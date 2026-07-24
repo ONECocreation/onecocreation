@@ -3,16 +3,17 @@ import TimeDoor from "@/components/time/TimeDoor";
 import Orrery from "@/components/time/orrery/Orrery";
 
 /**
- * /time — behind the TIME DOOR. Education-first: THE LIVING CLOCK large
- * (the hero — the pupil study's clock, whole), THE PAPER (Bitcoin
- * Federated Time explained for a curious human), and THE EXPERIMENT
- * (watch a block land + two converters). Public page; BFT-only dates
- * (house law).
+ * /time — behind the TIME DOOR. Education-first: THE ORRERY large (the
+ * hero — Act I of the orrery study, every ring a bitcoin period around
+ * the 624-ember sun), THE PAPER (Bitcoin Federated Time explained for a
+ * curious human), and THE EXPERIMENT (watch a block land + two
+ * converters). Public page; BFT-only dates (house law).
  *
- * Below all of that rides THE ORRERY — Act I of the orrery study (v22),
- * every ring a bitcoin period around the 624-ember sun (owner ruling:
- * planet-themed, it lives on frens.earth/time; Acts I·B, II and III stay
- * in the study, still under development).
+ * DIFFERENT WORLDS, SAME CLOCK (owner ruling 0018.04.28): each site tells
+ * the one time its own way, branded and skinned per world — the orrery is
+ * EARTH's; the pacman living clock is the ARCADE's (pacsarcade.org/time);
+ * DW land will tell it in brass and gears. Acts I·B, II and III of the
+ * study stay on the bench, under development.
  *
  * OWNER RULING (0018.04.22, binding): any link to "the paper" points to
  * the STANDALONE repo — github.com/PacsArcade/bitcoin-federated-time —
@@ -181,19 +182,12 @@ export default function TimePage() {
         play with it. Tick tock.
       </p>
 
-      <TimeDoor>
-        <ThePaper />
-      </TimeDoor>
-
-      {/* ═══ THE ORRERY — Act I of the orrery study (v22), below the living
-          clock (owner ruling: planet-themed, it lives on frens.earth/time;
-          "only ship the part 1 — the 1a, 2 and 3 sections are still under
-          development"). A div, not a <section> — the global `section` rule
-          adds 5rem padding + a dashed border. */}
-      <div className="mt-16 w-full" aria-label="The orrery — every ring is a bitcoin period">
-        <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
-          PART THREE ▸ THE ORRERY
-        </p>
+      {/* ═══ THE CLOCK — THE ORRERY, this world's way of telling the one
+          time (owner ruling 0018.04.28: different worlds, same clock — the
+          orrery is EARTH's; the pacman clock performs at pacsarcade.org/time;
+          DW land will tell it in brass). A div, not a <section> — the global
+          `section` rule adds 5rem padding + a dashed border. */}
+      <div className="mb-14 w-full" aria-label="The orrery — every ring is a bitcoin period">
         {/* the heading wears the study's amber — the orrery's own skin */}
         <h2
           className="mb-3 font-pixel text-lg uppercase"
@@ -202,10 +196,15 @@ export default function TimePage() {
           The Orrery
         </h2>
         <p className="mb-5 font-body text-sm text-white/70">
-          every ring is a bitcoin period. the chain is the sun.
+          every ring is a bitcoin period. the chain is the sun. different
+          worlds tell the same clock — this one is earth&apos;s.
         </p>
         <Orrery />
       </div>
+
+      <TimeDoor>
+        <ThePaper />
+      </TimeDoor>
 
       <p className="mt-12 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-white/25">
         tick tock, it all comes back to the block

@@ -1,36 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import dynamic from "next/dynamic";
-import { estimateHeight, moonPhase, yearAnimal } from "@/lib/bb/bft";
+import { estimateHeight } from "@/lib/bb/bft";
 import type { LivingTip } from "@/components/time/living-clock-engine";
 import Converters from "@/components/time/Converters";
 
 /**
- * /time — the room behind the TIME DOOR. One live poll feeds everything:
- * THE LIVING CLOCK (the pupil study's clock, whole — flip digits, Pac's
- * ring, the fiat ghosts, the fruit ladder, the Day-0 flip side), the
- * "watch a block land" strip, and the converters' sense of "now". The
- * paper rides in as server-rendered children between the hero and the
- * experiment.
+ * /time — the room behind the TIME DOOR. One live poll feeds the "watch a
+ * block land" strip and the converters' sense of "now"; the paper rides in
+ * as server-rendered children above the experiment.
+ *
+ * DIFFERENT WORLDS, SAME CLOCK (owner ruling 0018.04.28): each site tells
+ * the one time its own way — frens.earth's clock is THE ORRERY (the page's
+ * hero, mounted by the page itself); the pacman living clock performs at
+ * pacsarcade.org/time; DW land will tell it in brass. The pacman hero that
+ * used to open this component moved to the arcade for good.
  *
  * ONE data seam (owner ruling 0018.04.22): everything reads the fleet's
- * own /api/chain/tip door — ?full=1 for the clock's richer needs (tip
- * timestamp, difficulty) — which walks OUR NODE first, mempool.space as
- * the honest fallback, server-side and pluggable. No client here ever
- * phones a third party. Seam dark → the genesis-anchored ~ estimate; the
- * clock never stops and never fakes a pulse.
- *
- * The living clock is heavy on purpose (it's the hero) — loaded lazily,
- * client-only, so the paper below still paints fast.
+ * own /api/chain/tip door — ?full=1 — which walks OUR NODE first,
+ * mempool.space as the honest fallback, server-side and pluggable. No
+ * client here ever phones a third party. Seam dark → the genesis-anchored
+ * ~ estimate; the clock never stops and never fakes a pulse.
  */
-
-const LivingClock = dynamic(() => import("@/components/time/LivingClock"), {
-  ssr: false,
-  loading: () => (
-    <p className="py-10 text-center font-mono text-sm text-white/40">syncing to the chain…</p>
-  ),
-});
 
 /** an honest cold-boot reading — the genesis-anchored ~, before the seam answers */
 function estimateTip(): LivingTip {
@@ -102,27 +93,11 @@ export default function TimeDoor({ children }: { children?: ReactNode }) {
   }, []);
 
   const { height, estimated, fill } = tip;
-  const moon = height == null ? null : moonPhase(height);
-  const animal = height == null ? null : yearAnimal(height);
 
   return (
     <>
-      {/* ═══ THE HERO — THE LIVING CLOCK (the study's card is its own frame) ═══ */}
-      <section className="mb-12" aria-label="The Bitcoin Federated Time living clock">
-        <LivingClock {...tip} />
-
-        {/* the sub-line — moon + year animal on ONE clean line (owner ruling
-            0018.04.22: beat and block-height live on the face, in tooltips
-            and in the experiment strip — never under the clock; LIVE/~ rides
-            the card's own status row) */}
-        {height != null && (
-          <p className="mt-4 whitespace-nowrap text-center font-mono text-[10px] text-white/45">
-            {moon!.emoji} {moon!.name} moon · year of the {animal!.emoji} {animal!.name}
-          </p>
-        )}
-      </section>
-
-      {/* ═══ THE PAPER (server-rendered) ═══ */}
+      {/* ═══ THE PAPER (server-rendered) — the clock itself is the page's
+          hero, THE ORRERY, mounted above this component ═══ */}
       {children}
 
       {/* ═══ THE EXPERIMENT ═══ */}
@@ -134,8 +109,8 @@ export default function TimeDoor({ children }: { children?: ReactNode }) {
         <p className="mb-4 font-body text-sm text-white/70">
           This strip is live. The bar is the mempool — everyone&apos;s waiting
           payments — filling toward one block&apos;s worth of space. Leave this
-          page open: when the next block lands, the clock above snaps its
-          cards, Pac eats the ₿ at twelve, and the height counts one more. That
+          page open: when the next block lands, every planet on the orrery
+          above steps forward at once and the height counts one more. That
           moment is the tick of the only clock the whole world agrees on.
         </p>
 
@@ -175,7 +150,7 @@ export default function TimeDoor({ children }: { children?: ReactNode }) {
             ) : estimated ? (
               <>~ the network is unreachable right now — the clock keeps counting on the honest estimate, and will snap true when the chain answers.</>
             ) : (
-              <>a full bar doesn&apos;t force a block — miners find one every ~10 minutes on average, whenever the numbers allow. that randomness is why the last digit up there wears its ~.</>
+              <>a full bar doesn&apos;t force a block — miners find one every ~10 minutes on average, whenever the numbers allow. that randomness is why the clock&apos;s estimates wear the ~.</>
             )}
           </p>
         </div>
