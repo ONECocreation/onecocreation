@@ -139,7 +139,7 @@ export function deriveTraits(bornBlock: number, name: string): BuddyTraits {
  * direct mempool.space read, then to a genesis-anchored estimate (~10 min/block).
  * Cached briefly so a page doesn't hammer anything.
  */
-let _tipCache: { height: number; at: number } | null = null;
+let _tipCache: { height: number; at: number; tipTimestamp: number | null } | null = null;
 
 export function estimateHeight(nowMs = Date.now()): number {
   return Math.max(0, Math.floor((nowMs - GENESIS_MS) / 600_000));
@@ -150,20 +150,29 @@ export function estimateHeight(nowMs = Date.now()): number {
 export interface BlockInfo {
   height: number;
   estimated: boolean;
+  /** unix seconds the tip block was mined — the CHAIN's own anchor for the
+      block age, so every clock agrees on Pac's lap and the seconds no
+      matter when the page loaded (`?full=1` reading). Null when only a
+      bare height was known. */
+  tipTimestamp: number | null;
 }
 
 export async function currentBlockInfo(): Promise<BlockInfo> {
   const now = Date.now();
-  if (_tipCache && now - _tipCache.at < 60_000) return { height: _tipCache.height, estimated: false };
+  if (_tipCache && now - _tipCache.at < 60_000)
+    return { height: _tipCache.height, estimated: false, tipTimestamp: _tipCache.tipTimestamp };
 
   // the fleet's own door first — /api/chain/tip reads the configured node
+  // (?full=1 adds the tip's own timestamp: the strip clock's seconds anchor)
   try {
-    const res = await fetch("/api/chain/tip", { cache: "no-store" });
+    const res = await fetch("/api/chain/tip?full=1", { cache: "no-store" });
     if (res.ok) {
       const d = await res.json();
       if (d?.ok && Number.isFinite(d.height) && d.height > 0) {
-        _tipCache = { height: d.height, at: now };
-        return { height: d.height, estimated: false };
+        const ts =
+          typeof d.tipTimestamp === "number" && Number.isFinite(d.tipTimestamp) ? d.tipTimestamp : null;
+        _tipCache = { height: d.height, at: now, tipTimestamp: ts };
+        return { height: d.height, estimated: false, tipTimestamp: ts };
       }
     }
   } catch {
@@ -177,14 +186,14 @@ export async function currentBlockInfo(): Promise<BlockInfo> {
     if (res.ok) {
       const h = parseInt((await res.text()).trim(), 10);
       if (Number.isFinite(h) && h > 0) {
-        _tipCache = { height: h, at: now };
-        return { height: h, estimated: false };
+        _tipCache = { height: h, at: now, tipTimestamp: null };
+        return { height: h, estimated: false, tipTimestamp: null };
       }
     }
   } catch {
     /* offline / blocked → fall through to the estimate */
   }
-  return { height: estimateHeight(now), estimated: true };
+  return { height: estimateHeight(now), estimated: true, tipTimestamp: null };
 }
 
 export async function currentBlock(): Promise<number> {

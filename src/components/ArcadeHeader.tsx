@@ -2,12 +2,19 @@ import { SiteHeader } from "@pacsarcade/arcade-ui";
 import FrenChip from "@/components/FrenChip";
 import FrenMenu from "@/components/FrenMenu";
 import FrenMenuFooter from "@/components/FrenMenuFooter";
+import StripClock from "@/components/time/StripClock";
 
 /**
  * The one header — chip-as-menu (header v4): the fren's face IS the menu
  * button, sign-out shares the bottom row with the easy-eyes toggle. Every
  * page renders this instead of wiring SiteHeader slots by hand, so the next
  * header change is a one-file edit.
+ *
+ * The telemetry band under the menu carries THE STRIP CLOCK now (owner
+ * marked-up spec, 0018.04.27, frens.earth sibling): the study's flip clock
+ * as a flat rectangle — hh:mm:ss, date, the height INSIDE it, all the
+ * pacman on its border — study face, frens.earth frame, in place of the
+ * old "■ BLOCK N" ticker. The whole strip opens /time.
  */
 export default function ArcadeHeader() {
   return (
@@ -26,6 +33,7 @@ export default function ArcadeHeader() {
       identitySlot={<FrenChip />}
       menuSlot={<FrenMenu />}
       menuFooterSlot={<FrenMenuFooter />}
+      tickerSlot={<StripClock />}
     />
   );
 }
