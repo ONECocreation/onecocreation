@@ -148,7 +148,11 @@
 .orrery .pchip.on .pdot .pbs { stroke: var(--orr-gold); }
 /* ✶ HOUSES / ☿ PLANETS are glyph dots, not planet discs — the glyph
    inherits the chip's color (cyan when the layer is lit); gold stays
-   reserved for ring selection. */
+   reserved for ring selection. The ☿ chip is v26's three-state cycle
+   (☿ BAND → ☿ RINGS → ☿ PLANETS): BAND and RINGS wear the lit cyan,
+   OFF rests in the dimmed muted ink — the same .on law, three labels.
+   The Kepler orbits themselves are inline SVG (the study's law): no
+   extra CSS rides here. */
 .orrery .pchip-houses .pdot,
 .orrery .pchip-planets .pdot { background: transparent; border-radius: 0; font-size: 12px; color: inherit; }
 .orrery .pchip-houses.on .pdot,
