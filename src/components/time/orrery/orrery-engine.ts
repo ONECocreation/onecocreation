@@ -1,7 +1,7 @@
 /**
  * THE ORRERY engine — Act I of the orrery study, ported whole.
  *
- * Source of truth: studies/clock-study-orrery.html (v22, owner-approved).
+ * Source of truth: studies/clock-study-orrery.html (v23, owner-approved).
  * This file is the study's own JS — the block math, the anchor table, the
  * twelve rings, the sun, the moon, the houses, the scrub/NOW/date-picker
  * wiring — adapted to the ship: the DOM skeleton is rendered by Orrery.tsx
@@ -15,7 +15,7 @@
  * sections are still under development"): the spirograph (Act I·B), the
  * tape (Act II), star birth facts (Act III).
  *
- * The laws ported intact (v22):
+ * The laws ported intact (v23):
  *  - 12 orbit rings around the 624-ember sun (THE LIGHT), the Admiral's
  *    order: sun · SECOND · MINUTE · HOUR · BLOCK · DAY · DIFFICULTY ·
  *    MONTH · MOON · YEAR · HALVING · GENERATION · LAST SAT.
@@ -28,16 +28,17 @@
  *    breathes its fill from the brand coin-orange up to the true ember.
  *  - ONE selection language, every ring: the chosen ring lights an ORANGE
  *    ember arc for what's full, a BLUE arc for what remains, and its dot
- *    lights up — ember for time, gold ONLY for the HALVING (subsidy is
- *    money) — all hidden at rest; the fact card names the remainder —
- *    "X% to go".
+ *    lights GOLD — the one selection color for every dot (owner ruling,
+ *    v23: "like the halving's, fleet-wide") — all hidden at rest; the
+ *    fact card names the remainder — "X% to go".
  *  - ring labels riding the orbit lines; the MOON at its true phase
  *    (northern sky); the 13 houses CAPRICORN-FIRST (the MONTH-SEAT LAW —
  *    month N of 13 sits in the Nth house; Ophiuchus keeps his true seat)
  *    behind the ✶ HOUSES toggle, every glyph naming its seat in a hover
  *    <title>, the current month's wedge softly lit in the ember; hover
  *    tooltips on every planet; the gravity-well gradient in the same
- *    ember; gold = money, on HALVING only.
+ *    ember; gold = money — the gold selection dot is the owner's ruled
+ *    exception.
  *  - scrub 0→6,930,000 + NOW; SET THE CLOCK takes ANY date — pre-genesis
  *    reads negative (b₿, blocks before genesis); reduced motion = a 1 s
  *    in-place refresh, no rAF.
@@ -155,8 +156,6 @@ interface RingDef {
   r: number;
   pr: number;
   c: string;
-  /** the chosen dot's light — gold for HALVING (money); ember otherwise */
-  selc?: string;
   ticks?: number;
   moon?: boolean;
   arc?: boolean;
@@ -296,8 +295,8 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
      chain's periods orbit beyond them. The order is the Admiral's ruling.
      ALL dots rest identical in the CREAM (the MOON keeps its phase face).
      ONE selection language, every ring: choose a ring and the ORANGE arc
-     shows what's full, the BLUE arc what remains, and the dot lights —
-     ember for time, gold only for the HALVING — hidden at rest. The MOON
+     shows what's full, the BLUE arc what remains, and the dot lights
+     GOLD — hidden at rest. The MOON
      rides its
      own orbit just outside the calendar's MONTH (synodic ≈ 4,252 blocks vs
      4,032 — the two-moons drift made visible; they kiss every ~19.3 bitcoin
@@ -342,7 +341,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
         return `<b>year ${bd.y} — bitcoin's age</b> · one lap = the 13-year animal wheel · ${an[0]} ${an[1]}`; } },
     /* the gold planet counts halvings-so-far; its lap is the ~4-year epoch,
        and the NEXT halving lands at the top — the counting law, in gold */
-    { key: 'HALVING', p: HALV, r: 217, pr: 6, c: CREAM, selc: GOLD, ticks: 4,
+    { key: 'HALVING', p: HALV, r: 217, pr: 6, c: CREAM, ticks: 4,
       f: H => `<b>every 210,000 blocks ≈ 4 years</b> · ${Math.floor(H / HALV)} halvings so far · the next lands at the top · <span class="g">${fmtSub(Math.floor(H / HALV))}</span>` },
     { key: 'GENERATION', p: CYCLE, r: 234, pr: 5.5, c: CREAM, ticks: 6,
       f: H => `<b>1,260,000 blocks</b> · 6 halvings · ~24 years — a human generation · ${pct(H, CYCLE)} through` },
@@ -455,8 +454,8 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
         pl.appendChild(lit);
       } else {
         /* the dot is a tiny dial: the planet circle with its reading inside.
-           ALL dots rest identical (cream); the chosen ring's dot lights up —
-           ember for time, gold only for the HALVING (subsidy is money) */
+           ALL dots rest identical (cream); the chosen ring's dot lights
+           GOLD (owner ruling: like the halving's, fleet-wide) */
         pl = el('g', {}) as SVGGElement;
         dot = el('circle', { r: 8, fill: rg.c }) as SVGCircleElement;
         pl.appendChild(dot);
@@ -509,7 +508,9 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       o.hit.setAttribute('cx', x); o.hit.setAttribute('cy', y);
       if (o.fillA) {
         const chosen = sel === planets.indexOf(o);
-        if (o.dot) o.dot.setAttribute('fill', chosen ? (o.rg.selc || '#ff6600') : o.rg.c);
+        /* the chosen ring's dot lights GOLD — the one selection color for
+           every dot (owner ruling: like the halving's, fleet-wide) */
+        if (o.dot) o.dot.setAttribute('fill', chosen ? GOLD : o.rg.c);
         if (chosen) {
           o.fillA.setAttribute('stroke-dasharray', (frac * 100).toFixed(2) + ' 100');
           o.fillA.setAttribute('opacity', '.8');

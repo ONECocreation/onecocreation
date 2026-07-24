@@ -6,7 +6,7 @@ import "./orrery.css";
 
 /**
  * THE ORRERY — Act I of the orrery study (studies/clock-study-orrery.html,
- * v22, owner-approved), ported whole: the twelve orbit rings around the
+ * v23, owner-approved), ported whole: the twelve orbit rings around the
  * pulsing 624-ember sun (THE LIGHT), the chips column riding the dial's
  * left (wrapping back below on small decks), the fact card, the scrub +
  * NOW, the SET THE CLOCK date picker and the ✶ HOUSES toggle. The

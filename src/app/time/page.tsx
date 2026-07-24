@@ -5,15 +5,23 @@ import Orrery from "@/components/time/orrery/Orrery";
 /**
  * /time — behind the TIME DOOR. Education-first: THE ORRERY large (the
  * hero — Act I of the orrery study, every ring a bitcoin period around
- * the 624-ember sun), THE PAPER (Bitcoin Federated Time explained for a
- * curious human), and THE EXPERIMENT (watch a block land + two
- * converters). Public page; BFT-only dates (house law).
+ * the 624-ember sun), HOW TO READ IT (the orrery taught in a glance,
+ * directly under the dial), THE PAPER (Bitcoin Federated Time explained
+ * for a curious human — through the orrery, the clock this page actually
+ * shows), and THE EXPERIMENT (watch a block land + two converters).
+ * Public page; BFT-only dates (house law).
  *
  * DIFFERENT WORLDS, SAME CLOCK (owner ruling 0018.04.28): each site tells
  * the one time its own way, branded and skinned per world — the orrery is
  * EARTH's; the pacman living clock is the ARCADE's (pacsarcade.org/time);
  * DW land will tell it in brass and gears. Acts I·B, II and III of the
  * study stay on the bench, under development.
+ *
+ * FACELIFT (owner orders, 0018.05.x): the paper teaches THE ORRERY now —
+ * every flip-clock passage rewritten (the pacman clock performs at the
+ * arcade); typographic emphasis by SIZE (the <Key> treatment — load-bearing
+ * phrases step up, sparingly); no mid-token wraps (<NB> pins the tokens
+ * that never split; headings balance, paragraphs wrap pretty).
  *
  * OWNER RULING (0018.04.22, binding): any link to "the paper" points to
  * the STANDALONE repo — github.com/PacsArcade/bitcoin-federated-time —
@@ -25,16 +33,95 @@ const PAPER_URL = "https://github.com/PacsArcade/bitcoin-federated-time";
 export const metadata: Metadata = {
   title: "The Clock — Bitcoin Federated Time — frens.earth",
   description:
-    "The clock that syncs to the block, not the sun. Read the flip clock, learn the calendar, watch a block land — Bitcoin Federated Time, explained.",
+    "The clock that syncs to the block, not the sun. Read the orrery, learn the calendar, watch a block land — Bitcoin Federated Time, explained.",
 };
 
-/** One section of the paper — pixel heading + warm body copy. */
+/** One passage of the paper — pixel heading + warm body copy. A div, not a
+    <section>: the global `section` rule adds 5rem padding + a dashed
+    border — page-part chrome, wrong for a paper passage (the old rough
+    look). */
 function Sect({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mb-8">
-      <h2 className="mb-3 font-pixel text-lg uppercase text-neon">{title}</h2>
-      <div className="space-y-3 font-body text-sm leading-relaxed text-white/70">{children}</div>
-    </section>
+    <div className="mb-8">
+      <h2 className="mb-3 text-balance font-pixel text-lg uppercase text-neon">{title}</h2>
+      <div className="space-y-3 text-pretty font-body text-sm leading-relaxed text-white/70">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Typographic emphasis by SIZE (owner ruling: "we can bold and highlight
+    text by making the font bigger") — the load-bearing phrase steps up
+    from the body's text-sm to text-base and wears the cream. Sparingly. */
+function Key({ children }: { children: React.ReactNode }) {
+  return <span className="text-base font-semibold text-[#f2ead8]">{children}</span>;
+}
+
+/** A token that must never split across lines (house law: "BITCOIN TIME",
+    a₿/b₿ datings, ★heights, hh:mm:ss readings, "~10 minutes"). */
+function NB({ children }: { children: React.ReactNode }) {
+  return <span className="whitespace-nowrap">{children}</span>;
+}
+
+/** One entry of HOW TO READ IT — amber pixel label, minimal words. */
+function ReadRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <dt className="font-pixel text-[9px] uppercase tracking-widest" style={{ color: "#ffb347" }}>
+        {label}
+      </dt>
+      <dd className="mt-1 text-pretty font-body text-sm leading-relaxed text-white/70">
+        {children}
+      </dd>
+    </div>
+  );
+}
+
+/** HOW TO READ IT — the orrery taught in a glance, directly under the
+    dial (owner order: "showcase how to read what we are showing above").
+    Minimal words; the dial itself is the lesson. */
+function HowToRead() {
+  return (
+    <div className="mt-8" aria-label="How to read the orrery">
+      <h3 className="mb-1 text-balance font-pixel text-sm uppercase" style={{ color: "#ffb347" }}>
+        How to read it
+      </h3>
+      <p className="mb-4 text-pretty font-body text-sm text-white/70">
+        one clock, twelve hands. <Key>every dot carries its reading</Key> — glance at a planet,
+        know the value.
+      </p>
+      <dl className="space-y-3">
+        <ReadRow label="the light">
+          the sun is the face: <NB>hh:mm:ss</NB> in <NB>BITCOIN TIME</NB>, and the ★height beneath
+          it is the sun&apos;s velocity — one block of speed every <NB>~10 minutes</NB>. it
+          breathes the 624 pulse: the ten-minute beat raised to light, the <NB>624 nm</NB> ember.
+        </ReadRow>
+        <ReadRow label="the dots">
+          second · minute · hour of 24 · block x of 144 filling the day · day of 28 filling the
+          month · month of 13 filling the year · year — bitcoin&apos;s age · halvings so far ·
+          generation · last-sat %. every lap fills at the top.
+        </ReadRow>
+        <ReadRow label="select a ring">
+          tap a chip or a planet: the <span className="text-[#ff6600]">orange arc</span> shows
+          what&apos;s full, the <span className="text-[#6fd7e0]">blue arc</span> what remains, and the
+          dot lights <span className="text-[#ffd700]">gold</span>. the card below names the
+          remainder.
+        </ReadRow>
+        <ReadRow label="the moon">
+          rides her own orbit beside MONTH, drawn at her true phase (as the northern sky sees
+          her) — the sky&apos;s month against the chain&apos;s.
+        </ReadRow>
+        <ReadRow label="the 13 houses">
+          the <NB>✶ HOUSES</NB> toggle: thirteen wedges, one per month, Ophiuchus restored to his
+          seat. the shaded wedge is the current month&apos;s.
+        </ReadRow>
+        <ReadRow label="set the clock">
+          point the whole orrery at any date — pre-genesis is welcome, read honestly in{" "}
+          <NB>b₿</NB>, blocks before the light. NOW brings it home.
+        </ReadRow>
+      </dl>
+    </div>
   );
 }
 
@@ -57,10 +144,10 @@ function ThePaper() {
           whole network agrees that one more block exists — and the count of
           those blocks, the <b className="text-white/90">height</b>, is a
           number every node on earth agrees on. No timezone, no committee,
-          no trust. <b className="text-white/90">Bitcoin Federated Time</b>{" "}
-          (BFT) is nothing more than that height, read as a calendar. The
-          date isn&apos;t announced by anyone; it&apos;s computed by
-          everyone. The block doesn&apos;t lie.
+          no trust. <NB><b className="text-white/90">Bitcoin Federated Time</b></NB>{" "}
+          (BFT) is nothing more than that height, read as a calendar.{" "}
+          <Key>The date isn&apos;t announced by anyone; it&apos;s computed by
+          everyone.</Key> The block doesn&apos;t lie.
         </p>
       </Sect>
 
@@ -68,35 +155,33 @@ function ThePaper() {
         <p>
           The tick of this clock is the <b className="text-white/90">beat</b>:
           one block, about ten minutes. 144 beats make a day, six beats make
-          an hour — so the face reads like the clock you already know,
-          <span className="font-mono text-white/85"> hh:mm</span>, stepping
-          ten &quot;minutes&quot; per block.
+          an hour — so the face at the heart of the orrery reads like the
+          clock you already know, <NB><span className="font-mono text-white/85">hh:mm:ss</span></NB>,
+          stepping ten &quot;minutes&quot; per block.
         </p>
         <p>
-          Look at the clock above: the date, the hours and the minute-tens are{" "}
-          <b className="text-white/90">chain-exact</b> — calm faces that flip
-          only when a real block lands. The last digit is the one card
-          allowed to struggle: it shows how far through the coming block we
-          are, in tenths, and it trembles on its hinge because blocks are
-          random — ten minutes is only the average. That&apos;s why it wears
-          the <span className="font-mono text-coin">~</span>. One honest
-          struggling digit; everything else is fact.
+          Look at THE LIGHT above: the sun carries the face, and the ★height
+          beneath it is <Key>the sun&apos;s velocity — one block of speed
+          every <NB>~10 minutes</NB></Key>. The seconds live inside the
+          block, and blocks are random — ten minutes is only the average —
+          so when one runs long the face holds at :59 and visibly strains.
+          It never lies; it struggles in the open. That&apos;s why estimates
+          wear the <span className="font-mono text-coin">~</span>.
         </p>
         <p>
-          Pac is that digit made visible: <b className="text-white/90">ten
-          laps of the ring make one block</b> — one lap per tenth. Every lap
-          he clears the waiting payments, eats a frightened fiat ghost or
-          two, and takes the fruit waiting at twelve — cherry first, the key
-          ninth, because the key unlocks the tenth lap: the ₿ itself, eaten
-          the moment the block breaks. Every block, bitcoin eats the
-          world&apos;s fiat. Then the board resets, forever. And the whole
-          card flips — click it — to the Day-0 countdown on its back.
+          Around the light, every ring is one of bitcoin&apos;s periods, and
+          every lap fills at the top: block x of 144 fills the day, day x of
+          28 fills the month, month x of 13 fills the year. Choose a ring
+          and it answers — the orange arc is what&apos;s full, the blue arc
+          what remains, the dot lights gold. And when the next block lands,
+          every planet steps forward at once.{" "}
+          <Key>One clock, twelve hands, no opinions.</Key>
         </p>
       </Sect>
 
       <Sect title="Thirteen perfect months">
         <p>
-          A BFT year is <b className="text-white/90">13 months × 28 days</b> —
+          A BFT year is <Key><NB>13 months × 28 days</NB></Key> —
           52,416 blocks, no leap days, no odd-length months, ever. And the
           shape isn&apos;t arbitrary: bitcoin re-tunes its mining difficulty
           every 2,016 blocks, so a month is exactly{" "}
@@ -106,21 +191,22 @@ function ThePaper() {
         </p>
         <p>
           Because every month is 28 days, the moon rides along for free: one
-          lunation per month, new moon on day 01, full around day 15. Every
-          new year opens on a new moon, and each year carries one of 13
-          animal signs — the traditional twelve plus the 🐈 Astronomical Cat,
-          the famous left-out sign, finally seated to match the 13-month
-          year. (Signs are for wonder, not finance.)
+          lunation per month, new moon on day 01, full around day 15 — which
+          is why she keeps her own orbit on the orrery, beside MONTH, at her
+          true phase. Every new year opens on a new moon, and each year
+          carries one of 13 animal signs — the traditional twelve plus the
+          🐈 Astronomical Cat, the famous left-out sign, finally seated to
+          match the 13-month year. (Signs are for wonder, not finance.)
         </p>
       </Sect>
 
       <Sect title="The year is bitcoin's age">
         <p>
           Years start at zero: block 0 opened year 0000, and the year is
-          simply how many 52,416-block years the chain has lived. So when the
-          clock above says year 0018, it&apos;s telling you{" "}
-          <b className="text-white/90">bitcoin is 18 block-years old</b> —
-          measured by the only clock that never lied.
+          simply how many 52,416-block years the chain has lived. So when
+          the orrery&apos;s YEAR planet reads 18, it&apos;s telling you{" "}
+          <Key>bitcoin is 18 block-years old</Key> — measured by the only
+          clock that never lied.
         </p>
         <p>
           The old calendar disagrees, and that&apos;s honest too: early
@@ -128,7 +214,7 @@ function ThePaper() {
           days, so block time runs a few months ahead of sun time — on
           purpose. The two counts meet at{" "}
           <b className="text-white/90">Day 0</b> — block 983,664, the new
-          moon of <span className="font-mono text-white/85">0018.10.28 a₿</span>,
+          moon of <NB><span className="font-mono text-white/85">0018.10.28 a₿</span></NB>,
           just after bitcoin&apos;s eighteenth birthday — when the sun
           finally agrees with what the block already knew. That&apos;s where
           the new calendar begins.
@@ -137,18 +223,20 @@ function ThePaper() {
 
       <Sect title="★ and ~ — the two honest marks">
         <p>
-          This clock makes exactly one promise: every mark on it maps to a
-          chain fact. <span className="font-mono text-coin">★</span> before a
+          This clock makes exactly one promise:{" "}
+          <Key>every mark on it maps to a chain fact.</Key>{" "}
+          <span className="font-mono text-coin">★</span> before a
           number means a real, recorded block height — history every node
           agrees on. <span className="font-mono text-coin">~</span> means an
           estimate — the network was unreachable, or a wall-clock moment was
-          converted at ~10 minutes a block.
+          converted at <NB>~10 minutes</NB> a block.
         </p>
         <p>
-          When the connection drops, the clock never stops and never
-          pretends: it keeps counting on the estimate, wears the ~, and
-          snaps true the moment the chain answers. No fake heartbeats, no
-          frozen faces. You can test both marks yourself, just below.
+          When the connection drops, the orrery never stops and never
+          pretends: it keeps counting on the genesis-anchored estimate,
+          wears the ~ on its face, and snaps true the moment the chain
+          answers. No fake heartbeats, no frozen faces. You can test both
+          marks yourself, just below.
         </p>
       </Sect>
 
@@ -173,13 +261,13 @@ export default function TimePage() {
       <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
         FRENS.EARTH ▸ THE TIME DOOR
       </p>
-      <h1 className="mb-3 font-pixel text-xl uppercase text-neon">
+      <h1 className="mb-3 text-balance font-pixel text-xl uppercase text-neon">
         The clock that syncs to the block, not the sun
       </h1>
-      <p className="mb-8 font-body text-sm text-white/70">
+      <p className="mb-8 text-pretty font-body text-sm text-white/70">
         This is Bitcoin Federated Time — the arcade&apos;s calendar, counted
-        purely in blocks. First the clock, then the why, then you get to
-        play with it. Tick tock.
+        purely in blocks. First the clock, then how to read it, then the
+        why, then you get to play with it. Tick tock.
       </p>
 
       {/* ═══ THE CLOCK — THE ORRERY, this world's way of telling the one
@@ -190,16 +278,17 @@ export default function TimePage() {
       <div className="mb-14 w-full" aria-label="The orrery — every ring is a bitcoin period">
         {/* the heading wears the study's amber — the orrery's own skin */}
         <h2
-          className="mb-3 font-pixel text-lg uppercase"
+          className="mb-3 text-balance font-pixel text-lg uppercase"
           style={{ color: "#ffb347" }}
         >
           The Orrery
         </h2>
-        <p className="mb-5 font-body text-sm text-white/70">
+        <p className="mb-5 text-pretty font-body text-sm text-white/70">
           every ring is a bitcoin period. the chain is the sun. different
           worlds tell the same clock — this one is earth&apos;s.
         </p>
         <Orrery />
+        <HowToRead />
       </div>
 
       <TimeDoor>

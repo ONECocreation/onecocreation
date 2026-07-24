@@ -20,6 +20,9 @@ import {
  * Two doors:
  *  - a day from the calendar you were handed → its BFT date. Wall-clock →
  *    height is an estimate (~10 min a block), so it wears the honest ~.
+ *    Every answer also carries its ~block height (NEGATIVE pre-genesis)
+ *    and the study's Act-III dating: "~N blocks before/after the light ·
+ *    b₿/a₿" (owner order — the same honest language as the orrery).
  *  - a block height → its BFT stamp. Height → date is pure arithmetic —
  *    exact, no ~ ever. A height above the tip isn't mined yet: its date is
  *    already certain, the wall-day it lands on is not. That asymmetry IS
@@ -33,10 +36,18 @@ function DateResult({ value }: { value: string }) {
   const utc = Date.UTC(y, mo - 1, d, 12); // midday — safe center of the day
 
   if (utc < GENESIS_MS) {
+    /* pre-genesis reads NEGATIVE — the ~block height on the ghost side,
+       and the honest Act-III phrasing: blocks before the light */
+    const before = Math.floor((GENESIS_MS - utc) / 600_000);
     return (
       <div className="mt-3 border-2 border-heart bg-heart/10 p-4">
         <p className="font-mono text-xl text-heart">{beforeBitcoin(y, mo, d)}</p>
-        <p className="mt-2 font-body text-xs text-white/70">
+        <p className="mt-2 font-mono text-xs tabular-nums text-white/70">
+          <span className="whitespace-nowrap">~block −{before.toLocaleString()}</span> ·{" "}
+          <span className="whitespace-nowrap">~{before.toLocaleString()} blocks before the light</span>{" "}
+          · <span className="whitespace-nowrap">b₿</span>
+        </p>
+        <p className="mt-2 text-pretty font-body text-xs text-white/70">
           Before the first block — a ghost-side date. b₿ dates walk backward
           from block 0; the chain counts you anyway.
         </p>
@@ -49,10 +60,17 @@ function DateResult({ value }: { value: string }) {
   const animal = yearAnimal(height);
   return (
     <div className="mt-3 border-2 border-neon bg-neon/10 p-4">
-      {/* height-derived from a wall clock → the honest ~ on both lines */}
+      {/* height-derived from a wall clock → the honest ~ on every line */}
       <p className="font-mono text-xl text-neon">~ {bftDate(height)}</p>
       <p className="mt-2 font-mono text-xs tabular-nums text-white/70">
-        ★~{height.toLocaleString()} — the nearest block (estimated, ~10 min a block)
+        <span className="whitespace-nowrap">★~{height.toLocaleString()}</span> — the nearest
+        block (estimated, <span className="whitespace-nowrap">~10 min</span> a block)
+      </p>
+      <p className="mt-1 font-mono text-xs tabular-nums text-white/70">
+        <span className="whitespace-nowrap">~block {height.toLocaleString()}</span> ·{" "}
+        <span className="whitespace-nowrap">a₿</span> —{" "}
+        <span className="whitespace-nowrap">~{height.toLocaleString()} blocks</span> after the
+        light
       </p>
       <p className="mt-1 font-mono text-xs text-white/70">
         moon: {moon.emoji} {moon.name} · year of the {animal.emoji} {animal.name}
@@ -73,10 +91,13 @@ function HeightResult({ raw, tip, tipEstimated }: { raw: string; tip: number | n
   return (
     <div className="mt-3 border-2 border-cyan bg-cyan/10 p-4">
       {/* height → date is pure block math — EXACT, never a ~ */}
-      <p className="font-mono text-xl text-cyan">{bftDateTime(h)} <span className="text-white/50">a₿</span></p>
+      <p className="font-mono text-xl text-cyan">
+        <span className="whitespace-nowrap">{bftDateTime(h)} <span className="text-white/50">a₿</span></span>
+      </p>
       <p className="mt-2 font-mono text-xs tabular-nums text-white/70">
-        ★{h.toLocaleString()} · beat {String(beat).padStart(3, "0")}/144 · moon: {moon.emoji}{" "}
-        {moon.name} · year of the {animal.emoji} {animal.name}
+        <span className="whitespace-nowrap">★{h.toLocaleString()}</span> ·{" "}
+        <span className="whitespace-nowrap">beat {String(beat).padStart(3, "0")}/144</span> ·
+        moon: {moon.emoji} {moon.name} · year of the {animal.emoji} {animal.name}
       </p>
       <p className="mt-2 font-body text-xs text-white/60">
         {future ? (
@@ -102,8 +123,10 @@ export default function Converters({ tip, tipEstimated }: { tip: number | null; 
 
   return (
     <section aria-label="The converters">
-      <h2 className="mb-3 font-pixel text-lg uppercase text-neon">Try the calendar yourself</h2>
-      <p className="mb-4 font-body text-sm text-white/70">
+      <h2 className="mb-3 text-balance font-pixel text-lg uppercase text-neon">
+        Try the calendar yourself
+      </h2>
+      <p className="mb-4 text-pretty font-body text-sm text-white/70">
         Both converters run entirely in your browser — nothing you type
         leaves this device. Notice which answers wear the ~ and which
         don&apos;t: that little mark is the calendar telling you the truth
