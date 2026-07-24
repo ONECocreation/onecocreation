@@ -391,11 +391,50 @@ export function createStripClock(root: HTMLElement): StripClockEngine {
     flipTo(5, String(ss % 10));
   }
 
-  /* the strain — only the live seconds card trembles, harder as the block ages */
+  /* the strain — THE LOADED CHAIN (owner ruling, clock suggestion 2's
+     orange marks): past ten minutes, every digit the next block-land will
+     flip trembles — the live card hardest, the pulse rippling leftward on
+     a stagger so you can feel it travel through the clock — and the
+     straining digits WARM from cream toward the 624 ember, snapping back
+     the moment the block lands. Before ten minutes the face stays calm:
+     the trembling has to mean something. At 39:59 the whole 9-5-9-3 chain
+     shivers; at 32:14 only the live card does — the vibration shows how
+     much of the clock the next block will move. */
+  const CREAM_RGB = [242, 240, 234] as const;
+  const EMBER_RGB = [255, 102, 0] as const;
   function applyStrain(nowSec: number) {
     if (!liveVal || !liveFlip) return;
-    const { glow, amp } = strainOf(blockAge());
-    liveVal.style.transform = REDUCED ? "none" : `rotateX(${(amp * 9 * jit(nowSec, 3.1)).toFixed(2)}deg)`;
+    const age = blockAge();
+    const { glow, amp } = strainOf(age);
+    const chainK = Math.min(1, Math.max(0, (age - 600) / 600));
+    /* which digits does the next land flip? compare this face to height+1's
+       fresh face — that's the spring the late block is loading */
+    let chain = [false, false, false, true, true, true];
+    if (state.height != null && chainK > 0) {
+      const [ch] = [bftTime(state.height)];
+      const nx = bftTime(state.height + 1);
+      chain = [ch[0] !== nx[0], ch[1] !== nx[1], ch[3] !== nx[3], true, true, true];
+    }
+    valEls.forEach((el, i) => {
+      const isLive = i === 5;
+      const k = isLive ? (amp > 0 ? 1 : 0) : chain[i] ? chainK : 0;
+      if (k <= 0) {
+        el.style.transform = "";
+        el.style.color = "";
+        return;
+      }
+      const w = 0.3 + 0.7 * (i / 5); // rightmost strongest, fading leftward
+      el.style.transform = REDUCED
+        ? ""
+        : `rotateX(${(amp * 9 * w * k * jit(nowSec - (5 - i) * 0.18, 3.1 + i * 0.37)).toFixed(2)}deg)`;
+      const warm = Math.min(1, chainK * w);
+      el.style.color =
+        warm > 0.02
+          ? `rgb(${Math.round(CREAM_RGB[0] + (EMBER_RGB[0] - CREAM_RGB[0]) * warm)}, ${Math.round(
+              CREAM_RGB[1] + (EMBER_RGB[1] - CREAM_RGB[1]) * warm
+            )}, ${Math.round(CREAM_RGB[2] + (EMBER_RGB[2] - CREAM_RGB[2]) * warm)})`
+          : "";
+    });
     liveFlip.style.boxShadow =
       glow > 0.05
         ? `0 0 ${(3 + 10 * glow).toFixed(0)}px rgba(247,147,26,${(0.12 + 0.35 * glow).toFixed(2)})`
