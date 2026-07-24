@@ -17,7 +17,7 @@
  *
  * The laws ported intact (v23):
  *  - 12 orbit rings around the 624-ember sun (THE LIGHT), the Admiral's
- *    order: sun · SECOND · MINUTE · HOUR · BLOCK · DAY · DIFFICULTY ·
+ *    order: sun · SECOND · MINUTE · HOUR · BLOCK · DAY · FORTNIGHT ·
  *    MONTH · MOON · YEAR · HALVING · GENERATION · LAST SAT.
  *  - every dot carries its READING; laps fill at the TOP; watchmaker
  *    ticks; ALL dots rest identical in the CREAM (the MOON keeps its
@@ -417,8 +417,8 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     { key: 'DAY', p: MONTH, r: 132, pr: 5, c: CREAM, ticks: 28,
       fr: H => pmod(H, MONTH) / MONTH,
       f: H => `<b>28 days · 4,032 blocks</b> · one lap fills the month · day ${Math.floor(pmod(H, MONTH) / DAY) + 1} of 28 · full at the top` },
-    { key: 'DIFFICULTY', p: DIFF, r: 149, pr: 5, c: CREAM,
-      f: H => `<b>2,016 blocks</b> · the network re-tunes · ${pct(H, DIFF)} through` },
+    { key: 'FORTNIGHT', p: DIFF, r: 149, pr: 5, c: CREAM,
+      f: H => `<b>2,016 blocks · a fortnight</b> — 14 days · the network re-tunes · ${pct(H, DIFF)} through` },
     { key: 'MONTH', p: YEAR, r: 166, pr: 5, c: CREAM, ticks: 13,
       fr: H => pmod(H, YEAR) / YEAR,
       f: H => { const h = houseOf(pmod(H, YEAR) / YEAR);
@@ -434,9 +434,9 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     /* the gold planet counts halvings-so-far; its lap is the ~4-year epoch,
        and the NEXT halving lands at the top — the counting law, in gold */
     { key: 'HALVING', p: HALV, r: 217, pr: 6, c: CREAM, ticks: 4,
-      f: H => `<b>every 210,000 blocks ≈ 4 years</b> · ${Math.floor(H / HALV)} halvings so far · the next lands at the top · <span class="g">${fmtSub(Math.floor(H / HALV))}</span>` },
+      f: H => `<b>every 210,000 blocks ≈ 4 years — an olympiad</b> · ${Math.floor(H / HALV)} halvings so far · the next lands at the top · <span class="g">${fmtSub(Math.floor(H / HALV))}</span>` },
     { key: 'GENERATION', p: CYCLE, r: 234, pr: 5.5, c: CREAM, ticks: 6,
-      f: H => `<b>1,260,000 blocks</b> · 6 halvings · ~24 years — a human generation · ${pct(H, CYCLE)} through` },
+      f: H => `<b>1,260,000 blocks</b> · 6 halvings · ~24 years — a human generation (Saturn laps next door in ~1.55M) · ${pct(H, CYCLE)} through` },
     { key: 'LAST SAT', p: LAST, r: 258, pr: 5, c: CREAM, arc: true,
       f: H => `<b>6,930,000 blocks</b> · genesis → the last sat struck · ~2140 · ${(H / LAST * 100).toFixed(2)}% along` },
   ];
@@ -449,7 +449,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     BLOCK: H => String(bidOf(H) + 1),                           // block 1-144, fills the day
     HOUR: (H, a) => faceTime(H, a).hh,
     DAY: H => String(Math.floor(pmod(H, MONTH) / DAY) + 1),     // day 1-28, fills the month
-    DIFFICULTY: H => String(Math.floor(pmod(H, DIFF) / DIFF * 100)), // % to the re-tune
+    FORTNIGHT: H => String(Math.floor(pmod(H, DIFF) / DIFF * 100)), // % to the re-tune fortnight
     MONTH: H => String(Math.floor(pmod(H, YEAR) / MONTH) + 1),  // month 1-13, fills the year
     YEAR: H => String(bftDate(H).y),                            // bitcoin's age (mirrored b₿)
     HALVING: H => String(Math.max(0, Math.floor(H / HALV))),    // halvings so far
@@ -812,7 +812,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       case 'DAY':         // the ringed one
         return s + '<ellipse cx="6" cy="6" rx="5.3" ry="1.7" fill="none" stroke="#b3a077" stroke-width=".9" class="pbs" transform="rotate(-18 6 6)"/>' +
           '<circle cx="6" cy="6" r="2.7" class="pb" fill="#d6c290"/>' + e;
-      case 'DIFFICULTY':  // the spotted moonlet
+      case 'FORTNIGHT':  // the spotted moonlet
         return s + '<circle cx="6" cy="6" r="3.2" class="pb" fill="#9aa0a8"/>' +
           '<circle cx="5" cy="5.1" r=".8" fill="rgba(28,28,38,.42)"/>' +
           '<circle cx="7.3" cy="7" r=".55" fill="rgba(28,28,38,.36)"/>' + e;
