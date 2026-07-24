@@ -1,0 +1,186 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   THE ORRERY — styles ported whole from studies/clock-study-orrery.html
+   (v22, owner-approved), Act I only, scoped under .orrery so nothing leaks
+   into the site's globals. Keyframes carry the orr- prefix.
+
+   The study's laws ride along: the clock face never theme-flips — the dark
+   bed #121215 is the law of the face; cream ink and cream planets, the sun
+   breathing THE 624 PULSE from coin-orange #f7931a to the 624 nm ember
+   #ff6600; GOLD is money and rides the HALVING alone; estimates wear the
+   ~ in cyan; "BITCOIN TIME" never splits. Reduced motion: the sun's
+   breath and the strain blink go still (steady opacity, no flashing) and
+   the pulse holds at the ember.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.orrery {
+  /* the study's palette, carried locally — the site's vars stay untouched */
+  --orr-ink: #f2ead8;
+  --orr-amber: #ffb347;
+  --orr-gold: #ffd700;
+  --orr-cyan: #6fd7e0;
+  --orr-mut: rgba(242, 234, 216, 0.58);
+  --orr-dim: rgba(242, 234, 216, 0.36);
+  --orr-line: rgba(242, 234, 216, 0.14);
+
+  width: 100%;
+  color: var(--orr-ink);
+  font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+.orrery .nb { white-space: nowrap; }
+.orrery .tilde { color: var(--orr-cyan); }
+
+/* ——— clock faces never theme-flip: the dark bed is the law of the face ——— */
+.orrery .face {
+  background: #121215;
+  color: #f2ead8;
+  border: 1px solid rgba(242, 234, 216, 0.14);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.orrery .orrerybox { padding: 6px; }
+.orrery .orr { display: block; width: 100%; height: auto; touch-action: manipulation; }
+.orrery .orr .ring { fill: none; stroke: rgba(242, 234, 216, 0.16); stroke-width: 1.25; }
+.orrery .orr .ring.hot { stroke: rgba(111, 215, 224, 0.55); }
+/* the orbit says its name — words riding the line, watch-dial style */
+.orrery .orr .ringlbl {
+  font-size: 6.8px;
+  letter-spacing: 0.18em;
+  fill: rgba(242, 234, 216, 0.55);
+  paint-order: stroke;
+  stroke: #121215;
+  stroke-width: 3px;
+}
+.orrery .orr .hit { fill: transparent; cursor: pointer; }
+.orrery .orr text { font-family: inherit; }
+.orrery .sunpulse { animation: orr-sunbreathe 6s ease-in-out infinite; }
+@keyframes orr-sunbreathe {
+  0%, 100% { opacity: 0.34; }
+  50% { opacity: 0.62; }
+}
+/* THE 624 PULSE — the sun breathes from the brand's coin-orange up to
+   the true 624 nm ember (vivid tangerine) and back: the signature beat */
+.orrery .sun624 { animation: orr-ember624 6s ease-in-out infinite; }
+@keyframes orr-ember624 {
+  0%, 100% { fill: #f7931a; }
+  50% { fill: #ff6600; }
+}
+/* past 600 s the face holds at :59 and visibly strains — never lies */
+.orrery .strain { animation: orr-strainblink 1.1s steps(2, end) infinite; }
+@keyframes orr-strainblink {
+  50% { opacity: 0.45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orrery .sunpulse { animation: none; opacity: 0.45; }
+  .orrery .strain { animation: none; opacity: 0.7; }
+  .orrery .sun624 { animation: none; fill: #ff6600; }
+}
+
+.orrery .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+/* the selector rides the left side; on small decks it wraps back below */
+.orrery .orrrow { display: flex; gap: 10px; align-items: flex-start; }
+.orrery .orrrow .face { flex: 1; min-width: 0; }
+.orrery .chips-side { flex-direction: column; flex-wrap: nowrap; margin-top: 0; flex: none; }
+.orrery .chips-side button { text-align: left; }
+@media (max-width: 640px) {
+  .orrery .orrrow { flex-direction: column; }
+  .orrery .chips-side { flex-direction: row; flex-wrap: wrap; order: 2; }
+}
+.orrery .chips button {
+  font: inherit;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  background: transparent;
+  color: var(--orr-mut);
+  border: 1px solid var(--orr-line);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.orrery .chips button:hover,
+.orrery .chips button.on { color: var(--orr-cyan); border-color: var(--orr-cyan); }
+.orrery .factcard {
+  margin-top: 10px;
+  min-height: 46px;
+  border: 1px solid var(--orr-line);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  color: var(--orr-ink);
+  display: flex;
+  align-items: center;
+}
+.orrery .factcard b { color: var(--orr-amber); font-weight: 600; }
+.orrery .factcard .g { color: var(--orr-gold); }
+.orrery .scrubrow { display: flex; gap: 10px; align-items: center; margin-top: 16px; }
+.orrery input[type="range"] {
+  flex: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 26px;
+  background: transparent;
+  cursor: pointer;
+}
+.orrery input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  background: var(--orr-line);
+  border-radius: 2px;
+}
+.orrery input[type="range"]::-moz-range-track {
+  height: 3px;
+  background: var(--orr-line);
+  border-radius: 2px;
+}
+.orrery input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--orr-amber);
+  margin-top: -6.5px;
+  border: none;
+}
+.orrery input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--orr-amber);
+  border: none;
+}
+.orrery button.act {
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  background: transparent;
+  color: var(--orr-amber);
+  border: 1px solid var(--orr-amber);
+  border-radius: 8px;
+  padding: 7px 16px;
+}
+.orrery button.act:hover { background: var(--orr-amber); color: #121215; }
+.orrery .readout {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--orr-mut);
+  letter-spacing: 0.06em;
+  min-height: 20px;
+}
+.orrery .typerow { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+.orrery .typerow label { font-size: 11px; letter-spacing: 0.2em; color: var(--orr-dim); }
+.orrery input[type="date"] {
+  font: inherit;
+  font-size: 14px;
+  background: transparent;
+  color: var(--orr-ink);
+  border: 1px solid var(--orr-line);
+  border-radius: 8px;
+  padding: 7px 10px;
+  color-scheme: dark;
+}
+.orrery .note { font-size: 12px; color: var(--orr-mut); }
