@@ -157,15 +157,20 @@ export interface BlockInfo {
   tipTimestamp: number | null;
 }
 
-export async function currentBlockInfo(): Promise<BlockInfo> {
+export async function currentBlockInfo(opts?: { fresh?: boolean }): Promise<BlockInfo> {
   const now = Date.now();
-  if (_tipCache && now - _tipCache.at < 60_000)
+  if (!opts?.fresh && _tipCache && now - _tipCache.at < 60_000)
     return { height: _tipCache.height, estimated: false, tipTimestamp: _tipCache.tipTimestamp };
 
   // the fleet's own door first — /api/chain/tip reads the configured node
   // (?full=1 adds the tip's own timestamp: the strip clock's seconds anchor)
+  // The 10 s deadline on every knock: a request left hanging across a laptop
+  // sleep or a network change must never out-live the reading that asked.
   try {
-    const res = await fetch("/api/chain/tip?full=1", { cache: "no-store" });
+    const res = await fetch("/api/chain/tip?full=1", {
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
     if (res.ok) {
       const d = await res.json();
       if (d?.ok && Number.isFinite(d.height) && d.height > 0) {
@@ -182,7 +187,10 @@ export async function currentBlockInfo(): Promise<BlockInfo> {
   // fallback: direct mempool.space read (relative fetch can't resolve
   // server-side, and the proxy may be down) — keeps the clock ticking
   try {
-    const res = await fetch("https://mempool.space/api/blocks/tip/height", { cache: "no-store" });
+    const res = await fetch("https://mempool.space/api/blocks/tip/height", {
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
     if (res.ok) {
       const h = parseInt((await res.text()).trim(), 10);
       if (Number.isFinite(h) && h > 0) {

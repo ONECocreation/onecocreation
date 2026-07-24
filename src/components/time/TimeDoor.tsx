@@ -48,7 +48,9 @@ export default function TimeDoor({ children }: { children?: ReactNode }) {
   useEffect(() => {
     let alive = true;
     const tick = () => {
-      fetch("/api/chain/tip?full=1", { cache: "no-store" })
+      /* the 10 s deadline: a request left hanging across a laptop sleep or
+         a network change must never out-live the poll that sent it */
+      fetch("/api/chain/tip?full=1", { cache: "no-store", signal: AbortSignal.timeout(10_000) })
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => {
           if (!alive) return;
@@ -85,14 +87,21 @@ export default function TimeDoor({ children }: { children?: ReactNode }) {
     };
     tick();
     const id = setInterval(tick, 30_000);
+    /* the wake law, all three doors: hidden tabs get their timers suspended —
+       re-knock the instant the page is looked at again (tab switch back,
+       bfcache restore, the network returning) */
     const onVisible = () => {
       if (!document.hidden) tick();
     };
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", onVisible);
+    window.addEventListener("online", onVisible);
     return () => {
       alive = false;
       clearInterval(id);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", onVisible);
+      window.removeEventListener("online", onVisible);
     };
   }, []);
 

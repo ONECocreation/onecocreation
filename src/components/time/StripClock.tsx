@@ -41,20 +41,33 @@ export default function StripClock() {
     tipTimestamp: number | null;
   } | null>(null);
 
-  /* the data plumbing — the MoonClock badge's, unchanged: poll each minute */
+  /* the data plumbing — the MoonClock badge's, plus THE WAKE LAW: hidden
+     tabs get their timers suspended, so the moment this strip is looked at
+     again (tab switch back, bfcache restore, the network returning) it
+     re-knocks IMMEDIATELY — fresh past the 60 s client cache — instead of
+     waiting out a stale interval. */
   useEffect(() => {
     let alive = true;
-    const tick = () => {
-      currentBlockInfo().then((i) => {
+    const tick = (fresh = false) => {
+      currentBlockInfo(fresh ? { fresh: true } : undefined).then((i) => {
         if (alive)
           setInfo({ height: i.height, estimated: i.estimated, tipTimestamp: i.tipTimestamp });
       });
     };
     tick();
-    const id = setInterval(tick, 60_000);
+    const id = setInterval(() => tick(), 60_000);
+    const wake = () => {
+      if (!document.hidden) tick(true);
+    };
+    document.addEventListener("visibilitychange", wake);
+    window.addEventListener("pageshow", wake);
+    window.addEventListener("online", wake);
     return () => {
       alive = false;
       clearInterval(id);
+      document.removeEventListener("visibilitychange", wake);
+      window.removeEventListener("pageshow", wake);
+      window.removeEventListener("online", wake);
     };
   }, []);
 

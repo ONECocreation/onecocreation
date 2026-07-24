@@ -263,17 +263,36 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
      tip holds for a missed knock, and only a second straight miss admits
      the honest ~. */
   const POLL_MS = 30000;
-  let inflight = false;                       // one knock at a time — a slow seam never stacks
+  /* THE UNWEDGE LAW (owner report, 0018.05.01: "the time is getting stuck,
+     i had to refresh it" — caught in the act by the stakeout): the old
+     `inflight` boolean was a one-way trap. A fetch with no timeout can hang
+     FOREVER (a request left half-open across a laptop sleep or a network
+     change never settles), `finally` never runs, and every later poll AND
+     every wake knock bounced off `if (inflight) return;` — the height froze
+     until a hard refresh. Two cures, both required:
+       1. every door knock carries a hard deadline (KNOCK_TIMEOUT_MS) so no
+          fetch can out-live the poll that sent it;
+       2. the guard is a TIMESTAMP, not a boolean — if a knock somehow still
+          out-stays two poll breaths, the next knock walks past the corpse
+          instead of waiting on it forever. */
+  const KNOCK_TIMEOUT_MS = 10000;             // per-door deadline, well inside the 30 s cadence
+  const INFLIGHT_STALE_MS = POLL_MS * 2;      // a knock older than this is presumed dead
+  let inflightAt = 0;                         // 0 = no knock out; else Date.now() it left
+  let knockSeq = 0;                           // stale knocks may not write state
   let misses = 0;                             // consecutive dark polls before the ~ takes over
   async function fetchTip() {
-    if (inflight) return;
-    inflight = true;
+    if (inflightAt && Date.now() - inflightAt < INFLIGHT_STALE_MS) return;
+    inflightAt = Date.now();
+    const myKnock = ++knockSeq;
     let got: { h: number; ts: number | null; src: 'ship' | 'arcade' } | null = null;
     try {
       for (const door of DOORS) {
         if (got) break;
         try {
-          const r = await fetch(door.url, { cache: 'no-store' });
+          const r = await fetch(door.url, {
+            cache: 'no-store',
+            signal: AbortSignal.timeout(KNOCK_TIMEOUT_MS),
+          });
           const j = r.ok ? await r.json() : null;
           if (j && j.ok && Number.isFinite(j.height))
             got = {
@@ -281,16 +300,21 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
               ts: Number.isFinite(j.tipTimestamp) ? j.tipTimestamp : null,
               src: door.src,
             };
-        } catch { /* this rung is dark — the next one carries */ }
+        } catch { /* this rung is dark (or timed out) — the next one carries */ }
       }
     } finally {
-      inflight = false;
+      if (myKnock === knockSeq) inflightAt = 0;
     }
-    if (destroyed) return;
+    if (destroyed || myKnock !== knockSeq) return;  // a newer knock owns the dial
     if (got) {
       misses = 0;
       if (got.h !== tip) tipSeen = Date.now();
-      tip = got.h; tipTs = got.ts; tipEstimated = false; tipSrc = got.src;
+      /* MINER-SKEW CLAMP (the strip clock's law, now here too): a tip
+         timestamp from the future would pin blockAge() at 0 and freeze the
+         seconds at :00 until the wall clock caught up — clamp to now. */
+      tip = got.h;
+      tipTs = got.ts != null ? Math.min(got.ts, Date.now() / 1000) : null;
+      tipEstimated = false; tipSrc = got.src;
       liveAnchor = [tip, tipTs ? tipTs * 1000 : tipSeen];
     } else if (tipEstimated || ++misses >= 2) {
       /* truly dark (or never lit): the genesis-anchored model carries, ~ */
@@ -712,10 +736,13 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
   let destroyed = false;
   let rafId = 0;
   let reducedInterval: ReturnType<typeof setInterval> | undefined;
+  let watchdogId: ReturnType<typeof setInterval> | undefined;
   let lastText = 0;
+  let lastFrameAt = Date.now();               // the watchdog's pulse — every frame stamps it
   if (!RM) {
     const tick = () => {
       if (destroyed) return;
+      lastFrameAt = Date.now();
       if (mode === 'live') {
         renderOrrery(false);
         if (Date.now() - lastText > 1000) { lastText = Date.now(); renderFact(); renderRead(); }
@@ -723,6 +750,20 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
+    /* THE WATCHDOG (belt to the unwedge law's braces): if the page says it
+       is VISIBLE but no animation frame has landed for >5 s, the rAF loop
+       is dead (a throttled/soft-frozen tab that never fired visibilitychange
+       on wake, or a cancelled chain) — re-arm it and repaint in place. Never
+       fires on a hidden tab: browsers pause rAF there by design. */
+    watchdogId = setInterval(() => {
+      if (destroyed || document.visibilityState !== 'visible') return;
+      if (Date.now() - lastFrameAt > 5000) {
+        cancelAnimationFrame(rafId);
+        lastFrameAt = Date.now();
+        rafId = requestAnimationFrame(tick);
+        if (mode === 'live') { renderOrrery(); renderRead(); }
+      }
+    }, 2500);
   } else {
     /* reduced motion: no animation frames — but a clock still tells time.
        once a second the face, velocity and true positions refresh in place. */
@@ -748,6 +789,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     ac.abort();
     cancelAnimationFrame(rafId);
     if (reducedInterval) clearInterval(reducedInterval);
+    if (watchdogId) clearInterval(watchdogId);
     clearInterval(pollId);
   }
 
