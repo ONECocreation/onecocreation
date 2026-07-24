@@ -1,0 +1,236 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   THE STRIP CLOCK — the pupil study's flip clock flattened into the
+   under-menu telemetry strip. Styles ported from living-clock.css (itself
+   the study, studies/clock-study-pupil.html) at strip scale, scoped under
+   .sclk; keyframes carry the sclk- prefix so nothing collides.
+
+   The study's never-laws ride along: the study skin only on the face —
+   dark bed, cream digits, bitcoin-orange #F7931A warmth; the ONLY gold is
+   the ₿ prize; frightened fiat teal-mint (never gold, never orange); no
+   red/pink chrome; nothing flashes more than 3×/sec; reduced motion →
+   everything steady and visible, flips become crossfades.
+
+   The pellet ember holds the static mid-breath glow (no per-frame filter
+   writes) because this strip rides every page.
+
+   FRENS.EARTH FRAME (fleet law): the brand shows ONLY in the strip's
+   frame/accent — the night-garden edge and the sprout-neon hover glow —
+   the clock face itself stays the study's, untouched.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.sclk {
+  display: block;
+  text-decoration: none;
+  font-family: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, "SF Mono", Menlo, monospace;
+  color: #e8e2d8;
+}
+.sclk:hover { color: #e8e2d8; }
+
+/* the flat rectangle — the study card's bed, squeezed */
+.sclk-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 26px 14px;
+  border-radius: 14px;
+  background: linear-gradient(165deg, #14111a 0%, #0e0c12 55%, #0b0d0c 100%);
+  border: 1px solid rgba(47, 64, 51, 0.9); /* the night-garden edge */
+  box-shadow: 0 0 0 1px rgba(94, 247, 138, 0.07), 0 10px 26px rgba(0, 0, 0, 0.55);
+  transition: box-shadow 0.3s ease;
+  max-width: min(400px, calc(100vw - 2rem));
+}
+.sclk:hover .sclk-card,
+.sclk:focus-visible .sclk-card {
+  /* the sprout-neon glow — frens.earth's "alive" accent, frame only */
+  box-shadow: 0 0 0 1px rgba(94, 247, 138, 0.25), 0 0 14px rgba(94, 247, 138, 0.22), 0 10px 26px rgba(0, 0, 0, 0.55);
+}
+.sclk:focus-visible { outline: none; }
+
+/* ——— the perimeter PAC ring ——— */
+.sclk-peri {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.sclk-track { fill: none; stroke: none; } /* path kept for getPointAtLength */
+.sclk-pix { fill: #f7931a; }
+.sclk-pix.front { fill: #ffd9a0; }
+/* the 624 ember, held at the study's mid-breath (a static glow — this strip
+   rides every page; the full colour breath lives on /time) */
+.sclk-dots { filter: drop-shadow(0 0 4.5px rgb(251, 124, 13)) brightness(1.2); }
+.sclk-pac {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 0 4px rgba(247, 147, 26, 0.6));
+}
+/* estimate mode — the honest analog ~: the ring & Pac admit they're guessing */
+.sclk.est .sclk-pac { opacity: 0.5; filter: none; }
+.sclk.est .sclk-prize { opacity: 0.55; }
+
+/* ——— the fiat ghosts (tricolor teal, the currency IS the face) ——— */
+.sclk-ghost .sclk-glayer rect { shape-rendering: crispEdges; }
+.sclk-ginner { transform-box: fill-box; transform-origin: center; will-change: opacity; }
+.sclk-glayer-lime rect { fill: #5fe6d2; }
+.sclk-glayer-core rect { fill: #45c6b4; }
+.sclk-glayer-deep rect { fill: #1d8b79; }
+.sclk-glayer-lime { opacity: 0.55; animation: sclk-shimmer-lime 4.2s ease-in-out infinite; }
+.sclk-glayer-core { opacity: 0.96; animation: sclk-shimmer-core 4.2s ease-in-out infinite; }
+.sclk-glayer-deep { opacity: 0.58; animation: sclk-shimmer-deep 4.2s ease-in-out infinite; }
+/* desync the ghosts so they don't shimmer in lockstep */
+.sclk-ghost:nth-child(2) .sclk-glayer { animation-delay: -1.4s; }
+.sclk-ghost:nth-child(3) .sclk-glayer { animation-delay: -2.8s; }
+.sclk-ghost:nth-child(4) .sclk-glayer { animation-delay: -0.7s; }
+.sclk-ghost:nth-child(5) .sclk-glayer { animation-delay: -3.5s; }
+.sclk-ghost:nth-child(6) .sclk-glayer { animation-delay: -2.1s; }
+.sclk-ghost:nth-child(7) .sclk-glayer { animation-delay: -1.0s; }
+.sclk-ghost:nth-child(8) .sclk-glayer { animation-delay: -3.2s; }
+.sclk-ghost:nth-child(9) .sclk-glayer { animation-delay: -1.8s; }
+.sclk-ghost:nth-child(10) .sclk-glayer { animation-delay: -2.5s; }
+.sclk-ghost:nth-child(11) .sclk-glayer { animation-delay: -3.9s; }
+@keyframes sclk-shimmer-lime { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.7; } }
+@keyframes sclk-shimmer-core { 0%, 100% { opacity: 0.97; } 50% { opacity: 0.86; } }
+@keyframes sclk-shimmer-deep { 0%, 100% { opacity: 0.72; } 50% { opacity: 0.44; } }
+/* FRIGHTENED — the calm slow blink; EATEN — gone, animations killed (perf) */
+.sclk-ghost .sclk-ginner { animation: sclk-blink-slow 1.7s ease-in-out infinite; }
+.sclk-ghost.eaten { opacity: 0; }
+.sclk-ghost.eaten .sclk-glayer,
+.sclk-ghost.eaten .sclk-ginner { animation: none !important; }
+@keyframes sclk-blink-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+.sclk-glyph {
+  fill: #fdfdff;
+  stroke: #14101c;
+  stroke-width: 0.6;
+  paint-order: stroke;
+  font: 700 7px ui-monospace, Consolas, monospace;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* ——— the prize at the origin: fruit ladder / the static-safe gold ₿ ——— */
+.sclk-fruit-plate {
+  fill: #0e0c12;
+  stroke: rgba(247, 147, 26, 0.35);
+  stroke-width: 1;
+}
+.sclk-fruit {
+  font: 9px ui-monospace, Consolas, monospace;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.sclk-coin-back { fill: #f3b40c; filter: drop-shadow(0 0 4px rgba(247, 201, 72, 0.85)); }
+.sclk-coin-b {
+  fill: #4a3405;
+  font: 700 7px ui-monospace, Consolas, monospace;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* ——— the flip cards: hh:mm:ss, the study's split-flap, shrunk ——— */
+.sclk-clock {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 21px;
+}
+.sclk .flip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.76em;
+  height: 1.16em;
+  border-radius: 4px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #2a2a2e 0%, #1c1c20 49.5%, #121216 50.5%, #08080a 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), inset 0 1px 3px rgba(255, 255, 255, 0.04), 0 2px 5px rgba(0, 0, 0, 0.5);
+  perspective: 340px;
+}
+.sclk .flip .flip-val {
+  display: block;
+  font-weight: 600;
+  line-height: 1;
+  color: #f2f0ea;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+  transform-origin: center center;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+.sclk .flip::after {
+  /* the mechanical hinge line across the middle */
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  z-index: 3;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.62);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.sclk .flip.flipping .flip-val { animation: sclk-flap 0.55s cubic-bezier(0.32, 0.72, 0.35, 1.12); }
+@keyframes sclk-flap {
+  0% { transform: rotateX(-88deg); filter: brightness(0.42); }
+  55% { transform: rotateX(12deg); filter: brightness(1.15); }
+  100% { transform: rotateX(0deg); filter: brightness(1); }
+}
+@keyframes sclk-fadeflap { from { opacity: 0.15; } to { opacity: 1; } }
+.sclk .flip-colon { color: #f2f0ea; font-weight: 600; opacity: 0.92; padding: 0 1px; }
+/* the LIVE seconds card wears the honest ~ (sub-block time is an estimate) */
+.sclk .flip.live .flip-est {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  z-index: 4;
+  font-size: 0.3em;
+  line-height: 1;
+  color: rgba(247, 147, 26, 0.9);
+  pointer-events: none;
+}
+
+/* ——— the facts INSIDE the card: height + the date line ——— */
+.sclk-facts {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  white-space: nowrap;
+}
+.sclk-height {
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #8a7f6a;
+}
+.sclk-height b {
+  color: rgba(247, 147, 26, 0.9);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1em;
+}
+.sclk-date { font-size: 10px; letter-spacing: 0.18em; color: #b9b2c6; }
+.sclk-date .sclk-ab { color: rgba(247, 147, 26, 0.8); letter-spacing: 0.05em; }
+.sclk-oldcal { font-size: 7.5px; letter-spacing: 0.22em; text-transform: uppercase; color: #6d6684; }
+
+/* narrow phones: the old-cal line yields first, then the clock shrinks */
+@media (max-width: 480px) {
+  .sclk-card { gap: 10px; padding: 13px 20px 12px; }
+  .sclk-clock { font-size: 18px; }
+  .sclk-oldcal { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* everything holds steady & visible: flips become a plain crossfade, the
+     ghosts hold colour/state, the seconds still tell the time */
+  .sclk .flip.flipping .flip-val { animation: sclk-fadeflap 0.4s ease; }
+  .sclk-glayer { animation: none !important; }
+  .sclk-ghost .sclk-ginner { animation: none !important; }
+}

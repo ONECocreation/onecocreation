@@ -27,7 +27,8 @@ export async function serverBlockInfo(): Promise<BlockInfo> {
         });
         if (res.ok) {
           const h = parseInt((await res.text()).trim(), 10);
-          if (Number.isFinite(h) && h > 0) return { height: h, estimated: false };
+          if (Number.isFinite(h) && h > 0)
+            return { height: h, estimated: false, tipTimestamp: null }; // bare-height read — no chain stamp here
         }
       } catch {
         /* this base is dark — try the next */
@@ -36,5 +37,5 @@ export async function serverBlockInfo(): Promise<BlockInfo> {
   } catch {
     /* node config unavailable — fall through to the honest estimate */
   }
-  return { height: estimateHeight(), estimated: true };
+  return { height: estimateHeight(), estimated: true, tipTimestamp: null };
 }

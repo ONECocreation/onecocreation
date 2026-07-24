@@ -58,23 +58,26 @@ const beatOf = (h: number) => ((h % 144) + 144) % 144; // block-in-day, 0..143
    block 983,664 lands at BFT pulse 00:00 — bitcoin-midnight, 0018.10.28 a₿,
    ~7 Jan 2027 old-cal, around the day bitcoin turns 18. */
 const GO_TARGET_HEIGHT = 983664;
-const BLOCK_MS = 600000; // ~10 minutes per block
+export const BLOCK_MS = 600000; // ~10 minutes per block
 
 /* THE RING CLOCK GRID — 12 hour positions; the reward coin holds hour 12
-   (path fraction 0, the top); the fiat ghosts take hours 1–11. */
+   (path fraction 0, the top); the fiat ghosts take hours 1–11.
+   These study constants (and strainOf/jit below) are EXPORTED so the strip
+   clock (strip-clock-engine.ts) reuses them verbatim — one source of law,
+   never re-ported. */
 const RING_SLOTS = 12;
-const FIAT_SETS = [
+export const FIAT_SETS = [
   ["$", "€", "¥", "£", "₹", "₽", "₩", "₺", "₪", "₫", "₦"],
   ["€", "₹", "₽", "₩", "$", "£", "¥", "Fr", "kr", "zł", "₴"],
   ["£", "₩", "₺", "₪", "₫", "₦", "R$", "R", "$", "€", "¥"],
 ];
-const GHOST_BMP = [
+export const GHOST_BMP = [
   "00011111000", "00111111100", "01111111110", "11111111111", "11111111111",
   "11111111111", "11111111111", "11111111111", "11111111111", "11111111111", "11011011011",
 ];
 /* THE FRUIT LADDER — laps 1–9's prizes at 12 o'clock; the 10th is the ₿.
    TRUE classic arcade points ride the tooltips (cherry 100 → key 5000). */
-const FRUITS = ["🍒", "🍓", "🍊", "🥨", "🍎", "🍈", "👾", "🔔", "🗝️"];
+export const FRUITS = ["🍒", "🍓", "🍊", "🥨", "🍎", "🍈", "👾", "🔔", "🗝️"];
 const FRUIT_NAMES = [
   "Cherry · 100", "Strawberry · 300", "Orange · 500", "Pretzel · 700",
   "Apple · 700", "Melon · 1000", "Galaxian · 2000", "Bell · 3000",
@@ -82,20 +85,20 @@ const FRUIT_NAMES = [
 ];
 const GEOM = { dotSize: 7, dotSpacing: 14, pacR: 9, fiatScale: 1.4 };
 /* the 11 clock-hours 1–11 (hour 12 = fraction 0 = the coin) */
-const FIAT_CARDINALS = Array.from({ length: RING_SLOTS - 1 }, (_, i) => (i + 1) / RING_SLOTS);
+export const FIAT_CARDINALS = Array.from({ length: RING_SLOTS - 1 }, (_, i) => (i + 1) / RING_SLOTS);
 /* shared mouth-TOUCH lookahead (lap fraction) — a ghost is EATEN the instant
    Pac's mouth reaches it (the study's balanced value) */
-const FIAT_EAT = 0.016;
+export const FIAT_EAT = 0.016;
 
 /* ═══ THE STRAIN MAP — driven by REAL block age, never a fake easing curve ═══ */
-function strainOf(ageSec: number) {
+export function strainOf(ageSec: number) {
   const glow = Math.min(1, Math.pow(Math.max(0, ageSec) / 1500, 0.85));
   let amp = 0;
   if (ageSec > 300) amp = Math.min(0.25, ((ageSec - 300) / 300) * 0.25);
   if (ageSec > 600) amp = 0.25 + Math.min(1.35, Math.pow((ageSec - 600) / 240, 1.4) * 0.25);
   return { glow, amp };
 }
-const jit = (t: number, s: number) =>
+export const jit = (t: number, s: number) =>
   Math.sin(t * 13.7 + s * 5.1) * 0.6 + Math.sin(t * 7.3 + s * 9.2) * 0.3 + Math.sin(t * 29.1 + s * 2.7) * 0.1;
 
 /* ═══ THE 624 EMBER — colour intensity only, never a wobble ═══ */
