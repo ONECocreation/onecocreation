@@ -6,10 +6,12 @@ import "./orrery.css";
 
 /**
  * THE ORRERY — Act I of the orrery study (studies/clock-study-orrery.html,
- * v23, owner-approved), ported whole: the twelve orbit rings around the
- * pulsing 624-ember sun (THE LIGHT), the chips column riding the dial's
+ * v24, owner-approved), ported whole: the twelve orbit rings around the
+ * pulsing 624-ember sun (THE LIGHT), the 13 sign names curved on the rim,
+ * THE WANDERERS' sky band (the real planets at ~mean longitude), the
+ * planet-dot chips column riding the dial's
  * left (wrapping back below on small decks), the fact card, the scrub +
- * NOW, the SET THE CLOCK date picker and the ✶ HOUSES toggle. The
+ * NOW, the SET THE CLOCK date picker and the ✶ HOUSES / ☿ PLANETS toggles. The
  * spirograph, the tape and the star birth facts stay in the study (owner
  * ruling: "only ship the part 1 — the 1a, 2 and 3 sections are still
  * under development").

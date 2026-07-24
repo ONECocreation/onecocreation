@@ -1,7 +1,7 @@
 /**
  * THE ORRERY engine — Act I of the orrery study, ported whole.
  *
- * Source of truth: studies/clock-study-orrery.html (v23, owner-approved).
+ * Source of truth: studies/clock-study-orrery.html (v24, owner-approved).
  * This file is the study's own JS — the block math, the anchor table, the
  * twelve rings, the sun, the moon, the houses, the scrub/NOW/date-picker
  * wiring — adapted to the ship: the DOM skeleton is rendered by Orrery.tsx
@@ -42,6 +42,22 @@
  *  - scrub 0→6,930,000 + NOW; SET THE CLOCK takes ANY date — pre-genesis
  *    reads negative (b₿, blocks before genesis); reduced motion = a 1 s
  *    in-place refresh, no rAF.
+ *
+ * v24, layered on top:
+ *  - every fact card counts its lap in BLOCKS;
+ *  - the 13 sign NAMES ride the rim in small curved text under their
+ *    glyphs (two textPath tracks, CW upper / CCW lower so all read
+ *    upright — they live in the zodiac group: ✶ HOUSES douses them);
+ *  - THE WANDERERS — the real planets at ~mean ecliptic longitude (J2000
+ *    elements) on a dashed sky band between GENERATION and LAST SAT,
+ *    tiny true-color bodies + symbol glyphs + lap-in-blocks tooltips,
+ *    behind the ☿ PLANETS chip (lit by default); the sky rides the clock
+ *    (scrub / date picker move it), tooltips recut only on house change;
+ *  - the selector chips wear the study's deterministic little planet
+ *    dots (.pdot art) inside this ship's collapsible planet-dot column:
+ *    collapsed dots ARE the planet art, expanded chips show dot + name;
+ *  - the study's data-sel scoping law: renderFact's chip sweep touches
+ *    only data-sel chips, so the HOUSES/PLANETS toggles keep their light.
  */
 
 export interface OrreryEngine {
@@ -110,6 +126,34 @@ const ZOD13: Array<[string, string]> = [['♑', 'Capricorn'], ['♒', 'Aquarius'
    in month 1. MONTH SEAT LAW: month N of 13 sits in the Nth house, same
    reading as the bitcoin-birthday page. Ophiuchus keeps his true seat. */
 const houseOf = (frac: number) => ZOD13[Math.floor(((frac % 1) + 1) % 1 * 13) % 13];
+
+/* ——— THE WANDERERS (experiment layer): the real planets of our solar
+   system, placed at their MEAN ecliptic longitudes — J2000 elements
+   (L0 at epoch 2000-01-01 12:00 UTC, mean motion n °/day). This is
+   wonder-grade (~), NOT an ephemeris: no equation of center, so true
+   positions can differ by a few degrees (Mars up to ~10°). Dial law:
+   0° longitude sits at the START of the ARIES sector — sector 4 of the
+   Capricorn-first dial, i.e. 3/13 of the circle past the top — and
+   longitude increases CLOCKWISE, matching the dial's own direction.
+   Laps quoted in blocks at ~10 min each. ☿ PLANETS lights and douses. */
+const J2000 = Date.UTC(2000, 0, 1, 12), SKY_R = 246;
+interface Wanderer { sym: string; name: string; L0: number; n: number; note?: string; lap: string }
+const WANDER: Wanderer[] = [
+  { sym: '☿', name: 'MERCURY', L0: 252.25, n: 4.09233,
+    lap: '≈ 12,672 blocks (~88 days)' },
+  { sym: '♀', name: 'VENUS', L0: 181.98, n: 1.60213,
+    lap: '≈ 32,400 blocks (~225 days)' },
+  { sym: '🜨', name: 'EARTH', L0: 100.46, n: 0.98565, note: 'we ride this one, fren',
+    lap: '≈ 52,596 blocks (~365.25 days — one bitcoin year + ~180 blocks: the calendar’s solar drift, made visible)' },
+  { sym: '♂', name: 'MARS', L0: 355.43, n: 0.52403,
+    lap: '≈ 98,928 blocks (~687 days)' },
+  { sym: '♃', name: 'JUPITER', L0: 34.35, n: 0.08309,
+    lap: '≈ 624,000 blocks (~11.86 years — almost exactly three halvings)' },
+  { sym: '♄', name: 'SATURN', L0: 50.08, n: 0.03346,
+    lap: '≈ 1,550,000 blocks (~29.5 years — about 1¼ generations)' },
+];
+const wanderFrac = (w: Wanderer, ms: number) =>
+  pmod(3 / 13 + pmod(w.L0 + w.n * ((ms - J2000) / 86400000), 360) / 360, 1);
 
 /* ——— subsidy of a halving epoch: integer sats, floored, as the protocol floors ——— */
 const subsidySats = (ep: number) => ep >= 33 ? 0 : Math.floor(5e9 / 2 ** ep);
@@ -354,13 +398,13 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
   const RINGS: RingDef[] = [
     { key: 'SECOND', p: 60, r: 62, pr: 4.5, c: CREAM,
       fr: (H, a) => (capA(a) % 60) / 60,
-      f: (H, a) => `<b>60 seconds</b> · one lap a minute · :${faceTime(H, a).ss}` },
+      f: (H, a) => `<b>60 seconds — 1/10 block</b> · one lap a minute · :${faceTime(H, a).ss}` },
     { key: 'MINUTE', p: 6, r: 80, pr: 4.5, c: CREAM,
       fr: (H, a) => (((bidOf(H) % 6) * 600 + capA(a)) % 3600) / 3600,
-      f: (H, a) => { const t = faceTime(H, a); return `<b>60 minutes</b> · one lap an hour · ${t.hh}:${t.mm}`; } },
+      f: (H, a) => { const t = faceTime(H, a); return `<b>60 minutes · 6 blocks</b> · one lap an hour · ${t.hh}:${t.mm}`; } },
     { key: 'HOUR', p: DAY, r: 98, pr: 5, c: CREAM, ticks: 24,
       fr: (H, a) => ((bidOf(H) * 600 + capA(a)) % 86400) / 86400,
-      f: (H, a) => { const t = faceTime(H, a); return `<b>24 hours</b> · one lap fills the day · ${t.hh}:${t.mm}:${t.ss}`; } },
+      f: (H, a) => { const t = faceTime(H, a); return `<b>24 hours · 144 blocks</b> · one lap fills the day · ${t.hh}:${t.mm}:${t.ss}`; } },
     /* BLOCK counts the way the Admiral reads it: block x of 144, one lap
        fills the day, full at the top — the day's 24 hour-marks on the rim */
     { key: 'BLOCK', p: DAY, r: 115, pr: 5.5, c: CREAM, ticks: 24,
@@ -372,13 +416,13 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
        YEAR wears bitcoin's age and laps the 13-year animal wheel. */
     { key: 'DAY', p: MONTH, r: 132, pr: 5, c: CREAM, ticks: 28,
       fr: H => pmod(H, MONTH) / MONTH,
-      f: H => `<b>28 days</b> · one lap fills the month · day ${Math.floor(pmod(H, MONTH) / DAY) + 1} of 28 · full at the top` },
+      f: H => `<b>28 days · 4,032 blocks</b> · one lap fills the month · day ${Math.floor(pmod(H, MONTH) / DAY) + 1} of 28 · full at the top` },
     { key: 'DIFFICULTY', p: DIFF, r: 149, pr: 5, c: CREAM,
       f: H => `<b>2,016 blocks</b> · the network re-tunes · ${pct(H, DIFF)} through` },
     { key: 'MONTH', p: YEAR, r: 166, pr: 5, c: CREAM, ticks: 13,
       fr: H => pmod(H, YEAR) / YEAR,
       f: H => { const h = houseOf(pmod(H, YEAR) / YEAR);
-        return `<b>13 months</b> · one lap fills the year · month ${Math.floor(pmod(H, YEAR) / MONTH) + 1} of 13 · in the house of ${h[0]} ${h[1]}`; } },
+        return `<b>13 months · 52,416 blocks</b> · one lap fills the year · month ${Math.floor(pmod(H, YEAR) / MONTH) + 1} of 13 · in the house of ${h[0]} ${h[1]}`; } },
     { key: 'MOON', p: 4252, r: 183, pr: 6, c: CREAM, moon: true,
       fr: H => moonFracAt(mode === 'live' ? Date.now() : h2ms(H)),
       f: H => { const t = mode === 'live' ? Date.now() : h2ms(H); const m = moonAt(t); const h = houseOf(moonFracAt(t));
@@ -386,7 +430,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     { key: 'YEAR', p: YEAR * 13, r: 200, pr: 5.5, c: CREAM, ticks: 13,
       fr: H => (pmod(Math.floor(H / YEAR), 13) + pmod(H, YEAR) / YEAR) / 13,
       f: H => { const bd = bftDate(H), an = yearAnimal(bd);
-        return `<b>year ${bd.y} — bitcoin's age</b> · one lap = the 13-year animal wheel · ${an[0]} ${an[1]}`; } },
+        return `<b>year ${bd.y} — bitcoin's age</b> · one lap = the 13-year animal wheel · 681,408 blocks · ${an[0]} ${an[1]}`; } },
     /* the gold planet counts halvings-so-far; its lap is the ~4-year epoch,
        and the NEXT halving lands at the top — the counting law, in gold */
     { key: 'HALVING', p: HALV, r: 217, pr: 6, c: CREAM, ticks: 4,
@@ -419,7 +463,8 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
   let wedgeIdx = -1;
   let sunLbl: SVGTextElement, sunTime: SVGTextElement, sunDate: SVGTextElement,
     sunVel: SVGTextElement, zodiacG: SVGGElement, sunTT: SVGTitleElement,
-    houseWedge: SVGPathElement;
+    houseWedge: SVGPathElement, skyG: SVGGElement;
+  const wanderers: { g: SVGGElement; tt: SVGTitleElement; w: Wanderer; hi: number }[] = [];
   while (orr.firstChild) orr.removeChild(orr.firstChild); // idempotent (strict-mode remount)
   {
     /* the gravity well — the sun's pull, fading out through the rings,
@@ -429,7 +474,8 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       '<stop offset="0%" stop-color="#ff6600" stop-opacity=".17"/>' +
       '<stop offset="35%" stop-color="#ff6600" stop-opacity=".05"/>' +
       '<stop offset="100%" stop-color="#ff6600" stop-opacity="0"/></radialGradient>' +
-      '<clipPath id="' + uid + '-mcl"><circle r="6"/></clipPath>';
+      '<clipPath id="' + uid + '-mcl"><circle r="6"/></clipPath>' +
+      '<clipPath id="' + uid + '-jcl"><circle r="6"/></clipPath>';
     orr.appendChild(defs);
     orr.appendChild(el('circle', { r: 285, fill: 'url(#' + uid + '-gw)' }));
     /* THE 13 HOUSES — faint spokes from the sun's edge to beyond the last
@@ -440,6 +486,14 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
        pie slice (and its boundaries) reads at a glance */
     houseWedge = el('path', { fill: 'rgba(255,102,0,.055)', stroke: 'rgba(242,234,216,.10)', 'stroke-width': 1 }) as SVGPathElement;
     zodiacG.appendChild(houseWedge);
+    /* the sign NAMES arc on the rim under their glyphs, above the outermost
+       ring line — watch-dial law: two invisible circle tracks, one clockwise
+       for the upper rim, one counter-clockwise for the lower rim so every
+       name reads upright. Both live in zodiacG: ✶ HOUSES douses them too. */
+    const nameTrack = (id: string, r: number, sweep: number) => el('path', { id, fill: 'none',
+      d: 'M ' + r + ' 0 A ' + r + ' ' + r + ' 0 1 ' + sweep + ' -' + r + ' 0 A ' + r + ' ' + r + ' 0 1 ' + sweep + ' ' + r + ' 0' });
+    zodiacG.appendChild(nameTrack(uid + '-znT', 264, 1));    // upper rim — text body arcs outward
+    zodiacG.appendChild(nameTrack(uid + '-znB', 270.5, 0));  // lower rim — text body arcs inward
     for (let k = 0; k < 13; k++) {
       const ba = k / 13 * 2 * Math.PI - Math.PI / 2;              // sector boundary
       zodiacG.appendChild(el('line', {
@@ -455,6 +509,21 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       gt.textContent = ZOD13[k][1] + ' — house ' + (k + 1) + ' of 13 · month ' + String(k + 1).padStart(2, '0') + '’s seat';
       gl.appendChild(gt);
       zodiacG.appendChild(gl);
+      /* the name, curved under the glyph — flip to the CCW track when the
+         sector center rides the lower rim, so the word stays upright */
+      const low = Math.sin(ca) > 0;
+      const off = (pmod(low ? -ca : ca, 2 * Math.PI) / (2 * Math.PI) * 100).toFixed(2) + '%';
+      const nm = el('text', { class: 'rimname', 'text-anchor': 'middle' });
+      const ntp = el('textPath', { startOffset: off });
+      const track = '#' + uid + (low ? '-znB' : '-znT');
+      ntp.setAttribute('href', track);
+      ntp.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', track);
+      ntp.textContent = ZOD13[k][1].toUpperCase();
+      nm.appendChild(ntp);
+      const nt = el('title', {});
+      nt.textContent = ZOD13[k][1] + ' — house ' + (k + 1) + ' of 13 · month ' + String(k + 1).padStart(2, '0') + '’s seat';
+      nm.appendChild(nt);
+      zodiacG.appendChild(nm);
     }
     orr.appendChild(zodiacG);
     RINGS.forEach((rg, i) => {
@@ -515,6 +584,46 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       orr.appendChild(pl); orr.appendChild(hit);
       planets.push({ pl, lit, num, hit, ring, rg, fillA, remA, dot, tt });
     });
+    /* THE WANDERERS' SKY BAND — one faint dashed circle between GENERATION
+       and LAST SAT; the six classical planets ride it at ~mean longitude.
+       Tiny true-color bodies: lawful house-art, the one place the study
+       wears the planets' own colors. */
+    skyG = el('g', {}) as SVGGElement;
+    skyG.appendChild(el('circle', { r: SKY_R, fill: 'none', stroke: 'rgba(242,234,216,.10)',
+      'stroke-width': 1, 'stroke-dasharray': '2 6' }));
+    WANDER.forEach(w => {
+      const g = el('g', {}) as SVGGElement;
+      if (w.name === 'MERCURY') {
+        g.appendChild(el('circle', { r: 3, fill: '#a8a49c' }));
+      } else if (w.name === 'VENUS') {
+        g.appendChild(el('circle', { r: 4, fill: '#e2cf9a' }));
+      } else if (w.name === 'EARTH') {
+        g.appendChild(el('circle', { r: 4, fill: '#6fa0ad' }));
+        g.appendChild(el('circle', { cx: -1.1, cy: .6, r: 1.6, fill: 'rgba(140,180,120,.7)' }));
+      } else if (w.name === 'MARS') {
+        g.appendChild(el('circle', { r: 3.5, fill: '#b06a48' }));
+      } else if (w.name === 'JUPITER') {
+        g.appendChild(el('circle', { r: 6, fill: '#cdb08a' }));
+        const bands = el('g', { 'clip-path': 'url(#' + uid + '-jcl)' });
+        bands.appendChild(el('rect', { x: -6, y: -2.6, width: 12, height: 1.5, fill: '#a5825f' }));
+        bands.appendChild(el('rect', { x: -6, y: .8, width: 12, height: 1.8, fill: '#a5825f' }));
+        g.appendChild(bands);
+      } else if (w.name === 'SATURN') {
+        g.appendChild(el('circle', { r: 5, fill: '#d6c290' }));
+        g.appendChild(el('ellipse', { rx: 9, ry: 2.6, fill: 'none', stroke: '#b3a077',
+          'stroke-width': 1, transform: 'rotate(-18)' }));
+      }
+      const sy = el('text', { y: -11, 'text-anchor': 'middle', 'font-size': 7,
+        fill: 'rgba(242,234,216,.55)' });
+      sy.textContent = w.sym + '︎';   // text presentation — ♀♂ go emoji otherwise
+      g.appendChild(sy);
+      const hov = el('circle', { r: 12, fill: 'transparent' });
+      const wtt = el('title', {}) as SVGTitleElement;
+      hov.appendChild(wtt); g.appendChild(hov);
+      skyG.appendChild(g);
+      wanderers.push({ g, tt: wtt, w, hi: -1 });
+    });
+    orr.appendChild(skyG);
     /* the sun: TIME CLOSEST TO THE HEART — hh:mm:ss beating at the center,
        the height beneath it as the sun's velocity (one block of speed every
        ~10 min), the planets held in the well of its pull. The sun wears the
@@ -571,11 +680,29 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
         }
       }
     });
+    renderWander(H);
     renderSun(H);
     /* shade the month's current house wedge (recut only when it moves) */
     const wk = Math.floor(pmod(H, YEAR) / MONTH) % 13;
     if (wk !== wedgeIdx) { wedgeIdx = wk; houseWedge.setAttribute('d', wedgePath(wk)); }
     if (withText !== false) renderFact(H);
+  }
+  /* the wanderers ride the clock: scrub or pick a date and the sky follows.
+     Position every frame; the tooltip recuts only when the house changes. */
+  function renderWander(H: number) {
+    const ms = mode === 'live' ? Date.now() : h2ms(H);
+    wanderers.forEach(o => {
+      const f = wanderFrac(o.w, ms), a = f * 2 * Math.PI - Math.PI / 2;
+      o.g.setAttribute('transform',
+        'translate(' + (SKY_R * Math.cos(a)).toFixed(2) + ' ' + (SKY_R * Math.sin(a)).toFixed(2) + ')');
+      const hk = Math.floor(pmod(f, 1) * 13) % 13;
+      if (hk !== o.hi) {
+        o.hi = hk;
+        const h = ZOD13[hk];
+        o.tt.textContent = o.w.sym + ' ' + o.w.name + (o.w.note ? ' — ' + o.w.note : '') +
+          ' · lap ' + o.w.lap + ' · in the house of ' + h[0] + ' ' + h[1] + ' · ~mean longitude';
+      }
+    });
   }
   function wedgePath(k: number) {
     const a0 = k / 13 * 2 * Math.PI - Math.PI / 2, a1 = (k + 1) / 13 * 2 * Math.PI - Math.PI / 2;
@@ -608,10 +735,12 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       : (() => { const o = planets[sel as number], age2 = mode === 'live' ? blockAge() : 0;
           const frac = o.rg!.arc ? Math.min(Math.max(H!, 0) / LAST, 1) : o.rg!.fr ? pmod(o.rg!.fr(H!, age2), 1) : pmod(H!, o.rg!.p) / o.rg!.p;
           return `<span>${RINGS[sel as number].f(H!, age2)} · <span class="tilde">${(100 - frac * 100).toFixed(frac > .99 ? 1 : 0)}% to go</span></span>`; })();
-    /* only the RING chips carry the selection — the ✶ HOUSES toggle and the
-       ≡ expander keep their own light (the old all-buttons sweep used to
-       douse the HOUSES chip on every repaint) */
-    root.querySelectorAll('.chips .pchip:not(.pchip-houses)').forEach((b, i) => {
+    /* only the RING chips carry the selection — the study's data-sel
+       scoping law: the ✶ HOUSES / ☿ PLANETS toggles and the ≡ expander
+       keep their own light (a class-exclusion sweep would douse every NEW
+       toggle it forgot to name; data-sel marks exactly the chips that
+       carry a selection) */
+    root.querySelectorAll('.chips .pchip[data-sel]').forEach((b, i) => {
       const on = sel === 'sun' ? i === 0 : i === (sel as number) + 1;
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', String(on));
@@ -659,20 +788,67 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
   expander.addEventListener('click', () => setExpanded(chipsEl.classList.contains('collapsed')), sig);
   setExpanded(false);   // dots first — the dial is the lesson, the list steps back
   chipsEl.appendChild(expander);
+  /* every chip wears its own little planet — DETERMINISTIC per ring (the
+     study's .pdot set, not random): varied muted colors, one banded, one
+     ringed, one spotted. THE LIGHT keeps the pulsing ember sun, the MOON
+     keeps her phase. Selection lights the body GOLD via CSS (.on .pb /
+     .pbs) — subtle: instrument, not toy box. */
+  function chipDot(key: string) {
+    const s = '<svg viewBox="0 0 12 12" aria-hidden="true">', e = '</svg>';
+    switch (key) {
+      case 'THE LIGHT':   // the ember sun, still breathing
+        return s + '<circle cx="6" cy="6" r="4.2" fill="#ff6600" class="sun624"/>' + e;
+      case 'SECOND':      // bare rock, mercury-small
+        return s + '<circle cx="6" cy="6" r="2.4" class="pb" fill="#a8a49c"/>' + e;
+      case 'MINUTE':      // pale-gold veil
+        return s + '<circle cx="6" cy="6" r="3" class="pb" fill="#dcc892"/>' + e;
+      case 'HOUR':        // sea and a hint of land
+        return s + '<circle cx="6" cy="6" r="3.2" class="pb" fill="#7ca9a4"/>' +
+          '<circle cx="5.1" cy="5.4" r="1.1" fill="rgba(140,180,120,.6)"/>' + e;
+      case 'BLOCK':       // the banded giant
+        return s + '<circle cx="6" cy="6" r="3.6" class="pb" fill="#c2a47c"/>' +
+          '<rect x="2.9" y="4.5" width="6.2" height="1" fill="rgba(90,68,48,.5)"/>' +
+          '<rect x="3.1" y="6.7" width="5.8" height="1.2" fill="rgba(90,68,48,.38)"/>' + e;
+      case 'DAY':         // the ringed one
+        return s + '<ellipse cx="6" cy="6" rx="5.3" ry="1.7" fill="none" stroke="#b3a077" stroke-width=".9" class="pbs" transform="rotate(-18 6 6)"/>' +
+          '<circle cx="6" cy="6" r="2.7" class="pb" fill="#d6c290"/>' + e;
+      case 'DIFFICULTY':  // the spotted moonlet
+        return s + '<circle cx="6" cy="6" r="3.2" class="pb" fill="#9aa0a8"/>' +
+          '<circle cx="5" cy="5.1" r=".8" fill="rgba(28,28,38,.42)"/>' +
+          '<circle cx="7.3" cy="7" r=".55" fill="rgba(28,28,38,.36)"/>' + e;
+      case 'MONTH':       // dusty olive
+        return s + '<circle cx="6" cy="6" r="3" class="pb" fill="#a8a878"/>' + e;
+      case 'MOON': {      // her true phase, as the northern sky sees it
+        const f = moonFracAt(Date.now());
+        const off = (f <= .5 ? 6.4 * (1 - 2 * f) : -6.4 * (2 * f - 1)).toFixed(2);
+        return s + '<clipPath id="' + uid + '-mchip"><circle cx="6" cy="6" r="3.2"/></clipPath>' +
+          '<circle cx="6" cy="6" r="3.2" fill="#23232a" stroke="rgba(242,234,216,.5)" stroke-width=".6" class="pbs"/>' +
+          '<circle cx="' + (6 + +off) + '" cy="6" r="3.2" fill="#d9d3c6" clip-path="url(#' + uid + '-mchip)"/>' + e;
+      }
+      case 'YEAR':        // far dusty blue
+        return s + '<circle cx="6" cy="6" r="3.4" class="pb" fill="#7c93b5"/>' + e;
+      case 'HALVING':     // pale ice-cyan (gold when chosen — money's ring)
+        return s + '<circle cx="6" cy="6" r="3.4" class="pb" fill="#8fbfbf"/>' + e;
+      case 'GENERATION':  // muted violet, one faint band
+        return s + '<circle cx="6" cy="6" r="3.2" class="pb" fill="#9a8ab0"/>' +
+          '<rect x="3.3" y="5.5" width="5.4" height=".9" fill="rgba(50,40,70,.4)"/>' + e;
+      case 'LAST SAT':    // the far dim wanderer, thin halo
+        return s + '<circle cx="6" cy="6" r="4.6" fill="none" stroke="rgba(242,234,216,.22)" stroke-width=".7"/>' +
+          '<circle cx="6" cy="6" r="2.6" class="pb" fill="#8a8578"/>' + e;
+      default: return s + '<circle cx="6" cy="6" r="3" class="pb" fill="#a8a49c"/>' + e;
+    }
+  }
   ['THE LIGHT', ...RINGS.map(r => r.key)].forEach((name, i) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'pchip' + (i === 0 ? ' pchip-sun' : '');
+    b.dataset.sel = String(i);   // selection chips only — the toggles keep their own light
     b.title = name;
     b.setAttribute('aria-label', 'select ' + name);
     const dot = document.createElement('span');
     dot.className = 'pdot';
     dot.setAttribute('aria-hidden', 'true');
-    if (i > 0 && RINGS[i - 1].moon) {
-      /* the moon's chip IS her phase disc — the same face she wears on orbit */
-      dot.classList.add('pdot-moon');
-      dot.textContent = moonAt(Date.now())[0];
-    }
+    dot.innerHTML = chipDot(name);   // the collapsed dot IS the planet art
     const lbl = document.createElement('span');
     lbl.className = 'plabel';
     lbl.textContent = name;
@@ -704,6 +880,29 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     zbtn.setAttribute('aria-pressed', String(off));
   }, sig);
   chipsEl.appendChild(zbtn);
+  /* the wanderers' switch — ☿ PLANETS beside ✶ HOUSES, lit by default; a
+     LAYER toggle like the houses: cyan for "lit", never the selection gold */
+  const pbtn = document.createElement('button');
+  pbtn.type = 'button';
+  pbtn.className = 'pchip pchip-planets on';
+  pbtn.title = '☿ PLANETS';
+  pbtn.setAttribute('aria-label', 'toggle the wandering planets layer');
+  pbtn.setAttribute('aria-pressed', 'true');
+  const pdot = document.createElement('span');
+  pdot.className = 'pdot';
+  pdot.setAttribute('aria-hidden', 'true');
+  pdot.textContent = '☿︎';
+  const plbl = document.createElement('span');
+  plbl.className = 'plabel';
+  plbl.textContent = '☿ PLANETS';
+  pbtn.append(pdot, plbl);
+  pbtn.addEventListener('click', () => {
+    const off = skyG.style.display === 'none';
+    skyG.style.display = off ? '' : 'none';
+    pbtn.classList.toggle('on', off);
+    pbtn.setAttribute('aria-pressed', String(off));
+  }, sig);
+  chipsEl.appendChild(pbtn);
   function hotRing() {
     planets.forEach((o, i) => { if (o.ring) o.ring.classList.toggle('hot', sel === i); });
   }
