@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import ArcadeHeader from "@/components/ArcadeHeader";
+import EarthFooter from "@/components/EarthFooter";
 import TimeDoor from "@/components/time/TimeDoor";
 import Orrery from "@/components/time/orrery/Orrery";
 
@@ -257,7 +259,14 @@ function ThePaper() {
 
 export default function TimePage() {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    /* the same shell as every frens.earth page (owner report: "the time
+       page doesn't seem to be a part of the overall template and there is
+       no way for me to get back to the main frens.earth page") — the
+       banner menu rides on top, the footer closes the deck, the clock
+       lives between them untouched. */
+    <main className="min-h-screen bg-void">
+      <ArcadeHeader />
+      <div className="mx-auto max-w-2xl px-6 py-16">
       <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
         FRENS.EARTH ▸ THE TIME DOOR
       </p>
@@ -298,6 +307,8 @@ export default function TimePage() {
       <p className="mt-12 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-white/25">
         tick tock, it all comes back to the block
       </p>
+      </div>
+      <EarthFooter />
     </main>
   );
 }

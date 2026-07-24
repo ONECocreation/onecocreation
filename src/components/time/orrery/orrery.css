@@ -80,8 +80,13 @@
   .orrery .sunpulse { animation: none; opacity: 0.45; }
   .orrery .strain { animation: none; opacity: 0.7; }
   .orrery .sun624 { animation: none; fill: #ff6600; }
+  .orrery .pchip-sun .pdot { animation: none; background: #ff6600; }
 }
 
+/* ——— THE PLANET SELECTOR — the chips column as planets. COLLAPSED (the
+   default): a slim vertical string of planet dots; the ≡ handle expands
+   it into the full labeled chips (dot + name side by side). The chosen
+   planet's dot lights GOLD — the one selection law. ——— */
 .orrery .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 /* the selector rides the left side; on small decks it wraps back below */
 .orrery .orrrow { display: flex; gap: 10px; align-items: flex-start; }
@@ -90,7 +95,8 @@
 .orrery .chips-side button { text-align: left; }
 @media (max-width: 640px) {
   .orrery .orrrow { flex-direction: column; }
-  .orrery .chips-side { flex-direction: row; flex-wrap: wrap; order: 2; }
+  /* the collapsed dot-string rides horizontally under the dial */
+  .orrery .chips-side { flex-direction: row; flex-wrap: wrap; order: 2; align-items: center; }
 }
 .orrery .chips button {
   font: inherit;
@@ -101,10 +107,64 @@
   color: var(--orr-mut);
   border: 1px solid var(--orr-line);
   border-radius: 999px;
-  padding: 4px 10px;
 }
 .orrery .chips button:hover,
 .orrery .chips button.on { color: var(--orr-cyan); border-color: var(--orr-cyan); }
+/* the expand/collapse handle — ≡ opens the names, ‹ folds them away */
+.orrery .chips-toggle {
+  padding: 2px 9px;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  align-self: flex-start;
+}
+/* one planet chip: the dot, and (expanded only) its name beside it */
+.orrery .pchip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+}
+.orrery .pdot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--orr-ink);   /* every planet rests in the ring's cream */
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+}
+/* the selection law: the chosen planet lights GOLD, chip and dial alike */
+.orrery .pchip.on .pdot { background: var(--orr-gold); }
+/* THE LIGHT's dot is a small sun, breathing the 624 ember */
+.orrery .pchip-sun .pdot {
+  background: #f7931a;
+  animation: orr-emberdot 6s ease-in-out infinite;
+}
+.orrery .pchip-sun.on .pdot { animation: none; background: var(--orr-gold); box-shadow: none; }
+@keyframes orr-emberdot {
+  0%, 100% { background: #f7931a; box-shadow: 0 0 3px rgba(255, 102, 0, 0.45); }
+  50% { background: #ff6600; box-shadow: 0 0 8px rgba(255, 102, 0, 0.9); }
+}
+/* the MOON's chip is her phase disc; ✶ HOUSES is a tiny star — glyphs, not
+   cream discs. The star inherits the chip's color (cyan when the layer is
+   lit); gold stays reserved for ring selection. */
+.orrery .pdot-moon,
+.orrery .pchip-houses .pdot { background: transparent; border-radius: 0; font-size: 12px; }
+.orrery .pchip-houses .pdot { color: inherit; }
+.orrery .pchip-houses.on .pdot { color: var(--orr-cyan); }
+/* collapsed = dots only: names hidden, chips shrink to slim hit targets */
+.orrery .chips.collapsed .plabel { display: none; }
+.orrery .chips.collapsed .pchip {
+  padding: 4px;
+  border-color: transparent;
+  justify-content: center;
+}
+.orrery .chips.collapsed .pchip:hover,
+.orrery .chips.collapsed .pchip.on { border-color: var(--orr-cyan); }
 .orrery .factcard {
   margin-top: 10px;
   min-height: 46px;

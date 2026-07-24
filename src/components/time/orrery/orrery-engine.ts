@@ -251,29 +251,53 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     { url: '/api/chain/tip?full=1', src: 'ship' },
     { url: 'https://time.pacsarcade.org/api/chain/tip?full=1', src: 'arcade' },
   ];
+  /* THE SYNC LAW (owner report, 0018.04.17: "I watched it break on mempool
+     and our time stayed the same"): every successful knock RE-ANCHORS the
+     dial — height, chain timestamp, the live anchor — so a new block snaps
+     the whole face within one poll breath. The cadence is 30 s (a block
+     lands ~1 in 20 polls), and the wake listeners below re-knock the
+     INSTANT the tab comes back — browsers suspend timers in hidden tabs,
+     and the old 60 s-only loop left the face ticking on stale anchors
+     ("its own time") after every tab switch. One transient dark poll no
+     longer flips the dial to the ten-minute model either: the last REAL
+     tip holds for a missed knock, and only a second straight miss admits
+     the honest ~. */
+  const POLL_MS = 30000;
+  let inflight = false;                       // one knock at a time — a slow seam never stacks
+  let misses = 0;                             // consecutive dark polls before the ~ takes over
   async function fetchTip() {
+    if (inflight) return;
+    inflight = true;
     let got: { h: number; ts: number | null; src: 'ship' | 'arcade' } | null = null;
-    for (const door of DOORS) {
-      if (got) break;
-      try {
-        const r = await fetch(door.url, { cache: 'no-store' });
-        const j = r.ok ? await r.json() : null;
-        if (j && j.ok && Number.isFinite(j.height))
-          got = {
-            h: j.height,
-            ts: Number.isFinite(j.tipTimestamp) ? j.tipTimestamp : null,
-            src: door.src,
-          };
-      } catch { /* this rung is dark — the next one carries */ }
+    try {
+      for (const door of DOORS) {
+        if (got) break;
+        try {
+          const r = await fetch(door.url, { cache: 'no-store' });
+          const j = r.ok ? await r.json() : null;
+          if (j && j.ok && Number.isFinite(j.height))
+            got = {
+              h: j.height,
+              ts: Number.isFinite(j.tipTimestamp) ? j.tipTimestamp : null,
+              src: door.src,
+            };
+        } catch { /* this rung is dark — the next one carries */ }
+      }
+    } finally {
+      inflight = false;
     }
     if (destroyed) return;
     if (got) {
+      misses = 0;
       if (got.h !== tip) tipSeen = Date.now();
       tip = got.h; tipTs = got.ts; tipEstimated = false; tipSrc = got.src;
       liveAnchor = [tip, tipTs ? tipTs * 1000 : tipSeen];
-    } else {
+    } else if (tipEstimated || ++misses >= 2) {
+      /* truly dark (or never lit): the genesis-anchored model carries, ~ */
       tip = Math.floor(ms2h(Date.now())); tipEstimated = true; tipTs = null; tipSrc = null;
     }
+    /* a single miss with a real tip in hand: hold the last true reading —
+       the 30 s cadence knocks again before the face can drift a block */
     if (mode === 'live') scrub.value = String(tip);
     renderOrrery(); renderRead();
   }
@@ -560,8 +584,14 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       : (() => { const o = planets[sel as number], age2 = mode === 'live' ? blockAge() : 0;
           const frac = o.rg!.arc ? Math.min(Math.max(H!, 0) / LAST, 1) : o.rg!.fr ? pmod(o.rg!.fr(H!, age2), 1) : pmod(H!, o.rg!.p) / o.rg!.p;
           return `<span>${RINGS[sel as number].f(H!, age2)} · <span class="tilde">${(100 - frac * 100).toFixed(frac > .99 ? 1 : 0)}% to go</span></span>`; })();
-    root.querySelectorAll('.chips button').forEach((b, i) =>
-      b.classList.toggle('on', sel === 'sun' ? i === 0 : i === (sel as number) + 1));
+    /* only the RING chips carry the selection — the ✶ HOUSES toggle and the
+       ≡ expander keep their own light (the old all-buttons sweep used to
+       douse the HOUSES chip on every repaint) */
+    root.querySelectorAll('.chips .pchip:not(.pchip-houses)').forEach((b, i) => {
+      const on = sel === 'sun' ? i === 0 : i === (sel as number) + 1;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
   }
   function renderRead() {
     const H = Math.floor(curH());
@@ -579,24 +609,75 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
   const ac = new AbortController();
   const sig = { signal: ac.signal };
 
-  /* chips: THE LIGHT + the twelve rings — easy tap targets for small screens */
+  /* ═══ THE PLANET SELECTOR — the chips column reborn as planets (owner
+     order: "maybe all of these type of items become planets — lean into
+     the planet theme", + "i would like to see the left items be
+     collapsible"). COLLAPSED (the default): a slim string of planet
+     dots — THE LIGHT a small ember-pulsing sun, every ring a planet in
+     the resting cream, the MOON her current phase disc, ✶ HOUSES a tiny
+     star — each wearing its name as a native tooltip and aria-label.
+     The ≡ handle expands the string into the full labeled chips (dot +
+     name side by side); ‹ collapses it back to dots. Clicking a planet
+     selects its ring exactly as before, and the chosen planet lights
+     GOLD — the one selection law, same as the dial. On small decks the
+     collapsed string rides horizontally under the dial. ═══ */
   while (chipsEl.firstChild) chipsEl.removeChild(chipsEl.firstChild); // idempotent (strict-mode remount)
+  const expander = document.createElement('button');
+  expander.type = 'button';
+  expander.className = 'chips-toggle';
+  const setExpanded = (open: boolean) => {
+    chipsEl.classList.toggle('collapsed', !open);
+    expander.textContent = open ? '‹' : '≡';
+    expander.setAttribute('aria-expanded', String(open));
+    expander.setAttribute('aria-label', open ? 'collapse the planet list to dots' : 'expand the planet list to show names');
+    expander.title = open ? 'collapse' : 'planet names';
+  };
+  expander.addEventListener('click', () => setExpanded(chipsEl.classList.contains('collapsed')), sig);
+  setExpanded(false);   // dots first — the dial is the lesson, the list steps back
+  chipsEl.appendChild(expander);
   ['THE LIGHT', ...RINGS.map(r => r.key)].forEach((name, i) => {
     const b = document.createElement('button');
     b.type = 'button';
-    b.textContent = name;
+    b.className = 'pchip' + (i === 0 ? ' pchip-sun' : '');
+    b.title = name;
+    b.setAttribute('aria-label', 'select ' + name);
+    const dot = document.createElement('span');
+    dot.className = 'pdot';
+    dot.setAttribute('aria-hidden', 'true');
+    if (i > 0 && RINGS[i - 1].moon) {
+      /* the moon's chip IS her phase disc — the same face she wears on orbit */
+      dot.classList.add('pdot-moon');
+      dot.textContent = moonAt(Date.now())[0];
+    }
+    const lbl = document.createElement('span');
+    lbl.className = 'plabel';
+    lbl.textContent = name;
+    b.append(dot, lbl);
     b.addEventListener('click', () => { sel = i === 0 ? 'sun' : i - 1; hotRing(); renderFact(); }, sig);
     chipsEl.appendChild(b);
   });
-  /* the experiment switch — the 13 houses, lit by default, doused on tap */
+  /* the experiment switch — the 13 houses, lit by default, doused on tap;
+     its planet is a tiny star. A LAYER toggle, not a ring selection — it
+     keeps cyan for "lit", never the selection gold. */
   const zbtn = document.createElement('button');
   zbtn.type = 'button';
-  zbtn.textContent = '✶ HOUSES';
-  zbtn.classList.add('on');
+  zbtn.className = 'pchip pchip-houses on';
+  zbtn.title = '✶ HOUSES';
+  zbtn.setAttribute('aria-label', 'toggle the 13 houses layer');
+  zbtn.setAttribute('aria-pressed', 'true');
+  const zdot = document.createElement('span');
+  zdot.className = 'pdot';
+  zdot.setAttribute('aria-hidden', 'true');
+  zdot.textContent = '✶';
+  const zlbl = document.createElement('span');
+  zlbl.className = 'plabel';
+  zlbl.textContent = '✶ HOUSES';
+  zbtn.append(zdot, zlbl);
   zbtn.addEventListener('click', () => {
     const off = zodiacG.style.display === 'none';
     zodiacG.style.display = off ? '' : 'none';
     zbtn.classList.toggle('on', off);
+    zbtn.setAttribute('aria-pressed', String(off));
   }, sig);
   chipsEl.appendChild(zbtn);
   function hotRing() {
@@ -651,8 +732,16 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
   /* ═══ ignition — the study's, on the ladder ═══ */
   scrub.value = String(tip);
   renderOrrery(); renderRead();
-  fetchTip();                                     // the one network request, polled every 60s
-  const pollId = setInterval(fetchTip, 60000);
+  fetchTip();                                     // the one network request, polled every 30 s
+  const pollId = setInterval(fetchTip, POLL_MS);
+  /* THE WAKE LAW: hidden tabs get their timers suspended — so the moment
+     this page is looked at again (tab switch back, bfcache restore, the
+     network returning) the ladder is walked IMMEDIATELY instead of waiting
+     out a stale interval. All on the one leash; destroy() aborts them. */
+  const wake = () => { if (!document.hidden) fetchTip(); };
+  document.addEventListener('visibilitychange', wake, sig);
+  window.addEventListener('pageshow', wake, sig);
+  window.addEventListener('online', wake, sig);
 
   function destroy() {
     destroyed = true;

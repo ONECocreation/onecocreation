@@ -25,11 +25,13 @@ import "./orrery.css";
  * react-compiler-safe split as LivingClock (no setState in effect bodies,
  * no ref reads during render).
  *
- * Data: the engine walks THE LADDER every 60 s — this ship's own
+ * Data: the engine walks THE LADDER every 30 s — and again the instant
+ * the tab wakes (visibilitychange / pageshow / online) — this ship's own
  * same-origin seam /api/chain/tip?full=1 first (node-first + public
  * fallback server-side, the pluggable knob), the arcade's time server
  * second (time.pacsarcade.org, CORS open), and the study's
- * genesis-anchored ten-minute model last, wearing the honest ~.
+ * genesis-anchored ten-minute model last, wearing the honest ~. Every
+ * successful knock re-anchors the whole dial (the sync law).
  */
 
 export default function Orrery() {
@@ -45,9 +47,15 @@ export default function Orrery() {
 
   return (
     <div className="orrery" ref={rootRef}>
-      {/* the selector rides the left side; on small decks it wraps back below */}
+      {/* the planet selector rides the left side — a collapsible string of
+          planet dots (the engine builds it); on small decks it wraps back
+          below the dial as a horizontal string */}
       <div className="orrrow">
-        <div className="chips chips-side" />
+        <div
+          className="chips chips-side collapsed"
+          role="group"
+          aria-label="planet selector — choose a ring of the orrery"
+        />
         <div className="face orrerybox">
           <svg
             className="orr"
