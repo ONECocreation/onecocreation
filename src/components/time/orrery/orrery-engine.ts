@@ -1,7 +1,7 @@
 /**
  * THE ORRERY engine — Act I of the orrery study, ported whole.
  *
- * Source of truth: studies/clock-study-orrery.html (v24, owner-approved).
+ * Source of truth: studies/clock-study-orrery.html (v27, owner-approved).
  * This file is the study's own JS — the block math, the anchor table, the
  * twelve rings, the sun, the moon, the houses, the scrub/NOW/date-picker
  * wiring — adapted to the ship: the DOM skeleton is rendered by Orrery.tsx
@@ -74,6 +74,28 @@
  *    attributes from radiusOf(key, mode)) — no teardown, no rebuild, no
  *    new listeners: selection, lit-states, scrub/pick and the rAF loop
  *    all survive the cycle. Zodiac rim, names, spokes, wedge, sun fixed.
+ *
+ * v27, layered on top:
+ *  - THE WEEK RING — 1,008 blocks = 7 block-days; the dot reads week 1–4
+ *    of the month and its lap FILLS the month (DAY's own counting law —
+ *    a month is exactly four weeks: no ragged weeks, ever), 4 ticks.
+ *    13 rings now: SECOND · MINUTE · HOUR · BLOCK · DAY · WEEK ·
+ *    FORTNIGHT · MONTH · MOON · YEAR · OLYMPIAD · GENERATION · LAST SAT.
+ *    Ruled radii rebalanced 62→258 (GENERATION holds 234, the sky band
+ *    holds 246); KEPLER is 19 orbits (WEEK laps the month in DAY's
+ *    cluster — ruled precedence DAY → WEEK → MOON), kisses kept.
+ *  - HALVING renamed OLYMPIAD (ring, chip, NUMS) — the dot still counts
+ *    halvings-so-far, gold on selection stays, 4 ticks stay.
+ *  - THE COPY LAW: every fact card reads [NAME + block time] · [current
+ *    reading] · [old-world relation] · [% to go], minimal words; the
+ *    kiss-notes ride as their own short final segments.
+ *  - THE WRAP LAW: the card renders atomic inline-block/nowrap segments
+ *    with the ' ·' separator bound to the TAIL of the segment before it —
+ *    a wrapped line can never open with '·' and no segment ever breaks
+ *    inside itself (the owner's phone-review screenshots).
+ *  - THE DATE-FIELD LAW: iOS/WebKit draws an empty date input as a blank
+ *    gray select-looking pill — SET THE CLOCK defaults to today (no
+ *    change event fires; the dial stays live until the fren picks).
  */
 
 export interface OrreryEngine {
@@ -82,7 +104,7 @@ export interface OrreryEngine {
 
 /*==MATH== — ported verbatim from the study ==*/
 /* ——— the block constants: the only clock bitcoin owns ——— */
-const DAY = 144, DIFF = 2016, MONTH = 4032, YEAR = 52416, HALV = 210000,
+const DAY = 144, WEEK = 1008, DIFF = 2016, MONTH = 4032, YEAR = 52416, HALV = 210000,
   CYCLE = 1260000, LAST = 6930000;
 const GENESIS_MS = Date.UTC(2009, 0, 3, 18, 15, 5);
 
@@ -153,57 +175,54 @@ const houseOf = (frac: number) => ZOD13[Math.floor(((frac % 1) + 1) % 1 * 13) % 
    longitude increases CLOCKWISE, matching the dial's own direction.
    Laps quoted in blocks at ~10 min each. ☿ PLANETS lights and douses. */
 const J2000 = Date.UTC(2000, 0, 1, 12), SKY_R = 246;
-interface Wanderer { sym: string; name: string; L0: number; n: number; note?: string; lap: string }
+/* v27 copy law rides the wanderers too: NAME first, the lap in blocks,
+   then the old-world relation — the tooltip is built in renderWander */
+interface Wanderer { sym: string; name: string; L0: number; n: number; note?: string; lap: string; old: string }
 const WANDER: Wanderer[] = [
   { sym: '☿', name: 'MERCURY', L0: 252.25, n: 4.09233,
-    lap: '≈ 12,672 blocks (~88 days)' },
+    lap: '≈12,672 blocks', old: 'the old world’s ~88 days' },
   { sym: '♀', name: 'VENUS', L0: 181.98, n: 1.60213,
-    lap: '≈ 32,400 blocks (~225 days)' },
+    lap: '≈32,400 blocks', old: 'the old world’s ~225 days' },
   { sym: '🜨', name: 'EARTH', L0: 100.46, n: 0.98565, note: 'we ride this one, fren',
-    lap: '≈ 52,596 blocks (~365.25 days — one bitcoin year + ~180 blocks: the calendar’s solar drift, made visible)' },
+    lap: '≈52,596 blocks', old: 'one old-world year — a bitcoin year + ~180 blocks of drift' },
   { sym: '♂', name: 'MARS', L0: 355.43, n: 0.52403,
-    lap: '≈ 98,928 blocks (~687 days)' },
+    lap: '≈98,928 blocks', old: 'the old world’s ~687 days' },
   { sym: '♃', name: 'JUPITER', L0: 34.35, n: 0.08309,
-    lap: '≈ 624,000 blocks (~11.86 years — almost exactly three halvings)' },
+    lap: '≈624,000 blocks', old: '~11.86 years — almost three halvings' },
   { sym: '♄', name: 'SATURN', L0: 50.08, n: 0.03346,
-    lap: '≈ 1,550,000 blocks (~29.5 years — about 1¼ generations)' },
+    lap: '≈1,550,000 blocks', old: '~29.5 years — the Saturn return' },
 ];
 const wanderFrac = (w: Wanderer, ms: number) =>
   pmod(3 / 13 + pmod(w.L0 + w.n * ((ms - J2000) / 86400000), 360) / 360, 1);
 
-/* ——— KEPLER RINGS MODE (v26): the ☿ chip cycles BAND → RINGS → OFF.
-   In RINGS the whole dial re-sorts by TRUE LAP PERIOD in blocks —
-   SECOND 0.1 · MINUTE 6 · HOUR 144 · BLOCK 144 · FORTNIGHT 2,016 ·
-   DAY 4,032 · MOON ≈4,252 · MERCURY 12,672 · VENUS 32,400 ·
-   MONTH 52,416 · EARTH 52,596 · MARS 98,928 · HALVING 210,000 ·
-   JUPITER 624,000 · YEAR 681,408 · GENERATION 1,260,000 ·
-   SATURN ≈1,550,000 · LAST SAT 6,930,000 — 18 orbits, 62→258.
+/* ——— KEPLER RINGS MODE (v26; re-spaced v27): the ☿ chip cycles
+   BAND → RINGS → OFF. In RINGS the whole dial re-sorts by TRUE LAP
+   PERIOD in blocks — SECOND 0.1 · MINUTE 6 · HOUR 144 · BLOCK 144 ·
+   FORTNIGHT 2,016 · DAY 4,032 · WEEK 4,032 (the month's own cluster —
+   ruled precedence DAY then WEEK) · MOON ≈4,252 · MERCURY 12,672 ·
+   VENUS 32,400 · MONTH 52,416 · EARTH 52,596 · MARS 98,928 ·
+   OLYMPIAD 210,000 · JUPITER 624,000 · YEAR 681,408 ·
+   GENERATION 1,260,000 · SATURN ≈1,550,000 · LAST SAT 6,930,000 —
+   19 orbits, 62→258.
    True near-pairs are deliberately drawn ALMOST TOUCHING (the kiss is
    the lesson): MONTH↔EARTH 5px — one earth year ≈ one bitcoin year,
    ~180 blocks of drift; JUPITER↔YEAR 7px — Jupiter hugs the animal
    wheel; GENERATION↔SATURN 7px — the Saturn return next door to a
-   human generation. Normal gaps 12.64px (= (196−19)/14). ——— */
+   human generation. Normal gaps 11.8px (= (196−19)/15). ——— */
 const KEPLER: Record<string, number> = {
-  SECOND: 62, MINUTE: 74.6, HOUR: 87.3, BLOCK: 99.9, FORTNIGHT: 112.6,
-  DAY: 125.2, MOON: 137.9, MERCURY: 150.5, VENUS: 163.1, MONTH: 175.8,
-  EARTH: 180.8, MARS: 193.4, HALVING: 206.1, JUPITER: 218.7, YEAR: 225.7,
-  GENERATION: 238.4, SATURN: 245.4, 'LAST SAT': 258,
+  SECOND: 62, MINUTE: 73.8, HOUR: 85.6, BLOCK: 97.4, FORTNIGHT: 109.2,
+  DAY: 121, WEEK: 132.8, MOON: 144.6, MERCURY: 156.4, VENUS: 168.2,
+  MONTH: 180, EARTH: 185, MARS: 196.8, OLYMPIAD: 208.6, JUPITER: 220.4,
+  YEAR: 227.4, GENERATION: 239.2, SATURN: 246.2, 'LAST SAT': 258,
 };
-/* the kiss-notes — spoken ONLY in rings state, where the near-touch shows */
+/* the kiss-notes — spoken ONLY in rings state, where the near-touch
+   shows; each is its OWN short segment (v27 wrap law) */
 const KISS: Record<string, string> = {
-  MONTH: ' · EARTH orbits 180 blocks away — the solar drift, drawn',
-  YEAR: ' · JUPITER rides next door — ≈624,000 blocks, almost three halvings',
-  GENERATION: ' · SATURN returns next door — ≈1,550,000 blocks, the Saturn return',
+  MONTH: 'EARTH orbits ~180 blocks away',
+  YEAR: 'JUPITER next door — ≈3 halvings',
+  GENERATION: 'SATURN next door — the return',
 };
 
-/* ——— subsidy of a halving epoch: integer sats, floored, as the protocol floors ——— */
-const subsidySats = (ep: number) => ep >= 33 ? 0 : Math.floor(5e9 / 2 ** ep);
-function fmtSub(ep: number) {
-  const s = subsidySats(ep);
-  if (s === 0) return 'subsidy 0 — the last sat is struck';
-  return 'subsidy ' + (s >= 1e8 ? (s / 1e8) + ' BTC'
-    : s.toLocaleString('en-US') + (s === 1 ? ' sat' : ' sats'));
-}
 /*==/MATH==*/
 
 const nf = (n: number) => Math.abs(n).toLocaleString('en-US');
@@ -245,7 +264,10 @@ interface RingDef {
   moon?: boolean;
   arc?: boolean;
   fr?: (H: number, a: number) => number;
-  f: (H: number, a: number) => string;
+  /* v27 COPY LAW: f returns an ARRAY of short segments — [NAME + block
+     time] · [current reading] · [old-world relation] (· extras) —
+     renderFact wraps each in a nowrap span and appends the '% to go' */
+  f: (H: number, a: number) => string[];
   n?: (H: number, a: number) => string;
 }
 
@@ -451,47 +473,54 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
   const RINGS: RingDef[] = [
     { key: 'SECOND', p: 60, r: 62, pr: 4.5, c: CREAM,
       fr: (H, a) => (capA(a) % 60) / 60,
-      f: (H, a) => `<b>60 seconds — 1/10 block</b> · one lap a minute · :${faceTime(H, a).ss}` },
-    { key: 'MINUTE', p: 6, r: 80, pr: 4.5, c: CREAM,
+      f: (H, a) => [`<b>60 SECONDS · 1/10 block</b>`, `:${faceTime(H, a).ss}`, `one lap a minute`, `the old world's second, kept`] },
+    { key: 'MINUTE', p: 6, r: 77.6, pr: 4.5, c: CREAM,
       fr: (H, a) => (((bidOf(H) % 6) * 600 + capA(a)) % 3600) / 3600,
-      f: (H, a) => { const t = faceTime(H, a); return `<b>60 minutes · 6 blocks</b> · one lap an hour · ${t.hh}:${t.mm}`; } },
-    { key: 'HOUR', p: DAY, r: 98, pr: 5, c: CREAM, ticks: 24,
+      f: (H, a) => { const t = faceTime(H, a); return [`<b>60 MINUTES · 6 blocks</b>`, `${t.hh}:${t.mm}`, `one lap an hour`, `the old world's hour, six strides`]; } },
+    { key: 'HOUR', p: DAY, r: 93.3, pr: 5, c: CREAM, ticks: 24,
       fr: (H, a) => ((bidOf(H) * 600 + capA(a)) % 86400) / 86400,
-      f: (H, a) => { const t = faceTime(H, a); return `<b>24 hours · 144 blocks</b> · one lap fills the day · ${t.hh}:${t.mm}:${t.ss}`; } },
+      f: (H, a) => { const t = faceTime(H, a); return [`<b>24 HOURS · 144 blocks</b>`, `${t.hh}:${t.mm}:${t.ss}`, `one lap fills the day`, `the old world's day, kept whole`]; } },
     /* BLOCK counts the way the Admiral reads it: block x of 144, one lap
        fills the day, full at the top — the day's 24 hour-marks on the rim */
-    { key: 'BLOCK', p: DAY, r: 115, pr: 5.5, c: CREAM, ticks: 24,
+    { key: 'BLOCK', p: DAY, r: 108.9, pr: 5.5, c: CREAM, ticks: 24,
       fr: (H, a) => (bidOf(H) + capA(a) / 600) / DAY,
-      f: H => `<b>144 blocks a day</b> · one lap fills the day · block ${bidOf(H) + 1} of 144 · ~10 min each` },
+      f: H => [`<b>BLOCK · 144 a day, ~10 min each</b>`, `block ${bidOf(H) + 1} of 144`, `one lap fills the day`, `the old world's ten minutes`] },
     /* the calendar rings count the way the Admiral reads a clock: the DAY
        dot climbs 1→28 and its lap FILLS the month — full lands at the top,
        and the new month begins there. MONTH climbs 1→13 filling the year;
        YEAR wears bitcoin's age and laps the 13-year animal wheel. */
-    { key: 'DAY', p: MONTH, r: 132, pr: 5, c: CREAM, ticks: 28,
+    { key: 'DAY', p: MONTH, r: 124.5, pr: 5, c: CREAM, ticks: 28,
       fr: H => pmod(H, MONTH) / MONTH,
-      f: H => `<b>28 days · 4,032 blocks</b> · one lap fills the month · day ${Math.floor(pmod(H, MONTH) / DAY) + 1} of 28 · full at the top` },
-    { key: 'FORTNIGHT', p: DIFF, r: 149, pr: 5, c: CREAM,
-      f: H => `<b>2,016 blocks · a fortnight</b> — 14 days · the network re-tunes · ${pct(H, DIFF)} through` },
-    { key: 'MONTH', p: YEAR, r: 166, pr: 5, c: CREAM, ticks: 13,
+      f: H => [`<b>28 DAYS · 4,032 blocks</b>`, `day ${Math.floor(pmod(H, MONTH) / DAY) + 1} of 28 — full at the top`, `one lap fills the month`, `the old world's month, made even`] },
+    /* THE WEEK (v27): 1,008 blocks = 7 block-days. The dot reads week 1–4
+       of the month and its lap FILLS the month, DAY's own counting law —
+       a month is exactly four weeks: no ragged weeks, ever. 4 ticks. */
+    { key: 'WEEK', p: MONTH, r: 140.2, pr: 5, c: CREAM, ticks: 4,
+      fr: H => pmod(H, MONTH) / MONTH,
+      f: H => [`<b>4 WEEKS · 1,008 blocks each</b>`, `week ${Math.floor(pmod(H, MONTH) / WEEK) + 1} of 4`, `one lap fills the month`, `the old world's week`, `no ragged weeks, ever`] },
+    { key: 'FORTNIGHT', p: DIFF, r: 155.8, pr: 5, c: CREAM,
+      f: H => [`<b>FORTNIGHT · 2,016 blocks</b>`, `${pct(H, DIFF)} through`, `the difficulty re-tunes each lap`, `the old world's two weeks`] },
+    { key: 'MONTH', p: YEAR, r: 171.5, pr: 5, c: CREAM, ticks: 13,
       fr: H => pmod(H, YEAR) / YEAR,
       f: H => { const h = houseOf(pmod(H, YEAR) / YEAR);
-        return `<b>13 months · 52,416 blocks</b> · one lap fills the year · month ${Math.floor(pmod(H, YEAR) / MONTH) + 1} of 13 · in the house of ${h[0]} ${h[1]}`; } },
-    { key: 'MOON', p: 4252, r: 183, pr: 6, c: CREAM, moon: true,
+        return [`<b>13 MONTHS · 52,416 blocks</b>`, `month ${Math.floor(pmod(H, YEAR) / MONTH) + 1} of 13`, `one lap fills the year`, `house of ${h[0]} ${h[1]}`]; } },
+    { key: 'MOON', p: 4252, r: 187.1, pr: 6, c: CREAM, moon: true,
       fr: H => moonFracAt(mode === 'live' ? Date.now() : h2ms(H)),
       f: H => { const t = mode === 'live' ? Date.now() : h2ms(H); const m = moonAt(t); const h = houseOf(moonFracAt(t));
-        return `<b>≈4,252 blocks</b> · the sky's own month · ${m[0]} ${m[1]} · in the house of ${h[0]} ${h[1]} · drawn for the northern sky`; } },
-    { key: 'YEAR', p: YEAR * 13, r: 200, pr: 5.5, c: CREAM, ticks: 13,
+        return [`<b>MOON · ≈4,252 blocks</b>`, `${m[0]} ${m[1]}`, `house of ${h[0]} ${h[1]}`, `the northern sky's view`]; } },
+    { key: 'YEAR', p: YEAR * 13, r: 202.7, pr: 5.5, c: CREAM, ticks: 13,
       fr: H => (pmod(Math.floor(H / YEAR), 13) + pmod(H, YEAR) / YEAR) / 13,
       f: H => { const bd = bftDate(H), an = yearAnimal(bd);
-        return `<b>year ${bd.y} — bitcoin's age</b> · one lap = the 13-year animal wheel · 681,408 blocks · ${an[0]} ${an[1]}`; } },
-    /* the gold planet counts halvings-so-far; its lap is the ~4-year epoch,
-       and the NEXT halving lands at the top — the counting law, in gold */
-    { key: 'HALVING', p: HALV, r: 217, pr: 6, c: CREAM, ticks: 4,
-      f: H => `<b>every 210,000 blocks ≈ 4 years — an olympiad</b> · ${Math.floor(H / HALV)} halvings so far · the next lands at the top · <span class="g">${fmtSub(Math.floor(H / HALV))}</span>` },
+        return [`<b>YEAR · 52,416 blocks</b>`, `year ${bd.y} — bitcoin's age`, `one lap, the 13-animal wheel`, `${an[0]} ${an[1]}`]; } },
+    /* OLYMPIAD (v27 rename — the ring formerly labeled HALVING): the dot
+       still counts halvings-so-far; its lap is the ~4-year epoch, and the
+       NEXT halving lands at the top — the counting law, gold on selection */
+    { key: 'OLYMPIAD', p: HALV, r: 218.4, pr: 6, c: CREAM, ticks: 4,
+      f: H => [`<b>OLYMPIAD · 210,000 blocks</b>`, `≈ 4 years`, `${Math.max(0, Math.floor(H / HALV))} halvings so far`, `the subsidy folds at the top`, `the old world counted games by it`] },
     { key: 'GENERATION', p: CYCLE, r: 234, pr: 5.5, c: CREAM, ticks: 6,
-      f: H => `<b>1,260,000 blocks</b> · 6 halvings · ~24 years — a human generation (Saturn laps next door in ~1.55M) · ${pct(H, CYCLE)} through` },
+      f: H => [`<b>GENERATION · 1,260,000 blocks</b>`, `halving ${Math.floor(pmod(H, CYCLE) / HALV) + 1} of 6`, `≈24 years — a human generation`, `Saturn returns ≈1.55M`] },
     { key: 'LAST SAT', p: LAST, r: 258, pr: 5, c: CREAM, arc: true,
-      f: H => `<b>6,930,000 blocks</b> · genesis → the last sat struck · ~2140 · ${(H / LAST * 100).toFixed(2)}% along` },
+      f: H => [`<b>LAST SAT · 6,930,000 blocks</b>`, `${(H / LAST * 100).toFixed(2)}% along`, `genesis → the last sat struck`, `the old world's ~2140`] },
   ];
 
   /* every dot carries its READING — glance at the planet, know the value,
@@ -502,10 +531,11 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     BLOCK: H => String(bidOf(H) + 1),                           // block 1-144, fills the day
     HOUR: (H, a) => faceTime(H, a).hh,
     DAY: H => String(Math.floor(pmod(H, MONTH) / DAY) + 1),     // day 1-28, fills the month
+    WEEK: H => String(Math.floor(pmod(H, MONTH) / WEEK) + 1),   // week 1-4, fills the month
     FORTNIGHT: H => String(Math.floor(pmod(H, DIFF) / DIFF * 100)), // % to the re-tune fortnight
     MONTH: H => String(Math.floor(pmod(H, YEAR) / MONTH) + 1),  // month 1-13, fills the year
     YEAR: H => String(bftDate(H).y),                            // bitcoin's age (mirrored b₿)
-    HALVING: H => String(Math.max(0, Math.floor(H / HALV))),    // halvings so far
+    OLYMPIAD: H => String(Math.max(0, Math.floor(H / HALV))),   // halvings so far
     GENERATION: H => String(Math.floor(pmod(H, CYCLE) / HALV) + 1), // halving 1-6 of the generation
     'LAST SAT': H => Math.max(0, Math.round(H / LAST * 100)) + '%',
   };
@@ -781,8 +811,9 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       if (hk !== o.hi) {
         o.hi = hk;
         const h = ZOD13[hk];
-        o.tt.textContent = o.w.sym + ' ' + o.w.name + (o.w.note ? ' — ' + o.w.note : '') +
-          ' · lap ' + o.w.lap + ' · in the house of ' + h[0] + ' ' + h[1] + ' · ~mean longitude';
+        o.tt.textContent = o.w.name + ' ' + o.w.sym + (o.w.note ? ' — ' + o.w.note : '') +
+          ' · lap ' + o.w.lap + ' · ' + o.w.old +
+          ' · in the house of ' + h[0] + ' ' + h[1] + ' · ~mean longitude';
       }
     });
   }
@@ -803,22 +834,35 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     sunDate.textContent = bftDate(H).str;
     sunVel.textContent = '★ ' + (est ? '~' : '') + (H < 0 ? '−' : '') + nf(Math.floor(H));
   }
+  /* THE WRAP LAW (v27): the card is a row of atomic segments — each one an
+     inline-block/nowrap span, the ' ·' separator bound to the TAIL of the
+     segment before it, so a wrapped line can never open with '·' and no
+     segment ever breaks inside itself. */
+  const segJoin = (a: string[]) =>
+    a.map((s, i) => '<span class="seg">' + s + (i < a.length - 1 ? ' ·' : '') + '</span>').join(' ');
   function renderFact(H?: number) {
     H = H === undefined ? curH() : H;
     /* hover text everywhere — every hit target carries its fact as a native
        tooltip, same words as the card at the bottom */
     const age = mode === 'live' ? blockAge() : 0;
     planets.forEach(o => {
-      if (o.tt && o.rg) o.tt.textContent = String(o.rg.f(H!, age)).replace(/<[^>]*>/g, '') +
-        (planetMode === 'rings' ? (KISS[o.rg.key] || '') : '');
+      if (o.tt && o.rg) o.tt.textContent = (o.rg.f(H!, age).join(' · ') +
+        (planetMode === 'rings' && KISS[o.rg.key] ? ' · ' + KISS[o.rg.key] : '')).replace(/<[^>]*>/g, '');
     });
     if (sunTT) sunTT.textContent = 'THE LIGHT · block ' + (H < 0 ? '−' : '') + nf(Math.floor(H)) + ' · ' + bftDate(H).str + ' · one block of velocity every ~10 min';
-    factEl.innerHTML = sel === 'sun'
-      ? `<span><b>THE LIGHT · block ${H < 0 ? '−' : ''}${nf(Math.floor(H))}</b> · the sun of this system — b₿ and a₿ are before and after it · one block of velocity every ~10 min${mode === 'live' && tipEstimated ? ' · <span class="tilde">~estimated</span>' : ''}</span>`
-      : (() => { const o = planets[sel as number], age2 = mode === 'live' ? blockAge() : 0;
-          const frac = o.rg!.arc ? Math.min(Math.max(H!, 0) / LAST, 1) : o.rg!.fr ? pmod(o.rg!.fr(H!, age2), 1) : pmod(H!, o.rg!.p) / o.rg!.p;
-          const kiss = planetMode === 'rings' ? (KISS[o.rg!.key] || '') : '';
-          return `<span>${RINGS[sel as number].f(H!, age2)}${kiss} · <span class="tilde">${(100 - frac * 100).toFixed(frac > .99 ? 1 : 0)}% to go</span></span>`; })();
+    let segs: string[];
+    if (sel === 'sun') {
+      segs = [`<b>THE LIGHT · block ${H < 0 ? '−' : ''}${nf(Math.floor(H))}</b>`,
+        'the sun of this system', 'b₿ and a₿ turn around it', 'one block of speed every ~10 min'];
+      if (mode === 'live' && tipEstimated) segs.push('<span class="tilde">~estimated</span>');
+    } else {
+      const o = planets[sel as number], age2 = mode === 'live' ? blockAge() : 0;
+      const frac = o.rg!.arc ? Math.min(Math.max(H!, 0) / LAST, 1) : o.rg!.fr ? pmod(o.rg!.fr(H!, age2), 1) : pmod(H!, o.rg!.p) / o.rg!.p;
+      segs = o.rg!.f(H!, age2).slice();
+      if (planetMode === 'rings' && KISS[o.rg!.key]) segs.push(KISS[o.rg!.key]);
+      segs.push(`<span class="tilde">${(100 - frac * 100).toFixed(frac > .99 ? 1 : 0)}% to go</span>`);
+    }
+    factEl.innerHTML = '<span class="fwrap">' + segJoin(segs) + '</span>';
     /* only the RING chips carry the selection — the study's data-sel
        scoping law: the ✶ HOUSES / ☿ PLANETS toggles and the ≡ expander
        keep their own light (a class-exclusion sweep would douse every NEW
@@ -896,6 +940,9 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       case 'DAY':         // the ringed one
         return s + '<ellipse cx="6" cy="6" rx="5.3" ry="1.7" fill="none" stroke="#b3a077" stroke-width=".9" class="pbs" transform="rotate(-18 6 6)"/>' +
           '<circle cx="6" cy="6" r="2.7" class="pb" fill="#d6c290"/>' + e;
+      case 'WEEK':        // the quartered worldlet — four even weeks
+        return s + '<circle cx="6" cy="6" r="3" class="pb" fill="#c9b58e"/>' +
+          '<path d="M6 3v6M3 6h6" stroke="rgba(28,28,38,.35)" stroke-width=".7" fill="none"/>' + e;
       case 'FORTNIGHT':  // the spotted moonlet
         return s + '<circle cx="6" cy="6" r="3.2" class="pb" fill="#9aa0a8"/>' +
           '<circle cx="5" cy="5.1" r=".8" fill="rgba(28,28,38,.42)"/>' +
@@ -911,7 +958,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       }
       case 'YEAR':        // far dusty blue
         return s + '<circle cx="6" cy="6" r="3.4" class="pb" fill="#7c93b5"/>' + e;
-      case 'HALVING':     // pale ice-cyan (gold when chosen — money's ring)
+      case 'OLYMPIAD':    // pale ice-cyan (gold when chosen — money's ring)
         return s + '<circle cx="6" cy="6" r="3.4" class="pb" fill="#8fbfbf"/>' + e;
       case 'GENERATION':  // muted violet, one faint band
         return s + '<circle cx="6" cy="6" r="3.2" class="pb" fill="#9a8ab0"/>' +
@@ -1049,7 +1096,15 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
   }, sig);
 
   /* the date picker — point the whole orrery at any date; pre-genesis dates
-     are welcome and read honestly in b₿, blocks-before-genesis */
+     are welcome and read honestly in b₿, blocks-before-genesis.
+     THE DATE-FIELD LAW (v27): iOS/WebKit renders an EMPTY date input as a
+     blank gray select-looking pill — default SET THE CLOCK to today so the
+     field always reads as a date. Setting .value fires no change event:
+     the dial stays LIVE until the fren actually picks. */
+  if (!clockDate.value) {
+    const d0 = new Date();
+    clockDate.value = d0.getFullYear() + '-' + String(d0.getMonth() + 1).padStart(2, '0') + '-' + String(d0.getDate()).padStart(2, '0');
+  }
   clockDate.addEventListener('change', () => {
     if (!clockDate.value) return;
     const [y, m, d] = clockDate.value.split('-').map(Number);

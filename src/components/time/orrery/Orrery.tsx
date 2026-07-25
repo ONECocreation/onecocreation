@@ -6,8 +6,9 @@ import "./orrery.css";
 
 /**
  * THE ORRERY — Act I of the orrery study (studies/clock-study-orrery.html,
- * v24, owner-approved), ported whole: the twelve orbit rings around the
- * pulsing 624-ember sun (THE LIGHT), the 13 sign names curved on the rim,
+ * v27, owner-approved), ported whole: the thirteen orbit rings around the
+ * pulsing 624-ember sun (THE LIGHT — SECOND through LAST SAT, WEEK and
+ * OLYMPIAD among them), the 13 sign names curved on the rim,
  * THE WANDERERS' sky band (the real planets at ~mean longitude), the
  * planet-dot chips column riding the dial's
  * left (wrapping back below on small decks), the fact card, the scrub +

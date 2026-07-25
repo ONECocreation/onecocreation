@@ -196,6 +196,13 @@
 }
 .orrery .factcard b { color: var(--orr-amber); font-weight: 600; }
 .orrery .factcard .g { color: var(--orr-gold); }
+/* THE WRAP LAW (v27, from the owner's phone review): the card is a row of
+   atomic segments — each an inline-block/nowrap span with the ' ·'
+   separator bound to its TAIL, so a wrapped line can never open with '·'
+   and no segment ever breaks inside itself. The cyan '% to go' rides
+   inside its own segment, same law. */
+.orrery .factcard .fwrap { display: inline; }
+.orrery .factcard .seg { display: inline-block; white-space: nowrap; }
 .orrery .scrubrow { display: flex; gap: 10px; align-items: center; margin-top: 16px; }
 .orrery input[type="range"] {
   flex: 1;
@@ -252,15 +259,32 @@
 }
 .orrery .typerow { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
 .orrery .typerow label { font-size: 11px; letter-spacing: 0.2em; color: var(--orr-dim); }
+/* THE DATE-FIELD LAW (v27, from the owner's phone review): iOS/WebKit
+   draws an empty date input as a blank gray select-looking pill — so the
+   appearance is taken in hand (-webkit-appearance:none), the inner value
+   pseudo is pinned left, the field stands ≥44px tall at 16px (no iOS
+   zoom-jump), and the engine DEFAULTS the value to today so it never
+   renders empty. It must look intentional on the phone. */
 .orrery input[type="date"] {
   font: inherit;
-  font-size: 14px;
+  font-size: 16px;
   background: transparent;
   color: var(--orr-ink);
   border: 1px solid var(--orr-line);
   border-radius: 8px;
   padding: 7px 10px;
   color-scheme: dark;
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 44px;
+}
+.orrery input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  margin: 0;
+}
+.orrery input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.8;
+  cursor: pointer;
 }
 .orrery .note { font-size: 12px; color: var(--orr-mut); }
 
