@@ -268,6 +268,10 @@ interface Planet {
   lblPath?: SVGPathElement;
   tickEls?: SVGLineElement[];
   cr?: number;
+  /* the mobile pass: the whole orbit LINE is a tap target — an invisible
+     fat-stroke twin of the ring (CSS .ringhit; fatter on coarse pointers)
+     wearing the same data-i, laid UNDER the dots so a dot tap still wins */
+  bandHit?: SVGCircleElement;
 }
 
 let seq = 0; // unique SVG-reference ids across engine instances (strict-mode remounts)
@@ -588,6 +592,11 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     RINGS.forEach((rg, i) => {
       const ring = el('circle', { class: 'ring', r: rg.r, 'data-i': i }) as SVGCircleElement;
       orr.appendChild(ring);
+      /* the thumb band — tap anywhere ON the orbit line to choose the ring
+         (a 1.25px stroke was never a touch target). It rides low in the
+         z-order, right on its ring, so every dot's hit circle stays boss. */
+      const bandHit = el('circle', { class: 'ringhit', r: rg.r, 'data-i': i }) as SVGCircleElement;
+      orr.appendChild(bandHit);
       /* watchmaker graduations — the Breguet/Patek tick-mark law; the
          refs ride along so applyLayout() can re-seat them per radius */
       const tickEls: SVGLineElement[] = [];
@@ -645,7 +654,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       const hit = el('circle', { class: 'hit', r: 17, 'data-i': i }) as SVGCircleElement;
       const tt = el('title', {}) as SVGTitleElement; hit.appendChild(tt);   // native hover tooltip
       orr.appendChild(pl); orr.appendChild(hit);
-      planets.push({ pl, lit, num, hit, ring, rg, fillA, remA, dot, tt, lblPath, tickEls, cr: rg.r });
+      planets.push({ pl, lit, num, hit, ring, rg, fillA, remA, dot, tt, lblPath, tickEls, cr: rg.r, bandHit });
     });
     /* THE WANDERERS' SKY BAND — one faint dashed circle between GENERATION
        and LAST SAT; the six classical planets ride it at ~mean longitude.
@@ -703,9 +712,12 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     orr.appendChild(el('circle', { r: 50, fill: BTC, class: 'sun624' }));
     sunLbl = el('text', { y: -27, 'text-anchor': 'middle', 'font-size': 6.2, 'letter-spacing': '.22em', fill: '#121215', opacity: .72 }) as SVGTextElement;
     sunLbl.textContent = 'BITCOIN TIME';
-    sunTime = el('text', { y: -5, 'text-anchor': 'middle', 'font-size': 14.5, 'font-weight': '700', fill: '#121215' }) as SVGTextElement;
-    sunDate = el('text', { y: 11, 'text-anchor': 'middle', 'font-size': 7.5, fill: '#121215', opacity: .85 }) as SVGTextElement;
-    sunVel = el('text', { y: 27, 'text-anchor': 'middle', 'font-size': 7, 'font-weight': '700', 'letter-spacing': '.06em', fill: '#121215', opacity: .72 }) as SVGTextElement;
+    /* the classed three step their font up on phone-scale decks (CSS
+       @media ≤480px overrides these attribute sizes) — the face must
+       read at arm's length even when the whole dial is ~300px wide */
+    sunTime = el('text', { class: 'suntime', y: -5, 'text-anchor': 'middle', 'font-size': 14.5, 'font-weight': '700', fill: '#121215' }) as SVGTextElement;
+    sunDate = el('text', { class: 'sundate', y: 11, 'text-anchor': 'middle', 'font-size': 7.5, fill: '#121215', opacity: .85 }) as SVGTextElement;
+    sunVel = el('text', { class: 'sunvel', y: 27, 'text-anchor': 'middle', 'font-size': 7, 'font-weight': '700', 'letter-spacing': '.06em', fill: '#121215', opacity: .72 }) as SVGTextElement;
     const sunHit = el('circle', { class: 'hit', r: 58, 'data-i': 'sun' }) as SVGCircleElement;
     sunTT = el('title', {}) as SVGTitleElement; sunHit.appendChild(sunTT);
     [sunLbl, sunTime, sunDate, sunVel, sunHit].forEach(n => orr.appendChild(n));
@@ -994,6 +1006,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       const r = radiusOf(o.rg.key, lay);
       o.cr = r;
       o.ring!.setAttribute('r', String(r));
+      o.bandHit!.setAttribute('r', String(r));
       o.fillA!.setAttribute('r', String(r));
       o.remA!.setAttribute('r', String(r));
       o.lblPath!.setAttribute('d', 'M ' + r + ' 0 A ' + r + ' ' + r + ' 0 1 1 -' + r + ' 0 A ' + r + ' ' + r + ' 0 1 1 ' + r + ' 0');
@@ -1052,11 +1065,13 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
   let rafId = 0;
   let reducedInterval: ReturnType<typeof setInterval> | undefined;
   let watchdogId: ReturnType<typeof setInterval> | undefined;
+  let io: IntersectionObserver | undefined;
+  let inView = true;                          // the park brake — false while scrolled away
   let lastText = 0;
   let lastFrameAt = Date.now();               // the watchdog's pulse — every frame stamps it
   if (!RM) {
     const tick = () => {
-      if (destroyed) return;
+      if (destroyed || !inView) return;
       lastFrameAt = Date.now();
       if (mode === 'live') {
         renderOrrery(false);
@@ -1069,9 +1084,10 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
        is VISIBLE but no animation frame has landed for >5 s, the rAF loop
        is dead (a throttled/soft-frozen tab that never fired visibilitychange
        on wake, or a cancelled chain) — re-arm it and repaint in place. Never
-       fires on a hidden tab: browsers pause rAF there by design. */
+       fires on a hidden tab: browsers pause rAF there by design. Respects
+       the park brake: it only resuscitates a loop that SHOULD be running. */
     watchdogId = setInterval(() => {
-      if (destroyed || document.visibilityState !== 'visible') return;
+      if (destroyed || !inView || document.visibilityState !== 'visible') return;
       if (Date.now() - lastFrameAt > 5000) {
         cancelAnimationFrame(rafId);
         lastFrameAt = Date.now();
@@ -1079,6 +1095,24 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
         if (mode === 'live') { renderOrrery(); renderRead(); }
       }
     }, 2500);
+    /* THE PARK LAW (mobile pass): a dial scrolled clear off the screen
+       paints for nobody — park the rAF loop when the orrery leaves the
+       viewport, re-arm it (with one immediate repaint, so no stale face
+       ever shows) the moment it scrolls back in. Same shape as the wake
+       law: the 30 s ladder poll keeps knocking either way, so the dial
+       is already true when it returns. */
+    if (typeof IntersectionObserver !== 'undefined') {
+      io = new IntersectionObserver((entries) => {
+        const vis = entries[entries.length - 1].isIntersecting;
+        if (destroyed || vis === inView) return;
+        inView = vis;
+        if (!inView) { cancelAnimationFrame(rafId); return; }
+        lastFrameAt = Date.now();
+        rafId = requestAnimationFrame(tick);
+        if (mode === 'live') { renderOrrery(); renderRead(); }
+      }, { rootMargin: '80px' });
+      io.observe(root);
+    }
   } else {
     /* reduced motion: no animation frames — but a clock still tells time.
        once a second the face, velocity and true positions refresh in place. */
@@ -1102,6 +1136,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
   function destroy() {
     destroyed = true;
     ac.abort();
+    io?.disconnect();
     cancelAnimationFrame(rafId);
     if (reducedInterval) clearInterval(reducedInterval);
     if (watchdogId) clearInterval(watchdogId);

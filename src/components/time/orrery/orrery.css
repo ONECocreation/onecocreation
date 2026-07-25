@@ -60,6 +60,18 @@
 /* the sign's NAME arcs under its glyph on the rim — small, dim, letterspaced */
 .orrery .orr .rimname { font-size: 6px; letter-spacing: 0.2em; fill: rgba(242, 234, 216, 0.42); }
 .orrery .orr .hit { fill: transparent; cursor: pointer; }
+/* the whole orbit LINE is a target too — an invisible fat stroke laid
+   under the dots (the engine gives it the ring's data-i, so the pick law
+   needs no new wiring): tap anywhere on a ring, choose that ring */
+.orrery .orr .ringhit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 8;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+/* the riding name never eats a tap meant for its ring */
+.orrery .orr .ringlbl { pointer-events: none; }
 .orrery .orr text { font-family: inherit; }
 .orrery .sunpulse { animation: orr-sunbreathe 6s ease-in-out infinite; }
 @keyframes orr-sunbreathe {
@@ -89,14 +101,19 @@
    it into the full labeled chips (dot + name side by side). The chosen
    planet's dot lights GOLD — the one selection law. ——— */
 .orrery .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-/* the selector rides the left side; on small decks it wraps back below */
-.orrery .orrrow { display: flex; gap: 10px; align-items: flex-start; }
+/* the selector rides the left side; on small decks it wraps back below.
+   wrap is for the FACT CARD: it lives in the row and breaks to its own
+   full-width line (flex-basis 100%) right under dial + chips */
+.orrery .orrrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
 .orrery .orrrow .face { flex: 1; min-width: 0; }
 .orrery .chips-side { flex-direction: column; flex-wrap: nowrap; margin-top: 0; flex: none; }
 .orrery .chips-side button { text-align: left; }
 @media (max-width: 640px) {
-  .orrery .orrrow { flex-direction: column; }
-  /* the collapsed dot-string rides horizontally under the dial */
+  /* stretch, not flex-start: without it the dial shrink-wraps to the
+     SVG's 300px fallback width and wastes the deck on 390/430 phones */
+  .orrery .orrrow { flex-direction: column; align-items: stretch; }
+  /* the collapsed dot-string rides horizontally — UNDER the fact card,
+     so tap-a-planet → read-the-story needs no scroll on a phone */
   .orrery .chips-side { flex-direction: row; flex-wrap: wrap; order: 2; align-items: center; }
 }
 .orrery .chips button {
@@ -167,7 +184,7 @@
 .orrery .chips.collapsed .pchip:hover,
 .orrery .chips.collapsed .pchip.on { border-color: var(--orr-cyan); }
 .orrery .factcard {
-  margin-top: 10px;
+  flex-basis: 100%;   /* inside .orrrow: always its own full-width line */
   min-height: 46px;
   border: 1px solid var(--orr-line);
   border-radius: 10px;
@@ -246,3 +263,42 @@
   color-scheme: dark;
 }
 .orrery .note { font-size: 12px; color: var(--orr-mut); }
+
+/* ——— THE THUMB LAWS — coarse pointers (phones, tablets). Hit areas are
+   invisible, so generosity is free: the point of every rule here is a
+   target a thumb can actually land. Pinch-zoom on the page stays free —
+   only the scrub claims its touches (it's a drag instrument). ——— */
+@media (pointer: coarse) {
+  /* the planet dots' hit circles swell (r is CSS geometry — the engine's
+     attribute stays 17 for mouse decks). The sun keeps its own r=58. */
+  .orrery .orr .hit:not([data-i="sun"]) { r: 30px; }
+  /* the orbit-line band fattens: the whole ring is thumbable */
+  .orrery .orr .ringhit { stroke-width: 16; }
+  /* collapsed planet dots become real touch targets (≥40px each way) */
+  .orrery .chips.collapsed .pchip { padding: 14px; }
+  .orrery .pchip { min-height: 40px; }
+  .orrery .chips-toggle { min-width: 44px; min-height: 42px; }
+  /* the scrub: a fat thumb, a tall touch lane, and NO page-scroll fights
+     mid-drag — touch-action stays default everywhere else, so pinch-zoom
+     and panning the rest of the page are untouched */
+  .orrery input[type="range"] { height: 44px; touch-action: none; }
+  .orrery input[type="range"]::-webkit-slider-thumb {
+    width: 28px;
+    height: 28px;
+    margin-top: -12.5px;
+  }
+  .orrery input[type="range"]::-moz-range-thumb { width: 28px; height: 28px; }
+  .orrery button.act { min-height: 44px; }
+  /* 16px: iOS Safari never zoom-jumps a focused input at 16 and up */
+  .orrery input[type="date"] { min-height: 44px; font-size: 16px; }
+}
+
+/* ——— phone-scale legibility: the sun's face and the fact card step up.
+   Ring labels and rim names stay small by design — the tap + fact card
+   carry the story at this scale. ——— */
+@media (max-width: 480px) {
+  .orrery .orr .suntime { font-size: 17px; }
+  .orrery .orr .sundate { font-size: 8.6px; }
+  .orrery .orr .sunvel { font-size: 8px; }
+  .orrery .factcard { font-size: 14.5px; padding: 12px 14px; }
+}

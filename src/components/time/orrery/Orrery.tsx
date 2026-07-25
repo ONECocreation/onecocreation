@@ -66,8 +66,12 @@ export default function Orrery() {
             aria-label="orbital rings of bitcoin periods"
           />
         </div>
+        {/* the fact card rides INSIDE the row: on wide decks it wraps to a
+            full-width line under dial+chips (flex-basis 100%); on small
+            decks (column) it sits DIRECTLY beneath the dial, above the
+            dot string — tap a planet, read the story without scrolling */}
+        <div className="factcard" aria-live="polite" />
       </div>
-      <div className="factcard" aria-live="polite" />
       <div className="scrubrow">
         <input
           type="range"
