@@ -168,8 +168,10 @@ export default function HalfWheel() {
       const h = height;
 
       const cx = w + 6, cy = hg * 0.5;
-      const sunR = w * 0.29;
       const maxR = Math.min(hg * 0.455, cx - 26);
+      /* the sun scales with width but YIELDS to the ring band: at wide or
+         short aspects it shrinks so the thirteen rings keep ~11px of air */
+      const sunR = Math.max(88, Math.min(w * 0.29, maxR - 150));
       sunGeom = { cx, cy, sunR };
 
       /* stars */
@@ -415,11 +417,13 @@ export default function HalfWheel() {
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      aria-label="The half-wheel: the bitcoin clock's mobile sky. Tap a ring for its reading."
-      className="block w-full cursor-pointer touch-manipulation"
-      style={{ height: "min(74vh, 700px)", minHeight: "480px" }}
-    />
+    <div className="mx-auto w-full max-w-[560px]">
+      <canvas
+        ref={canvasRef}
+        aria-label="The half-wheel: the bitcoin clock's mobile sky. Tap a ring for its reading."
+        className="block w-full cursor-pointer touch-manipulation"
+        style={{ height: "min(74vh, 700px)", minHeight: "480px" }}
+      />
+    </div>
   );
 }
