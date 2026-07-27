@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   GENESIS_MS,
   bftDate,
   beforeBitcoin,
-  estimateHeight,
+  estimateHeightAt,
+  currentBlockInfo,
   moonPhase,
   yearAnimal,
 } from "@/lib/bb/bft";
@@ -27,7 +28,7 @@ interface Bday {
   animal?: string;
 }
 
-function convert(value: string): Bday | null {
+function convert(value: string, tip: number | null): Bday | null {
   const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return null;
   const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
@@ -35,7 +36,7 @@ function convert(value: string): Bday | null {
   if (utc < GENESIS_MS) {
     return { preGenesis: true, date: beforeBitcoin(y, mo, d) };
   }
-  const height = estimateHeight(utc); // the ONE genesis-anchored estimator (bft.ts), ~10 min/block
+  const height = estimateHeightAt(utc, tip); // anchored: halvings + the live tip (bft.ts)
   const moon = moonPhase(height);
   const animal = yearAnimal(height);
   return {
@@ -49,7 +50,19 @@ function convert(value: string): Bday | null {
 
 export default function BdayPage() {
   const [value, setValue] = useState("");
-  const bday = value ? convert(value) : null;
+  const [tip, setTip] = useState<number | null>(null);
+  useEffect(() => {
+    let alive = true;
+    currentBlockInfo()
+      .then((info) => {
+        if (alive && !info.estimated) setTip(info.height);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const bday = value ? convert(value, tip) : null;
 
   return (
     <main className="mx-auto max-w-xl px-6 py-16">

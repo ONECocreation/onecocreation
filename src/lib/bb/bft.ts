@@ -141,8 +141,52 @@ export function deriveTraits(bornBlock: number, name: string): BuddyTraits {
  */
 let _tipCache: { height: number; at: number; tipTimestamp: number | null } | null = null;
 
+/** Heights the chain passed on well-recorded days (the halvings). The network
+ * has averaged FASTER than 600s/block for most of its life, so a pure
+ * genesis ÷ 10min guess drifts ~250 days behind by 2026 — these anchors keep
+ * a date→height estimate honest in every era. */
+const CHAIN_ANCHORS: ReadonlyArray<readonly [number, number]> = [
+  [GENESIS_MS, 0],
+  [Date.UTC(2012, 10, 28), 210_000],
+  [Date.UTC(2016, 6, 9), 420_000],
+  [Date.UTC(2020, 4, 11), 630_000],
+  [Date.UTC(2024, 3, 20), 840_000],
+];
+
+/**
+ * Date → ~height, anchored. Interpolates between chain anchors for historical
+ * dates; when the live tip is known it becomes the final anchor, so "today"
+ * lands on today's height and futures extend from the real tip at 600s/block.
+ */
+export function estimateHeightAt(
+  utcMs: number,
+  tip?: number | null,
+  tipAtMs = Date.now(),
+): number {
+  const anchors: Array<readonly [number, number]> = [...CHAIN_ANCHORS];
+  const lastFixed = anchors[anchors.length - 1];
+  if (tip != null && tip > lastFixed[1] && tipAtMs > lastFixed[0]) {
+    anchors.push([tipAtMs, tip]);
+  }
+  if (utcMs <= GENESIS_MS) {
+    return Math.floor((utcMs - GENESIS_MS) / 600_000);
+  }
+  const last = anchors[anchors.length - 1];
+  if (utcMs >= last[0]) {
+    return Math.max(0, Math.round(last[1] + (utcMs - last[0]) / 600_000));
+  }
+  for (let i = 1; i < anchors.length; i++) {
+    if (utcMs <= anchors[i][0]) {
+      const [t0, h0] = anchors[i - 1];
+      const [t1, h1] = anchors[i];
+      return Math.max(0, Math.round(h0 + ((utcMs - t0) / (t1 - t0)) * (h1 - h0)));
+    }
+  }
+  return Math.max(0, Math.floor((utcMs - GENESIS_MS) / 600_000));
+}
+
 export function estimateHeight(nowMs = Date.now()): number {
-  return Math.max(0, Math.floor((nowMs - GENESIS_MS) / 600_000));
+  return estimateHeightAt(nowMs);
 }
 
 /** `estimated: true` = the network was unreachable and the height is a

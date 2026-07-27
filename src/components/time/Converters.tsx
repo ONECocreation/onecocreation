@@ -6,7 +6,7 @@ import {
   bftDate,
   bftDateTime,
   beforeBitcoin,
-  estimateHeight,
+  estimateHeightAt,
   moonPhase,
   yearAnimal,
   BLOCKS_PER_DAY,
@@ -29,7 +29,7 @@ import {
  *    the lesson.
  */
 
-function DateResult({ value }: { value: string }) {
+function DateResult({ value, tip }: { value: string; tip: number | null }) {
   const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return null;
   const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
@@ -55,7 +55,7 @@ function DateResult({ value }: { value: string }) {
     );
   }
 
-  const height = estimateHeight(utc); // the ONE genesis-anchored estimator (bft.ts)
+  const height = estimateHeightAt(utc, tip); // anchored: halvings + the live tip (bft.ts)
   const moon = moonPhase(height);
   const animal = yearAnimal(height);
   return (
@@ -145,7 +145,7 @@ export default function Converters({ tip, tipEstimated }: { tip: number | null; 
             onChange={(e) => setDateValue(e.target.value)}
             className="w-full border-2 border-edge bg-void px-3 py-2 font-mono text-sm text-cyan focus:border-cyan focus:outline-none"
           />
-          {dateValue && <DateResult value={dateValue} />}
+          {dateValue && <DateResult value={dateValue} tip={tip} />}
           <span className="mt-2 block font-mono text-[10px] text-white/35">
             a wall-clock day → the nearest block is an ~estimate. your
             birthday gets the full ceremony at /bday.
