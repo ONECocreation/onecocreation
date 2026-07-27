@@ -3,6 +3,7 @@ import ArcadeHeader from "@/components/ArcadeHeader";
 import EarthFooter from "@/components/EarthFooter";
 import TimeDoor from "@/components/time/TimeDoor";
 import Orrery from "@/components/time/orrery/Orrery";
+import HalfWheel from "@/components/time/HalfWheel";
 
 /**
  * /time — behind the TIME DOOR. Education-first: THE ORRERY large (the
@@ -296,7 +297,14 @@ export default function TimePage() {
           every ring is a bitcoin period. the chain is the sun. different
           worlds tell the same clock — this one is earth&apos;s.
         </p>
-        <Orrery />
+        {/* the full wheel keeps desktop duty; below md the sky folds to the
+            HALF-WHEEL — the admiral's horizon telling (bench v12) */}
+        <div className="hidden md:block">
+          <Orrery />
+        </div>
+        <div className="md:hidden">
+          <HalfWheel />
+        </div>
         <HowToRead />
       </div>
 
