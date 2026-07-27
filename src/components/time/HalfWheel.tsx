@@ -43,8 +43,8 @@ const RINGS: Ring[] = [
 
 const REL: Record<string, string> = {
   second: "the fastest hand",
-  minute: "= 60 seconds",
-  block: "= 10 minutes",
+  minute: "= 60 secs",
+  block: "= 10 mins",
   hour: "= 6 blocks",
   day: "= 24 hours",
   week: "= 7 days",
@@ -81,9 +81,9 @@ function ringProgress(r: Ring, h: number, now: Date, tipTs: number | null): numb
 }
 
 function ringFacts(r: Ring, h: number, now: Date, tipTs: number | null) {
-  if (r.kind === "wall-s") return { pos: now.getSeconds(), span: 60, unit: "seconds" };
-  if (r.kind === "wall-m") return { pos: now.getMinutes(), span: 60, unit: "minutes" };
-  if (r.kind === "intra") return { pos: Math.floor(intraBlockSeconds(now, tipTs)), span: 600, unit: "seconds" };
+  if (r.kind === "wall-s") return { pos: now.getSeconds(), span: 60, unit: "secs" };
+  if (r.kind === "wall-m") return { pos: now.getMinutes(), span: 60, unit: "mins" };
+  if (r.kind === "intra") return { pos: Math.floor(intraBlockSeconds(now, tipTs)), span: 600, unit: "secs" };
   if (r.max) return { pos: h, span: r.max, unit: "blocks" };
   return { pos: h % (r.mod as number), span: r.mod as number, unit: "blocks" };
 }
@@ -366,17 +366,18 @@ export default function HalfWheel() {
         sunRowWrap(REL[r3.label] || "", cy - sunR * 0.46 + 15, 9.5, false, ink);
         sunRow(pct.toFixed(pct < 10 ? 1 : 0) + "%", cy + 10, 28, true, ink);
         sunRow(`${compactNum(f.pos)} / ${compactNum(f.span)}`, cy + 28, 10, false, ink);
-        sunRow(`${compactNum(f.span - f.pos)} to the turn`, cy + 42, 10, false, ink);
-        /* chevrons: step ring to ring without thumb precision (mobile crew law) */
-        const chevY = cy + sunR * 0.58;
-        if (chevY < cy + sunR - 14) {
-          ctx.font = "bold 16px ui-monospace, monospace";
+        sunRowWrap(`${compactNum(f.span - f.pos)} ${f.unit} left`, cy + 42, 10, false, ink);
+        /* chevrons: step ring to ring without thumb precision (mobile crew law).
+           They sit LOW on the disc, clear of the card's last line. */
+        const chevY = cy + sunR * 0.74;
+        if (chevY < cy + sunR - 12) {
+          ctx.font = "bold 18px ui-monospace, monospace";
           ctx.fillStyle = inkSoft;
           ctx.textAlign = "center";
-          const cxL = w - sunR * 0.62, cxR = w - PAD_R - 12;
+          const cxL = w - sunR * 0.72, cxR = w - PAD_R - 14;
           ctx.fillText("‹", cxL, chevY);
           ctx.fillText("›", cxR, chevY);
-          chevrons = { prev: [cxL - 20, chevY - 20, 40, 40], next: [cxR - 20, chevY - 20, 40, 40] };
+          chevrons = { prev: [cxL - 22, chevY - 22, 44, 44], next: [cxR - 22, chevY - 22, 44, 44] };
         }
       }
     }
