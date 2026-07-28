@@ -1621,3 +1621,142 @@ footer {
   from { offset-distance: 0%; }
   to { offset-distance: 100%; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SITE CONSOLE CHROME  —  the operator rooms inside the artist's own site
+   (SiteConsoleShell; CONSOLE_CHROME=site). Deliberately NOT arcade: rounded
+   cards, a serif, cream ground, air. A wellness practice is a different
+   design language from an arcade, and a recolour of LCARS can't get there.
+
+   Every value reads the SITE's OWN brand token first with an arcade-safe
+   fallback, so a clone that defines --serif / --cream / --ink / --gold in
+   its globals.css — as onecocreation already does — wears its own face here
+   with no edits to this file.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.mgmt-ground {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--cream, #0b0b12);
+  color: var(--ink, #e8e8f0);
+}
+
+.mgmt-wrap {
+  flex: 1;
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: clamp(22px, 4vw, 44px) clamp(16px, 3vw, 28px) 72px;
+}
+
+.mgmt-head { margin-bottom: 22px; }
+
+.mgmt-eyebrow {
+  font-family: var(--sans, inherit);
+  font-size: .68rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted, #8b8ba3);
+  margin: 0 0 6px;
+}
+
+.mgmt-title {
+  font-family: var(--serif, inherit);
+  font-size: clamp(1.7rem, 3.6vw, 2.4rem);
+  line-height: 1.12;
+  margin: 0;
+  color: var(--ink, #f2f2f8);
+  text-wrap: balance;
+}
+
+.mgmt-blurb {
+  margin: 8px 0 0;
+  color: var(--muted, #8b8ba3);
+  max-width: 62ch;
+  font-size: .95rem;
+}
+
+/* section tabs — the room registry, worn softly */
+.mgmt-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 18px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--edge, rgba(255,255,255,.12));
+}
+
+.mgmt-tab {
+  font-family: var(--sans, inherit);
+  font-size: .82rem;
+  letter-spacing: .04em;
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--edge, rgba(255,255,255,.16));
+  color: var(--muted, #9a9ab2);
+  text-decoration: none;
+  transition: color .18s ease, border-color .18s ease, background .18s ease;
+}
+
+.mgmt-tab:hover { color: var(--ink, #fff); border-color: var(--lavender, #7a7ad0); }
+
+.mgmt-tab.is-active {
+  color: var(--ink, #fff);
+  border-color: var(--lavender, #7a7ad0);
+  background: color-mix(in srgb, var(--lavender, #7a7ad0) 14%, transparent);
+}
+
+.mgmt-tab:focus-visible {
+  outline: 2px solid var(--purple, #9B26D6);
+  outline-offset: 2px;
+}
+
+.mgmt-body { font-family: var(--sans, inherit); }
+
+/* Soften the rooms themselves. The room pages are shared with the SCAR
+   shell and carry arcade utility classes; rather than fork every page, the
+   site chrome restyles the few primitives they use. Scoped under
+   .mgmt-body so the LCARS bridge is untouched. */
+.mgmt-body h1,
+.mgmt-body h2,
+.mgmt-body h3 { font-family: var(--serif, inherit); letter-spacing: 0; }
+
+.mgmt-body .border { border-color: var(--edge, rgba(255,255,255,.14)) !important; }
+
+.mgmt-body [class*="border-neutral"],
+.mgmt-body [class*="border-cyan"] {
+  border-color: var(--edge, rgba(255,255,255,.14)) !important;
+  border-radius: 16px;
+}
+
+.mgmt-body [class*="text-cyan"] { color: var(--purple, #7a7ad0) !important; }
+.mgmt-body [class*="text-amber"] { color: var(--rose, #C56E8B) !important; }
+.mgmt-body [class*="text-neutral-4"],
+.mgmt-body [class*="text-neutral-5"] { color: var(--muted, #8b8ba3) !important; }
+.mgmt-body [class*="text-neutral-1"],
+.mgmt-body [class*="text-neutral-2"] { color: var(--ink, #f2f2f8) !important; }
+
+.mgmt-body input,
+.mgmt-body select,
+.mgmt-body textarea {
+  border-radius: 10px;
+  background: var(--panel, transparent);
+  color: var(--ink, inherit);
+  font-family: var(--sans, inherit);
+}
+
+.mgmt-body button {
+  border-radius: 999px;
+  font-family: var(--sans, inherit);
+  letter-spacing: .03em;
+}
+
+/* GOLD IS MONEY ONLY — the house rule survives the reskin. */
+.mgmt-body .is-money,
+.mgmt-body [data-money] { color: var(--gold, #D9B24E) !important; }
+
+@media (max-width: 560px) {
+  .mgmt-nav { gap: 6px; }
+  .mgmt-tab { font-size: .76rem; padding: 6px 12px; }
+}

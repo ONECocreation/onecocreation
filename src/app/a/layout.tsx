@@ -1,6 +1,8 @@
 import { headers } from "next/headers";
 import ConsoleShell from "@/components/console/ConsoleShell";
+import SiteConsoleShell from "@/components/console/SiteConsoleShell";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
+import { CONSOLE_CHROME } from "@/lib/console";
 
 /**
  * The /a layout — mounts the SCAR·LET LCARS shell (elbow ribbon + top bar +
@@ -18,5 +20,7 @@ export default async function ConsoleLayout({
   const cookie = (await headers()).get("cookie");
   const operator = operatorFromCookieHeader(cookie);
   if (!operator) return <>{children}</>;
-  return <ConsoleShell>{children}</ConsoleShell>;
+  // Same gate, same rooms — only the chrome differs per clone (console.ts).
+  const Shell = CONSOLE_CHROME === "site" ? SiteConsoleShell : ConsoleShell;
+  return <Shell>{children}</Shell>;
 }

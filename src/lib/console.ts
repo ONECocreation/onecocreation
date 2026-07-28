@@ -15,6 +15,22 @@ import { NIP05_DOMAIN, SPACE_NAME } from "./identity-config";
  * a markup fork.
  */
 
+/**
+ * WHICH CHROME wraps the rooms — the per-clone console look.
+ *
+ * - `scar`  the SCAR·LET LCARS bridge (this ship; the arcade's own furniture)
+ * - `site`  the rooms inside the artist's OWN header and footer, so managing
+ *           the shop is an extension of their site rather than a visit to a
+ *           spaceship (the captain's call for onecocreation, ~0018.05.03)
+ *
+ * A clone sets CONSOLE_CHROME=site and swaps the two exports in
+ * components/console/site-chrome.tsx. Nothing else changes: the rooms, the
+ * registry, the operator gate and every API are shared by both shells.
+ */
+export type ConsoleChrome = "scar" | "site";
+export const CONSOLE_CHROME: ConsoleChrome =
+  process.env.NEXT_PUBLIC_CONSOLE_CHROME === "site" ? "site" : "scar";
+
 /** house accents — the semantic contract (gold/coin = MONEY only) */
 export type ConsoleTone = "neon" | "cyan" | "pink" | "ghost" | "coin";
 
@@ -45,6 +61,14 @@ export interface ConsoleRoom {
   /** registered but its route hasn't landed yet — renders as an honest
       disabled SOON berth in the ribbon (never a dead link) */
   soon?: boolean;
+  /**
+   * HOUSE FURNITURE — this ship's own bridge, not an artist's shop.
+   * The SCAR·LET shell shows everything; the `site` chrome (an artist
+   * managing their own site) hides these, because a wellness practitioner
+   * has no use for a SIMULATOR or a FLEET MAP. Rooms an artist genuinely
+   * runs — their shelf, their calendar, their brand — leave this unset.
+   */
+  houseOnly?: boolean;
   subs?: ConsoleRoomSub[];
 }
 
@@ -106,6 +130,7 @@ export const CONSOLE_OVERVIEW: ConsoleRoom = {
 export const CONSOLE_ROOMS: ConsoleRoom[] = [
   {
     key: "bridge",
+    houseOnly: true,
     href: "/a/status",
     label: "BRIDGE",
     short: "BRIDGE",
@@ -136,6 +161,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
   },
   {
     key: "duty",
+    houseOnly: true,
     href: "/a/action",
     label: "DUTY ROSTER",
     short: "DUTY ROSTER",
@@ -161,6 +187,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
   },
   {
     key: "sim",
+    houseOnly: true,
     href: "/a/sim",
     label: "SIMULATOR",
     short: "SIMULATOR",
@@ -173,6 +200,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
   },
   {
     key: "bots",
+    houseOnly: true,
     href: "/a/bots",
     label: "BOT DECK",
     short: "BOT DECK",
@@ -181,6 +209,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
   },
   {
     key: "fleet",
+    houseOnly: true,
     href: "/a/connections",
     label: "FLEET MAP",
     short: "FLEET MAP",
@@ -222,6 +251,17 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     short: "STORE",
     blurb: "the shelf manager — wares, prices, the order book",
     tone: "neon",
+  },
+  {
+    /* the CALENDAR room — booking S6, steps 1–2 (docs/booking-flow.md).
+       Services + the artist's week; holds, orders and reminders land with
+       step 3 and grow their own berths here. */
+    key: "booking",
+    href: "/a/booking",
+    label: "CALENDAR",
+    short: "CAL",
+    blurb: "sessions and your week — what you offer, when you work",
+    tone: "cyan",
   },
 ];
 
