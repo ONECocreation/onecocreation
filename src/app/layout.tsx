@@ -5,6 +5,9 @@ import { CRTOverlay, EASY_MODE_BOOT_SCRIPT } from "@pacsarcade/arcade-ui";
 import { BrandProvider, frensEarthTheme } from "@/lib/brand";
 import BftClock from "@/components/BftClock";
 import "./globals.css";
+/* One Cocreation's own face — loaded AFTER globals so Love's brand tokens
+   (--serif/--cream/--ink/--gold) win, including inside the admin shell. */
+import "./onecocreation.css";
 
 const retronoid = localFont({
   src: "../../public/fonts/Retronoid.ttf",

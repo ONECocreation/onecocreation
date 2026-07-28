@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144" role="img" aria-label="One Cocreation coin">
+  <defs>
+    <radialGradient id="starGlowC" cx="72" cy="72" r="42.16" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.97"/>
+      <stop offset="10%" stop-color="#FCFDF6" stop-opacity="0.90"/>
+      <stop offset="26%" stop-color="#FCD877" stop-opacity="0.60"/>
+      <stop offset="50%" stop-color="#F0B347" stop-opacity="0.24"/>
+      <stop offset="78%" stop-color="#B87A22" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="starBodyC" cx="72" cy="72" r="37.40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="18%" stop-color="#FFF6C4"/>
+      <stop offset="45%" stop-color="#FCE27A"/>
+      <stop offset="72%" stop-color="#EDBB48"/>
+      <stop offset="100%" stop-color="#C98E2B"/>
+    </radialGradient>
+    <radialGradient id="faceGradC" cx="72" cy="72" r="52.00" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1A1206"/>
+      <stop offset="60%" stop-color="#0C0904"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+    <linearGradient id="ringGoldC" x1="72" y1="4.0" x2="72" y2="140.0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F7DE68"/>
+      <stop offset="28%" stop-color="#D6AB3B"/>
+      <stop offset="58%" stop-color="#976E1D"/>
+      <stop offset="82%" stop-color="#6A490F"/>
+      <stop offset="100%" stop-color="#412C08"/>
+    </linearGradient>
+    <linearGradient id="ringRidgeC" x1="72" y1="4.0" x2="72" y2="140.0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF7CC"/>
+      <stop offset="42%" stop-color="#F1D064"/>
+      <stop offset="75%" stop-color="#C1912F"/>
+      <stop offset="100%" stop-color="#8A6417"/>
+    </linearGradient>
+    <linearGradient id="ringInnerBevelC" x1="4.0" y1="4.0" x2="140.0" y2="140.0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF4B0"/>
+      <stop offset="45%" stop-color="#E7C24E"/>
+      <stop offset="100%" stop-color="#6E4C10"/>
+    </linearGradient>
+  </defs>
+
+  <g>
+    <circle cx="72" cy="72" r="50.50" fill="url(#faceGradC)"/>
+    <circle cx="72" cy="72" r="59.00" fill="none" stroke="url(#ringGoldC)" stroke-width="17"/>
+    <circle cx="72" cy="72" r="59.50" fill="none" stroke="url(#ringRidgeC)" stroke-width="6" opacity="0.6"/>
+    <circle cx="72" cy="72" r="67.40" fill="none" stroke="#3A2706" stroke-width="2.4" opacity="0.92"/>
+    <circle cx="72" cy="72" r="50.90" fill="none" stroke="#241704" stroke-width="2.4" opacity="0.96"/>
+    <circle cx="72" cy="72" r="52.70" fill="none" stroke="url(#ringInnerBevelC)" stroke-width="1.5" opacity="0.7"/>
+    <path d="M15.62 51.48 A60.00 60.00 0 0 1 117.96 33.43" fill="none" stroke="#FCF6C0" stroke-width="4.5" stroke-linecap="round" opacity="0.6"/>
+    <path d="M121.15 106.41 A60.00 60.00 0 0 1 66.77 131.77" fill="none" stroke="#EAC96A" stroke-width="3" stroke-linecap="round" opacity="0.28"/>
+    <circle cx="72" cy="72" r="40.80" fill="url(#starGlowC)"/>
+    <path d="M86.42 86.42L72.00 75.40L57.58 86.42L68.60 72.00L57.58 57.58L72.00 68.60L86.42 57.58L75.40 72.00Z" fill="url(#starBodyC)" opacity="0.85"/>
+    <path d="M109.06 72.00L74.64 74.64L72.00 109.06L69.36 74.64L34.94 72.00L69.36 69.36L72.00 34.94L74.64 69.36Z" fill="url(#starBodyC)"/>
+    <circle cx="72" cy="72" r="5.10" fill="#FFFDF4"/>
+  </g></svg>

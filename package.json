@@ -1,5 +1,5 @@
 {
-  "name": "frens-earth",
+  "name": "onecocreation",
   "version": "0.1.0",
   "private": true,
   "browserslist": [
@@ -36,5 +36,6 @@
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "description": "One Cocreation \u2014 Love's site, cloned from the frens.earth store framework."
 }

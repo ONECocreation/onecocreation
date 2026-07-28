@@ -3,13 +3,13 @@
  *
  * The `site` console chrome (SiteConsoleShell) renders the operator rooms
  * inside the ARTIST'S OWN header and footer, so managing the shop looks and
- * feels like being on their site rather than visiting a spaceship. Which
- * header and footer those are is the only thing that differs per clone, so
- * it lives here alone.
+ * feels like being on their site rather than visiting a spaceship.
  *
- * onecocreation's clone changes exactly these two lines to their SiteHeader
- * and SiteFooter — and inherits everything else. This file joins the
- * de-house-ing checklist in docs/storefront-framework.md.
+ * ── ONE COCREATION's clone: pointed at Love's real site chrome. ──
+ * Upstream (frens.earth) re-exports ArcadeHeader/EarthFooter here; this is
+ * the de-housed version and is EXPECTED to conflict on upstream merges —
+ * always keep this side. See docs/storefront-framework.md's de-housing
+ * checklist.
  */
-export { default as SiteChromeHeader } from "@/components/ArcadeHeader";
-export { default as SiteChromeFooter } from "@/components/EarthFooter";
+export { default as SiteChromeHeader } from "@/components/SiteHeader";
+export { default as SiteChromeFooter } from "@/components/SiteFooter";
