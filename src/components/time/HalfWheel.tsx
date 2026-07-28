@@ -53,7 +53,7 @@ const RINGS: Ring[] = [
 ];
 
 const REL: Record<string, string> = {
-  second: "the fastest hand",
+  second: "the chain's pulse",
   minute: "= 60 secs",
   block: "= 10 mins",
   hour: "= 6 blocks",
@@ -88,10 +88,17 @@ function moonIllumination(h: number): number {
   return (1 - Math.cos(2 * Math.PI * lun)) / 2;
 }
 
+/* display-clamped block seconds: parks at 9:59 when the chain is loaded */
+function intraDisplay(now: Date, tipTs: number | null): number {
+  return Math.min(599.999, intraBlockSeconds(now, tipTs));
+}
+
 function ringProgress(r: Ring, h: number, now: Date, tipTs: number | null): number {
-  if (r.kind === "wall-s") return now.getSeconds() / 60 + now.getMilliseconds() / 60000;
-  if (r.kind === "wall-m") return now.getMinutes() / 60 + now.getSeconds() / 3600;
-  if (r.kind === "intra") return intraBlockSeconds(now, tipTs) / 600;
+  /* second and minute are the CHAIN's hands, derived from block time —
+     when the block freezes at its top, they freeze with it */
+  if (r.kind === "wall-s") return (intraDisplay(now, tipTs) % 60) / 60;
+  if (r.kind === "wall-m") return ((h % 6) * 600 + intraDisplay(now, tipTs)) / 3600;
+  if (r.kind === "intra") return intraDisplay(now, tipTs) / 600;
   if (r.kind === "moon") return moonIllumination(h);
   if (r.max) return h / r.max;
   return (h % (r.mod as number)) / (r.mod as number);
@@ -100,9 +107,9 @@ function ringProgress(r: Ring, h: number, now: Date, tipTs: number | null): numb
 /* the count each ball carries — where we ARE, in the ring's own tongue */
 function ringBall(r: Ring, h: number, now: Date, tipTs: number | null): number | string {
   switch (r.label) {
-    case "second": return now.getSeconds();
-    case "minute": return now.getMinutes();
-    case "block": return Math.floor(intraBlockSeconds(now, tipTs) / 60);
+    case "second": return Math.floor(intraDisplay(now, tipTs)) % 60;
+    case "minute": return (h % 6) * 10 + Math.floor(intraDisplay(now, tipTs) / 60);
+    case "block": return Math.floor(intraDisplay(now, tipTs) / 60);
     case "hour": return h % 6;
     case "day": return Math.floor((h % 144) / 6);
     case "week": return Math.floor((h % 1008) / 144);
@@ -133,10 +140,16 @@ function cardFor(r: Ring, h: number, now: Date, tipTs: number | null): Card {
   const month = Math.floor((Math.floor(h / 144) % 364) / 28) + 1;
   const pct = (p: number) => `${Math.min(100, p * 100).toFixed(p * 100 < 10 ? 1 : 0)}%`;
   switch (r.label) {
-    case "second":
-      return { big: String(now.getSeconds()), l1: `${now.getSeconds()} / 60 secs`, l2: "the wall's hand" };
-    case "minute":
-      return { big: String(now.getMinutes()), l1: `${now.getMinutes()} / 60 mins`, l2: "the wall's hand" };
+    case "second": {
+      const sec = Math.floor(intraDisplay(now, tipTs)) % 60;
+      const frozen = tipTs !== null && intraBlockSeconds(now, tipTs) >= 600;
+      return { big: String(sec), l1: `${sec} / 60 secs`, l2: frozen ? "the chain is loaded" : "of the bitcoin minute", tremble: frozen };
+    }
+    case "minute": {
+      const bmin = (h % 6) * 10 + Math.floor(intraDisplay(now, tipTs) / 60);
+      const frozen = tipTs !== null && intraBlockSeconds(now, tipTs) >= 600;
+      return { big: String(bmin), l1: `minute ${bmin} / 60`, l2: frozen ? "the chain is loaded" : `of hour ${Number(bftTime(h).slice(0, 2))}`, tremble: frozen };
+    }
     case "block": {
       const s = Math.floor(intraBlockSeconds(now, tipTs));
       const remain = Math.max(0, 600 - s);
@@ -185,7 +198,7 @@ function cardFor(r: Ring, h: number, now: Date, tipTs: number | null): Card {
 function stripFor(r: Ring | null, h: number, now: Date, tipTs: number | null): string {
   if (!r) return `block ${h.toLocaleString()} · ${bftDate(h)} · tap a ring to learn its lap`;
   const c = cardFor(r, h, now, tipTs);
-  const span = r.max ? `${compactNum(r.max)} blocks` : r.mod ? `${compactNum(r.mod)} blocks` : "the wall's lap";
+  const span = r.max ? `${compactNum(r.max)} blocks` : r.mod ? `${compactNum(r.mod)} blocks` : "the block's beat";
   return `${r.label.toUpperCase()} · ${span} · ${c.big} — ${c.l1} · ${c.l2}`;
 }
 
@@ -256,7 +269,6 @@ export default function HalfWheel() {
       /* the loaded chain: block overdue → ember trembles outward */
       const intraS = intraBlockSeconds(now, tipTs);
       const loaded = tipTs !== null && intraS >= 600;
-      const trembleT = now.getTime() / 300;
 
       /* stars */
       for (let i = 0; i < 34; i++) {
@@ -309,10 +321,14 @@ export default function HalfWheel() {
            block ring outward, fading with distance — the arcade's tell */
         let stroke = sel ? "#ffb01f" : `rgba(61,255,122,${r.thin ? 0.45 : 0.85})`;
         if (loaded && !sel && !reduced) {
+          /* one crest, born at the block ring, sweeping cleanly outward,
+             then a beat of quiet before the next */
+          const PULSE_SECS = 2.6;
+          const phase = ((now.getTime() / 1000) % PULSE_SECS) / PULSE_SECS;
+          const front = phase * (RINGS.length + 3) - 1;
           const dist = Math.abs(idx - blockIdx);
-          const wave = Math.max(0, Math.sin(trembleT - dist * 0.9));
-          const glow = wave * Math.exp(-dist * 0.38);
-          if (glow > 0.04) {
+          const glow = Math.exp(-((dist - front) ** 2) / 0.7);
+          if (glow > 0.05) {
             const g = Math.round(176 - 74 * glow);
             stroke = `rgba(255,${g},31,${0.35 + 0.55 * glow})`;
           }
@@ -479,8 +495,8 @@ export default function HalfWheel() {
         sunRowWrap(card.l2, cy + 42, 10, false, ink);
         /* chevrons: point the way the rings actually lie — ‹ steps OUTWARD
            (leftward, away from the sun), › steps INWARD toward the sun */
-        const chevY = cy + sunR * 0.74;
-        if (chevY < cy + sunR - 12) {
+        const chevY = cy + sunR * 0.86;
+        if (chevY < cy + sunR - 8) {
           ctx.font = "bold 18px ui-monospace, monospace";
           ctx.fillStyle = inkSoft;
           ctx.textAlign = "center";
@@ -531,7 +547,7 @@ export default function HalfWheel() {
     /* the tremble needs a quicker brush when the chain is loaded */
     const trembleId = reduced ? null : window.setInterval(() => {
       if (height !== null && tipTs !== null && intraBlockSeconds(new Date(), tipTs) >= 600) draw();
-    }, 150);
+    }, 120);
 
     return () => {
       disposed = true;
