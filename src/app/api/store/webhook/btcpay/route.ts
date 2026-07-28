@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { btcpayAdapter } from "@/lib/payments";
 import { recordChargeEvent } from "@/lib/store";
 import { settleBookingFromOrder } from "@/lib/booking-fulfil";
+import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,10 @@ export async function POST(request: Request) {
     // the spec's serverless fulfilment ruling. A booking order confirms its
     // slot here; a refund/dispute gives the time back.
     if (order?.bookingId) await settleBookingFromOrder(order);
+    // Packages: grant/revoke the tier and move the member in or out of the
+    // rooms. Independently idempotent, so a retry or a late reconcile poll
+    // lands on the same answer as the first delivery.
+    if (order) await settleEntitlementFromOrder(order);
   }
   return NextResponse.json({ ok: true });
 }
