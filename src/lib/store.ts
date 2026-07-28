@@ -131,6 +131,13 @@ export interface OrderRecord {
   chargeIds: string[];
   /** handle@space — REQUIRED for digital/package (the gate's subject) */
   entitlementSubject?: string;
+  /**
+   * Set on a booking order (docs/booking-flow.md §4) — the order stays the
+   * record of fact for MONEY, the booking for TIME, and this is the link the
+   * settle hook follows to confirm the slot. Additive and optional, so v1/v2
+   * records read unchanged and no version bump is owed.
+   */
+  bookingId?: string;
   contact?: { email?: string };
   shipping?: { name?: string; address?: string };
   createdAtMs: number;
