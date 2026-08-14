@@ -64,31 +64,67 @@ export default function MediaField({
   }
   useEffect(() => { if (open) loadLibrary(); }, [open]);
 
-  async function upload(file: File) {
-    setBusy(true);
-    setNote("");
-    try {
+  /* in-browser ConvertX: photos get downscaled + re-encoded to webp so
+     nothing trips Vercel's ~4.5MB body ceiling (base64 inflates by 4/3 —
+     the old silent killer of big uploads). SVG/GIF pass through untouched. */
+  async function toUploadable(file: File): Promise<{ name: string; mime: string; dataBase64: string }> {
+    const passthrough = file.type === "image/svg+xml" || file.type === "image/gif";
+    const budget = 2.8 * 1024 * 1024; // bytes, pre-base64
+    if (passthrough || file.size <= budget) {
+      if (passthrough && file.size > budget) throw new Error("that file is too big — keep SVG/GIF under 2.8 MB");
       const dataBase64 = await new Promise<string>((resolve, reject) => {
         const r = new FileReader();
         r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
         r.onerror = () => reject(r.error);
         r.readAsDataURL(file);
       });
+      if (!passthrough && file.size > budget) throw new Error("unexpected size");
+      return { name: file.name, mime: file.type, dataBase64 };
+    }
+    const bitmap = await createImageBitmap(file).catch(() => null);
+    if (!bitmap) throw new Error("couldn't read that image format — try a jpg, png, or webp");
+    const MAX_EDGE = 2000;
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    for (const q of [0.85, 0.7, 0.55]) {
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/webp", q));
+      if (blob && blob.size <= budget) {
+        const dataBase64 = await new Promise<string>((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
+          r.onerror = () => reject(r.error);
+          r.readAsDataURL(blob);
+        });
+        return { name: file.name.replace(/\.[a-z0-9]+$/i, "") + ".webp", mime: "image/webp", dataBase64 };
+      }
+    }
+    throw new Error("image is enormous even after compressing — try cropping it first");
+  }
+
+  async function upload(file: File) {
+    setBusy(true);
+    setNote("");
+    try {
+      const { name, mime, dataBase64 } = await toUploadable(file);
       const res = await fetch("/api/media", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: file.name, mime: file.type, dataBase64 }),
+        body: JSON.stringify({ name, mime, dataBase64 }),
       });
-      const d = await res.json();
-      if (d.ok && d.url) {
+      const d = await res.json().catch(() => null);
+      if (d?.ok && d.url) {
         onChange(d.url);
         setNote("saved to the library ✓");
         loadLibrary();
       } else {
-        setNote(d.reason || "upload failed");
+        /* surface the REAL verdict — no more silent generic failures */
+        setNote(d?.reason || `upload failed (HTTP ${res.status})`);
       }
-    } catch {
-      setNote("upload failed — try again");
+    } catch (e) {
+      setNote(e instanceof Error && e.message ? e.message : "upload failed — try again");
     } finally {
       setBusy(false);
     }
