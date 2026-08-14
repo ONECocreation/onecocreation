@@ -247,49 +247,6 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
   const switcherOptions = Array.from(new Set(["home", "practice", slug, ...Object.keys(SEEDS), ...pages]))
     .filter((p) => p !== "brand");
 
-  /* one side panel: content when open, slim vertical tab when collapsed */
-  function Panel({ k, side, label, width, children }: {
-    k: PanelKey; side: "left" | "right"; label: string; width: number; children: React.ReactNode;
-  }) {
-    const isOpen = !collapsed[k];
-    /* narrow chrome: right-side panels float over the canvas so the page
-       keeps its width (the Admiral's portrait-monitor law) */
-    const overlay = !wideChrome && side === "right" && isOpen;
-    return (
-      <div style={{
-        width: isOpen && !overlay ? width : 30, flex: "none", display: "flex", flexDirection: "column",
-        background: "#12101f", minWidth: 0, position: "relative", transition: "width .2s ease",
-        borderLeft: side === "right" ? "1px solid rgba(139,118,196,.25)" : "none",
-        borderRight: side === "left" ? "1px solid rgba(139,118,196,.25)" : "none",
-      }}>
-        {overlay && (
-          <div style={{ position: "absolute", right: 30, top: 0, bottom: 0, width,
-            zIndex: 30, background: "#12101f", display: "flex", flexDirection: "column",
-            borderLeft: "1px solid rgba(139,118,196,.35)", boxShadow: "-14px 0 34px rgba(0,0,0,.45)" }}>
-            {children}
-          </div>
-        )}
-        <button
-          onClick={() => togglePanel(k)}
-          title={isOpen ? `collapse ${label}` : `open ${label}`}
-          data-oc-panel-tab={k}
-          style={{ position: "absolute", top: 8, right: isOpen ? 6 : 5, zIndex: 6, width: 18, height: 18,
-            borderRadius: 5, border: "1px solid rgba(139,118,196,.3)", background: "#1b1530",
-            color: "#9a8fae", fontSize: 10, lineHeight: 1, cursor: "pointer", padding: 0 }}
-        >
-          {isOpen ? (side === "left" ? "«" : "»") : (side === "left" ? "»" : "«")}
-        </button>
-        {isOpen && !overlay ? children : !isOpen ? (
-          <button onClick={() => togglePanel(k)}
-            style={{ background: "none", border: "none", cursor: "pointer", marginTop: 44,
-              writingMode: "vertical-rl", fontFamily: MONO, fontSize: 10, letterSpacing: ".3em",
-              color: "#9a8fae", textTransform: "uppercase", padding: 0 }}>
-            {label}
-          </button>
-        ) : null}
-      </div>
-    );
-  }
 
   return (
     <div className="oc-studio" style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100vh", overflow: "hidden", background: "#141021" }}>
@@ -380,7 +337,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
 
         {/* ══ panes: library · canvas · style · Number One ══ */}
         <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-          <Panel k="lib" side="left" label="Library" width={230}>
+          <Panel k="lib" side="left" label="Library" width={230} collapsed={collapsed} wideChrome={wideChrome} onToggle={togglePanel}>
             <div style={{ flex: 1, overflowY: "auto", paddingTop: 30 }}>
               {/* SEARCH INSERT: type to filter the library; matches render
                   as a flat draggable Drawer, the stock view hides (display
@@ -414,13 +371,13 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
             <CanvasArea columnRef={canvasColRef} />
           </div>
 
-          <Panel k="fields" side="right" label="Style" width={280}>
+          <Panel k="fields" side="right" label="Style" width={280} collapsed={collapsed} wideChrome={wideChrome} onToggle={togglePanel}>
             <div style={{ flex: 1, overflowY: "auto", paddingTop: 30 }}>
               <Puck.Fields />
             </div>
           </Panel>
 
-          <Panel k="cop" side="right" label="Number One" width={300}>
+          <Panel k="cop" side="right" label="Number One" width={300} collapsed={collapsed} wideChrome={wideChrome} onToggle={togglePanel}>
             <div style={{ flex: 1, minHeight: 0, paddingTop: 26, display: "flex", flexDirection: "column" }}>
               <Copilot slug={slug} currentContent={() => liveRef.current} onApply={applyGenerated} />
             </div>
@@ -657,3 +614,50 @@ function FindingsPanel({ findings, errCount }: { findings: Finding[]; errCount: 
     </div>
   );
 }
+
+/* one side panel: content when open, slim vertical tab when collapsed —
+   MODULE-LEVEL so re-renders never remount children (the alt-box focus-
+   stutter: an inline component remounts on every keystroke) */
+function Panel({ k, side, label, width, children, collapsed, wideChrome, onToggle }: {
+  k: PanelKey; side: "left" | "right"; label: string; width: number; children: React.ReactNode;
+  collapsed: Record<PanelKey, boolean>; wideChrome: boolean; onToggle: (k: PanelKey) => void;
+}) {
+    const isOpen = !collapsed[k];
+    /* narrow chrome: right-side panels float over the canvas so the page
+       keeps its width (the Admiral's portrait-monitor law) */
+    const overlay = !wideChrome && side === "right" && isOpen;
+    return (
+      <div style={{
+        width: isOpen && !overlay ? width : 30, flex: "none", display: "flex", flexDirection: "column",
+        background: "#12101f", minWidth: 0, position: "relative", transition: "width .2s ease",
+        borderLeft: side === "right" ? "1px solid rgba(139,118,196,.25)" : "none",
+        borderRight: side === "left" ? "1px solid rgba(139,118,196,.25)" : "none",
+      }}>
+        {overlay && (
+          <div style={{ position: "absolute", right: 30, top: 0, bottom: 0, width,
+            zIndex: 30, background: "#12101f", display: "flex", flexDirection: "column",
+            borderLeft: "1px solid rgba(139,118,196,.35)", boxShadow: "-14px 0 34px rgba(0,0,0,.45)" }}>
+            {children}
+          </div>
+        )}
+        <button
+          onClick={() => onToggle(k)}
+          title={isOpen ? `collapse ${label}` : `open ${label}`}
+          data-oc-panel-tab={k}
+          style={{ position: "absolute", top: 8, right: isOpen ? 6 : 5, zIndex: 6, width: 18, height: 18,
+            borderRadius: 5, border: "1px solid rgba(139,118,196,.3)", background: "#1b1530",
+            color: "#9a8fae", fontSize: 10, lineHeight: 1, cursor: "pointer", padding: 0 }}
+        >
+          {isOpen ? (side === "left" ? "«" : "»") : (side === "left" ? "»" : "«")}
+        </button>
+        {isOpen && !overlay ? children : !isOpen ? (
+          <button onClick={() => onToggle(k)}
+            style={{ background: "none", border: "none", cursor: "pointer", marginTop: 44,
+              writingMode: "vertical-rl", fontFamily: MONO, fontSize: 10, letterSpacing: ".3em",
+              color: "#9a8fae", textTransform: "uppercase", padding: 0 }}>
+            {label}
+          </button>
+        ) : null}
+      </div>
+    );
+  }

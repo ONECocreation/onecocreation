@@ -64,24 +64,35 @@ export default function MediaField({
   }
   useEffect(() => { if (open) loadLibrary(); }, [open]);
 
-  /* in-browser ConvertX: photos get downscaled + re-encoded to webp so
-     nothing trips Vercel's ~4.5MB body ceiling (base64 inflates by 4/3 —
-     the old silent killer of big uploads). SVG/GIF pass through untouched. */
+  /* in-browser ConvertX: EVERY raster image becomes webp (uniform library,
+     smallest files, nothing trips Vercel's ~4.5MB body ceiling — base64
+     inflates by 4/3). iPhone HEIC decodes via a lazy-loaded wasm decoder.
+     SVG passes through (vector); GIF passes through to keep its ANIMATION —
+     canvas re-encoding would freeze it (animated-webp = a future server
+     lane). */
   async function toUploadable(file: File): Promise<{ name: string; mime: string; dataBase64: string }> {
     const passthrough = file.type === "image/svg+xml" || file.type === "image/gif";
     const budget = 2.8 * 1024 * 1024; // bytes, pre-base64
-    if (passthrough || file.size <= budget) {
-      if (passthrough && file.size > budget) throw new Error("that file is too big — keep SVG/GIF under 2.8 MB");
+    if (passthrough) {
+      if (file.size > budget) throw new Error("that file is too big — keep SVG/GIF under 2.8 MB");
       const dataBase64 = await new Promise<string>((resolve, reject) => {
         const r = new FileReader();
         r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
         r.onerror = () => reject(r.error);
         r.readAsDataURL(file);
       });
-      if (!passthrough && file.size > budget) throw new Error("unexpected size");
       return { name: file.name, mime: file.type, dataBase64 };
     }
-    const bitmap = await createImageBitmap(file).catch(() => null);
+    /* iPhone HEIC/HEIF: browsers can't decode natively — lazy wasm decode */
+    let source: Blob = file;
+    const isHeic = /image\/hei[cf]/.test(file.type) || /\.hei[cf]$/i.test(file.name);
+    if (isHeic) {
+      const { default: heic2any } = await import("heic2any");
+      const out = await heic2any({ blob: file, toType: "image/png" }).catch(() => null);
+      if (!out) throw new Error("couldn't decode that iPhone photo — try exporting it as jpg");
+      source = Array.isArray(out) ? out[0] : out;
+    }
+    const bitmap = await createImageBitmap(source).catch(() => null);
     if (!bitmap) throw new Error("couldn't read that image format — try a jpg, png, or webp");
     const MAX_EDGE = 2000;
     const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
