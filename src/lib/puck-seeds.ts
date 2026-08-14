@@ -155,7 +155,12 @@ const kit = (prefix: string) => {
     panel: (content: Block[]) => mk("Panel", { content }),
     twocol: (left: Block[], right: Block[], gap = 26, valign = "top") => mk("TwoColumns", { gap, valign, left, right }),
     threecol: (a: Block[], b: Block[], c: Block[], gap = 22, valign = "top") => mk("ThreeColumns", { gap, valign, a, b, c }),
-    band: (background: string, hold: string, content: Block[]) => mk("Band", { background, hold, content }),
+    band: (
+      background: string,
+      hold: string,
+      content: Block[],
+      ground?: { bgSrc?: string; bgColor?: string },
+    ) => mk("Band", { background, hold, content, ...(ground ?? {}) }),
     hero: (days: string, title: string, sub: string) => mk("Hero", { days, title, sub }),
   };
 };
@@ -483,61 +488,66 @@ const storeContent: Block[] = [
  * ~/dev/troubleshooting/onecocreation/original/) so the operator can open each
  * original beside its new version and restyle it. Rules of this lane:
  *   - copy VERBATIM where legible; "[illegible in capture]" where not
- *   - original imagery is NOT hotlinked — Image blocks carry src "" + an alt
- *     describing the original art, with a Note to upload to the library
+ *   - 1:1 IMAGERY (the seed-surgeon pass, 0018.05.21): every Image carries
+ *     its REAL rescued asset from the ONECocreation/onecocreation-assets
+ *     repo (docs/original-assets-map.json); original image grounds ride the
+ *     Band bgSrc prop, original flat grounds ride bgColor (puck-config
+ *     0.13.0). NOTE: plugin-rails ground-tracking doesn't know custom
+ *     grounds — these bands stay lint-tracked as their hold (documented
+ *     package limitation).
  *   - live widgets (forms, booking calendars, checkout) become Notes
- *   - our Band vocabulary is dark-first; the original's LIGHT lavender
- *     grounds are marked "── original: lavender #DBD4E4 ground ──" Notes
+ *   - LEGIBILITY DOCTRINE: on light custom grounds (lavender #DBD4E4,
+ *     gray #E1E1E1) direct text/heading children carry INK "#2A2140" (a
+ *     theme-independent dark) so the archive reads in both themes; bands
+ *     that gained a photo ground hold the night (the bgSrc veil is dark)
  *   - archival heading demotions (one-h1 / heading-order) are noted in place
  */
+const RAW = "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals";
+/** theme-independent dark ink for light archival grounds */
+const INK_DARK = "#2A2140";
 
 /* ── home-old — hero, Leap of Faith band, triad, Be In The Know ─────────── */
 const hmo = kit("hmo");
 const homeOldContent: Block[] = [
   hmo.band("sky-veil", "night", [
     hmo.note("── original had: PopUp 1 'Get your free meditation! / Unzip into the new you' (Name/Email/DOWNLOAD IT NOW, timed 2s, once per session) — stays code-side / future lane ──"),
-    hmo.img("", "Golden hand reaching from sunlit clouds toward a figure on a cliff edge — the original hero banner", 560, "none", "center"),
-    hmo.note("── original image: golden hand-from-clouds hero — upload to the library ──"),
-  ]),
+    hmo.img(`${RAW}/popup-free-guide/unzip-9141826.png`, "Unzip Into The New You — the popup's free-meditation light-body graphic", 320, "soft", "center"),
+  ], { bgSrc: `${RAW}/home/IMG_0334-9138867.png` }),
   hmo.band("sky-glass", "night", [
-    hmo.note("── original: dark charcoal #2B2C30 band ──"),
     hmo.heading("LEAP OF FAITH", "h1", "left"),
     hmo.text("5 DAYS", "left"),
     hmo.text("FRESH STEP INTO A NEW MINDSET", "left"),
     hmo.button("GET STARTED TODAY", "/packages", "gold", "center"),
     hmo.note("── original button: WHITE squared (0-radius) letterspaced caps ──"),
-  ]),
+  ], { bgColor: "#2B2C30" }),
   hmo.band("meteors", "night", [
     hmo.note("── original had: intro video of Love (04:12) centered over a black band with a DNA-helix strip graphic — stays code-side ──"),
-    hmo.note("── original imagery: two blue galaxy/starfield banner bands between sections — upload to the library ──"),
-  ]),
+  ], { bgSrc: `${RAW}/about/IMG_3142-0518689.png` }),
   hmo.band("plain", "theme", [
-    hmo.note("── original: lavender #DBD4E4 ground ──"),
-    hmo.heading("Memberships", "h2", "center"),
+    hmo.heading("Memberships", "h2", "center", st({ color: INK_DARK })),
     hmo.threecol(
       [hmo.panel([
-        hmo.img("", "Woman in profile with a glowing brain of light threads — The Weekly Intuitive card art (purple gradient card)", 300, "soft", "center"),
+        hmo.img(`${RAW}/shared/IMG_0176-0521729.jpeg`, "Woman in profile with a glowing brain of light threads — The Weekly Intuitive card art (purple gradient card)", 300, "soft", "center"),
         hmo.heading("The Weekly Intuitive", "h3", "center"),
         hmo.button("YES!", "/packages/weekly-intuitive", "gold", "center"),
       ])],
       [hmo.panel([
-        hmo.img("", "Photographer in purple watching comets fall over a sunset plain — The Observer card art (gold gradient card)", 300, "soft", "center"),
+        hmo.img(`${RAW}/shared/IMG_0177-0521729.jpeg`, "Photographer in purple watching comets fall over a sunset plain — The Observer card art (gold gradient card)", 300, "soft", "center"),
         hmo.heading("The Observer", "h3", "center"),
         hmo.button("YES!", "/packages/observer", "gold", "center"),
       ])],
       [hmo.panel([
-        hmo.img("", "Silhouette with arms outstretched against a green-teal galaxy — The Evening Star card art (teal gradient card)", 300, "soft", "center"),
+        hmo.img(`${RAW}/shared/IMG_0175-0521729.jpeg`, "Silhouette with arms outstretched against a green-teal galaxy — The Evening Star card art (teal gradient card)", 300, "soft", "center"),
         hmo.heading("The Evening Star", "h3", "center"),
         hmo.button("YES!", "/packages/evening-star", "gold", "center"),
       ])],
     ),
-  ]),
+  ], { bgColor: "#DBD4E4" }),
   hmo.band("sky-warm", "theme", [
     hmo.heading("BE IN THE KNOW", "h2", "center"),
     hmo.twocol(
       [
-        hmo.img("", "Love posing in front of a painted angel-wings wall mural", 320, "soft", "center"),
-        hmo.note("── original image: angel-wings mural photo — upload to the library ──"),
+        hmo.img(`${RAW}/home/IMG_7315-0518689.jpeg`, "Love posing in front of a painted angel-wings wall mural", 320, "soft", "center"),
       ],
       [
         hmo.text("Sign up below and receive a free recording to Unzip Into The New You!"),
@@ -554,15 +564,12 @@ const homeOldContent: Block[] = [
 /* ── about-old — red-rock hero, My Story, the lavender story bands ──────── */
 const abo = kit("abo");
 const aboutOldContent: Block[] = [
-  abo.band("sky-warm", "theme", [
-    abo.img("", "Love with arms raised in triumph on top of red-rock cliffs under blue sky — caption 'Smiles, Love'", 560, "none", "center"),
-    abo.note("── original image: red-rock arms-raised hero (the EARTH half of the brand) — upload to the library ──"),
-  ]),
+  abo.band("sky-warm", "night", [
+    abo.note("── the red-rock arms-raised hero (the EARTH half of the brand) is the band's real ground — caption in the original: 'Smiles, Love' ──"),
+  ], { bgSrc: `${RAW}/about/welcome-0086394.png` }),
   abo.band("plain", "theme", [
-    abo.note("── original: lavender #DBD4E4 ground ──"),
-    abo.img("", "Purple calligraphy banner: 'Where Heaven and Earth Meet' — script artwork, an image in the original, not live text", 560, "none", "center"),
-    abo.note("── original image: purple calligraphy banner — upload to the library ──"),
-  ]),
+    abo.img(`${RAW}/about/where_heaven_and_earth_meet-1394563.png`, "Purple calligraphy banner: 'Where Heaven and Earth Meet' — script artwork, an image in the original, not live text", 560, "none", "center"),
+  ], { bgColor: "#DBD4E4" }),
   abo.band("plain", "theme", [
     abo.heading("My Story", "h1", "center"),
     abo.twocol(
@@ -571,7 +578,7 @@ const aboutOldContent: Block[] = [
         abo.text("Maybe like me, you never felt like you belonged here. I didn’t understand the unkindness I saw in this world and I played small, wanting to be seen but not noticed. I people pleased to avoid confrontation. I was an introvert and proud, to not be a part of anything. Why? Because that meant that I wasn’t the one being rejected. That WAS me.", "center"),
       ],
       [
-        abo.img("", "Love holding an oracle card (an eagle card) toward the camera, pink flower in her hair", 320, "soft", "center"),
+        abo.img(`${RAW}/about/IMG_3098-1465149.jpeg`, "Love holding an oracle card (an eagle card) toward the camera, pink flower in her hair", 320, "soft", "center"),
         abo.text("The ability to stretch, and expand against all odds! All the while yearning for Home. All the while, always possessing the choice, the power to go home, to Be home. For home is not a destination. Home IS where the Heart IS. In presence. In Now. It is within the Heartmind Coherence that the You and the Devine as One, bring all to balanced form."),
       ],
       40,
@@ -579,21 +586,18 @@ const aboutOldContent: Block[] = [
     ),
     abo.text("I consciously connect with the land and the waters. Where I go IAM Home. I have been offering Silent Hair Sessions in my mobile studio where I travel. Offering heart connective awareness. I prepare and create the space, for One’s epiphanies to arise and make themselves know."),
     abo.text("To those drawn by the energy of the soul, Welcome Home to you. You Are the Bridge, Where Heaven and Earth Meet."),
-    abo.img("", "Panorama of mountains and a lake at sunset (Love's own photo), beneath a heart outline icon", 560, "soft", "center"),
-    abo.note("── original image: mountain-lake sunset panorama — upload to the library ──"),
+    abo.img(`${RAW}/shared/IMG_2330-0939418.jpeg`, "Panorama of mountains and a lake at sunset (Love's own photo), beneath a heart outline icon", 560, "soft", "center"),
   ]),
   abo.band("plain", "theme", [
-    abo.note("── original: lavender #DBD4E4 ground ──"),
-    abo.text("—For Years when I couldn’t sleep through the night, I knew that, that was a sign of the body speaking to me that there were things out of balance in life. I had been trying to change an other, or change the outside circumstances to bring peace. That’s when I knew ....in that moment I knew that the only way for me to be happy again was to work with my body, to hear, to pay attention to my emotions, my reactions, my beliefs and ask is there another way. I became the Observer of my inner world and my outer world transformed before my eyes.", "center"),
-    abo.text("—Fast Forward to Current Day ....IAM bringing you back to the way of the heart. Through group conversations, connecting to the intelligence of earth, intelligence of the body and the Devine You Are. Channeled messages through our Devine connection Through breath, through heart, through community through earth connection. I prepare the energetic space to assist you to see what is next for you as you go along your path. You have all the answers."),
-    abo.text("We will explore themes of material meditations, books, modalities of intuitives, of coaches, of the quantum for you to add to your tools of ascension. I’ll be there along the way guiding you in the practical use of tools and information that arises. As you join me and I have a chance to work with you as a group or one on one I will be tuning in to and asking what your Claire or Clairs are and bringing your awareness to it when I can, when it comes in. And then guiding you to working more with me or other intuitives that will assist you further in that area."),
-    abo.text("I have come to know that IAM here to assist ones like you into a different relationship with not just your body, your cells but your relationship to all that surrounds you. Your connection to your Clair senses, the still point that lies within you, and the world we came here for. We are shifting and expanding our consciousness in form."),
+    abo.text("—For Years when I couldn’t sleep through the night, I knew that, that was a sign of the body speaking to me that there were things out of balance in life. I had been trying to change an other, or change the outside circumstances to bring peace. That’s when I knew ....in that moment I knew that the only way for me to be happy again was to work with my body, to hear, to pay attention to my emotions, my reactions, my beliefs and ask is there another way. I became the Observer of my inner world and my outer world transformed before my eyes.", "center", st({ color: INK_DARK })),
+    abo.text("—Fast Forward to Current Day ....IAM bringing you back to the way of the heart. Through group conversations, connecting to the intelligence of earth, intelligence of the body and the Devine You Are. Channeled messages through our Devine connection Through breath, through heart, through community through earth connection. I prepare the energetic space to assist you to see what is next for you as you go along your path. You have all the answers.", "left", st({ color: INK_DARK })),
+    abo.text("We will explore themes of material meditations, books, modalities of intuitives, of coaches, of the quantum for you to add to your tools of ascension. I’ll be there along the way guiding you in the practical use of tools and information that arises. As you join me and I have a chance to work with you as a group or one on one I will be tuning in to and asking what your Claire or Clairs are and bringing your awareness to it when I can, when it comes in. And then guiding you to working more with me or other intuitives that will assist you further in that area.", "left", st({ color: INK_DARK })),
+    abo.text("I have come to know that IAM here to assist ones like you into a different relationship with not just your body, your cells but your relationship to all that surrounds you. Your connection to your Clair senses, the still point that lies within you, and the world we came here for. We are shifting and expanding our consciousness in form.", "left", st({ color: INK_DARK })),
     abo.note("── original had: video of Love and a friend on a couch (pink flower in hair) — stays code-side ──"),
-  ]),
+  ], { bgColor: "#DBD4E4" }),
   abo.band("plain", "theme", [
-    abo.note("── original: light gray #E1E1E1 ground ──"),
-    abo.text("This can be uncomfortable, confusing, but also wonderful, for as we each expand energetically we weave together energetic threads for this Golden age. As we tune in and tune up, our nervous system to our inner voice, inner sight, inner hearing, inner knowing, inner sensing, and FEEL... into different frequencies, toning, movement and more! Your body and mind will get more familiar with that greatest aspect of you. The one that already knows where you are going and what is needed along the way to support you. There will meet people and tools that you will be introduced to, that will resonate along your path as we explore together. Through readings of books you will receive light codes both through the frequency of my voice as well as the book chosen for that time. This is a way to nurture You. Your inner child and the adult you are, as we adventure through many types of activating literature. Whether you decide to read along or simply InJoy and surrender to what comes forth, you will receive exactly what is needed for you at that time."),
-  ]),
+    abo.text("This can be uncomfortable, confusing, but also wonderful, for as we each expand energetically we weave together energetic threads for this Golden age. As we tune in and tune up, our nervous system to our inner voice, inner sight, inner hearing, inner knowing, inner sensing, and FEEL... into different frequencies, toning, movement and more! Your body and mind will get more familiar with that greatest aspect of you. The one that already knows where you are going and what is needed along the way to support you. There will meet people and tools that you will be introduced to, that will resonate along your path as we explore together. Through readings of books you will receive light codes both through the frequency of my voice as well as the book chosen for that time. This is a way to nurture You. Your inner child and the adult you are, as we adventure through many types of activating literature. Whether you decide to read along or simply InJoy and surrender to what comes forth, you will receive exactly what is needed for you at that time.", "left", st({ color: INK_DARK })),
+  ], { bgColor: "#E1E1E1" }),
   abo.band("plain", "theme", [
     abo.heading("The Value: We are Stepping into a New Era of Love", "h2"),
     abo.list([
@@ -605,27 +609,24 @@ const aboutOldContent: Block[] = [
     abo.note("── original had: stock pink-blazer video + empty 'CALL TO ACTION' button (template residue — tell Love) ──"),
   ]),
   abo.band("plain", "theme", [
-    abo.note("── original: lavender #DBD4E4 ground ──"),
-    abo.img("", "Purple-and-gold calligraphy banner: 'New Earth Living' — script artwork, an image in the original", 560, "none", "center"),
-    abo.note("── original image: New Earth Living calligraphy banner — upload to the library ──"),
-    abo.text("We can BE the Now and create a more collaborative future for us and all, as IAM WE ARE. We are seeing the shifts already. The shifts in our world, and the world systems as a breaking down and a synchronistic leveling up, is occurring now with Gaia. The New Earth and the New Human as Onecocreation.", "center"),
-  ]),
-  abo.band("sky-warm", "theme", [
-    abo.img("", "Sun breaking through clouds over the ocean at dusk — beneath a purple ink-wave divider", 560, "none", "center"),
-    abo.note("── original image: ocean-sunset band + wave divider — upload to the library ──"),
+    abo.img(`${RAW}/about/New_Earth_Living-2073893.png`, "Purple-and-gold calligraphy banner: 'New Earth Living' — script artwork, an image in the original", 560, "none", "center"),
+    abo.text("We can BE the Now and create a more collaborative future for us and all, as IAM WE ARE. We are seeing the shifts already. The shifts in our world, and the world systems as a breaking down and a synchronistic leveling up, is occurring now with Gaia. The New Earth and the New Human as Onecocreation.", "center", st({ color: INK_DARK })),
+  ], { bgColor: "#DBD4E4" }),
+  abo.band("sky-warm", "night", [
+    abo.note("── the sun-through-clouds ocean photo is the band's real ground; the original added a purple ink-wave divider above it (restyle pass) ──"),
     abo.panel([
       abo.heading("Ready to Get Started?", "h2", "center"),
       abo.note("── original had: empty 'CALL TO ACTION' button (template residue — tell Love) ──"),
     ]),
     abo.note("── original footer rendered literal 'Copyright © {2026} {OneCocreation}' ──"),
-  ]),
+  ], { bgSrc: `${RAW}/shared/IMG_2938-0939419.jpeg` }),
 ];
 
 /* ── memberships-old — the cosmic white-lion page, single text column ───── */
 const mbo = kit("mbo");
 const membershipsOldContent: Block[] = [
   mbo.band("nebula", "night", [
-    mbo.note("── original: WHITE page over a full-bleed cosmic white-lion background image — upload the lion art to the library ──"),
+    mbo.note("── original: WHITE page over the full-bleed cosmic white-lion — the lion is now the band's real ground (veiled dark; restyle pass may lift toward the original white read) ──"),
     mbo.heading("Memberships", "h1"),
     mbo.heading("Welcome to The Heart Field where “Heaven and Earth Meet”", "h2"),
     mbo.rich("<b>3 Different Memberships</b>"),
@@ -643,19 +644,18 @@ const membershipsOldContent: Block[] = [
     mbo.text("Welcome to the Field of the Heart!💖"),
     mbo.button("GET STARTED TODAY", "/packages", "gold", "center"),
     mbo.note("── original button: WHITE squared; 'You..' rendered large-type (demoted to H2 here for heading order) ──"),
-  ]),
+  ], { bgSrc: `${RAW}/memberships/lion-ai-0088969.png` }),
 ];
 
 /* ── consciouscuts-old — moon hero, silent question, how it works ───────── */
 const cco = kit("cco");
 const consciousCutsOldContent: Block[] = [
   cco.band("sky-veil", "night", [
-    cco.note("── original: full-moon starfield background with a dancing angel-wings silhouette; small purple calligraphy 'Where Heaven and Earth Meet' top-left ──"),
-    cco.img("", "Gold winged-scissors ConsciousCuts logo on a black panel", 240, "none", "center"),
-    cco.note("── original image: winged-scissors logo — upload to the library (SVG traced 0018.05.15) ──"),
+    cco.note("── original: small purple calligraphy 'Where Heaven and Earth Meet' top-left of the moon hero (the moon-cartwheel photo is the band's real ground) ──"),
+    cco.img(`${RAW}/consciouscuts-waxing/IMG_0313-8971737.jpeg`, "Gold winged-scissors ConsciousCuts logo on a black panel", 240, "none", "center"),
     cco.heading("CONSCIOUS CUTS & WAXING", "h1", "center"),
     cco.heading("WELCOME 🌈 🦋 🪶 💫", "h2", "center"),
-    cco.img("", "Love with blue-streaked hair blowing a kiss — portrait photo", 320, "soft", "center"),
+    cco.img(`${RAW}/consciouscuts-waxing/IMG_4524-8983940.jpeg`, "Love with blue-streaked hair blowing a kiss — portrait photo", 320, "soft", "center"),
     cco.button("CREATE AN ACCOUNT", "/welcome", "gold", "center"),
     cco.text("WELCOME TO", "center"),
     cco.text("The Way of the Heart", "center"),
@@ -663,7 +663,7 @@ const consciousCutsOldContent: Block[] = [
     cco.text("To BE Silent or Not to be Silent", "center"),
     cco.text("that is the Question", "center"),
     cco.text("We find out what your needs are, sometimes use photos to get us in the right direction. You get to sit back and enjoy the magic. All sessions have the pleasure of an affirmations card chosen. A message sent to you from The Universe to take with you in your day.", "center"),
-  ]),
+  ], { bgSrc: `${RAW}/consciouscuts-waxing/IMG_0266-3095756.jpeg` }),
   cco.band("nebula", "night", [
     cco.heading("IS A SILENT HAIR SESSION FOR YOU?", "h2", "center"),
     cco.threecol(
@@ -672,7 +672,7 @@ const consciousCutsOldContent: Block[] = [
         cco.text("A heart to heart connection, through presence. Here we will explore the look you desire, and collab. It’s more than hair. But have no fear you get to choose, a regular hair service or MORE. Often through hair we are maintaining, cleaning up, creating a new. This is one way we unconsciously work with energy. Here aware that we are both human and soul, we will provide a space for intentional presence and [continues — cut off in capture]"),
       ])],
       [cco.panel([
-        cco.img("", "Blue-toned woman holding a point of light — 'Conscious Cuts & Waxing / A Curious Traveler _ FB Live' card", 280, "soft", "center"),
+        cco.img(`${RAW}/consciouscuts-waxing/IMG_3230-0674274.jpeg`, "Blue-toned woman holding a point of light — 'Conscious Cuts & Waxing / A Curious Traveler _ FB Live' card", 280, "soft", "center"),
         cco.button("CREATE AN ACCOUNT", "/welcome", "gold", "center"),
       ])],
       [cco.panel([
@@ -685,7 +685,7 @@ const consciousCutsOldContent: Block[] = [
         cco.note("── original had: grid of stock hair-model photos ──"),
       ])],
     ),
-  ]),
+  ], { bgSrc: `${RAW}/consciouscuts-waxing/IMG_0292-8983552.jpeg` }),
   cco.band("sky-glass", "night", [
     cco.heading("HOW IT WORKS", "h2"),
     cco.text("CREATE YOUR FREE MEMBERSHIP"),
@@ -707,7 +707,6 @@ const consciousCutsOldContent: Block[] = [
     cco.quote("I’ve had my hair done by Love for two years, now and have had only the best experience. She has a wonderful sense of style and vision as well as being to create the haircut that is beyond what you have in mind. [rest illegible in capture]"),
   ]),
   cco.band("plain", "theme", [
-    cco.note("── original: lavender #DBD4E4 ground ──"),
     cco.threecol(
       [cco.panel([
         cco.heading("The Weekly Intuitive", "h3", "center"),
@@ -722,7 +721,7 @@ const consciousCutsOldContent: Block[] = [
         cco.button("YES!", "/packages/evening-star", "gold", "center"),
       ])],
     ),
-  ]),
+  ], { bgColor: "#DBD4E4" }),
   cco.band("sky-warm", "theme", [
     cco.heading("BE IN THE KNOW", "h2", "center"),
     cco.text("Sign up below and receive a free recording to Unzip Into The New You!", "center"),
@@ -734,22 +733,20 @@ const consciousCutsOldContent: Block[] = [
 const cto = kit("cto");
 const contactOldContent: Block[] = [
   cto.band("plain", "theme", [
-    cto.note("── original: light gray ground; violet accordion bars ──"),
-    cto.heading("FAQ", "h2", "center"),
+    cto.note("── original: violet accordion bars (Faq block styling is theme-side — restyle pass) ──"),
+    cto.heading("FAQ", "h2", "center", st({ color: INK_DARK })),
     cto.faq([
       { q: "WHAT TIME ZONES ARE UTUBE \" LIVE WITH LOVE\"", a: "[answer not captured — accordion closed in the capture]" },
       { q: "HOW DO I GET A SILENT HAIR CUT?", a: "[answer not captured — accordion closed in the capture]" },
       { q: "Title", a: "[unfinished placeholder accordion in the original — tell Love]" },
     ]),
-  ]),
+  ], { bgColor: "#E1E1E1" }),
   cto.band("plain", "theme", [
-    cto.note("── original: lavender #DBD4E4 ground ──"),
-    cto.heading("E.T. Phone Home", "h1"),
-    cto.img("", "Deep starfield band photo beside the contact form", 420, "soft", "center"),
+    cto.heading("E.T. Phone Home", "h1", "left", st({ color: INK_DARK })),
+    cto.note("── original image: deep starfield band photo beside the contact form — NOT recovered in the harvest (only the moon-cartwheel survived for this page) ──"),
     cto.note("── original had: contact form (Full Name / Email / Subject / Message / SEND) — stays code-side ──"),
-    cto.img("", "Silhouette cartwheeling in front of a giant full moon over a flower field", 420, "soft", "center"),
-    cto.note("── original image: moon-cartwheel art — upload to the library ──"),
-    cto.heading("Or... Book a 30 min Discovery Call", "h2", "center"),
+    cto.img(`${RAW}/consciouscuts-waxing/IMG_0266-3095756.jpeg`, "Silhouette cartwheeling in front of a giant full moon over a flower field", 420, "soft", "center"),
+    cto.heading("Or... Book a 30 min Discovery Call", "h2", "center", st({ color: INK_DARK })),
     cto.note("── original had: embedded booking calendar (Pick a Date and Time · August · evening slots · Pacific Daylight Time GMT-07:00) — stays code-side ──"),
     cto.panel([
       cto.heading("Discovery Call", "h3", "center"),
@@ -758,7 +755,7 @@ const contactOldContent: Block[] = [
       cto.text("LETS PLAY ! Learn if this is right for you! We’ll hop on a one on one phone call to explore some of the services that you are considering for you or your family. It is here that we start the journey.", "center"),
       cto.note("── the full Discovery Call description lives on book-a-call-old (same widget, transcribed there) ──"),
     ]),
-  ]),
+  ], { bgColor: "#DBD4E4" }),
 ];
 
 /* ── gallaria-old — Visiting Artists and Collaborators (slug drift: my-fav-products) ── */
@@ -766,12 +763,12 @@ const glo = kit("glo");
 const gallariaOldContent: Block[] = [
   glo.band("nebula", "night", [
     glo.heading("The Gallaria", "h1"),
-    glo.note("── original: green-teal cosmic hero with an arms-outstretched silhouette and a scalloped wave bottom edge; page name typo in the original tree: 'Visiting Artists and Collborators' ──"),
-  ]),
+    glo.note("── original: scalloped wave bottom edge on the hero (restyle pass); page name typo in the original tree: 'Visiting Artists and Collborators' ──"),
+  ], { bgSrc: `${RAW}/shared/IMG_0175-0521729.jpeg` }),
   glo.band("plain", "theme", [
     glo.twocol(
       [
-        glo.img("", "Silhouette of a dancer balancing on a rooftop edge against a bright sun", 380, "soft", "center"),
+        glo.img(`${RAW}/gallaria/ac22e465-d346-4a53-9a68-ad4faf17b2a1-3030003.jpeg`, "Silhouette of a dancer balancing on a rooftop edge against a bright sun", 380, "soft", "center"),
       ],
       [
         glo.eyebrow("FEATURED COLLABORATORS"),
@@ -786,48 +783,46 @@ const gallariaOldContent: Block[] = [
   ]),
   glo.band("plain", "theme", [
     glo.note("── section top cropped between captures — a collaborator feature with a painting ──"),
-    glo.img("", "Blue night painting of a heron by the water (collaborator artwork)", 420, "soft", "center"),
+    glo.img(`${RAW}/gallaria/IMG_7711-3031880.jpeg`, "Blue night painting of a heron by the water (collaborator artwork)", 420, "soft", "center"),
     glo.button("GET DISCOUNTS & MORE!", "#", "gold"),
   ]),
   glo.band("nebula", "night", [
-    glo.note("── original: lavender #DBD4E4 panel floating over a moon starfield band ──"),
+    glo.note("── original: lavender #DBD4E4 panel floating over the moon band (panel restyle pass) ──"),
     glo.panel([
       glo.quote("\"WE CREATE FROM OUR INNER WELL\""),
       glo.text("- JULIA CAMERON", "center"),
     ]),
-  ]),
-  glo.band("sky-warm", "theme", [
-    glo.note("── original: beach photo ground (hand holding a wooden flamingo, arms raised) ──"),
+  ], { bgSrc: `${RAW}/consciouscuts-waxing/IMG_0266-3095756.jpeg` }),
+  glo.band("sky-warm", "night", [
+    glo.note("── ground: the rescued pond/swan arms-raised photo (the tiny capture read 'beach + wooden flamingo' — best match, flag for Love) ──"),
     glo.heading("COMING SOON", "h2", "center"),
     glo.text("In order to create, we draw from our inner well. This inner well, an artistic reservoir, is ideally like a well-stocked fish pond… If we don’t give some attention to upkeep, our well is apt to become depleted, stagnant, or blocked…As artists, we must learn to be self-nourishing. We must become alert enough to consciously replenish our creative resources as we draw on them — to restock the trout pond, so to speak.", "center"),
     glo.text("—Julia Cameron", "center"),
     glo.button("LEARN MORE", "#", "gold", "center"),
     glo.note("── original had: product carousel (Large Sums Of Money $11.11 · Thank You Wake Up Affirmations $11.11 · The Observer $55.00/month — Buy Now) — stays code-side / store lane ──"),
-  ]),
+  ], { bgSrc: `${RAW}/gallaria/IMG_1348-3033912.jpeg` }),
 ];
 
 /* ── thank-you-old — the general Thank You Page ─────────────────────────── */
 const tyo = kit("tyo");
 const thankYouOldContent: Block[] = [
   tyo.band("plain", "theme", [
-    tyo.note("── original: lavender #DBD4E4 ground ──"),
-    tyo.heading("THANK YOU", "h1", "center"),
-    tyo.text("It is a pleasure to connect with you", "center"),
-    tyo.text("So much is available to you", "center"),
-    tyo.text("This is but a first step into who you are", "center"),
-    tyo.text("Thank you for allowing me to be part of your Journey", "center"),
-    tyo.text("Check out other memberships for a little face to face, heart to heart connection", "center"),
-    tyo.img("", "Glowing energy-body figure with chakra points, labeled 'Left Side' — still from the meditation video", 480, "soft", "center"),
-    tyo.note("── original image/video: energy-body art — upload to the library ──"),
-  ]),
+    tyo.heading("THANK YOU", "h1", "center", st({ color: INK_DARK })),
+    tyo.text("It is a pleasure to connect with you", "center", st({ color: INK_DARK })),
+    tyo.text("So much is available to you", "center", st({ color: INK_DARK })),
+    tyo.text("This is but a first step into who you are", "center", st({ color: INK_DARK })),
+    tyo.text("Thank you for allowing me to be part of your Journey", "center", st({ color: INK_DARK })),
+    tyo.text("Check out other memberships for a little face to face, heart to heart connection", "center", st({ color: INK_DARK })),
+    tyo.img(`${RAW}/thank-you-page/IMG_0090-9067730.png`, "Glowing energy-body figure with chakra points, labeled 'Left Side' — still from the meditation video", 480, "soft", "center"),
+  ], { bgColor: "#DBD4E4" }),
   tyo.band("nebula", "night", [
     tyo.panel([
       tyo.stacked("Unzip Into", "The New You", "h2", "center"),
       tyo.text("A guided meditation", "center"),
       tyo.button("DOWNLOAD YOUR FREEBIE", "/meditation", "gold", "center"),
     ]),
-    tyo.note("── original: lavender panel over an orange-blue nebula band; download delivery stays code-side ──"),
-  ]),
+    tyo.note("── original: lavender panel (panel restyle pass); download delivery stays code-side ──"),
+  ], { bgSrc: `${RAW}/shared/IMG_0292-7424980.png` }),
 ];
 
 /* ── book-a-call-old — Let's Chat! + the Discovery Call copy in full ────── */
@@ -860,8 +855,8 @@ const wio = kit("wio");
 const weeklyIntuitiveOldContent: Block[] = [
   wio.band("nebula", "night", [
     wio.heading("The Weekly Intuitive", "h1"),
-    wio.note("── original: gold heading over a face/soundwave cosmic hero band ──"),
-  ]),
+    wio.note("── original: gold heading over a face/soundwave cosmic hero band (best surviving match: the Weekly Intuitive face art rides as the ground — flag for Love) ──"),
+  ], { bgSrc: `${RAW}/shared/IMG_0176-0521729.jpeg` }),
   wio.band("sky-glass", "theme", [
     wio.note("── original: soft blue gradient ground ──"),
     wio.twocol(
@@ -874,7 +869,7 @@ const weeklyIntuitiveOldContent: Block[] = [
         wio.text("We will be tuning into recordings of material you already have access to. We will [continues — cut off in capture]"),
       ],
       [
-        wio.img("", "Woman in profile with a glowing brain of light threads — the Weekly Intuitive art, on a white card", 380, "soft", "center"),
+        wio.img(`${RAW}/shared/IMG_0176-0521729.jpeg`, "Woman in profile with a glowing brain of light threads — the Weekly Intuitive art, on a white card", 380, "soft", "center"),
       ],
       36,
       "top",
@@ -892,8 +887,7 @@ const weeklyIntuitiveOldContent: Block[] = [
 const lko = kit("lko");
 const linksOldContent: Block[] = [
   lko.band("plain", "theme", [
-    lko.img("", "Love magazine-cover style art — '444' cover with phoenix artwork and headline text [small text illegible in capture]", 320, "soft", "center"),
-    lko.note("── original image: the 444 cover art — upload to the library ──"),
+    lko.img(`${RAW}/links/IMG_2282-2500869.jpeg`, "Love magazine-cover style art — '444' cover with dragon-card artwork and headline text", 320, "soft", "center"),
     lko.heading("Hi  there!", "h1", "center"),
     lko.note("── original had: three black 'LINK HERE / 14 Day Free Trial' placeholder buttons (skeleton, never filled — tell Love); slug drift twin 'links-copy' existed too ──"),
   ]),
@@ -904,8 +898,8 @@ const eso = kit("eso");
 const eveningStarOldContent: Block[] = [
   eso.band("nebula", "night", [
     eso.heading("The Evening Star", "h1"),
-    eso.note("── original: gold heading over a green cosmic arms-outstretched hero band ──"),
-  ]),
+    eso.note("── original: gold heading over the green cosmic arms-outstretched hero (the Evening Star art rides as the ground) ──"),
+  ], { bgSrc: `${RAW}/shared/IMG_0175-0521729.jpeg` }),
   eso.band("sky-glass", "theme", [
     eso.note("── original: teal-green gradient ground ──"),
     eso.twocol(
@@ -928,7 +922,7 @@ const eveningStarOldContent: Block[] = [
         eso.note("── list continues below the fold — cut off in capture; 'Focus Foxy' transcribed as printed ──"),
       ],
       [
-        eso.img("", "Silhouette with arms outstretched against a green-teal galaxy, on a white card", 380, "soft", "center"),
+        eso.img(`${RAW}/shared/IMG_0175-0521729.jpeg`, "Silhouette with arms outstretched against a green-teal galaxy, on a white card", 380, "soft", "center"),
       ],
       36,
       "top",
@@ -946,15 +940,14 @@ const eveningStarOldContent: Block[] = [
 const lfo = kit("lfo");
 const leapOfFaithOldContent: Block[] = [
   lfo.band("sky-glass", "night", [
-    lfo.note("── original: black band ──"),
     lfo.heading("LEAP OF FAITH", "h1"),
     lfo.text("5 DAYS  FRESH STEP INTO A NEW MINDSET"),
     lfo.text("June 5-10"),
     lfo.button("GET STARTED TODAY", "/packages", "gold", "center"),
-    lfo.img("", "Golden hand reaching from sunlit clouds toward a cliff edge — full-width band image", 560, "none", "center"),
-  ]),
+    lfo.img(`${RAW}/home/IMG_0334-9138867.png`, "Golden figure leaping from a cliff toward a radiant sun — full-width band image", 560, "none", "center"),
+  ], { bgColor: "#000000" }),
   lfo.band("plain", "theme", [
-    lfo.note("── original: lavender #DBD4E4 ground; a section heading may be cropped between captures ──"),
+    lfo.note("── a section heading may be cropped between captures ──"),
     lfo.threecol(
       [lfo.panel([
         lfo.heading("The Weekly Intuitive", "h2", "center"),
@@ -969,7 +962,7 @@ const leapOfFaithOldContent: Block[] = [
         lfo.button("YES!", "/packages/evening-star", "gold", "center"),
       ])],
     ),
-  ]),
+  ], { bgColor: "#DBD4E4" }),
   lfo.band("sky-veil", "night", [
     lfo.note("── original had: dark film-reel band of Conscious Cuts & Waxing style cards ('A Curious Traveler' + stock hair-model photos) ──"),
     lfo.heading("IS A SILENT HAIR SESSION FOR YOU?", "h2", "center"),
@@ -987,23 +980,22 @@ const thankYouProductOld = (
   prefix: string,
   gift: [string, string],
   artAlt: string,
+  artSrc: string,
 ): Block[] => {
   const k = kit(prefix);
   return [
     k.band("plain", "theme", [
-      k.note("── original: lavender #DBD4E4 ground ──"),
-      k.heading("THANK YOU", "h1", "center"),
-      k.text("Check out other memberships for a little face to face, heart to heart connection", "center"),
-      k.img("", artAlt, 480, "soft", "center"),
-      k.note("── original image: " + artAlt + " — upload to the library ──"),
-    ]),
+      k.heading("THANK YOU", "h1", "center", st({ color: INK_DARK })),
+      k.text("Check out other memberships for a little face to face, heart to heart connection", "center", st({ color: INK_DARK })),
+      k.img(artSrc, artAlt, 480, "soft", "center"),
+    ], { bgColor: "#DBD4E4" }),
     k.band("nebula", "night", [
       k.panel([
         k.stacked(gift[0], gift[1], "h2", "center"),
         k.button("DOWNLOAD", "/store", "gold", "center"),
       ]),
-      k.note("── original: lavender panel over an orange-blue nebula band; download delivery stays code-side ──"),
-    ]),
+      k.note("── original: lavender panel (panel restyle pass); download delivery stays code-side ──"),
+    ], { bgSrc: `${RAW}/shared/IMG_0292-7424980.png` }),
   ];
 };
 
@@ -1011,16 +1003,19 @@ const thankYouMorningMeditationOldContent = thankYouProductOld(
   "tmo",
   ["Thank you", "Morning Meditation"],
   "Golden figure of light holding a glowing heart, flower-of-life halo",
+  `${RAW}/shared/IMG_0270-3098597.jpeg`,
 );
 const thankYouLargeSumsOldContent = thankYouProductOld(
   "tlo",
   ["Thank you", "Large Sums of Money"],
   "Golden doorway bursting with light, banknotes swirling through the air",
+  `${RAW}/shared/IMG_0267-3097825.jpeg`,
 );
 const thankYouIamWorthyOldContent = thankYouProductOld(
   "tio",
   ["Thank you", "IAM Worthy Meditation"],
   "Silhouette with hands in prayer above the head, sun blazing at the heart, sunset sky",
+  `${RAW}/shared/IMG_0269-3098622.jpeg`,
 );
 
 /* ── observer-old — the misfiled REAL Observer page (slug `observer`, named
@@ -1029,8 +1024,8 @@ const obo = kit("obo");
 const observerOldContent: Block[] = [
   obo.band("nebula", "night", [
     obo.heading("The Observer", "h1"),
-    obo.note("── original: gold heading over a comet-streaked starfield hero; page misfiled in the academy demo funnel under the name 'Weekly Intuitive', slug `observer` (tell Love) ──"),
-  ]),
+    obo.note("── original: gold heading over a comet-streaked starfield hero (best surviving match: the Observer comet art rides as the ground — flag for Love); page misfiled in the academy demo funnel under the name 'Weekly Intuitive', slug `observer` (tell Love) ──"),
+  ], { bgSrc: `${RAW}/shared/IMG_0177-0521729.jpeg` }),
   obo.band("sky-warm", "theme", [
     obo.note("── original: warm gold gradient ground ──"),
     obo.twocol(
@@ -1054,7 +1049,7 @@ const observerOldContent: Block[] = [
         obo.note("── voice-sample section continues — cut off in capture ──"),
       ],
       [
-        obo.img("", "Photographer with a lantern watching comets streak over a twilight plain, on a white card", 380, "soft", "center"),
+        obo.img(`${RAW}/shared/IMG_0177-0521729.jpeg`, "Photographer with a lantern watching comets streak over a twilight plain, on a white card", 380, "soft", "center"),
       ],
       36,
       "top",
