@@ -22,7 +22,7 @@
     "@anthropic-ai/sdk": "^0.116.0",
     "@pacsarcade/arcade-ui": "https://github.com/PacsArcade/arcade-ui/archive/8e2dd386e0d541a525ac4f3c69ac75c454396e47.tar.gz",
     "@pacsarcade/plugin-rails": "https://github.com/PacsArcade/puck-studio/releases/download/plugin-rails-v0.3.0/pacsarcade-plugin-rails-0.3.0.tgz",
-    "@pacsarcade/puck-config": "https://github.com/PacsArcade/puck-studio/releases/download/puck-config-v0.11.0/pacsarcade-puck-config-0.11.0.tgz",
+    "@pacsarcade/puck-config": "https://github.com/PacsArcade/puck-studio/releases/download/puck-config-v0.12.0/pacsarcade-puck-config-0.12.0.tgz",
     "@puckeditor/core": "^0.23.0",
     "@types/nodemailer": "^8.0.1",
     "@vercel/blob": "^2.5.0",

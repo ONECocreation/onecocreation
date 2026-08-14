@@ -181,10 +181,17 @@ export default function MediaField({
               {items.map((it) => (
                 <button key={it.url} type="button" title={it.name} onClick={() => { onChange(it.url); setNote(""); }}
                   style={{ padding: 0, border: value === it.url ? "2px solid #EBCB77" : "1px solid rgba(139,118,196,.3)",
-                    borderRadius: 7, overflow: "hidden", cursor: "pointer", background: "#0f0c1d", aspectRatio: "4/3" }}>
+                    borderRadius: 7, overflow: "hidden", cursor: "pointer", background: "#0f0c1d",
+                    display: "flex", flexDirection: "column" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={it.url} alt={it.name} loading="lazy"
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", display: "block" }} />
+                  {/* the name, visible — text-safe panel per the legibility doctrine */}
+                  <span style={{ display: "block", width: "100%", padding: "3px 5px", background: "#1b1530",
+                    color: "#D9D2E4", fontSize: 9.5, fontFamily: mono, textAlign: "left",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {it.name}
+                  </span>
                 </button>
               ))}
             </div>

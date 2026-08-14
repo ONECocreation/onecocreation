@@ -353,7 +353,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
               : "guidelines ✓"}
           </button>
           <UndoRedoPills pill={pill} />
-          <ViewportBar />
+          <ViewportBar compact />
           <ZoomPills />
           <button
             onClick={() => setMatrix((v) => { const n = !v; try { localStorage.setItem("oc-studio-matrix", n ? "1" : "0"); } catch { /* private mode */ } return n; })}
