@@ -1,4 +1,6 @@
 import { tierSatisfies, type Tier } from "./entitlement";
+import { ROOMS, type MatrixRoom } from "./matrix-rooms";
+export { ROOMS, type MatrixRoom } from "./matrix-rooms";
 
 /**
  * MATRIX — classes and community, tier-gated, wired to a real homeserver.
@@ -25,36 +27,60 @@ import { tierSatisfies, type Tier } from "./entitlement";
  * permanently replicated to remote servers a kick cannot claw back.
  */
 
-export interface MatrixRoom {
-  /** room ALIAS, e.g. #claire-senses:onecocreation.com */
-  id: string;
-  title: string;
-  kind: "class" | "community";
-  minTier: Tier | "all";
-}
-
-/* ── CONTENT: Love's rooms ──────────────────────────────────────────────── */
-export const ROOMS: MatrixRoom[] = [
-  { id: "#heart-field:onecocreation.com", title: "The Heart Field — Commons", kind: "community", minTier: "all" },
-  { id: "#claire-senses:onecocreation.com", title: "Claire Senses — Foundations", kind: "class", minTier: "A" },
-  { id: "#tune-up:onecocreation.com", title: "Daily Tune-Up & Check-ins", kind: "community", minTier: "A" },
-  { id: "#weekly-reading:onecocreation.com", title: "Chronicles: Weekly Reading", kind: "class", minTier: "B" },
-  { id: "#observers-circle:onecocreation.com", title: "The Observers' Circle", kind: "community", minTier: "B" },
-  { id: "#quantum-healing:onecocreation.com", title: "Quantum Healing — Deep Dive", kind: "class", minTier: "C" },
-  { id: "#inner-sanctum:onecocreation.com", title: "Evening Star — Inner Sanctum", kind: "community", minTier: "C" },
-];
-
-/** Which rooms a tier opens. `all` rooms are open to any paying member. */
 export function roomsForTier(tier: Tier): MatrixRoom[] {
   return ROOMS.filter((r) => r.minTier === "all" || tierSatisfies(tier, r.minTier));
+}
+
+/** Every room open to a member holding `tier` — null tier = the free
+ *  Community Circle, which still opens every `all` room. */
+export function roomsForMember(tier: Tier | null): MatrixRoom[] {
+  return tier ? roomsForTier(tier) : ROOMS.filter((r) => r.minTier === "all");
+}
+
+/** Bot-invite a member to specific rooms (already-inside counts as done).
+ *  The free-member half of the gate: `all` rooms open at login, not at
+ *  purchase — a Community Circle soul has no settle event to ride. */
+export async function ensureInvited(mxid: string, rooms: MatrixRoom[]): Promise<RoomOutcome[]> {
+  const out: RoomOutcome[] = [];
+  for (const room of rooms) {
+    const id = await resolveRoom(room.id);
+    if (!id) {
+      out.push({ room: room.id, ok: false, reason: "room not found on the homeserver" });
+      continue;
+    }
+    const res = await call("POST", `/rooms/${encodeURIComponent(id)}/invite`, { user_id: mxid });
+    if (res.ok) out.push({ room: room.id, ok: true });
+    else if (/already in the room|already invited|already joined/i.test(res.reason)) {
+      out.push({ room: room.id, ok: true, already: true });
+    } else out.push({ room: room.id, ok: false, reason: res.reason });
+  }
+  return out;
 }
 
 /* ── the homeserver ─────────────────────────────────────────────────────── */
 
 function config(): { base: string; token: string } | null {
-  const base = process.env.MATRIX_HOMESERVER?.replace(/\/$/, "");
-  const token = process.env.MATRIX_BOT_TOKEN;
+  // Love's OWN homeserver is the default now (0018.05.16 — the VPS run made
+  // it real). The bot seat is adminpacman: an ordinary account that is room
+  // creator/PL100 in Love's rooms — on a single-tenant homeserver the
+  // per-clone-bot law and this token describe the same blast radius.
+  const base = (process.env.MATRIX_HOMESERVER ?? "https://matrix.onecocreation.com").replace(/\/$/, "");
+  const token = process.env.MATRIX_BOT_TOKEN ?? process.env.MATRIX_OCC_ADMIN_TOKEN;
   return base && token ? { base, token } : null;
+}
+
+/** The member's matrix id, derived — never asked for. Email members read as
+ *  pac.at.pacsarcade.org; key members keep their handle. */
+export function mxidForSubject(subject: string): string {
+  const server = (process.env.MATRIX_HOMESERVER ?? "https://matrix.onecocreation.com")
+    .replace(/^https?:\/\/matrix\./, "").replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const [handle, space] = subject.includes("@")
+    ? [subject.slice(0, subject.lastIndexOf("@")), subject.slice(subject.lastIndexOf("@") + 1)]
+    : [subject, ""];
+  const local = (space === "email" ? handle.replace(/@/g, ".at.") : handle)
+    .toLowerCase()
+    .replace(/[^a-z0-9._=\/-]/g, "-");
+  return `@${local}:${server}`;
 }
 
 export function matrixConfigured(): boolean {

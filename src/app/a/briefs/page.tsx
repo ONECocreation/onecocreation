@@ -13,7 +13,7 @@ import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-au
  * Operators only — same key-is-the-operator gate as every /a tab.
  */
 export const metadata: Metadata = {
-  title: "Briefs library — frens.earth admin",
+  title: "Briefs library — One Cocreation admin",
   robots: { index: false, follow: false },
 };
 

@@ -112,7 +112,7 @@ export default function SeatReservedPanel({ space }: { space: string }) {
             data-accent="cyan"
             className="btn-pill btn-pill--solid"
           >
-            {phase === "seating" ? "SEATING…" : "▶ SEAT IT"}
+            {phase === "seating" ? "SEATING…" : " SEAT IT"}
           </button>
           <button
             onClick={() => setPhase("form")}
@@ -166,8 +166,7 @@ export default function SeatReservedPanel({ space }: { space: string }) {
         data-accent="cyan"
         className="btn-pill btn-pill--solid mt-5 flex w-full"
       >
-        SEAT THIS NAME ▸
-      </button>
+        SEAT THIS NAME </button>
       {error && <p className="mt-3 font-pixel text-[9px] uppercase text-ghost">{error}</p>}
     </div>
   );

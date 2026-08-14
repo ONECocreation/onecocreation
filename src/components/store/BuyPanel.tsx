@@ -1,23 +1,39 @@
 "use client";
 
 import { useState } from "react";
+import { payInModal } from "@/lib/btcpay-modal";
 import type { StoreItem } from "@/lib/store";
 
 /**
- * The buy moment — honest to the no-coiner: this shelf takes bitcoin, and
- * the button says so before any invoice appears. Digital/package items buy
- * AS a signed-in fren (the server enforces it; this copy just warns first).
+ * The buy moment, in glass (walk facelift 0018.05.15) — honest to the
+ * no-coiner: this shelf takes bitcoin, and the words say so before any
+ * invoice appears. Centered card, fields evenly spaced, the doors at the
+ * bottom center (the Admiral's law).
  */
+
+const glassField: React.CSSProperties = {
+  border: "1px solid rgba(139,118,196,.45)", borderRadius: 10, padding: "9px 12px",
+  background: "rgba(255,255,255,.92)", fontSize: "1rem", color: "#4a4458",
+  fontFamily: "inherit", width: "100%", boxSizing: "border-box",
+};
+
+const fieldLabel: React.CSSProperties = {
+  display: "block", textAlign: "left", fontSize: ".72rem", letterSpacing: ".08em",
+  textTransform: "uppercase", color: "var(--muted, #897f97)",
+};
+
 export default function BuyPanel({ item, railLive }: { item: StoreItem; railLive: boolean }) {
   const [email, setEmail] = useState("");
+  const [discountCode, setDiscountCode] = useState("");
   const [shipName, setShipName] = useState("");
   const [shipAddr, setShipAddr] = useState("");
   const [size, setSize] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [basketNote, setBasketNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const needsShipping = item.fulfillment === "self";
-  const gated = item.kind === "digital" || item.kind === "package";
+  const gated = item.kind === "digital" || item.kind === "package" || item.kind === "retreat";
   const sizes = item.sizes ?? [];
   const needsSize = sizes.length > 0;
 
@@ -31,6 +47,7 @@ export default function BuyPanel({ item, railLive }: { item: StoreItem; railLive
         body: JSON.stringify({
           itemId: item.id,
           size: size ?? undefined,
+          discountCode: discountCode.trim() || undefined,
           contact: email ? { email } : undefined,
           shipping: needsShipping ? { name: shipName, address: shipAddr } : undefined,
         }),
@@ -41,7 +58,15 @@ export default function BuyPanel({ item, railLive }: { item: StoreItem; railLive
         setBusy(false);
         return;
       }
-      window.location.href = data.payUrl;
+      if (data.paid) {
+        window.location.href = `/store/order/${data.orderId}`;
+        return;
+      }
+      const opened = await payInModal(data.payUrl, {
+        onPaid: () => window.location.assign(`/store/order/${data.orderId}`),
+        onClose: () => window.location.assign(`/store/order/${data.orderId}`),
+      });
+      if (!opened) window.location.href = data.payUrl;
     } catch {
       setError("checkout unreachable — try again");
       setBusy(false);
@@ -49,43 +74,50 @@ export default function BuyPanel({ item, railLive }: { item: StoreItem; railLive
   }
 
   if (item.status === "soldout") {
-    return <p className="mt-6 text-sm text-neutral-400">SOLD OUT — the shelf restocks when the artist does.</p>;
+    return <p style={{ marginTop: 24, fontSize: ".9rem", color: "var(--muted, #897f97)" }}>Sold out — back when the artist restocks.</p>;
   }
 
   if (!railLive) {
     return (
-      <p className="mt-6 border border-cyan-800 px-3 py-2 text-xs text-cyan-300">
-        ◌ payment rail not connected — buying opens when this ship links its BTCPay
+      <p style={{ marginTop: 24, fontSize: ".85rem", color: "var(--muted, #897f97)" }}>
+the shelf opens for checkout very soon — browse with love ✨
       </p>
     );
   }
 
   return (
-    <div className="mt-6 max-w-sm">
-      <p className="text-xs text-neutral-300">
-        This shelf takes <span className="font-bold">bitcoin</span> — on-chain or lightning, paid
-        straight to the artist. New to bitcoin?{" "}
-        <a href="/chat" className="text-cyan-300 underline">
-          the attendant can get you started
-        </a>
-        .
+    <div
+      style={{
+        margin: "24px auto 0", maxWidth: 440, textAlign: "center",
+        borderRadius: 20, border: "1px solid var(--glass-edge)",
+        background: "var(--glass)", backdropFilter: "blur(8px)",
+        boxShadow: "0 24px 60px -30px rgba(120,100,160,.55)", padding: "20px 22px",
+      }}
+    >
+      <p style={{ margin: 0, fontSize: ".82rem", color: "var(--muted, #897f97)" }}>
+        Pay in bitcoin — quick as a breath on lightning — and it lands straight with the artist.
       </p>
       {gated && (
-        <p className="mt-2 text-xs text-cyan-300">unlocks for your tag — sign in before buying.</p>
+        <p style={{ margin: "8px 0 0", fontSize: ".8rem", color: "#5f4b96" }}>
+          unlocks for your account — your email at checkout becomes it, or sign in first.
+        </p>
       )}
       {needsSize && (
-        <fieldset className="mt-4">
-          <legend className="text-xs text-neutral-400">size — pick one before buying</legend>
-          <div className="mt-1 flex flex-wrap gap-1">
+        <fieldset style={{ border: 0, padding: 0, margin: "16px 0 0" }}>
+          <legend style={{ ...fieldLabel, textAlign: "center", width: "100%", marginBottom: 6 }}>
+            size — pick one before buying
+          </legend>
+          <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 8 }}>
             {sizes.map((s) => (
+              /* the shipped selectable pill (cartridge walk step 5) — gold
+                 on-state rides aria-pressed */
               <button
                 key={s}
                 type="button"
+                className="chip-select"
                 aria-pressed={size === s}
                 onClick={() => setSize(s)}
-                className={`min-h-11 touch-manipulation border px-3 py-1 text-xs ${
-                  size === s ? "border-white font-bold text-white" : "border-neutral-600 text-neutral-300"
-                }`}
+                style={{ fontSize: ".85rem" }}
               >
                 {s}
               </button>
@@ -93,48 +125,66 @@ export default function BuyPanel({ item, railLive }: { item: StoreItem; railLive
           </div>
         </fieldset>
       )}
-      {/* text-base on touch = 16px, so iOS doesn't zoom-jump on focus */}
-      <label className="mt-4 block text-xs text-neutral-400">
-        email for your receipt (optional)
-        <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm"
-          type="email"
-        />
-      </label>
-      {needsShipping && (
-        <>
-          <label className="mt-2 block text-xs text-neutral-400">
-            ship to — name
-            <input
-              value={shipName}
-              onChange={(e) => setShipName(e.target.value)}
-              className="mt-1 w-full border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm"
-            />
-          </label>
-          <label className="mt-2 block text-xs text-neutral-400">
-            address
-            <textarea
-              value={shipAddr}
-              onChange={(e) => setShipAddr(e.target.value)}
-              className="mt-1 w-full border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm"
-              rows={3}
-            />
-          </label>
-          <p className="mt-1 text-[10px] text-neutral-500">
-            seen by the artist alone · forgotten ~30 days after delivery
-          </p>
-        </>
-      )}
-      <button
-        onClick={buy}
-        disabled={busy || (needsShipping && (!shipName || !shipAddr)) || (needsSize && !size)}
-        className="mt-4 min-h-11 w-full touch-manipulation border border-yellow-500 px-4 py-2 text-sm font-bold tracking-widest text-yellow-400 disabled:opacity-40"
-      >
-        {busy ? "OPENING INVOICE…" : needsSize && !size ? "PICK A SIZE FIRST" : "BUY WITH BITCOIN"}
-      </button>
-      {error && <p className="mt-2 text-xs" style={{ color: "#ff5577" }}>{error}</p>}
+      <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
+        {/* 1rem fields = 16px, so iOS doesn't zoom-jump on focus */}
+        <label style={fieldLabel}>
+          email for your receipt {gated ? "(becomes your account)" : "(optional)"}
+          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email"
+            style={{ ...glassField, marginTop: 3 }} />
+        </label>
+        <label style={fieldLabel}>
+          discount code (optional)
+          <input value={discountCode} onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+            style={{ ...glassField, marginTop: 3, textTransform: "uppercase" }} />
+        </label>
+        {needsShipping && (
+          <>
+            <label style={fieldLabel}>
+              ship to — name
+              <input value={shipName} onChange={(e) => setShipName(e.target.value)}
+                style={{ ...glassField, marginTop: 3 }} />
+            </label>
+            <label style={fieldLabel}>
+              address
+              <textarea value={shipAddr} onChange={(e) => setShipAddr(e.target.value)} rows={3}
+                style={{ ...glassField, marginTop: 3, resize: "vertical" }} />
+            </label>
+            <p style={{ margin: 0, fontSize: ".7rem", color: "var(--muted, #897f97)", textAlign: "left" }}>
+              seen by the artist alone · forgotten ~30 days after delivery
+            </p>
+          </>
+        )}
+      </div>
+      {/* the doors — bottom center, evenly spaced */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginTop: 18 }}>
+        <button
+          onClick={buy}
+          disabled={busy || (needsShipping && (!shipName || !shipAddr)) || (needsSize && !size)}
+          className="btn btn-gold btn-sm"
+          style={{ opacity: busy || (needsShipping && (!shipName || !shipAddr)) || (needsSize && !size) ? 0.5 : 1 }}
+        >
+          {busy ? "Opening invoice…" : needsSize && !size ? "Pick a size first" : "Buy now ⚡"}
+        </button>
+        <button
+          onClick={async () => {
+            if (needsSize && !size) { setBasketNote("pick a size first"); return; }
+            const res = await fetch("/api/cart", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ itemId: item.id, size: size ?? undefined }),
+            });
+            if ((await res.json().catch(() => ({ ok: false }))).ok) {
+              setBasketNote("in the basket 🧺");
+              window.dispatchEvent(new Event("oc-cart-changed"));
+            } else setBasketNote("could not add — try again");
+          }}
+          className="btn btn-ghost btn-sm"
+        >
+          Add to basket 🧺
+        </button>
+      </div>
+      {basketNote && <p style={{ margin: "10px 0 0", fontSize: ".8rem", color: "#3c6b49" }}>{basketNote}</p>}
+      {error && <p style={{ margin: "10px 0 0", fontSize: ".8rem", color: "#a34e6c" }}>{error}</p>}
     </div>
   );
 }

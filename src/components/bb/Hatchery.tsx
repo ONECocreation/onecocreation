@@ -59,7 +59,7 @@ export default function Hatchery({
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-5 rounded-2xl border-2 border-edge bg-panel p-6">
       <div>
-        <h3 className="font-arcade text-xl text-neon glow-neon">THE HATCHERY</h3>
+        <h3 className="font-arcade text-xl text-neon glow-neon">The Hatchery</h3>
         <p className="mt-1 font-body text-sm text-white/70">
           Bring something you own to life. Drop a photo — a mug, a pet, a sticker — and we&apos;ll
           pixel-hatch it into a Buddy born at the block. Or just name one and hatch the house critter.
@@ -103,7 +103,7 @@ export default function Hatchery({
         <label className="font-mono text-[10px] uppercase tracking-widest text-white/40">Name your Buddy</label>
         <input type="text" maxLength={14} placeholder="e.g. Nubbins" value={name} onChange={(e) => setName(e.target.value)}
           className="rounded-lg border border-edge bg-[#0b120e] px-3 py-2.5 font-mono text-sm tracking-wide text-white outline-none focus:border-pink" />
-        <span className="font-mono text-[11px] text-pink">{clean}@frens.earth · born <BftDate height={currentBlock} /></span>
+        <span className="font-mono text-[11px] text-pink">{clean}@onecocreation · born <BftDate height={currentBlock} /></span>
       </div>
 
       <button onClick={hatch} className="button w-full text-center">Hatch your Buddy 💜</button>

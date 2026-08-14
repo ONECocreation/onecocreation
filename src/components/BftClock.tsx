@@ -134,8 +134,7 @@ export default function BftClock() {
 
         {/* the door's handle */}
         <span className="mt-1 block text-center font-mono text-[6px] uppercase tracking-[0.3em] text-coin/60">
-          open the clock ▸
-        </span>
+          open the clock </span>
       </span>
     </Link>
   );

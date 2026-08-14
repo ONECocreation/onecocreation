@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import EarthFooter from "@/components/EarthFooter";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 import SignerDoors from "@/components/SignerDoors";
 
 /**
@@ -69,35 +70,42 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
   }
 
   return (
-    <main className="flex min-h-screen flex-col console-ground">
+    <main className="mgmt-ground">
+      <SiteHeader />
+      <div className="mgmt-wrap mgmt-body" style={{ maxWidth: 640 }}>
       <div className="flex flex-1 items-center justify-center px-6 py-16">
-        <div className="console-card w-full max-w-md p-8 text-center" data-accent="cyan">
-          <p className="lcars-eyebrow mb-4 justify-center" data-accent="cyan">
-            ADMIN SIDE · OPERATORS
-          </p>
-          <h1 className="mb-4 font-arcade text-3xl text-cyan glow-cyan">TRUST, VERIFIED</h1>
+        <div className="w-full max-w-md p-8 text-center" style={{ background: "rgba(255,255,255,.6)", border: "1.5px solid rgba(139,118,196,.35)", borderRadius: 20 }}>
+          <p className="mgmt-eyebrow mb-4">Operators</p>
+          <h1 className="mgmt-title mb-4">Operator sign-in</h1>
           <p className="mb-6 font-body text-sm text-white/70">
-            This side of the earth is for operators. Sign a fresh challenge with an
-            operator key and step through — we don&apos;t ask who you are, we verify it.
+            This door is for operators. Sign a fresh challenge with an operator key and
+            step through — we don&apos;t ask who you are, we verify it.
           </p>
           {configured ? (
             <>
               <button
                 onClick={verify}
                 disabled={busy}
-                className="btn-pill btn-pill--solid min-h-11 w-full touch-manipulation"
-                data-accent="cyan"
+                className="btn btn-gold min-h-11 w-full touch-manipulation"
               >
-                {busy ? "READING YOUR SIGNATURE…" : "▶ VERIFY OPERATOR KEY"}
+                {busy ? "Reading your signature…" : "Verify operator key"}
               </button>
               <details className="mt-4 text-left">
                 <summary className="cursor-pointer font-pixel text-[9px] uppercase text-white/50">
-                  ON A PHONE, OR NO EXTENSION HERE? MORE DOORS ▸
-                </summary>
+                  On a phone, or no extension here? More doors </summary>
                 <div className="mt-3">
                   <SignerDoors kind="console" submit={submitConsole} />
                 </div>
               </details>
+              {/* the email seat (Love's door, 0018.05.15) — no key ceremony,
+                  just her ordinary sign-in; the gate recognizes the address */}
+              <p className="mt-5" style={{ fontSize: ".78rem", color: "var(--muted)" }}>
+                Holding an email seat? Just{" "}
+                <a href="/login" style={{ color: "var(--gold-deep, #b4862b)", textDecoration: "underline" }}>
+                  sign in with your email
+                </a>{" "}
+                and come back — this door will know you.
+              </p>
             </>
           ) : (
             <p
@@ -114,7 +122,8 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
           )}
         </div>
       </div>
-      <EarthFooter />
+      </div>
+      <SiteFooter />
     </main>
   );
 }

@@ -128,36 +128,34 @@ export default function SignerDoors({
   return (
     <div className="space-y-3">
       {/* ── NIP-46: remote signer / bunker — iOS + any browser ─────────── */}
-      <details className="border-2 border-cyan/40 bg-void px-4 py-3">
-        <summary className="cursor-pointer font-pixel text-[9px] uppercase text-cyan">
-          REMOTE SIGNER · WORKS ON iPHONE + ANY BROWSER ▸
-        </summary>
+      <details style={{ borderRadius: 16, border: "1px solid var(--glass-edge)", background: "var(--glass)", padding: "12px 16px", textAlign: "left" }}>
+        <summary className="btn-quiet" style={{ listStyle: "none", padding: 0 }}>remote signer · works on iPhone + any browser</summary>
         <div className="mt-3 space-y-3">
-          <p className="font-body text-xs leading-relaxed text-white/70">
+          <p style={{ fontSize: ".8rem", lineHeight: 1.7, color: "var(--ink-body)" }}>
             Your key lives in a signer you already trust — nsec.app, Amber, or
             your own nsecBunker — and answers over nostr. This page never sees
             it. Needs one of those set up first.
           </p>
-          <label className="block font-pixel text-[9px] uppercase text-white/50">
-            PASTE YOUR BUNKER ADDRESS
+          <label style={{ display: "block", fontSize: ".68rem", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--muted)" }}>
+            paste your bunker address
             <input
               value={bunkerInput}
               onChange={(e) => setBunkerInput(e.target.value)}
               placeholder="bunker://… or name@domain"
               autoComplete="off"
               spellCheck={false}
-              className="mt-1 w-full border-2 border-edge bg-panel px-3 py-2 font-mono text-base text-white sm:text-sm"
+              style={{ marginTop: 6, width: "100%", boxSizing: "border-box", borderRadius: 999, border: "1.5px solid rgba(180,134,43,.65)", background: "rgba(255,255,255,.94)", color: "#4a4458", padding: "10px 16px", fontFamily: "monospace", fontSize: ".85rem" }}
             />
           </label>
           <button
             onClick={signBunker}
             disabled={busy !== "idle"}
-            className="button block min-h-11 w-full touch-manipulation text-center disabled:opacity-50"
+            className="btn btn-gold btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
           >
-            {busy === "bunker" ? "ASKING YOUR SIGNER…" : "▶ CONNECT & SIGN"}
+            {busy === "bunker" ? "Asking your signer…" : "Connect & sign"}
           </button>
-          <div className="border-t-2 border-edge pt-3">
-            <p className="mb-2 font-body text-xs text-white/50">
+          <div style={{ borderTop: "1px solid var(--glass-edge)", paddingTop: 12 }}>
+            <p style={{ margin: "0 0 8px", fontSize: ".78rem", color: "var(--muted)" }}>
               No bunker address handy? Mint an invite — tap it on this phone,
               or paste it into a signer that speaks nostr connect.
             </p>
@@ -165,25 +163,25 @@ export default function SignerDoors({
               <div className="space-y-2">
                 <a
                   href={invite.uri}
-                  className="block break-all border-2 border-cyan/40 bg-panel p-2 font-mono text-[10px] text-cyan underline"
+                  style={{ display: "block", wordBreak: "break-all", borderRadius: 12, border: "1px solid var(--glass-edge)", background: "var(--glass-strong, rgba(22,17,40,.85))", padding: 8, fontFamily: "monospace", fontSize: ".68rem", color: "var(--teal-bright, #8FD0D8)", textDecoration: "underline" }}
                 >
                   {invite.uri}
                 </a>
-                <p className="font-pixel text-[9px] uppercase text-cyan">
-                  WAITING FOR YOUR SIGNER TO ANSWER…
+                <p style={{ margin: 0, fontSize: ".72rem", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--teal-bright, #8FD0D8)" }}>
+                  waiting for your signer to answer…
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={copyInvite}
-                    className="button min-h-11 flex-1 touch-manipulation text-center"
+                    className="btn btn-gold btn-sm" style={{ flex: 1 }}
                   >
-                    {copied ? "COPIED ✓" : "COPY INVITE"}
+                    {copied ? "Copied ✓" : "Copy invite"}
                   </button>
                   <button
                     onClick={cancelInvite}
-                    className="min-h-11 flex-1 touch-manipulation border-2 border-edge font-pixel text-[9px] uppercase text-white/50"
+                    className="btn btn-ghost btn-sm" style={{ flex: 1 }}
                   >
-                    NEVER MIND
+                    Never mind
                   </button>
                 </div>
               </div>
@@ -191,9 +189,9 @@ export default function SignerDoors({
               <button
                 onClick={makeInvite}
                 disabled={busy !== "idle"}
-                className="button block min-h-11 w-full touch-manipulation text-center disabled:opacity-50"
+                className="btn btn-gold btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
               >
-                ▶ MINT A CONNECT INVITE
+                Mint a connect invite
               </button>
             )}
           </div>
@@ -201,13 +199,11 @@ export default function SignerDoors({
       </details>
 
       {/* ── NIP-55: Android signer apps — honest about where it works ──── */}
-      <details className="border-2 border-cyan/40 bg-void px-4 py-3">
-        <summary className="cursor-pointer font-pixel text-[9px] uppercase text-cyan">
-          ANDROID SIGNER APP · AMBER-CLASS ▸
-        </summary>
+      <details style={{ borderRadius: 16, border: "1px solid var(--glass-edge)", background: "var(--glass)", padding: "12px 16px", textAlign: "left" }}>
+        <summary className="btn-quiet" style={{ listStyle: "none", padding: 0 }}>Android signer app · Amber-class</summary>
         <div className="mt-3 space-y-3">
           {android === false ? (
-            <p className="font-body text-xs leading-relaxed text-white/70">
+            <p style={{ fontSize: ".8rem", lineHeight: 1.7, color: "var(--ink-body)" }}>
               This door is Android-only — the <span className="font-mono">nostrsigner:</span>{" "}
               hand-off is an Android intent, and iPhone browsers have no
               equivalent. On this device, the remote-signer door above is the
@@ -215,13 +211,13 @@ export default function SignerDoors({
             </p>
           ) : (
             <>
-              <p className="font-body text-xs leading-relaxed text-white/70">
+              <p style={{ fontSize: ".8rem", lineHeight: 1.7, color: "var(--ink-body)" }}>
                 Your key lives in a signer app like{" "}
                 <a
                   href="https://github.com/greenart7c3/Amber"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-cyan underline"
+                  style={{ color: "var(--teal-bright, #8FD0D8)", textDecoration: "underline" }}
                 >
                   Amber
                 </a>
@@ -230,11 +226,11 @@ export default function SignerDoors({
               </p>
               <button
                 onClick={openSignerApp}
-                className="button block min-h-11 w-full touch-manipulation text-center"
+                className="btn btn-gold btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
               >
-                ▶ OPEN MY SIGNER APP
+                Open my signer app
               </button>
-              <p className="font-body text-xs text-white/50">
+              <p style={{ fontSize: ".78rem", color: "var(--muted)" }}>
                 Nothing opened? Then no signer app answered — this browser
                 can&apos;t check ahead of time. Install Amber first, or use
                 the remote-signer door above.
@@ -244,7 +240,7 @@ export default function SignerDoors({
         </div>
       </details>
 
-      {error && <p className="font-pixel text-[9px] uppercase text-ghost">{error}</p>}
+      {error && <p style={{ margin: 0, fontSize: ".8rem", color: "var(--err, #E7899E)" }}>{error}</p>}
     </div>
   );
 }

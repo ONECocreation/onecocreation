@@ -56,7 +56,7 @@ function SignerReturn() {
         if (!res.ok || !data?.ok) {
           setError(
             data?.reason ??
-              `the arcade server hiccuped (HTTP ${res.status}) — your signature was fine; tell the operator`
+              `the server hiccuped (HTTP ${res.status}) — your signature was fine; tell the operator`
           );
           return;
         }
@@ -68,26 +68,26 @@ function SignerReturn() {
         applyFrenSession({ handle: data.handle!, space: data.space!, npub: data.npub ?? null });
         router.replace(next ?? `/u/${data.handle}@${data.space}`);
       } catch {
-        setError("couldn't reach the arcade — check your connection and try again");
+        setError("couldn't reach the server — check your connection and try again");
       }
     }
     void deliver();
   }, [door, next, rawEvent, router]);
 
   return (
-    <div className="mx-auto w-full max-w-md border-2 border-cyan/40 bg-panel p-6 text-center">
+    <div className="mx-auto w-full max-w-md text-center" style={{ background: "var(--glass)", backdropFilter: "blur(9px)", borderRadius: 24, border: "1px solid var(--glass-edge)", padding: "26px 24px", boxShadow: "0 26px 60px -30px rgba(5,3,16,.7)" }}>
       {error ? (
         <>
-          <p className="mb-3 font-pixel text-[10px] uppercase text-ghost">{error}</p>
+          <p className="mb-3" style={{ fontSize: ".8rem", color: "var(--err, #E7899E)" }}>{error}</p>
           <Link
             href={door === "console" ? "/a" : "/login"}
-            className="font-pixel text-[10px] uppercase text-cyan underline"
+            className="btn-quiet" style={{ padding: 0, color: "var(--teal-bright, #8FD0D8)" }}
           >
             ◀ BACK TO THE DOOR
           </Link>
         </>
       ) : (
-        <p className="font-pixel text-[10px] uppercase text-cyan glow-cyan">
+        <p style={{ fontSize: ".78rem", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--teal-bright, #8FD0D8)" }}>
           READING YOUR SIGNATURE…
         </p>
       )}
@@ -97,7 +97,7 @@ function SignerReturn() {
 
 export default function SignerReturnPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-void px-6">
+    <main className="flex min-h-screen items-center justify-center px-6" style={{ background: "var(--ground, #141021)" }}>
       <Suspense fallback={null}>
         <SignerReturn />
       </Suspense>

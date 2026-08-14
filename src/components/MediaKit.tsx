@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from "react";
-import { frensEarthTheme } from "@/lib/brand";
+import { oneCocreationTheme } from "@/lib/brand-onecocreation";
 
 /**
  * MEDIA / ASSETS — the emojipedia replacement, but ours. Copy a ₿, a sat mark,
- * the BFT markers, the house mark, the wordmark, the palette, and a press
+ * the BFT markers, the site mark, the wordmark, the palette, and a press
  * blurb — all one click to the clipboard, without leaving home.
  *
  * House laws bound here: honest "copied ✓" states (and an honest "copy failed"
@@ -15,34 +15,12 @@ import { frensEarthTheme } from "@/lib/brand";
  * is neon (the live rail). Nothing decorative wears gold.
  */
 
-/* The frens.earth mark source — the sprouting planet, byte-for-byte from
-   public/frens-mark.svg so COPY SVG hands over the real asset. */
-const FRENS_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-label="frens.earth">
-  <defs>
-    <radialGradient id="fe-planet" cx="36%" cy="30%" r="82%">
-      <stop offset="0%" stop-color="#1f3a2b"/>
-      <stop offset="100%" stop-color="#0c1912"/>
-    </radialGradient>
-  </defs>
-  <ellipse cx="24" cy="31" rx="20" ry="8" transform="rotate(-24 24 31)"
-           fill="none" stroke="#b795ff" stroke-width="1.4" opacity="0.65"/>
-  <circle cx="24" cy="31" r="14" fill="url(#fe-planet)" stroke="#53e0d4" stroke-width="2"/>
-  <path d="M13.5 29c2.6-2.4 6-2.2 8.4-.6 1.7 1.2.9 3.5-1.4 4.2-3.3 1-6.7-.2-7.6-1.6-.6-1 .1-1.6.6-2z"
-        fill="#53e0d4" opacity="0.5"/>
-  <path d="M26.5 37c1.8-1 4-.6 5 .8.7 1-.2 2.3-2 2.4-2.7.2-4.3-1.6-3-3.2z"
-        fill="#53e0d4" opacity="0.42"/>
-  <path d="M24 20V10" stroke="#5ef78a" stroke-width="2.4" stroke-linecap="round"/>
-  <path d="M24 15c-1-4.6-4.4-6.4-8-6.6 .4 4.2 3.2 6.8 8 6.6z" fill="#5ef78a"/>
-  <path d="M24 13c1-3.8 3.9-5.4 7-5.6-.4 3.5-2.8 5.8-7 5.6z" fill="#5ef78a"/>
-  <circle cx="24" cy="8" r="2.1" fill="#b795ff"/>
-</svg>`;
-
 /* The press blurbs — warm and true, the spirit of the mission. */
 const PRESS_ONELINER =
-  "frens.earth gives anyone a free, sovereign @frens handle — your name, your keys, verified on nostr and tied to Bitcoin — from Pac's Arcade, a 501(c)(3) bitcoin-education non-profit.";
+  "One Cocreation is the way of the heart — sessions, meditations, and a community where heaven and earth meet, with a free, sovereign name@onecocreation tag: your name, your keys, verified on nostr and tied to Bitcoin.";
 
 const PRESS_PARAGRAPH =
-  "frens.earth is the home world of Pac's Arcade, a 501(c)(3) non-profit that teaches bitcoin the hands-on way. Claim a free @frens tag and it's yours forever: a name bound to keys only you hold, verifiable on nostr today and anchored to Bitcoin at the next batch — no rent, no resets, nobody to ask. Learn, play, and grow with your frens. Tick tock: everything gets tied to the block.";
+  "One Cocreation is where heaven and earth meet — a home for sessions, meditations, and the community room, walked the way of the heart. Claim a free name@onecocreation tag and it's yours forever: a name bound to keys only you hold, verifiable on nostr and anchored to Bitcoin — no rent, no resets, nobody to ask. Everything gets tied to the block.";
 
 /** Copy-to-clipboard button with an honest state machine: idle → copied ✓,
     or → copy failed when the clipboard API is blocked. Reverts after a beat. */
@@ -93,10 +71,10 @@ function CopyButton({
 }
 
 /**
- * The house SATOSHI mark — Candidate A, "THE STRUCK ESS": a lowercase gold s
+ * The SATOSHI mark — Candidate A, "THE STRUCK ESS": a lowercase gold s
  * pierced by ₿'s two vertical hash-bars. Composited inline (no font codepoint
  * exists for the satoshi), scales with font-size, wears coin gold because sats
- * ARE money. HOUSE PROPOSAL — pending the admiral's pick among four candidates.
+ * ARE money. A PROPOSAL — not yet a settled standard.
  */
 function SatMark({ style }: { style?: CSSProperties }) {
   const bar: CSSProperties = { top: "-0.16em", bottom: "-0.16em", width: "0.085em" };
@@ -105,7 +83,7 @@ function SatMark({ style }: { style?: CSSProperties }) {
       className="relative inline-block font-mono font-bold text-coin"
       style={{ padding: "0 0.07em", ...style }}
       role="img"
-      aria-label="satoshi mark (house proposal — the struck ess)"
+      aria-label="satoshi mark (a proposal — the struck ess)"
     >
       <span aria-hidden>s</span>
       <span aria-hidden className="absolute bg-current" style={{ ...bar, left: "0.22em" }} />
@@ -190,39 +168,37 @@ function SwatchButton({ name, hex, role }: { name: string; hex: string; role: st
   );
 }
 
-const t = frensEarthTheme.tokens;
+const t = oneCocreationTheme.tokens;
 const SWATCHES: ReadonlyArray<{ name: string; hex: string; role: string }> = [
-  { name: "void", hex: t.void, role: "surface" },
-  { name: "panel", hex: t.panel, role: "surface" },
-  { name: "edge", hex: t.edge, role: "surface" },
-  { name: "sprout", hex: t.neon, role: "live / success" },
-  { name: "teal", hex: t.cyan, role: "info · verify" },
-  { name: "coin", hex: t.coin, role: "money ONLY" },
-  { name: "ghost", hex: t.ghost, role: "danger" },
-  { name: "heart", hex: t.pink, role: "flair 💜" },
+  { name: "space", hex: t.space, role: "surface" },
+  { name: "cream", hex: t.cream, role: "text" },
+  { name: "gold", hex: t.gold, role: "money ONLY" },
+  { name: "purple", hex: t.purple, role: "info · verify" },
+  { name: "lavender", hex: t.lavender, role: "live / success" },
+  { name: "rose", hex: t.rose, role: "danger — gentle" },
+  { name: "magenta", hex: t.magenta, role: "flair 💜" },
+  { name: "copper", hex: t.copper, role: "warmth" },
 ];
 
 export default function MediaKit() {
   return (
     <>
       {/* Hero — informational, so no gold (gold is money only) */}
-      <section className="px-6 pb-8 pt-14 text-center">
-        <p className="font-pixel text-[10px] uppercase tracking-widest text-white/40">
-          MEDIA / ASSETS
-        </p>
-        <h1 className="mt-4 font-arcade text-4xl leading-tight text-white sm:text-5xl">
-          COPY A <span className="text-coin glow-coin">₿</span> WITHOUT LEAVING HOME
+      <header className="mgmt-head">
+        <p className="mgmt-eyebrow">Media & assets</p>
+        <h1 className="mgmt-title">
+          Copy a <span className="text-coin">₿</span> without leaving home
         </h1>
-        <p className="mx-auto mt-6 max-w-xl font-body text-base text-white/70">
-          House bitcoin glyphs, the frens.earth brand, and a press blurb — each one
+        <p className="mgmt-blurb">
+          Bitcoin glyphs, the One Cocreation brand, and a press blurb — each one
           click to your clipboard. No trip to emojipedia required.
         </p>
-      </section>
+      </header>
 
       {/* 1 — BITCOIN GLYPHS */}
-      <section className="border-t border-dashed border-edge px-6 py-14">
+      <section className="mt-10 border-t border-dashed border-edge py-10">
         <div className="mx-auto max-w-5xl">
-          <h2 className="font-pixel text-sm text-cyan">BITCOIN GLYPHS</h2>
+          <h2 className="font-pixel text-sm text-cyan">Bitcoin glyphs</h2>
           <p className="mt-2 font-body text-sm text-white/60">
             Click to copy. <span className="text-coin">Gold is money</span> (the ₿ and the sat
             mark); <span className="text-cyan">cyan is time</span> (the date markers);{" "}
@@ -285,21 +261,21 @@ export default function MediaKit() {
             <span className="font-pixel text-[10px] uppercase tracking-widest text-white/60">
               On the sat mark ·{" "}
             </span>
-            The struck ess (<SatMark style={{ fontSize: "1.1em" }} />) is the house lead among
+            The struck ess (<SatMark style={{ fontSize: "1.1em" }} />) is the lead among
             four satoshi-mark candidates — a lowercase gold s wearing ₿&apos;s two hash-bars.
-            It&apos;s a <span className="text-white/70">house proposal, pending the admiral&apos;s
-            pick</span>, so the honest copyable value is the text fallback{" "}
+            It&apos;s <span className="text-white/70">a proposal, not yet a settled
+            standard</span>, so the honest copyable value is the text fallback{" "}
             <span className="font-mono text-coin">sats</span> — the word wallets already print.
           </p>
         </div>
       </section>
 
-      {/* 2 — HOUSE BRAND ASSETS */}
-      <section className="border-t border-dashed border-edge px-6 py-14">
+      {/* 2 — BRAND ASSETS */}
+      <section className="border-t border-dashed border-edge py-10">
         <div className="mx-auto max-w-5xl">
-          <h2 className="font-pixel text-sm text-cyan">HOUSE BRAND ASSETS</h2>
+          <h2 className="font-pixel text-sm text-cyan">Brand assets</h2>
           <p className="mt-2 font-body text-sm text-white/60">
-            The mark, the wordmark, and the night-garden palette.
+            The mark, the wordmark, and the celestial palette.
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -308,48 +284,54 @@ export default function MediaKit() {
               <div className="flex items-center gap-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/frens-mark.svg"
-                  alt="frens.earth mark — a sprouting planet"
+                  src="/brand/onecocreation-coin-gold.svg"
+                  alt="One Cocreation mark — the gold coin holding a star"
                   width={64}
                   height={64}
                   className="h-16 w-16 shrink-0"
                 />
                 <div>
-                  <p className="font-pixel text-xs text-white">THE MARK</p>
+                  <p className="font-pixel text-xs text-white">The mark</p>
                   <p className="mt-1 font-body text-xs leading-snug text-white/60">
-                    A sprouting planet — a living earth, deliberately not a coin.
+                    The gold coin holding a star — where heaven and earth meet.
                   </p>
                 </div>
               </div>
               <div className="mt-5 flex flex-wrap gap-2">
                 <a
-                  href="/frens-mark.svg"
-                  download="frens-mark.svg"
+                  href="/brand/onecocreation-coin-gold.svg"
+                  download="onecocreation-coin-gold.svg"
                   className="border-2 border-edge px-3 py-2 font-pixel text-[10px] uppercase tracking-widest text-white/70 transition-colors hover:border-cyan hover:text-cyan motion-reduce:transition-none"
                 >
                   DOWNLOAD SVG
                 </a>
-                <CopyButton value={FRENS_MARK_SVG} label="COPY SVG" />
+                <a
+                  href="/brand/onecocreation-mark-gold.svg"
+                  download="onecocreation-mark-gold.svg"
+                  className="border-2 border-edge px-3 py-2 font-pixel text-[10px] uppercase tracking-widest text-white/70 transition-colors hover:border-cyan hover:text-cyan motion-reduce:transition-none"
+                >
+                  DOWNLOAD FULL LOCKUP
+                </a>
               </div>
             </div>
 
             {/* The wordmark */}
             <div className="flex flex-col justify-between border-2 border-edge bg-panel p-6">
               <div>
-                <p className="font-pixel text-[9px] uppercase tracking-widest text-white/40">
-                  THE WORDMARK
+                <p className="font-pixel text-[9px] tracking-widest text-white/40">
+                  The wordmark
                 </p>
-                <p className="mt-3 font-arcade text-3xl text-white sm:text-4xl">FRENS.EARTH</p>
+                <p className="mt-3 font-arcade text-3xl text-white sm:text-4xl">One Cocreation</p>
               </div>
               <div className="mt-5">
-                <CopyButton value="FRENS.EARTH" label="COPY WORDMARK" />
+                <CopyButton value="One Cocreation" label="COPY WORDMARK" />
               </div>
             </div>
           </div>
 
           {/* The palette */}
-          <p className="mt-8 font-pixel text-[10px] uppercase tracking-widest text-white/50">
-            THE PALETTE — CLICK A SWATCH TO COPY ITS HEX
+          <p className="mt-8 font-pixel text-[10px] tracking-widest text-white/50">
+            The palette — click a swatch to copy its hex
           </p>
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {SWATCHES.map((s) => (
@@ -361,24 +343,24 @@ export default function MediaKit() {
             <span className="font-pixel text-[10px] uppercase tracking-widest text-white/60">
               Usage ·{" "}
             </span>
-            <span className="text-coin">Gold is money, and only money.</span> The earth&apos;s
-            shape is never asserted — it&apos;s a mark, not a claim. And no Disney, ever.
+            <span className="text-coin">Gold is money, and only money.</span> The brand runs
+            on the night sky — keep the mark on dark, at its natural aspect, never squeezed.
           </p>
         </div>
       </section>
 
       {/* 3 — FOR PRESS */}
-      <section className="border-t border-dashed border-edge px-6 py-14">
+      <section className="border-t border-dashed border-edge py-10">
         <div className="mx-auto max-w-3xl">
-          <h2 className="font-pixel text-sm text-cyan">FOR PRESS</h2>
+          <h2 className="font-pixel text-sm text-cyan">For press</h2>
           <p className="mt-2 font-body text-sm text-white/60">
             Writing about us? Copy and paste — it&apos;s warm and it&apos;s true.
           </p>
 
           <div className="mt-8 space-y-6">
             <div className="border-2 border-edge bg-panel p-6">
-              <p className="font-pixel text-[9px] uppercase tracking-widest text-white/40">
-                ONE-LINER
+              <p className="font-pixel text-[9px] tracking-widest text-white/40">
+                One-liner
               </p>
               <blockquote className="mt-3 font-body text-base leading-relaxed text-white/80">
                 {PRESS_ONELINER}
@@ -389,8 +371,8 @@ export default function MediaKit() {
             </div>
 
             <div className="border-2 border-edge bg-panel p-6">
-              <p className="font-pixel text-[9px] uppercase tracking-widest text-white/40">
-                SHORT PARAGRAPH
+              <p className="font-pixel text-[9px] tracking-widest text-white/40">
+                Short paragraph
               </p>
               <blockquote className="mt-3 font-body text-base leading-relaxed text-white/80">
                 {PRESS_PARAGRAPH}

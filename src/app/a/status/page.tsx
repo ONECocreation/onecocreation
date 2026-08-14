@@ -14,7 +14,7 @@ import { CONSOLE_SITE } from "@/lib/console";
  * operator gate as every /a tab.
  */
 export const metadata: Metadata = {
-  title: "Bridge — frens.earth admin",
+  title: "Bridge — One Cocreation admin",
   robots: { index: false, follow: false },
 };
 

@@ -1,0 +1,478 @@
+/* ════════════════════════════════════════════════════════════════════
+   THE HOUSE — the brand-free framework (cartridge walk step 8,
+   Admiral's walk, 0018.05.15): buttons, cards, chips, sheets, grids,
+   nav machinery, the alive layer, the mgmt cartridge rules. It reads
+   ONLY tokens; the tokens live in cartridge.css, loaded before this.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* the z-ladder, said out loud: sheets under popups under the lightbox
+   (cartridge walk step 6) — house structure, not brand */
+:root{--z-sheet:60;--z-popup:70;--z-lightbox:80}
+
+/* ── the stacked hero — Love's own typographic gesture (cuts study) ── */
+.stack-hero{font-family:var(--disp);font-weight:800;letter-spacing:.1em;line-height:1.05;
+  color:var(--ink-strong);text-transform:uppercase;margin:0}
+.stack-hero span{display:block}
+.stack-hero .sh-ink{font-size:clamp(1.9rem,6.2vw,3.2rem)}
+.stack-hero .sh-teal{font-size:clamp(1.9rem,6.2vw,3.2rem);color:var(--teal-bright)}
+.stack-hero .sh-amp{font-family:var(--serif);font-weight:400;text-transform:none;
+  font-size:clamp(1.1rem,3.4vw,1.9rem);color:var(--gold-deep);letter-spacing:0}
+.stack-hero .sh-sub{font-size:clamp(1.3rem,4.6vw,2.4rem)}
+.constellation{font-size:1.25rem;letter-spacing:.4em;margin:12px 0 0}
+.btn-teal{background:linear-gradient(135deg,#8FD0D8,var(--teal-deep));color:#fff}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;color:var(--ink);font-family:var(--font-body);line-height:1.7;font-size:19px;-webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(900px 500px at 50% -4%, rgba(120,86,180,.22), transparent 60%),
+    radial-gradient(760px 620px at 88% 12%, rgba(78,160,175,.1), transparent 62%),
+    linear-gradient(180deg,#141021 0%, #191325 45%, #1c1730 100%);background-attachment:fixed}
+html[data-oc-theme="light"] body{
+  background:
+    radial-gradient(900px 500px at 50% -4%, rgba(235,203,119,.28), transparent 60%),
+    radial-gradient(760px 620px at 88% 12%, rgba(231,178,195,.26), transparent 62%),
+    linear-gradient(180deg,#FCF7F0 0%, #F7EFF3 45%, #F1EEF8 100%);background-attachment:fixed}
+img{max-width:100%;display:block}
+a{color:var(--lavender);text-decoration:none}
+h1,h2,h3,h4{line-height:1.16;margin:0 0 .45em;color:var(--ink-strong);font-weight:700}
+/* the FONT TRIO (0018.05.17, Love's law): Barlow = H1/display, Helvetica =
+   H2 + body, Lucida Grande = H3 (h4 rides with h3 — no fourth voice) */
+h1{font-family:var(--font-h1)}
+h2{font-family:var(--font-h2)}
+h3,h4{font-family:var(--font-h3)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+section{padding:76px 0;position:relative}
+.kicker{font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:var(--rose);font-weight:700;margin:0 0 1rem}
+/* no font-family here — .sec-h rides h1 or h2 (both tags used), so it takes
+   whichever the element selector gives it (FONT TRIO, 0018.05.17) */
+.sec-h{font-size:clamp(1.9rem,5vw,2.6rem);color:var(--ink-strong);font-weight:400}
+.lead{max-width:680px;margin:0 auto 48px;color:var(--muted)}
+.center{text-align:center}
+/* NO transparent borders on pills — a fractional border over a gradient at
+   border-radius:999px paints visible "cut" slivers at the rounded ends in
+   Chrome (the Admiral's catch, packages page). Outlines ride inset
+   box-shadow instead; padding absorbs the old border's 1.5px. */
+.btn{display:inline-block;padding:15.5px 31.5px;border-radius:999px;font-weight:600;letter-spacing:.07em;font-size:.82rem;text-transform:uppercase;cursor:pointer;border:0;transition:transform .18s;-webkit-tap-highlight-color:transparent}
+.btn:hover{transform:translateY(-3px)}
+.btn-gold{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:#3a2a06;
+  text-shadow:0 1px 1px rgba(58,42,6,.4),0 0 8px rgba(58,42,6,.35)}
+.btn-rose{background:linear-gradient(135deg,#E7B2C3,#C56E8B);color:#fff}
+.btn-ghost{background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px var(--edge)}
+.btn-sm{padding:11.5px 19.5px;font-size:.72rem}
+/* step 5 of the cartridge walk: the three shapes that end the one-offs */
+.btn-quiet{background:none;border:0;padding:8px 6px;cursor:pointer;font-family:inherit;
+  font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--muted);white-space:nowrap;text-decoration:none}
+.btn-quiet:hover{color:var(--gold-deep)}
+.btn-quiet--gold{color:var(--gold-2)}
+.chip-select{border-radius:999px;padding:9px 16px;font-size:.88rem;cursor:pointer;font-family:inherit;
+  font-weight:500;border:1.5px solid rgba(139,118,196,.4);background:rgba(255,255,255,.8);color:#4a4458}
+.chip-select[aria-pressed="true"],.chip-select.on{font-weight:700;border-color:#b4862b;
+  background:linear-gradient(135deg,#ebcb77,#b4862b);color:#3a2a06}
+.btn-round{width:var(--size,40px);height:var(--size,40px);border-radius:50%;cursor:pointer;
+  display:grid;place-items:center;font-size:1.1rem;border:1.5px solid rgba(235,203,119,.6);
+  background:rgba(14,12,24,.6);color:#ebcb77}
+/* uniform pill sheets (Admiral, 0018.05.15): every calendar selection lays
+   its chips on this grid — equal widths, aligned rows, no ragged wrap */
+.chip-grid{list-style:none;padding:0;margin:0;display:grid;gap:8px;
+  grid-template-columns:repeat(auto-fill,minmax(var(--chip-min,104px),1fr))}
+.chip-grid .chip-select{width:100%;text-align:center;white-space:nowrap;padding:9px 8px}
+
+.brandmark{width:44px;height:44px}
+.clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ── THE ALIVE LAYER (0018.05.15, after Love's Shine build) — things rise
+   into view as you scroll; cards breathe on hover; images lean closer ── */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s cubic-bezier(.22,1,.36,1)}
+.reveal.in{opacity:1;transform:none}
+.card{transition:transform .3s ease,box-shadow .3s ease}
+.card:hover{transform:translateY(-6px);box-shadow:0 34px 74px -32px rgba(120,100,160,.7)}
+.card .thumb{transition:transform .6s cubic-bezier(.22,1,.36,1)}
+.card:hover .thumb{transform:scale(1.06)}
+@media(prefers-reduced-motion:reduce){
+  .reveal{opacity:1;transform:none;transition:none}
+  .card,.card .thumb{transition:none}
+  .card:hover{transform:none;box-shadow:var(--soft)}
+  .card:hover .thumb{transform:none}
+}
+
+/* the store's category wayfinding — little anchor pills under the title */
+.cat-pills{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:18px 0 0}
+.cat-pills a{border-radius:999px;padding:7px 16px;font-size:.72rem;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ghost-ink);background:var(--ghost-bg);box-shadow:inset 0 0 0 1.5px var(--edge)}
+.cat-pills a:hover{color:var(--gold-deep);box-shadow:inset 0 0 0 1.5px rgba(180,134,43,.5)}
+.card{background:var(--panel);border:1px solid var(--glass-edge);border-radius:24px;overflow:hidden;box-shadow:var(--soft);display:flex;flex-direction:column;backdrop-filter:blur(8px)}
+.card .thumb{aspect-ratio:4/3;width:100%;object-fit:cover}
+.card .body{padding:24px;display:flex;flex-direction:column;flex:1}
+/* THE CARD CONTRACT (Admiral, 0018.05.15 — one standard for every card):
+   4/3 image, centered body, title/sub zones reserve their lines, footer
+   actions ride .push and never wrap — all footers land level. */
+.card .body .card-title{min-height:2.5em}
+.card .body .card-sub{min-height:2.2em}
+.card .nowrap{white-space:nowrap}
+/* ── THE FLIP CONTRACT (Admiral, 0018.06.10) — session cards turn over
+   instead of popping sheets. The 3D recipe is the Admiral's own, lifted
+   from the aceo playground (aceo-playground/src/AceoCard.jsx): perspective
+   on the frame, preserve-3d on the turner, backface-visibility hidden on
+   both faces, the back pre-rotated rotateY(180deg). The FRONT face rules
+   the height; the back rides absolute inset:0 to match it and scrolls its
+   story inside — so the grid rows stay level and nothing spills (the old
+   peek Sheet's position:fixed was trapped by the card's backdrop-filter
+   containing block and overflowed the grid — retired). ── */
+.flip-card{position:relative}
+.flip-inner{position:relative;width:100%;height:100%;perspective:1400px}
+/* each face turns on its OWN hinge — no preserve-3d to inherit. The first
+   contract rotated a preserve-3d parent, but the faces are .cards
+   (overflow:hidden + compositing), which Chrome flattens: both backfaces
+   hid at once and the card vanished (card flip vanish.png). Independent
+   rotations can't be flattened away. */
+.flip-front,.flip-back{-webkit-backface-visibility:hidden;backface-visibility:hidden;
+  /* Safari (Love's iPad) mishandles backface culling on clipped faces and
+     vanishes the card — so the faces ALSO swap opacity at the exact
+     mid-turn instant (.3s = half the .6s swing), when the card is edge-on
+     and invisible anyway. Every engine obeys opacity. */
+  /* SYMMETRIC ease: the old springy ease-out reached edge-on early, then
+     the opacity swap at half-time left a visible blank stretch. With
+     ease-in-out, 90° lands exactly at half-time — swap meets the turn. */
+  transition:transform .55s cubic-bezier(.45,0,.55,1),opacity 0s linear .275s;
+  /* no backdrop-filter on a turning face — Chrome flickers the backface */
+  backdrop-filter:none}
+.flip-front{position:relative;height:100%}
+.flip-back{position:absolute;inset:0}
+/* hover-lift stays off the faces — its transform would overwrite the hinge */
+.flip-card .flip-front,.flip-card .flip-front:hover{transform:rotateY(0deg);opacity:1}
+.flip-card .flip-back,.flip-card .flip-back:hover{transform:rotateY(-180deg);opacity:0}
+.flip-card.is-flipped .flip-front{transform:rotateY(180deg);opacity:0}
+.flip-card.is-flipped .flip-back{transform:rotateY(0deg);opacity:1}
+.flip-back .body{min-height:0}
+.flip-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;scrollbar-color:rgba(139,118,196,.5) transparent}
+@media(prefers-reduced-motion:reduce){
+  .flip-front,.flip-back{transition:none} /* instant turn — the card still flips, without the sail */
+}
+.grid{display:grid;gap:26px}
+@media(min-width:760px){.grid-3{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr 1fr}}
+.price{font-family:var(--serif);color:var(--gold-deep);font-size:1.5rem}
+.price small{font-size:.8rem;color:var(--muted)}
+.sats{color:var(--gold-deep);font-size:.82rem;font-weight:700;margin-top:2px}
+.feat{list-style:none;padding:0;margin:14px 0 20px;font-size:.94rem;color:var(--ink-body)}
+.feat li{padding:5px 0 5px 22px;position:relative}
+.feat li::before{content:"✦";position:absolute;left:0;color:var(--lavender);font-size:.78rem;top:7px}
+.push{margin-top:auto}
+
+/* header / footer */
+.site-header{position:sticky;top:0;z-index:40;background:rgba(14,12,24,.86);backdrop-filter:blur(12px)}
+.site-header .bar{display:flex;align-items:center;gap:16px;padding:2px 22px;max-width:1140px;margin:0 auto}
+.logo{display:flex;align-items:center;gap:10px}
+.logo .wm{font-family:var(--serif);line-height:.98}
+.logo .wm b{display:block;color:var(--gold-2);font-size:1.24rem;letter-spacing:.14em}
+.logo .wm span{display:block;color:#c79ae8;font-size:.85rem;letter-spacing:.07em}
+.site-nav{margin-left:auto;display:flex;align-items:center;gap:15px;flex-wrap:wrap}
+.site-nav a{font-size:.95rem;letter-spacing:.04em;color:#ECE3C9;text-transform:uppercase;font-weight:600}
+.site-nav a:hover{color:var(--gold-2)}
+.site-nav .sats-pill{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:#3a2a06;padding:8px 15px;border-radius:999px}
+.site-footer{background:rgba(14,12,24,.9);color:#cabfda;padding:52px 0 36px;text-align:center;margin-top:30px}
+.site-footer .fnav{display:flex;flex-wrap:wrap;gap:15px;justify-content:center;margin:16px 0;font-size:.8rem;text-transform:uppercase}
+.site-footer .fnav a{color:#ECE3C9}
+.site-footer .legal{color:#8a82a0;font-size:.8rem}
+.site-footer .rebuild{max-width:680px;margin:20px auto 0;font-size:.78rem;color:#7c749a;border-top:1px solid rgba(255,255,255,.12);padding-top:16px}
+
+/* hero + glyph */
+.hero{text-align:center;padding:96px 0 90px;position:relative;overflow:hidden;
+  background:radial-gradient(760px 460px at 50% 14%, rgba(120,86,180,.5), transparent 62%),linear-gradient(180deg,#0b0a18,#16111f 55%,#241a33)}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:150px;z-index:2}
+/* the moon breathes too — a slow lean-in for image heroes: a background
+   LAYER inside an overflow-hidden section, scaled gently over time */
+.kenburns{position:absolute;inset:0;will-change:transform;
+  animation:kenburns 40s ease-in-out infinite alternate}
+@keyframes kenburns{from{transform:scale(1.02)}to{transform:scale(1.1)}}
+@media(prefers-reduced-motion:reduce){
+  .hero::before{animation:none}
+  .kenburns{animation:none}
+}
+.hero .inner{position:relative;z-index:3}
+.hero::before,.hero::after{pointer-events:none}
+.hero canvas{pointer-events:none!important}
+.hero .days{font-family:var(--serif);letter-spacing:.55em;color:var(--gold-2);text-transform:uppercase;font-size:1.3rem}
+.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(2.7rem,9vw,5rem);color:#F4ECFF;letter-spacing:.05em;margin:.08em 0;text-shadow:0 0 44px rgba(232,185,35,.4)}
+.hero .sub{font-family:var(--serif);letter-spacing:.18em;text-transform:uppercase;color:#EEC2D0;margin:.4em 0 1.6em}
+.glyph{width:min(300px,70vw);margin:0 auto 22px;filter:drop-shadow(0 0 8px rgba(255,255,255,.85)) drop-shadow(0 0 30px rgba(232,185,35,.4))}
+
+/* jewelry */
+.jgrid{display:grid;gap:26px}
+@media(min-width:640px){.jgrid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:960px){.jgrid{grid-template-columns:repeat(4,1fr)}}
+.pendant{aspect-ratio:1/1;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,#fff6ef,#efe3f0 60%,#e6d9ee)}
+.pendant svg{width:74%}
+
+/* services / rooms */
+.svc{display:flex;align-items:center;gap:16px;background:var(--panel);border:1px solid var(--glass-edge);border-radius:18px;padding:16px 20px;box-shadow:var(--soft);flex-wrap:wrap;margin-bottom:14px}
+.svc .meta{flex:1;min-width:180px}
+.svc .meta h4{margin:0;font-weight:400;font-size:1.05rem}
+.svc .meta p{margin:2px 0 0;font-size:.85rem;color:var(--muted)}
+.svc .pr{font-family:var(--serif);color:var(--gold-deep);font-weight:700}
+.roomrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,118,196,.3);color:var(--ink-body)}
+.lockpill{margin-left:auto;font-size:.66rem;text-transform:uppercase;color:var(--gold-deep);background:rgba(217,178,78,.16);border-radius:999px;padding:3px 11px;font-weight:700}
+.note{max-width:780px;margin:30px auto 0;text-align:center;font-size:.9rem;color:var(--ink-body);background:var(--glass);border:1px solid var(--glass-edge);border-radius:18px;padding:18px 22px}
+.note b{color:var(--gold-deep)}
+.stub{display:inline-block;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-deep);border:1px dashed rgba(180,134,43,.5);border-radius:999px;padding:5px 12px}
+
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+
+/* header lockup — natural aspect, never squeezed (the smooshed-logo fix) */
+.brandmark-lockup{height:60px;width:auto;display:block}
+
+/* THE LIGHT CODE DRAWS ITSELF (Love's ask via the Admiral, 0018.05.10):
+   the hand-drawn symbol fills in from top to bottom on arrival — a soft
+   wipe + glow bloom, not a flat appearance. Reduced-motion exempt. */
+.glyph{animation:glyph-fill 2.6s ease-out both}
+@keyframes glyph-fill{
+  0%{clip-path:inset(0 0 100% 0);opacity:.0;filter:drop-shadow(0 0 0 rgba(255,255,255,0))}
+  12%{opacity:1}
+  100%{clip-path:inset(0 0 -8% 0);opacity:1;filter:drop-shadow(0 0 18px rgba(255,255,255,.45))}
+}
+@media (prefers-reduced-motion: reduce){.glyph{animation:none}}
+
+/* the sats line never wraps mid-number (the memberships wrapping fix) */
+.sats{white-space:nowrap}
+
+/* ── BORROWED MAGIC (magicui/react-bits bench, CSS-first ports) ── */
+/* aurora — northern light ribbons (≈ react-bits Aurora, no deps) */
+.aurora{position:absolute;inset:-18%;pointer-events:none;filter:blur(48px);opacity:.55;z-index:0}
+.aurora i{position:absolute;display:block;width:62%;height:56%;border-radius:50%}
+.aurora i:nth-child(1){left:-6%;top:-4%;background:radial-gradient(closest-side,rgba(78,160,175,.85),transparent 70%);animation:aur1 16s ease-in-out infinite alternate}
+.aurora i:nth-child(2){right:-8%;top:14%;background:radial-gradient(closest-side,rgba(139,118,196,.75),transparent 70%);animation:aur2 21s ease-in-out infinite alternate}
+.aurora i:nth-child(3){left:20%;bottom:-14%;background:radial-gradient(closest-side,rgba(235,203,119,.45),transparent 70%);animation:aur3 18s ease-in-out infinite alternate}
+@keyframes aur1{to{transform:translate(16%,12%) scale(1.25)}}
+@keyframes aur2{to{transform:translate(-14%,18%) scale(1.15)}}
+@keyframes aur3{to{transform:translate(10%,-16%) scale(1.3)}}
+/* shimmer — a slow light pass, PRIMARY doors only (Admiral, 0018.05.15) */
+.btn-shimmer{position:relative;overflow:hidden}
+.btn-shimmer::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.45) 50%,transparent 68%);
+  transform:translateX(-140%);animation:gold-shimmer 5.2s ease-in-out infinite}
+@keyframes gold-shimmer{0%,55%{transform:translateX(-140%)}85%,100%{transform:translateX(140%)}}
+/* shine-border — a light runs the card's rim on hover (≈ MagicUI border-beam) */
+@property --shine-ang{syntax:"<angle>";initial-value:0deg;inherits:false}
+.shine-hover{position:relative}
+.shine-hover::before{content:"";position:absolute;inset:-1.5px;border-radius:26px;padding:1.5px;z-index:3;
+  background:conic-gradient(from var(--shine-ang),transparent 0 72%,rgba(235,203,119,.95) 86%,transparent 100%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  opacity:0;transition:opacity .3s;pointer-events:none}
+.shine-hover:hover::before{opacity:1;animation:shine-spin 2.4s linear infinite}
+@keyframes shine-spin{to{--shine-ang:360deg}}
+@media(prefers-reduced-motion:reduce){
+  .aurora i{animation:none}
+  .btn-shimmer::after{animation:none}
+  .shine-hover:hover::before{animation:none;opacity:.6}
+}
+
+/* the sun with shades — theme toggle in the header, by the login name
+   (Admiral, 0018.05.17: "easy on the eyes?") */
+.theme-sun{width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(235,203,119,.45);
+  background:none;color:#EBCB77;cursor:pointer;display:grid;place-items:center;padding:0;
+  transition:transform .18s ease,border-color .18s ease}
+.theme-sun:hover{transform:rotate(20deg);border-color:rgba(235,203,119,.8)}
+html[data-oc-theme="light"] .theme-sun{color:#B4862B;border-color:rgba(180,134,43,.5)}
+
+/* Love's Pen — the header toggle (operator-only, P1 2026-08-10) and the
+   inline-edit affordance it switches on for every <Editable>. */
+.pen-toggle{width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(235,203,119,.45);
+  background:none;font-size:16px;cursor:pointer;display:grid;place-items:center;padding:0;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.pen-toggle:hover{transform:rotate(-8deg);border-color:rgba(235,203,119,.8)}
+.pen-toggle.is-on{background:rgba(217,178,78,.18);border-color:var(--gold-deep)}
+
+.pen-editable{outline:1px dashed transparent;outline-offset:4px;border-radius:4px;
+  cursor:text;transition:outline-color .15s ease,background .15s ease}
+.pen-editable:hover{outline-color:rgba(180,134,43,.55);background:rgba(217,178,78,.06)}
+.pen-editable:focus{outline:2px solid var(--gold-deep);outline-offset:4px;background:rgba(217,178,78,.09)}
+
+.pen-revert{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;
+  border:1.5px solid var(--gold-deep);background:#141021;color:var(--gold-2);font-size:12px;
+  line-height:1;cursor:pointer;display:grid;place-items:center;opacity:.75;z-index:2}
+.pen-revert:hover{opacity:1;transform:rotate(-18deg)}
+.pen-saved{position:absolute;top:-10px;right:20px;font-size:.68rem;font-weight:700;
+  color:var(--teal-bright);background:#141021;padding:2px 8px;border-radius:999px;z-index:2}
+.pen-counter{position:absolute;bottom:-18px;right:0;font-size:.66rem;color:var(--rose);
+  background:#141021;padding:1px 7px;border-radius:999px;z-index:2}
+
+/* tier pills — each plan wears its name; the door to its own page */
+.tier-pills{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:18px 0 30px}
+.tier-pill{border:1.5px solid rgba(180,134,43,.5);color:var(--gold-deep);border-radius:999px;
+  padding:11px 22px;font-weight:700;font-size:.86rem;letter-spacing:.05em;text-transform:uppercase;
+  transition:background .18s,border-color .18s}
+.tier-pill:hover{background:rgba(217,178,78,.14);border-color:var(--gold-deep)}
+
+/* tier detail: two columns fold to one on phones */
+@media(max-width:760px){.tier-cols{grid-template-columns:1fr !important}}
+
+/* console pages: the sticky nav goes OPAQUE so scrolled room content never
+   bleeds through it (the "shelf title takes over the menu" fix) */
+.mgmt-ground .site-header{background:rgb(14,12,24)}
+
+/* SAME collision, second casualty (signin-experience1 red mark): the bare
+   header{} rule ALSO pads .site-header 1.5rem top+bottom — the dead black
+   band under the nav. The bar's own padding is the only padding. */
+header.site-header{padding:0;border-bottom:none}
+
+/* the arcade-era bare `header{}` rule in globals paints every <header>
+   black+sticky(z-100) — that was the band eating the menu on /a and /login.
+   The shell/page heads are headers-in-flow, not chrome: neutralize. */
+header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;backdrop-filter:none;z-index:auto}
+
+/* the sign-in card sheds its arcade skin (panel/glow/pixel/pink shadow)
+   inside site pages — scoped like the rest of the cartridge repaint */
+.mgmt-body [class*="bg-panel"]{background:rgba(255,255,255,.62)!important;border-radius:20px}
+.mgmt-body [class*="shadow-["]{box-shadow:var(--soft)!important}
+.mgmt-body [class*="glow-"]{text-shadow:none!important}
+.mgmt-body [class*="font-pixel"]{font-family:var(--sans)!important;letter-spacing:.04em}
+.mgmt-body [class*="border-2"],.mgmt-body [class*="border-4"]{border-width:1.5px!important;border-color:rgba(139,118,196,.35)!important;border-radius:20px}
+.mgmt-body [class*="text-neon"]{color:var(--rose)!important}
+.mgmt-body [class*="text-pink"]{color:var(--magenta)!important}
+.mgmt-body .button{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:#3a2a06;border:none;border-radius:999px;font-family:var(--sans);letter-spacing:.05em}
+
+/* per-package accents — the name pill up top matches its Learn More below */
+.tier-pill--a,.tier-btn--a{border:1.5px solid var(--lavender);color:#5f4b96}
+.tier-btn--a:hover,.tier-pill--a:hover{background:rgba(139,118,196,.14)}
+.tier-pill--b,.tier-btn--b{border:1.5px solid var(--rose);color:#a34e6c}
+.tier-btn--b:hover,.tier-pill--b:hover{background:rgba(197,110,139,.12)}
+.tier-pill--c,.tier-btn--c{border:0;background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:#3a2a06}
+.tier-btn--c:hover,.tier-pill--c:hover{filter:brightness(1.06)}
+.tier-name-pill{display:inline-block;border-radius:999px;padding:8px 18px;font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+
+/* the sign-in button sheds its arcade drop-shadow inside site pages */
+.mgmt-body .button{box-shadow:var(--soft)!important;border:none!important}
+
+/* Weekly Intuitive + Observer pills fill in like Evening Star's gold */
+.tier-pill--a,.tier-btn--a{border:0;background:linear-gradient(135deg,#cbbbea,var(--lavender));color:#fff}
+.tier-btn--a:hover,.tier-pill--a:hover{filter:brightness(1.06);background:linear-gradient(135deg,#cbbbea,var(--lavender))}
+.tier-pill--b,.tier-btn--b{border:0;background:linear-gradient(135deg,#efc6da,var(--rose));color:#fff}
+.tier-btn--b:hover,.tier-pill--b:hover{filter:brightness(1.06);background:linear-gradient(135deg,#efc6da,var(--rose))}
+
+/* the nav's right tail (member name + Support) never wraps under the menu —
+   the Admiral's persistent catch; it lives OUTSIDE the wrapping nav now */
+.site-header .bar{flex-wrap:wrap}
+.nav-tail{display:flex;align-items:center;gap:14px;flex-shrink:0;margin-left:auto}
+.site-nav{margin-left:auto;margin-right:0}
+
+/* ── the console's left rail (wireframe v2) ── */
+.mgmt-shell{display:grid;grid-template-columns:190px minmax(0,1fr);gap:26px;align-items:start}
+/* minmax(0,1fr), NOT 1fr — a bare 1fr track's minimum is the content's
+   min-width, so the 700px week grid was widening the whole page on phones
+   (mobile menu2.png: the calendar made everything scroll right) */
+@media(max-width:760px){.mgmt-shell{grid-template-columns:minmax(0,1fr)}}
+/* and the page itself never pans sideways — wide things scroll in their own box */
+@media(max-width:920px){
+  .mgmt-ground{overflow-x:clip}
+  .mgmt-stage,.mgmt-body{min-width:0}
+  .mgmt-body table{display:block;max-width:100%;overflow-x:auto}
+}
+.mgmt-rail{display:flex;flex-direction:column;gap:6px;position:sticky;top:92px;z-index:10;
+  background:var(--glass);border:1.5px solid var(--glass-edge);border-radius:16px;padding:12px 10px}
+@media(max-width:760px){.mgmt-rail{position:static;flex-direction:row;flex-wrap:wrap}}
+.mgmt-rail-tab{display:block;padding:9px 14px;border-radius:10px;font-family:var(--sans);
+  font-size:.84rem;letter-spacing:.03em;color:var(--muted);border:1.5px solid transparent}
+.mgmt-rail-tab:hover{color:var(--ink);border-color:rgba(139,118,196,.4)}
+.mgmt-rail-tab.is-active{color:var(--ink);font-weight:700;background:rgba(217,178,78,.14);border-color:var(--gold-deep)}
+
+/* ── consolidated nav: sub-menus + hamburger (Admiral, 0018.05.13) ── */
+.nav-menu{position:relative;margin-left:auto}
+.nav-burger{display:none;background:none;border:1.5px solid rgba(236,227,201,.4);border-radius:8px;
+  color:#ECE3C9;font-size:1.2rem;padding:4px 12px;cursor:pointer}
+.nav-items{display:flex;align-items:center;gap:18px}
+.nav-item{position:relative}
+/* one line-height for BOTH faces of a nav item — <a> links inherit the
+   body's 1.7 while <button> parents don't, which sat About/Support lower
+   than their submenu siblings (Admiral's catch, 0018.05.16) */
+.nav-link{background:none;border:none;cursor:pointer;font-family:inherit;display:inline-block;
+  font-size:.95rem;line-height:1.2;letter-spacing:.04em;color:#ECE3C9;text-transform:uppercase;font-weight:600;padding:6px 0;
+  position:relative}
+.nav-link:hover{color:var(--gold-2)}
+/* ── where you are, lit (mockup C blessed — the dawn underline) ── */
+.nav-link.is-here{color:var(--here-ink,#F4ECFF);text-shadow:0 0 10px rgba(200,170,220,.35)}
+.nav-link.is-here::after{content:"";position:absolute;left:1px;right:1px;bottom:-3px;height:2.5px;
+  border-radius:3px;background:var(--here-grad,linear-gradient(90deg,#EBCB77,#9d86d9));
+  box-shadow:0 0 12px 1px var(--here-glow,rgba(180,150,200,.55));
+  animation:here-dawn .35s ease;transform-origin:left center}
+.nav-sub a.is-here{color:var(--here-ink,#F4ECFF);
+  background:linear-gradient(90deg,rgba(235,203,119,.14),rgba(157,134,217,.14))}
+@keyframes here-dawn{from{opacity:0;transform:scaleX(.55)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.nav-link.is-here::after{animation:none}}
+.nav-sub{position:absolute;top:calc(100% + 8px);left:0;min-width:220px;z-index:var(--z-sheet,60);
+  background:var(--pop-bg);border:1.5px solid var(--pop-edge);border-radius:14px;padding:8px 0;
+  box-shadow:var(--pop-shadow)}
+.nav-sub a{display:block;padding:9px 18px;color:#ECE3C9;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
+.nav-sub a:hover{color:var(--gold-2)}
+/* hover-open, click-through (Admiral, 0018.05.15): the sub is always in the
+   DOM and breathes open on hover/focus; the close lingers .18s so the cursor
+   can cross the 8px gap (the ::before bridge catches it too). */
+.nav-item.has-sub .nav-sub{opacity:0;visibility:hidden;transform:translateY(7px);pointer-events:none;
+  transition:opacity .22s ease,transform .22s ease,visibility 0s linear .4s}
+.nav-item.has-sub:hover .nav-sub,.nav-item.has-sub:focus-within .nav-sub{
+  opacity:1;visibility:visible;transform:none;pointer-events:auto;transition-delay:.06s,.06s,0s}
+.nav-sub::before{content:"";position:absolute;top:-10px;left:0;right:0;height:10px}
+@media(prefers-reduced-motion:reduce){.nav-item.has-sub .nav-sub{transition:none;transform:none}}
+@media(max-width:920px){
+  /* ONE row on phones (mobile menu1.png fix): logo left, then
+     basket+name, burger far right — nothing wraps to a second line.
+     The logo cell GROWS to eat the free space (mobile menu2.png fix),
+     so the tail + burger sit hard right even if auto margins misbehave. */
+  .site-header .bar{flex-wrap:nowrap;gap:10px;padding:6px 14px}
+  .logo{flex:1 1 auto;min-width:0}
+  .brandmark-lockup{height:56px}
+  .nav-burger{display:block}
+  .nav-menu{order:3;margin-left:0;position:static}
+  /* the arcade globals' `header nav{width:100%}` (≤720px) was stretching
+     this nav across the bar — its empty box ate the free space and shoved
+     burger + login to the LEFT. Our nav is content-sized, always. */
+  .site-header nav.nav-menu{width:auto;flex:0 0 auto}
+  .nav-tail{order:2;margin-left:auto;gap:10px;min-width:0}
+  .nav-tail a{overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+  .nav-items{display:none;position:absolute;right:10px;left:auto;top:calc(100% + 6px);z-index:var(--z-sheet,60);
+    flex-direction:column;align-items:stretch;gap:0;min-width:240px;max-width:calc(100vw - 20px);
+    background:var(--pop-bg);border:1.5px solid var(--pop-edge);border-radius:14px;padding:8px 0}
+  .nav-items.is-open{display:flex}
+  .nav-item .nav-link{display:block;width:100%;text-align:left;padding:10px 18px}
+  .nav-sub{position:static;border:none;box-shadow:none;background:transparent;padding:0 0 4px 14px;min-width:0}
+  /* no hover on phones — subs sit open under their parent in the sheet */
+  .nav-item.has-sub .nav-sub{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:none}
+  .nav-sub::before{display:none}
+  /* the dawn in the sheet: a short bar under the word, not a full-row rule */
+  .nav-link.is-here::after{left:18px;right:auto;width:46px;bottom:5px}
+}
+.nav-tail{flex-shrink:0;white-space:nowrap}
+
+/* ── the pull-quote (Admiral, 0018.05.15): a line of the artist's own voice
+   lifted out of the story and given air — big serif, gold rules above and
+   below, breathing room on both sides. ── */
+.pull-quote{font-family:var(--serif);font-weight:400;font-size:clamp(1.4rem,3.4vw,1.85rem);
+  line-height:1.45;text-align:center;text-wrap:balance;max-width:580px;margin:46px auto;
+  color:var(--rose);padding:0 10px}
+.pull-quote::before,.pull-quote::after{content:"";display:block;width:54px;height:1.5px;
+  margin:0 auto;background:linear-gradient(90deg,transparent,var(--gold-deep),transparent)}
+.pull-quote::before{margin-bottom:20px}
+.pull-quote::after{margin-top:20px}
+
+/* ── the voices ticker (Admiral, 0018.05.15): community quotes drift by on
+   a slow loop — the track holds the set twice so the seam never shows.
+   Hover holds a voice still; reduced-motion lays them out wrapped. ── */
+.voice-ticker{overflow:hidden;position:relative;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.voice-track{display:flex;gap:14px;width:max-content;animation:voice-drift 48s linear infinite}
+.voice-ticker:hover .voice-track{animation-play-state:paused}
+.voice-chip{display:flex;flex-direction:column;gap:4px;flex:0 0 auto;max-width:300px;
+  padding:12px 18px;border-radius:16px;text-decoration:none;
+  background:var(--glass);border:1px solid var(--glass-edge);box-shadow:var(--soft-sm);
+  transition:border-color .25s ease,transform .25s ease}
+.voice-chip:hover{border-color:rgba(217,178,78,.55);transform:translateY(-2px)}
+.voice-quote{font-family:var(--serif);font-size:.92rem;line-height:1.5;color:var(--ink-strong)}
+.voice-who{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-deep)}
+@keyframes voice-drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){
+  .voice-track{animation:none;flex-wrap:wrap;width:auto}
+  .voice-track a[aria-hidden="true"]{display:none}
+  .voice-ticker{-webkit-mask-image:none;mask-image:none}
+}

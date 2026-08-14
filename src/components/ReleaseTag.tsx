@@ -68,7 +68,7 @@ export default function ReleaseTag({
 
   return (
     <section className="border-2 border-edge bg-panel p-6">
-      <p className="mb-2 font-pixel text-xs text-white/40">CHANGED YOUR MIND, FREN?</p>
+      <p className="mb-2 font-pixel text-xs text-white/40">CHANGED YOUR MIND?</p>
       {!arming ? (
         <div className="flex flex-wrap items-center gap-5">
           <p className="min-w-[16rem] flex-1 font-body text-sm text-white/60">

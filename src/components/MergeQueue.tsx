@@ -183,7 +183,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
     }
   }, []);
 
-  /** ▸ CHANGES — the proposal's touched files, fetched once per open. */
+  /** CHANGES — the proposal's touched files, fetched once per open. */
   async function toggleChanges(pr: number) {
     if (changes[pr]) {
       setChanges((p) => {
@@ -215,9 +215,9 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
     const ics = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//frens.earth//SCAR-LET//EN",
+      "PRODID:-//onecocreation.com//SCAR-LET//EN",
       "BEGIN:VEVENT",
-      `UID:scarlet-key-${d8(expiry)}@frens.earth`,
+      `UID:scarlet-key-${d8(expiry)}@onecocreation.com`,
       `DTSTAMP:${stamp}`,
       `DTSTART;VALUE=DATE:${d8(remind)}`,
       "SUMMARY:SCAR·LET — renew the GitHub key (7 days left)",
@@ -463,8 +463,8 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
     }
   }
 
-  /** ✎ NOTE — the row's signed comment box, collapsible like ▸ CHANGES. */
-  /** ▸ WHAT TO TEST — the change's own brief (PR title+body), fetched once. */
+  /** ✎ NOTE — the row's signed comment box, collapsible like CHANGES. */
+  /** WHAT TO TEST — the change's own brief (PR title+body), fetched once. */
   const [briefs, setBriefs] = useState<Record<number, { title: string; body: string } | "loading">>({});
   async function toggleBrief(pr: number) {
     if (briefs[pr]) {
@@ -665,7 +665,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <button onClick={() => toggleBrief(x.pr)} className="btn-pill" data-accent="cyan">
-              {briefs[x.pr] ? "▾" : "▸"} WHAT SHIPS
+              {briefs[x.pr] ? "▾" : " "} WHAT SHIPS
             </button>
             <button onClick={() => toggleNote(x.pr)} className="btn-pill" data-accent="pink">
               ✎ NOTE
@@ -720,7 +720,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <button onClick={() => toggleBrief(x.pr)} className="btn-pill" data-accent="cyan">
-              {briefs[x.pr] ? "▾" : "▸"} WHAT TO TEST
+              {briefs[x.pr] ? "▾" : " "} WHAT TO TEST
             </button>
             <button onClick={() => toggleNote(x.pr)} className="btn-pill" data-accent="pink">
               ✎ FEEDBACK
@@ -814,7 +814,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
                       className="btn-pill"
                       data-accent="cyan"
                     >
-                      {changes[pr.number] ? "▾" : "▸"} CHANGES
+                      {changes[pr.number] ? "▾" : " "} CHANGES
                     </button>
                     <button
                       onClick={() => toggleNote(pr.number)}
@@ -875,8 +875,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
                   <div className="mt-3 border-t border-edge pt-2">
                     {(changes[pr.number] as PrFile[]).length === 0 ? (
                       <p className="font-mono text-[10px] text-white/40">
-                        couldn&apos;t read the change list — review on GitHub ▸
-                      </p>
+                        couldn&apos;t read the change list — review on GitHub </p>
                     ) : (
                       (changes[pr.number] as PrFile[]).map((f) => {
                         const base = f.file.split("/").pop() ?? f.file;
@@ -1079,7 +1078,7 @@ function ConnectGithub({ onConnected }: { onConnected: () => void }) {
     done: "border-neon text-neon",
     fail: "border-ghost text-ghost",
   };
-  const stageMark: Record<StageState, string> = { wait: "", run: "▸ ", done: "✓ ", fail: "✗ " };
+  const stageMark: Record<StageState, string> = { wait: "", run: " ", done: "✓ ", fail: "✗ " };
 
   return (
     <div className="console-card p-4" data-accent="cyan">
@@ -1094,8 +1093,7 @@ function ConnectGithub({ onConnected }: { onConnected: () => void }) {
             rel="noopener noreferrer"
             className="text-cyan underline hover:text-white"
           >
-            Fine-grained tokens ▸
-          </a>
+            Fine-grained tokens </a>
           : name under 40 chars, resource owner = <span className="text-cyan">your org</span>, this
           repo only, permissions <span className="text-cyan">Contents + Pull requests (read/write)</span>.
           Paste it once — it&apos;s stored write-only and never shown again.
@@ -1142,7 +1140,7 @@ function ConnectGithub({ onConnected }: { onConnected: () => void }) {
             data-accent="cyan"
             className="btn-pill btn-pill--solid px-4"
           >
-            {busy ? "SHAKING HANDS…" : "▶ CONNECT"}
+            {busy ? "SHAKING HANDS…" : " CONNECT"}
           </button>
         </div>
       )}
@@ -1167,7 +1165,7 @@ function FragmentedStage({
   return (
     <>
       {index > 0 && (
-        <span className="hidden place-self-center font-mono text-[11px] text-white/30 sm:grid">▶</span>
+        <span className="hidden place-self-center font-mono text-[11px] text-white/30 sm:grid"> </span>
       )}
       <div className={`flex flex-col gap-1 rounded-lg border-2 bg-panel p-2.5 ${style}`}>
         <span className="font-mono text-[8px] uppercase tracking-widest opacity-60">

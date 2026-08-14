@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { nip19 } from "nostr-tools";
 
 /**
  * TIERED ENTITLEMENT — the packages, wired to the framework's real gate.
@@ -26,9 +27,13 @@ export type Tier = "A" | "B" | "C";
 
 /* ── CONTENT: Love's packages ───────────────────────────────────────────── */
 export const TIERS: Record<Tier, { name: string; priceUsd: number; priceSats: number }> = {
-  A: { name: "The Weekly Intuitive", priceUsd: 33, priceSats: 33_000 },
-  B: { name: "The Observer", priceUsd: 55.55, priceSats: 55_550 },
-  C: { name: "The Evening Star", priceUsd: 111.11, priceSats: 111_110 },
+  /* Angel-number sats, proposed 0018.05.09 — NOT naive USD×rate. Love's
+     confirmation pending (checklist): C may become 111,111, the
+     mirror-digits Evening Star, instead of 177,777. */
+  /* Names without "The" — the Admiral's call 0018.05.15. */
+  A: { name: "Weekly Intuitive", priceUsd: 33, priceSats: 55_555 },
+  B: { name: "Observer", priceUsd: 55.55, priceSats: 88_888 },
+  C: { name: "Evening Star", priceUsd: 111.11, priceSats: 177_777 },
 };
 
 const RANK: Record<Tier, number> = { A: 1, B: 2, C: 3 };
@@ -51,6 +56,9 @@ export interface Entitlement {
   /** matrix id, once the member has linked or been provisioned one */
   mxid?: string;
   revokedAtMs?: number;
+  /** a TASTER grant only — e.g. the $11 one-week pass. Absent = the open-
+   *  ended monthly membership. Read as expired (no access) once past. */
+  expiresAtMs?: number;
 }
 
 /* ── the vault (same transports as orders and bookings) ─────────────────── */
@@ -111,7 +119,21 @@ async function kv(cmd: unknown[]): Promise<{ result: unknown } | null> {
 
 const dir = () => path.join(process.cwd(), "data", "entitlements");
 const file = (npub: string) => path.join(dir(), `${npub}.json`);
-const safeNpub = (n: string) => /^[a-f0-9]{64}$/i.test(n);
+// hex pubkeys are the canonical grant key; email members grant under their
+// "address@email" subject — the identity that survives on their orders
+const safeNpub = (n: string) => /^[a-f0-9]{64}$/i.test(n) || /^[^\s@]+@[^\s@]+@email$/.test(n);
+
+/** hex or bech32 npub → canonical hex (null when it's neither). */
+export function normalizeNpub(n: string | undefined | null): string | null {
+  if (!n) return null;
+  if (/^[a-f0-9]{64}$/i.test(n)) return n.toLowerCase();
+  try {
+    const d = nip19.decode(n);
+    return d.type === "npub" ? (d.data as string) : null;
+  } catch {
+    return null;
+  }
+}
 
 async function readRec(npub: string): Promise<Entitlement | null> {
   if (vaultConfigured()) {
@@ -139,11 +161,15 @@ async function write(rec: Entitlement): Promise<void> {
 
 /* ── reads ──────────────────────────────────────────────────────────────── */
 
-/** The live tier for a registry npub. A revoked grant reads as nothing. */
+/** The live tier for a registry npub. A revoked grant reads as nothing —
+ *  so does a lapsed taster (expiresAtMs in the past): the ONE gate every
+ *  tier check funnels through, so a week pass closing needs no separate
+ *  sweep. */
 export async function getEntitlement(npub: string): Promise<Entitlement | null> {
   if (!safeNpub(npub)) return null;
   const rec = await readRec(npub);
   if (!rec || rec.revokedAtMs) return null;
+  if (rec.expiresAtMs != null && Date.now() > rec.expiresAtMs) return null;
   return rec;
 }
 
@@ -180,23 +206,48 @@ export async function listEntitlements(): Promise<Entitlement[]> {
  * UPGRADE keeps the higher tier: a later grant never demotes someone who
  * already paid for more — an Evening Star who buys a Weekly Intuitive as a
  * gift for themselves must not lose the Evening Star.
+ *
+ * `opts.expiresAtMs` is the taster door (the $11/$22.22 one-week passes):
+ * present = this grant closes on its own at that instant, no revoke needed.
+ * The expiry only ever rides the WINNING tier of this call — a taster never
+ * downgrades a standing permanent membership at the same or higher tier,
+ * and a permanent purchase always clears any taster expiry it replaces. Two
+ * tasters at the same tier extend to the later of the two (a renewed week).
  */
 export async function grantTier(
   npub: string,
   tier: Tier,
   orderId: string,
-  mxid?: string,
+  opts?: { mxid?: string; expiresAtMs?: number },
 ): Promise<Entitlement | null> {
   if (!safeNpub(npub) || !isTier(tier)) return null;
   const existing = await getEntitlement(npub);
   if (existing && existing.orderId === orderId && existing.tier === tier) return existing; // retry
   const keep = existing && RANK[existing.tier] > RANK[tier] ? existing.tier : tier;
+
+  let expiresAtMs: number | undefined;
+  if (keep !== tier) {
+    // the standing grant outranks this purchase — its own expiry (if any) stands
+    expiresAtMs = existing?.expiresAtMs;
+  } else if (opts?.expiresAtMs == null) {
+    // a permanent purchase at (or above) the standing tier — no more clock
+    expiresAtMs = undefined;
+  } else if (existing?.tier === tier && existing.expiresAtMs == null) {
+    // already permanent at this tier — a taster can't downgrade it
+    expiresAtMs = undefined;
+  } else if (existing?.tier === tier && existing.expiresAtMs != null) {
+    expiresAtMs = Math.max(existing.expiresAtMs, opts.expiresAtMs); // renewal stacks
+  } else {
+    expiresAtMs = opts.expiresAtMs;
+  }
+
   const rec: Entitlement = {
     npub,
     tier: keep,
     orderId,
     grantedAtMs: existing?.grantedAtMs ?? Date.now(),
-    mxid: mxid ?? existing?.mxid,
+    mxid: opts?.mxid ?? existing?.mxid,
+    expiresAtMs,
   };
   await write(rec);
   return rec;

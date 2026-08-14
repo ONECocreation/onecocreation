@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { payInModal } from "@/lib/btcpay-modal";
+import { GENESIS_MS, bftTime, bftDatePlain } from "@/lib/bb/bft";
+import { USA_ZONES, zipToTz } from "@/lib/us-zip-tz";
 
 /**
  * The slot picker — step 2, and the whole timezone law made visible.
@@ -25,7 +28,13 @@ interface ServiceView {
   pricingMode: "fixed" | "pwyc";
 }
 
+/** BFT — the block is the clock. A FUTURE slot rides the genesis-anchored
+ *  estimate (~144 blocks a day), and wears the honest `~`. */
+const BFT = "BFT";
+const estHeight = (iso: string) => Math.floor((Date.parse(iso) - GENESIS_MS) / 600_000);
+
 function fmtTime(iso: string, tz: string): string {
+  if (tz === BFT) return `~${bftTime(estHeight(iso))}`;
   return new Intl.DateTimeFormat(undefined, {
     timeZone: tz,
     hour: "numeric",
@@ -34,6 +43,7 @@ function fmtTime(iso: string, tz: string): string {
 }
 
 function fmtDayHeading(iso: string, tz: string): string {
+  if (tz === BFT) return `~${bftDatePlain(estHeight(iso))} a₿`;
   return new Intl.DateTimeFormat(undefined, {
     timeZone: tz,
     weekday: "long",
@@ -42,8 +52,20 @@ function fmtDayHeading(iso: string, tz: string): string {
   }).format(new Date(iso));
 }
 
+/** The date-pill face: short, calm — "Thu Aug 6". */
+function fmtDayPill(iso: string, tz: string): string {
+  if (tz === BFT) return `~${bftDatePlain(estHeight(iso))}`;
+  return new Intl.DateTimeFormat(undefined, {
+    timeZone: tz,
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(iso));
+}
+
 /** Group key = the calendar day AS THE VIEWER'S ZONE sees it, not UTC's. */
 function dayKey(iso: string, tz: string): string {
+  if (tz === BFT) return bftDatePlain(estHeight(iso)); // the 144-block day
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
     year: "numeric",
@@ -52,13 +74,126 @@ function dayKey(iso: string, tz: string): string {
   }).format(new Date(iso));
 }
 
+/** THE MONTH CALENDAR — the traditional picker (Admiral, 0018.05.17):
+ *  Sun-first grid, open days tappable with their count, the rest resting. */
+function MonthCalendar({
+  days,
+  chosenDay,
+  onPick,
+}: {
+  days: [string, { startUtc: string }[]][];
+  chosenDay: string | null;
+  onPick: (key: string) => void;
+}) {
+  const counts = new Map(days.map(([k, s]) => [k, s.length]));
+  const months = [...new Set(days.map(([k]) => k.slice(0, 7)))].sort();
+  const [cursor, setCursor] = useState(months[0]);
+  const month = months.includes(cursor) || !months.length ? cursor : months[0];
+
+  const [y, m] = month.split("-").map(Number);
+  const firstDow = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const monthName = new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(undefined, {
+    month: "long", year: "numeric", timeZone: "UTC",
+  });
+  const at = months.indexOf(month);
+
+  const cells: (number | null)[] = [
+    ...Array.from({ length: firstDow }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
+  /* .btn-round with the calendar's glass face (cartridge walk step 5) —
+     the class carries the circle; these carry the daylight */
+  const navBtn: React.CSSProperties = {
+    "--size": "34px", background: "var(--glass)", borderColor: "rgba(180,134,43,.45)",
+    color: "var(--gold-deep, #b4862b)", fontSize: "1rem", lineHeight: 1,
+  } as React.CSSProperties;
+
+  return (
+    <div
+      style={{
+        borderRadius: 20,
+        border: "1px solid var(--glass-edge)",
+        background: "var(--glass)",
+        backdropFilter: "blur(8px)",
+        boxShadow: "0 24px 60px -30px rgba(120,100,160,.55)",
+        padding: "18px 18px 14px",
+        maxWidth: 360,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <button type="button" className="btn-round" onClick={() => at > 0 && setCursor(months[at - 1])} disabled={at <= 0}
+          style={{ ...navBtn, opacity: at <= 0 ? 0.3 : 1 }} aria-label="previous month">‹</button>
+        <span style={{ fontFamily: "var(--font-h3, sans-serif)", fontSize: "1.15rem", color: "var(--ink-strong)" }}>{monthName}</span>
+        <button type="button" className="btn-round" onClick={() => at < months.length - 1 && setCursor(months[at + 1])} disabled={at >= months.length - 1}
+          style={{ ...navBtn, opacity: at >= months.length - 1 ? 0.3 : 1 }} aria-label="next month">›</button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4, textAlign: "center" }}>
+        {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+          <span key={i} style={{ fontSize: ".62rem", letterSpacing: ".12em", color: "var(--muted, #897f97)", padding: "2px 0" }}>{d}</span>
+        ))}
+        {cells.map((d, i) => {
+          if (d === null) return <span key={`b${i}`} />;
+          const key = `${month}-${String(d).padStart(2, "0")}`;
+          const open = counts.get(key);
+          const active = chosenDay === key;
+          return open ? (
+            /* .chip-select shaped into the calendar's circle — the class
+               carries the gold on/off state via aria-pressed */
+            <button
+              key={key}
+              type="button"
+              className="chip-select"
+              onClick={() => onPick(key)}
+              aria-pressed={active}
+              title={`${open} open ${open === 1 ? "time" : "times"}`}
+              style={{
+                position: "relative", height: 40, borderRadius: "50%", padding: 0,
+                fontSize: ".92rem", transition: "transform .12s ease",
+              }}
+            >
+              {d}
+              <span style={{
+                position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)",
+                width: 5, height: 5, borderRadius: "50%",
+                background: active ? "#3a2a06" : "var(--gold-deep, #b4862b)",
+              }} />
+            </button>
+          ) : (
+            <span key={key} style={{ height: 40, display: "grid", placeItems: "center", fontSize: ".9rem", color: "rgba(154,143,174,.6)" }}>{d}</span>
+          );
+        })}
+      </div>
+      <p style={{ margin: "10px 2px 0", fontSize: ".68rem", color: "var(--muted, #897f97)" }}>
+        golden-dot days have open times — tap one
+      </p>
+    </div>
+  );
+}
+
 /** "PDT", "GMT+1" — the short label a human recognizes. */
 function zoneLabel(tz: string): string {
+  if (tz === BFT) return "block time";
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(new Date());
   return parts.find((p) => p.type === "timeZoneName")?.value ?? tz;
 }
 
-export default function SlotPicker({ serviceId }: { serviceId: string }) {
+export default function SlotPicker({
+  serviceId,
+  inPerson = false,
+  voucherId,
+  rescheduleBookingId,
+}: {
+  serviceId: string;
+  inPerson?: boolean;
+  /** gift-redeem mode: the session is already paid — booking goes through
+   *  /api/gift/redeem and every payment control stays hidden */
+  voucherId?: string;
+  /** reschedule mode: moving an EXISTING booking — no payment, no fields,
+   *  just the new time through /api/bookings/<id>/change */
+  rescheduleBookingId?: string;
+}) {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [service, setService] = useState<ServiceView | null>(null);
   const [chosen, setChosen] = useState<string | null>(null);
@@ -69,7 +204,31 @@ export default function SlotPicker({ serviceId }: { serviceId: string }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
+  /* WHAT'S THE CALL FOR (Admiral, 0018.05.15) — discovery calls carry an
+     intent: the fixed doors, anything on the shelf, or their own words */
+  const [intent, setIntent] = useState("");
+  const [shelfTitles, setShelfTitles] = useState<string[]>([]);
+  const isDiscovery = /discovery/i.test(serviceId);
+  useEffect(() => {
+    if (!isDiscovery) return;
+    fetch("/api/store/catalog")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { items?: { title: string }[] } | null) =>
+        setShelfTitles((d?.items ?? []).map((i) => i.title)))
+      .catch(() => {});
+  }, [isDiscovery]);
+  const noteOut = intent ? `Calling about: ${intent}${note.trim() ? `\n${note}` : ""}` : note;
   const [amountSats, setAmountSats] = useState("");
+  const [discountCode, setDiscountCode] = useState("");
+  // the cuts chooser saves the studio's destination — checkout meets it filled
+  const savedLoc = (() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("oc-inperson-loc") ?? "{}") as { city?: string; state?: string; zip?: string };
+    } catch { return {}; }
+  })();
+  const [city, setCity] = useState(savedLoc.city ?? "");
+  const [stateReg, setStateReg] = useState(savedLoc.state ?? "");
+  const [zip, setZip] = useState(savedLoc.zip ?? "");
   const [rail, setRail] = useState<"lightning" | "onchain">("lightning");
   const [busy, setBusy] = useState(false);
   const [bookError, setBookError] = useState<string | null>(null);
@@ -78,6 +237,9 @@ export default function SlotPicker({ serviceId }: { serviceId: string }) {
   // people booking on someone else's behalf both exist.
   const detected = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
   const [viewerTz, setViewerTz] = useState(detected);
+  const [zipForTz, setZipForTz] = useState("");
+  // less is more (Admiral): pick a DAY first, then that day's times
+  const [chosenDay, setChosenDay] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -121,6 +283,56 @@ export default function SlotPicker({ serviceId }: { serviceId: string }) {
     if (!chosen) return;
     setBusy(true);
     setBookError(null);
+    if (rescheduleBookingId) {
+      try {
+        const res = await fetch(`/api/bookings/${rescheduleBookingId}/change`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "reschedule", startUtc: chosen }),
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          setBookError(data.reason ?? "could not move the session");
+          return;
+        }
+        window.location.reload();
+      } catch {
+        setBookError("could not reach the ship");
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+    if (voucherId) {
+      // the gift path — no money, just the claim
+      try {
+        const res = await fetch("/api/gift/redeem", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            voucherId,
+            startUtc: chosen,
+            customer: inPerson ? { name, email, note: noteOut, city, state: stateReg, zip } : { name, email, note: noteOut },
+          }),
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          setBookError(data.reason ?? "could not book that time");
+          if (res.status === 409) {
+            const again = await fetch(`/api/bookings/slots?service=${encodeURIComponent(serviceId)}`);
+            const fresh = await again.json();
+            if (fresh.ok) { setSlots(fresh.slots ?? []); setChosen(null); }
+          }
+          return;
+        }
+        window.location.href = data.receiptUrl ?? "/";
+      } catch {
+        setBookError("could not reach the ship");
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     try {
       const res = await fetch("/api/bookings/checkout", {
         method: "POST",
@@ -130,7 +342,10 @@ export default function SlotPicker({ serviceId }: { serviceId: string }) {
           startUtc: chosen,
           rail,
           amountSats: service?.pricingMode === "pwyc" ? Number(amountSats) : undefined,
-          customer: { name, email, note },
+          discountCode: discountCode.trim() || undefined,
+          customer: inPerson
+            ? { name, email, note: noteOut, city, state: stateReg, zip }
+            : { name, email, note: noteOut },
         }),
       });
       const data = await res.json();
@@ -147,8 +362,16 @@ export default function SlotPicker({ serviceId }: { serviceId: string }) {
         }
         return;
       }
-      // hand off to the processor; the receipt is the redirect target
-      window.location.href = data.payUrl ?? `/book/receipt/${data.bookingId}`;
+      // the invoice opens OVER the calendar; the receipt follows the sats
+      if (!data.payUrl) {
+        window.location.href = `/book/receipt/${data.bookingId}`;
+        return;
+      }
+      const opened = await payInModal(data.payUrl, {
+        onPaid: () => window.location.assign(`/book/receipt/${data.bookingId}`),
+        onClose: () => window.location.assign(`/book/receipt/${data.bookingId}`),
+      });
+      if (!opened) window.location.href = data.payUrl;
     } catch {
       setBookError("could not reach the ship");
     } finally {
@@ -156,145 +379,322 @@ export default function SlotPicker({ serviceId }: { serviceId: string }) {
     }
   }
 
-  if (loading) return <p className="mt-8 text-sm text-neutral-400">Finding open times…</p>;
-  if (error) return <p className="mt-8 text-sm text-amber-300">◌ {error}</p>;
+  async function addToBasket() {
+    if (!chosen) return;
+    setBusy(true);
+    setBookError(null);
+    try {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serviceId, startUtc: chosen }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        setBookError(data.reason ?? "could not hold that time");
+        if (res.status === 409) {
+          const again = await fetch(`/api/bookings/slots?service=${encodeURIComponent(serviceId)}`);
+          const fresh = await again.json();
+          if (fresh.ok) {
+            setSlots(fresh.slots ?? []);
+            setChosen(null);
+          }
+        }
+        return;
+      }
+      window.dispatchEvent(new Event("oc-cart-changed"));
+      window.location.assign("/cart");
+    } catch {
+      setBookError("could not reach the ship");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const glassField: React.CSSProperties = {
+    border: "1px solid rgba(139,118,196,.45)", borderRadius: 10, padding: "6px 10px",
+    background: "rgba(255,255,255,.92)", fontSize: ".8rem", color: "#4a4458", fontFamily: "inherit",
+  };
+
+  if (loading) return <p style={{ marginTop: 32, fontSize: ".9rem", color: "var(--muted, #897f97)", textAlign: "center" }}>Finding open times…</p>;
+  if (error) return <p style={{ marginTop: 32, fontSize: ".9rem", color: "#a34e6c", textAlign: "center" }}>◌ {error}</p>;
 
   return (
     <div className="mt-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-xs uppercase tracking-widest text-cyan-300">Pick a time</p>
-        <label className="text-xs text-neutral-400">
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 4 }}>
+        <p style={{ margin: 0, fontSize: ".7rem", letterSpacing: ".18em", textTransform: "uppercase",
+          fontWeight: 700, color: "var(--rose, #c56e8b)" }}>Pick a day</p>
+        <label style={{ fontSize: ".76rem", color: "var(--muted, #897f97)" }}>
           times shown in{" "}
           <select
             value={viewerTz}
             onChange={(e) => setViewerTz(e.target.value)}
-            className="border border-neutral-700 bg-transparent px-1 py-0.5 text-neutral-200"
+            style={glassField}
           >
-            {[...new Set([detected, artistTz, "UTC"])].map((tz) => (
-              <option key={tz} value={tz}>
-                {tz} ({zoneLabel(tz)})
-              </option>
+            {[...new Map<string, string>([
+              [detected, `where you are — ${detected}`],
+              [artistTz, `the host's clock — ${artistTz}`],
+              ...USA_ZONES.map(({ tz, label }) => [tz, label] as [string, string]),
+              ["UTC", "UTC"],
+              [BFT, "₿FT — Bitcoin Federated Time"],
+            ])].map(([tz, label]) => (
+              <option key={tz} value={tz}>{label}</option>
             ))}
           </select>
+        </label>
+        <label style={{ fontSize: ".76rem", color: "var(--muted, #897f97)" }}>
+          or zip{" "}
+          <input
+            value={zipForTz}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9]/g, "").slice(0, 5);
+              setZipForTz(v);
+              if (v.length >= 3) {
+                const tz = zipToTz(v);
+                if (tz) setViewerTz(tz);
+              }
+            }}
+            inputMode="numeric"
+            placeholder="80301"
+            style={{ ...glassField, width: 70 }}
+          />
         </label>
       </div>
 
       {days.length === 0 ? (
-        <p className="mt-6 text-sm text-neutral-400">No open times in this window yet.</p>
+        <p style={{ marginTop: 24, fontSize: ".9rem", color: "var(--muted, #897f97)", textAlign: "center" }}>
+          No open times in this window yet.
+        </p>
       ) : (
-        <div className="mt-4 space-y-6">
-          {days.map(([key, daySlots]) => (
-            <div key={key}>
-              <h3 className="text-sm font-semibold text-neutral-200">
-                {fmtDayHeading(daySlots[0].startUtc, viewerTz)}
-              </h3>
-              <ul className="mt-2 flex flex-wrap gap-2">
-                {daySlots.map((s) => {
-                  const isChosen = chosen === s.startUtc;
-                  return (
-                    <li key={s.startUtc}>
-                      <button
-                        type="button"
-                        onClick={() => setChosen(s.startUtc)}
-                        aria-pressed={isChosen}
-                        className={`border px-3 py-1.5 text-sm transition ${
-                          isChosen
-                            ? "border-cyan-400 bg-cyan-400/10 text-cyan-200"
-                            : "border-neutral-700 text-neutral-200 hover:border-cyan-600"
-                        }`}
-                      >
-                        {fmtTime(s.startUtc, viewerTz)}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+        <div
+          className="mt-4"
+          style={{
+            display: "grid",
+            gap: 20,
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(340px,100%), 1fr))",
+            alignItems: "start",
+          }}
+        >
+          {/* step 1 — a TRADITIONAL month calendar (Admiral, 0018.05.17);
+              the block-time viewer keeps the list (₿FT days aren't Gregorian) */}
+          {viewerTz === BFT ? (
+            <ul className="chip-grid" style={{ "--chip-min": "140px", alignSelf: "start" } as React.CSSProperties}>
+              {days.map(([key, daySlots]) => {
+                const active = chosenDay === key;
+                return (
+                  <li key={key}>
+                    <button
+                      type="button"
+                      className="chip-select"
+                      onClick={() => { setChosenDay(active ? null : key); setChosen(null); }}
+                      aria-pressed={active}
+                      style={{ fontSize: ".85rem" }}
+                    >
+                      {fmtDayPill(daySlots[0].startUtc, viewerTz)}
+                      <span style={{ marginLeft: 6, fontSize: ".72rem", opacity: 0.7 }}>{daySlots.length}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <MonthCalendar
+              days={days}
+              chosenDay={chosenDay}
+              onPick={(key) => { setChosenDay(chosenDay === key ? null : key); setChosen(null); }}
+            />
+          )}
+
+          {/* step 2 — the day's times in their own glass panel beside the
+              calendar (the booking-split, uicookies 07) */}
+          <div
+            style={{
+              borderRadius: 20,
+              border: "1px solid var(--glass-edge)",
+              background: "var(--glass)",
+              backdropFilter: "blur(8px)",
+              boxShadow: "0 24px 60px -30px rgba(120,100,160,.55)",
+              padding: "18px 20px",
+              minHeight: 120,
+            }}
+          >
+            {(() => {
+              const day = days.find(([k]) => k === chosenDay);
+              if (!day) {
+                return (
+                  <p style={{ color: "var(--muted, #897f97)", fontSize: ".88rem", margin: 0 }}>
+                    ✨ pick a golden-dot day and its open times appear here
+                  </p>
+                );
+              }
+              const [, daySlots] = day;
+              return (
+                <div>
+                  <h3 style={{ fontFamily: "var(--font-h3, sans-serif)", fontWeight: 400, fontSize: "1.1rem", color: "var(--ink-strong)", margin: "0 0 12px" }}>
+                    {fmtDayHeading(daySlots[0].startUtc, viewerTz)}
+                  </h3>
+                  <ul className="chip-grid">
+                    {daySlots.map((s) => {
+                      const isChosen = chosen === s.startUtc;
+                      return (
+                        <li key={s.startUtc}>
+                          <button
+                            type="button"
+                            className="chip-select"
+                            onClick={() => setChosen(s.startUtc)}
+                            aria-pressed={isChosen}
+                          >
+                            {fmtTime(s.startUtc, viewerTz)}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })()}
+          </div>
         </div>
       )}
 
       {chosen && (
-        <div className="mt-6 border border-cyan-800 px-3 py-3 text-sm">
-          <p className="text-neutral-200">
-            {fmtDayHeading(chosen, viewerTz)} · <strong>{fmtTime(chosen, viewerTz)}</strong>{" "}
-            <span className="text-neutral-400">your time ({zoneLabel(viewerTz)})</span>
+        <div
+          style={{
+            margin: "24px auto 0", maxWidth: 480, textAlign: "center",
+            borderRadius: 20, border: "1px solid var(--glass-edge)",
+            background: "var(--glass)", backdropFilter: "blur(8px)",
+            boxShadow: "0 24px 60px -30px rgba(120,100,160,.55)", padding: "22px 22px 20px",
+          }}
+        >
+          <p style={{ margin: 0, fontFamily: "var(--serif, sans-serif)", fontSize: "1.1rem", color: "var(--ink-strong)" }}>
+            {fmtDayHeading(chosen, viewerTz)} · <b style={{ color: "var(--gold-deep, #b4862b)" }}>{fmtTime(chosen, viewerTz)}</b>
           </p>
-          {/* THE TIMEZONE LAW — the artist's clock, always said out loud */}
-          {zonesDiffer && (
-            <p className="mt-1 text-neutral-400">
-              {fmtTime(chosen, artistTz)} for the host ({zoneLabel(artistTz)})
-            </p>
-          )}
-          <p className="mt-2 text-xs text-neutral-500">{service?.durationMin} minutes</p>
+          <p style={{ margin: "2px 0 0", fontSize: ".78rem", color: "var(--muted, #897f97)" }}>
+            your time ({zoneLabel(viewerTz)})
+            {/* THE TIMEZONE LAW — the artist's clock, always said out loud */}
+            {zonesDiffer && <> · {fmtTime(chosen, artistTz)} for the host ({zoneLabel(artistTz)})</>}
+            {" · "}{service?.durationMin} minutes
+          </p>
 
-          <div className="mt-4 space-y-2 border-t border-neutral-800 pt-3">
-            <input
+          <div style={{ display: "grid", gap: 10, marginTop: 16, textAlign: "left" }}>
+            {!rescheduleBookingId && <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="your name"
-              className="w-full border border-neutral-700 bg-transparent px-2 py-1 text-sm"
-            />
-            <input
+              style={{ ...glassField, padding: "9px 12px", fontSize: ".9rem", width: "100%", boxSizing: "border-box" }}
+            />}
+            {!rescheduleBookingId && <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email (for your confirmation)"
               type="email"
-              className="w-full border border-neutral-700 bg-transparent px-2 py-1 text-sm"
-            />
-            <textarea
+              style={{ ...glassField, padding: "9px 12px", fontSize: ".9rem", width: "100%", boxSizing: "border-box" }}
+            />}
+            {!rescheduleBookingId && inPerson && (
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="city"
+                  style={{ ...glassField, padding: "9px 12px", fontSize: ".9rem", flex: 2, minWidth: 120 }} />
+                <input value={stateReg} onChange={(e) => setStateReg(e.target.value)} placeholder="state"
+                  style={{ ...glassField, padding: "9px 12px", fontSize: ".9rem", flex: 1, minWidth: 70 }} />
+                <input value={zip} onChange={(e) => setZip(e.target.value)} placeholder="zip"
+                  style={{ ...glassField, padding: "9px 12px", fontSize: ".9rem", flex: 1, minWidth: 80 }} />
+              </div>
+            )}
+            {!(voucherId || rescheduleBookingId) && <input
+              value={discountCode}
+              onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+              placeholder="discount code (optional)"
+              style={{ ...glassField, padding: "9px 12px", fontSize: ".9rem", width: "100%", boxSizing: "border-box", textTransform: "uppercase" }}
+            />}
+            {!rescheduleBookingId && isDiscovery && (
+              <label style={{ fontSize: ".72rem", letterSpacing: ".08em", textTransform: "uppercase", color: "var(--muted, #897f97)" }}>
+                <span style={{ display: "block", marginBottom: 3 }}>what shall we explore together?</span>
+                <select
+                  value={intent}
+                  onChange={(e) => setIntent(e.target.value)}
+                  style={{ ...glassField, padding: "9px 12px", fontSize: ".9rem", width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">choose, or just come as you are…</option>
+                  <option value="A conscious conversation">A conscious conversation 💬</option>
+                  <option value="A silent haircut — ConsciousCuts">A silent haircut — ConsciousCuts ✂️</option>
+                  <option value="A retreat">A retreat 🏜️</option>
+                  {shelfTitles.length > 0 && (
+                    <optgroup label="— from the shelves —">
+                      {shelfTitles.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  <option value="Something else">Something else — I'll say below ✨</option>
+                </select>
+              </label>
+            )}
+            {!rescheduleBookingId && <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="anything the host should know (optional)"
+              placeholder={isDiscovery ? "anything else you\u2019d like to share (optional)" : "anything the host should know (optional)"}
               rows={2}
-              className="w-full border border-neutral-700 bg-transparent px-2 py-1 text-sm"
-            />
+              style={{ ...glassField, padding: "9px 12px", fontSize: ".9rem", width: "100%", boxSizing: "border-box", resize: "vertical" }}
+            />}
 
             {/* pwyc: the customer names the price, and it buys the same session */}
-            {service?.pricingMode === "pwyc" && (
-              <label className="block text-xs text-neutral-400">
-                <span className="mb-1 block">what you can give (sats)</span>
+            {!(voucherId || rescheduleBookingId) && service?.pricingMode === "pwyc" && (
+              <label style={{ fontSize: ".72rem", letterSpacing: ".08em", textTransform: "uppercase", color: "var(--muted, #897f97)" }}>
+                <span style={{ display: "block", marginBottom: 3 }}>what you can give (sats)</span>
                 <input
                   value={amountSats}
                   onChange={(e) => setAmountSats(e.target.value)}
                   inputMode="numeric"
                   placeholder="21000"
-                  className="w-full border border-neutral-700 bg-transparent px-2 py-1 text-sm"
+                  style={{ ...glassField, padding: "9px 12px", fontSize: ".9rem", width: "100%", boxSizing: "border-box" }}
                 />
               </label>
             )}
 
-            <label className="block text-xs text-neutral-400">
-              <span className="mb-1 block">paying by</span>
+            {!(voucherId || rescheduleBookingId) && <label style={{ fontSize: ".72rem", letterSpacing: ".08em", textTransform: "uppercase", color: "var(--muted, #897f97)" }}>
+              <span style={{ display: "block", marginBottom: 3 }}>paying by</span>
               <select
                 value={rail}
                 onChange={(e) => setRail(e.target.value as "lightning" | "onchain")}
-                className="w-full border border-neutral-700 bg-transparent px-2 py-1 text-sm text-neutral-100"
+                style={{ ...glassField, padding: "9px 12px", fontSize: ".9rem", width: "100%", boxSizing: "border-box" }}
               >
                 <option value="lightning">lightning — settles in seconds</option>
                 <option value="onchain">on-chain — holds your time for 90 minutes</option>
               </select>
-            </label>
-
-            {/* the honest wait, said BEFORE they commit, never after */}
-            {rail === "onchain" && (
-              <p className="text-xs text-amber-300">
-                on-chain payments take 10–60 minutes to confirm. Your time is held the whole while.
-              </p>
-            )}
-
-            {bookError && <p className="text-xs text-amber-300">◌ {bookError}</p>}
-
-            <button
-              type="button"
-              disabled={busy}
-              onClick={book}
-              className="w-full border border-cyan-600 px-3 py-2 text-sm text-cyan-300 hover:bg-cyan-900/30 disabled:opacity-50"
-            >
-              {busy ? "holding your time…" : "book this time"}
-            </button>
-            <p className="text-center text-xs text-neutral-500">bitcoin only · paid straight to the host</p>
+            </label>}
           </div>
+
+          {/* the honest wait, said BEFORE they commit, never after */}
+          {!(voucherId || rescheduleBookingId) && rail === "onchain" && (
+            <p style={{ margin: "12px 0 0", fontSize: ".78rem", color: "#7a5a12" }}>
+              on-chain payments take 10–60 minutes to confirm. Your time is held the whole while.
+            </p>
+          )}
+
+          {bookError && <p style={{ margin: "12px 0 0", fontSize: ".8rem", color: "#a34e6c" }}>◌ {bookError}</p>}
+
+          {/* the doors — bottom center, evenly spaced (the Admiral's law) */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginTop: 18 }}>
+            <button type="button" disabled={busy} onClick={book} className="btn btn-gold btn-sm">
+              {busy
+                ? rescheduleBookingId ? "Moving your session…" : voucherId ? "Booking your gift…" : "Holding your time…"
+                : rescheduleBookingId ? "Move my session here" : voucherId ? "Claim my gift 🕊️" : "Book this time ⚡"}
+            </button>
+            {/* v1.5: the basket door — the slot is HELD (72h) the moment it
+                lands, so browsing on doesn't lose the time */}
+            {!(voucherId || rescheduleBookingId) && (
+              <button type="button" disabled={busy} onClick={addToBasket} className="btn btn-ghost btn-sm">
+                {busy ? "…" : "Add to basket 🧺"}
+              </button>
+            )}
+          </div>
+          <p style={{ margin: "12px 0 0", fontSize: ".74rem", color: "var(--muted, #897f97)" }}>
+            {rescheduleBookingId
+              ? "same session, new moment — nothing owed"
+              : voucherId
+                ? "already paid, with love — nothing owed"
+                : "the basket holds this time 72h · paid straight to the host"}
+          </p>
         </div>
       )}
     </div>

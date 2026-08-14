@@ -24,14 +24,13 @@ export interface SpaceConfig {
   nip05Domain: string;
 }
 
+// DEHOUSED 0018.05.17 (the eat6 walk found it): Love's clone hosts ONE
+// board — hers. The arcade's spaces (frens/pacsarcade/degen) were template
+// residue; leaving them in KNOWN_SPACES let foreign registries answer
+// sign-ins on her site. A fleet clone lists only its own doors.
 export const SPACE_HOSTS: Record<string, SpaceConfig> = {
-  "frens.earth": { space: "frens", nip05Domain: "frens.earth" },
-  "www.frens.earth": { space: "frens", nip05Domain: "frens.earth" },
-  "pacsarcade.org": { space: "pacsarcade", nip05Domain: "pacsarcade.org" },
-  "www.pacsarcade.org": { space: "pacsarcade", nip05Domain: "pacsarcade.org" },
-  // Degen Wonderland — @degen tags on degenwonderland.com (themeable sign-in).
-  "degenwonderland.com": { space: "degen", nip05Domain: "degenwonderland.com" },
-  "www.degenwonderland.com": { space: "degen", nip05Domain: "degenwonderland.com" },
+  "onecocreation.com": { space: "onecocreation", nip05Domain: "onecocreation.com" },
+  "www.onecocreation.com": { space: "onecocreation", nip05Domain: "onecocreation.com" },
 };
 
 /**
@@ -61,6 +60,7 @@ export function domainForSpace(space: string): string {
 
 /** What each door is for — the two-door model, config not copy. */
 export const SPACE_ROLES: Record<string, string> = {
+  onecocreation: "COMMUNITY",
   frens: "PLAY",
   pacsarcade: "SCHOOL",
   degen: "WONDER",

@@ -74,3 +74,15 @@ bind everything here — especially rule 1: **no Disney, ever**
 - **Class spark (Pac's Arcade MUD)**: *GIT101 — "The Merge Ceremony"* — a
   beginner class on repos, PRs, merges, and deploys, taught the arcade way.
   The admiral's own onboarding is the curriculum's first draft.
+
+---
+
+## THE SVG-TRACE BENCH SKILL (0018.06.07 — the Admiral's own workflow, kept)
+
+Any raster artwork an artist hands over (Canva exports, logo webp/png) can be
+pulled into clean multicolor SVG with the house pipeline: **`~/.claude/skills/svg-trace/SKILL.md`**
+(flatpak Inkscape CLI `object-trace` multicolor scans → drop the #010101
+hole-mask → clip the stack to a traced silhouette → mono variant from the
+silhouette path). Proven on Love's ConsciousCuts winged scissors —
+`public/brand/consciouscuts-mark{,-mono}.svg`. This is the branding-tools
+skill: every GLYPH commission that starts as raster ends as vector through it.

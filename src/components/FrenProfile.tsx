@@ -7,8 +7,8 @@ import type { HandleStatus } from "@/lib/registry";
 import { ANCHOR_BLOCKS_OUT, SPACE_ROLES } from "@/lib/identity-config";
 import { ARTIST_GATE_CERT_COUNT, CLASSES_URL } from "@/lib/classes";
 import { PixelAvatar, useTipHeight } from "@pacsarcade/arcade-ui";
-import ArcadeHeader from "@/components/ArcadeHeader";
-import EarthFooter from "@/components/EarthFooter";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 import PokeArcadeCard from "@/components/PokeArcadeCard";
 import ProfileEditor from "@/components/ProfileEditor";
 import ReleaseTag from "@/components/ReleaseTag";
@@ -117,12 +117,12 @@ export default function FrenProfile({
     : `~ ${bftDate(estimateHeight(registered.getTime()))}`;
 
   return (
-    <main className="min-h-screen bg-void">
-      <ArcadeHeader />
+    <main className="mgmt-ground">
+      <SiteHeader />
 
-      <div className="mx-auto flex max-w-3xl flex-col gap-8 px-6 py-12">
+      <section className="mgmt-wrap mgmt-body flex flex-col gap-8" style={{ maxWidth: 820 }}>
         <p className="font-pixel text-[10px] uppercase tracking-widest text-white/40">
-          PAC&apos;S ARCADE ▸ FREN PROFILE
+          ONE COCREATION MEMBER PROFILE
         </p>
 
         {/* The fren's own sky — banner straight from their kind-0 */}
@@ -163,14 +163,14 @@ export default function FrenProfile({
             )}
             {sinceBlock !== null ? (
               <p className="mt-1 font-pixel text-[10px] text-white/40">
-                PLAYER SINCE BLOCK <span className="text-cyan">{sinceBlock.toLocaleString()}</span>
+                MEMBER SINCE BLOCK <span className="text-cyan">{sinceBlock.toLocaleString()}</span>
                 {/* Bitcoin time, not the old calendar (Pac, 2026-07-11) */}
                 <span className="text-white/25">{" "}· {bftDate(sinceBlock)}</span>
               </p>
             ) : (
               registeredLabel && (
                 <p className="mt-1 font-pixel text-[10px] text-white/40">
-                  PLAYER SINCE {registeredLabel}
+                  MEMBER SINCE {registeredLabel}
                 </p>
               )
             )}
@@ -214,7 +214,7 @@ export default function FrenProfile({
                 : "border-cyan/60 bg-cyan/5 text-cyan"
             }`}
           >
-            {space === "pacsarcade" ? "◆ ARTIST FLOOR" : "● PLAY FLOOR"} — {spaceTag} ·{" "}
+            {space === "pacsarcade" ? "◆ ARTIST SPACE" : "● MEMBER SPACE"} — {spaceTag} ·{" "}
             {SPACE_ROLES[space] ?? "VERSE"}
           </span>
           <span className="border-2 border-cyan/60 px-3 py-1.5 font-pixel text-[10px] text-cyan">
@@ -253,16 +253,14 @@ export default function FrenProfile({
           {space === "frens" ? (
             <div className="border-2 border-ghost/60 bg-panel p-5">
               <p className="font-body text-sm text-white/80">
-                <span className="text-pink">@frens</span>{" "}is the play-and-support account:
-                games, classes, backing other frens&apos; runs. Running a campaign of your own is
-                school business — it takes an{" "}
-                <span className="text-pink">@pacsarcade</span>{" "}account.{" "}
-                <a
-                  href="https://pacsarcade.org/register"
+                <span className="text-pink">{spaceTag}</span>{" "}is a guest account here:
+                browse, learn, back other members&apos; work. Running a campaign of your own
+                takes a home account.{" "}
+                <Link
+                  href="/"
                   className="font-pixel text-[10px] uppercase text-cyan underline hover:glow-cyan"
                 >
-                  ENROLL AT PACSARCADE.ORG ▸
-                </a>
+                  CLAIM YOUR TAG </Link>
               </p>
             </div>
           ) : (
@@ -352,7 +350,7 @@ export default function FrenProfile({
                   <p className="mt-2 break-words font-body text-sm text-white/75">{profile.about}</p>
                 )}
                 <p className="mt-3 font-body text-xs text-white/50">
-                  This is what other frens see — live from the open network, not from our database.
+                  This is what other members see — live from the open network, not from our database.
                 </p>
               </div>
             </div>
@@ -402,14 +400,14 @@ export default function FrenProfile({
                 <span className="px-2 text-center font-pixel text-[8px] uppercase leading-relaxed text-white/30">
                   YOUR FIRST
                   <br />
-                  CART GOES
+                  CERT GOES
                   <br />
                   HERE
                 </span>
               </div>
               <div className="min-w-[16rem] flex-1">
                 <p className="font-body text-sm text-white/80">
-                  The arcade teaches free, fren. Take a class, earn a cert — one rune, etched to
+                  Classes here are free. Take a class, earn a cert — one rune, etched to
                   your wallet, network fee on the house. Every cert ships as box art, and{" "}
                   <span className="text-cyan">the block decides the case</span>: full moons mint{" "}
                   silver, epoch boundaries mint <span className="text-coin">gold</span> — like the
@@ -417,8 +415,7 @@ export default function FrenProfile({
                   <span className="text-pink">astronomical</span> tier.
                 </p>
                 <a href={CLASSES_URL} className="button mt-4 inline-block text-center">
-                  SEE THE CLASSES ▸
-                </a>
+                  SEE THE CLASSES </a>
               </div>
             </div>
           </div>
@@ -438,13 +435,12 @@ export default function FrenProfile({
             <div className="flex flex-wrap items-center gap-5">
               <p className="min-w-[16rem] flex-1 font-body text-sm text-white/80">
                 Back a project and the runes and ordinals it mints land here — real artifacts on
-                Bitcoin, made in the arcade. Every piece on this shelf will link back to the
-                campaign that made it, so a fren who likes what they see can walk straight to
-                the cabinet and drop a quarter too.
+                Bitcoin, made in this community. Every piece on this shelf will link back to the
+                campaign that made it, so anyone who likes what they see can walk straight in
+                and back it too.
               </p>
               <Link href="/campaigns" className="button w-full text-center sm:w-auto">
-                SEE THE FLOOR ▸
-              </Link>
+                SEE THE CAMPAIGNS </Link>
             </div>
           </div>
         </section>
@@ -456,13 +452,13 @@ export default function FrenProfile({
           <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
             PAYING IT FORWARD, ON THE RECORD
           </p>
-          <h2 className="mb-4 font-arcade text-2xl text-coin glow-coin">1UP SUPPORTERS</h2>
+          <h2 className="mb-4 font-arcade text-2xl text-coin glow-coin">SUPPORTERS</h2>
           <div className="border-2 border-coin/40 bg-panel p-6">
             <p className="mb-2 font-pixel text-xs text-white/60">THE SHELF IS WAITING</p>
             <p className="font-body text-sm text-white/80">
               When you back a campaign with your tag signed in, the project&apos;s badge lights
-              up here — a 1UP for someone else&apos;s dream, worn on your profile. Supporters see
-              their backed projects; visitors see a fren who pays it forward. Contributions
+              up here — a boost for someone else&apos;s dream, worn on your profile. Supporters see
+              their backed projects; visitors see a member who pays it forward. Contributions
               stay wallet-to-wallet either way — the badge is bragging rights, not custody. 💛
             </p>
           </div>
@@ -476,8 +472,7 @@ export default function FrenProfile({
             <summary className="cursor-pointer p-6 sm:p-8">
               <span className="mb-1 block font-pixel text-xs text-neon glow-neon">NEXT LEVEL</span>
               <span className="font-arcade text-2xl text-cyan glow-cyan">
-                WHAT CAN NOSTR DO? ▸
-              </span>
+                WHAT CAN NOSTR DO? </span>
             </summary>
             <div className="px-6 pb-6 sm:px-8 sm:pb-8">
           <p className="mb-6 font-body text-sm text-white/80">
@@ -506,7 +501,7 @@ export default function FrenProfile({
             ▲ SEE YOUR LIVE SIGNAL
           </a>
           <p className="mt-2 text-center font-body text-xs text-white/50">
-            The ON AIR card above reads the open network directly — your own arcade, no
+            The ON AIR card above reads the open network directly — your own signal, no
             middleman. Third-party windows if you want a second opinion:{" "}
             <a
               href={njumpUrl}
@@ -562,13 +557,13 @@ export default function FrenProfile({
             </p>
             <p>
               <span className="mr-2 font-pixel text-xs text-neon">LEVEL 2 · SAY GM</span>
-              Post your first note: <span className="text-coin">&quot;gm frens 💜&quot;</span>.
+              Post your first note: <span className="text-coin">&quot;gm 💜&quot;</span>.
               &quot;gm&quot; is the network&apos;s hello — expect a few back.
             </p>
             <p>
-              <span className="mr-2 font-pixel text-xs text-neon">LEVEL 3 · FIND THE ARCADE</span>
-              Search for <span className="text-pink">pacsarcade</span>{" "}and follow — that&apos;s
-              where etch ceremonies are announced, including the one that anchors{" "}
+              <span className="mr-2 font-pixel text-xs text-neon">LEVEL 3 · FIND THE COMMUNITY</span>
+              Search for <span className="text-pink">onecocreation</span>{" "}and follow — that&apos;s
+              where anchor ceremonies are announced, including the one that anchors{" "}
               <span className="text-coin">{handle}{spaceTag}</span>{" "}to Bitcoin forever.
             </p>
           </div>
@@ -578,7 +573,7 @@ export default function FrenProfile({
 
         {/* The plumbing — keys and addresses, copy-ready */}
         <section className="border-2 border-edge bg-panel p-6">
-          <p className="mb-4 font-pixel text-xs text-cyan">PLAYER DATA</p>
+          <p className="mb-4 font-pixel text-xs text-cyan">MEMBER DATA</p>
           <div className="space-y-4 font-body text-sm">
             <div>
               <p className="mb-1 font-pixel text-[10px] text-white/40">VERIFIED ADDRESS (NIP-05)</p>
@@ -613,7 +608,7 @@ export default function FrenProfile({
                 {copied === "page" ? "✓ copied" : `https://${nip05Domain}/u/${handle}`}
               </button>
               <p className="mt-1 font-body text-xs text-white/50">
-                Bookmark it, share it — this is your start screen. Frens without keys can still
+                Bookmark it, share it — this is your home page. Friends without keys can still
                 see you here.
               </p>
             </div>
@@ -623,47 +618,44 @@ export default function FrenProfile({
         {/* The right of exit — pending names only; etched is forever */}
         <ReleaseTag handle={handle} space={space} status={status} nip05Domain={nip05Domain} />
 
-        {/* The three doors — the whole arcade from any profile, no dupes */}
+        {/* The doors — the whole site from any profile, no dupes */}
         <section className="border-b-0 py-0">
           <p className="mb-2 text-center font-pixel text-[10px] uppercase tracking-widest text-white/40">
-            THE THREE DOORS OF THE ARCADE
+            THE DOORS OF ONE COCREATION
           </p>
           <div className="grid gap-5 sm:grid-cols-3">
             <div className="flex flex-col gap-3 border-2 border-coin/40 bg-panel p-5">
-              <p className="font-pixel text-xs text-coin">PLAY</p>
+              <p className="font-pixel text-xs text-coin">SESSIONS</p>
               <p className="flex-1 font-body text-sm text-white/70">
-                The game portal — P.O.K.E. worlds where playing IS learning.
+                Book a one-on-one time — paid in bitcoin, straight to the host.
               </p>
-              <a
-                href="https://pacsarcade.org/play"
+              <Link
+                href="/book"
                 className="self-start font-pixel text-[10px] text-cyan underline hover:glow-cyan"
               >
-                INSERT COIN ▸
-              </a>
+                BOOK A TIME </Link>
             </div>
             <div className="flex flex-col gap-3 border-2 border-pink/40 bg-panel p-5">
-              <p className="font-pixel text-xs text-pink">LEARN</p>
+              <p className="font-pixel text-xs text-pink">COMMUNITY</p>
               <p className="flex-1 font-body text-sm text-white/70">
-                Free classes, live with Pacman — every one etches a cert.
+                Classes and gatherings — one tag across all of it.
               </p>
-              <a
-                href={CLASSES_URL}
+              <Link
+                href="/classes"
                 className="self-start font-pixel text-[10px] text-cyan underline hover:glow-cyan"
               >
-                SEE CLASSES ▸
-              </a>
+                JOIN THE COMMUNITY </Link>
             </div>
             <div className="flex flex-col gap-3 border-2 border-cyan/40 bg-panel p-5">
-              <p className="font-pixel text-xs text-cyan">GROW</p>
+              <p className="font-pixel text-xs text-cyan">SUPPORT</p>
               <p className="flex-1 font-body text-sm text-white/70">
-                The community floor — frens funding frens, wallet to wallet.
+                Members funding members — wallet to wallet, non-custodial.
               </p>
-              <a
-                href="https://pacsarcade.org/campaigns"
+              <Link
+                href="/support"
                 className="self-start font-pixel text-[10px] text-cyan underline hover:glow-cyan"
               >
-                WALK THE FLOOR ▸
-              </a>
+                SUPPORT THE WORK </Link>
             </div>
           </div>
         </section>
@@ -673,9 +665,9 @@ export default function FrenProfile({
             REGISTER ANOTHER TAG
           </Link>
         </p>
-      </div>
+      </section>
 
-      <EarthFooter />
+      <SiteFooter />
     </main>
   );
 }

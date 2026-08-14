@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import ArcadeHeader from "@/components/ArcadeHeader";
-import EarthFooter from "@/components/EarthFooter";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 import TimeDoor from "@/components/time/TimeDoor";
 import Orrery from "@/components/time/orrery/Orrery";
 import HalfWheel from "@/components/time/HalfWheel";
@@ -34,7 +34,7 @@ import HalfWheel from "@/components/time/HalfWheel";
 const PAPER_URL = "https://github.com/PacsArcade/bitcoin-federated-time";
 
 export const metadata: Metadata = {
-  title: "The Clock — Bitcoin Federated Time — frens.earth",
+  title: "The Clock — Bitcoin Federated Time — One Cocreation",
   description:
     "The clock that syncs to the block, not the sun. Read the orrery, learn the calendar, watch a block land — Bitcoin Federated Time, explained.",
 };
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
 function Sect({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-8">
-      <h2 className="mb-3 text-balance font-pixel text-lg uppercase text-neon">{title}</h2>
+      <h2 className="mb-3 text-balance font-pixel text-lg text-neon">{title}</h2>
       <div className="space-y-3 text-pretty font-body text-sm leading-relaxed text-white/70">
         {children}
       </div>
@@ -87,7 +87,7 @@ function ReadRow({ label, children }: { label: string; children: React.ReactNode
 function HowToRead() {
   return (
     <div className="mt-8" aria-label="How to read the orrery">
-      <h3 className="mb-1 text-balance font-pixel text-sm uppercase" style={{ color: "#ffb347" }}>
+      <h3 className="mb-1 text-balance font-pixel text-sm" style={{ color: "#ffb347" }}>
         How to read it
       </h3>
       <p className="mb-4 text-pretty font-body text-sm text-white/70">
@@ -131,8 +131,8 @@ function HowToRead() {
 function ThePaper() {
   return (
     <div className="mb-12">
-      <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
-        PART ONE ▸ THE PAPER
+      <p className="mb-2 font-pixel text-[10px] tracking-widest text-white/40">
+        Part one The paper
       </p>
 
       <Sect title="The block is the clock">
@@ -260,42 +260,38 @@ function ThePaper() {
 
 export default function TimePage() {
   return (
-    /* the same shell as every frens.earth page (owner report: "the time
-       page doesn't seem to be a part of the overall template and there is
-       no way for me to get back to the main frens.earth page") — the
-       banner menu rides on top, the footer closes the deck, the clock
-       lives between them untouched. */
-    <main className="min-h-screen bg-void">
-      <ArcadeHeader />
-      <div className="mx-auto max-w-2xl px-6 py-16">
-      <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
-        FRENS.EARTH ▸ THE TIME DOOR
-      </p>
-      <h1 className="mb-3 text-balance font-pixel text-xl uppercase text-neon">
-        The clock that syncs to the block, not the sun
-      </h1>
-      <p className="mb-8 text-pretty font-body text-sm text-white/70">
-        This is Bitcoin Federated Time — the arcade&apos;s calendar, counted
-        purely in blocks. First the clock, then how to read it, then the
-        why, then you get to play with it. Tick tock.
-      </p>
-
+    /* the same shell as every page on the site (the mgmt-ground/mgmt-body
+       cartridge — see globals.css "SITE CONSOLE CHROME") — the banner menu
+       rides on top, the footer closes the deck, the clock lives between
+       them untouched. */
+    <main className="mgmt-ground">
+      <SiteHeader />
+      <section className="mgmt-wrap mgmt-body" style={{ maxWidth: 720 }}>
+      <header className="mgmt-head">
+        <p className="mgmt-eyebrow">The time door</p>
+        <h1 className="mgmt-title">The clock that syncs to the block, not the sun</h1>
+        <p className="mgmt-blurb">
+          This is Bitcoin Federated Time — a calendar counted purely in
+          blocks. First the clock, then how to read it, then the why, then
+          you get to play with it. Tick tock.
+        </p>
+      </header>
       {/* ═══ THE CLOCK — THE ORRERY, this world's way of telling the one
           time (owner ruling 0018.04.28: different worlds, same clock — the
           orrery is EARTH's; the pacman clock performs at pacsarcade.org/time;
           DW land will tell it in brass). A div, not a <section> — the global
           `section` rule adds 5rem padding + a dashed border. */}
-      <div className="mb-14 w-full" aria-label="The orrery — every ring is a bitcoin period">
+      <div className="mt-10 mb-14 w-full" aria-label="The orrery — every ring is a bitcoin period">
         {/* the heading wears the study's amber — the orrery's own skin */}
         <h2
-          className="mb-3 text-balance font-pixel text-lg uppercase"
+          className="mb-3 text-balance font-pixel text-lg"
           style={{ color: "#ffb347" }}
         >
           The Orrery
         </h2>
         <p className="mb-5 text-pretty font-body text-sm text-white/70">
           every ring is a bitcoin period. the chain is the sun. different
-          worlds tell the same clock — this one is earth&apos;s.
+          worlds tell the same clock — this one is ours.
         </p>
         {/* the full wheel keeps desktop duty; below md the sky folds to the
             HALF-WHEEL — the admiral's horizon telling (bench v12) */}
@@ -315,8 +311,8 @@ export default function TimePage() {
       <p className="mt-12 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-white/25">
         tick tock, it all comes back to the block
       </p>
-      </div>
-      <EarthFooter />
+      </section>
+      <SiteFooter />
     </main>
   );
 }

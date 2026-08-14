@@ -125,7 +125,7 @@ export default function TicketsPanel({ mode }: { mode: "support" | "crew" }) {
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
       <p className="lcars-eyebrow mb-3" data-accent="cyan">
-        {isCrew ? "SCAR · FRENS.EARTH" : "FRENS.EARTH · SUPPORT"}
+        {isCrew ? "SCAR · ONE COCREATION" : "ONE COCREATION · SUPPORT"}
       </p>
       <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">
         {isCrew ? "DUTY ROSTER" : "RAISE A TICKET"}
@@ -189,7 +189,7 @@ export default function TicketsPanel({ mode }: { mode: "support" | "crew" }) {
             data-accent="neon"
             className="btn-pill btn-pill--solid w-full"
           >
-            {raising ? "SENDING…" : "▶ RAISE IT"}
+            {raising ? "SENDING…" : " RAISE IT"}
           </button>
         </div>
       )}

@@ -10,6 +10,8 @@ import {
   type PriceSnapshot,
 } from "@/lib/store";
 import { liveAdapter } from "@/lib/payments";
+import { findDiscount, applyDiscount } from "@/lib/discounts";
+import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 import { frenFromRequest } from "@/lib/fren-auth";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +40,7 @@ export async function POST(request: Request) {
     itemId?: string;
     orderId?: string;
     size?: string;
+    discountCode?: string;
     contact?: { email?: string };
     shipping?: { name?: string; address?: string };
   };
@@ -90,7 +93,7 @@ export async function POST(request: Request) {
     const fren = frenFromRequest(request);
     if (!fren) {
       return NextResponse.json(
-        { ok: false, reason: "sign in with your tag to buy this — it unlocks FOR you" },
+        { ok: false, reason: "sign in first (email or key) — this unlocks FOR you" },
         { status: 401 }
       );
     }
@@ -99,10 +102,21 @@ export async function POST(request: Request) {
 
   // sats-primary: sale price (gold rail) wins when present
   const effective = item.sale ?? item.price;
-  const snapshot: PriceSnapshot =
+  let snapshot: PriceSnapshot =
     effective.sats != null
       ? { amount: effective.sats, currency: "SATS", at: new Date().toISOString() }
       : { amount: effective.fiat!.amount, currency: effective.fiat!.currency, at: new Date().toISOString() };
+
+  // ── the discount, if offered (store-level; reprices BEFORE any invoice) ──
+  let discountApplied: { code: string; originalAmount: number } | undefined;
+  if (body.discountCode) {
+    const d = await findDiscount(body.discountCode);
+    if (!d) return NextResponse.json({ ok: false, reason: "that code isn't active" }, { status: 400 });
+    const reduced = applyDiscount(snapshot, d);
+    if (!reduced) return NextResponse.json({ ok: false, reason: "that code doesn't fit this price" }, { status: 400 });
+    discountApplied = { code: d.code, originalAmount: snapshot.amount };
+    snapshot = reduced;
+  }
 
   const order: OrderRecord = {
     id: newOrderId(),
@@ -115,9 +129,20 @@ export async function POST(request: Request) {
     entitlementSubject,
     contact: body.contact,
     shipping: item.fulfillment === "self" ? body.shipping : undefined,
+    discount: discountApplied,
     createdAtMs: Date.now(),
     events: [],
   };
+
+  // ── a 100% code settles with no invoice at all — recorded, never silent ──
+  if (snapshot.amount === 0 && discountApplied) {
+    order.state = "settled";
+    order.settledAtMs = Date.now();
+    order.events.push({ type: "settled", chargeId: `discount:${discountApplied.code}`, atMs: Date.now() });
+    await createOrder(order);
+    await settleEntitlementFromOrder(order);
+    return NextResponse.json({ ok: true, orderId: order.id, paid: true });
+  }
   await createOrder(order);
 
   const charge = await adapter.createCharge(

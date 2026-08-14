@@ -53,7 +53,7 @@ function unpointedFloor(handle: string): string {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CHAT — frens.earth</title>
+<title>CHAT — One Cocreation</title>
 <style>
   body { margin: 0; min-height: 100vh; display: grid; place-items: center;
          background: #0d1210; color: rgba(255,255,255,.8);
@@ -70,13 +70,13 @@ function unpointedFloor(handle: string): string {
 </head>
 <body>
 <main>
-  <p class="dim">FRENS.EARTH ▸ CHAT</p>
+  <p class="dim">ONE COCREATION ▸ CHAT</p>
   <h1>The floor isn&#8217;t pointed yet</h1>
   <p>You&#8217;re signed in, @${safe} — the gate knows you. But no chat node is
      linked to this deployment, so there&#8217;s no floor to open. No pretend
      doors here.</p>
   <p class="dim">Operators: point the orbee node at <a href="/a/chat">/a/chat</a>.</p>
-  <p><a href="/">&#8592; back to frens.earth</a></p>
+  <p><a href="/">&#8592; back to One Cocreation</a></p>
 </main>
 </body>
 </html>`;

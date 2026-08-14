@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   const fren = frenFromRequest(request);
   if (!fren) {
     return Response.json(
-      { ok: false, reason: "claim a @frens tag and sign in to raise a ticket" },
+      { ok: false, reason: "claim your tag and sign in to raise a ticket" },
       { status: 401 }
     );
   }

@@ -18,7 +18,7 @@ import { effectiveMudNode } from "@/lib/nodeconfig";
  * Same key-is-the-operator gate as every /a tab.
  */
 export const metadata: Metadata = {
-  title: "Simulator — frens.earth admin",
+  title: "Simulator — One Cocreation admin",
   robots: { index: false, follow: false },
 };
 
@@ -69,8 +69,7 @@ export default async function AdminSimulatorPage() {
                   rel="noreferrer"
                   className="btn-pill btn-pill--solid"
                   data-accent="neon"
-                >
-                  ▶ Open the sim node
+                > Open the sim node
                 </a>
                 <Link href="/a/connections#mud" className="btn-pill" data-accent="cyan">
                   Tune the link

@@ -1,19 +1,72 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import Link from "next/link";
 import OperatorGate from "@/components/OperatorGate";
 import OverviewPanel from "@/components/console/OverviewPanel";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
-import { CONSOLE_SITE } from "@/lib/console";
+import { CONSOLE_SITE, CONSOLE_CHROME, CONSOLE_ROOMS } from "@/lib/console";
+import { listTips, tipsConfigured, type TipLedger } from "@/lib/tips";
+import AdminWeekGrid from "@/components/console/AdminWeekGrid";
+import AttentionStrip from "@/components/console/AttentionStrip";
+
+const JAR_LABELS: Record<string, string> = {
+  love: "Tip Love",
+  onecocreation: "Tip One Cocreation",
+  payforward: "Pay It Forward",
+};
+
+/** The jars, read live from BTCPay. Pay-it-forward is a promise held for
+ *  someone who hasn't arrived yet — it gets shown even at zero. */
+/** THE SCOREBOARD (Admiral, 0018.05.18): the jars as one slim banner —
+ *  glance, don't dwell; Money Jars holds the full books. */
+async function TipJarsCard({ banner = false }: { banner?: boolean }) {
+  void banner;
+  if (!tipsConfigured()) return null;
+  let ledger: TipLedger;
+  try {
+    ledger = await listTips();
+  } catch {
+    return (
+      <p className="border border-neutral-800 px-4 py-2 text-xs text-neutral-400">
+        jars unreachable — check the BTCPay key&apos;s &quot;view invoices&quot; permission
+      </p>
+    );
+  }
+  return (
+    <Link
+      href="/a/money"
+      style={{
+        display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 22px",
+        borderRadius: 14, padding: "10px 18px", textDecoration: "none",
+        border: "1.5px solid rgba(180,134,43,.4)", background: "rgba(217,178,78,.08)",
+      }}
+    >
+      {(Object.keys(JAR_LABELS) as (keyof typeof ledger.totals)[]).map((jar) => (
+        <span key={jar} style={{ fontSize: ".8rem", color: "var(--muted, #999)" }}>
+          {JAR_LABELS[jar]}{" "}
+          <b style={{ color: "var(--gold-deep, #d9b24e)" }}>{ledger.totals[jar].settledSats.toLocaleString()}</b>
+          <span style={{ fontSize: ".68rem" }}> sats</span>
+        </span>
+      ))}
+      <span style={{ marginLeft: "auto", fontSize: ".68rem", textTransform: "uppercase", letterSpacing: ".08em", color: "var(--gold-deep, #d9b24e)" }}>
+        the books →
+      </span>
+    </Link>
+  );
+}
 
 /**
- * SCAR·LET OVERVIEW — the console FRONT PAGE. "/a" is the room the ribbon's
- * ◗ SCAR·LET brand block opens (◉ HOME in the readout): how the site is doing
- * at a glance, what needs the admiral (real board counts, each a door), and
- * where a first captain begins. The Action Items desk moved to /a/action.
- * Same key-is-the-operator gate as every /a tab.
+ * The console FRONT PAGE — two faces, one gate.
+ *
+ * - `scar` chrome: SCAR·LET OVERVIEW, the arcade bridge (boards, sign-offs,
+ *   the captain's onboarding) — house furniture, houseOnly rooms included.
+ * - `site` chrome: the ARTIST's landing — only the rooms the clone actually
+ *   ships (registry entries without houseOnly), spoken in the site's own
+ *   voice. An artist managing their shop should never meet the arcade's
+ *   duty roster. (Admiral's catch, 0018.05.10 — sign-offs were leaking.)
  */
 export const metadata: Metadata = {
-  title: "Overview — frens.earth admin",
+  title: `Overview — ${CONSOLE_SITE.domain} admin`,
   robots: { index: false, follow: false },
 };
 
@@ -25,6 +78,36 @@ export default async function ConsoleOverviewPage() {
   if (!operator) {
     return <OperatorGate configured={operatorsConfigured()} />;
   }
+
+  if (CONSOLE_CHROME === "site") {
+    // Home & Calendar (wireframe v2): the jars at a glance, then the week.
+    return (
+      <div>
+        <AdminWeekGrid />
+        {/* the day's actions live WITH the calendar (Admiral, 0018.05.15) —
+            goods to ship + offers waiting; sessions close out in their popups */}
+        <AttentionStrip />
+        {/* THE WEEKLY RHYTHM (Admiral, 0018.05.18): where Love checks, when */}
+        <div className="mt-6 border border-neutral-800 p-4 text-sm">
+          <h2 className="text-sm text-neutral-100">Love&apos;s week — where to check</h2>
+          <ul className="mt-2 space-y-1 text-xs text-neutral-300">
+            <li>📺 <b>Mon · Wed · Fri ~11:11</b> — go live on <a className="underline" href="https://www.youtube.com/@Onecocreation" target="_blank" rel="noreferrer">YouTube</a></li>
+            <li>⚑ <b>Daily</b> — tap a flagged session on the calendar above; saving notes closes it out</li>
+            <li>✉️ <b>Weekly</b> — write &amp; publish the news: <Link className="underline" href="/a/letters">Letters</Link> (it lands on <Link className="underline" href="/news">/news</Link> + every inbox)</li>
+            <li>🎁 <b>Every visit</b> — give-what-you-can offers waiting: <Link className="underline" href="/a/money">Money Jars → offers desk</Link></li>
+            <li>📅 <b>Weekly</b> — hours &amp; days off ring true: the calendar above</li>
+            <li>👥 <b>Monthly</b> — who&apos;s new, who needs a hand: <Link className="underline" href="/a/people">People</Link></li>
+          </ul>
+        </div>
+        {/* the jars, as a scoreboard strip (Admiral, 0018.05.18) — the big
+            card retired; the left rail already IS the rooms map */}
+        <div className="mt-6">
+          <TipJarsCard banner />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen">
       <div className="mx-auto max-w-5xl px-6 pb-4 pt-10">

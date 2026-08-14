@@ -57,7 +57,7 @@ export default function PokeArcadeCard({
       <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
         HIGH SCORES FROM THE GAME FLOOR — {poke.world}
       </p>
-      <h2 className="mb-4 font-arcade text-2xl text-coin glow-coin">ARCADE STATS</h2>
+      <h2 className="mb-4 font-arcade text-2xl text-coin glow-coin">STATS</h2>
       <div className="border-2 border-edge bg-panel p-5">
         {/* status strip: presence first, then the honest asterisks */}
         <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -128,8 +128,8 @@ export default function PokeArcadeCard({
             )}
             <p className="mt-2 font-body text-xs text-white/70">
               {permanent
-                ? "Benched from the arcade — this bench has no timer; talk to the operator. The high score will wait. 💜"
-                : `Benched from the arcade — back in ${fmtLeft(banLeft)}. Hydrate. Take a stroll. The high score will wait. 💜`}
+                ? "Benched — this bench has no timer; talk to the operator. The high score will wait. 💜"
+                : `Benched — back in ${fmtLeft(banLeft)}. Hydrate. Take a stroll. The high score will wait. 💜`}
             </p>
           </div>
         )}

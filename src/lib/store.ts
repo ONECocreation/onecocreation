@@ -19,7 +19,7 @@ import { blobStoreEnabled } from "./registry";
  *   reconcile polling both funnel through it; retries are no-ops.
  */
 
-export type ItemKind = "self" | "fourthwall" | "digital" | "service" | "package";
+export type ItemKind = "self" | "fourthwall" | "digital" | "service" | "package" | "retreat";
 export type ItemStatus = "live" | "hidden" | "soldout";
 
 export interface Price {
@@ -83,8 +83,15 @@ export interface StoreItem {
   /** sale price rides the gold rail; presence = on sale */
   sale?: Price;
   fulfillment: ItemKind;
+  /** drop-ship partner filling the order (Fourthwall / Printful) — the
+      admin UI only offers a partner once its API env is configured */
+  partner?: "printful" | "fourthwall";
   status: ItemStatus;
   entitlementTier?: string;
+  /** a TASTER package (the $11/$22.22 one-week passes) — the grant closes
+   *  itself this many days after purchase instead of standing open-ended.
+   *  Absent = the ordinary monthly membership. */
+  entitlementDays?: number;
 }
 
 /** What a v1 record on disk/blob may look like — read-compat input shape. */
@@ -109,7 +116,7 @@ export type OrderState =
   | "disputed";
 
 /** Terminal-ish states a plain charge event may never downgrade. */
-const SETTLED_FAMILY: OrderState[] = ["settled", "fulfilled", "refunded", "disputed"];
+export const SETTLED_FAMILY: OrderState[] = ["settled", "fulfilled", "refunded", "disputed"];
 
 export interface PriceSnapshot {
   amount: number;
@@ -124,7 +131,23 @@ export interface OrderRecord {
   /** 1 = pre-sizes records (read-compat: size is optional); new orders write 2 */
   schemaVersion: 1 | 2;
   state: OrderState;
-  lineItems: { itemId: string; title: string; qty: number; size?: string }[];
+  lineItems: {
+    itemId: string;
+    title: string;
+    qty: number;
+    size?: string;
+    /** a SESSION line (cart v1.5) — the booking this line confirms at settle */
+    bookingId?: string;
+    /** pay-what-you-can: what was offered vs the shelf price, both recorded
+     *  for the ledger (offer < list ⇒ the order waits on Love's review) */
+    offerSats?: number;
+    listSats?: number;
+    /** a gift line — who it's for (email or @tag); delivery is Love's
+     *  loving hand for now, auto-delivery is a next-round rail */
+    giftTo?: string;
+    /** a gift-session VOUCHER — no slot; the recipient books their own */
+    voucher?: boolean;
+  }[];
   priceSnapshot: PriceSnapshot;
   adapterId: string;
   /** one order, many charges — invoices expire and get re-minted */
@@ -142,6 +165,12 @@ export interface OrderRecord {
   shipping?: { name?: string; address?: string };
   createdAtMs: number;
   settledAtMs?: number;
+  /** a store-level code applied at checkout — the honest paper trail */
+  discount?: { code: string; originalAmount: number };
+  /** pay-what-you-can review (Admiral 0018.05.14): an offer below list was
+   *  paid up front; Love accepts (jar may carry the gap) or kindly declines
+   *  (refund). Cleared when decided; the decision rides `events`. */
+  pwycPending?: boolean;
   /** contact+shipping stripped on schedule (call #3) */
   piiPurgedAtMs?: number;
   events: { type: string; chargeId: string; atMs: number }[];
@@ -176,7 +205,20 @@ function migrateCatalog(doc: StoredCatalogDoc): CatalogDoc {
 const CATALOG_BLOB = "store/catalog.json";
 const catalogFile = () => path.join(process.cwd(), "data", "store-catalog.json");
 
+const CATALOG_KV = "store:catalog";
+
 async function readCatalog(): Promise<CatalogDoc> {
+  /* THE VAULT IS THE CATALOG'S TRUTH (0018.05.12): blob reads ride a CDN
+     whose staleness ate 8 of 10 items in read-modify-write races. KV is
+     consistent; the blob path below remains as one-time migration + dev. */
+  try {
+    const kvRes = await kv(["GET", CATALOG_KV]);
+    if (kvRes?.result) {
+      return migrateCatalog(JSON.parse(kvRes.result as string) as StoredCatalogDoc);
+    }
+  } catch {
+    /* vault unreachable → legacy paths below */
+  }
   if (blobStoreEnabled()) {
     try {
       const res = await get(CATALOG_BLOB, { access: "public" });
@@ -197,6 +239,12 @@ async function readCatalog(): Promise<CatalogDoc> {
 
 async function writeCatalog(doc: CatalogDoc): Promise<void> {
   const json = JSON.stringify(doc, null, 2);
+  try {
+    const res = await kv(["SET", CATALOG_KV, json]);
+    if (res) return; // vault took it — done (null = vault not configured)
+  } catch {
+    /* vault write failed → fall through so dev/file still works */
+  }
   if (blobStoreEnabled()) {
     await put(CATALOG_BLOB, json, {
       access: "public",
@@ -236,6 +284,12 @@ export function validateItem(item: StoreItem): { ok: true } | { ok: false; reaso
   }
   if (item.sku != null && (typeof item.sku !== "string" || item.sku.length > 64)) {
     return { ok: false, reason: "sku as short text (max 64 chars)" };
+  }
+  if (item.partner != null && !["printful", "fourthwall"].includes(item.partner)) {
+    return { ok: false, reason: "partner as printful or fourthwall" };
+  }
+  if (item.entitlementDays != null && (!Number.isInteger(item.entitlementDays) || item.entitlementDays <= 0)) {
+    return { ok: false, reason: "entitlementDays as a positive integer" };
   }
   if (item.sizes != null) {
     if (
@@ -494,6 +548,26 @@ export async function recordChargeEvent(
 }
 
 /** The artist's flip: settled → fulfilled (shipment sent / access granted). */
+/** Love's pay-what-you-can decision (0018.05.14): the sats were already
+ *  paid; ACCEPT records the blessing (the Pay-It-Forward jar may carry the
+ *  gap in the books), DECLINE records that a refund is owed. The event is
+ *  the ledger row; the flag clears either way. */
+export async function decidePwyc(
+  orderId: string,
+  decision: "accept" | "decline",
+): Promise<OrderRecord | null> {
+  const order = await getOrder(orderId);
+  if (!order || !order.pwycPending) return null;
+  delete order.pwycPending;
+  order.events.push({
+    type: decision === "accept" ? "pwyc_accepted" : "pwyc_declined_refund_owed",
+    chargeId: "",
+    atMs: Date.now(),
+  });
+  await writeOrder(order);
+  return order;
+}
+
 export async function markFulfilled(orderId: string): Promise<OrderRecord | null> {
   const order = await getOrder(orderId);
   if (!order) return null;

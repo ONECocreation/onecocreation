@@ -1,3 +1,5 @@
+import { cartridge } from "@/brand/cartridge";
+
 /**
  * One Cocreation — BrandTheme.
  *
@@ -7,7 +9,12 @@
  * lavender, soft rose. House rule still holds — GOLD is money only (the sats /
  * bitcoin surfaces); everything else stays soft and warm.
  *
- * Typeface is Cochin (Love's brand serif, self-hosted in /public/fonts).
+ * Typeface is Barlow (Love's display face — no serifs, FONT TRIO 0018.05.17).
+ *
+ * SINCE THE CARTRIDGE SPLIT (walk step 8, Admiral's walk, 0018.05.15) the
+ * values live in src/brand/cartridge.ts — this file is a thin adapter that
+ * keeps the exported shape the sign-in contract and MediaKit already speak.
+ * Edit the cartridge, not this.
  */
 
 export interface BrandTokens {
@@ -44,32 +51,10 @@ export interface BrandTheme {
 
 export const oneCocreationTheme: BrandTheme = {
   id: "onecocreation",
-  label: "One Cocreation — Where Heaven and Earth Meet",
-  tokens: {
-    space: "#0a0a14",
-    panel: "rgba(22,18,40,.66)",
-    edge: "rgba(168,130,240,.22)",
-    cream: "#FBF6EF",
-    blush: "#F3DCE3",
-    ink: "#4A4458",
-    muted: "#897F97",
-    gold: "#D9B24E",
-    goldDeep: "#B4862B",
-    purple: "#9B26D6",
-    magenta: "#C42EC9",
-    lavender: "#8B76C4",
-    rose: "#C56E8B",
-    copper: "#C77B4A",
-  },
-  fonts: {
-    display: "'Cochin','Optima','Palatino Linotype',Georgia,serif",
-    body: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
-  },
-  copy: {
-    productName: "One Cocreation",
-    tagline: "The Way of the Heart",
-    memberNoun: "soul",
-  },
+  label: `${cartridge.name} — Where Heaven and Earth Meet`,
+  tokens: { ...cartridge.palette },
+  fonts: { ...cartridge.fonts },
+  copy: { ...cartridge.copy },
 };
 
 /** Emit the theme as CSS custom properties (mirrors frens.earth brandCssVars). */

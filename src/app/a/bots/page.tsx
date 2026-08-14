@@ -15,7 +15,7 @@ import { CONSOLE_SITE } from "@/lib/console";
  * Same key-is-the-operator gate as every /a tab.
  */
 export const metadata: Metadata = {
-  title: "Bot deck — frens.earth admin",
+  title: "Bot deck — One Cocreation admin",
   robots: { index: false, follow: false },
 };
 

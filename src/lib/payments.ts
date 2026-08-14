@@ -157,6 +157,38 @@ export const btcpayAdapter: PaymentAdapter = {
   },
 };
 
+/**
+ * Refund a settled BTCPay invoice as a PULL PAYMENT — BTCPay mints a claim
+ * page where the member takes their sats back (lightning or on-chain, their
+ * pick). RateThen = the BTC amount as paid, which for our sats-denominated
+ * invoices is simply the sats back. Greenfield's payout-method field name
+ * moved across versions, so both spellings are tried before giving up.
+ * Null = this invoice can't auto-refund (unpaid/expired) — manual it is.
+ */
+export async function btcpayRefundLink(chargeId: string): Promise<string | null> {
+  const env = btcpayEnv();
+  if (!env) return null;
+  const bodies = [
+    { refundVariant: "RateThen", payoutMethodId: "BTC-CHAIN" },
+    { refundVariant: "RateThen", paymentMethod: "BTC" },
+  ];
+  for (const body of bodies) {
+    try {
+      const res = await btcpayFetch(`/invoices/${chargeId}/refund`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) continue;
+      const pp = (await res.json()) as { id?: string; viewLink?: string };
+      if (pp.viewLink) return pp.viewLink;
+      if (pp.id) return `${env.url}/pull-payments/${pp.id}`;
+    } catch {
+      /* try the other spelling */
+    }
+  }
+  return null;
+}
+
 export function getAdapter(id: string): PaymentAdapter | null {
   return id === "btcpay" ? btcpayAdapter : null;
 }

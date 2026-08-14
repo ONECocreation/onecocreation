@@ -343,7 +343,7 @@ export default function TagClaim({
   const statusLine = {
     idle: { text: "TYPE A NAME TO CHECK THE BOARD", cls: "text-cyan glow-cyan" },
     checking: { text: "CHECKING…", cls: "text-coin glow-coin pulse-neon" },
-    available: { text: "TAG AVAILABLE — PRESS START", cls: "text-neon glow-neon" },
+    available: { text: "NAME AVAILABLE — CLAIM IT", cls: "text-neon glow-neon" },
     taken: { text: "TAKEN — TRY ANOTHER", cls: "text-ghost glow-ghost" },
     invalid: { text: (reason ?? "INVALID NAME").toUpperCase(), cls: "text-ghost glow-ghost" },
   }[availability];
@@ -364,7 +364,7 @@ export default function TagClaim({
     );
     return (
       <div className="mx-auto max-w-2xl border-4 border-neon bg-panel p-8 shadow-[8px_8px_0_#ff00ff]">
-        <p className="text-center font-pixel text-2xl text-neon glow-neon mb-6">PLAYER REGISTERED</p>
+        <p className="text-center font-pixel text-2xl text-neon glow-neon mb-6">NAME REGISTERED</p>
         <p className="text-center font-arcade text-[clamp(1.4rem,7vw,2.25rem)] leading-tight break-all text-coin glow-coin mb-8">
           {claimed.handle}
           {spaceTag}
@@ -385,7 +385,7 @@ export default function TagClaim({
               disabled={profilePublish === "done"}
               maxLength={500}
               rows={3}
-              placeholder="ABOUT ME (optional) — tell the arcade who you are. This becomes your fren identity everywhere."
+              placeholder="ABOUT ME (optional) — tell us who you are. This becomes your identity everywhere."
               className="mb-4 w-full border-2 border-edge bg-void px-3 py-2 font-body text-sm text-white/85 outline-none focus:border-cyan disabled:opacity-60"
               aria-label="About me — optional bio for your profile"
             />
@@ -419,8 +419,7 @@ export default function TagClaim({
             Your profile page is live — your start screen for the nostr verse. Everything below
             is waiting for you there too.
           </p>
-          <Link href={`/u/${claimed.handle}`} className="button block w-full">
-            ▶ ENTER YOUR PROFILE
+          <Link href="/me" className="button block w-full"> ENTER YOUR PAGE
           </Link>
           <p className="mt-3 font-body text-xs text-white/50">
             {nip05Domain}/u/{claimed.handle} — bookmark it, share it, come back any time.
@@ -441,7 +440,7 @@ export default function TagClaim({
               nostr
             </a>
             {" "}— an open chat network no company owns. Open any nostr app (Primal, Damus,
-            Amethyst), sign in with your key, and you can post, message, and follow other frens by
+            Amethyst), sign in with your key, and you can post, message, and follow other members by
             their tags.
           </p>
           <p>
@@ -470,7 +469,7 @@ export default function TagClaim({
             <span className="text-coin font-pixel text-xs mr-2">ANCHOR</span>
             At the next batch ceremony your tag is anchored to Bitcoin — permanent and
             uncensorable. Ceremonies run as the queue fills, announced from{" "}
-            <span className="text-pink">@pacsarcade</span>{" "}on nostr.
+            <span className="text-pink">@onecocreation</span>{" "}on nostr.
             {tipHeight ? (
               <>
                 {" "}Bitcoin is at block{" "}

@@ -1,21 +1,34 @@
 import Link from "next/link";
 import { TIERS } from "@/lib/entitlement";
+import { TIER_PAGES } from "@/lib/tiers-content";
 import { ROOMS } from "@/lib/matrix";
+import { listServices } from "@/lib/booking";
+import { listItems } from "@/lib/store";
+import SubscribeForm from "./SubscribeForm";
+import TipJar from "./TipJar";
+import WildDoors from "./WildDoors";
+import LightCode from "./LightCode";
+import { cartridge } from "@/brand/cartridge";
+import CosmicSky from "./CosmicSky";
+import ServiceCard from "./ServiceCard";
+import ContactDoors from "./ContactDoors";
 
 /* eslint-disable @next/next/no-img-element */
 
 export function Hero() {
   return (
     <section className="hero">
+      {/* the living sky — twinkle + the odd shooting star, behind the light */}
+      <CosmicSky />
       <div className="inner wrap">
-        {/* Love's channeled Love Light Language glyph — glowing on the dark celestial hero.
-            (The animated draw-in lives in preview-elevated.html; static glow here.) */}
-        <img className="glyph" src="/brand/love-light-language.svg" alt="Love Light Language" />
+        {/* Love's channeled Love Light Language glyph — DRAWN IN LIGHT on
+            arrival (the bench-artifact animation Love loved; LightCode.tsx). */}
+        <LightCode />
         <div className="days">5 Days</div>
         <h1>Leap of Faith</h1>
         <div className="sub">A Fresh Step Into a New Mindset</div>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link className="btn btn-gold" href="/packages">Begin the Journey</Link>
+          <Link className="btn btn-gold btn-shimmer" href="/packages">Begin the Journey</Link>
           <Link className="btn btn-ghost" href="/#free">Receive the Free Meditation</Link>
         </div>
       </div>
@@ -30,12 +43,16 @@ export function About() {
         <p className="kicker center">Smiles, Love</p>
         <h2 className="center sec-h" style={{ marginBottom: "1em" }}>My Story</h2>
         <div style={{ display: "grid", gap: 40, gridTemplateColumns: "minmax(0,.8fr) minmax(0,1.2fr)", alignItems: "center" }}>
-          <img src="/images/love-headshot.webp" alt="Love — founder of One Cocreation" style={{ borderRadius: 24, boxShadow: "var(--soft)" }} />
+          <img src={cartridge.portraits.headshot} alt="Love — founder of One Cocreation" style={{ borderRadius: 24, boxShadow: "var(--soft)" }} />
           <div>
             <p>I have been a solo adventurer for a while now — like most, on the hero&apos;s journey. Over time I found none of us are here to shrink, but to standout. Not here to separate, but to gather together — to bring kindness to the world, to be unapologetically US.</p>
             <p style={{ color: "var(--rose)", fontFamily: "var(--serif)", fontSize: "1.3rem", lineHeight: 1.5 }}>
               &ldquo;To those drawn by the energy of the soul, Welcome Home. You Are the Bridge, Where Heaven and Earth Meet.&rdquo;
             </p>
+            {/* the short version lives here; the whole journey has its own room */}
+            <Link className="btn btn-ghost btn-sm" href="/about" style={{ marginTop: 6, display: "inline-block" }}>
+              Read my full story →
+            </Link>
           </div>
         </div>
       </div>
@@ -45,35 +62,43 @@ export function About() {
 
 export function Packages() {
   const cards = [
-    { tier: "A" as const, img: "/images/weekly-intuitive.webp", feats: ["Live weekly Zoom — 4× a month", "Explore your Claire Senses through breath", "Meditations, toning, light language", "A held energetic field, in community"] },
-    { tier: "B" as const, img: "/images/observer.webp", feats: ["Everything in Package A", "Weekly recorded reading + affirmations", "Weekly live Zoom meetup group", "Movement, meditation & navigation"] },
-    { tier: "C" as const, img: "/images/evening-star.webp", feats: ["Everything in Packages A & B", "Monthly 1–1½ hr focused meeting", "Quantum healing & reference tools", "All classes + full community"] },
+    { tier: "A" as const, accent: "a", img: cartridge.tierArt.A, feats: ["Live weekly Zoom — 4× a month", "Explore your Clair Senses through breath", "Meditations, toning, light language", "A held energetic field, in community"] },
+    { tier: "B" as const, accent: "b", img: cartridge.tierArt.B, feats: ["Everything in Weekly Intuitive", "Weekly recorded reading + affirmations", "Weekly live Zoom meetup group", "Movement, meditation & navigation"] },
+    { tier: "C" as const, accent: "c", img: cartridge.tierArt.C, feats: ["Everything in Weekly Intuitive & Observer", "Monthly 1–1½ hr focused meeting", "Quantum healing & reference tools", "All classes + full community"] },
   ];
   return (
-    <section id="packages">
+    <section id="packages" className="lions-gate">
       <div className="wrap">
         <p className="kicker center">The Heart Field — Where Heaven and Earth Meet</p>
         <h2 className="center sec-h">Memberships</h2>
         <p className="lead center">Three ways into the field — each includes everything before it. Pay monthly in dollars or in bitcoin; your tier gently becomes your key.</p>
+        <nav className="tier-pills" aria-label="Membership plans">
+          {TIER_PAGES.map((p) => (
+            <Link key={p.slug} className="tier-pill" href={`/packages/${p.slug}`}>
+              {TIERS[p.tier].name}
+            </Link>
+          ))}
+        </nav>
         <div className="grid grid-3">
           {cards.map((c) => {
             const t = TIERS[c.tier];
             return (
-              <div className="card" key={c.tier}>
+              <div className="card shine-hover" key={c.tier}>
                 <img className="thumb" src={c.img} alt={t.name} />
                 <div className="body">
-                  <div style={{ width: 42, height: 42, borderRadius: "50%", display: "grid", placeItems: "center", fontFamily: "var(--serif)", fontSize: "1.25rem", color: c.tier === "C" ? "#3a2a06" : "#fff", background: c.tier === "C" ? "linear-gradient(135deg,var(--gold-2),var(--gold-deep))" : "linear-gradient(135deg,#cbbbea,var(--lavender))", marginBottom: 12 }}>{c.tier}</div>
-                  <h3 style={{ fontWeight: 400 }}>{t.name}</h3>
+                  <Link href={`/packages/${TIER_PAGES.find((p) => p.tier === c.tier)?.slug}`} className={`tier-name-pill tier-pill--${c.accent}`} style={{ textDecoration: "none" }}>{t.name}</Link>
                   <div className="price">${t.priceUsd}<small>/mo</small></div>
                   <div className="sats">⚡ ≈ {t.priceSats.toLocaleString()} sats / month</div>
                   <ul className="feat">{c.feats.map((f) => <li key={f}>{f}</li>)}</ul>
-                  <Link className={`btn ${c.tier === "C" ? "btn-gold" : "btn-ghost"} push`} href="/support">Yes! — ⚡ or $</Link>
+                  <div className="push" style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+                    <Link className={`btn tier-btn--${c.accent}`} href={`/packages/${TIER_PAGES.find((p) => p.tier === c.tier)?.slug}`}>YES! →</Link>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
-        <p className="note"><b>How the gate works:</b> pay in bitcoin (or dollars) → your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door. <em>(Entitlement gate — stub in this scaffold.)</em></p>
+        <p className="note"><b>How the gate works:</b> pay in bitcoin (or dollars) → your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing.</p>
       </div>
     </section>
   );
@@ -127,28 +152,53 @@ export function Jewelry() {
   );
 }
 
-export function Services() {
-  const svcs = [
-    { icon: "✂️", name: "Silent Haircut — Women", desc: "Conscious cut · affirmation card included", usd: 222, sats: "222,000" },
-    { icon: "✂️", name: "Silent Haircut — Men", desc: "Conscious cut · affirmation card included", usd: 111, sats: "111,000" },
-    { icon: "💫", name: "Soul Conversation (1:1)", desc: "Heart-connective session · with or without a cut", usd: 222, sats: "222,000" },
-    { icon: "🕊️", name: "Discovery Call — 30 min", desc: "Feel into what's next · credited toward first service", usd: 55, sats: "55,000" },
+export async function Services() {
+  // The REAL shelf — same services the booking rail sells, in Love's order.
+  const services = await listServices();
+  const shelfIds = new Set((await listItems()).map((i) => i.id));
+  // real photography per session (Admiral, 0018.05.15 — no more emoji tiles)
+  const IMG: [RegExp, string][] = [
+    [/discovery/i, cartridge.hero.loveSidelook],
+    [/soul/i, cartridge.hero.moon],
+    [/women|female/i, cartridge.portraits.cuts.women],
+    [/men|male/i, cartridge.portraits.cuts.men],
+    [/wax/i, cartridge.portraits.cuts.wax],
   ];
+  const imgFor = (id: string) => IMG.find(([re]) => re.test(id))?.[1] ?? cartridge.hero.nebula;
   return (
-    <section id="services">
-      <div className="wrap">
-        <p className="kicker center">ConsciousCuts &amp; Waxing — Book &amp; Pay in Sats ⚡</p>
-        <h2 className="center sec-h">Silent Hair Sessions 🦋</h2>
-        <p className="lead center">The Way of the Heart, one-on-one. Sessions where you don&apos;t have to keep up conversation. Pick a time, pay in sats, you&apos;re held.</p>
-        {svcs.map((s) => (
-          <div className="svc" key={s.name}>
-            <div style={{ width: 46, height: 46, borderRadius: 12, display: "grid", placeItems: "center", fontSize: "1.4rem", background: "linear-gradient(135deg,#f3dce3,#cbbbea)" }}>{s.icon}</div>
-            <div className="meta"><h4>{s.name}</h4><p>{s.desc}</p></div>
-            <div style={{ textAlign: "right" }}><div className="pr">${s.usd}</div><div className="sats">⚡ ≈ {s.sats} sats</div></div>
-            <Link className="btn btn-ghost btn-sm" href="/support">Book ⚡</Link>
-          </div>
-        ))}
-        <p className="note"><span className="stub">Calendar &amp; booking — stub</span><br />Real availability, timezone &amp; confirmation arrive in Phase 2 (pick a slot → pay on book → confirmed).</p>
+    <section id="services" className="sky-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
+      <CosmicSky shooting={false} />
+      <div className="wrap" style={{ position: "relative", zIndex: 2, padding: "70px 22px 76px" }}>
+        <div className="center reveal">
+          <h2 className="sec-h" style={{ color: "var(--ink-strong)" }}>ConsciousCuts &amp; Waxing 🦋</h2>
+          <p className="lead" style={{ color: "var(--muted)", marginBottom: 34 }}>
+            The Way of the Heart, one-on-one.<br />
+            Sessions where you don&apos;t have to keep up conversation.<br />
+            Pick a time — you&apos;re held.
+          </p>
+        </div>
+        <div className="grid grid-2" style={{ maxWidth: 880, margin: "0 auto" }}>
+          {services.map((s, i) => (
+            <ServiceCard
+              key={s.id}
+              delay={(i % 2) * 0.12}
+              svc={{
+                id: s.id,
+                title: s.title,
+                blurb: s.blurb ?? "",
+                durationMin: s.durationMin,
+                usd: s.price.fiat ? Math.round(s.price.fiat.amount / 100) : undefined,
+                sats: s.price.sats,
+                pwyc: s.pricingMode === "pwyc",
+                inStore: shelfIds.has(s.id),
+                img: imgFor(s.id),
+              }}
+            />
+          ))}
+        </div>
+        <p className="center reveal" style={{ margin: "30px auto 0", maxWidth: 640, fontSize: ".88rem", color: "var(--muted)" }}>
+          Pick a session → choose a real open time → pay in sats or dollars → confirmed with a calendar file, held with love.
+        </p>
       </div>
     </section>
   );
@@ -161,14 +211,34 @@ export function Classes() {
   return (
     <section id="classes">
       <div className="wrap">
-        <p className="kicker center">Chronicles of Wonderland</p>
+        {/* was "Chronicles of Wonderland" — a Degen Wonderland remnant (Admiral's catch, 0018.05.15) */}
+        <p className="kicker center">The Heartfield Commons</p>
         <h2 className="center sec-h">Classes &amp; Community</h2>
-        <p className="lead center">Your own luminous rooms — powered by Matrix, the open protocol behind Pac&apos;s Arcade. Tier-gated: your package opens the doors.</p>
-        <div style={{ display: "grid", gap: 24, gridTemplateColumns: "1fr 1fr" }}>
-          <div className="card"><div className="body"><h3 style={{ fontWeight: 400 }}>📚 Classes</h3>{classes.map((r) => <div className="roomrow" key={r.id}>{r.title}<span className="lockpill">{label(r.minTier as string)}</span></div>)}</div></div>
-          <div className="card"><div className="body"><h3 style={{ fontWeight: 400 }}>💗 Community</h3>{community.map((r) => <div className="roomrow" key={r.id}>{r.title}<span className="lockpill">{label(r.minTier as string)}</span></div>)}</div></div>
+        <p className="lead center">Your own luminous rooms — powered by Matrix — an open protocol; your rooms, your keys. Tier-gated: your package opens the doors.</p>
+        <div className="grid grid-2" style={{ maxWidth: 860, margin: "0 auto" }}>
+          <div className="card reveal"><div className="body">
+            <h3 style={{ fontWeight: 400 }}>📚 Classes</h3>
+            {classes.map((r) => (
+              <div className="roomrow" key={r.id}>
+                <span aria-hidden>✦</span> {r.title}
+                <span className="lockpill">{label(r.minTier as string)}</span>
+              </div>
+            ))}
+          </div></div>
+          <div className="card reveal" style={{ transitionDelay: ".12s" }}><div className="body">
+            <h3 style={{ fontWeight: 400 }}>💗 Community</h3>
+            {community.map((r) => (
+              <div className="roomrow" key={r.id}>
+                <span aria-hidden>♡</span> {r.title}
+                <span className="lockpill">{label(r.minTier as string)}</span>
+              </div>
+            ))}
+          </div></div>
         </div>
-        <p className="note"><b>Matrix-powered</b> — paying for a package sends your invite automatically, One Cocreation-branded (replacing Patreon / Mighty Networks / Kajabi). <em>(Rooms illustrative in this scaffold.)</em></p>
+        <div className="center reveal" style={{ marginTop: 24 }}>
+          <Link className="btn btn-gold" href="/classes">Enter your rooms →</Link>
+        </div>
+        <p className="note reveal"><b>Matrix-powered</b> — paying for a package sends your invite automatically, One Cocreation-branded (replacing Patreon / Mighty Networks / Kajabi). Your rooms, your keys.</p>
       </div>
     </section>
   );
@@ -178,12 +248,12 @@ export function Affirmations() {
   const aff = [
     { name: "Thank You", sub: "Wake Up Affirmations · 1 hr 11 min", img: "/images/affirmation-thankyou.webp" },
     { name: "Large Sums of Money", sub: "Sleep Affirmation · 16 min · no music", img: "/images/affirmation-largesums.webp" },
-    { name: "IAM Enough", sub: "Sleep Affirmation · 3 hr 3 min", img: "/images/affirmation-iamenough.webp" },
+    { name: "IAM Worthy", sub: "Sleep Affirmation · 3 hr 3 min", img: "/images/affirmation-iamenough.webp" },
   ];
   return (
     <section id="offers">
       <div className="wrap">
-        <p className="kicker center">Chronicles of Wonderland</p>
+        <p className="kicker center">With Love, Recorded</p>
         <h2 className="center sec-h">Guided Affirmations</h2>
         <p className="lead center">Recorded meditations to nurture the New You. Each payable in bitcoin.</p>
         <div className="grid grid-3">
@@ -194,7 +264,7 @@ export function Affirmations() {
                 <h3 style={{ fontWeight: 400 }}>{a.name}</h3>
                 <p style={{ color: "var(--muted)", margin: ".2em 0 .6em" }}>{a.sub}</p>
                 <div className="price">$11.11</div><div className="sats">⚡ ≈ 11,110 sats</div>
-                <Link className="btn btn-ghost push" style={{ marginTop: 16 }} href="/support">Add ⚡</Link>
+                <Link className="btn btn-ghost push" style={{ marginTop: 16 }} href="/store">Add ⚡</Link>
               </div>
             </div>
           ))}
@@ -208,16 +278,31 @@ export function Donations() {
   return (
     <section id="support">
       <div className="wrap">
-        <div style={{ background: "linear-gradient(150deg,rgba(255,255,255,.66),rgba(243,220,227,.5))", border: "1px solid rgba(217,178,78,.4)", borderRadius: 30, padding: 44, boxShadow: "var(--soft)" }}>
-          <p className="kicker">Support This Work — gently, in bitcoin ⚡</p>
-          <h2 className="sec-h">Sats straight to One Cocreation.</h2>
-          <p style={{ color: "#544e64", maxWidth: 640 }}>Support the work, join a package, or gift a session over the Lightning Network. <strong style={{ color: "var(--gold-deep)" }}>Non-custodial:</strong> sats land in One Cocreation&apos;s own node. We provide the rails; we never touch, hold, or route the money. Or simply pay in dollars — bitcoin is an option, never a demand.</p>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "18px 0 22px" }}>
-            {["2,100 sats", "11,111 sats", "111,111 sats", "Custom"].map((c) => (
-              <span key={c} style={{ border: "1.5px solid rgba(180,134,43,.5)", color: "var(--gold-deep)", borderRadius: 999, padding: "9px 17px", fontWeight: 700, fontSize: ".82rem" }}>{c}</span>
-            ))}
+        <div style={{ background: "var(--warm-panel)", border: "1px solid var(--warm-edge)", borderRadius: 30, padding: 44, boxShadow: "var(--soft)" }}>
+          <p className="kicker">Support This Work — Gently ⚡</p>
+          <h2 className="sec-h">Tend the Field</h2>
+          <p style={{ color: "var(--ink-body)", maxWidth: 640 }}>
+            A gift lands with Love <strong style={{ color: "var(--gold-deep)" }}>whole</strong> — no
+            platform between, no cut taken. Give in bitcoin over lightning or simply in dollars;
+            bitcoin is an option here, never a demand.
+          </p>
+          <TipJar />
+
+          {/* ── where Pay It Forward flows (Love's word, 0018.05.15) ───── */}
+          <div style={{ marginTop: 34 }}>
+            <p className="kicker" style={{ marginBottom: 6 }}>Where Pay It Forward Flows 🎁</p>
+            <p style={{ color: "var(--ink-body)", maxWidth: 640, fontSize: ".95rem", margin: "0 0 10px" }}>
+              The Pay-It-Forward jar doesn&apos;t stop here — Love passes it onward to the beings
+              holding this Earth together.
+            </p>
+            <WildDoors />
           </div>
-          <span className="stub">Stub — their BTCPay / LNbits node not yet linked (Phase 1)</span>
+
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", margin: "26px 0 4px" }}>
+            <Link className="btn btn-ghost" href="/book">Book a Session</Link>
+            <Link className="btn btn-ghost" href="/store">Visit the Store</Link>
+            <Link className="btn btn-ghost" href="/support">The Full Support Room →</Link>
+          </div>
         </div>
       </div>
     </section>
@@ -233,9 +318,9 @@ export function FreeMeditation() {
           <div>
             <p className="kicker">Be in the Know</p>
             <h2 className="sec-h">A Free Meditation, With Love</h2>
-            <p style={{ color: "var(--muted)" }}>Join the newsletter and receive <strong style={{ color: "var(--rose)" }}>&ldquo;Unzip Into the New You&rdquo;</strong> — a free guided meditation, plus a weekly note of inspiration.</p>
-            <p style={{ fontSize: ".82rem", color: "var(--muted)" }}>Delivered two ways: <b>a signed nostr note</b> + <b>an email</b>. <em>(Email is a new house capability — wired in Phase 5.)</em></p>
-            <Link className="btn btn-rose" href="/support">Send My Free Meditation</Link>
+            <p style={{ color: "var(--ink-body)", fontSize: "1.02rem" }}>Join the newsletter and receive <strong style={{ color: "var(--rose)" }}>&ldquo;Unzip Into the New You&rdquo;</strong> — a free guided meditation, plus a weekly note of inspiration.</p>
+            <p style={{ fontSize: ".85rem", color: "var(--muted)", margin: "0 0 26px" }}>Delivered straight to your inbox — no strings, only love.</p>
+            <SubscribeForm source="meditation" />
           </div>
         </div>
       </div>
@@ -249,11 +334,9 @@ export function Contact() {
       <div className="wrap">
         <p className="kicker center">E.T. Phone Home</p>
         <h2 className="center sec-h" style={{ marginBottom: "1em" }}>Connect &amp; Book</h2>
-        <div className="grid grid-3">
-          <div className="card"><div className="body"><h3 style={{ fontWeight: 400, fontSize: "1.1rem" }}>11:11 Live with Love</h3><p style={{ color: "var(--muted)", fontSize: ".94rem" }}>Monday · Wednesday · Friday @ 11:11 (MST / PST), or there bouts ;) Live on YouTube @Onecocreation.</p></div></div>
-          <div className="card"><div className="body"><h3 style={{ fontWeight: 400, fontSize: "1.1rem" }}>Book a Discovery Call</h3><p style={{ color: "var(--muted)", fontSize: ".94rem" }}>A 30-minute call to feel into what&apos;s next — the $55 credited toward your first service.</p></div></div>
-          <div className="card"><div className="body"><h3 style={{ fontWeight: 400, fontSize: "1.1rem" }}>Silent Hair Session</h3><p style={{ color: "var(--muted)", fontSize: ".94rem" }}>Choose a package or a service, pay in bitcoin, and you&apos;ll receive booking-calendar access.</p></div></div>
-        </div>
+        {/* every card IS its door (Admiral, 0018.05.17); the doors themselves
+            are shared with /contact (0018.05.15 — the Admiral prefers that set) */}
+        <ContactDoors />
       </div>
     </section>
   );

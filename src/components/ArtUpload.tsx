@@ -64,12 +64,12 @@ export default function ArtUpload({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={busy}
-        className="cursor-pointer border border-cyan/60 px-2 py-0.5 font-pixel text-[9px] uppercase text-cyan hover:bg-cyan/10 disabled:opacity-40"
+        className="btn-quiet" style={{ padding: "2px 0", color: "var(--teal-bright, #8FD0D8)" }}
       >
-        {busy ? "BEAMING UP…" : `${label} ▸`}
+        {busy ? "Beaming up…" : `${label} `}
       </button>
-      <span className="font-body text-xs text-white/40">hosted on this ship — up to 2 MB</span>
-      {error && <span className="font-pixel text-[9px] uppercase text-ghost">{error}</span>}
+      <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>hosted on this ship — up to 2 MB</span>
+      {error && <span style={{ margin: 0, fontSize: ".8rem", color: "var(--err, #E7899E)" }}>{error}</span>}
     </span>
   );
 }

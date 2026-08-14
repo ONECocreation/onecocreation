@@ -133,7 +133,7 @@ export type ArtistGate =
 export async function artistFromRequest(request: Request): Promise<ArtistGate> {
   const fren = frenFromRequest(request);
   if (!fren) {
-    return { ok: false, status: 401, reason: "sign in with your tag first, fren", signedIn: false };
+    return { ok: false, status: 401, reason: "sign in with your tag first", signedIn: false };
   }
   const entry = await getEntry(fren.handle, fren.space);
   if (!entry?.npub || !(await isArtistNpub(entry.npub))) {

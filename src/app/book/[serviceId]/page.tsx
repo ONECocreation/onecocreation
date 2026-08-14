@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import ArcadeHeader from "@/components/ArcadeHeader";
-import EarthFooter from "@/components/EarthFooter";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 import SlotPicker from "@/components/booking/SlotPicker";
 import { getService } from "@/lib/booking";
-import { liveAdapter } from "@/lib/payments";
 
 export const dynamic = "force-dynamic";
 
@@ -36,30 +35,34 @@ export default async function BookPage({ params }: { params: Promise<{ serviceId
   const service = await getService(serviceId);
   if (!service || service.status !== "live") notFound();
 
-  const rail = liveAdapter();
-
   return (
-    <main className="min-h-screen bg-void text-white">
-      <ArcadeHeader />
-      <section className="mx-auto max-w-2xl px-4 py-10">
-        <p className="text-xs uppercase tracking-widest text-neutral-500">
-          <Link href="/book" className="hover:text-cyan-300">
-            sessions
-          </Link>
-        </p>
-        <h1 className="mt-2 text-2xl font-bold tracking-widest">{service.title.toUpperCase()}</h1>
-        {service.blurb && <p className="mt-2 text-sm text-neutral-300">{service.blurb}</p>}
-        <p className="mt-3 text-sm text-amber-300">{priceLabel(service)}</p>
+    <main>
+      <SiteHeader />
+      <section>
+        <div className="wrap" style={{ maxWidth: 820 }}>
+          <div className="center">
+            <p className="kicker">
+              <Link href="/book" style={{ color: "inherit" }}>Sessions</Link>
+            </p>
+            <h1 className="sec-h">{service.title}</h1>
+            {service.blurb && (
+              <p className="lead" style={{ marginBottom: 8 }}>{service.blurb}</p>
+            )}
+            <p className="price" style={{ fontSize: "1.2rem", margin: "0 0 4px" }}>{priceLabel(service)}</p>
+            <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: 0 }}>{service.durationMin} minutes</p>
+            {service.meetingRail.kind === "inPerson" && (
+              <p style={{ marginTop: 12, fontSize: ".88rem", color: "var(--muted)", maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
+                This is an in-person session — Love&apos;s mobile studio travels; checkout asks your
+                city, state, and zip so the visit can find you.
+              </p>
+            )}
 
-        {!rail && (
-          <p className="mt-4 border border-cyan-800 px-3 py-2 text-xs text-cyan-300">
-            ◌ payment rail not connected — times are browsable until this ship links its BTCPay
-          </p>
-        )}
+          </div>
 
-        <SlotPicker serviceId={service.id} />
+          <SlotPicker serviceId={service.id} inPerson={service.meetingRail.kind === "inPerson"} />
+        </div>
       </section>
-      <EarthFooter />
+      <SiteFooter />
     </main>
   );
 }

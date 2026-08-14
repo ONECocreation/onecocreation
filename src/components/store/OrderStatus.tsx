@@ -1,7 +1,40 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { payInModal } from "@/lib/btcpay-modal";
 import { bftDateTime, estimateHeight } from "@/lib/bb/bft";
+import { cartridge } from "@/brand/cartridge";
+
+/** The moment after the sats land: Love herself says thank you — a living
+ *  portrait (muted loop; a still for reduced-motion) over her line. */
+function ThankYouFromLove() {
+  const vid = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) vid.current?.pause();
+  }, []);
+  return (
+    <div className="reveal in" style={{ margin: "26px auto 4px", maxWidth: 440 }}>
+      <video
+        ref={vid}
+        src={cartridge.thanks.video}
+        poster={cartridge.thanks.poster}
+        autoPlay muted loop playsInline
+        width={148} height={148}
+        style={{ display: "block", margin: "0 auto", width: 148, height: 148, objectFit: "cover",
+          borderRadius: "50%", border: "2px solid rgba(217,178,78,.55)",
+          boxShadow: "0 22px 54px -22px rgba(120,86,180,.6)" }}
+      />
+      <p style={{ margin: "16px 0 0", fontFamily: "var(--serif, sans-serif)", fontSize: "1.35rem",
+        color: "var(--ink-strong)" }}>
+        {cartridge.thanks.heading}
+      </p>
+      <p style={{ margin: "6px auto 0", maxWidth: 380, fontSize: ".9rem", lineHeight: 1.7,
+        color: "var(--ink-body)" }}>
+        {cartridge.thanks.message}
+      </p>
+    </div>
+  );
+}
 
 interface OrderView {
   id: string;
@@ -33,6 +66,10 @@ const STATE_COPY: Record<string, { label: string; note: string }> = {
 };
 
 const IN_FLIGHT = ["created", "charge_created", "processing"];
+
+/** the entitlement subject is an internal key (`handle@space`) — show the
+ *  human half, never the "@email" machinery */
+const prettySubject = (s: string) => s.replace(/@email$/, "");
 
 export default function OrderStatus({ orderId }: { orderId: string }) {
   const [order, setOrder] = useState<OrderView | null>(null);
@@ -80,68 +117,84 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
         body: JSON.stringify({ orderId }),
       });
       const data = await res.json();
-      if (res.ok && data.ok) window.location.href = data.payUrl;
-      else setBusy(false);
+      if (res.ok && data.ok) {
+        const opened = await payInModal(data.payUrl, {
+          onPaid: () => window.location.reload(),
+          onClose: () => setBusy(false),
+        });
+        if (!opened) window.location.href = data.payUrl;
+        else setBusy(false);
+      } else setBusy(false);
     } catch {
       setBusy(false);
     }
   }
 
-  if (missing) return <p className="mt-8 text-sm text-neutral-400">No such order on this ship.</p>;
-  if (!order) return <p className="mt-8 text-sm text-neutral-400">reading the order…</p>;
+  if (missing) return <p style={{ marginTop: 32, fontSize: ".9rem", color: "var(--muted, #897f97)", textAlign: "center" }}>No such order.</p>;
+  if (!order) return <p style={{ marginTop: 32, fontSize: ".9rem", color: "var(--muted, #897f97)", textAlign: "center" }}>reading the order…</p>;
 
   const copy = STATE_COPY[order.state] ?? { label: order.state.toUpperCase(), note: "" };
   const canRecharge = ["expired", "underpaid"].includes(order.state);
+  const settledFine = ["settled", "fulfilled"].includes(order.state);
 
   return (
-    <div className="mt-6">
-      <p className="text-lg font-bold tracking-widest">{copy.label}</p>
-      <p className="mt-1 text-sm text-neutral-300">{copy.note}</p>
-      <div className="mt-6 border border-neutral-700 p-4 text-sm">
+    <div style={{ marginTop: 20, textAlign: "center" }}>
+      <p style={{ margin: 0, textTransform: "uppercase", fontWeight: 700,
+        /* paid is a CELEBRATION (Admiral, 0018.05.15) — big and gold, not a small green whisper */
+        ...(settledFine
+          ? { fontSize: "1.35rem", letterSpacing: ".24em", color: "var(--gold-2, #ebcb77)",
+              textShadow: "0 0 22px rgba(235,203,119,.4)" }
+          : { fontSize: ".78rem", letterSpacing: ".2em", color: "var(--gold-deep, #b4862b)" }) }}>
+        {copy.label}
+      </p>
+      <p style={{ margin: "4px auto 0", fontSize: ".88rem", color: "var(--muted, #897f97)", maxWidth: 460 }}>{copy.note}</p>
+      {settledFine && <ThankYouFromLove />}
+      <div style={{
+        margin: "20px auto 0", maxWidth: 440,
+        borderRadius: 20, border: "1px solid var(--glass-edge)",
+        background: "var(--glass)", backdropFilter: "blur(8px)",
+        boxShadow: "0 24px 60px -30px rgba(120,100,160,.55)", padding: "20px 22px",
+      }}>
         {order.lineItems.map((li) => (
-          <p key={li.itemId} className="font-bold">
+          <p key={li.itemId} style={{ margin: 0, fontFamily: "var(--font-h3, sans-serif)", fontSize: "1.1rem", color: "var(--ink-strong)" }}>
             {li.title}
-            {li.size && <span className="ml-2 font-normal text-neutral-300">· size {li.size}</span>}
+            {li.qty > 1 && ` × ${li.qty}`}
+            {li.size && <span style={{ fontSize: ".85rem", color: "var(--muted, #897f97)" }}> · size {li.size}</span>}
           </p>
         ))}
-        <p className="mt-1" style={{ color: "#FFD700" }}>
+        <p style={{ margin: "6px 0 0", fontFamily: "var(--serif, sans-serif)", fontSize: "1.3rem", color: "var(--gold-deep, #b4862b)" }}>
           {order.priceSnapshot.currency === "SATS"
             ? `${order.priceSnapshot.amount.toLocaleString("en-US")} sats`
             : `${(order.priceSnapshot.amount / 100).toFixed(2)} ${order.priceSnapshot.currency}`}
         </p>
         {order.entitlementSubject && (
-          <p className="mt-1 text-xs text-cyan-300">unlocks for {order.entitlementSubject}</p>
+          <p style={{ margin: "4px 0 0", fontSize: ".8rem", color: "var(--info, #5f4b96)" }}>unlocks for {prettySubject(order.entitlementSubject)}</p>
         )}
-        <p className="mt-2 text-xs text-neutral-500">
+        <p style={{ margin: "10px 0 0", fontSize: ".76rem", color: "var(--muted, #897f97)" }}>
           placed ~{bftDateTime(estimateHeight(order.createdAtMs))}
           {order.settledAtMs && <> · paid ~{bftDateTime(estimateHeight(order.settledAtMs))}</>}
         </p>
-        <p className="mt-1 text-[10px] text-neutral-600">order {order.id}</p>
+        <p style={{ margin: "4px 0 0", fontSize: ".68rem", color: "var(--muted, #897f97)", opacity: 0.7 }}>order {order.id}</p>
       </div>
       {/* the paid good itself — gold is right here, this IS the money's worth.
           Locked = the viewer isn't the buying tag (shared link, or signed
           out): an honest lock, never a gold button that would only 403. */}
-      {order.deliverable && ["settled", "fulfilled"].includes(order.state) && (
-        <div className="mt-4">
+      {order.deliverable && settledFine && (
+        <div style={{ marginTop: 18 }}>
           {order.deliverable.locked ? (
-            <div className="border border-neutral-700 px-4 py-2">
-              <p className="text-sm text-neutral-300">
-                🔒 unlocks for <span className="text-cyan-300">{order.entitlementSubject}</span> —{" "}
-                <a href="/login" className="text-cyan-300 underline">
-                  sign in
-                </a>{" "}
-                with that key to download
-              </p>
-            </div>
+            <p style={{ margin: "0 auto", maxWidth: 440, fontSize: ".88rem", color: "var(--muted, #897f97)" }}>
+              🔒 unlocks for <b style={{ color: "var(--info, #5f4b96)" }}>{prettySubject(order.entitlementSubject!)}</b> —{" "}
+              <a href="/login" style={{ color: "var(--gold-deep, #b4862b)", textDecoration: "underline" }}>sign in</a>{" "}
+              with that key to download
+            </p>
           ) : (
             <>
-              <a
-                href={`/api/store/download/${order.id}`}
-                className="inline-block min-h-11 touch-manipulation border border-yellow-500 px-4 py-2 text-sm font-bold tracking-widest text-yellow-400"
-              >
-                ⬇ DOWNLOAD — {order.deliverable.label}
-              </a>
-              <p className="mt-1 text-xs text-neutral-400">
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <a href={`/api/store/download/${order.id}`} className="btn btn-gold btn-sm">
+                  ⬇ Download — {order.deliverable.label}
+                </a>
+              </div>
+              <p style={{ margin: "8px 0 0", fontSize: ".76rem", color: "var(--muted, #897f97)" }}>
                 this link is yours — your receipt email leads back to this page.
               </p>
             </>
@@ -149,13 +202,11 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
         </div>
       )}
       {canRecharge && (
-        <button
-          onClick={recharge}
-          disabled={busy}
-          className="mt-4 min-h-11 touch-manipulation border border-yellow-500 px-4 py-2 text-sm font-bold tracking-widest text-yellow-400 disabled:opacity-40"
-        >
-          {busy ? "MINTING…" : "MINT A FRESH INVOICE"}
-        </button>
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 18 }}>
+          <button onClick={recharge} disabled={busy} className="btn btn-gold btn-sm">
+            {busy ? "Minting…" : "Mint a fresh invoice ⚡"}
+          </button>
+        </div>
       )}
     </div>
   );

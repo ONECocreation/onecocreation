@@ -134,7 +134,7 @@ export default function SpacesPanel({ space }: { space: string }) {
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       <p className="lcars-eyebrow mb-3" data-accent="cyan">
-        OPERATOR CONSOLE · FRENS.EARTH
+        OPERATOR CONSOLE · ONE COCREATION
       </p>
       <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">SPACES NODE</h1>
       <p className="mb-8 font-mono text-[11px] text-white/50">
@@ -278,7 +278,7 @@ function NodeTab({
             data-accent="cyan"
             className="btn-pill btn-pill--solid"
           >
-            {saving ? "SAVING…" : saved ? "✓ SAVED" : "▶ SAVE & TEST"}
+            {saving ? "SAVING…" : saved ? "✓ SAVED" : " SAVE & TEST"}
           </button>
           <button onClick={onTest} disabled={busy} data-accent="cyan" className="btn-pill">
             {busy ? "TESTING…" : "TEST CONNECTION"}
@@ -494,7 +494,7 @@ function AnchorTab({
           data-accent="cyan"
           className="btn-pill btn-pill--solid flex w-full"
         >
-          {committing ? "RECORDING…" : "▶ RECORD BATCH COMMIT"}
+          {committing ? "RECORDING…" : " RECORD BATCH COMMIT"}
         </button>
         {err && <p className="font-pixel text-[10px] uppercase text-ghost">{err}</p>}
         {result && (

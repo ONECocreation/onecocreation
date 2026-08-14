@@ -44,9 +44,12 @@ export interface BookingRecord {
   artistTz: string;
   state: "held" | "confirmed" | "released" | "canceled";
   orderId: string;
-  customer: { name?: string; email?: string; note?: string; npub?: string };
+  customer: { name?: string; email?: string; note?: string; npub?: string; city?: string; state?: string; zip?: string };
   /** resolved at confirmation — never rendered on a public service page */
   meetingUrl?: string;
+  /** Love's own session notes (discovery-call impressions etc.) — admin-only,
+      never serialized to any public/member surface */
+  adminNotes?: string;
   createdAtMs: number;
   confirmedAtMs?: number;
 }
@@ -222,6 +225,22 @@ export async function claimSlot(
   return true;
 }
 
+/** Read a slot's current claim — the cart checkout's "is this hold still
+ *  mine and alive" question. Null = unclaimed. */
+export async function getClaim(serviceId: string, startUtc: string): Promise<SlotClaim | null> {
+  const field = slotField(serviceId, startUtc);
+  if (vaultConfigured()) {
+    const res = await kv(["HGET", CLAIMS, field]);
+    if (typeof res?.result !== "string") return null;
+    try {
+      return JSON.parse(res.result) as SlotClaim;
+    } catch {
+      return null;
+    }
+  }
+  return (await readClaimsFile())[field] ?? null;
+}
+
 /** Give a slot back — expiry, cancellation, refund. Idempotent. */
 export async function releaseSlot(serviceId: string, startUtc: string): Promise<void> {
   const field = slotField(serviceId, startUtc);
@@ -292,6 +311,17 @@ export async function getBooking(id: string): Promise<BookingRecord | null> {
   }
 }
 
+/** Love's session notes — written from the calendar popup, admin-gated. */
+export async function setBookingNotes(id: string, notes: string): Promise<BookingRecord | null> {
+  const rec = await getBooking(id);
+  if (!rec) return null;
+  const trimmed = notes.trim().slice(0, 4000);
+  if (trimmed) rec.adminNotes = trimmed;
+  else delete rec.adminNotes;
+  await writeBooking(rec);
+  return rec;
+}
+
 export async function listBookings(): Promise<BookingRecord[]> {
   let ids: string[] = [];
   if (vaultConfigured()) {
@@ -336,6 +366,28 @@ export async function confirmBookingForOrder(
 }
 
 /** Payment died or was refunded → the time goes back on the board. */
+/** Self-serve reschedule (Admiral, 0018.05.17): claim the NEW time first,
+ *  then let the old one go — the member never risks losing both. */
+export async function moveBooking(
+  bookingId: string,
+  slot: { startUtc: string; endUtc: string },
+): Promise<{ ok: true; booking: BookingRecord } | { ok: false; reason: string }> {
+  const rec = await getBooking(bookingId);
+  if (!rec) return { ok: false, reason: "no such booking" };
+  const claimed = await claimSlot(rec.serviceId, slot.startUtc, {
+    state: rec.state === "confirmed" ? "confirmed" : "held",
+    bookingId,
+    ...(rec.state === "confirmed" ? {} : { untilMs: Date.now() + 72 * 3600 * 1000 }),
+  });
+  if (!claimed) return { ok: false, reason: "someone just took that time — pick another" };
+  const oldStart = rec.startUtc;
+  rec.startUtc = slot.startUtc;
+  rec.endUtc = slot.endUtc;
+  await writeBooking(rec);
+  await releaseSlot(rec.serviceId, oldStart);
+  return { ok: true, booking: rec };
+}
+
 export async function releaseBookingForOrder(
   bookingId: string,
   reason: "released" | "canceled" = "released",

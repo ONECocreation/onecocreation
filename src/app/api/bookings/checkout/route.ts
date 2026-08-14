@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getService, slotsFor, readConfig } from "@/lib/booking";
+import { busyFeed, subtractBusy } from "@/lib/ical-busy";
 import {
   claimSlot,
   createBooking,
@@ -11,6 +12,9 @@ import {
 import { createOrder, attachCharge, newOrderId, ordersConfigured, type OrderRecord, type PriceSnapshot } from "@/lib/store";
 import { liveAdapter } from "@/lib/payments";
 import { frenFromRequest } from "@/lib/fren-auth";
+import { findDiscount, applyDiscount } from "@/lib/discounts";
+import { settleBookingFromOrder } from "@/lib/booking-fulfil";
+import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +55,8 @@ export async function POST(request: Request) {
     startUtc?: string;
     rail?: "lightning" | "onchain";
     amountSats?: number; // pwyc only — the customer names it
-    customer?: { name?: string; email?: string; note?: string };
+    discountCode?: string;
+    customer?: { name?: string; email?: string; note?: string; city?: string; state?: string; zip?: string };
   };
   try {
     body = await request.json();
@@ -67,8 +72,9 @@ export async function POST(request: Request) {
   // ── 1. the slot must be one the artist actually offers ──────────────────
   // Recomputing from the rules is the gate. A client could otherwise post any
   // instant it liked — 3am, a blocked day, a slot outside the lead window.
-  const { rules, overrides } = await readConfig();
-  const offered = slotsFor(service, rules, overrides);
+  const { rules, overrides, icalUrl } = await readConfig();
+  const busy = await busyFeed(icalUrl);
+  const offered = subtractBusy(slotsFor(service, rules, overrides), busy.windows);
   const slot = offered.find((s) => s.startUtc === body.startUtc);
   if (!slot) {
     return NextResponse.json({ ok: false, reason: "that time isn't open" }, { status: 409 });
@@ -92,6 +98,17 @@ export async function POST(request: Request) {
     };
   } else {
     return NextResponse.json({ ok: false, reason: "this session has no price set" }, { status: 409 });
+  }
+
+  // ── the discount, if offered (store-level; reprices BEFORE any invoice) ──
+  let discountApplied: { code: string; originalAmount: number } | undefined;
+  if (body.discountCode) {
+    const d = await findDiscount(body.discountCode);
+    if (!d) return NextResponse.json({ ok: false, reason: "that code isn't active" }, { status: 400 });
+    const reduced = applyDiscount(snapshot, d);
+    if (!reduced) return NextResponse.json({ ok: false, reason: "that code doesn't fit this price" }, { status: 400 });
+    discountApplied = { code: d.code, originalAmount: snapshot.amount };
+    snapshot = reduced;
   }
 
   // ── 2. claim it BEFORE any money exists ────────────────────────────────
@@ -128,6 +145,9 @@ export async function POST(request: Request) {
         name: body.customer?.name?.trim() || undefined,
         email: body.customer?.email?.trim() || undefined,
         note: body.customer?.note?.trim() || undefined,
+        city: body.customer?.city?.trim() || undefined,
+        state: body.customer?.state?.trim() || undefined,
+        zip: body.customer?.zip?.trim() || undefined,
         npub: fren ? `${fren.handle}@${fren.space}` : undefined,
       },
       createdAtMs: Date.now(),
@@ -144,9 +164,29 @@ export async function POST(request: Request) {
       chargeIds: [],
       bookingId,
       contact: booking.customer.email ? { email: booking.customer.email } : undefined,
+      entitlementSubject: fren ? `${fren.handle}@${fren.space}` : undefined,
+      discount: discountApplied,
       createdAtMs: Date.now(),
       events: [],
     };
+
+    // ── a 100% code settles with no invoice at all — recorded, never silent ──
+    if (snapshot.amount === 0 && discountApplied) {
+      order.state = "settled";
+      order.settledAtMs = Date.now();
+      order.events.push({ type: "settled", chargeId: `discount:${discountApplied.code}`, atMs: Date.now() });
+      await createOrder(order);
+      await settleBookingFromOrder(order);
+      await settleEntitlementFromOrder(order);
+      const origin = new URL(request.url).origin;
+      return NextResponse.json({
+        ok: true,
+        bookingId,
+        orderId,
+        paid: true,
+        receiptUrl: `${origin}/book/receipt/${bookingId}`,
+      });
+    }
     await createOrder(order);
 
     const origin = new URL(request.url).origin;

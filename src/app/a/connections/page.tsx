@@ -22,7 +22,7 @@ import { SPACE_NAME } from "@/lib/identity-config";
  * ribbon. Same key-is-the-operator gate as every /a tab.
  */
 export const metadata: Metadata = {
-  title: "Fleet map — frens.earth admin",
+  title: "Fleet map — One Cocreation admin",
   robots: { index: false, follow: false },
 };
 

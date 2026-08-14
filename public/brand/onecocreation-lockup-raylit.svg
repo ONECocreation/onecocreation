@@ -1,0 +1,636 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  One Cocreation logo lockup v6 RAYLIT VARIANT: both words lit by one shared
+  gradient anchored at the star center, falling from warm gold to deep violet
+  along the down-right light diagonal (per logo-suggestions1.png). Transparent ground throughout - every luminous element
+  fades to transparent (no opaque white fills). Torus ring lit top-left with feathered
+  highlight/shade arcs (replaces the old hard-ended glint strokes) and inner-rim reflection.
+  Soft shadow behind the star for lift. Star interior per onecocreation-mark-gold.svg.
+  Wordmark: outlined Poppins-match paths, airy tracking (+6.8/letter).
+  Merch-grade follow-up: reconcile against the layered GIMP source (logo one cocreation.xcf).
+-->
+
+<svg
+   viewBox="0 -8 512 212"
+   width="512"
+   height="212"
+   role="img"
+   aria-label="ONE Cocreation"
+   version="1.1"
+   id="svg83"
+   sodipodi:docname="onecocreation-lockup-raylit.svg"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview83"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="3.5566406"
+     inkscape:cx="160.26359"
+     inkscape:cy="82.099945"
+     inkscape:window-width="1920"
+     inkscape:window-height="1002"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg83" />
+  <defs
+     id="defs63">
+    <radialGradient
+       id="coinShadow">
+      <stop
+         offset="0%"
+         stop-color="#1A0E30"
+         stop-opacity="0.42"
+         id="stop1" />
+      <stop
+         offset="55%"
+         stop-color="#1A0E30"
+         stop-opacity="0.22"
+         id="stop2" />
+      <stop
+         offset="100%"
+         stop-color="#1A0E30"
+         stop-opacity="0"
+         id="stop3" />
+    </radialGradient>
+    <radialGradient
+       id="starShadow"
+       cx="119"
+       cy="72.5"
+       r="36"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#120A24"
+         stop-opacity="0.5"
+         id="stop4" />
+      <stop
+         offset="55%"
+         stop-color="#120A24"
+         stop-opacity="0.26"
+         id="stop5" />
+      <stop
+         offset="100%"
+         stop-color="#120A24"
+         stop-opacity="0"
+         id="stop6" />
+    </radialGradient>
+    <radialGradient
+       id="starGlow"
+       cx="115"
+       cy="68"
+       r="70"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#FFFFFF"
+         stop-opacity="0.97"
+         id="stop7" />
+      <stop
+         offset="6%"
+         stop-color="#FCFDF6"
+         stop-opacity="0.90"
+         id="stop8" />
+      <stop
+         offset="16%"
+         stop-color="#FCD877"
+         stop-opacity="0.60"
+         id="stop9" />
+      <stop
+         offset="30%"
+         stop-color="#F0B347"
+         stop-opacity="0.26"
+         id="stop10" />
+      <stop
+         offset="52%"
+         stop-color="#DCA22F"
+         stop-opacity="0.13"
+         id="stop11" />
+      <stop
+         offset="74%"
+         stop-color="#E8B23C"
+         stop-opacity="0.08"
+         id="stop12" />
+      <stop
+         offset="100%"
+         stop-color="#E8B23C"
+         stop-opacity="0"
+         id="stop13" />
+    </radialGradient>
+    <radialGradient
+       id="starBody"
+       cx="115"
+       cy="68"
+       r="37.95"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#FFF9DC"
+         id="stop14" />
+      <stop
+         offset="18%"
+         stop-color="#FFF6C4"
+         id="stop15" />
+      <stop
+         offset="45%"
+         stop-color="#FCE27A"
+         id="stop16" />
+      <stop
+         offset="72%"
+         stop-color="#EDBB48"
+         id="stop17" />
+      <stop
+         offset="100%"
+         stop-color="#C98E2B"
+         id="stop18" />
+    </radialGradient>
+    <radialGradient
+       id="coreBloom"
+       cx="115"
+       cy="68"
+       r="13"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#FFFFFF"
+         id="stop19" />
+      <stop
+         offset="45%"
+         stop-color="#FFFFFF"
+         stop-opacity="0.85"
+         id="stop20" />
+      <stop
+         offset="100%"
+         stop-color="#FFFCEA"
+         stop-opacity="0"
+         id="stop21" />
+    </radialGradient>
+    <radialGradient
+       id="coreDot"
+       cx="115"
+       cy="68"
+       r="7.5"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#FFFFFF"
+         id="stop22" />
+      <stop
+         offset="55%"
+         stop-color="#FFFDF0"
+         stop-opacity="0.92"
+         id="stop23" />
+      <stop
+         offset="100%"
+         stop-color="#FFFCEA"
+         stop-opacity="0"
+         id="stop24" />
+    </radialGradient>
+    <linearGradient
+       id="ringGold"
+       x1="80.21"
+       y1="33.21"
+       x2="149.79"
+       y2="102.79"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#F9E272"
+         id="stop25" />
+      <stop
+         offset="26%"
+         stop-color="#D9AE3E"
+         id="stop26" />
+      <stop
+         offset="44%"
+         stop-color="#B57795"
+         id="stop26b" />
+      <stop
+         offset="62%"
+         stop-color="#6E35A2"
+         id="stop27" />
+      <stop
+         offset="82%"
+         stop-color="#4B2481"
+         id="stop28" />
+      <stop
+         offset="100%"
+         stop-color="#2A1150"
+         id="stop29" />
+    </linearGradient>
+    <linearGradient
+       id="ringRidge"
+       x1="80.21"
+       y1="33.21"
+       x2="149.79"
+       y2="102.79"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#FFF8D0"
+         id="stop30" />
+      <stop
+         offset="42%"
+         stop-color="#F1D064"
+         id="stop31" />
+      <stop
+         offset="75%"
+         stop-color="#9B5FC0"
+         id="stop32" />
+      <stop
+         offset="100%"
+         stop-color="#4B2481"
+         id="stop33" />
+    </linearGradient>
+    <linearGradient
+       id="ringInnerBevel"
+       x1="65.5"
+       y1="18.5"
+       x2="164.5"
+       y2="117.5"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#FFF4B0"
+         id="stop34" />
+      <stop
+         offset="45%"
+         stop-color="#E7C24E"
+         id="stop35" />
+      <stop
+         offset="100%"
+         stop-color="#5A2894"
+         id="stop36" />
+    </linearGradient>
+    <linearGradient
+       id="hiArc"
+       x1="58.62"
+       y1="88.52"
+       x2="135.52"
+       y2="11.62"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#FCF6C0"
+         stop-opacity="0"
+         id="stop37" />
+      <stop
+         offset="25%"
+         stop-color="#FCF6C0"
+         stop-opacity="0.7"
+         id="stop38" />
+      <stop
+         offset="50%"
+         stop-color="#FFFADB"
+         stop-opacity="1"
+         id="stop39" />
+      <stop
+         offset="75%"
+         stop-color="#FCF6C0"
+         stop-opacity="0.7"
+         id="stop40" />
+      <stop
+         offset="100%"
+         stop-color="#FCF6C0"
+         stop-opacity="0"
+         id="stop41" />
+    </linearGradient>
+    <linearGradient
+       id="shArc"
+       x1="171.38"
+       y1="47.48"
+       x2="94.48"
+       y2="124.38"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#2A1454"
+         stop-opacity="0"
+         id="stop42" />
+      <stop
+         offset="35%"
+         stop-color="#2A1454"
+         stop-opacity="0.75"
+         id="stop43" />
+      <stop
+         offset="65%"
+         stop-color="#200F44"
+         stop-opacity="0.8"
+         id="stop44" />
+      <stop
+         offset="100%"
+         stop-color="#2A1454"
+         stop-opacity="0"
+         id="stop45" />
+    </linearGradient>
+    <linearGradient
+       id="reflArc"
+       x1="164.62"
+       y1="86.06"
+       x2="81.06"
+       y2="108.45"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#F5D468"
+         stop-opacity="0"
+         id="stop46" />
+      <stop
+         offset="50%"
+         stop-color="#F8DD7E"
+         stop-opacity="0.75"
+         id="stop47" />
+      <stop
+         offset="100%"
+         stop-color="#F5D468"
+         stop-opacity="0"
+         id="stop48" />
+    </linearGradient>
+    <linearGradient
+       id="rayGrad"
+       x1="115"
+       y1="68"
+       x2="507"
+       y2="180"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#FFF3C0"
+         id="stop49" />
+      <stop
+         offset="15%"
+         stop-color="#F7D964"
+         id="stop50" />
+      <stop
+         offset="32%"
+         stop-color="#C283BC"
+         id="stop51" />
+      <stop
+         offset="46%"
+         stop-color="#B06BA8"
+         id="stop52" />
+      <stop
+         offset="64%"
+         stop-color="#8A3FC0"
+         id="stop53" />
+      <stop
+         offset="100%"
+         stop-color="#4B2481"
+         id="stop54" />
+    </linearGradient>
+    <linearGradient
+       id="neGrad"
+       x1="0"
+       y1="52"
+       x2="0"
+       y2="110"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#4B2481"
+         id="stop55" />
+      <stop
+         offset="24%"
+         stop-color="#7A456C"
+         id="stop56" />
+      <stop
+         offset="44%"
+         stop-color="#946460"
+         id="stop57" />
+      <stop
+         offset="62%"
+         stop-color="#B0805A"
+         id="stop58" />
+      <stop
+         offset="80%"
+         stop-color="#D2A64D"
+         id="stop59" />
+      <stop
+         offset="100%"
+         stop-color="#EFC546"
+         id="stop60" />
+    </linearGradient>
+    <linearGradient
+       id="cocGrad"
+       x1="0"
+       y1="116"
+       x2="0"
+       y2="170"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#9B26D6"
+         id="stop61" />
+      <stop
+         offset="55%"
+         stop-color="#7F3EB8"
+         id="stop62" />
+      <stop
+         offset="100%"
+         stop-color="#6F57A8"
+         id="stop63" />
+    </linearGradient>
+  </defs>
+  <!-- ground shadow: coin rests above the surface -->
+  <ellipse
+     cx="119"
+     cy="141.5"
+     rx="52"
+     ry="8.5"
+     fill="url(#coinShadow)"
+     id="ellipse63" />
+  <!-- gold torus: diagonal light (top-left) with feathered highlight/shade arcs + inner-rim reflection -->
+  <circle
+     cx="115"
+     cy="68"
+     r="60"
+     fill="none"
+     stroke="url(#ringGold)"
+     stroke-width="17"
+     id="circle63" />
+  <circle
+     cx="115"
+     cy="68"
+     r="60.5"
+     fill="none"
+     stroke="url(#ringRidge)"
+     stroke-width="6"
+     opacity="0.6"
+     id="circle64" />
+  <circle
+     cx="115"
+     cy="68"
+     r="68.400002"
+     fill="none"
+     stroke="#3a2706"
+     stroke-width="2.4"
+     opacity="0.92"
+     id="circle65"
+     style="display:inline;opacity:0.5;stroke:#67309d;stroke-opacity:1"
+     inkscape:label="outside O ring" />
+  <circle
+     cx="115"
+     cy="68"
+     r="51.9"
+     fill="none"
+     stroke="#2E1656"
+     stroke-width="2.4"
+     opacity="0.96"
+     id="circle66" />
+  <circle
+     cx="115"
+     cy="68"
+     r="53.7"
+     fill="none"
+     stroke="url(#ringInnerBevel)"
+     stroke-width="1.5"
+     opacity="0.7"
+     id="circle67" />
+  <!-- the O wears the same black outline as the letters (stroke #050308,
+       2.6w): one line kissing the ring's outer edge, one its inner edge -->
+  <circle
+     cx="115"
+     cy="68"
+     r="69.15"
+     fill="none"
+     stroke="#050308"
+     stroke-width="1.3"
+     id="circleOuterInk"
+     inkscape:label="O outline outer" />
+  <circle
+     cx="115"
+     cy="68"
+     r="50.85"
+     fill="none"
+     stroke="#050308"
+     stroke-width="1.3"
+     id="circleInnerInk"
+     inkscape:label="O outline inner" />
+  <path
+     d="M58.62 88.52 A60 60 0 0 1 135.52 11.62"
+     fill="none"
+     stroke="url(#hiArc)"
+     stroke-width="8"
+     stroke-linecap="round"
+     id="path67" />
+  <path
+     d="M171.38 47.48 A60 60 0 0 1 94.48 124.38"
+     fill="none"
+     stroke="url(#shArc)"
+     stroke-width="9"
+     stroke-linecap="round"
+     id="path68" />
+  <path
+     d="M164.62 86.06 A52.8 52.8 0 0 1 81.06 108.45"
+     fill="none"
+     stroke="url(#reflArc)"
+     stroke-width="2.2"
+     stroke-linecap="round"
+     id="path69" />
+  <!-- star: soft drop shadow (light top-left), glow, glints + 4-point star (mark-gold geometry),
+       bloom and core built from transparent-fading radials - no opaque white fills -->
+  <circle
+     cx="119"
+     cy="72.5"
+     r="36"
+     fill="url(#starShadow)"
+     id="circle69" />
+  <circle
+     cx="115"
+     cy="68"
+     r="70"
+     fill="url(#starGlow)"
+     id="circle70"
+     style="opacity:1" />
+  <path
+     d="M134.79 87.79L115.00 72.06L95.21 87.79L110.94 68.00L95.21 48.21L115.00 63.94L134.79 48.21L119.06 68.00Z"
+     fill="url(#starBody)"
+     opacity="0.85"
+     id="path70" />
+  <path
+     d="M171 68.00L117.68 70.68L115.00 124L112.32 70.68L59 68.00L112.32 65.32L115.00 12L117.68 65.32Z"
+     fill="url(#starBody)"
+     id="path71" />
+  <circle
+     cx="115"
+     cy="68"
+     r="13"
+     fill="url(#coreBloom)"
+     id="circle71" />
+  <circle
+     cx="115"
+     cy="68"
+     r="7.5"
+     fill="url(#coreDot)"
+     id="circle72" />
+  <!-- NE (completes "ONE"); purple-to-gold signature gradient -->
+  <g
+     fill="url(#rayGrad)"
+     stroke="#050308"
+     stroke-width="2.6"
+     paint-order="stroke fill"
+     id="g73">
+    <path
+       d="M192 52 L201 52 L235 97.86 L235 52 L244 52 L244 110 L235 110 L201 64.14 L201 110 L192 110 Z"
+       id="path72" />
+    <path
+       d="M254 52 H298 V60 H262 V79 H296 V86 H262 V102 H300 V110 H254 Z"
+       id="path73" />
+  </g>
+  <!-- Cocreation: outlined Poppins-match glyphs, airy tracking (+6.8/letter), purple gradient -->
+  <g
+     fill="url(#rayGrad)"
+     stroke="#050308"
+     stroke-width="2.6"
+     paint-order="stroke fill"
+     id="g83">
+    <path
+       d="M176.9 119.4Q185.1 119.4 191.2 123.4Q197.3 127.3 200.1 134.5H192.3Q190.2 130 186.3 127.6Q182.4 125.2 176.9 125.2Q171.7 125.2 167.5 127.6Q163.4 130 161 134.5Q158.7 139 158.7 145Q158.7 150.9 161 155.4Q163.4 159.9 167.5 162.3Q171.7 164.8 176.9 164.8Q182.4 164.8 186.3 162.4Q190.2 160 192.3 155.5H200.1Q197.3 162.6 191.2 166.5Q185.1 170.4 176.9 170.4Q170 170.4 164.3 167.2Q158.6 163.9 155.3 158.1Q152 152.3 152 145Q152 137.7 155.3 131.9Q158.6 126 164.3 122.7Q170 119.4 176.9 119.4Z"
+       id="path74" />
+    <path
+       transform="translate(6.8 0)"
+       d="M196.5 150.3Q196.5 144.3 199.1 139.7Q201.7 135 206.2 132.6Q210.7 130.1 216.3 130.1Q221.9 130.1 226.4 132.6Q230.9 135 233.6 139.6Q236.2 144.2 236.2 150.3Q236.2 156.4 233.5 161Q230.8 165.6 226.2 168.1Q221.6 170.6 216 170.6Q210.5 170.6 206 168.1Q201.6 165.6 199 161Q196.5 156.4 196.5 150.3ZM229.5 150.3Q229.5 145.6 227.6 142.3Q225.8 139 222.8 137.4Q219.8 135.8 216.3 135.8Q212.7 135.8 209.7 137.4Q206.7 139 204.9 142.3Q203.1 145.6 203.1 150.3Q203.1 155.1 204.9 158.4Q206.7 161.7 209.6 163.3Q212.5 164.9 216 164.9Q219.6 164.9 222.6 163.3Q225.7 161.6 227.6 158.3Q229.5 155 229.5 150.3Z"
+       id="path75" />
+    <path
+       transform="translate(13.6 0)"
+       d="M250.6 130.1Q257.9 130.1 262.6 133.6Q267.3 137.1 268.8 143.4H261.7Q260.7 139.8 257.8 137.7Q254.9 135.6 250.6 135.6Q245.1 135.6 241.6 139.4Q238.2 143.3 238.2 150.3Q238.2 157.4 241.6 161.3Q245.1 165.1 250.6 165.1Q254.9 165.1 257.8 163.1Q260.7 161.1 261.7 157.4H268.8Q267.2 163.4 262.5 167Q257.7 170.6 250.6 170.6Q245.1 170.6 240.7 168.1Q236.4 165.6 234 161Q231.5 156.5 231.5 150.3Q231.5 144.2 234 139.7Q236.4 135.1 240.7 132.6Q245.1 130.1 250.6 130.1Z"
+       id="path76" />
+    <path
+       transform="translate(20.4 0)"
+       d="M285.8 130V136.8H284.1Q273.1 136.8 273.1 148.7V170H266.6V130.7H273.1V137.1Q274.9 133.8 278 131.9Q281.2 130 285.8 130Z"
+       id="path77" />
+    <path
+       transform="translate(27.2 0)"
+       d="M318.1 152.8H286.7Q287.1 158.6 290.7 161.9Q294.3 165.1 299.5 165.1Q303.7 165.1 306.6 163.2Q309.4 161.2 310.5 157.9H317.6Q316 163.6 311.2 167.1Q306.5 170.6 299.5 170.6Q293.9 170.6 289.5 168.1Q285.1 165.6 282.6 161Q280.1 156.4 280.1 150.3Q280.1 144.2 282.5 139.6Q285 135 289.4 132.6Q293.8 130.1 299.5 130.1Q305.1 130.1 309.4 132.5Q313.7 135 316 139.2Q318.3 143.5 318.3 148.9Q318.3 150.7 318.1 152.8ZM299.2 135.6Q294.3 135.6 290.8 138.8Q287.3 141.9 286.8 147.5H311.6Q311.6 143.8 310 141.1Q308.3 138.4 305.5 137Q302.7 135.6 299.2 135.6Z"
+       id="path78" />
+    <path
+       transform="translate(34.0 0)"
+       d="M332.3 130.1Q337.5 130.1 341.3 132.3Q345.1 134.5 346.9 137.9V130.7H353.5V170H346.9V162.7Q345 166.1 341.2 168.4Q337.3 170.6 332.2 170.6Q327 170.6 322.8 168.1Q318.6 165.5 316.1 160.8Q313.7 156.2 313.7 150.2Q313.7 144.2 316.1 139.7Q318.6 135.1 322.8 132.6Q327.1 130.1 332.3 130.1ZM333.6 135.8Q329.9 135.8 326.9 137.5Q323.9 139.2 322.1 142.5Q320.3 145.8 320.3 150.2Q320.3 154.7 322.1 158.1Q323.9 161.4 326.9 163.2Q329.9 164.9 333.6 164.9Q337.3 164.9 340.3 163.2Q343.3 161.4 345.1 158.1Q346.9 154.7 346.9 150.3Q346.9 145.9 345.1 142.6Q343.3 139.3 340.3 137.5Q337.3 135.8 333.6 135.8Z"
+       id="path79" />
+    <path
+       transform="translate(40.8 0)"
+       d="M361.7 136.1V159.3Q361.7 162.1 362.9 163.3Q364.1 164.5 367.1 164.5H371.9V170H366.1Q360.6 170 357.9 167.5Q355.2 165 355.2 159.3V136.1H350.1V130.7H355.2V120.9H361.7V130.7H371.9V136.1Z"
+       id="path80" />
+    <path
+       transform="translate(47.6 0)"
+       d="M367.9 119.9Q367.9 118.1 369.2 116.8Q370.5 115.5 372.4 115.5Q374.1 115.5 375.4 116.8Q376.7 118.1 376.7 119.9Q376.7 121.8 375.4 123.1Q374.1 124.4 372.4 124.4Q370.5 124.4 369.2 123.1Q367.9 121.8 367.9 119.9ZM375.5 130.7V170H369V130.7Z"
+       id="path81" />
+    <path
+       transform="translate(54.4 0)"
+       d="M373.4 150.3Q373.4 144.3 376 139.7Q378.6 135 383.1 132.6Q387.6 130.1 393.2 130.1Q398.8 130.1 403.3 132.6Q407.8 135 410.4 139.6Q413 144.2 413 150.3Q413 156.4 410.4 161Q407.7 165.6 403.1 168.1Q398.5 170.6 392.9 170.6Q387.4 170.6 382.9 168.1Q378.4 165.6 375.9 161Q373.4 156.4 373.4 150.3ZM406.4 150.3Q406.4 145.6 404.5 142.3Q402.7 139 399.7 137.4Q396.6 135.8 393.1 135.8Q389.6 135.8 386.6 137.4Q383.6 139 381.8 142.3Q380 145.6 380 150.3Q380 155.1 381.8 158.4Q383.5 161.7 386.5 163.3Q389.4 164.9 392.9 164.9Q396.4 164.9 399.5 163.3Q402.6 161.6 404.5 158.3Q406.4 155 406.4 150.3Z"
+       id="path82" />
+    <path
+       transform="translate(61.2 0)"
+       d="M446 146.9V170H439.6V147.8Q439.6 141.9 436.6 138.8Q433.7 135.7 428.6 135.7Q423.4 135.7 420.4 138.9Q417.3 142.1 417.3 148.3V170H410.8V130.7H417.3V136.3Q419.3 133.3 422.6 131.7Q425.9 130 430 130Q437.1 130 441.6 134.4Q446 138.7 446 146.9Z"
+       id="path83" />
+  </g>
+</svg>

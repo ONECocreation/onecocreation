@@ -30,7 +30,7 @@ function useHasSigner(): boolean | null {
 export default function Kind0Doors({
   prepare,
   submit,
-  label = "▶ SIGN & PUBLISH",
+  label = "Sign & publish",
 }: {
   /** Build the event to sign — or return a human-readable problem string. */
   prepare: () => EventTemplate | { problem: string };
@@ -181,46 +181,46 @@ export default function Kind0Doors({
           type="button"
           onClick={signNip07}
           disabled={busy !== "idle"}
-          className="button block min-h-11 w-full cursor-pointer touch-manipulation text-center disabled:opacity-50"
+          className="btn btn-gold btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
         >
-          {busy === "nip07" ? "WAITING FOR YOUR KEY…" : label}
+          {busy === "nip07" ? "Waiting for your key…" : label}
         </button>
       ) : (
         hasSigner === false && <SignerNudge />
       )}
 
       {/* ── NIP-46: remote signer / bunker — iPhone + any browser ────────── */}
-      <details className="border-2 border-cyan/40 bg-void px-4 py-3" open={hasSigner === false}>
-        <summary className="cursor-pointer font-pixel text-[9px] uppercase text-cyan">
-          {hasSigner ? "NO EXTENSION? REMOTE SIGNER ▸" : "REMOTE SIGNER · WORKS ON iPHONE + ANY BROWSER ▸"}
+      <details style={{ borderRadius: 16, border: "1px solid var(--glass-edge)", background: "var(--glass)", padding: "12px 16px", textAlign: "left" }} open={hasSigner === false}>
+        <summary className="btn-quiet" style={{ listStyle: "none", padding: 0 }}>
+          {hasSigner ? "no extension? remote signer" : "remote signer · works on iPhone + any browser"}
         </summary>
         <div className="mt-3 space-y-3">
-          <p className="font-body text-xs leading-relaxed text-white/70">
+          <p style={{ fontSize: ".8rem", lineHeight: 1.7, color: "var(--ink-body)" }}>
             Your key stays in a signer you already trust — nsec.app, Amber, or
             your own nsecBunker — and signs this profile card over nostr. This
             page never sees the key.
           </p>
-          <label className="block font-pixel text-[9px] uppercase text-white/50">
-            PASTE YOUR BUNKER ADDRESS
+          <label style={{ display: "block", fontSize: ".68rem", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--muted)" }}>
+            paste your bunker address
             <input
               value={bunkerInput}
               onChange={(e) => setBunkerInput(e.target.value)}
               placeholder="bunker://… or name@domain"
               autoComplete="off"
               spellCheck={false}
-              className="mt-1 w-full border-2 border-edge bg-panel px-3 py-2 font-mono text-base text-white sm:text-sm"
+              style={{ marginTop: 6, width: "100%", boxSizing: "border-box", borderRadius: 12, border: "1.5px solid rgba(180,134,43,.5)", background: "rgba(255,255,255,.94)", color: "#4a4458", padding: "10px 14px", fontFamily: "monospace", fontSize: ".85rem" }}
             />
           </label>
           <button
             type="button"
             onClick={signBunker}
             disabled={busy !== "idle"}
-            className="button block min-h-11 w-full cursor-pointer touch-manipulation text-center disabled:opacity-50"
+            className="btn btn-gold btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
           >
-            {busy === "bunker" ? "ASKING YOUR SIGNER…" : "▶ CONNECT, SIGN & PUBLISH"}
+            {busy === "bunker" ? "Asking your signer…" : "Connect, sign & publish"}
           </button>
-          <div className="border-t-2 border-edge pt-3">
-            <p className="mb-2 font-body text-xs text-white/50">
+          <div style={{ borderTop: "1px solid var(--glass-edge)", paddingTop: 12 }}>
+            <p style={{ margin: "0 0 8px", fontSize: ".78rem", color: "var(--muted)" }}>
               No bunker address handy? Mint an invite — tap it on this phone,
               or paste it into a signer that speaks nostr connect.
             </p>
@@ -228,27 +228,27 @@ export default function Kind0Doors({
               <div className="space-y-2">
                 <a
                   href={invite.uri}
-                  className="block break-all border-2 border-cyan/40 bg-panel p-2 font-mono text-[10px] text-cyan underline"
+                  style={{ display: "block", wordBreak: "break-all", borderRadius: 12, border: "1px solid var(--glass-edge)", background: "var(--glass-strong, rgba(22,17,40,.85))", padding: 8, fontFamily: "monospace", fontSize: ".68rem", color: "var(--teal-bright, #8FD0D8)", textDecoration: "underline" }}
                 >
                   {invite.uri}
                 </a>
-                <p className="font-pixel text-[9px] uppercase text-cyan">
-                  WAITING FOR YOUR SIGNER TO ANSWER…
+                <p style={{ margin: 0, fontSize: ".72rem", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--teal-bright, #8FD0D8)" }}>
+                  waiting for your signer to answer…
                 </p>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={copyInvite}
-                    className="button min-h-11 flex-1 cursor-pointer touch-manipulation text-center"
+                    className="btn btn-gold btn-sm" style={{ flex: 1 }}
                   >
-                    {copied ? "COPIED ✓" : "COPY INVITE"}
+                    {copied ? "Copied ✓" : "Copy invite"}
                   </button>
                   <button
                     type="button"
                     onClick={cancelInvite}
-                    className="min-h-11 flex-1 cursor-pointer touch-manipulation border-2 border-edge font-pixel text-[9px] uppercase text-white/50"
+                    className="btn btn-ghost btn-sm" style={{ flex: 1 }}
                   >
-                    NEVER MIND
+                    Never mind
                   </button>
                 </div>
               </div>
@@ -257,16 +257,16 @@ export default function Kind0Doors({
                 type="button"
                 onClick={makeInvite}
                 disabled={busy !== "idle"}
-                className="button block min-h-11 w-full cursor-pointer touch-manipulation text-center disabled:opacity-50"
+                className="btn btn-gold btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
               >
-                ▶ MINT A CONNECT INVITE
+                Mint a connect invite
               </button>
             )}
           </div>
         </div>
       </details>
 
-      {error && <p className="font-pixel text-[9px] uppercase text-ghost">{error}</p>}
+      {error && <p style={{ margin: 0, fontSize: ".8rem", color: "var(--err, #E7899E)" }}>{error}</p>}
     </div>
   );
 }

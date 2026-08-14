@@ -16,7 +16,7 @@ import { CONSOLE_SITE } from "@/lib/console";
  * same key-is-the-operator gate as every /a tab.
  */
 export const metadata: Metadata = {
-  title: "Dressing room — frens.earth admin",
+  title: "Dressing room — One Cocreation admin",
   robots: { index: false, follow: false },
 };
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { listOrders, markFulfilled } from "@/lib/store";
+import { decideOfferWithLetters } from "@/lib/pwyc-letters";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,18 @@ export async function POST(request: Request) {
     body = await request.json();
   } catch {
     return NextResponse.json({ ok: false, reason: "bad request" }, { status: 400 });
+  }
+  // Love's pay-what-you-can call — accept with love, or decline (refund owed).
+  // The letters + refund mint live in ONE jug (pwyc-letters) so the email
+  // doors and this desk can never drift apart (Admiral, 0018.05.23).
+  if ((body.action === "pwyc-accept" || body.action === "pwyc-decline") && body.id) {
+    const decided = await decideOfferWithLetters(
+      body.id,
+      body.action === "pwyc-accept" ? "accept" : "decline",
+      "desk",
+    );
+    if (!decided) return NextResponse.json({ ok: false, reason: "no pending offer on that order" }, { status: 404 });
+    return NextResponse.json({ ok: true, order: decided.order, refundLink: decided.refundLink });
   }
   if (body.action !== "fulfill" || !body.id) {
     return NextResponse.json({ ok: false, reason: "unknown action" }, { status: 400 });

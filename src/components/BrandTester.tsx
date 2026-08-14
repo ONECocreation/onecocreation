@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import LoginPanel from "@/components/LoginPanel";
-import EarthFooter from "@/components/EarthFooter";
+import SiteFooter from "@/components/SiteFooter";
 import { BrandProvider, THEMES, frensTheme, type BrandTheme } from "@/lib/brand";
 
 /**
@@ -204,7 +204,7 @@ export default function BrandTester() {
         </p>
       </section>
 
-      <EarthFooter />
+      <SiteFooter />
     </main>
   );
 }

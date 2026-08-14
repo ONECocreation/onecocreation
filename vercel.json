@@ -1,6 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
   "git": {
-    "deploymentEnabled": false
-  }
+    "deploymentEnabled": true
+  },
+  "crons": [
+    {
+      "path": "/api/mail/tick",
+      "schedule": "0 15 * * *"
+    }
+  ]
 }

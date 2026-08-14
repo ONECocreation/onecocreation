@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readConfig, slotsFor } from "@/lib/booking";
 import { takenSlots, slotField } from "@/lib/booking-orders";
+import { busyFeed, subtractBusy } from "@/lib/ical-busy";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
   const serviceId = searchParams.get("service");
   if (!serviceId) return NextResponse.json({ ok: false, reason: "service required" }, { status: 400 });
 
-  const { services, rules, overrides } = await readConfig();
+  const { services, rules, overrides, icalUrl } = await readConfig();
   const service = services.find((s) => s.id === serviceId);
   if (!service || service.status !== "live") {
     return NextResponse.json({ ok: false, reason: "no such service" }, { status: 404 });
@@ -33,7 +34,12 @@ export async function GET(request: Request) {
 
   const offered = slotsFor(service, rules, overrides, { days });
   const taken = await takenSlots();
-  const slots = offered.filter((s) => !taken.has(slotField(service.id, s.startUtc)));
+  // the artist's own external calendar blocks time too (iCal busy sync)
+  const busy = await busyFeed(icalUrl);
+  const slots = subtractBusy(
+    offered.filter((s) => !taken.has(slotField(service.id, s.startUtc))),
+    busy.windows,
+  );
 
   return NextResponse.json({
     ok: true,

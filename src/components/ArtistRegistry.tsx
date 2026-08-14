@@ -150,7 +150,7 @@ export default function ArtistRegistry() {
         if (!data.ok) throw new Error();
         setGate({ state: data.artist ? "artist" : "locked", handle: data.handle, space: data.space });
       })
-      .catch(() => setErr("couldn't reach the arcade — refresh to try again"));
+      .catch(() => setErr("couldn't reach the site — refresh to try again"));
   }, []);
 
   const loadRequests = useCallback(async () => {
@@ -227,14 +227,15 @@ export default function ArtistRegistry() {
   ];
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
-      <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
-        PAC&apos;S ARCADE BRAND KIT ▸ ARTIST TRAINING
-      </p>
-      <h1 className="mb-3 font-arcade text-4xl text-pink glow-pink">ARTIST REGISTRY</h1>
-      <p className="mb-8 font-mono text-[11px] text-white/50">
-        YOUR NAME ON THE SPACES PROTOCOL — REQUEST IT · WATCH THE AUCTION · ANCHOR IT TO BITCOIN
-      </p>
+    <div className="mx-auto max-w-3xl">
+      <header className="mgmt-head">
+        <p className="mgmt-eyebrow">Artist training</p>
+        <h1 className="mgmt-title">Artist Registry</h1>
+        <p className="mgmt-blurb">
+          Your name on the Spaces protocol — request it, watch the auction, anchor it to Bitcoin.
+        </p>
+      </header>
+      <div className="mb-8" />
 
       {err && <p className="mb-4 font-pixel text-[10px] uppercase text-ghost">{err}</p>}
 
@@ -258,7 +259,7 @@ export default function ArtistRegistry() {
       {gate.state === "locked" && (
         <div className="border-2 border-edge bg-panel p-6">
           <p className="mb-4 font-pixel text-xs text-white/30">
-            🔒 LEVEL LOCKED — THE ARTIST TRAINING PACKAGE OPENS THIS DOOR
+            🔒 Locked — the artist training package opens this door
           </p>
           <div className="space-y-3 font-body text-sm text-white/70">
             <p>
@@ -270,8 +271,8 @@ export default function ArtistRegistry() {
               switch — the door is simply locked.
             </p>
             <p>
-              The registry ships with the <span className="text-pink">Pac&apos;s Arcade branding
-              kit</span>&apos;s artist training package: finish the training and the crew adds your
+              The registry opens with the <span className="text-pink">artist training
+              package</span>: finish the training and the crew adds your
               key to the roster. Already through it?{" "}
               <Link href="/support" className="text-cyan hover:glow-cyan underline">
                 Raise a ticket with the crew
@@ -443,7 +444,7 @@ function RequestTab({
           disabled={filing || !name.trim() || taken}
           className="button mt-4 block w-full text-center disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {filing ? "FILING…" : taken ? "TAKEN — TRY ANOTHER" : "▶ FILE THE REQUEST"}
+          {filing ? "FILING…" : taken ? "TAKEN — TRY ANOTHER" : " FILE THE REQUEST"}
         </button>
         {err && <p className="mt-3 font-pixel text-[10px] uppercase text-ghost">{err}</p>}
         <p className="mt-3 font-body text-xs text-white/50">

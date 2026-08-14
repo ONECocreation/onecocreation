@@ -12,7 +12,7 @@ import { spaceForHost, domainForSpace, KNOWN_SPACES } from "@/lib/identity-confi
 function registerHrefFor(host: string, space: string): string {
   const h = host.toLowerCase().split(":")[0];
   if (h === "frens.earth" || h === "www.frens.earth") return "/";
-  return space === "pacsarcade" ? "/register" : "/frens";
+  return space === "pacsarcade" ? "/register" : "/";
 }
 
 /* /u/pacster reads the HOST's space; /u/pacster@frens is explicit and works
@@ -45,8 +45,8 @@ export async function generateMetadata({
   const { handle, space } = parseTarget(raw, host);
   const tag = `${handle}@${space}`;
   return {
-    title: `${tag} — fren profile — Pac's Arcade`,
-    description: `${tag} is registered on the board: verified on nostr today, etched to Bitcoin at the next ceremony.`,
+    title: `${tag} — One Cocreation`,
+    description: `${tag} is registered: verified on nostr today, anchored to Bitcoin at the next ceremony.`,
   };
 }
 
@@ -60,14 +60,32 @@ export default async function FrenProfileRoute({
   const { handle, space, nip05Domain } = parseTarget(raw, host);
   const valid = validateHandle(handle);
   if (!valid.ok) {
-    /* Reserved names get the honest GAME OVER; garbage input stays a 404. */
+    /* Reserved names may still be SEATED via the captain's door — an entry
+       wins over the reservation notice (the adminpacman bug, 0018.05.15). */
     if (valid.reason !== "reserved name") notFound();
+    const seated = await getEntry(handle, space);
+    if (!seated) {
+      return (
+        <GameOverTag
+          handle={handle}
+          spaceTag={`@${space}`}
+          registerHref={registerHrefFor(host, space)}
+          reserved
+        />
+      );
+    }
+    const poke = await getPokeProfile(handle);
     return (
-      <GameOverTag
-        handle={handle}
-        spaceTag={`@${space}`}
-        registerHref={registerHrefFor(host, space)}
-        reserved
+      <FrenProfile
+        handle={seated.handle}
+        npub={seated.npub}
+        status={seated.status}
+        requestedAt={seated.requestedAt}
+        blockHeight={seated.blockHeight}
+        space={space}
+        nip05Domain={nip05Domain}
+        matrixProvisioned={seated.matrix ?? false}
+        poke={poke}
       />
     );
   }

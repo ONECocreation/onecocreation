@@ -1,0 +1,228 @@
+/* ════════════════════════════════════════════════════════════════════
+   THE BRAND CARTRIDGE — One Cocreation (celestial + luminous).
+   GOLD is money only (sats/bitcoin).
+
+   Split from onecocreation.css (cartridge walk step 8, Admiral's walk,
+   0018.05.15). THIS file is the brand: tokens (dark-first + the light
+   dawn), the band ladder, keep-dark law, faces, the lion, the wild
+   doors, the light code, the hero nebula. Its sibling house.css is the
+   brand-free framework. A new artist swaps THIS file + src/brand/
+   cartridge.ts — never hunts literals. Load order: cartridge, then
+   house (layout.tsx).
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ══ DARK-FIRST (the Admiral's ruling, 0018.05.15): the night is the
+   default truth; html[data-oc-theme="light"] restores the dawn. ══ */
+:root{
+  --space:#0a0a14; --panel:rgba(24,19,44,.72); --edge:rgba(139,118,196,.34);
+  --cream:#FBF6EF; --ink:#E9E2F2; --muted:#9a8fae;
+  --ink-strong:#F4ECFF; --ink-body:#D9D2E4;
+  --glass:rgba(22,17,40,.66); --glass-edge:rgba(139,118,196,.35);
+  --ghost-bg:rgba(255,255,255,.08); --ghost-ink:#ECE3C9;
+  --warm-panel:linear-gradient(150deg,rgba(40,29,54,.82),rgba(56,32,48,.7)); --warm-edge:rgba(217,178,78,.45);
+  --glass-strong:rgba(26,20,46,.88);
+  --ground:#141021;
+  --glass-night:rgba(22,17,40,.66); --glass-night-edge:rgba(139,118,196,.35);
+  --field-bg:rgba(255,255,255,.94); --field-ink:#4a4458; --sheet-bg:rgba(28,22,50,.98);
+  --soft-sm:0 18px 44px -28px rgba(5,3,16,.6);
+  --ok:#7fb98f; --warn:#EBCB77; --err:#E7899E; --info:#9d86d9;
+  --teal-bright:#8FD0D8;
+  --gold:#D9B24E; --gold-2:#EBCB77; --gold-deep:#D9B24E;
+  --teal:#4EA0AF; --teal-deep:#23636E;
+  --purple:#9B26D6; --lavender:#8B76C4; --rose:#E7B2C3; --copper:#C77B4A;
+  /* — Love's law: no serifs; token name kept for churn-safety, points at Barlow now (0018.05.17 FONT TRIO) */
+  --serif:var(--font-barlow,'Barlow'),'Barlow',-apple-system,sans-serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --disp:var(--font-barlow,'Barlow'),var(--font-disp,'Montserrat'),'Poppins',-apple-system,'Segoe UI',sans-serif;
+  /* the FONT TRIO, said out loud: Barlow leads display/H1, Helvetica carries
+     H2 + all body copy, Lucida Grande marks H3. Set by element in house.css. */
+  --font-h1:var(--font-barlow,'Barlow'),'Barlow',-apple-system,sans-serif;
+  --font-h2:'Helvetica Neue',Helvetica,Arial,sans-serif;
+  --font-h3:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Verdana,sans-serif;
+  --font-body:'Helvetica Neue',Helvetica,Arial,sans-serif;
+  --soft:0 24px 60px -30px rgba(5,3,16,.8);
+  /* the nav-dropdown recipe, once — .nav-sub, the mobile sheet, and
+     FrenBadge all pour from this jug (cartridge walk step 6, Admiral's
+     walk, 0018.05.15). Always night: the header never theme-flips. */
+  --pop-bg:rgba(20,16,32,.97); --pop-edge:rgba(217,178,78,.4); --pop-shadow:0 10px 30px rgba(0,0,0,.4);
+  /* the dawn — where-you-are in the nav (mockup C, blessed 0018.05.15):
+     gold rising into purple, left to right, with a lavender glow */
+  --here-grad:linear-gradient(90deg,#EBCB77 0%,#9d86d9 100%);
+  --here-glow:rgba(180,150,200,.55); --here-ink:#F4ECFF;
+}
+html[data-oc-theme="light"]{
+  --panel:rgba(255,255,255,.6); --edge:rgba(139,118,196,.28);
+  --ink:#4A4458; --muted:#897F97;
+  --ink-strong:#3f3a4e; --ink-body:#544e64;
+  --glass:rgba(252,247,240,.62); --glass-edge:rgba(255,255,255,.6);
+  --ghost-bg:rgba(255,255,255,.6); --ghost-ink:#5a5470;
+  --warm-panel:linear-gradient(150deg,rgba(255,255,255,.66),rgba(243,220,227,.5)); --warm-edge:rgba(217,178,78,.4);
+  --glass-strong:rgba(252,247,240,.88);
+  --ground:#FCF7F0;
+  --soft-sm:0 18px 44px -28px rgba(120,100,160,.45);
+  --sheet-bg:#fffdf8;
+  --ok:#3c6b49; --warn:#7a5a12; --err:#a34e6c; --info:#5f4b96;
+  --teal-bright:#23636E;
+  --gold-deep:#B4862B; --rose:#C56E8B;
+  --soft:0 24px 60px -30px rgba(120,100,160,.55);
+}
+
+/* the nebula breathes behind the void — a slow drift, barely there */
+.hero::before{content:"";position:absolute;inset:-12%;z-index:0;
+  background:url("/images/consciouscuts/nebula.webp") center / cover no-repeat;
+  opacity:.16;animation:nebula-drift 70s ease-in-out infinite alternate}
+@keyframes nebula-drift{
+  from{transform:translate3d(-2.5%,-1.5%,0) scale(1.04)}
+  to{transform:translate3d(2.5%,2%,0) scale(1.12)}
+}
+
+/* LIONS GATE — Love's white lion holds the memberships field (8/8 portal;
+   asset from her own art trove, compressed). Soft cream veil keeps the
+   cards readable; the lion reads through the air around them. */
+.lions-gate{
+  background:
+    linear-gradient(rgba(18,13,30,.8), rgba(20,16,33,.9)),
+    url("/images/lions-gate.webp") center top / cover no-repeat;
+}
+html[data-oc-theme="light"] .lions-gate{
+  background:
+    linear-gradient(rgba(251,246,239,.82), rgba(251,246,239,.9)),
+    url("/images/lions-gate.webp") center top / cover no-repeat;
+}
+
+/* ── the wild doors (Love's pay-it-forward beings, 0018.05.15) — the beast
+   grows OUT of its cell on hover: the habitat band clips its gradient, the
+   animal itself is free to rise past the card's edge ── */
+.wild-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));margin-top:8px}
+.wild-card{display:block;border-radius:22px;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.9);
+  box-shadow:var(--soft);text-decoration:none;color:var(--ink);transition:transform .25s ease}
+.wild-card:hover{transform:translateY(-6px)}
+.wild-card--soon{opacity:.92}
+.habitat{position:relative;height:104px;display:flex;align-items:flex-end;justify-content:center}
+.habitat .ground{position:absolute;inset:0;border-radius:22px 22px 0 0;overflow:hidden}
+.habitat .ground i{position:absolute;inset:0;display:block}
+.beast{position:relative;z-index:2;font-size:3.3rem;line-height:1;transform:translateY(6px);
+  transform-origin:50% 100%;transition:transform .38s cubic-bezier(.34,1.56,.64,1);
+  filter:drop-shadow(0 10px 14px rgba(60,40,10,.28))}
+.wild-card:hover .beast{transform:translateY(-16px) scale(1.45)}
+.sprout{position:absolute;bottom:4px;z-index:1;font-size:1.15rem;opacity:0;
+  transform:translateY(14px) scale(.5);transform-origin:50% 100%;transition:opacity .35s ease .06s,transform .45s cubic-bezier(.34,1.56,.64,1) .06s}
+.sprout--l{left:16%}.sprout--r{right:16%;transition-delay:.14s}
+.wild-card:hover .sprout{opacity:1;transform:translateY(0) scale(1)}
+.wild-body{padding:16px 20px 18px}
+.wild-body h3{font-weight:400;font-size:1.1rem;margin:0 0 2px;color:#3f3a4e}
+.wild-body p{color:#897F97;font-size:.85rem;margin:0 0 10px}
+.wild-cta{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#B4862B}
+.wild-cta--soon{color:#897F97}
+@media(prefers-reduced-motion:reduce){.wild-card,.beast,.sprout{transition:none}.wild-card:hover .beast{transform:none}}
+
+/* ── THE COSMIC WALK (0018.05.15) — the homepage keeps its dark hero
+   (light code draws in light against the void), then every section hands
+   its tone to the next: dawn → lions gate → waters → the nebula rooms →
+   golden hour → rose → dusk → home. Nothing flat. ── */
+/* THE BAND LADDER (cartridge walk step 3, 0018.05.15): section tones are
+   tokens — a new brand swaps the ladder, not the selectors */
+:root{--band-1:#1a1428;--band-2:#241a33;--band-3:#1e1a2f;--band-4:#12202a;
+  --band-5:#241c15;--band-6:#241722;--band-7:#161b2b;--band-8:#141a2b;--band-9:#221b12}
+html[data-oc-theme="light"]{--band-1:#F3EEF4;--band-2:#ECEAF6;--band-3:#EFE9F7;
+  --band-4:#E7EEF0;--band-5:#F3EFE6;--band-6:#F8EDF0;--band-7:#E7ECF3;--band-8:#EAE3F3;--band-9:#FBF4EA}
+#about{background:linear-gradient(180deg,var(--band-1) 0%,var(--band-2) 62%,var(--band-3) 100%)}
+#services{background:linear-gradient(180deg,var(--band-3) 0%,var(--band-4) 60%,var(--band-5) 100%)}
+#classes{background:
+  linear-gradient(180deg, rgba(14,10,28,.68), rgba(14,10,28,.8)),
+  url("/images/consciouscuts/nebula.webp") center / cover no-repeat}
+/* .sec-h and .kicker used to repeat #F4ECFF/#E7B2C3 here unconditionally —
+   exactly the dark values var(--ink-strong)/var(--rose) already resolve to,
+   so those two lines were dead weight in dark mode and a light-mode bug:
+   the light repaint below (html[data-oc-theme="light"] main section...)
+   flips #classes' background to cream, but the literals never flipped with
+   it, leaving near-invisible pale text (Admiral's sighting, 0018.05.24).
+   Removed — the base .sec-h/.kicker rules in house.css already read the
+   tokens and flip correctly. .lead keeps its brighter-than---muted literal
+   for contrast against the nebula image in dark, with an explicit light
+   counterpart below. */
+#classes .lead{color:#CFC5E2}
+html[data-oc-theme="light"] #classes .lead{color:var(--muted)}
+/* readability in the nebula (community classes1.png): cards go SOLID warm
+   glass, ink stays ink, and the note bar earns its own light */
+#classes .card{background:rgba(252,247,240,.94);backdrop-filter:blur(6px)}
+#classes .roomrow{color:#464050;border-bottom-color:rgba(139,118,196,.28)}
+#classes .lockpill{background:rgba(217,178,78,.26);color:#8a6410}
+#classes .note{background:rgba(252,247,240,.92);color:#544e64;border-color:rgba(255,255,255,.7)}
+#classes .note b{color:var(--gold-deep)}
+#offers{background:linear-gradient(180deg,var(--band-5) 0%,var(--band-9) 100%)}
+#support{background:linear-gradient(180deg,var(--band-9) 0%,var(--band-6) 100%)}
+#free{background:linear-gradient(180deg,var(--band-6) 0%,var(--band-7) 100%)}
+#contact{background:linear-gradient(180deg,var(--band-7) 0%,var(--ground) 100%)}
+/* ── THE FOUR SKIES (Admiral's unification, 0018.05.15) — every swept
+   section background is one of four decisions. !important so a sky class
+   beats the id band rules (#services) the old inline styles used to beat;
+   the light-theme repaint below still out-specifies these for non-keep-dark
+   sections, and the sky light overrides out-specify the repaint. ── */
+.sky-night{background:linear-gradient(180deg,#1a1428 0%,#141021 100%)!important}
+.sky-veil{background:radial-gradient(700px 420px at 50% 0%,rgba(120,86,180,.34),transparent 60%),linear-gradient(180deg,#241a33 0%,#463a58 50%,#1a1428 100%)!important}
+.sky-glass{background:linear-gradient(180deg,#1a1428 0%,#241a33 100%)!important}
+.sky-warm{background:linear-gradient(180deg,#241c15 0%,#241722 100%)!important}
+/* keep-dark sections hold the NIGHT tokens in both themes — text and
+   glass inside them never flip out from under their dark backgrounds
+   (cartridge walk, 0018.05.15) */
+main .keep-dark{--ink-strong:#F4ECFF;--ink-body:#D9D2E4;--muted:#9a8fae;
+  --rose:#E7B2C3;--gold-deep:#D9B24E;--teal-bright:#8FD0D8;
+  --glass:var(--glass-night);--glass-edge:var(--glass-night-edge)}
+/* light mode repaints the swept dark bands; image layers and keep-dark
+   sections hold the night */
+html[data-oc-theme="light"] main section:not(.keep-dark):not(.lions-gate){background:linear-gradient(180deg,#FCF7F0,#F3EEF4)!important}
+/* :not(.lions-gate-dark) — the memberships page wears this class straight
+   on <main> (not a section), so it fell outside the sky/section exclusions
+   above; this blanket rule used to stomp its dark lion background flat
+   cream while .lions-gate-dark's luminous text (line ~215 below) stayed
+   unconditionally pale — invisible pale-on-cream (Admiral's sighting,
+   0018.05.24). lions-gate-dark is a keep-dark-law page: it never flips. */
+html[data-oc-theme="light"] main:not(.lions-gate-dark){background:#FCF7F0!important}
+/* THE FOUR SKIES, at dawn — warm cream analogs of the four night skies.
+   Higher specificity than the blanket repaint above so each sky keeps its
+   own character in light; .keep-dark skies are excluded and hold the night */
+html[data-oc-theme="light"] main section.sky-night:not(.keep-dark):not(.lions-gate){background:linear-gradient(180deg,#FCF7F0 0%,#F3EEF4 100%)!important}
+html[data-oc-theme="light"] main section.sky-veil:not(.keep-dark):not(.lions-gate){background:radial-gradient(700px 420px at 50% 0%,rgba(214,178,214,.38),transparent 60%),linear-gradient(180deg,#F8EDF0 0%,#EFE9F7 55%,#F3EEF4 100%)!important}
+html[data-oc-theme="light"] main section.sky-glass:not(.keep-dark):not(.lions-gate){background:#F3EEF4!important}
+html[data-oc-theme="light"] main section.sky-warm:not(.keep-dark):not(.lions-gate){background:linear-gradient(180deg,#f5ead5 0%,#f7efe2 100%)!important}
+/* the hero fade lands wherever the page continues */
+.hero::after{background:linear-gradient(180deg,transparent,#1a1428)}
+html[data-oc-theme="light"] .hero::after{background:linear-gradient(180deg,transparent,#F3EEF4)}
+
+/* ✦ Love Light Language — drawn in light, dots added in (from the approved
+   bench artifact; the version Love loved). LightCode.tsx runs the strokes. ✦ */
+.llstage{position:relative;margin:0 auto;display:flex;align-items:center;justify-content:center}
+.llstage .ll{width:100%;height:100%;overflow:visible;display:block}
+.ll-line{fill:#fff;stroke:#fff;stroke-width:12.5;stroke-linecap:round;stroke-linejoin:round;
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.9)) drop-shadow(0 0 20px rgba(255,244,214,.55)) drop-shadow(0 0 46px rgba(232,185,35,.42));
+  opacity:0}
+.llstage-hero{width:min(360px,74vw);height:min(470px,96vw);margin-bottom:26px}
+.llstage .tw{position:absolute;width:7px;height:7px;border-radius:50%;
+  background:radial-gradient(circle,#fff 0%,rgba(255,244,214,.65) 45%,transparent 72%);
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.95));
+  opacity:0;transform:translate(-50%,-50%) scale(.5);
+  animation:tw-in 2.4s ease 8s forwards, tw-pulse 3.6s ease-in-out 8s infinite}
+@keyframes tw-in{from{opacity:0;transform:translate(-50%,-50%) scale(.4)}to{opacity:.9;transform:translate(-50%,-50%) scale(1)}}
+@keyframes tw-pulse{0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(.82)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.28)}}
+@media (prefers-reduced-motion: reduce){
+  .ll-line{opacity:1 !important;stroke-dasharray:none !important;stroke-dashoffset:0 !important;fill:#fff !important}
+}
+/* the glyph, already drawn this visit (remounts wear this class): strokes
+   finished AND twinkles lit — the twinkles' 8s CSS delay restarting on
+   remount was the lingering "draw-in glitch" (Admiral, third sighting) */
+.ll-done .ll-line{opacity:1 !important;stroke-dasharray:none !important;stroke-dashoffset:0 !important;fill:#fff !important;transition:none !important}
+.ll-done .tw{opacity:.9 !important;animation:none !important;transform:translate(-50%,-50%) scale(1) !important}
+@media (prefers-reduced-motion: reduce){
+  .llstage .tw{opacity:.9;animation:none;transform:translate(-50%,-50%) scale(1)}
+}
+
+/* LIONS GATE, NIGHT — the darker telling for the lion page itself (Admiral's
+   call): the lion glows out of celestial dark; text goes luminous. */
+.lions-gate-dark{
+  background:
+    linear-gradient(rgba(10,10,20,.62), rgba(10,10,20,.78)),
+    url("/images/lions-gate.webp") center top / cover no-repeat;
+}
+.lions-gate-dark .sec-h{color:#F4ECFF}
+.lions-gate-dark p{color:#D9D2E4}

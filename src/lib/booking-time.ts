@@ -25,7 +25,11 @@ export type MeetingRail =
   | { kind: "static"; url: string }
   | { kind: "jitsi"; domain: string }
   | { kind: "matrix"; roomId: string }
-  | { kind: "orbee" };
+  | { kind: "orbee" }
+  /* Love's mobile (RV) studio and every visiting artist: the meeting is a
+     PLACE, not a link — checkout collects city/state/zip instead. The artist
+     may pin the studio's current address/geotag; members copy it from /me. */
+  | { kind: "inPerson"; address?: string; geo?: string };
 
 export type PricingMode = "fixed" | "pwyc";
 
@@ -79,11 +83,37 @@ export interface DateOverride {
   note?: string;
 }
 
+/**
+ * A RETREAT (the Admiral's blessing, 0018.05.28): a block of days at a
+ * place, sold by the seat. Its days become blocked overrides automatically
+ * (regular session slots vanish); its seats are ordinary store items riding
+ * the ordinary cart — the guest list IS the order book filtered to them.
+ */
+export interface Retreat {
+  id: string;
+  title: string;
+  location: string;
+  /** "YYYY-MM-DD" inclusive span, artist's zone */
+  startDate: string;
+  endDate: string;
+  seats: number;
+  priceSats: number;
+  /** optional smaller amount that holds a seat; the rest settles by letter */
+  depositSats?: number;
+  blurb: string;
+  status: "live" | "hidden";
+  createdAtMs: number;
+}
+
 export interface BookingConfig {
   schemaVersion: 1;
   services: Service[];
   rules: AvailabilityRule[];
   overrides: DateOverride[];
+  retreats?: Retreat[];
+  /** the artist's external calendar (secret iCal address) — its events
+   *  become busy windows subtracted from every slot board. Additive. */
+  icalUrl?: string;
 }
 
 /**
@@ -227,7 +257,6 @@ export function slotsFor(
   const tz = service.artistTz;
   const horizonDays = Math.min(opts?.days ?? service.maxAdvanceDays, service.maxAdvanceDays);
   const earliest = now + service.minLeadHours * 3600_000;
-  const stepMin = service.durationMin + service.bufferMin;
   const slots: Slot[] = [];
 
   const mine = (ids: string[]) => ids.length === 0 || ids.includes(service.id);
@@ -262,7 +291,13 @@ export function slotsFor(
       const to = toMinutes(w.end);
       if (from < 0 || to < 0 || to <= from) continue;
 
-      for (let m = from; m + service.durationMin <= to; m += stepMin) {
+      /* THE FIVE SACRED TIMES (Love's word on the call, 0018.05.15):
+         sessions begin at 10:10 · 11:11 · 12:12 · 2:22 · 3:33 on HER
+         mountain clock — no other minute exists. Windows still rule:
+         a time outside the working hours stays closed. */
+      const SACRED = [10 * 60 + 10, 11 * 60 + 11, 12 * 60 + 12, 14 * 60 + 22, 15 * 60 + 33];
+      for (const m of SACRED) {
+        if (m < from || m + service.durationMin > to) continue;
         // a partial block kills any slot it touches at all
         const clashes = partialBlocks.some((b) => m < b.to && m + service.durationMin > b.from);
         if (clashes) continue;
@@ -334,6 +369,27 @@ export function validateRule(r: AvailabilityRule): Check {
   const to = toMinutes(r.end);
   if (from < 0 || to < 0) return { ok: false, reason: "times as HH:MM" };
   if (to <= from) return { ok: false, reason: "an end time after the start time" };
+  return { ok: true };
+}
+
+export function validateRetreat(r: Retreat): Check {
+  if (!r.title?.trim()) return { ok: false, reason: "a name" };
+  if (!r.location?.trim()) return { ok: false, reason: "a location" };
+  if (!YMD.test(r.startDate ?? "") || !YMD.test(r.endDate ?? "")) {
+    return { ok: false, reason: "dates as YYYY-MM-DD" };
+  }
+  if (r.endDate < r.startDate) return { ok: false, reason: "an end date on or after the start" };
+  const span = (Date.parse(`${r.endDate}T00:00:00Z`) - Date.parse(`${r.startDate}T00:00:00Z`)) / 86_400_000;
+  if (span > 60) return { ok: false, reason: "a span of 60 days or fewer" };
+  if (!Number.isInteger(r.seats) || r.seats < 1 || r.seats > 500) {
+    return { ok: false, reason: "seats as a whole number (1–500)" };
+  }
+  if (!Number.isInteger(r.priceSats) || r.priceSats <= 0) {
+    return { ok: false, reason: "a seat price in sats" };
+  }
+  if (r.depositSats != null && (!Number.isInteger(r.depositSats) || r.depositSats <= 0 || r.depositSats >= r.priceSats)) {
+    return { ok: false, reason: "a deposit smaller than the seat price" };
+  }
   return { ok: true };
 }
 

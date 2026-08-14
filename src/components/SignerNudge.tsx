@@ -5,17 +5,19 @@
  */
 export default function SignerNudge() {
   return (
-    <div className="border-2 border-coin/60 bg-void p-4">
-      <p className="mb-2 font-pixel text-[10px] uppercase text-coin">
-        NO KEY SIGNER IN THIS BROWSER
+    <div style={{ borderRadius: 16, border: "1.5px solid rgba(217,178,78,.5)",
+      background: "rgba(217,178,78,.08)", padding: "14px 16px" }}>
+      <p style={{ margin: "0 0 6px", fontSize: ".68rem", fontWeight: 700, letterSpacing: ".08em",
+        textTransform: "uppercase", color: "var(--gold-2, #ebcb77)" }}>
+        no key signer in this browser
       </p>
-      <p className="font-body text-sm text-white/70">
+      <p style={{ margin: 0, fontSize: ".85rem", lineHeight: 1.7, color: "var(--ink-body)" }}>
         Install a signer extension, add your key, reload:{" "}
         <a
           href="https://github.com/fiatjaf/nos2x"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-cyan underline"
+          style={{ color: "var(--teal-bright, #8FD0D8)", textDecoration: "underline" }}
         >
           nos2x
         </a>{" "}(just the signer, simplest) or{" "}
@@ -23,7 +25,7 @@ export default function SignerNudge() {
           href="https://getalby.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-cyan underline"
+          style={{ color: "var(--teal-bright, #8FD0D8)", textDecoration: "underline" }}
         >
           Alby
         </a>{" "}(signer + wallet features later). A key is not a wallet — lesson one.

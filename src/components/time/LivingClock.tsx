@@ -154,7 +154,7 @@ export default function LivingClock(props: LivingTip) {
             <div className="blockpct" />
             <div
               className="levelbadge"
-              title="Your arcade LEVEL. The network re-tunes its difficulty every ~2 weeks to keep blocks about 10 minutes apart. ▲ = getting harder · ▼ = getting easier."
+              title="Your LEVEL. The network re-tunes its difficulty every ~2 weeks to keep blocks about 10 minutes apart. ▲ = getting harder · ▼ = getting easier."
             >
               LEVEL —
             </div>

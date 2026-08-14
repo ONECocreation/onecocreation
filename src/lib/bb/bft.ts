@@ -75,9 +75,25 @@ export const MOON_PHASES: ReadonlyArray<readonly [string, string]> = [
 ];
 
 /** One lunation per BFT month → phase is a pure function of the day-of-month. */
-export function moonPhase(height: number): { emoji: string; name: string; index: number } {
-  const day = bft(height).day;
-  const index = Math.round(((day - 1) / 28) * 8) % 8;
+/** THE SKY'S OWN MOON (universal-calendar review, 0018.05.18): phase from
+ *  the real synodic month (29.530589 days) anchored to a known new moon —
+ *  not the calendar day. The 28-day month is our RHYTHM; the moon keeps her
+ *  own, and the clock honors the sky. Accurate within hours for decades. */
+const SYNODIC_DAYS = 29.530588853;
+/** A well-known new moon: 2000-01-06 18:14 UTC. */
+const NEW_MOON_EPOCH_MS = Date.UTC(2000, 0, 6, 18, 14);
+
+/** `atMs` — the wall instant this height belongs to. Callers who KNOW it
+ *  (a live tip = Date.now()) must pass it: the flat 10-min genesis average
+ *  runs months ahead of reality after 17 years of fast blocks. Without it,
+ *  the estimate wears that honest skew. */
+export function moonPhase(
+  height: number,
+  atMs: number = GENESIS_MS + height * 600_000,
+): { emoji: string; name: string; index: number } {
+  const days = (atMs - NEW_MOON_EPOCH_MS) / 86_400_000;
+  const age = ((days % SYNODIC_DAYS) + SYNODIC_DAYS) % SYNODIC_DAYS;
+  const index = Math.round((age / SYNODIC_DAYS) * 8) % 8;
   const [emoji, name] = MOON_PHASES[index];
   return { emoji, name, index };
 }

@@ -26,43 +26,41 @@ export default function GameOverTag({
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-void px-6 text-center">
       <p className="font-pixel text-[10px] uppercase tracking-widest text-white/40">
-        PAC&apos;S ARCADE ▸ TAG NOT FOUND
+        ONE COCREATION NAME NOT FOUND
       </p>
-      <p className="font-arcade text-5xl text-ghost glow-ghost">GAME OVER</p>
+      <p className="font-arcade text-5xl text-ghost glow-ghost">Unclaimed</p>
       <p className="font-pixel text-xs uppercase text-white/80">
-        NO FREN HOLDS <span className="text-coin">{handle}{spaceTag}</span>
+        No one holds <span className="text-coin">{handle}{spaceTag}</span>
       </p>
       {reserved ? (
         <p className="max-w-md font-body text-lg text-white/80">
-          This one&apos;s held back by the arcade, fren — it can&apos;t go on the board. Another
+          This name is held back by the house — it can&apos;t be claimed. Another
           name is waiting for you, first-come.
         </p>
       ) : (
         <p className="max-w-md font-body text-lg text-white/80">
-          Which means it might be free, fren. Tags are first-come — press start and make it yours
-          before another player does.
+          This name isn&apos;t claimed yet — it might be free. Names are first-come:
+          claim it and make it yours before someone else does.
         </p>
       )}
       {elsewhereSpace && !reserved && (
         <p className="border-2 border-cyan/60 px-4 py-3 font-pixel text-[10px] uppercase text-cyan">
-          THIS TAG LIVES BEHIND THE OTHER DOOR —{" "}
+          This name lives in another space —{" "}
           <Link href={`/u/${handle}@${elsewhereSpace}`} className="underline hover:glow-cyan">
-            VIEW {handle.toUpperCase()}@{elsewhereSpace.toUpperCase()} ▸
-          </Link>
+            view {handle}@{elsewhereSpace} </Link>
         </p>
       )}
-      <Link href={pressStartHref} className="button pulse-neon">
-        ▶ NEW PLAYER — PRESS START
+      <Link href={pressStartHref} className="button pulse-neon"> Claim This Name
       </Link>
       <Link href={registerHref} className="font-pixel text-xs text-cyan hover:glow-cyan">
-        SEARCH ANOTHER TAG
+        Search another name
       </Link>
       <p className="font-pixel text-[10px] uppercase text-white/40">
-        REGISTRATION IS FREE — THE ARCADE&apos;S TREAT
+        Registration is free — on the house
       </p>
       <p className="font-pixel text-xs text-white/40">
-        <Link href="https://pacsarcade.org" className="text-cyan hover:glow-cyan">
-          BACK TO PAC&apos;S ARCADE
+        <Link href="/" className="text-cyan hover:glow-cyan">
+          Back to One Cocreation
         </Link>
       </p>
     </main>

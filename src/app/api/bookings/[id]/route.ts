@@ -37,7 +37,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           const updated = await recordChargeEvent(order.id, { type: state, chargeId });
           if (updated) {
             order = updated;
-            if (updated.bookingId) await settleBookingFromOrder(updated);
+            await settleBookingFromOrder(updated); // per-line bookings included
           }
         }
       } catch {
@@ -52,6 +52,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     ok: true,
     booking: {
       id: fresh.id,
+      serviceId: fresh.serviceId,
       serviceTitle: fresh.serviceTitle,
       startUtc: fresh.startUtc,
       endUtc: fresh.endUtc,

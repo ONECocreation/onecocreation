@@ -15,9 +15,9 @@ import { anyAccepted, publishKind0, type RelayResult } from "@/lib/kind0-publish
 /** The eight fields the form edits — Primal parity, arcade dress. These are
     all NOSTR profile-card fields: none of them touch the etched arcade tag. */
 const FIELDS = [
-  { key: "name", label: "NOSTR USERNAME", hint: "what nostr apps show — not your arcade tag" },
-  { key: "display_name", label: "ARCADE NAME (DISPLAY NAME)", hint: "the marquee version — change it any time; only your tag is etched" },
-  { key: "about", label: "ABOUT ME", hint: "say something to the frens", textarea: true },
+  { key: "name", label: "NOSTR USERNAME", hint: "what nostr apps show — not your tag" },
+  { key: "display_name", label: "DISPLAY NAME", hint: "the marquee version — change it any time; only your tag is etched" },
+  { key: "about", label: "ABOUT ME", hint: "say something to the community", textarea: true },
   { key: "website", label: "WEBSITE", hint: "https://…" },
   { key: "lud16", label: "LIGHTNING ADDRESS (ZAPS)", hint: "name@wallet-provider — lightning, not an on-chain address" },
   { key: "nip05", label: "VERIFIED NOSTR ADDRESS (NIP-05)", hint: "" },
@@ -175,7 +175,7 @@ export default function ProfileEditor({
     /* wrong-key guard: the signer must hold THIS profile's key */
     const decoded = nip19.decode(npub);
     if (decoded.type !== "npub" || event.pubkey !== decoded.data) {
-      return "this signer holds a different fren's key — nothing sent";
+      return "this signer holds a different member's key — nothing sent";
     }
     setError(null);
     const results = await publishKind0(event as NostrEvent);
@@ -198,8 +198,8 @@ export default function ProfileEditor({
   if (!open) {
     return (
       <div className="space-y-2">
-        <button type="button" onClick={openEditor} className="button cursor-pointer">
-          ◆ EDIT PROFILE
+        <button type="button" onClick={openEditor} className="btn btn-gold btn-sm">
+          ✎ Edit profile
         </button>
         {published && relayResults && <RelayResults results={relayResults} />}
       </div>
@@ -207,9 +207,9 @@ export default function ProfileEditor({
   }
 
   return (
-    <section className="border-2 border-cyan bg-panel p-6">
-      <p className="mb-1 font-pixel text-xs text-cyan glow-cyan">EDIT PROFILE</p>
-      <p className="mb-5 font-body text-xs text-white/50">
+    <section style={{ borderRadius: 20, border: "1px solid var(--glass-edge)", background: "var(--glass)", padding: "22px 20px", textAlign: "left" }}>
+      <p style={{ margin: "0 0 4px", fontFamily: "var(--font-h3, sans-serif)", fontWeight: 400, fontSize: "1.2rem", color: "var(--ink-strong)" }}>Edit profile</p>
+      <p className="mb-5" style={{ fontSize: ".8rem", lineHeight: 1.6, color: "var(--muted)" }}>
         {signal === "found"
           ? "Prefilled from your live signal. Saving signs a fresh card with your key and sends it to the relays — everything you set in other apps rides along untouched."
           : signal === "silent"
@@ -219,14 +219,14 @@ export default function ProfileEditor({
 
       {/* the one thing this form can NEVER touch — answer the question
           before it's asked: the tag is registry + Bitcoin, not kind-0 */}
-      <div className="mb-5 border-2 border-edge bg-void px-3 py-2">
-        <p className="mb-1 font-pixel text-[10px] text-white/40">
-          YOUR ARCADE TAG — ETCHED, NEVER CHANGES
+      <div className="mb-5" style={{ borderRadius: 14, border: "1.5px solid rgba(217,178,78,.45)", background: "rgba(217,178,78,.08)", padding: "10px 14px" }}>
+        <p style={{ margin: "0 0 4px", fontSize: ".66rem", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--gold-2, #ebcb77)" }}>
+          your tag — etched, never changes
         </p>
-        <p className="font-mono text-sm text-coin">
+        <p style={{ margin: 0, fontFamily: "monospace", fontSize: ".9rem", color: "var(--gold-2, #ebcb77)" }}>
           {handle}@{space}
         </p>
-        <p className="mt-1 font-body text-xs text-white/50">
+        <p className="mt-1" style={{ fontSize: ".76rem", color: "var(--muted)" }}>
           Everything below is your nostr profile card — the outfit, not the player. The tag
           stays yours no matter what you set here.
         </p>
@@ -238,7 +238,7 @@ export default function ProfileEditor({
             <div key={f.key}>
               <label
                 htmlFor={`pe-${f.key}`}
-                className="mb-1 block font-pixel text-[10px] text-white/40"
+                style={{ margin: "0 0 4px", display: "block", fontSize: ".66rem", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--muted)" }}
               >
                 {f.label}
               </label>
@@ -249,7 +249,7 @@ export default function ProfileEditor({
                   onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
                   rows={3}
                   placeholder={f.hint}
-                  className="w-full border-2 border-edge bg-void p-2 font-body text-sm text-white/85 placeholder:text-white/25 focus:border-cyan focus:outline-none"
+                  style={{ width: "100%", boxSizing: "border-box", borderRadius: 12, border: "1.5px solid rgba(180,134,43,.5)", background: "rgba(255,255,255,.94)", color: "#4a4458", padding: "10px 14px", fontSize: ".9rem", fontFamily: "inherit" }}
                 />
               ) : (
                 <input
@@ -258,7 +258,7 @@ export default function ProfileEditor({
                   value={draft[f.key]}
                   onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
                   placeholder={f.hint}
-                  className="w-full border-2 border-edge bg-void p-2 font-mono text-sm text-white/85 placeholder:text-white/25 focus:border-cyan focus:outline-none"
+                  style={{ width: "100%", boxSizing: "border-box", borderRadius: 12, border: "1.5px solid rgba(180,134,43,.5)", background: "rgba(255,255,255,.94)", color: "#4a4458", padding: "10px 14px", fontSize: ".85rem", fontFamily: "monospace" }}
                 />
               )}
               {f.key === "lud16" && (
@@ -267,22 +267,22 @@ export default function ProfileEditor({
                     type="button"
                     onClick={testLightning}
                     disabled={lnCheck === "checking" || !draft.lud16.trim()}
-                    className="cursor-pointer border border-cyan/60 px-2 py-0.5 font-pixel text-[9px] uppercase text-cyan hover:bg-cyan/10 disabled:opacity-40"
+                    className="btn-quiet" style={{ padding: "2px 0", color: "var(--teal-bright, #8FD0D8)" }}
                   >
-                    {lnCheck === "checking" ? "TESTING…" : "TEST THIS ADDRESS ▸"}
+                    {lnCheck === "checking" ? "testing…" : "test this address ⚡"}
                   </button>
                   {lnCheck === "live" && (
-                    <span className="font-pixel text-[9px] uppercase text-neon">
-                      ✓ LIVE — THIS ADDRESS CAN CATCH ZAPS
+                    <span style={{ fontSize: ".72rem", fontWeight: 700, textTransform: "uppercase", color: "var(--ok, #7fb98f)" }}>
+                      ✓ live — this address can catch zaps
                     </span>
                   )}
                   {lnCheck === "bad" && (
-                    <span className="font-pixel text-[9px] uppercase text-ghost">
-                      ✗ NO ZAP SERVICE ANSWERED AT THAT ADDRESS
+                    <span style={{ margin: 0, fontSize: ".8rem", color: "var(--err, #E7899E)" }}>
+                      ✗ no zap service answered at that address
                     </span>
                   )}
                   {lnCheck === "unknown" && (
-                    <span className="font-body text-xs text-white/50">
+                    <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>
                       couldn&apos;t confirm from the browser (provider blocks cross-site checks) —
                       try a tiny zap from any wallet
                     </span>
@@ -291,23 +291,22 @@ export default function ProfileEditor({
               )}
               {f.key === "nip05" && draft.nip05.trim() !== defaultNip05 && (
                 <div className="mt-1 space-y-1">
-                  <p className="font-pixel text-[9px] uppercase text-coin">
-                    ⚠ {defaultNip05} is your verified arcade address — change it and the checkmark
+                  <p style={{ margin: 0, fontSize: ".72rem", fontWeight: 700, textTransform: "uppercase", color: "var(--warn, #EBCB77)" }}>
+                    ⚠ {defaultNip05} is your verified address — change it and the checkmark
                     goes dark
                   </p>
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, nip05: defaultNip05 })}
-                    className="cursor-pointer border border-cyan/60 px-2 py-0.5 font-pixel text-[9px] uppercase text-cyan hover:bg-cyan/10"
+                    className="btn-quiet" style={{ padding: "2px 0", color: "var(--teal-bright, #8FD0D8)" }}
                   >
-                    USE {defaultNip05} ▸
-                  </button>
+                    use {defaultNip05}</button>
                 </div>
               )}
               {(f.key === "picture" || f.key === "banner") && (
                 <div className="mt-1">
                   <ArtUpload
-                    label={f.key === "picture" ? "UPLOAD AVATAR ART" : "UPLOAD BANNER ART"}
+                    label={f.key === "picture" ? "upload avatar art" : "upload banner art"}
                     onUrl={(url) => setDraft({ ...draft, [f.key]: url })}
                   />
                 </div>
@@ -321,8 +320,8 @@ export default function ProfileEditor({
                     aria-hidden
                     className={
                       f.key === "picture"
-                        ? "mt-2 h-14 w-14 border-2 border-edge object-cover"
-                        : "mt-2 h-14 w-full border-2 border-edge object-cover"
+                        ? "mt-2 h-14 w-14 object-cover"
+                        : "mt-2 h-14 w-full object-cover"
                     }
                   />
                 )}
@@ -330,7 +329,7 @@ export default function ProfileEditor({
           ))}
       </div>
 
-      {error && <p className="mt-4 font-pixel text-[9px] uppercase text-ghost">{error}</p>}
+      {error && <p className="mt-4" style={{ fontSize: ".8rem", color: "var(--err, #E7899E)" }}>{error}</p>}
       {relayResults && !published && (
         <div className="mt-4">
           <RelayResults results={relayResults} />
@@ -342,9 +341,9 @@ export default function ProfileEditor({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="cursor-pointer border-2 border-edge px-4 py-2 font-pixel text-[10px] uppercase text-white/50 hover:border-cyan hover:text-cyan"
+          className="btn btn-ghost btn-sm"
         >
-          CANCEL
+          Cancel
         </button>
       </div>
 

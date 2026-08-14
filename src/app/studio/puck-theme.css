@@ -1,0 +1,168 @@
+/* ════════════════════════════════════════════════════════════════════
+   STUDIO — house-night theme for the Puck editor (rewritten 2026-08-13
+   for @puckeditor/core 0.23, which replaced the 0.20 grey/azure ramps
+   with SEMANTIC tokens: --puck-color-surface / text / border /
+   interactive / focus-ring …). Every override below is a real token
+   confirmed present in node_modules/@puckeditor/core/dist/
+   no-external.css, scoped under .oc-studio so nothing outside the
+   editor is touched.
+
+   Values come from the cartridge's dark-first palette (cartridge.css):
+   night grounds #141021/#1b1530/#221a38, ink #F4ECFF/#D9D2E4, muted
+   #9a8fae, lavender edges, gold interactive — so the editor chrome IS
+   the house, and a future artist clone that swaps the cartridge
+   re-skins the studio with it.
+   ════════════════════════════════════════════════════════════════════ */
+
+.oc-studio {
+  /* surfaces — the night grounds */
+  --puck-color-surface: #12101f;
+  --puck-color-surface-subtle: #1b1530;
+  --puck-color-surface-muted: #221a38;
+  --puck-color-surface-inverse: #f4ecff;
+  --puck-color-bg-disabled: #1b1530;
+  --puck-color-overlay-backdrop: rgba(10, 8, 20, 0.7);
+
+  /* text — the inks */
+  --puck-color-text: #f4ecff;
+  --puck-color-text-primary: #f4ecff;
+  --puck-color-text-secondary: #d9d2e4;
+  --puck-color-text-muted: #9a8fae;
+  --puck-color-text-subtle: #9a8fae;
+  --puck-color-text-disabled: #6f6683;
+  --puck-color-text-inverse: #141021;
+
+  /* borders — the lavender edges */
+  --puck-color-border: rgba(139, 118, 196, 0.32);
+  --puck-color-border-muted: rgba(139, 118, 196, 0.18);
+  --puck-color-border-hover: rgba(139, 118, 196, 0.55);
+  --puck-color-border-inverse: #141021;
+
+  /* interactive — the gold */
+  --puck-color-interactive: #d9b24e;
+  --puck-color-interactive-hover: #ebcb77;
+  --puck-color-interactive-active: #ebcb77;
+  --puck-color-interactive-soft: rgba(217, 178, 78, 0.14);
+  --puck-color-interactive-soft-hover: rgba(217, 178, 78, 0.22);
+  --puck-color-interactive-subtle: rgba(139, 118, 196, 0.14);
+  --puck-color-interactive-neutral-hover: rgba(139, 118, 196, 0.2);
+  --puck-color-interactive-inverse-hover: rgba(139, 118, 196, 0.2);
+  --puck-color-interactive-inverse-active: rgba(139, 118, 196, 0.3);
+
+  /* selection + focus — gold ring, lavender halo */
+  --puck-color-focus-ring: rgba(217, 178, 78, 0.65);
+  --puck-color-selection-border: #d9b24e;
+  --puck-color-selection-bg: rgba(217, 178, 78, 0.12);
+  --puck-color-highlight: rgba(139, 118, 196, 0.25);
+  --puck-color-line-placeholder: rgba(139, 118, 196, 0.5);
+}
+
+/* the drag-preview canvas root keeps its own white unless told otherwise;
+   the page being edited paints its own ground, this is just the mat */
+.oc-studio [class*="PuckCanvas-root"],
+.oc-studio [class*="Preview-frame"] {
+  background: #0f0c1d;
+}
+
+/* ── UI feedback batch (2026-08-13) ──────────────────────────────────
+   "not… multiple scroll bars": Puck.Components / Puck.Fields / Outline
+   each ship their own overflow-y:auto INSIDE our scrolling panel — two
+   scrollbars deep. The panel wrapper is the ONE scroll area; the inner
+   plugin containers must grow. */
+.oc-studio [class*="BlocksPlugin"],
+.oc-studio [class*="FieldsPlugin"],
+.oc-studio [class*="OutlineWrapper-layers"],
+.oc-studio [class*="Sidebar_"] {
+  overflow-y: visible !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+/* "the text in the drop down menus is hard to read": native <select>
+   popups render OS-side but the closed control + <option> rows take our
+   colors when set explicitly. Solid night ground, full ink. */
+.oc-studio select,
+.oc-studio [class*="Input-select"] {
+  background: #1b1530 !important;
+  color: #f4ecff !important;
+  border-color: rgba(139, 118, 196, 0.4);
+}
+.oc-studio select option,
+.oc-studio [class*="Input-select"] option {
+  background: #1b1530;
+  color: #f4ecff;
+}
+.oc-studio select option:disabled {
+  color: #6f6683;
+}
+
+/* "shouldn't have to scroll… to use all the tools": compact 2-across
+   component tiles so the whole library fits the first screen. */
+.oc-studio [class*="ComponentList-content"] [class*="Drawer_"] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 4px 10px 10px;
+}
+.oc-studio [class*="ComponentList-title"] {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9a8fae;
+}
+.oc-studio [class*="DrawerItem-draggable"] {
+  padding: 7px 8px;
+  font-size: 11.5px;
+}
+.oc-studio [class*="DrawerItem-name"] {
+  font-size: 11.5px;
+}
+
+/* quiet, house-colored scrollbars on the one scroll area per panel */
+.oc-studio *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.oc-studio *::-webkit-scrollbar-thumb {
+  background: rgba(139, 118, 196, 0.35);
+  border-radius: 8px;
+}
+.oc-studio *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* the outline layer tree must never grow a sideways scrollbar —
+   long layer names ellipsize instead */
+.oc-studio [class*="OutlineWrapper"],
+.oc-studio [class*="LayerTree"] {
+  overflow-x: hidden !important;
+  min-width: 0;
+}
+
+/* ── responsive batch (0018.05.20 a₿) ────────────────────────────────
+   THE MASTER BUG: compositional <Puck> wraps children in a plain block
+   div, killing our flex chain — the shell collapsed to content height
+   (the Admiral's portrait-monitor dead zone). Restore the chain. */
+.oc-studio > [class*="Puck_"],
+.oc-studio > .Puck {
+  flex: 1;
+  min-height: 0;
+  display: flex !important;
+  flex-direction: column;
+  overflow: hidden !important;
+}
+
+/* library tiles must never clip or scroll sideways in the 230px panel */
+.oc-studio [class*="ComponentList-content"] [class*="Drawer_"] > * {
+  min-width: 0;
+}
+.oc-studio [class*="DrawerItem-name"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* stray scrollbar arrow buttons ("left nav buttons") — gone everywhere */
+.oc-studio *::-webkit-scrollbar-button {
+  display: none;
+}

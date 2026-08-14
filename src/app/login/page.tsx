@@ -1,32 +1,42 @@
 import type { Metadata } from "next";
-import ArcadeHeader from "@/components/ArcadeHeader";
-import EarthFooter from "@/components/EarthFooter";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
+import CosmicSky from "@/components/CosmicSky";
 import LoginPanel from "@/components/LoginPanel";
-import { frensEarthTheme } from "@/lib/brand";
+import { cartridge } from "@/brand/cartridge";
 
 export const metadata: Metadata = {
-  title: "Login — frens.earth",
+  title: "Sign in — One Cocreation",
   description:
-    "Sign in with your key — no passwords, nothing stored. New here? Two doors: a free @frens home tag, or your @pacsarcade school account.",
+    "Sign in with your key or your email — no passwords, nothing stored. New here? The welcome path is open.",
 };
 
-/* The page header reads the SAME theme the layout injects, so the words and
-   the paint can never disagree. */
+/* The front door dressed in the house sky (Admiral, 0018.05.15) — the mgmt
+ * wireframe robe retired; same celestial hero grammar as /welcome and the
+ * commons. */
 export default function LoginPage() {
-  const { copy } = frensEarthTheme;
   return (
-    <main className="min-h-screen bg-void">
-      <ArcadeHeader />
-      <div className="px-6 py-12">
-        <div className="mx-auto mb-8 max-w-md text-center">
-          <p className="mb-3 font-pixel text-[10px] uppercase tracking-widest text-white/40">
-            {copy.loginKicker}
-          </p>
-          <h1 className="font-arcade text-4xl text-coin glow-coin">{copy.loginTitle}</h1>
-        </div>
-        <LoginPanel />
-      </div>
-      <EarthFooter />
-    </main>
+    <>
+      <SiteHeader />
+      <main>
+        <section className="keep-dark sky-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
+          <CosmicSky />
+          <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "56px 22px 40px" }}>
+            <p className="kicker" style={{ color: "var(--rose)" }}>Members</p>
+            <h1 className="stack-hero">
+              <span className="sh-ink" style={{ color: "var(--ink-strong)" }}>WELCOME</span>
+              <span className="sh-teal" style={{ color: "var(--teal-bright)" }}>HOME</span>
+            </h1>
+            <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
+          </div>
+        </section>
+        <section className="sky-night" style={{ padding: "40px 0 70px" }}>
+          <div className="wrap" style={{ maxWidth: 560 }}>
+            <LoginPanel />
+          </div>
+        </section>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

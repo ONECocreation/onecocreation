@@ -71,7 +71,7 @@ export default function MudPanel() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       <p className="lcars-eyebrow mb-3" data-accent="cyan">
-        OPERATOR CONSOLE · FRENS.EARTH
+        OPERATOR CONSOLE · ONE COCREATION
       </p>
       <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">MUD NODE</h1>
       <p className="mb-8 font-mono text-[11px] text-white/50">

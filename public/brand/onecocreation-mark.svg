@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  One Cocreation "O" mark alone v6: gold torus (lit top-left) + mark-gold star interior,
+  transparent ground, all luminous elements fade to transparent. Soft star shadow for lift.
+  Square viewBox for favicons / coins / merch. Matches onecocreation-lockup.svg.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 156 156" width="156" height="156" role="img" aria-label="One Cocreation mark">
+  <defs>
+    <radialGradient id="coinShadowM">
+      <stop offset="0%" stop-color="#1A0E30" stop-opacity="0.42"/>
+      <stop offset="55%" stop-color="#1A0E30" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#1A0E30" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="starShadowM" cx="76" cy="76.5" r="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#120A24" stop-opacity="0.5"/>
+      <stop offset="55%" stop-color="#120A24" stop-opacity="0.26"/>
+      <stop offset="100%" stop-color="#120A24" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="starGlowM" cx="72" cy="72" r="69" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.97"/>
+      <stop offset="6%" stop-color="#FCFDF6" stop-opacity="0.90"/>
+      <stop offset="16%" stop-color="#FCD877" stop-opacity="0.60"/>
+      <stop offset="30%" stop-color="#F0B347" stop-opacity="0.26"/>
+      <stop offset="52%" stop-color="#DCA22F" stop-opacity="0.13"/>
+      <stop offset="74%" stop-color="#E8B23C" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#E8B23C" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="starBodyM" cx="72" cy="72" r="37.4" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF9DC"/>
+      <stop offset="18%" stop-color="#FFF6C4"/>
+      <stop offset="45%" stop-color="#FCE27A"/>
+      <stop offset="72%" stop-color="#EDBB48"/>
+      <stop offset="100%" stop-color="#C98E2B"/>
+    </radialGradient>
+    <radialGradient id="coreBloomM" cx="72" cy="72" r="12.7" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#FFFCEA" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="coreDotM" cx="72" cy="72" r="7.5" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="55%" stop-color="#FFFDF0" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#FFFCEA" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ringGoldM" x1="37.79" y1="37.79" x2="106.21" y2="106.21" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F9E272"/>
+      <stop offset="26%" stop-color="#D9AE3E"/>
+      <stop offset="44%" stop-color="#B57795"/>
+      <stop offset="62%" stop-color="#6E35A2"/>
+      <stop offset="82%" stop-color="#4B2481"/>
+      <stop offset="100%" stop-color="#2A1150"/>
+    </linearGradient>
+    <linearGradient id="ringRidgeM" x1="37.79" y1="37.79" x2="106.21" y2="106.21" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF8D0"/>
+      <stop offset="42%" stop-color="#F1D064"/>
+      <stop offset="75%" stop-color="#9B5FC0"/>
+      <stop offset="100%" stop-color="#4B2481"/>
+    </linearGradient>
+    <linearGradient id="ringInnerBevelM" x1="22.5" y1="22.5" x2="121.5" y2="121.5" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF4B0"/>
+      <stop offset="45%" stop-color="#E7C24E"/>
+      <stop offset="100%" stop-color="#5A2894"/>
+    </linearGradient>
+    <linearGradient id="hiArcM" x1="16.56" y1="92.18" x2="92.18" y2="16.56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FCF6C0" stop-opacity="0"/>
+      <stop offset="25%" stop-color="#FCF6C0" stop-opacity="0.7"/>
+      <stop offset="50%" stop-color="#FFFADB" stop-opacity="1"/>
+      <stop offset="75%" stop-color="#FCF6C0" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#FCF6C0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="shArcM" x1="127.44" y1="51.82" x2="51.82" y2="127.44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2A1454" stop-opacity="0"/>
+      <stop offset="35%" stop-color="#2A1454" stop-opacity="0.75"/>
+      <stop offset="65%" stop-color="#200F44" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#2A1454" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="reflArcM" x1="120.68" y1="89.72" x2="38.7" y2="111.68" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F5D468" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#F8DD7E" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#F5D468" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ground shadow -->
+  <ellipse cx="75.5" cy="143" rx="51" ry="7.5" fill="url(#coinShadowM)"/>
+
+  <!-- gold torus: diagonal light (top-left) with feathered highlight/shade arcs + inner-rim reflection -->
+  <circle cx="72" cy="72" r="59" fill="none" stroke="url(#ringGoldM)" stroke-width="17"/>
+  <circle cx="72" cy="72" r="59.5" fill="none" stroke="url(#ringRidgeM)" stroke-width="6" opacity="0.6"/>
+  <circle cx="72" cy="72" r="67.4" fill="none" stroke="#67309D" stroke-width="2.4" opacity="0.5"/>
+  <circle cx="72" cy="72" r="50.9" fill="none" stroke="#2E1656" stroke-width="2.4" opacity="0.96"/>
+  <circle cx="72" cy="72" r="52.7" fill="none" stroke="url(#ringInnerBevelM)" stroke-width="1.5" opacity="0.7"/>
+  <path d="M16.56 92.18 A59 59 0 0 1 92.18 16.56" fill="none" stroke="url(#hiArcM)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M127.44 51.82 A59 59 0 0 1 51.82 127.44" fill="none" stroke="url(#shArcM)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M120.68 89.72 A51.8 51.8 0 0 1 38.7 111.68" fill="none" stroke="url(#reflArcM)" stroke-width="2.2" stroke-linecap="round"/>
+
+  <circle cx="76" cy="76.5" r="36" fill="url(#starShadowM)"/>
+  <circle cx="72" cy="72" r="69" fill="url(#starGlowM)"/>
+  <path d="M91.50 91.50L72.00 76.00L52.50 91.50L68.00 72.00L52.50 52.50L72.00 68.00L91.50 52.50L76.00 72.00Z" fill="url(#starBodyM)" opacity="0.85"/>
+  <path d="M127.5 72.00L74.64 74.64L72.00 127.5L69.36 74.64L16.5 72.00L69.36 69.36L72.00 16.5L74.64 69.36Z" fill="url(#starBodyM)"/>
+  <circle cx="72" cy="72" r="12.7" fill="url(#coreBloomM)"/>
+  <circle cx="72" cy="72" r="7.5" fill="url(#coreDotM)"/>
+</svg>

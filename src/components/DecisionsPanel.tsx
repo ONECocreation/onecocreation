@@ -249,8 +249,7 @@ export default function DecisionsPanel() {
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             className="absolute right-3 top-3 inline-flex min-h-11 items-center font-mono text-[11px] text-cyan underline decoration-cyan/40 underline-offset-2 hover:decoration-cyan focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan"
-                          >
-                            ▸ SEE IT
+                          > SEE IT
                           </a>
                         )}
                       </div>
@@ -326,8 +325,7 @@ export default function DecisionsPanel() {
                 </div>
                 <p className="mt-1 font-body text-sm text-white/80">{d.question}</p>
                 {d.note && (
-                  <p className="mt-2 font-mono text-[11px] leading-relaxed text-cyan/85">
-                    ▸ {d.note}
+                  <p className="mt-2 font-mono text-[11px] leading-relaxed text-cyan/85"> {d.note}
                   </p>
                 )}
                 <p className="mt-2 font-pixel text-[9px] uppercase text-white/35">

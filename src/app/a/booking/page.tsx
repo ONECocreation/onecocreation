@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import RetreatsDesk from "@/components/console/RetreatsDesk";
+import { Chip, SectionHead, field } from "@/components/console/glass";
 import type { Service, AvailabilityRule, DateOverride, BookingConfig } from "@/lib/booking";
 
 /**
  * /a/booking — the artist describes their week (spec: docs/booking-flow.md,
- * step 1). Services on the left, weekly rules and date exceptions on the
- * right. Session-gated only: saying what you offer and when you work is
- * cosmetic-tier under the /a/store stakes model. Money and refunds take a
- * per-action signature, and they arrive with step 3.
+ * step 1), wearing the console's glass grammar (Admiral, 0018.05.15 — the
+ * last wireframe room repainted). Session-gated only: saying what you offer
+ * and when you work is cosmetic-tier under the /a/store stakes model. Money
+ * and refunds take a per-action signature, and they arrive with step 3.
  *
  * The "block this slot" button lives here too — it is the manual answer to
  * the Google-iCal lag (spec §6): our own config is the source of truth, and
@@ -16,6 +18,21 @@ import type { Service, AvailabilityRule, DateOverride, BookingConfig } from "@/l
  */
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+const fieldLabel: React.CSSProperties = {
+  display: "block", fontSize: ".62rem", letterSpacing: ".1em", textTransform: "uppercase",
+  color: "var(--muted)", marginBottom: 3,
+};
+
+const glassRow: React.CSSProperties = {
+  background: "var(--glass)", border: "1px solid rgba(139,118,196,.22)",
+  borderRadius: 12, padding: "10px 14px", marginBottom: 8,
+};
+
+const textBtn = (color: string): React.CSSProperties => ({
+  background: "none", border: 0, cursor: "pointer", fontFamily: "inherit", padding: "6px 4px",
+  fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color,
+});
 
 const blankService = (tz: string): Service => ({
   id: "",
@@ -87,248 +104,322 @@ export default function BookingRoom() {
     }
   }
 
-  if (denied) return <p className="p-6 text-sm text-amber-300">◌ operator session required.</p>;
-  if (!config) return <p className="p-6 text-sm text-neutral-400">Loading the calendar…</p>;
+  if (denied)
+    return (
+      <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>
+        operator session required — <a href="/a" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>sign in at the door</a>
+      </p>
+    );
+  if (!config) return <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>reading the calendar…</p>;
+
+  const editorPanel = draft && (
+  <div style={{ marginTop: 12, background: "var(--glass)", border: "1px solid rgba(139,118,196,.25)",
+    borderRadius: 14, padding: "14px 16px" }}>
+    <div className="grid gap-3 sm:grid-cols-2">
+      <Field label="title">
+        <input
+          value={draft.title}
+          onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+          style={{ ...field, width: "100%" }}
+        />
+      </Field>
+      <Field label="timezone (yours)">
+        <input
+          value={draft.artistTz}
+          onChange={(e) => setDraft({ ...draft, artistTz: e.target.value })}
+          style={{ ...field, width: "100%" }}
+          placeholder="America/Los_Angeles"
+        />
+      </Field>
+      <Field label="blurb" wide>
+        <input
+          value={draft.blurb}
+          onChange={(e) => setDraft({ ...draft, blurb: e.target.value })}
+          style={{ ...field, width: "100%" }}
+        />
+      </Field>
+      <Field label="duration (min)">
+        <input
+          type="number"
+          value={draft.durationMin}
+          onChange={(e) => setDraft({ ...draft, durationMin: Number(e.target.value) })}
+          style={{ ...field, width: "100%" }}
+        />
+      </Field>
+      <Field label="buffer after (min)">
+        <input
+          type="number"
+          value={draft.bufferMin}
+          onChange={(e) => setDraft({ ...draft, bufferMin: Number(e.target.value) })}
+          style={{ ...field, width: "100%" }}
+        />
+      </Field>
+      <Field label="min lead (hours)">
+        <input
+          type="number"
+          value={draft.minLeadHours}
+          onChange={(e) => setDraft({ ...draft, minLeadHours: Number(e.target.value) })}
+          style={{ ...field, width: "100%" }}
+        />
+      </Field>
+      <Field label="book up to (days ahead)">
+        <input
+          type="number"
+          value={draft.maxAdvanceDays}
+          onChange={(e) => setDraft({ ...draft, maxAdvanceDays: Number(e.target.value) })}
+          style={{ ...field, width: "100%" }}
+        />
+      </Field>
+      <Field label="pricing">
+        <select
+          value={draft.pricingMode}
+          onChange={(e) => setDraft({ ...draft, pricingMode: e.target.value as Service["pricingMode"] })}
+          style={{ ...field, width: "100%" }}
+        >
+          <option value="fixed">fixed</option>
+          <option value="pwyc">give what you can</option>
+        </select>
+      </Field>
+      <Field label="price (sats)">
+        <input
+          type="number"
+          value={draft.price.sats ?? ""}
+          onChange={(e) =>
+            setDraft({
+              ...draft,
+              price: { ...draft.price, sats: e.target.value ? Number(e.target.value) : undefined },
+            })
+          }
+          style={{ ...field, width: "100%", opacity: draft.pricingMode === "pwyc" ? 0.5 : 1 }}
+          disabled={draft.pricingMode === "pwyc"}
+        />
+      </Field>
+      {/* the meeting rail, quick-select (Admiral's ask): a knob, never
+          hardcoded — link / jitsi / matrix / the RV studio in person */}
+      <Field label="how you meet" wide>
+        <div className="flex flex-wrap gap-2">
+          {([
+            ["static", "Zoom / any link"],
+            ["jitsi", "Jitsi"],
+            ["matrix", "Matrix room"],
+            ["inPerson", "In person — the studio"],
+          ] as const).map(([kind, label]) => (
+            <button
+              key={kind}
+              type="button"
+              onClick={() =>
+                setDraft({
+                  ...draft,
+                  meetingRail:
+                    kind === "static" ? { kind, url: draft.meetingRail.kind === "static" ? draft.meetingRail.url : "" }
+                    : kind === "jitsi" ? { kind, domain: draft.meetingRail.kind === "jitsi" ? draft.meetingRail.domain : "meet.jit.si" }
+                    : kind === "matrix" ? { kind, roomId: draft.meetingRail.kind === "matrix" ? draft.meetingRail.roomId : "" }
+                    : { kind,
+                        address: draft.meetingRail.kind === "inPerson" ? draft.meetingRail.address : "",
+                        geo: draft.meetingRail.kind === "inPerson" ? draft.meetingRail.geo : "" },
+                })
+              }
+              className={`btn btn-sm ${draft.meetingRail.kind === kind ? "btn-gold" : "btn-ghost"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </Field>
+      {draft.meetingRail.kind === "static" && (
+        <Field label="meeting link" wide>
+          <input
+            value={draft.meetingRail.url}
+            onChange={(e) => setDraft({ ...draft, meetingRail: { kind: "static", url: e.target.value } })}
+            style={{ ...field, width: "100%" }}
+            placeholder="https://zoom.us/j/…"
+          />
+        </Field>
+      )}
+      {draft.meetingRail.kind === "jitsi" && (
+        <Field label="jitsi domain" wide>
+          <input
+            value={draft.meetingRail.domain}
+            onChange={(e) => setDraft({ ...draft, meetingRail: { kind: "jitsi", domain: e.target.value } })}
+            style={{ ...field, width: "100%" }}
+            placeholder="meet.jit.si"
+          />
+        </Field>
+      )}
+      {draft.meetingRail.kind === "matrix" && (
+        <Field label="matrix room id" wide>
+          <input
+            value={draft.meetingRail.roomId}
+            onChange={(e) => setDraft({ ...draft, meetingRail: { kind: "matrix", roomId: e.target.value } })}
+            style={{ ...field, width: "100%" }}
+            placeholder="!room:onecocreation.com"
+          />
+        </Field>
+      )}
+      {draft.meetingRail.kind === "inPerson" && (
+        <>
+          <Field label="studio address (members copy this from their calendar)" wide>
+            <input
+              value={draft.meetingRail.address ?? ""}
+              onChange={(e) => setDraft({ ...draft, meetingRail: { ...draft.meetingRail, kind: "inPerson", address: e.target.value } })}
+              style={{ ...field, width: "100%" }}
+              placeholder="where the RV parks — street, city, state"
+            />
+          </Field>
+          <Field label="geotag / map link (optional)" wide>
+            <input
+              value={draft.meetingRail.geo ?? ""}
+              onChange={(e) => setDraft({ ...draft, meetingRail: { ...draft.meetingRail, kind: "inPerson", geo: e.target.value } })}
+              style={{ ...field, width: "100%" }}
+              placeholder="https://maps.app.goo.gl/… or geo:39.7,-104.9"
+            />
+          </Field>
+        </>
+      )}
+      <Field label="status">
+        <select
+          value={draft.status}
+          onChange={(e) => setDraft({ ...draft, status: e.target.value as Service["status"] })}
+          style={{ ...field, width: "100%" }}
+        >
+          <option value="hidden">○ hidden</option>
+          <option value="live">● live</option>
+        </select>
+      </Field>
+    </div>
+    <div className="mt-3 flex gap-2">
+      <button type="button" disabled={busy} onClick={() => save("service", draft)} className="btn btn-gold btn-sm">
+        {busy ? "Saving…" : "Save"}
+      </button>
+      <button type="button" onClick={() => setDraft(null)} className="btn btn-ghost btn-sm">
+        Cancel
+      </button>
+    </div>
+  </div>
+  );
+
 
   return (
-    <div className="p-4 sm:p-6">
-      <h1 className="text-lg font-bold tracking-widest text-cyan-300">THE CALENDAR</h1>
-      <p className="mt-1 text-xs text-neutral-400">
-        what you offer, and when you work. Times are your wall clock — visitors see their own.
+    <div className="p-2 text-sm" style={{ color: "var(--ink)" }}>
+      <p style={{ margin: "0 0 4px", fontSize: ".85rem", color: "var(--muted)" }}>
+        what you offer, and when you work — times are your wall clock, visitors see their own.
       </p>
-      {error && <p className="mt-3 border border-amber-700 px-3 py-2 text-xs text-amber-300">◌ {error}</p>}
+      {error && (
+        <p style={{ margin: "10px 0 0", padding: "8px 14px", borderRadius: 10, fontSize: ".82rem",
+          color: "var(--err)", background: "rgba(197,110,139,.1)", border: "1px solid rgba(197,110,139,.4)" }}>
+          ◌ {error}
+        </p>
+      )}
 
       {/* ── services ─────────────────────────────────────────────────── */}
-      <section className="mt-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold tracking-wide">SESSIONS</h2>
-          <button
-            type="button"
-            onClick={() => setDraft(blankService(defaultTz))}
-            className="border border-cyan-700 px-2 py-1 text-xs text-cyan-300 hover:bg-cyan-900/30"
-          >
-            + new
-          </button>
-        </div>
+      <SectionHead label="Sessions" />
+      <div style={{ margin: "0 0 10px" }}>
+        <button type="button" onClick={() => setDraft(blankService(defaultTz))} className="btn btn-gold btn-sm">
+          + New session
+        </button>
+      </div>
 
-        {config.services.length === 0 && !draft && (
-          <p className="mt-3 text-xs text-neutral-500">No sessions yet.</p>
-        )}
+      {config.services.length === 0 && !draft && (
+        <p style={{ fontSize: ".82rem", color: "var(--muted)" }}>
+          No sessions yet — <b>working windows alone don&apos;t show on the booking page.</b>{" "}
+          Hit <b>+ New session</b> (name, length, price), set it LIVE, and it appears at /book
+          inside the windows you&apos;ve set.
+        </p>
+      )}
 
-        <ul className="mt-3 space-y-2">
-          {config.services.map((s) => (
-            <li key={s.id} className="border border-neutral-800 p-3">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className="text-sm text-neutral-100">{s.title}</span>
-                <span className="text-xs text-neutral-500">
-                  {s.durationMin}min +{s.bufferMin} · {s.pricingMode === "pwyc" ? "give what you can" : "fixed"} ·{" "}
-                  <span className={s.status === "live" ? "text-cyan-300" : "text-neutral-500"}>{s.status}</span>
-                </span>
-              </div>
-              <div className="mt-2 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setDraft(s)}
-                  className="border border-neutral-700 px-2 py-0.5 text-xs hover:border-cyan-600"
-                >
+      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        {config.services.map((s) => (
+          <li key={s.id} style={glassRow}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+              <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>{s.title}</b>
+              <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>
+                {s.durationMin}min +{s.bufferMin} · {s.pricingMode === "pwyc" ? "give what you can" : "fixed"}
+              </span>
+              {s.status === "live" ? <Chip tone="green">live</Chip> : <Chip tone="grey">hidden</Chip>}
+              <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+                <button type="button" onClick={() => setDraft(s)} style={textBtn("var(--gold-deep)")}>
                   edit
                 </button>
-                <button
-                  type="button"
-                  onClick={() => remove("service", s.id)}
-                  className="border border-neutral-800 px-2 py-0.5 text-xs text-neutral-500 hover:border-amber-700 hover:text-amber-300"
-                >
+                <button type="button" onClick={() => remove("service", s.id)} style={textBtn("var(--err)")}>
                   delete
                 </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+              </span>
+            </div>
+            {/* the editor opens RIGHT HERE, under its own service (Admiral,
+                0018.05.18) — never a hunt to the bottom of the page */}
+            {draft?.id === s.id && editorPanel}
+          </li>
+        ))}
+      </ul>
 
-        {draft && (
-          <div className="mt-4 border border-cyan-900 p-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="title">
-                <input
-                  value={draft.title}
-                  onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="timezone (yours)">
-                <input
-                  value={draft.artistTz}
-                  onChange={(e) => setDraft({ ...draft, artistTz: e.target.value })}
-                  className={inputCls}
-                  placeholder="America/Los_Angeles"
-                />
-              </Field>
-              <Field label="blurb" wide>
-                <input
-                  value={draft.blurb}
-                  onChange={(e) => setDraft({ ...draft, blurb: e.target.value })}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="duration (min)">
-                <input
-                  type="number"
-                  value={draft.durationMin}
-                  onChange={(e) => setDraft({ ...draft, durationMin: Number(e.target.value) })}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="buffer after (min)">
-                <input
-                  type="number"
-                  value={draft.bufferMin}
-                  onChange={(e) => setDraft({ ...draft, bufferMin: Number(e.target.value) })}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="min lead (hours)">
-                <input
-                  type="number"
-                  value={draft.minLeadHours}
-                  onChange={(e) => setDraft({ ...draft, minLeadHours: Number(e.target.value) })}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="book up to (days ahead)">
-                <input
-                  type="number"
-                  value={draft.maxAdvanceDays}
-                  onChange={(e) => setDraft({ ...draft, maxAdvanceDays: Number(e.target.value) })}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="pricing">
-                <select
-                  value={draft.pricingMode}
-                  onChange={(e) => setDraft({ ...draft, pricingMode: e.target.value as Service["pricingMode"] })}
-                  className={inputCls}
-                >
-                  <option value="fixed">fixed</option>
-                  <option value="pwyc">give what you can</option>
-                </select>
-              </Field>
-              <Field label="price (sats)">
-                <input
-                  type="number"
-                  value={draft.price.sats ?? ""}
-                  onChange={(e) =>
-                    setDraft({
-                      ...draft,
-                      price: { ...draft.price, sats: e.target.value ? Number(e.target.value) : undefined },
-                    })
-                  }
-                  className={inputCls}
-                  disabled={draft.pricingMode === "pwyc"}
-                />
-              </Field>
-              <Field label="meeting link (static rail)" wide>
-                <input
-                  value={draft.meetingRail.kind === "static" ? draft.meetingRail.url : ""}
-                  onChange={(e) => setDraft({ ...draft, meetingRail: { kind: "static", url: e.target.value } })}
-                  className={inputCls}
-                  placeholder="https://zoom.us/j/…"
-                />
-              </Field>
-              <Field label="status">
-                <select
-                  value={draft.status}
-                  onChange={(e) => setDraft({ ...draft, status: e.target.value as Service["status"] })}
-                  className={inputCls}
-                >
-                  <option value="hidden">hidden</option>
-                  <option value="live">live</option>
-                </select>
-              </Field>
-            </div>
-            <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => save("service", draft)}
-                className="border border-cyan-600 px-3 py-1 text-xs text-cyan-300 hover:bg-cyan-900/30 disabled:opacity-50"
-              >
-                save
-              </button>
-              <button
-                type="button"
-                onClick={() => setDraft(null)}
-                className="border border-neutral-700 px-3 py-1 text-xs text-neutral-400"
-              >
-                cancel
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
+      {draft && !config.services.some((x) => x.id === draft.id) && editorPanel}
 
       {/* ── weekly rules ─────────────────────────────────────────────── */}
-      <section className="mt-8">
-        <h2 className="text-sm font-semibold tracking-wide">YOUR WEEK</h2>
-        <p className="mt-1 text-xs text-neutral-500">
-          recurring windows in your wall clock — 9:00 stays 9:00 across daylight saving
-        </p>
-        <ul className="mt-3 space-y-1">
-          {config.rules.map((r) => (
-            <li key={r.id} className="flex items-center justify-between border border-neutral-800 px-3 py-2 text-xs">
-              <span>
-                <strong className="text-neutral-200">{WEEKDAYS[r.weekday]}</strong> {r.start}–{r.end}
-                <span className="ml-2 text-neutral-500">
-                  {r.serviceIds.length === 0 ? "all sessions" : r.serviceIds.join(", ")}
-                </span>
+      <SectionHead label="Your Week" />
+      <p style={{ margin: "0 0 10px", fontSize: ".78rem", color: "var(--muted)" }}>
+        recurring windows in your wall clock — 9:00 stays 9:00 across daylight saving
+      </p>
+      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        {config.rules.map((r) => (
+          <li key={r.id} style={{ ...glassRow, display: "flex", alignItems: "center", gap: 10, fontSize: ".85rem" }}>
+            <span style={{ flex: 1 }}>
+              <b>{WEEKDAYS[r.weekday]}</b> {r.start}–{r.end}
+              <span style={{ marginLeft: 8, color: "var(--muted)", fontSize: ".78rem" }}>
+                {r.serviceIds.length === 0 ? "all sessions" : r.serviceIds.join(", ")}
               </span>
-              <button
-                type="button"
-                onClick={() => remove("rule", r.id)}
-                className="text-neutral-500 hover:text-amber-300"
-              >
-                remove
-              </button>
-            </li>
-          ))}
-        </ul>
-        <RuleAdder onAdd={(r) => save("rule", r)} busy={busy} services={config.services} />
-      </section>
+            </span>
+            <button type="button" onClick={() => remove("rule", r.id)} style={textBtn("var(--err)")}>
+              remove
+            </button>
+          </li>
+        ))}
+      </ul>
+      <RuleAdder onAdd={(r) => save("rule", r)} busy={busy} services={config.services} />
 
       {/* ── date overrides ───────────────────────────────────────────── */}
-      <section className="mt-8">
-        <h2 className="text-sm font-semibold tracking-wide">EXCEPTIONS</h2>
-        <p className="mt-1 text-xs text-neutral-500">
-          block a day or an hour you filled elsewhere · add a one-off window
-        </p>
-        <ul className="mt-3 space-y-1">
-          {config.overrides.map((o) => (
-            <li key={o.id} className="flex items-center justify-between border border-neutral-800 px-3 py-2 text-xs">
-              <span>
-                <strong className={o.kind === "blocked" ? "text-amber-300" : "text-cyan-300"}>{o.kind}</strong>{" "}
+      <SectionHead label="Exceptions" />
+      <p style={{ margin: "0 0 10px", fontSize: ".78rem", color: "var(--muted)" }}>
+        block a day or an hour you filled elsewhere · add a one-off window
+      </p>
+      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        {config.overrides.map((o) => {
+          const retreat = o.id.startsWith("retreat-");
+          return (
+            <li key={o.id} style={{ ...glassRow, display: "flex", alignItems: "center", gap: 10, fontSize: ".85rem" }}>
+              <span style={{ flex: 1 }}>
+                {retreat ? (
+                  <Chip tone="teal">retreat</Chip>
+                ) : o.kind === "blocked" ? (
+                  <Chip tone="rose">blocked</Chip>
+                ) : (
+                  <Chip tone="green">extra</Chip>
+                )}{" "}
                 {o.date} {o.start && o.end ? `${o.start}–${o.end}` : "(all day)"}
+                {o.note && <span style={{ marginLeft: 8, color: "var(--muted)", fontSize: ".78rem" }}>{o.note}</span>}
               </span>
-              <button
-                type="button"
-                onClick={() => remove("override", o.id)}
-                className="text-neutral-500 hover:text-amber-300"
-              >
-                remove
-              </button>
+              {!retreat && (
+                <button type="button" onClick={() => remove("override", o.id)} style={textBtn("var(--err)")}>
+                  remove
+                </button>
+              )}
             </li>
-          ))}
-        </ul>
-        <OverrideAdder onAdd={(o) => save("override", o)} busy={busy} />
-      </section>
+          );
+        })}
+      </ul>
+      <OverrideAdder onAdd={(o) => save("override", o)} busy={busy} />
+
+      {/* ── retreats & excursions ────────────────────────────────────── */}
+      <div className="mt-4">
+        <RetreatsDesk />
+      </div>
     </div>
   );
 }
 
-const inputCls = "w-full border border-neutral-700 bg-transparent px-2 py-1 text-sm text-neutral-100";
-
 function Field({ label, children, wide }: { label: string; children: React.ReactNode; wide?: boolean }) {
   return (
-    <label className={`block text-xs text-neutral-400 ${wide ? "sm:col-span-2" : ""}`}>
-      <span className="mb-1 block">{label}</span>
+    <label className={`block ${wide ? "sm:col-span-2" : ""}`}>
+      <span style={fieldLabel}>{label}</span>
       {children}
     </label>
   );
@@ -349,17 +440,17 @@ function RuleAdder({
   const [serviceId, setServiceId] = useState("");
 
   return (
-    <div className="mt-3 flex flex-wrap items-end gap-2">
-      <select value={weekday} onChange={(e) => setWeekday(Number(e.target.value))} className={`${inputCls} w-auto`}>
+    <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+      <select value={weekday} onChange={(e) => setWeekday(Number(e.target.value))} style={field}>
         {WEEKDAYS.map((d, i) => (
           <option key={d} value={i}>
             {d}
           </option>
         ))}
       </select>
-      <input type="time" value={start} onChange={(e) => setStart(e.target.value)} className={`${inputCls} w-auto`} />
-      <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className={`${inputCls} w-auto`} />
-      <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className={`${inputCls} w-auto`}>
+      <input type="time" value={start} onChange={(e) => setStart(e.target.value)} style={field} />
+      <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} style={field} />
+      <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} style={field}>
         <option value="">all sessions</option>
         {services.map((s) => (
           <option key={s.id} value={s.id}>
@@ -373,9 +464,9 @@ function RuleAdder({
         onClick={() =>
           onAdd({ id: "", weekday: weekday as AvailabilityRule["weekday"], start, end, serviceIds: serviceId ? [serviceId] : [] })
         }
-        className="border border-cyan-700 px-3 py-1 text-xs text-cyan-300 hover:bg-cyan-900/30 disabled:opacity-50"
+        className="btn btn-gold btn-sm"
       >
-        add window
+        + Add window
       </button>
     </div>
   );
@@ -388,25 +479,25 @@ function OverrideAdder({ onAdd, busy }: { onAdd: (o: DateOverride) => void; busy
   const [end, setEnd] = useState("");
 
   return (
-    <div className="mt-3 flex flex-wrap items-end gap-2">
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={`${inputCls} w-auto`} />
+    <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={field} />
       <select
         value={kind}
         onChange={(e) => setKind(e.target.value as DateOverride["kind"])}
-        className={`${inputCls} w-auto`}
+        style={field}
       >
         <option value="blocked">blocked</option>
         <option value="extra">extra window</option>
       </select>
-      <input type="time" value={start} onChange={(e) => setStart(e.target.value)} className={`${inputCls} w-auto`} />
-      <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className={`${inputCls} w-auto`} />
+      <input type="time" value={start} onChange={(e) => setStart(e.target.value)} style={field} />
+      <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} style={field} />
       <button
         type="button"
         disabled={busy || !date}
         onClick={() => onAdd({ id: "", date, kind, start: start || undefined, end: end || undefined })}
-        className="border border-cyan-700 px-3 py-1 text-xs text-cyan-300 hover:bg-cyan-900/30 disabled:opacity-50"
+        className="btn btn-gold btn-sm"
       >
-        add exception
+        + Add exception
       </button>
     </div>
   );

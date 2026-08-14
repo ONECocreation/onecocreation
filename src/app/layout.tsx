@@ -1,13 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Press_Start_2P, Roboto } from "next/font/google";
+import { Barlow, Montserrat, Press_Start_2P, Roboto } from "next/font/google";
 import localFont from "next/font/local";
-import { CRTOverlay, EASY_MODE_BOOT_SCRIPT } from "@pacsarcade/arcade-ui";
-import { BrandProvider, frensEarthTheme } from "@/lib/brand";
-import BftClock from "@/components/BftClock";
+import { EASY_MODE_BOOT_SCRIPT } from "@pacsarcade/arcade-ui";
+import { BrandProvider, oneCocreationBrand } from "@/lib/brand";
+import ScrollFix from "@/components/ScrollFix";
+import AliveEffects from "@/components/AliveEffects";
+import { PenModeProvider } from "@/components/PenMode";
 import "./globals.css";
-/* One Cocreation's own face — loaded AFTER globals so Love's brand tokens
-   (--serif/--cream/--ink/--gold) win, including inside the admin shell. */
-import "./onecocreation.css";
+/* The face, split in two (cartridge walk step 8): cartridge.css is the
+   BRAND (tokens, bands, faces, imagery), house.css is the brand-free
+   framework. Loaded AFTER globals so Love's tokens win, including inside
+   the admin shell — cartridge first, house reads its tokens. */
+import "./cartridge.css";
+import "./house.css";
 
 const retronoid = localFont({
   src: "../../public/fonts/Retronoid.ttf",
@@ -29,6 +34,22 @@ const pressStart2P = Press_Start_2P({
   variable: "--font-press-start",
 });
 
+const montserrat = Montserrat({
+  weight: ["700", "800"],
+  subsets: ["latin"],
+  variable: "--font-disp",
+});
+
+/* Love's blessed FONT TRIO, leg 1 — Barlow carries H1/display (0018.05.17).
+   --font-barlow feeds --serif and --disp in cartridge.css/house.css so the
+   whole display layer (headlines, hero stacks, prices) speaks one voice. */
+const barlow = Barlow({
+  weight: ["400", "600", "700", "800"],
+  subsets: ["latin"],
+  variable: "--font-barlow",
+  display: "swap",
+});
+
 const roboto = Roboto({
   weight: ["400", "700"],
   subsets: ["latin"],
@@ -36,28 +57,34 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Claim your fren tag — frens.earth",
+  title: "One Cocreation — Where Heaven and Earth Meet",
   description:
-    "Free sovereign bitcoin handles. Your name, your keys — verifiable on nostr today, permanent on Bitcoin at the next batch. Made with love at Pac's Arcade 💜",
+    "Intuitive sessions, meditations and community with Love. Pay in dollars or bitcoin — sats land in One Cocreation's own node, never held by anyone else.",
   /* Module 6 — installable on the home screen; iOS reads these, the
      manifest (src/app/manifest.ts) covers the rest */
   appleWebApp: {
     capable: true,
-    title: "frens.earth",
+    title: "One Cocreation",
     statusBarStyle: "black-translucent",
   },
 };
 
 /* One phone contract for every surface: real device width, no forced zoom
    lock (pinch stays — accessibility), edge-to-edge under the notch, and the
-   browser chrome tinted the house void. */
+   browser chrome tinted Love's celestial night. */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0d1210",
+  themeColor: "#0a0a14",
 };
 
+/**
+ * De-housed (design punch list, 0018.05.10): the clone wears ONLY Love's
+ * face at the root. The arcade's CRT scan lines and the BFT clock are
+ * frens.earth furniture and do not ship here; the easy-mode boot script
+ * stays — accessibility is house law, not house branding.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -66,17 +93,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${retronoid.variable} ${pressStart2P.variable} ${roboto.variable} ${openDyslexic.variable}`}
+      className={`${retronoid.variable} ${pressStart2P.variable} ${roboto.variable} ${openDyslexic.variable} ${montserrat.variable} ${barlow.variable}`}
     >
       <body>
+        <script dangerouslySetInnerHTML={{ __html:
+          "try{if(localStorage.getItem('oc-theme')==='light')document.documentElement.setAttribute('data-oc-theme','light')}catch(e){}" }} />
         <script dangerouslySetInnerHTML={{ __html: EASY_MODE_BOOT_SCRIPT }} />
-        {/* Digital Renaissance is frens.earth's MAIN theme (Pac, 2026-07-09).
-            The dressing room (/a/brand) still previews candidates on top. */}
-        <BrandProvider theme={frensEarthTheme}>
-          {children}
-          <BftClock />
+        <BrandProvider theme={oneCocreationBrand}>
+          <PenModeProvider>
+            <ScrollFix />
+            <AliveEffects />
+            {children}
+          </PenModeProvider>
         </BrandProvider>
-        <CRTOverlay />
       </body>
     </html>
   );

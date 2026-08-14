@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import ArcadeHeader from "@/components/ArcadeHeader";
-import EarthFooter from "@/components/EarthFooter";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 import BookingReceipt from "@/components/booking/BookingReceipt";
 
 export const metadata: Metadata = {
@@ -18,12 +18,14 @@ export const dynamic = "force-dynamic";
 export default async function ReceiptPage({ params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
   return (
-    <main className="min-h-screen bg-void text-white">
-      <ArcadeHeader />
-      <section className="mx-auto max-w-xl px-4 py-10">
-        <BookingReceipt bookingId={bookingId} />
+    <main>
+      <SiteHeader />
+      <section>
+        <div className="wrap" style={{ maxWidth: 640 }}>
+          <BookingReceipt bookingId={bookingId} />
+        </div>
       </section>
-      <EarthFooter />
+      <SiteFooter />
     </main>
   );
 }

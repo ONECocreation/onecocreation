@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ManageBooking from "@/components/booking/ManageBooking";
 
 /**
  * The receipt — and the honest face of `processing`.
@@ -15,6 +16,7 @@ import { useEffect, useState } from "react";
 interface View {
   booking: {
     id: string;
+    serviceId?: string;
     serviceTitle: string;
     startUtc: string;
     endUtc: string;
@@ -80,39 +82,49 @@ export default function BookingReceipt({ bookingId }: { bookingId: string }) {
     };
   }, [bookingId]);
 
-  if (error) return <p className="text-sm text-amber-300">◌ {error}</p>;
-  if (!view) return <p className="text-sm text-neutral-400">Loading your booking…</p>;
+  if (error) return <p style={{ fontSize: ".9rem", color: "var(--err, #E7899E)", textAlign: "center" }}>◌ {error}</p>;
+  if (!view) return <p style={{ fontSize: ".9rem", color: "var(--muted, #897f97)", textAlign: "center" }}>Loading your booking…</p>;
 
   const { booking, payment } = view;
   const zonesDiffer = booking.artistTz !== viewerTz;
   const dayOpts: Intl.DateTimeFormatOptions = { weekday: "long", month: "long", day: "numeric" };
   const timeOpts: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
 
-  return (
-    <div>
-      <h1 className="text-2xl font-bold tracking-widest">
-        {booking.state === "confirmed" ? "YOU'RE BOOKED" : "YOUR BOOKING"}
-      </h1>
-      <p className="mt-1 text-sm text-cyan-300">{booking.serviceTitle}</p>
+  const glassCard: React.CSSProperties = {
+    borderRadius: 20, border: "1px solid var(--glass-edge)",
+    background: "var(--glass)", backdropFilter: "blur(8px)",
+    boxShadow: "0 24px 60px -30px rgba(120,100,160,.55)", padding: "20px 22px",
+  };
 
-      <div className="mt-6 border border-neutral-800 p-4">
-        <p className="text-sm text-neutral-100">{fmt(booking.startUtc, viewerTz, dayOpts)}</p>
-        <p className="mt-1 text-lg text-neutral-100">
-          {fmt(booking.startUtc, viewerTz, timeOpts)}{" "}
-          <span className="text-xs text-neutral-400">your time ({zoneLabel(viewerTz)})</span>
+  return (
+    <div style={{ textAlign: "center" }}>
+      <p style={{ margin: 0, fontSize: ".7rem", letterSpacing: ".28em", textTransform: "uppercase",
+        fontWeight: 700, color: "var(--rose, #c56e8b)" }}>
+        {booking.state === "confirmed" ? "You're Booked" : "Your Booking"}
+      </p>
+      <h1 style={{ fontFamily: "var(--font-h1, sans-serif)", fontWeight: 400, fontSize: "1.8rem",
+        color: "var(--ink-strong)", margin: ".2em 0 .6em" }}>
+        {booking.serviceTitle}
+      </h1>
+
+      <div style={glassCard}>
+        <p style={{ margin: 0, fontFamily: "var(--serif, sans-serif)", fontSize: "1.1rem", color: "var(--ink-strong)" }}>
+          {fmt(booking.startUtc, viewerTz, dayOpts)}
         </p>
-        {/* THE TIMEZONE LAW — the host's clock, always said out loud */}
-        {zonesDiffer && (
-          <p className="mt-1 text-sm text-neutral-400">
-            {fmt(booking.startUtc, booking.artistTz, timeOpts)} for the host ({zoneLabel(booking.artistTz)})
-          </p>
-        )}
+        <p style={{ margin: "4px 0 0", fontSize: "1.4rem", fontFamily: "var(--serif, sans-serif)", color: "var(--gold-deep, #b4862b)" }}>
+          {fmt(booking.startUtc, viewerTz, timeOpts)}
+        </p>
+        <p style={{ margin: "4px 0 0", fontSize: ".8rem", color: "var(--muted, #897f97)" }}>
+          your time ({zoneLabel(viewerTz)})
+          {/* THE TIMEZONE LAW — the host's clock, always said out loud */}
+          {zonesDiffer && <> · {fmt(booking.startUtc, booking.artistTz, timeOpts)} for the host ({zoneLabel(booking.artistTz)})</>}
+        </p>
       </div>
 
       {booking.state === "held" && (
-        <div className="mt-4 border border-amber-800 px-3 py-3 text-sm">
-          <p className="text-amber-300">◌ waiting on payment</p>
-          <p className="mt-1 text-xs text-neutral-400">
+        <div style={{ ...glassCard, marginTop: 14, border: "1.5px solid rgba(180,134,43,.5)", background: "rgba(217,178,78,.12)" }}>
+          <p style={{ margin: 0, fontWeight: 700, fontSize: ".9rem", color: "var(--warn, #EBCB77)" }}>◌ waiting on payment</p>
+          <p style={{ margin: "4px 0 0", fontSize: ".8rem", color: "var(--warn, #EBCB77)", opacity: 0.85 }}>
             {payment?.state === "processing"
               ? "Your payment is on the chain — this takes 10–60 minutes. This page updates itself; your time is held."
               : "Your time is held until the invoice expires. This page updates itself."}
@@ -121,16 +133,18 @@ export default function BookingReceipt({ bookingId }: { bookingId: string }) {
       )}
 
       {booking.state === "confirmed" && (
-        <div className="mt-4 border border-cyan-800 px-3 py-3 text-sm">
-          <p className="text-cyan-300">✓ paid and confirmed</p>
+        <div style={{ ...glassCard, marginTop: 14, border: "1.5px solid rgba(78,138,95,.45)", background: "rgba(78,138,95,.1)" }}>
+          <p style={{ margin: 0, fontWeight: 700, fontSize: ".9rem", color: "var(--ok, #7fb98f)" }}>✓ paid and confirmed</p>
           {booking.meetingUrl ? (
-            <p className="mt-2">
-              <a href={booking.meetingUrl} className="text-cyan-300 underline" rel="noreferrer">
-                the meeting link
+            <div style={{ marginTop: 12, display: "flex", justifyContent: "center" }}>
+              <a href={booking.meetingUrl} className="btn btn-gold btn-sm" rel="noreferrer">
+                Join the meeting →
               </a>
-            </p>
+            </div>
           ) : (
-            <p className="mt-1 text-xs text-neutral-400">The host will send the meeting link.</p>
+            <p style={{ margin: "4px 0 0", fontSize: ".8rem", color: "var(--ok, #7fb98f)", opacity: 0.85 }}>
+              The host will send the meeting link.
+            </p>
           )}
         </div>
       )}
@@ -139,26 +153,29 @@ export default function BookingReceipt({ bookingId }: { bookingId: string }) {
           UID is stable, downloading again after payment updates that same
           entry in place rather than leaving a stale one behind. */}
       {(booking.state === "held" || booking.state === "confirmed") && (
-        <a
-          href={`/api/bookings/${booking.id}/ics`}
-          className="mt-4 block border border-neutral-700 px-3 py-2 text-center text-sm text-neutral-200 hover:border-cyan-600 hover:text-cyan-300"
-        >
-          add to your calendar
-        </a>
+        <>
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+            <a href={`/api/bookings/${booking.id}/ics`} className="btn btn-ghost btn-sm">
+              Add to your calendar 🗓️
+            </a>
+          </div>
+          <p style={{ margin: "8px 0 0", fontSize: ".76rem", color: "var(--muted, #897f97)" }}>
+            your phone will remind you an hour before
+          </p>
+        </>
       )}
-      {(booking.state === "held" || booking.state === "confirmed") && (
-        <p className="mt-2 text-center text-xs text-neutral-500">
-          your phone will remind you an hour before
-        </p>
+
+      {booking.state === "confirmed" && booking.serviceId && (
+        <ManageBooking bookingId={booking.id} serviceId={booking.serviceId} startUtc={booking.startUtc} />
       )}
 
       {(booking.state === "released" || booking.state === "canceled") && (
-        <p className="mt-4 border border-neutral-700 px-3 py-3 text-sm text-neutral-400">
+        <p style={{ ...glassCard, marginTop: 14, fontSize: ".9rem", color: "var(--muted, #897f97)" }}>
           This booking was {booking.state}. The time went back on the board.
         </p>
       )}
 
-      <p className="mt-6 text-xs text-neutral-600">booking {booking.id}</p>
+      <p style={{ marginTop: 24, fontSize: ".72rem", color: "var(--muted, #897f97)", opacity: 0.7 }}>booking {booking.id}</p>
     </div>
   );
 }

@@ -31,13 +31,23 @@ import { SiteChromeHeader, SiteChromeFooter } from "./site-chrome";
  * branding. The registry is untouched; only the presentation changes.
  */
 const SITE_LABELS: Record<string, string> = {
-  overview: "Overview",
-  store: "Shelf",
-  booking: "Calendar",
+  overview: "Home & Calendar",
+  store: "Items",
+  booking: "Services",
+  letters: "Letters",
+  people: "People",
+  money: "Money Jars",
   brand: "Brand",
 };
 
+/** Same treatment for blurbs — "where a first captain begins" is the house
+    onboarding voice, not an artist's dashboard. */
+const SITE_BLURBS: Record<string, string> = {
+  overview: "today's sessions, the jars, and your week at a glance",
+};
+
 const label = (key: string, fallback: string) => SITE_LABELS[key] ?? fallback;
+const blurb = (key: string, fallback?: string) => SITE_BLURBS[key] ?? fallback;
 
 export default function SiteConsoleShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/a";
@@ -51,21 +61,16 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
     <div className="mgmt-ground">
       <SiteChromeHeader />
 
-      <div className="mgmt-wrap">
-        <header className="mgmt-head">
-          <p className="mgmt-eyebrow">Manage</p>
-          <h1 className="mgmt-title">{label(current.key, current.label)}</h1>
-          {current.blurb && <p className="mgmt-blurb">{current.blurb}</p>}
-        </header>
-
-        <nav className="mgmt-nav" aria-label="Management sections">
+      <div className="mgmt-wrap mgmt-shell">
+        {/* the LEFT RAIL — wireframe v2: tabs down the side, stage beside */}
+        <nav className="mgmt-rail" aria-label="Management sections">
           {rooms.map((r) => {
             const active = r.key === current.key;
             return (
               <Link
                 key={r.key}
                 href={r.href}
-                className={`mgmt-tab${active ? " is-active" : ""}`}
+                className={`mgmt-rail-tab${active ? " is-active" : ""}`}
                 aria-current={active ? "page" : undefined}
               >
                 {label(r.key, r.label)}
@@ -74,7 +79,16 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
           })}
         </nav>
 
-        <main className="mgmt-body">{children}</main>
+        <div className="mgmt-stage">
+          <header className="mgmt-head">
+            <p className="mgmt-eyebrow">Manage</p>
+            <h1 className="mgmt-title">{label(current.key, current.label)}</h1>
+            {blurb(current.key, current.blurb) && (
+              <p className="mgmt-blurb">{blurb(current.key, current.blurb)}</p>
+            )}
+          </header>
+          <main className="mgmt-body">{children}</main>
+        </div>
       </div>
 
       <SiteChromeFooter />

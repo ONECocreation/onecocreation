@@ -263,6 +263,34 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     blurb: "sessions and your week — what you offer, when you work",
     tone: "cyan",
   },
+  /* ── the artist-console rooms (wireframe v2, Admiral-blessed 0018.05.12).
+     Site chrome renders these in its left rail; the scar shell ignores them
+     (houseOnly false but arcade keeps its own decks — additive, no berth
+     stolen). */
+  {
+    key: "letters",
+    href: "/a/letters",
+    label: "LETTERS",
+    short: "LETTERS",
+    blurb: "every letter the house sends — and the ones Love will bring",
+    tone: "pink",
+  },
+  {
+    key: "people",
+    href: "/a/people",
+    label: "PEOPLE",
+    short: "PEOPLE",
+    blurb: "who's in the field — packages held, progress, offers awaiting you",
+    tone: "cyan",
+  },
+  {
+    key: "money",
+    href: "/a/money",
+    label: "MONEY JARS",
+    short: "MONEY",
+    blurb: "the jars, the codes, and the books — exports by type and date",
+    tone: "neon",
+  },
 ];
 
 /** Every level-1 + level-2 sub of a room, flattened (for path matching). */

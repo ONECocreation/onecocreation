@@ -1,6 +1,9 @@
+import { verifyEvent } from "nostr-tools";
+import { nip19 } from "nostr-tools";
 import { claimHandle } from "@/lib/registry";
 import { spaceForHost } from "@/lib/identity-config";
 import { effectiveMempoolNode, MEMPOOL_URL_DEFAULT } from "@/lib/nodeconfig";
+import { makeFrenToken, FREN_COOKIE } from "@/lib/fren-auth";
 
 /* Bitcoin time for the entry — "player since block N". Best-effort with a
    short leash: a slow or down explorer must never block a claim. Server-side,
@@ -31,7 +34,15 @@ async function currentTipHeight(): Promise<number | null> {
 }
 
 export async function POST(request: Request) {
-  let body: { handle?: string; npub?: string; space?: string };
+  let body: {
+    handle?: string;
+    npub?: string;
+    space?: string;
+    /** a signed PACS-LOGIN event — claim + sign-in as ONE atomic step
+     *  (the welcome flow). Skips the reverse lookup entirely, so the
+     *  blob CDN's lag can never strand a fresh claim at the door. */
+    event?: { content?: string; pubkey?: string; sig?: string; created_at?: number; kind?: number; tags?: unknown; id?: string };
+  };
   try {
     body = await request.json();
   } catch {
@@ -49,5 +60,29 @@ export async function POST(request: Request) {
   if (!result.ok) {
     return Response.json(result, { status: 409 });
   }
+
+  // the atomic door: the event proves the claimer HOLDS the claimed key —
+  // fresh challenge, valid signature, pubkey == npub — so the session is
+  // minted right here, no lookup, no lag window
+  if (body.event?.content && body.event.pubkey && body.event.sig) {
+    const m = body.event.content.match(/^PACS-LOGIN-(\d+)$/);
+    const fresh = m && Math.abs(Date.now() - Number(m[1])) < 5 * 60 * 1000;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const signed = fresh && verifyEvent(body.event as any);
+    const sameKey = signed && nip19.npubEncode(body.event.pubkey!) === body.npub;
+    if (sameKey) {
+      const handle = body.handle.trim().toLowerCase();
+      const token = makeFrenToken(handle, space);
+      return Response.json(
+        { ...result, session: { handle, space, npub: body.npub } },
+        {
+          headers: {
+            "Set-Cookie": `${FREN_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`,
+          },
+        },
+      );
+    }
+  }
+
   return Response.json(result);
 }

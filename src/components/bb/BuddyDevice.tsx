@@ -254,7 +254,7 @@ export default function BuddyDevice({
           {buddy.name} <span aria-hidden>💜</span>
         </span>
         <span className="rounded-full border border-pink/30 bg-pink/10 px-2 py-1 font-mono text-[10px] text-pink">
-          {buddy.name}@frens.earth
+          {buddy.name}@onecocreation
         </span>
       </div>
       <div className="mt-3 flex flex-wrap gap-2 font-mono text-[10px] uppercase tracking-wider text-white/50">
@@ -287,7 +287,7 @@ export default function BuddyDevice({
               lived {ageDays} day{ageDays === 1 ? "" : "s"} on the block<br />
               <span className="text-white/50">{cause}</span>
             </p>
-            <button onClick={onNew} className="button mt-1">Bring home a new fren</button>
+            <button onClick={onNew} className="button mt-1">Bring home a new buddy</button>
           </div>
         )}
       </div>

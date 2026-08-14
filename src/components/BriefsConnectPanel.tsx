@@ -60,7 +60,7 @@ export default function BriefsConnectPanel() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       <p className="lcars-eyebrow mb-3" data-accent="cyan">
-        OPERATOR CONSOLE · FRENS.EARTH
+        OPERATOR CONSOLE · ONE COCREATION
       </p>
       <h2 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">BRIEFS</h2>
       <p className="mb-8 font-mono text-[11px] text-white/50">

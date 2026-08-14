@@ -74,7 +74,15 @@ const TOKEN_JOIN = "~";
 export const MAX_SESSIONS = 8;
 
 function parseToken(raw: string): { handle: string; space: string } | null {
-  const [handle, space, exp, sig] = raw.split(".");
+  // parse from the END — the handle may itself carry dots (every email
+  // member: pac@pacsarcade.org.email.<exp>.<sig> — the Admiral's
+  // "didn't keep me signed in", 0018.05.17). Spaces never contain dots.
+  const parts = raw.split(".");
+  if (parts.length < 4) return null;
+  const sig = parts.pop()!;
+  const exp = parts.pop()!;
+  const space = parts.pop()!;
+  const handle = parts.join(".");
   if (!handle || !space || !exp || !sig) return null;
   if (Date.now() > Number(exp)) return null;
   const expected = hmac(`${handle}|${space}|${exp}`);
@@ -86,11 +94,12 @@ function parseToken(raw: string): { handle: string; space: string } | null {
   return { handle, space };
 }
 
-/** Every valid session in the cookie, in order (first = active). */
-export function sessionsFromRequest(
-  request: Request
+/** Every valid session in a raw cookie header, in order (first = active) —
+ *  split out so the operator gate can read the fren cookie too. */
+export function sessionsFromCookieHeader(
+  cookieHeader: string | null
 ): { token: string; handle: string; space: string }[] {
-  const cookie = request.headers.get("cookie") ?? "";
+  const cookie = cookieHeader ?? "";
   const match = cookie.match(new RegExp(`${FREN_COOKIE}=([^;]+)`));
   if (!match) return [];
   const out: { token: string; handle: string; space: string }[] = [];
@@ -101,6 +110,13 @@ export function sessionsFromRequest(
     }
   }
   return out.slice(0, MAX_SESSIONS);
+}
+
+/** Every valid session in the cookie, in order (first = active). */
+export function sessionsFromRequest(
+  request: Request
+): { token: string; handle: string; space: string }[] {
+  return sessionsFromCookieHeader(request.headers.get("cookie"));
 }
 
 /** Join tokens back into one cookie value (first = active). */

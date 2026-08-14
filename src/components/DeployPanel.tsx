@@ -221,7 +221,7 @@ function ConnectDeployHook({ onConnected }: { onConnected: () => void }) {
           data-accent="neon"
           className="btn-pill btn-pill--solid px-4"
         >
-          {busy ? "SAVING…" : "▶ CONNECT"}
+          {busy ? "SAVING…" : " CONNECT"}
         </button>
       </div>
       {err && <p className="mt-2 font-pixel text-[9px] uppercase text-ghost">{err}</p>}

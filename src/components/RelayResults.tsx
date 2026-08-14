@@ -7,9 +7,9 @@ import { anyAccepted, relayLabel, type RelayResult } from "@/lib/kind0-publish";
 export default function RelayResults({ results }: { results: RelayResult[] }) {
   const carried = anyAccepted(results);
   return (
-    <div className="border-2 border-edge bg-void px-3 py-2">
+    <div style={{ borderRadius: 12, border: "1px solid var(--glass-edge)", background: "var(--glass)", padding: "10px 14px" }}>
       <p
-        className={`mb-1 font-pixel text-[9px] uppercase ${carried ? "text-neon glow-neon" : "text-ghost glow-ghost"}`}
+        className="mb-1" style={{ fontSize: ".72rem", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: carried ? "var(--ok, #7fb98f)" : "var(--err, #E7899E)" }}
       >
         {carried
           ? "✓ CARD PUBLISHED — THE RELAYS GOSSIP IT OUT FROM HERE"
@@ -18,9 +18,9 @@ export default function RelayResults({ results }: { results: RelayResult[] }) {
       <ul className="space-y-0.5">
         {results.map((r) => (
           <li key={r.relay} className="font-mono text-[10px]">
-            <span className={r.ok ? "text-neon" : "text-ghost"}>{r.ok ? "✓" : "✗"}</span>{" "}
-            <span className="text-white/60">{relayLabel(r.relay)}</span>
-            {!r.ok && r.note && <span className="text-white/35"> — {r.note}</span>}
+            <span style={{ color: r.ok ? "var(--ok, #7fb98f)" : "var(--err, #E7899E)" }}>{r.ok ? "✓" : "✗"}</span>{" "}
+            <span style={{ color: "var(--ink-body)" }}>{relayLabel(r.relay)}</span>
+            {!r.ok && r.note && <span style={{ color: "var(--muted)" }}> — {r.note}</span>}
           </li>
         ))}
       </ul>

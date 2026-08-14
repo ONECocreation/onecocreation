@@ -135,7 +135,7 @@ export function startNostrConnectForTemplate(
     relays: NOSTRCONNECT_RELAYS,
     secret,
     perms,
-    name: "frens.earth",
+    name: "One Cocreation",
     url: typeof location !== "undefined" ? location.origin : undefined,
   });
   const abort = new AbortController();
@@ -185,7 +185,7 @@ export function nip55SignUri(kind: ChallengeKind, next?: string): string {
     compressionType: "none",
     returnType: "event",
     type: "sign_event",
-    appName: "frens.earth",
+    appName: "One Cocreation",
     callbackUrl,
   });
   return `nostrsigner:${encodeURIComponent(JSON.stringify(event))}?${params.toString()}`;

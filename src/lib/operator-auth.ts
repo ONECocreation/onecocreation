@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { verifyEvent, nip19 } from "nostr-tools";
+import { sessionsFromCookieHeader } from "./fren-auth";
 
 /**
  * Operator auth — ported from pacsarcade-org's console-auth: the operator IS
@@ -116,8 +117,25 @@ export function verifyOperatorToken(token: string | undefined): string | null {
   return operatorHexKeys().includes(pubkey) ? pubkey : null;
 }
 
-/** Pulls the operator pubkey from a cookie header value, or null. */
+/** The email seat (the Admiral's ruling for Love, 0018.05.15): an email on
+ *  OPERATOR_EMAILS is an operator through her ordinary email sign-in — the
+ *  interim door while her key is being worked out. */
+function operatorEmails(): string[] {
+  return (process.env.OPERATOR_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/** Pulls the operator identity from a cookie header value, or null —
+ *  a keyed operator's pubkey, or an allowlisted email seat's address. */
 export function operatorFromCookieHeader(cookieHeader: string | null): string | null {
   const match = (cookieHeader ?? "").match(new RegExp(`${OPERATOR_COOKIE}=([^;]+)`));
-  return verifyOperatorToken(match?.[1]);
+  const keyed = verifyOperatorToken(match?.[1]);
+  if (keyed) return keyed;
+  const active = sessionsFromCookieHeader(cookieHeader)[0];
+  if (active && active.space === "email" && operatorEmails().includes(active.handle.toLowerCase())) {
+    return active.handle;
+  }
+  return null;
 }

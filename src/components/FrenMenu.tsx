@@ -1,27 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PixelAvatar } from "@pacsarcade/arcade-ui";
 import useFrenSession from "@/hooks/useFrenSession";
 import useNostrProfile from "@/hooks/useNostrProfile";
+import useIsOperator from "@/hooks/useIsOperator";
 import { SPACE_ROLES } from "@/lib/identity-config";
 
 /* The admin deck row — for a live operator session OR a fren whose key is on
    the operator allowlist (`eligible`: the door shows, the gate still takes a
    fresh signature). Cookies are httpOnly, so the menu asks the whoami
-   endpoint; everyone else never sees the row. */
-function useIsOperator(): boolean {
-  const [isOp, setIsOp] = useState(false);
-  useEffect(() => {
-    fetch("/api/admin/session")
-      .then((r) => r.json())
-      .then((d) => setIsOp(!!d.ok || !!d.eligible))
-      .catch(() => {});
-  }, []);
-  return isOp;
-}
+   endpoint (useIsOperator, shared with Love's Pen toggle); everyone else
+   never sees the row. */
 
 function AdminDeckRow() {
   return (

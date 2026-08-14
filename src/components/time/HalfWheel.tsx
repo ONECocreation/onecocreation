@@ -82,10 +82,15 @@ function intraBlockSeconds(now: Date, tipTs: number | null): number {
 }
 
 /* moon ring: illumination fraction — new at the bottom, full at the top,
-   waxing up the near side, waning back down */
-function moonIllumination(h: number): number {
-  const lun = (h % 4252) / 4252;
-  return (1 - Math.cos(2 * Math.PI * lun)) / 2;
+   waxing up the near side, waning back down. THE SKY'S moon (synodic from
+   the real new-moon epoch), not the block count — a live height means NOW. */
+const SYNODIC_MS = 29.530588853 * 86_400_000;
+const NEW_MOON_2000_MS = Date.UTC(2000, 0, 6, 18, 14);
+function lunation(): number {
+  return (((Date.now() - NEW_MOON_2000_MS) % SYNODIC_MS) + SYNODIC_MS) % SYNODIC_MS / SYNODIC_MS;
+}
+function moonIllumination(): number {
+  return (1 - Math.cos(2 * Math.PI * lunation())) / 2;
 }
 
 /* display-clamped block seconds: parks at 9:59 when the chain is loaded */
@@ -99,7 +104,7 @@ function ringProgress(r: Ring, h: number, now: Date, tipTs: number | null): numb
   if (r.kind === "wall-s") return (intraDisplay(now, tipTs) % 60) / 60;
   if (r.kind === "wall-m") return ((h % 6) * 600 + intraDisplay(now, tipTs)) / 3600;
   if (r.kind === "intra") return intraDisplay(now, tipTs) / 600;
-  if (r.kind === "moon") return moonIllumination(h);
+  if (r.kind === "moon") return moonIllumination();
   if (r.max) return h / r.max;
   return (h % (r.mod as number)) / (r.mod as number);
 }
@@ -115,7 +120,7 @@ function ringBall(r: Ring, h: number, now: Date, tipTs: number | null): number |
     case "week": return Math.floor((h % 1008) / 144);
     case "fortnight": return Math.floor((h % 2016) / 1008);
     case "month": return Math.floor((Math.floor(h / 144) % 364) / 28) + 1; // month we are IN, 1..13
-    case "moon": return moonPhase(h).emoji;
+    case "moon": return moonPhase(h, now.getTime()).emoji;
     case "year": return Math.floor(Math.floor(h / 144) / 364); // the year we are IN — matches 0018
     case "olympiad": return Math.floor((h % 210000) / 52416);
     case "generation": return Math.floor((h % 1260000) / 210000);
@@ -175,8 +180,8 @@ function cardFor(r: Ring, h: number, now: Date, tipTs: number | null): Card {
     case "month":
       return { big: `${month} / 13`, l1: `day ${dayOfMonth} / 28`, l2: `${compactNum(4032 - (h % 4032))} blocks left` };
     case "moon": {
-      const ph = moonPhase(h);
-      const dmoon = Math.floor((h % 4252) / 144) + 1;
+      const ph = moonPhase(h, Date.now());
+      const dmoon = Math.floor(lunation() * 29.53) + 1;
       return { big: ph.emoji, l1: ph.name, l2: `day ${dmoon} of ≈30` };
     }
     case "year": {

@@ -65,7 +65,7 @@ export default function ScarHud() {
       </span>
 
       {hud.at === "reading" && (
-        <span className="scar-hud__seg scar-hud__seg--dim">BOARD ▸ READING…</span>
+        <span className="scar-hud__seg scar-hud__seg--dim">BOARD READING…</span>
       )}
 
       {hud.at === "dark" && (
@@ -74,7 +74,7 @@ export default function ScarHud() {
           className="scar-hud__seg scar-hud__seg--dim"
           title="the rank board didn't answer — the HUD goes dark rather than invent numbers"
         >
-          BOARD ▸ NO READ
+          BOARD NO READ
         </span>
       )}
 
@@ -84,8 +84,7 @@ export default function ScarHud() {
             href="/a/testing#rank"
             className="scar-hud__seg scar-hud__seg--rank"
             title="your rank track — office label first (Pac's ruling); the full board lives on the crew board"
-          >
-            ▸ {hud.read.office ?? hud.read.rank?.name ?? "NO TAG YET"}
+          > {hud.read.office ?? hud.read.rank?.name ?? "NO TAG YET"}
           </Link>
           <span
             className="scar-hud__seg"

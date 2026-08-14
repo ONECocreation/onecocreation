@@ -21,7 +21,7 @@ export default function ShipsLog() {
             <ul className="mt-2 space-y-1">
               {e.bullets.map((b, i) => (
                 <li key={i} className="flex gap-2 font-body text-xs text-white/70">
-                  <span aria-hidden className="text-neon">▸</span>
+                  <span aria-hidden className="text-neon"> </span>
                   <span>{b}</span>
                 </li>
               ))}

@@ -80,8 +80,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ orde
 
   // single-item checkout today, but scan the line items honestly: the first
   // one whose catalog record carries a file is the deliverable
+  const wantItem = new URL(request.url).searchParams.get("item");
   let blobPath: string | undefined;
   for (const li of order.lineItems) {
+    if (wantItem && li.itemId !== wantItem) continue;
     const item = await getItem(li.itemId);
     if (item?.media?.deliverable?.blobPath) {
       blobPath = item.media.deliverable.blobPath;

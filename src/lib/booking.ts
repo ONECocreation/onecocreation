@@ -32,7 +32,34 @@ const emptyConfig = (): BookingConfig => ({
 const CONFIG_BLOB = "booking/config.json";
 const configFile = () => path.join(process.cwd(), "data", "booking-config.json");
 
+const CONFIG_KV = "booking:config";
+
+async function cfgKv(cmd: unknown[]): Promise<unknown> {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  if (!url || !token) return null;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(cmd),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`booking config: KV ${res.status}`);
+  return ((await res.json()) as { result: unknown }).result;
+}
+
 export async function readConfig(): Promise<BookingConfig> {
+  /* vault first — same CDN-staleness lesson as the store catalog */
+  try {
+    const raw = (await cfgKv(["GET", CONFIG_KV])) as string | null;
+    if (raw) return JSON.parse(raw) as BookingConfig;
+  } catch {
+    /* fall through */
+  }
+  return readConfigLegacy();
+}
+
+async function readConfigLegacy(): Promise<BookingConfig> {
   if (blobStoreEnabled()) {
     try {
       const res = await get(CONFIG_BLOB, { access: "public" });
@@ -53,6 +80,12 @@ export async function readConfig(): Promise<BookingConfig> {
 
 export async function writeConfig(doc: BookingConfig): Promise<void> {
   const json = JSON.stringify(doc, null, 2);
+  try {
+    const url = process.env.KV_REST_API_URL;
+    if (url && (await cfgKv(["SET", CONFIG_KV, json])) !== null) return;
+  } catch {
+    /* fall through to legacy write */
+  }
   if (blobStoreEnabled()) {
     await put(CONFIG_BLOB, json, {
       access: "public",
@@ -68,9 +101,30 @@ export async function writeConfig(doc: BookingConfig): Promise<void> {
   await fs.rename(tmp, configFile());
 }
 
+/** The shelf order Love wants spoken everywhere (Admiral, 0018.05.14):
+ *  discovery first, then soul conversations, then the cuts — women before
+ *  men, keeping their order among themselves. Any OTHER (non-ConsciousCuts)
+ *  service defaults to rank 50 and sorts ahead of the whole group —
+ *  ConsciousCuts goes LAST, everywhere sessions list (Love's meeting,
+ *  0018.05.11). */
+const SERVICE_RANK: Record<string, number> = {
+  "discovery-call": 101,
+  "soul-conversation": 102,
+  "soul-conversation-women": 103,
+  "soul-conversation-men": 104,
+  "silent-haircut-women": 105,
+  "silent-haircut-men": 106,
+};
+
+export function sortServices<T extends { id: string }>(services: T[]): T[] {
+  return services
+    .slice()
+    .sort((a, b) => (SERVICE_RANK[a.id] ?? 50) - (SERVICE_RANK[b.id] ?? 50));
+}
+
 export async function listServices(opts?: { includeHidden?: boolean }): Promise<Service[]> {
   const { services } = await readConfig();
-  return opts?.includeHidden ? services : services.filter((s) => s.status === "live");
+  return sortServices(opts?.includeHidden ? services : services.filter((s) => s.status === "live"));
 }
 
 export async function getService(id: string): Promise<Service | null> {

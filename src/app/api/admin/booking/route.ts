@@ -6,12 +6,15 @@ import {
   validateService,
   validateRule,
   validateOverride,
+  validateRetreat,
   slugify,
   DEFAULT_TZ,
   type Service,
   type AvailabilityRule,
   type DateOverride,
+  type Retreat,
 } from "@/lib/booking";
+import { removeRetreatItems, syncRetreatItems, syncRetreatOverrides } from "@/lib/retreats";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +63,7 @@ export async function PUT(request: Request) {
   if (denied) return denied;
   if (!sameOrigin(request)) return NextResponse.json({ ok: false, reason: "bad origin" }, { status: 403 });
 
-  let body: { kind: "service" | "rule" | "override"; value: unknown };
+  let body: { kind: "service" | "rule" | "override" | "ical" | "retreat"; value: unknown };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -92,6 +95,14 @@ export async function PUT(request: Request) {
     const at = config.rules.findIndex((x) => x.id === r.id);
     if (at >= 0) config.rules[at] = r;
     else config.rules.push(r);
+  } else if (body.kind === "ical") {
+    // the external calendar's secret address — empty string unhooks it
+    const url = String((body.value as { url?: string })?.url ?? "").trim();
+    if (url && !/^https?:\/\//.test(url)) {
+      return NextResponse.json({ ok: false, reason: "an iCal address starting with http(s)://" }, { status: 400 });
+    }
+    if (url) config.icalUrl = url;
+    else delete config.icalUrl;
   } else if (body.kind === "override") {
     const o = body.value as DateOverride;
     o.id = o.id || id();
@@ -100,6 +111,27 @@ export async function PUT(request: Request) {
     const at = config.overrides.findIndex((x) => x.id === o.id);
     if (at >= 0) config.overrides[at] = o;
     else config.overrides.push(o);
+  } else if (body.kind === "retreat") {
+    const r = body.value as Retreat;
+    r.id = r.id || slugify(r.title ?? "") || id();
+    r.title = (r.title ?? "").trim();
+    r.location = (r.location ?? "").trim();
+    r.blurb = (r.blurb ?? "").trim();
+    r.status = r.status === "live" ? "live" : "hidden";
+    r.seats = Math.floor(Number(r.seats));
+    r.priceSats = Math.floor(Number(r.priceSats));
+    r.depositSats = r.depositSats != null && Number(r.depositSats) > 0 ? Math.floor(Number(r.depositSats)) : undefined;
+    const check = validateRetreat(r);
+    if (!check.ok) return NextResponse.json({ ok: false, reason: `needs ${check.reason}` }, { status: 400 });
+    config.retreats = config.retreats ?? [];
+    const at = config.retreats.findIndex((x) => x.id === r.id);
+    if (at >= 0) r.createdAtMs = config.retreats[at].createdAtMs;
+    else r.createdAtMs = Date.now();
+    if (at >= 0) config.retreats[at] = r;
+    else config.retreats.push(r);
+    // its days become blocked overrides; its seats become shelf items
+    syncRetreatOverrides(config, r);
+    await syncRetreatItems(r);
   } else {
     return NextResponse.json({ ok: false, reason: "unknown kind" }, { status: 400 });
   }
@@ -133,6 +165,10 @@ export async function DELETE(request: Request) {
     config.rules = config.rules.filter((r) => r.id !== target);
   } else if (kind === "override") {
     config.overrides = config.overrides.filter((o) => o.id !== target);
+  } else if (kind === "retreat") {
+    config.retreats = (config.retreats ?? []).filter((r) => r.id !== target);
+    config.overrides = config.overrides.filter((o) => !o.id.startsWith(`retreat-${target}-`));
+    await removeRetreatItems(target);
   } else {
     return NextResponse.json({ ok: false, reason: "unknown kind" }, { status: 400 });
   }

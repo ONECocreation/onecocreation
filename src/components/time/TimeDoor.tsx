@@ -124,7 +124,7 @@ export default function TimeDoor({ children }: { children?: ReactNode }) {
       {/* ═══ THE EXPERIMENT ═══ */}
       <section className="mb-6" aria-label="The experiment">
         <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
-          PART TWO ▸ THE EXPERIMENT
+          PART TWO THE EXPERIMENT
         </p>
         <h2 className="mb-3 text-balance font-pixel text-lg uppercase text-neon">
           Watch a block land

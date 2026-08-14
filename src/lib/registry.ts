@@ -246,6 +246,7 @@ async function blobWriteIndex(space: string, index: Record<string, HandleEntry>)
     addRandomSuffix: false,
     allowOverwrite: true,
     contentType: "application/json",
+    cacheControlMaxAge: 60,
   });
 }
 
@@ -298,7 +299,11 @@ async function blobFindByNpub(space: string, npub: string): Promise<HandleEntry 
   const index = await blobReadIndex(space);
   if (index) {
     const hit = Object.values(index).find((e) => e.npub === npub);
-    if (hit) return hit;
+    // TRUST BUT VERIFY: the index rides the CDN and can outlive a release —
+    // a hit whose authoritative blob is gone is a GHOST (the eat6→pacster
+    // haunting, 0018.05.17: sign-in kept resurrecting a released tag while
+    // availability told the truth). head() bypasses the edge cache.
+    if (hit && (await blobExists(space, hit.handle))) return hit;
   }
   const rebuilt = await blobRebuildIndex(space);
   return Object.values(rebuilt).find((e) => e.npub === npub) ?? null;
@@ -361,6 +366,7 @@ export async function claimHandle(
       await put(blobPath(s, valid.handle), JSON.stringify(entry, null, 2), {
         access: "public",
         addRandomSuffix: false,
+        cacheControlMaxAge: 60,
         allowOverwrite: false, // create-if-not-exists: the atomic uniqueness check
         contentType: "application/json",
       });
@@ -432,6 +438,7 @@ export async function seatReservedHandle({
       await put(blobPath(s, fmt.handle), JSON.stringify(entry, null, 2), {
         access: "public",
         addRandomSuffix: false,
+        cacheControlMaxAge: 60,
         allowOverwrite: false, // create-if-not-exists: seating never overwrites
         contentType: "application/json",
       });
@@ -479,6 +486,7 @@ export async function updateEntry(
       await put(blobPath(s, handle), JSON.stringify(next, null, 2), {
         access: "public",
         addRandomSuffix: false,
+        cacheControlMaxAge: 60,
         allowOverwrite: true,
         contentType: "application/json",
       });
@@ -647,6 +655,7 @@ async function writeEntryRecord(space: string, entry: HandleEntry): Promise<bool
       await put(blobPath(space, entry.handle), JSON.stringify(entry, null, 2), {
         access: "public",
         addRandomSuffix: false,
+        cacheControlMaxAge: 60,
         allowOverwrite: true, // an existing record, not a new claim
         contentType: "application/json",
       });

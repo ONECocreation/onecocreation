@@ -271,8 +271,7 @@ export default function BriefsPanel() {
                   className={`mb-3 font-mono text-[11px] leading-relaxed ${
                     b.status === "signed" ? "text-neon/85" : "text-cyan/85"
                   }`}
-                >
-                  ▸ {b.comment}
+                > {b.comment}
                 </p>
               )}
 

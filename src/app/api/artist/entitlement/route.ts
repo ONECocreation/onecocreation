@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const fren = frenFromRequest(request);
   if (!fren) {
-    return Response.json({ ok: false, reason: "sign in with your tag first, fren" }, { status: 401 });
+    return Response.json({ ok: false, reason: "sign in with your tag first" }, { status: 401 });
   }
   const entry = await getEntry(fren.handle, fren.space);
   const artist = !!entry?.npub && (await isArtistNpub(entry.npub));
