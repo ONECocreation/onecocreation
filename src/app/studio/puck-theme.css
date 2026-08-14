@@ -80,17 +80,22 @@
 
 /* "the text in the drop down menus is hard to read": native <select>
    popups render OS-side but the closed control + <option> rows take our
-   colors when set explicitly. Solid night ground, full ink. */
+   colors when set explicitly. Solid night ground, full ink — and the
+   CLOSED control itself never below 13px (LEGIBILITY DOCTRINE,
+   brand-board batch 2026-08-14: the complaint was the closed control's
+   own size/contrast, not just the options). */
 .oc-studio select,
 .oc-studio [class*="Input-select"] {
   background: #1b1530 !important;
   color: #f4ecff !important;
   border-color: rgba(139, 118, 196, 0.4);
+  font-size: 13px;
 }
 .oc-studio select option,
 .oc-studio [class*="Input-select"] option {
   background: #1b1530;
   color: #f4ecff;
+  font-size: 13px;
 }
 .oc-studio select option:disabled {
   color: #6f6683;

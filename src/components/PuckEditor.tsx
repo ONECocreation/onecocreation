@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Puck, Render, createUsePuck, type Data } from "@puckeditor/core";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { Puck, Render, Drawer, createUsePuck, useGetPuck, type Data } from "@puckeditor/core";
 import "@puckeditor/core/no-external.css";
 import { config } from "@/lib/puck-config";
 import Copilot from "@/components/Copilot";
-import PaletteDock from "@/components/PaletteDock";
-import { lintPage, summarize, type Finding } from "@pacsarcade/plugin-rails";
+import { lintPage, type Finding } from "@pacsarcade/plugin-rails";
 import { createChangelog, type ChangeOrigin, type Changelog } from "@pacsarcade/puck-changelog";
 import { ChangelogBridge, useApplyData } from "@pacsarcade/puck-changelog/react";
-import { ViewportBar, ArtboardRail, CanvasZoomer, ZoomControls, FrameScrollbarStyles, useCanvasZoom } from "@pacsarcade/puck-config/responsive";
+import { ViewportBar, ArtboardRail, CanvasZoomer, ZoomControls, FrameScrollbarStyles, useCanvasZoom, type CanvasZoomApi } from "@pacsarcade/puck-config/responsive";
 import { createPresence, type PresenceClient } from "@pacsarcade/presence";
 import { createNostrTransport } from "@pacsarcade/presence/nostr";
 import { loadIdentity, saveIdentity, colorFor, newSessionId } from "@pacsarcade/presence";
@@ -22,7 +21,7 @@ import { ONECOCREATION } from "@/brand/tokens";
  * 2026-08-13). Puck's compositional API lets us own the layout with zero
  * core patches:
  *
- *   ┌ top bar: STUDIO · page · preview · palette · rails · zen · publish ┐
+ *   ┌ top bar: STUDIO · page · brand · guidelines · zoom · zen · publish ┐
  *   │ LIBRARY   │        canvas        │  STYLE   │  NUMBER ONE          │
  *   │ (blocks + │   (Puck.Preview)     │ (fields) │  (docked copilot)    │
  *   │  outline) │                      │          │                      │
@@ -75,6 +74,11 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
     return () => mq.removeEventListener("change", apply);
   }, []);
   const saveTimer = useRef<number | null>(null);
+  /* the canvas column — measured by useCanvasZoom (via StudioZoomProvider);
+     lives at editor level so the top-bar zoom pills and the canvas share
+     one zoom state (ZOOM LIFT, brand-board batch 2026-08-14) */
+  const canvasColRef = useRef<HTMLDivElement>(null);
+  const [libQuery, setLibQuery] = useState("");
 
   const liveUrl = `/p/${slug}`;
   const lane = slug === "practice" || slug.startsWith("u/") ? "play" : "brand";
@@ -213,7 +217,23 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
   function goToPage(target: string) {
     const t = target.trim().replace(/^\/+|\/+$/g, "");
     if (!t || t === slug) return;
+    if (t === "brand") {
+      window.alert("'brand' is the brand board — pick another name");
+      return;
+    }
     window.location.assign(t === "home" ? "/studio" : `/studio/${t}`);
+  }
+
+  /* → the brand board: flush any pending draft save first, remember where
+     we were so "back to studio" returns here */
+  async function goBrandBoard() {
+    try { sessionStorage.setItem("oc-last-slug", slug); } catch { /* private mode */ }
+    if (saveTimer.current) {
+      window.clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+      await saveDraft(liveRef.current);
+    }
+    window.location.assign("/studio/brand");
   }
 
   const pill: React.CSSProperties = {
@@ -222,7 +242,10 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
   };
   const GOLD = "var(--gold-deep, #b4862b)";
   const errCount = findings.filter((f) => f.severity === "error").length;
-  const switcherOptions = Array.from(new Set(["home", "practice", slug, ...Object.keys(SEEDS), ...pages]));
+  const warnCount = findings.length - errCount;
+  /* "brand" is RESERVED: /studio/brand is the brand board, never a page */
+  const switcherOptions = Array.from(new Set(["home", "practice", slug, ...Object.keys(SEEDS), ...pages]))
+    .filter((p) => p !== "brand");
 
   /* one side panel: content when open, slim vertical tab when collapsed */
   function Panel({ k, side, label, width, children }: {
@@ -285,6 +308,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
         <PresenceHalos client={presence} slug={slug} />
         <PresenceBanner client={presence} slug={slug} />
 
+        <StudioZoomProvider columnRef={canvasColRef}>
         {/* ══ top bar ══ */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px",
           background: "#12101f", borderBottom: "1px solid rgba(139,118,196,.3)", flex: "none",
@@ -293,14 +317,18 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
             ■ <i style={{ fontStyle: "normal", color: "#EBCB77" }}>STUDIO</i>
           </span>
 
+          {/* page switcher — LEGIBILITY DOCTRINE: solid night panel, full
+              ink at 13px on the CLOSED control; options solid-dark too
+              (the old rgba pill + #000 options were mid-on-mid) */}
           <select
             value={switcherOptions.includes(slug) ? slug : "home"}
             onChange={(e) => { if (e.target.value === "__new") { const s = window.prompt("New page name (letters, dashes):"); if (s) goToPage(s); } else goToPage(e.target.value); }}
-            style={{ ...pill, background: "rgba(139,118,196,.2)", color: "#F4ECFF", paddingRight: 8, cursor: "pointer" }}
+            style={{ ...pill, fontSize: 13, background: "#1b1530", color: "#F4ECFF",
+              border: "1px solid rgba(139,118,196,.45)", paddingRight: 8, cursor: "pointer" }}
             title="Switch page"
           >
-            {switcherOptions.map((p) => <option key={p} value={p} style={{ color: "#000" }}>{p === "practice" ? "✎ practice (sandbox)" : p}</option>)}
-            <option value="__new" style={{ color: "#000" }}>＋ new page…</option>
+            {switcherOptions.map((p) => <option key={p} value={p} style={{ background: "#1b1530", color: "#F4ECFF" }}>{p === "practice" ? "✎ practice (sandbox)" : p}</option>)}
+            <option value="__new" style={{ background: "#1b1530", color: "#F4ECFF" }}>＋ new page…</option>
           </select>
           <button
             onClick={() => { const p = window.prompt("New page name (letters, dashes):"); if (p) goToPage(p); }}
@@ -308,18 +336,25 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
             style={{ ...pill, background: "rgba(139,118,196,.2)", color: "#F4ECFF", padding: "5px 9px" }}
           >+</button>
 
-          <PaletteDock />
+          <button
+            onClick={() => { void goBrandBoard(); }}
+            title="the brand board — palette, type ladder, gradients, both skins"
+            style={{ ...pill, background: "rgba(139,118,196,.2)", color: "#F4ECFF" }}
+          >🎨 Brand</button>
           <button
             onClick={() => setShowFindings((v) => !v)}
-            title="the rails — house rules checked as you edit"
+            title="brand guidelines — checked as you edit"
             style={{ ...pill,
               background: errCount ? "rgba(231,137,158,.18)" : findings.length ? "rgba(235,203,119,.15)" : "rgba(127,185,143,.14)",
               color: errCount ? "#E7899E" : findings.length ? "#EBCB77" : "#9ee0ad" }}
           >
-            {findings.length ? `rails ${summarize(findings)}` : "rails ✓"}
+            {errCount ? `${errCount} to fix`
+              : warnCount ? `⚠ ${warnCount} warning${warnCount === 1 ? "" : "s"}`
+              : "guidelines ✓"}
           </button>
           <UndoRedoPills pill={pill} />
           <ViewportBar />
+          <ZoomPills />
           <button
             onClick={() => setMatrix((v) => { const n = !v; try { localStorage.setItem("oc-studio-matrix", n ? "1" : "0"); } catch { /* private mode */ } return n; })}
             title="see every breakpoint at once — click an artboard to edit that size"
@@ -347,7 +382,25 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
         <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
           <Panel k="lib" side="left" label="Library" width={230}>
             <div style={{ flex: 1, overflowY: "auto", paddingTop: 30 }}>
-              <Puck.Components />
+              {/* SEARCH INSERT: type to filter the library; matches render
+                  as a flat draggable Drawer, the stock view hides (display
+                  none keeps Puck.Components mounted) */}
+              <div style={{ padding: "2px 10px 8px" }}>
+                <input
+                  value={libQuery}
+                  onChange={(e) => setLibQuery(e.target.value)}
+                  placeholder="What would you like to insert?"
+                  aria-label="search blocks to insert"
+                  title="search blocks to insert"
+                  style={{ width: "100%", boxSizing: "border-box", background: "#1b1530",
+                    color: "#F4ECFF", border: "1px solid rgba(139,118,196,.45)",
+                    borderRadius: 8, padding: "7px 10px", fontSize: 13, fontFamily: SANS }}
+                />
+              </div>
+              {libQuery.trim() !== "" && <SearchDrawer query={libQuery} />}
+              <div style={{ display: libQuery.trim() !== "" ? "none" : undefined }}>
+                <Puck.Components />
+              </div>
               <Puck.Outline />
             </div>
           </Panel>
@@ -358,7 +411,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
                 <ArtboardRail tokens={ONECOCREATION} height={320} log={changelog} />
               </div>
             )}
-            <CanvasArea />
+            <CanvasArea columnRef={canvasColRef} />
           </div>
 
           <Panel k="fields" side="right" label="Style" width={280}>
@@ -373,29 +426,14 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
             </div>
           </Panel>
         </div>
-      </Puck>
+        </StudioZoomProvider>
 
-      {/* findings panel */}
-      {showFindings && findings.length > 0 && (
-        <div style={{ position: "fixed", left: "50%", top: 52, transform: "translateX(-50%)",
-          zIndex: 1090, width: 480, maxWidth: "calc(100vw - 32px)", maxHeight: "50vh", overflowY: "auto",
-          background: "#12101f", border: "1px solid rgba(139,118,196,.4)", borderRadius: 14,
-          padding: "12px 14px", boxShadow: "0 16px 44px rgba(0,0,0,.55)", fontFamily: SANS }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#F4ECFF", marginBottom: 8 }}>
-            The rails — {errCount} to fix before this page can go live, {findings.length - errCount} suggestions
-          </div>
-          {findings.map((f, i) => (
-            <div key={i} style={{ display: "flex", gap: 8, padding: "6px 0", borderTop: "1px solid rgba(139,118,196,.15)", fontSize: 12, lineHeight: 1.45 }}>
-              <span style={{ flex: "none", fontWeight: 800, color: f.severity === "error" ? "#E7899E" : "#EBCB77" }}>
-                {f.severity === "error" ? "✕" : "⚠"}
-              </span>
-              <span style={{ color: "#D9D2E4" }}>
-                {f.blockType && <b style={{ color: "#F4ECFF" }}>{f.blockType}: </b>}{f.message}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+        {/* findings panel — INSIDE <Puck> now so click-to-focus can reach
+            the store (useGetPuck); position:fixed keeps it floating */}
+        {showFindings && findings.length > 0 && (
+          <FindingsPanel findings={findings} errCount={errCount} />
+        )}
+      </Puck>
 
       {/* both-skins preview overlay */}
       {preview && (
@@ -477,24 +515,145 @@ function PresenceBanner({ client, slug }: { client: PresenceClient | null; slug:
 
 const useStudioPuck = createUsePuck();
 
-/* the canvas mat: zoomable, iframe is the ONLY scroller, house scrollbars
-   injected in-frame; must render inside <Puck> */
-function CanvasArea() {
+/* ── ZOOM LIFT (brand-board batch 2026-08-14): one zoom state, owned above
+   both consumers — the top-bar pills and the canvas mat. The provider must
+   render inside <Puck> (it reads the viewport width from the store). */
+const ZoomCtx = createContext<CanvasZoomApi | null>(null);
+
+function StudioZoomProvider({ columnRef, children }: {
+  columnRef: React.RefObject<HTMLDivElement | null>;
+  children: React.ReactNode;
+}) {
   const vpWidth = useStudioPuck((st) => {
     const w = st.appState.ui.viewports?.current?.width;
     return typeof w === "number" ? w : 1280;
   });
-  const columnRef = useRef<HTMLDivElement>(null);
   const zoomApi = useCanvasZoom(vpWidth, columnRef);
+  return <ZoomCtx.Provider value={zoomApi}>{children}</ZoomCtx.Provider>;
+}
+
+/* the zoom cluster in the top bar's tools run (Fit · 50 · 75 · 100 · %) */
+function ZoomPills() {
+  const zoomApi = useContext(ZoomCtx);
+  return zoomApi ? <ZoomControls zoomApi={zoomApi} /> : null;
+}
+
+/* the canvas mat: zoomable, iframe is the ONLY scroller, house scrollbars
+   injected in-frame; must render inside <Puck>. The floating bottom-left
+   zoom pill moved to the top bar (ZoomPills). */
+function CanvasArea({ columnRef }: { columnRef: React.RefObject<HTMLDivElement | null> }) {
+  const vpWidth = useStudioPuck((st) => {
+    const w = st.appState.ui.viewports?.current?.width;
+    return typeof w === "number" ? w : 1280;
+  });
+  const zoomApi = useContext(ZoomCtx);
   return (
     <div ref={columnRef} style={{ flex: 1, minHeight: 0, position: "relative" }}>
-      <CanvasZoomer viewportWidth={vpWidth} zoom={zoomApi.zoom} onZoom={zoomApi.setZoom}>
+      <CanvasZoomer viewportWidth={vpWidth} zoom={zoomApi?.zoom ?? 1} onZoom={zoomApi?.setZoom}>
         <Puck.Preview />
       </CanvasZoomer>
       <FrameScrollbarStyles />
-      <div style={{ position: "absolute", left: 14, bottom: 12, zIndex: 15 }}>
-        <ZoomControls zoomApi={zoomApi} />
+    </div>
+  );
+}
+
+/* ── SEARCH INSERT: a flat, draggable Drawer of every visible block whose
+   key or label matches the query (case-insensitive). Must render inside
+   <Puck> — Drawer.Item rides the editor's drag context. */
+function SearchDrawer({ query }: { query: string }) {
+  const q = query.trim().toLowerCase();
+  const cats = (config.categories ?? {}) as Record<
+    string,
+    { components?: readonly string[]; visible?: boolean }
+  >;
+  const visible = new Set<string>();
+  for (const cat of Object.values(cats)) {
+    if (cat.visible === false) continue;
+    for (const c of cat.components ?? []) visible.add(c);
+  }
+  const comps = config.components as Record<string, { label?: string }>;
+  const matches = Array.from(visible).filter((key) => {
+    const label = comps[key]?.label ?? key;
+    return key.toLowerCase().includes(q) || label.toLowerCase().includes(q);
+  });
+  if (matches.length === 0) {
+    return (
+      <p style={{ padding: "4px 12px 10px", fontSize: 12.5, color: "#9a8fae", fontFamily: SANS }}>
+        no blocks match &ldquo;{query.trim()}&rdquo;
+      </p>
+    );
+  }
+  return (
+    <div style={{ padding: "0 10px 10px" }}>
+      <Drawer>
+        {matches.map((key) => (
+          <Drawer.Item key={key} name={key} label={comps[key]?.label ?? key} />
+        ))}
+      </Drawer>
+    </div>
+  );
+}
+
+/* ── the guidelines panel — inside <Puck> so a row click can FOCUS the
+   offending block: select it in the store, then scroll the canvas iframe
+   to it. Rows without a blockId (page-level findings) stay inert. */
+function FindingsPanel({ findings, errCount }: { findings: Finding[]; errCount: number }) {
+  const getPuck = useGetPuck();
+
+  function focusFinding(f: Finding) {
+    if (!f.blockId) return;
+    const puck = getPuck();
+    const selector = puck.getSelectorForId(f.blockId);
+    if (!selector) return;
+    puck.dispatch({
+      type: "setUi",
+      ui: { itemSelector: { index: selector.index, zone: selector.zone } },
+    });
+    try {
+      const frame = document.querySelector<HTMLIFrameElement>("iframe#preview-frame");
+      frame?.contentDocument
+        ?.querySelector(`[data-puck-component="${CSS.escape(f.blockId)}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    } catch { /* cross-origin or frame mid-remount — selection still landed */ }
+  }
+
+  return (
+    <div style={{ position: "fixed", left: "50%", top: 52, transform: "translateX(-50%)",
+      zIndex: 1090, width: 480, maxWidth: "calc(100vw - 32px)", maxHeight: "50vh", overflowY: "auto",
+      background: "#12101f", border: "1px solid rgba(139,118,196,.4)", borderRadius: 14,
+      padding: "12px 14px", boxShadow: "0 16px 44px rgba(0,0,0,.55)", fontFamily: SANS }}>
+      <style>{`.oc-finding-row[data-focusable="1"]:hover{background:rgba(139,118,196,.14);border-radius:8px}`}</style>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "#F4ECFF", marginBottom: 8 }}>
+        Brand guidelines — {errCount} to fix before this page can go live, {findings.length - errCount} suggestions
       </div>
+      {findings.map((f, i) => {
+        const focusable = Boolean(f.blockId);
+        return (
+          <div
+            key={i}
+            className="oc-finding-row"
+            data-focusable={focusable ? "1" : undefined}
+            role={focusable ? "button" : undefined}
+            tabIndex={focusable ? 0 : undefined}
+            title={focusable ? "click to select this block on the canvas" : undefined}
+            onClick={focusable ? () => focusFinding(f) : undefined}
+            onKeyDown={focusable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); focusFinding(f); } } : undefined}
+            style={{ display: "flex", gap: 8, padding: "6px 4px",
+              borderTop: "1px solid rgba(139,118,196,.15)", fontSize: 12, lineHeight: 1.45,
+              cursor: focusable ? "pointer" : "default", alignItems: "flex-start" }}
+          >
+            <span style={{ flex: "none", fontWeight: 800, color: f.severity === "error" ? "#E7899E" : "#EBCB77" }}>
+              {f.severity === "error" ? "✕" : "⚠"}
+            </span>
+            <span style={{ color: "#D9D2E4", flex: 1 }}>
+              {f.blockType && <b style={{ color: "#F4ECFF" }}>{f.blockType}: </b>}{f.message}
+            </span>
+            {focusable && (
+              <span aria-hidden style={{ flex: "none", color: "#9a8fae", fontWeight: 800 }}>›</span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
