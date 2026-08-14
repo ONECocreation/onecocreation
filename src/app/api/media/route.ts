@@ -8,13 +8,13 @@ export const dynamic = "force-dynamic";
  * versioned, sovereign, "saved to the correct place in the github" — and
  * serve instantly via raw.githubusercontent URLs (no redeploy wait).
  *
- * Repo: GITHUB_ASSETS_REPO (default PacsArcade/onecocreation-assets, public
+ * Repo: GITHUB_ASSETS_REPO (default ONECocreation/onecocreation-assets, public
  * so raw URLs serve without auth). Auth: GITHUB_TOKEN (fine-grained PAT,
  * Contents read/write on that one repo — Vercel env, Sensitive).
  * Path convention: uploads/<epoch>-<safe-name>.<ext>.
  */
 
-const REPO = process.env.GITHUB_ASSETS_REPO?.trim() || "PacsArcade/onecocreation-assets";
+const REPO = process.env.GITHUB_ASSETS_REPO?.trim() || "ONECocreation/onecocreation-assets";
 const BRANCH = process.env.GITHUB_ASSETS_BRANCH?.trim() || "main";
 const DIR = "uploads";
 const MAX_BYTES = 4 * 1024 * 1024; // Vercel body ceiling headroom
