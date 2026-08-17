@@ -40,7 +40,7 @@ function convert(value: string, tip: number | null): Bday | null {
     return { preGenesis: true, date: beforeBitcoin(y, mo, d) };
   }
   const height = estimateHeightAt(utc, tip); // anchored: halvings + the live tip (bft.ts)
-  const moon = moonPhase(height);
+  const moon = moonPhase(height, utc); // the typed day's own instant — not the flat model
   const animal = yearAnimal(height);
   return {
     preGenesis: false,

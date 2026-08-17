@@ -242,7 +242,7 @@ export default function BuddyDevice({
   /* One source of truth for the sky: glyph + name + BFT day all come from
      moonPhase/bft — the old footer hardcoded a 🌙 crescent next to the real
      phase NAME, so mid-month it lied "🌙 Full" (fixed 0018.04.15 a₿). */
-  const moon = moonPhase(currentBlock);
+  const moon = moonPhase(currentBlock, Date.now()); // the tip is NOW — the sky's own instant
   const bftDay = bft(currentBlock).day;
   const tilde = estimatedBlock ? "~" : "";
 
