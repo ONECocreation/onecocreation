@@ -52,23 +52,46 @@ section{padding:76px 0;position:relative}
    border-radius:999px paints visible "cut" slivers at the rounded ends in
    Chrome (the Admiral's catch, packages page). Outlines ride inset
    box-shadow instead; padding absorbs the old border's 1.5px. */
-.btn{display:inline-block;padding:15.5px 31.5px;border-radius:999px;font-weight:600;letter-spacing:.07em;font-size:.82rem;text-transform:uppercase;cursor:pointer;border:0;transition:transform .18s;-webkit-tap-highlight-color:transparent}
+
+/* ══ THE PRIMARY CTA — restored to Love's original (the flagged fidelity
+   item). Live-extracted from the real production render via
+   getComputedStyle (onecocreation-live-capture CAPTURE-NOTES §0.3,
+   ~0018.05.23 a₿ — confirmed exact against the original-art audit): Open
+   Sans 700, 24px, letter-spacing 2px, ALL CAPS, WHITE fill, SQUARE corners
+   (border-radius 0), ink #3E3E3E, padding 20px 40px. The original has NO
+   rounded or pill buttons anywhere — square is the brand law for buttons.
+   Gold leaves the generic-primary seat: .btn-gold below is the MONEY door
+   only (sats / checkout / donations), curated, never the default. ══ */
+.btn{display:inline-block;padding:20px 40px;border-radius:0;
+  font-family:var(--font-open-sans),'Open Sans',-apple-system,'Segoe UI',sans-serif;
+  font-weight:700;letter-spacing:2px;font-size:1.5rem;line-height:1.25;
+  text-transform:uppercase;text-align:center;cursor:pointer;border:0;
+  background:#fff;color:#3E3E3E;
+  transition:transform .18s;-webkit-tap-highlight-color:transparent}
 .btn:hover{transform:translateY(-3px)}
 .btn-gold{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:#3a2a06;
   text-shadow:0 1px 1px rgba(58,42,6,.4),0 0 8px rgba(58,42,6,.35)}
 .btn-rose{background:linear-gradient(135deg,#E7B2C3,#C56E8B);color:#fff}
 .btn-ghost{background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px var(--edge)}
-.btn-sm{padding:11.5px 19.5px;font-size:.72rem}
+/* the small variant — same square law, compact for dense rooms */
+.btn-sm{padding:12px 24px;font-size:.9rem;letter-spacing:1.5px}
 /* step 5 of the cartridge walk: the three shapes that end the one-offs */
 .btn-quiet{background:none;border:0;padding:8px 6px;cursor:pointer;font-family:inherit;
   font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
   color:var(--muted);white-space:nowrap;text-decoration:none}
-.btn-quiet:hover{color:var(--gold-deep)}
-.btn-quiet--gold{color:var(--gold-2)}
+.btn-quiet:hover{color:var(--info)}
+/* the accent quiet-door — LAVENDER (info/interactive), not gold: gold is
+   curated to money now (the relaxed gold law, ~0018.05.24 a₿) */
+.btn-quiet--accent{color:var(--info)}
 .chip-select{border-radius:999px;padding:9px 16px;font-size:.88rem;cursor:pointer;font-family:inherit;
   font-weight:500;border:1.5px solid rgba(139,118,196,.4);background:rgba(255,255,255,.8);color:#4a4458}
-.chip-select[aria-pressed="true"],.chip-select.on{font-weight:700;border-color:#b4862b;
-  background:linear-gradient(135deg,#ebcb77,#b4862b);color:#3a2a06}
+/* pressed = lavender (interactive state), never gold — gold is not the
+   default "selected" paint anymore */
+.chip-select[aria-pressed="true"],.chip-select.on{font-weight:700;border-color:var(--lavender);
+  background:linear-gradient(135deg,#cbbbea,var(--lavender));color:#fff}
+/* the active/pressed BUTTON state (view switchers, rail toggles) — same
+   lavender law as the chips */
+.btn-on{background:linear-gradient(135deg,#cbbbea,var(--lavender));color:#fff}
 .btn-round{width:var(--size,40px);height:var(--size,40px);border-radius:50%;cursor:pointer;
   display:grid;place-items:center;font-size:1.1rem;border:1.5px solid rgba(235,203,119,.6);
   background:rgba(14,12,24,.6);color:#ebcb77}
@@ -80,6 +103,23 @@ section{padding:76px 0;position:relative}
 
 .brandmark{width:44px;height:44px}
 .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* two-column feature rows — the ratio rides --cols, and the row ALWAYS
+   collapses to one column on small screens (no side-by-side squish at 375px) */
+.two-col{display:grid;gap:40px;grid-template-columns:var(--cols,minmax(0,1fr) minmax(0,1fr));align-items:center}
+@media(max-width:760px){.two-col{grid-template-columns:1fr}}
+
+/* ★-in-a-box — the canonical block-height mark: EVERY height wears the
+   boxed star (never a bare ★, never a ▣ dialect), cyan (info) — time marks
+   are not money (the MediaKit law, MediaKit.tsx). The console twin is
+   .scar-starbox in globals.css. */
+.starbox{display:inline-grid;place-items:center;width:1.2em;height:1.2em;flex:none;
+  border:1.5px solid currentColor;border-radius:3px;color:var(--teal-bright);
+  font-size:.85em;line-height:1;vertical-align:-0.18em}
+.starbox::before{content:"★";font-size:.62em}
+/* the a₿/b₿ era marker — cyan (info), rides AFTER the date, never wraps
+   away from it, never uppercased */
+.ab-mark{color:var(--teal-bright);white-space:nowrap;text-transform:none}
 
 /* ── THE ALIVE LAYER (0018.05.15, after Love's Shine build) — things rise
    into view as you scroll; cards breathe on hover; images lean closer ── */
@@ -246,10 +286,11 @@ section{padding:76px 0;position:relative}
 @keyframes aur1{to{transform:translate(16%,12%) scale(1.25)}}
 @keyframes aur2{to{transform:translate(-14%,18%) scale(1.15)}}
 @keyframes aur3{to{transform:translate(10%,-16%) scale(1.3)}}
-/* shimmer — a slow light pass, PRIMARY doors only (Admiral, 0018.05.15) */
+/* shimmer — a slow light pass, PRIMARY doors only (Admiral, 0018.05.15);
+   lavender-tinted so it reads on the restored white CTA as well as on gold */
 .btn-shimmer{position:relative;overflow:hidden}
 .btn-shimmer::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.45) 50%,transparent 68%);
+  background:linear-gradient(115deg,transparent 32%,rgba(139,118,196,.4) 50%,transparent 68%);
   transform:translateX(-140%);animation:gold-shimmer 5.2s ease-in-out infinite}
 @keyframes gold-shimmer{0%,55%{transform:translateX(-140%)}85%,100%{transform:translateX(140%)}}
 /* shine-border — a light runs the card's rim on hover (≈ MagicUI border-beam) */
@@ -363,9 +404,12 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
    min-width, so the 700px week grid was widening the whole page on phones
    (mobile menu2.png: the calendar made everything scroll right) */
 @media(max-width:760px){.mgmt-shell{grid-template-columns:minmax(0,1fr)}}
-/* and the page itself never pans sideways — wide things scroll in their own box */
+/* and the page itself never pans sideways — wide things scroll in their own
+   box. The clip is GLOBAL (every ground, not just mgmt): rotated photo rows
+   and oversized heroes on the public pages must never open a horizontal
+   body scroll either (rubric: no horizontal body scroll, anywhere). */
+html,body{overflow-x:clip}
 @media(max-width:920px){
-  .mgmt-ground{overflow-x:clip}
   .mgmt-stage,.mgmt-body{min-width:0}
   .mgmt-body table{display:block;max-width:100%;overflow-x:auto}
 }
@@ -375,7 +419,7 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
 .mgmt-rail-tab{display:block;padding:9px 14px;border-radius:10px;font-family:var(--sans);
   font-size:.84rem;letter-spacing:.03em;color:var(--muted);border:1.5px solid transparent}
 .mgmt-rail-tab:hover{color:var(--ink);border-color:rgba(139,118,196,.4)}
-.mgmt-rail-tab.is-active{color:var(--ink);font-weight:700;background:rgba(217,178,78,.14);border-color:var(--gold-deep)}
+.mgmt-rail-tab.is-active{color:var(--ink);font-weight:700;background:rgba(139,118,196,.14);border-color:var(--lavender)}
 
 /* ── consolidated nav: sub-menus + hamburger (Admiral, 0018.05.13) ── */
 .nav-menu{position:relative;margin-left:auto}
@@ -386,10 +430,13 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
 /* one line-height for BOTH faces of a nav item — <a> links inherit the
    body's 1.7 while <button> parents don't, which sat About/Support lower
    than their submenu siblings (Admiral's catch, 0018.05.16) */
-.nav-link{background:none;border:none;cursor:pointer;font-family:inherit;display:inline-block;
-  font-size:.95rem;line-height:1.2;letter-spacing:.04em;color:#ECE3C9;text-transform:uppercase;font-weight:600;padding:6px 0;
+/* scoped under .site-nav: the header's older `.site-nav a` pair (above)
+   is 0-1-1 and out-ranks a bare .nav-link (0-1-0) — it repainted every
+   door cream and killed the version colors + hover (gate catch, 0018.05.24 a₿) */
+.site-nav .nav-link{background:none;border:none;cursor:pointer;font-family:inherit;display:inline-block;
+  font-size:.95rem;line-height:1.2;letter-spacing:.04em;color:#FAC51C;text-transform:uppercase;font-weight:600;padding:6px 0;
   position:relative}
-.nav-link:hover{color:var(--gold-2)}
+.site-nav .nav-link:hover{color:var(--gold-2)}
 /* ── where you are, lit (mockup C blessed — the dawn underline) ── */
 .nav-link.is-here{color:var(--here-ink,#F4ECFF);text-shadow:0 0 10px rgba(200,170,220,.35)}
 .nav-link.is-here::after{content:"";position:absolute;left:1px;right:1px;bottom:-3px;height:2.5px;
@@ -403,7 +450,7 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
 .nav-sub{position:absolute;top:calc(100% + 8px);left:0;min-width:220px;z-index:var(--z-sheet,60);
   background:var(--pop-bg);border:1.5px solid var(--pop-edge);border-radius:14px;padding:8px 0;
   box-shadow:var(--pop-shadow)}
-.nav-sub a{display:block;padding:9px 18px;color:#ECE3C9;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
+.nav-sub a{display:block;padding:9px 18px;color:#FAC51C;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
 .nav-sub a:hover{color:var(--gold-2)}
 /* hover-open, click-through (Admiral, 0018.05.15): the sub is always in the
    DOM and breathes open on hover/focus; the close lingers .18s so the cursor

@@ -90,23 +90,24 @@ export default function FlipClock({
       className={`fclk ${className ?? ""}`}
       style={{ "--fclk-strain": fill.toFixed(2) } as CSSProperties}
       role="timer"
-      aria-label={`Bitcoin Federated Time ${hh}:${min[0]}${tenth} a₿, ${yyyy}:${mm}:${dd} (last time digit estimated)`}
+      aria-label={`Bitcoin Federated Time ${hh}:${min[0]}${tenth}, ${yyyy}.${mm}.${dd} a₿ (last time digit estimated)`}
     >
-      {/* THE TIME — the hero: hh:m + the one struggling ones digit + a₿ */}
+      {/* THE TIME — the hero: hh:m + the one struggling ones digit */}
       <span className="fclk-grp">
         <Cards digits={hh} />
         <span className="fclk-colon">:</span>
         <FlipCard value={min[0]} />
         <FlipCard value={String(tenth)} live />
-        <span className="fclk-ab">a₿</span>
       </span>
-      {/* the date — the afterthought: tiny dim calm chain-exact cards below */}
+      {/* the date — the afterthought: tiny dim calm chain-exact cards below,
+          wearing the a₿ marker AFTER the date (the canonical order law) */}
       <span className="fclk-grp fclk-date">
         <Cards digits={yyyy} />
-        <span className="fclk-colon">:</span>
+        <span className="fclk-colon">.</span>
         <Cards digits={mm} />
-        <span className="fclk-colon">:</span>
+        <span className="fclk-colon">.</span>
         <Cards digits={dd} />
+        <span className="fclk-ab">a₿</span>
       </span>
     </span>
   );

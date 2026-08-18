@@ -72,7 +72,7 @@ export default function JitsiRoom({
           Thank you for meeting — you&apos;re home, right where you left off.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link className="btn btn-gold" href="/me">My calendar</Link>
+          <Link className="btn" href="/me">My calendar</Link>
           <Link className="btn btn-ghost" href="/classes">The community</Link>
         </div>
       </div>

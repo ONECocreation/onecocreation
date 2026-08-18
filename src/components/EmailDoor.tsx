@@ -111,7 +111,7 @@ export default function EmailDoor({ bare = false }: { bare?: boolean }) {
             aria-label="Email address"
             style={inputStyle}
           />
-          <button className="btn btn-gold" type="submit" disabled={busy}>
+          <button className="btn" type="submit" disabled={busy}>
             {busy ? "Sending…" : "Email me a code"}
           </button>
         </form>
@@ -130,7 +130,7 @@ export default function EmailDoor({ bare = false }: { bare?: boolean }) {
             aria-label="Sign-in code"
             style={{ ...inputStyle, letterSpacing: ".3em", flex: "0 1 170px" }}
           />
-          <button className="btn btn-gold" type="submit" disabled={busy || code.length !== 6}>
+          <button className="btn" type="submit" disabled={busy || code.length !== 6}>
             {busy ? "Checking…" : "Sign in"}
           </button>
           <button
@@ -148,7 +148,7 @@ export default function EmailDoor({ bare = false }: { bare?: boolean }) {
       )}
 
       {note && (
-        <p style={{ color: step === "done" ? "var(--rose)" : "var(--muted)", fontSize: ".88rem", marginTop: 12 }}>
+        <p style={{ color: step === "done" ? "var(--ok)" : "var(--muted)", fontSize: ".88rem", marginTop: 12 }}>
           {note}
         </p>
       )}

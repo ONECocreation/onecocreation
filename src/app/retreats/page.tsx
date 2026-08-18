@@ -65,8 +65,8 @@ export default async function RetreatsPage() {
                     {r.seatsLeft > 0 ? `${r.seatsLeft} of ${r.seats} seats left` : "all seats taken"}
                   </p>
                   <div className="push">
-                    <Link className="btn btn-gold btn-sm" href={`/retreats/${r.id}`}>
-                      {r.seatsLeft > 0 ? "See the days →" : "See the days (waitlist by letter) →"}
+                    <Link className="btn btn-sm" href={`/retreats/${r.id}`}>
+                      {r.seatsLeft > 0 ? "See the days" : "See the days (waitlist by letter)"}
                     </Link>
                   </div>
                 </div>

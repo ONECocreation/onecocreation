@@ -52,7 +52,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
           {item.media?.preview && (
             <p style={{ margin: "10px 0 0", fontSize: ".85rem" }}>
               <a href={item.media.preview} style={{ color: "var(--gold-deep)", textDecoration: "underline" }}
-                target="_blank" rel="noopener noreferrer">hear / see a preview ↗</a>
+                target="_blank" rel="noopener noreferrer">hear / see a preview</a>
             </p>
           )}
           {item.sku && <p style={{ margin: "10px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>item № {item.sku}</p>}
@@ -71,7 +71,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
               page leads to its TIME — and the unsure get the dove */}
           {item.kind === "service" && (
             <div className="reveal" style={{ margin: "18px 0 0", transitionDelay: ".14s" }}>
-              <Link className="btn btn-gold" href={`/book/${item.id}`}>Book a time ⚡</Link>
+              <Link className="btn" href={`/book/${item.id}`}>Book a time ⚡</Link>
               {item.id !== "discovery-call" && (
                 <p style={{ margin: "12px 0 0" }}>
                   <Link href="/book/discovery-call" className="btn-quiet" style={{ padding: "0 14px", whiteSpace: "normal", textTransform: "none", letterSpacing: 0, fontSize: ".82rem", display: "inline-block", maxWidth: "100%", lineHeight: 1.5 }}>

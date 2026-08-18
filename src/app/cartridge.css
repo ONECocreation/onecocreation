@@ -45,8 +45,10 @@
      FrenBadge all pour from this jug (cartridge walk step 6, Admiral's
      walk, 0018.05.15). Always night: the header never theme-flips. */
   --pop-bg:rgba(20,16,32,.97); --pop-edge:rgba(217,178,78,.4); --pop-shadow:0 10px 30px rgba(0,0,0,.4);
-  /* the dawn — where-you-are in the nav (mockup C, blessed 0018.05.15):
-     gold rising into purple, left to right, with a lavender glow */
+  /* the dawn — where-you-are in the nav (VERSION B ~0018.05.24 a₿: Love's
+     ORIGINAL gold nav — #FAC51C links, live-extracted from the production
+     render — kept as an earned brand accent; the gold→purple dawn rides
+     with it. Version A is the retinted, template-clean alternate) */
   --here-grad:linear-gradient(90deg,#EBCB77 0%,#9d86d9 100%);
   --here-glow:rgba(180,150,200,.55); --here-ink:#F4ECFF;
 }

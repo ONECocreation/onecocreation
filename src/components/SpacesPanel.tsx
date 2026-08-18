@@ -43,13 +43,18 @@ function shortNpub(n: string): string {
   return n.length > 15 ? `${n.slice(0, 10)}…${n.slice(-4)}` : n;
 }
 
-/** BFT stamp for a queue row, house standard (yyyy.mm.dd hh:mm — the a₿
-    marker is assumed on new items): the real block when recorded, a
-    ~estimate from the claim timestamp when not. */
-function bftStamp(e: QueuedEntry): string {
+/** BFT stamp for a queue row, house standard (yyyy.mm.dd hh:mm a₿ — the
+    marker always rides the stamp, after the date): the real block when
+    recorded, a ~estimate from the claim timestamp when not. */
+function BftStamp({ e }: { e: QueuedEntry }) {
   if (e.blockHeight != null)
-    return `▣ ${e.blockHeight.toLocaleString()} · ${bftDateTime(e.blockHeight)}`;
-  return `~ ${bftDateTime(estimateHeight(new Date(e.requestedAt).getTime()))}`;
+    return (
+      <>
+        <span className="starbox" aria-hidden="true" /> {e.blockHeight.toLocaleString()} ·{" "}
+        {bftDateTime(e.blockHeight)}
+      </>
+    );
+  return <>~ {bftDateTime(estimateHeight(new Date(e.requestedAt).getTime()))}</>;
 }
 
 function Pill({ ok, children }: { ok: boolean; children: ReactNode }) {
@@ -305,8 +310,8 @@ function NodeTab({
           <Row label="CHAIN">{status?.chain ?? "—"}</Row>
           <Row label="BLOCK">
             {tip?.height != null ? (
-              <span className="text-coin glow-coin">
-                ▣ {tip.height.toLocaleString()} · {bftDate(tip.height)}
+              <span className="text-cyan glow-cyan">
+                <span className="starbox" aria-hidden="true" /> {tip.height.toLocaleString()} · {bftDate(tip.height)}
               </span>
             ) : (
               "—"
@@ -441,7 +446,7 @@ function AnchorTab({
                   {e.handle}@{space}
                 </span>
                 <span className="text-white/40">{shortNpub(e.npub)}</span>
-                <span className="text-white/40">{bftStamp(e)}</span>
+                <span className="text-white/40"><BftStamp e={e} /></span>
                 <button
                   onClick={() => release(e.handle)}
                   title="release this name back to the pool (queued only)"

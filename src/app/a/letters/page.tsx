@@ -36,7 +36,7 @@ const LETTERS: { key?: string; name: string; from: string; kind: string; subject
     from: "news@",
     kind: "drip queue · +24h · EDITABLE",
     subject: "Welcome to the field — a note from One Cocreation",
-    note: "PLACEHOLDER VOICE — awaiting Love's words",
+    note: "awaiting Love's words",
   },
   {
     key: "news-sample",

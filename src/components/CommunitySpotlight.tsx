@@ -11,9 +11,9 @@ import { cartridge } from "@/brand/cartridge";
  */
 export default function CommunitySpotlight() {
   const doors = [
-    { icon: "✂️", title: "Silent Haircuts", sub: "ConsciousCuts & Waxing — soul work in sacred silence, where the mobile studio travels.", href: "/services", cta: "the way of the heart →" },
-    { icon: "🏜️", title: "Retreats", sub: "Days together at a place — held, fed, and walked in the field.", href: "/retreats", cta: "see what's forming →" },
-    { icon: "📺", title: "11:11 Live with Love", sub: "Mon · Wed · Fri @ ~11:11 (MST/PST) — or there abouts ;)", href: "https://www.youtube.com/@Onecocreation", cta: "@Onecocreation ↗", external: true },
+    { icon: "✂️", title: "Silent Haircuts", sub: "ConsciousCuts & Waxing — soul work in sacred silence, where the mobile studio travels.", href: "/services", cta: "the way of the heart" },
+    { icon: "🏜️", title: "Retreats", sub: "Days together at a place — held, fed, and walked in the field.", href: "/retreats", cta: "see what's forming" },
+    { icon: "📺", title: "11:11 Live with Love", sub: "Mon · Wed · Fri @ ~11:11 (MST/PST) — or there abouts ;)", href: "https://www.youtube.com/@Onecocreation", cta: "@Onecocreation", external: true },
   ];
   return (
     <div style={{ margin: "0 0 34px" }}>
@@ -55,7 +55,7 @@ export default function CommunitySpotlight() {
                 <a key={`${pass}-${i}`} className="voice-chip" href={v.href} target="_blank" rel="noreferrer"
                   aria-hidden={pass === 1} title={`${v.who} on YouTube`}>
                   <span className="voice-quote">&ldquo;{v.quote}&rdquo;</span>
-                  <span className="voice-who">— {v.name} · YouTube ↗</span>
+                  <span className="voice-who">— {v.name} · YouTube</span>
                 </a>
               )),
             )}

@@ -59,7 +59,7 @@ export default function AttentionStrip() {
             {o.shipping?.name && <span style={{ opacity: 0.8 }}> · ship to {o.shipping.name}</span>}
             {!o.shipping?.name && o.entitlementSubject && <span style={{ opacity: 0.8 }}> · {o.entitlementSubject}</span>}
           </span>
-          <button className="btn btn-gold btn-sm" onClick={() => fulfil(o.id)} disabled={busy === o.id}>
+          <button className="btn btn-sm" onClick={() => fulfil(o.id)} disabled={busy === o.id}>
             {busy === o.id ? "Marking…" : "Mark fulfilled ✓"}
           </button>
         </div>

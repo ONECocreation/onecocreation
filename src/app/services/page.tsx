@@ -74,7 +74,7 @@ export default async function ServicesPage() {
                       fontSize: "1.3rem", color: "var(--ink-strong)", margin: "16px 0 2px" }}>WELCOME</div>
                     <div className="constellation" aria-hidden style={{ margin: "2px 0 0" }}>{cartridge.constellation}</div>
                     <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginTop: 20 }}>
-                      <Link className="btn btn-gold btn-shimmer" href="/welcome">Create an account — free</Link>
+                      <Link className="btn btn-shimmer" href="/welcome">Create an account — free</Link>
                       <a className="btn btn-teal" href="#silent">Is a silent session for you?</a>
                     </div>
                   </StackedHero>
@@ -135,7 +135,7 @@ export default async function ServicesPage() {
                 of intentional presence and connection beyond the physical service of hair and waxing.
               </p>
               <div style={{ marginTop: 22 }}>
-                <Link className="btn btn-gold btn-sm" href="/book">Book a session ⚡</Link>
+                <Link className="btn btn-sm" href="/book">Book a session ⚡</Link>
               </div>
             </div>
           </div>
@@ -173,7 +173,7 @@ export default async function ServicesPage() {
               ))}
             </div>
             <div className="center reveal" style={{ marginTop: 26 }}>
-              <Link className="btn btn-gold" href="/welcome">Create your free membership ✨</Link>
+              <Link className="btn" href="/welcome">Create your free membership ✨</Link>
             </div>
           </div>
         </section>
@@ -210,7 +210,7 @@ export default async function ServicesPage() {
               total of your session (your Discovery Call, kept).
             </p>
             <div className="center reveal" style={{ marginTop: 18 }}>
-              <Link className="btn btn-gold btn-shimmer" href="/welcome">Get started today</Link>
+              <Link className="btn btn-shimmer" href="/welcome">Get started today</Link>
             </div>
           </div>
         </section>
@@ -270,7 +270,7 @@ export default async function ServicesPage() {
                       <div className="price">${t.priceUsd}<small>/mo</small></div>
                       <div className="sats">⚡ ≈ {t.priceSats.toLocaleString()} sats / month</div>
                       <div className="push" style={{ display: "flex", justifyContent: "center", width: "100%", marginTop: 14 }}>
-                        <Link className="btn btn-gold" href={`/packages/${page?.slug}`}>YES!</Link>
+                        <Link className="btn" href={`/packages/${page?.slug}`}>YES!</Link>
                       </div>
                     </div>
                   </div>
@@ -315,7 +315,7 @@ export default async function ServicesPage() {
           <div className="wrap center reveal">
             <p className="kicker" style={{ color: "var(--rose)" }}>More Doors</p>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-              {anyRetreat && <Link className="btn btn-gold btn-sm" href="/retreats">Retreats 🏜️</Link>}
+              {anyRetreat && <Link className="btn btn-sm" href="/retreats">Retreats 🏜️</Link>}
               <Link className="btn btn-ghost btn-sm" href="/packages">Memberships</Link>
               <Link className="btn btn-ghost btn-sm" href="/store">The Store</Link>
               <Link className="btn btn-ghost btn-sm" href="/meditation">Free Meditation 🎁</Link>

@@ -297,23 +297,23 @@ export default function AdminWeekGrid() {
   return (
     <div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
-        <button className={`btn btn-sm ${view === "agenda" ? "btn-gold" : "btn-ghost"}`} onClick={() => setView("agenda")}>Agenda</button>
-        <button className={`btn btn-sm ${view === "week" ? "btn-gold" : "btn-ghost"}`} onClick={() => setView("week")}>Week</button>
-        <button className={`btn btn-sm ${view === "month" ? "btn-gold" : "btn-ghost"}`} onClick={() => setView("month")}>Month</button>
+        <button className={`btn btn-sm ${view === "agenda" ? "btn-on" : "btn-ghost"}`} onClick={() => setView("agenda")}>Agenda</button>
+        <button className={`btn btn-sm ${view === "week" ? "btn-on" : "btn-ghost"}`} onClick={() => setView("week")}>Week</button>
+        <button className={`btn btn-sm ${view === "month" ? "btn-on" : "btn-ghost"}`} onClick={() => setView("month")}>Month</button>
       </div>
       {/* the period's own wayfinding — arrows WITH the calendar, not the tabs
           (the Admiral's markup, month-calendar1) */}
       {view !== "agenda" && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, margin: "4px 0 12px" }}>
           <button onClick={() => step(-1)} aria-label="previous" className="btn-round"
-            style={{ "--size": "34px", background: "var(--glass)", borderColor: "rgba(180,134,43,.45)", color: "var(--gold-deep)", fontSize: "1rem" } as React.CSSProperties}>‹</button>
+            style={{ "--size": "34px", background: "var(--glass)", borderColor: "rgba(139,118,196,.45)", color: "var(--info)", fontSize: "1rem" } as React.CSSProperties}>‹</button>
           <span style={{ fontFamily: "var(--font-h3)", fontSize: "1.15rem", color: "var(--ink-strong)", minWidth: 150, textAlign: "center" }}>
             {view === "month"
               ? monthLabel
               : `${days7[0].toLocaleDateString(undefined, { month: "short", day: "numeric" })} – ${days7[6].toLocaleDateString(undefined, { month: "short", day: "numeric" })}`}
           </span>
           <button onClick={() => step(1)} aria-label="next" className="btn-round"
-            style={{ "--size": "34px", background: "var(--glass)", borderColor: "rgba(180,134,43,.45)", color: "var(--gold-deep)", fontSize: "1rem" } as React.CSSProperties}>›</button>
+            style={{ "--size": "34px", background: "var(--glass)", borderColor: "rgba(139,118,196,.45)", color: "var(--info)", fontSize: "1rem" } as React.CSSProperties}>›</button>
         </div>
       )}
 
@@ -341,11 +341,11 @@ export default function AdminWeekGrid() {
                   {/* the date rail */}
                   <div style={{ width: 54, flex: "none", textAlign: "center" }}>
                     <div style={{ fontSize: ".62rem", letterSpacing: ".12em", textTransform: "uppercase",
-                      color: isToday ? "var(--gold-deep, #b4862b)" : "var(--muted)" }}>
+                      color: isToday ? "var(--teal-bright, #8FD0D8)" : "var(--muted)" }}>
                       {isToday ? "today" : d.toLocaleDateString(undefined, { weekday: "short" })}
                     </div>
                     <div style={{ fontFamily: "var(--serif, sans-serif)", fontSize: "1.9rem", lineHeight: 1.1,
-                      color: isToday ? "var(--gold-deep, #b4862b)" : "var(--ink-strong)" }}>
+                      color: isToday ? "var(--teal-bright, #8FD0D8)" : "var(--ink-strong)" }}>
                       {d.getDate()}
                     </div>
                   </div>
@@ -357,7 +357,7 @@ export default function AdminWeekGrid() {
                           padding: "8px 12px", marginBottom: 6, borderRadius: 12,
                           background: "var(--glass)", border: "1px solid rgba(139,118,196,.25)",
                           fontSize: ".85rem", color: "inherit", fontFamily: "inherit" }}>
-                        <b style={{ color: "var(--gold-deep, #b4862b)" }}>
+                        <b style={{ color: "var(--teal-bright, #8FD0D8)" }}>
                           {new Date(c.startUtc).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
                         </b>{" "}
                         <b>{c.title}</b> — {c.customer}
@@ -478,7 +478,7 @@ export default function AdminWeekGrid() {
                           borderRadius: 12,
                           cursor: "pointer",
                           opacity: inMonth ? 1 : 0.35,
-                          border: isToday ? "2px solid var(--gold-deep)" : "1px solid rgba(139,118,196,.22)",
+                          border: isToday ? "2px solid var(--teal-bright)" : "1px solid rgba(139,118,196,.22)",
                           background: retreatDay
                             ? "rgba(78,160,175,.22)"
                             : off
@@ -492,7 +492,7 @@ export default function AdminWeekGrid() {
                         title={off ? `${retreatDay ? "" : "day off"}${off.note ? `${retreatDay ? "" : " — "}${off.note}` : ""}` : works ? "working day — tap for the week" : "resting day"}
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                          <span style={{ fontWeight: isToday ? 700 : 500, fontSize: ".82rem", color: isToday ? "var(--gold-deep)" : "var(--ink-strong)" }}>{d.getDate()}</span>
+                          <span style={{ fontWeight: isToday ? 700 : 500, fontSize: ".82rem", color: isToday ? "var(--teal-bright)" : "var(--ink-strong)" }}>{d.getDate()}</span>
                           {off && (
                             <span style={{ fontSize: ".56rem", textTransform: "uppercase", fontWeight: 700,
                               color: retreatDay ? "#2e6b77" : "var(--err)" }}>
@@ -560,7 +560,7 @@ export default function AdminWeekGrid() {
             </p>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
               {detail.meetingUrl && (
-                <a className="btn btn-gold btn-sm" href={detail.meetingUrl} target="_blank" rel="noreferrer">
+                <a className="btn btn-sm" href={detail.meetingUrl} target="_blank" rel="noreferrer">
                   Join the meeting →
                 </a>
               )}
@@ -600,7 +600,7 @@ export default function AdminWeekGrid() {
               </p>
             )}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
-              <button className="btn btn-gold btn-sm" onClick={saveNotes} disabled={detailBusy}>
+              <button className="btn btn-sm" onClick={saveNotes} disabled={detailBusy}>
                 {detailBusy ? "Saving…" : detail.needsFulfil ? "Save notes & close out ✓" : "Save notes"}
               </button>
               <button className="btn btn-ghost btn-sm" onClick={() => setDetail(null)}>Close</button>
@@ -640,7 +640,7 @@ export default function AdminWeekGrid() {
             </div>
             {err && <p style={{ color: "var(--err)", fontSize: ".82rem", marginBottom: 10 }}>{err}</p>}
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn-gold btn-sm" onClick={saveHours} disabled={busyUi}>{busyUi ? "Saving…" : "Add hours"}</button>
+              <button className="btn btn-sm" onClick={saveHours} disabled={busyUi}>{busyUi ? "Saving…" : "Add hours"}</button>
               <button className="btn btn-ghost btn-sm" onClick={() => setModal(null)}>Close</button>
             </div>
 
@@ -686,7 +686,7 @@ export default function AdminWeekGrid() {
             </div>
             {err && <p style={{ color: "var(--err)", fontSize: ".82rem", marginBottom: 10 }}>{err}</p>}
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn-gold btn-sm" onClick={saveDayOff} disabled={busyUi}>{busyUi ? "Saving…" : "Block it"}</button>
+              <button className="btn btn-sm" onClick={saveDayOff} disabled={busyUi}>{busyUi ? "Saving…" : "Block it"}</button>
               <button className="btn btn-ghost btn-sm" onClick={() => setModal(null)}>Close</button>
             </div>
 
@@ -723,7 +723,7 @@ export default function AdminWeekGrid() {
             {cfg?.icalUrl ? (
               <div style={{ marginBottom: 14 }}>
                 <p style={{ fontSize: ".85rem", wordBreak: "break-all" }}>
-                  connected: <span style={{ color: "var(--gold-deep)" }}>{cfg.icalUrl.slice(0, 60)}…</span>
+                  connected: <span style={{ color: "var(--muted)" }}>{cfg.icalUrl.slice(0, 60)}…</span>
                 </p>
                 {feed?.ical && (
                   <p style={{ fontSize: ".78rem", color: "var(--muted)", marginTop: 4 }}>
@@ -747,7 +747,7 @@ export default function AdminWeekGrid() {
                   value={icalInput} onChange={(e) => setIcalInput(e.target.value)} style={field}
                 />
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button className="btn btn-gold btn-sm" onClick={() => saveIcal(icalInput)} disabled={busyUi || !icalInput.trim()}>
+                  <button className="btn btn-sm" onClick={() => saveIcal(icalInput)} disabled={busyUi || !icalInput.trim()}>
                     {busyUi ? "Connecting…" : "Connect"}
                   </button>
                   <button className="btn btn-ghost btn-sm" onClick={() => setModal(null)}>Close</button>

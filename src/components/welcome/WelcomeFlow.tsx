@@ -137,7 +137,7 @@ export default function WelcomeFlow() {
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email"
             placeholder="your@email.com" style={{ ...glassField, margin: "16px 0 12px" }} />
           {note && <p style={{ margin: "0 0 10px", fontSize: ".8rem", color: "#E7B2C3" }}>{note}</p>}
-          <button className="btn btn-gold btn-shimmer" onClick={start} disabled={busy || !email.includes("@")}>
+          <button className="btn btn-shimmer" onClick={start} disabled={busy || !email.includes("@")}>
             {busy ? "Sending your code…" : "YES! — join free"}
           </button>
           <p style={{ marginTop: 16 }}>
@@ -167,7 +167,7 @@ export default function WelcomeFlow() {
             inputMode="numeric" placeholder="••••••"
             style={{ ...glassField, margin: "16px 0 12px", letterSpacing: ".4em", fontSize: "1.3rem" }} />
           {note && <p style={{ margin: "0 0 10px", fontSize: ".8rem", color: "#E7B2C3" }}>{note}</p>}
-          <button className="btn btn-gold" onClick={verify} disabled={busy || code.length !== 6}>
+          <button className="btn" onClick={verify} disabled={busy || code.length !== 6}>
             {busy ? "Opening the door…" : "Step in ✨"}
           </button>
           <p style={{ marginTop: 14 }}>
@@ -213,7 +213,7 @@ export default function WelcomeFlow() {
             placeholder={`call me… ${accountName ? `(or just "${accountName}")` : ""}`}
             style={{ ...glassField, marginBottom: 12 }} maxLength={48} />
           {note && <p style={{ margin: "0 0 10px", fontSize: ".8rem", color: "#E7B2C3" }}>{note}</p>}
-          <button className="btn btn-gold" onClick={saveNames} disabled={busy}>
+          <button className="btn" onClick={saveNames} disabled={busy}>
             {busy ? "Weaving you in…" : "Claim it 💫"}
           </button>
         </>

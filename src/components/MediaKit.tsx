@@ -11,7 +11,7 @@ import { oneCocreationTheme } from "@/lib/brand-onecocreation";
  * House laws bound here: honest "copied ✓" states (and an honest "copy failed"
  * when the clipboard is blocked), NO wireframe arrows, motion-safe, mobile
  * first, and GOLD = MONEY ONLY — coin gold rides the ₿ and the sat mark
- * (sats are money); the a₿ / b₿ / ▣ markers are cyan (they're time), and ⚡
+ * (sats are money); the a₿ / b₿ / ★ markers are cyan (they're time), and ⚡
  * is neon (the live rail). Nothing decorative wears gold.
  */
 
@@ -240,11 +240,11 @@ export default function MediaKit() {
               accent={TIME}
             />
             <GlyphCard
-              glyph="▣"
+              glyph="★"
               kicker="TIME"
-              note="Block marker — prefixes a height when the block itself matters: ▣ 957,661."
-              copyValue="▣"
-              copyLabel="COPY ▣"
+              note="Star-in-a-box — every block height wears the boxed star in UI: ★ 957,661. Copy the star; the box is drawn by the component."
+              copyValue="★"
+              copyLabel="COPY ★"
               accent={TIME}
             />
             <GlyphCard

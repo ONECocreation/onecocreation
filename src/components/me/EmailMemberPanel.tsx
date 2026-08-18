@@ -89,7 +89,7 @@ export default function EmailMemberPanel() {
               fontSize: ".95rem",
             }}
           />
-          <button className="btn btn-gold" type="submit">
+          <button className="btn" type="submit">
             {saved ? "Saved ✓" : "Save"}
           </button>
         </form>

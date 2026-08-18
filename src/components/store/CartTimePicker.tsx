@@ -76,7 +76,7 @@ export default function CartTimePicker({
 
   return (
     <>
-      <button className="btn btn-gold btn-sm" onClick={() => setOpen(true)}>
+      <button className="btn btn-sm" onClick={() => setOpen(true)}>
         ⏰ choose your time
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} z="popup"

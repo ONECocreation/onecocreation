@@ -219,7 +219,7 @@ export default function BookingRoom() {
                         geo: draft.meetingRail.kind === "inPerson" ? draft.meetingRail.geo : "" },
                 })
               }
-              className={`btn btn-sm ${draft.meetingRail.kind === kind ? "btn-gold" : "btn-ghost"}`}
+              className={`btn btn-sm ${draft.meetingRail.kind === kind ? "btn-on" : "btn-ghost"}`}
             >
               {label}
             </button>
@@ -288,7 +288,7 @@ export default function BookingRoom() {
       </Field>
     </div>
     <div className="mt-3 flex gap-2">
-      <button type="button" disabled={busy} onClick={() => save("service", draft)} className="btn btn-gold btn-sm">
+      <button type="button" disabled={busy} onClick={() => save("service", draft)} className="btn btn-sm">
         {busy ? "Saving…" : "Save"}
       </button>
       <button type="button" onClick={() => setDraft(null)} className="btn btn-ghost btn-sm">
@@ -314,7 +314,7 @@ export default function BookingRoom() {
       {/* ── services ─────────────────────────────────────────────────── */}
       <SectionHead label="Sessions" />
       <div style={{ margin: "0 0 10px" }}>
-        <button type="button" onClick={() => setDraft(blankService(defaultTz))} className="btn btn-gold btn-sm">
+        <button type="button" onClick={() => setDraft(blankService(defaultTz))} className="btn btn-sm">
           + New session
         </button>
       </div>
@@ -337,7 +337,7 @@ export default function BookingRoom() {
               </span>
               {s.status === "live" ? <Chip tone="green">live</Chip> : <Chip tone="grey">hidden</Chip>}
               <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-                <button type="button" onClick={() => setDraft(s)} style={textBtn("var(--gold-deep)")}>
+                <button type="button" onClick={() => setDraft(s)} style={textBtn("var(--info)")}>
                   edit
                 </button>
                 <button type="button" onClick={() => remove("service", s.id)} style={textBtn("var(--err)")}>
@@ -464,7 +464,7 @@ function RuleAdder({
         onClick={() =>
           onAdd({ id: "", weekday: weekday as AvailabilityRule["weekday"], start, end, serviceIds: serviceId ? [serviceId] : [] })
         }
-        className="btn btn-gold btn-sm"
+        className="btn btn-sm"
       >
         + Add window
       </button>
@@ -495,7 +495,7 @@ function OverrideAdder({ onAdd, busy }: { onAdd: (o: DateOverride) => void; busy
         type="button"
         disabled={busy || !date}
         onClick={() => onAdd({ id: "", date, kind, start: start || undefined, end: end || undefined })}
-        className="btn btn-gold btn-sm"
+        className="btn btn-sm"
       >
         + Add exception
       </button>

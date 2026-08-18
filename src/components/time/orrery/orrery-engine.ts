@@ -2,14 +2,16 @@
  * THE ORRERY engine — Act I of the orrery study, ported whole.
  *
  * Source of truth: studies/clock-study-orrery.html (v27, owner-approved).
- * This file is the study's own JS — the block math, the anchor table, the
- * twelve rings, the sun, the moon, the houses, the scrub/NOW/date-picker
- * wiring — adapted to the ship: the DOM skeleton is rendered by Orrery.tsx
- * (same structure, class-scoped instead of ids), and the network plumbing
- * walks THE LADDER — this ship's own same-origin seam /api/chain/tip?full=1
- * first (node-first + public fallback SERVER-side, the pluggable knob), the
- * arcade's time server second (time.pacsarcade.org, CORS open), and the
- * genesis-anchored ten-minute model last, wearing the honest ~.
+ * This file is the study's own JS — the twelve rings, the sun, the moon,
+ * the houses, the scrub/NOW/date-picker wiring — adapted to the ship: the
+ * DOM skeleton is rendered by Orrery.tsx (same structure, class-scoped
+ * instead of ids), the CALENDAR + anchor table ride the canonical port in
+ * bft.ts (one table, every clock — re-seated 0018.05.24 a₿), and the
+ * network plumbing walks THE LADDER — this ship's own same-origin seam
+ * /api/chain/tip?full=1 first (node-first + public fallback SERVER-side,
+ * the pluggable knob), the arcade's time server second (a cartridge value
+ * — cartridge.doors.timeTipUrl, CORS open), and the genesis-anchored
+ * ten-minute model last, wearing the honest ~.
  *
  * Stays in the study (owner ruling: "only ship the part 1 — the 1a, 2 and 3
  * sections are still under development"): the spirograph (Act I·B), the
@@ -102,42 +104,35 @@ export interface OrreryEngine {
   destroy(): void;
 }
 
-/*==MATH== — ported verbatim from the study ==*/
-/* ——— the block constants: the only clock bitcoin owns ——— */
+/*==MATH== — the study's dial math, re-seated 0018.05.24 a₿ (coordinator
+   ruling): the CALENDAR + the anchor table now live in bft.ts (the canonical
+   port) — this file keeps only the dial's own walk + the sky. ==*/
+import { CHAIN_ANCHORS, formatDate, fromHeight, heightAt } from "@/lib/bb/bft";
+import type { BftKnown } from "@/lib/bb/bft";
+import { cartridge } from "@/brand/cartridge";
+
+/* ——— the block constants: the only clock bitcoin owns (the dial's ring
+   periods — the shared calendar math is bft.ts's) ——— */
 const DAY = 144, WEEK = 1008, DIFF = 2016, MONTH = 4032, YEAR = 52416, HALV = 210000,
   CYCLE = 1260000, LAST = 6930000;
-const GENESIS_MS = Date.UTC(2009, 0, 3, 18, 15, 5);
 
-/* ——— gregorian ⇄ height: piecewise through real anchors, steady ~10 min elsewhere ——— */
-const ANCH: Array<[number, number]> = [
-  [0, GENESIS_MS],                        // genesis
-  [57043, Date.UTC(2010, 4, 22)],         // pizza day
-  [210000, Date.UTC(2012, 10, 28)],       // halving I
-  [420000, Date.UTC(2016, 6, 9)],         // halving II
-  [630000, Date.UTC(2020, 4, 11)],        // halving III
-  [840000, Date.UTC(2024, 3, 20)],        // halving IV
-  [957877, Date.UTC(2026, 6, 13, 16, 13, 46)], // the pupil's honest anchor — keeps the offline model within a whisker of now
-];
+/* ——— gregorian ⇄ height: piecewise through real anchors, steady ~10 min
+   elsewhere. ONE table for every clock — bft.ts's CHAIN_ANCHORS [ms, height];
+   the dial walks it as [height, ms]. Same instants the study carried
+   (genesis at the real birth second, the pizza, the halvings, the pupil's
+   0018 anchor), so the dial's readings don't move. ——— */
+const ANCH: Array<[number, number]> = CHAIN_ANCHORS.map(([ms, h]) => [h, ms] as [number, number]);
 
-/* ——— the BFT calendar: 13 months × 28 days, year = bitcoin's age ——— */
-interface BftD { y: number; mo: number; d: number; era: string; str: string }
-function bftDate(h: number): BftD {
-  const H = Math.floor(h);
-  const era = H >= 0 ? 'a₿' : 'b₿';
-  const m = H >= 0 ? H : -H;                 // b₿ mirrors around genesis
-  const y = Math.floor(m / YEAR);
-  const mo = Math.floor((m % YEAR) / MONTH) + 1;
-  const d = Math.floor((m % MONTH) / DAY) + 1;
-  return { y, mo, d, era, str:
-    String(y).padStart(4, '0') + '.' + String(mo).padStart(2, '0') + '.' + String(d).padStart(2, '0') + ' ' + era };
-}
+/* ——— the BFT date reads come from bft.ts now (fromHeight / formatDate —
+   the canonical port; b₿ mirrors around genesis exactly as the study's own
+   mirror did: h and −h wear the same date, marker swapped) ——— */
 
 /* ——— the 13-wheel of year animals: a₿ 0 = Ox; the Cat rides thirteenth ——— */
 const ANIMALS: Array<[string, string]> = [['🐀', 'Rat'], ['🐂', 'Ox'], ['🐅', 'Tiger'],
   ['🐇', 'Rabbit'], ['🐉', 'Dragon'], ['🐍', 'Snake'], ['🐎', 'Horse'], ['🐐', 'Goat'],
   ['🐒', 'Monkey'], ['🐓', 'Rooster'], ['🐕', 'Dog'], ['🐖', 'Pig'], ['🐈', 'Astronomical Cat']];
-function yearAnimal(d: BftD) {
-  const i = (((d.era === 'b₿' ? 1 - d.y : d.y + 1) % 13) + 13) % 13;
+function yearAnimal(d: BftKnown) {
+  const i = (((d.epoch === 'BB' ? 1 - d.year : d.year + 1) % 13) + 13) % 13;
   return ANIMALS[i];
 }
 
@@ -365,11 +360,15 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
   /* THE LADDER — this ship's own door FIRST: the same-origin seam
      /api/chain/tip?full=1 (node-first + public fallback SERVER-side; the
      CHAIN knob rewires every clock with zero client code). The arcade's
-     time server second — time.pacsarcade.org, the house clock's own door,
-     CORS open. The genesis-anchored ten-minute model last, wearing ~. */
+     time server second — a CARTRIDGE value now (A9, 0018.05.24 a₿:
+     cartridge.doors.timeTipUrl — the house clock's own door, CORS open;
+     another brand points it at its own server or empties it). The
+     genesis-anchored ten-minute model last, wearing ~. */
   const DOORS: Array<{ url: string; src: 'ship' | 'arcade' }> = [
     { url: '/api/chain/tip?full=1', src: 'ship' },
-    { url: 'https://time.pacsarcade.org/api/chain/tip?full=1', src: 'arcade' },
+    ...(cartridge.doors.timeTipUrl
+      ? [{ url: cartridge.doors.timeTipUrl, src: 'arcade' as const }]
+      : []),
   ];
   /* THE SYNC LAW (owner report, 0018.04.17: "I watched it break on mempool
      and our time stayed the same"): every successful knock RE-ANCHORS the
@@ -551,8 +550,8 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
         return [`<b>MOON · ≈4,252 blocks</b>`, `${m[0]} ${m[1]}`, `house of ${h[0]} ${h[1]}`, `the northern sky's view`]; } },
     { key: 'YEAR', p: YEAR * 13, r: 202.7, pr: 5.5, c: CREAM, ticks: 13,
       fr: H => (pmod(Math.floor(H / YEAR), 13) + pmod(H, YEAR) / YEAR) / 13,
-      f: H => { const bd = bftDate(H), an = yearAnimal(bd);
-        return [`<b>YEAR · 52,416 blocks</b>`, `year ${bd.y} — bitcoin's age`, `one lap, the 13-animal wheel`, `${an[0]} ${an[1]}`]; } },
+      f: H => { const bd = fromHeight(H), an = yearAnimal(bd);
+        return [`<b>YEAR · 52,416 blocks</b>`, `year ${bd.year} — bitcoin's age`, `one lap, the 13-animal wheel`, `${an[0]} ${an[1]}`]; } },
     /* OLYMPIAD (v27 rename — the ring formerly labeled HALVING): the dot
        still counts halvings-so-far; its lap is the ~4-year epoch, and the
        NEXT halving lands at the top — the counting law, gold on selection */
@@ -575,7 +574,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     WEEK: H => String(Math.floor(pmod(H, MONTH) / WEEK) + 1),   // week 1-4, fills the month
     FORTNIGHT: H => String(Math.floor(pmod(H, DIFF) / DIFF * 100)), // % to the re-tune fortnight
     MONTH: H => String(Math.floor(pmod(H, YEAR) / MONTH) + 1),  // month 1-13, fills the year
-    YEAR: H => String(bftDate(H).y),                            // bitcoin's age (mirrored b₿)
+    YEAR: H => String(fromHeight(H).year),                      // bitcoin's age (mirrored b₿)
     OLYMPIAD: H => String(Math.max(0, Math.floor(H / HALV))),   // halvings so far
     GENERATION: H => String(Math.floor(pmod(H, CYCLE) / HALV) + 1), // halving 1-6 of the generation
     'LAST SAT': H => Math.max(0, Math.round(H / LAST * 100)) + '%',
@@ -875,7 +874,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     const ageEst = live && !tipEstimated && tipTs == null && !ageSeeded;
     sunTime.textContent = t.hh + ':' + t.mm + ':' + t.ss + (est || ageEst ? '~' : '');
     sunTime.classList.toggle('strain', live && t.strain);
-    sunDate.textContent = bftDate(H).str;
+    sunDate.textContent = formatDate(H);
     sunVel.textContent = '★ ' + (est ? '~' : '') + (H < 0 ? '−' : '') + nf(Math.floor(H));
   }
   /* THE WRAP LAW (v27): the card is a row of atomic segments — each one an
@@ -893,7 +892,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
       if (o.tt && o.rg) o.tt.textContent = (o.rg.f(H!, age).join(' · ') +
         (planetMode === 'rings' && KISS[o.rg.key] ? ' · ' + KISS[o.rg.key] : '')).replace(/<[^>]*>/g, '');
     });
-    if (sunTT) sunTT.textContent = 'THE LIGHT · block ' + (H < 0 ? '−' : '') + nf(Math.floor(H)) + ' · ' + bftDate(H).str + ' · one block of velocity every ~10 min';
+    if (sunTT) sunTT.textContent = 'THE LIGHT · block ' + (H < 0 ? '−' : '') + nf(Math.floor(H)) + ' · ' + formatDate(H) + ' · one block of velocity every ~10 min';
     let segs: string[];
     if (sel === 'sun') {
       segs = [`<b>THE LIGHT · block ${H < 0 ? '−' : ''}${nf(Math.floor(H))}</b>`,
@@ -922,7 +921,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
     const H = Math.floor(curH());
     const live = mode === 'live';
     readEl.innerHTML =
-      `${H < 0 ? nf(H) + ' blocks before genesis' : 'block ' + nf(H)} · ${oldFmt(H)} · ${bftDate(H).str}` +
+      `${H < 0 ? nf(H) + ' blocks before genesis' : 'block ' + nf(H)} · ${oldFmt(H)} · ${formatDate(H)}` +
       (live ? (tipEstimated ? ' · <span class="tilde">~no rail, ten-minute model</span>'
           : tipSrc === 'ship' ? ' · live · this ship’s door'
           : ' · live · the arcade’s time server')
@@ -1152,7 +1151,12 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
   clockDate.addEventListener('change', () => {
     if (!clockDate.value) return;
     const [y, m, d] = clockDate.value.split('-').map(Number);
-    pickH = Math.round(ms2h(Date.UTC(y, m - 1, d, 12)));
+    /* the canonical bridge (bft.ts heightAt) takes ANY year — pre-genesis
+       included, where Date.UTC alone would misread 0–99 as 19xx. Post-genesis
+       dates walk the anchor table instead: the recent-anchor law (canonical
+       skill — never land a "now"-era date on the flat ten-minute model). */
+    const bridged = heightAt(y, m, d, 12);
+    pickH = bridged < 0 ? bridged : Math.round(ms2h(Date.UTC(y, m - 1, d, 12)));
     mode = 'pick';
     if (pickH >= 0 && pickH <= LAST) scrub.value = String(pickH);
     renderOrrery(); renderRead();

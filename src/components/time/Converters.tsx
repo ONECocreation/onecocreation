@@ -63,8 +63,10 @@ function DateResult({ value, tip }: { value: string; tip: number | null }) {
       {/* height-derived from a wall clock → the honest ~ on every line */}
       <p className="font-mono text-xl text-neon">~ {bftDate(height)}</p>
       <p className="mt-2 font-mono text-xs tabular-nums text-white/70">
-        <span className="whitespace-nowrap">★~{height.toLocaleString()}</span> — the nearest
-        block (estimated, <span className="whitespace-nowrap">~10 min</span> a block)
+        <span className="whitespace-nowrap">
+          <span className="starbox" aria-hidden="true" /> ~{height.toLocaleString()}
+        </span>{" "}
+        — the nearest block (estimated, <span className="whitespace-nowrap">~10 min</span> a block)
       </p>
       <p className="mt-1 font-mono text-xs tabular-nums text-white/70">
         <span className="whitespace-nowrap">~block {height.toLocaleString()}</span> ·{" "}
@@ -92,11 +94,13 @@ function HeightResult({ raw, tip, tipEstimated }: { raw: string; tip: number | n
     <div className="mt-3 border-2 border-cyan bg-cyan/10 p-4">
       {/* height → date is pure block math — EXACT, never a ~ */}
       <p className="font-mono text-xl text-cyan">
-        <span className="whitespace-nowrap">{bftDateTime(h)} <span className="text-white/50">a₿</span></span>
+        <span className="whitespace-nowrap">{bftDateTime(h)}</span>
       </p>
       <p className="mt-2 font-mono text-xs tabular-nums text-white/70">
-        <span className="whitespace-nowrap">★{h.toLocaleString()}</span> ·{" "}
-        <span className="whitespace-nowrap">beat {String(beat).padStart(3, "0")}/144</span> ·
+        <span className="whitespace-nowrap">
+          <span className="starbox" aria-hidden="true" /> {h.toLocaleString()}
+        </span>{" "}
+        · <span className="whitespace-nowrap">beat {String(beat).padStart(3, "0")}/144</span> ·
         moon: {moon.emoji} {moon.name} · year of the {animal.emoji} {animal.name}
       </p>
       <p className="mt-2 font-body text-xs text-white/60">

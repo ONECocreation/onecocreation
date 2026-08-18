@@ -87,7 +87,8 @@ export default function BdayChecker() {
           {/* the date is height-derived, so it wears the honest ~ too */}
           <p className="mt-2 font-mono text-2xl text-neon">~ {bday.date}</p>
           <p className="mt-2 font-mono text-xs text-white/70">
-            ▣ ~{bday.height!.toLocaleString()} — your birth block (estimated, ~10 min a block)
+            <span className="starbox" aria-hidden="true" /> ~{bday.height!.toLocaleString()} — your
+            birth block (estimated, ~10 min a block)
           </p>
           <p className="mt-1 font-mono text-xs text-white/70">
             moon: {bday.moon} · year of the {bday.animal}

@@ -191,7 +191,7 @@ export default function CartPanel() {
         {expiredNotice}
         <p style={{ fontSize: ".95rem", color: "var(--muted, #897f97)" }}>Your basket is empty.</p>
         <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
-          <Link className="btn btn-gold" href="/store">Visit the store</Link>
+          <Link className="btn" href="/store">Visit the store</Link>
         </div>
       </div>
     );

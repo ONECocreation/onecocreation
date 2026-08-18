@@ -342,9 +342,9 @@ export default function StoreRoom() {
           style={{ ...field, borderRadius: 999, padding: "9px 18px", flex: 1, minWidth: 170 }}
         />
         <a className="btn btn-ghost btn-sm" href="/store" target="_blank" rel="noreferrer">
-          Preview store ↗
+          Preview store
         </a>
-        <button className="btn btn-gold btn-sm" onClick={() => openEditor(BLANK)}>
+        <button className="btn btn-sm" onClick={() => openEditor(BLANK)}>
           + Add item
         </button>
       </div>
@@ -407,7 +407,7 @@ export default function StoreRoom() {
                     <button onClick={() => openEditor(item)}
                       style={{ background: "none", border: 0, cursor: "pointer", padding: "6px 4px", fontFamily: "inherit",
                         fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em",
-                        color: "var(--gold-deep)" }}>
+                        color: "var(--info)" }}>
                       edit
                     </button>
                     <button onClick={() => toggle(item, item.status === "live" ? "hidden" : "live")}
@@ -462,7 +462,7 @@ export default function StoreRoom() {
               <h3 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: "1.3rem", margin: 0, flex: 1 }}>
                 {draft.id ? draft.title || "Edit item" : "A new item"}
               </h3>
-              <button className="btn btn-gold btn-sm" onClick={saveDraft} disabled={uploading || dUploading}>
+              <button className="btn btn-sm" onClick={saveDraft} disabled={uploading || dUploading}>
                 Save
               </button>
               <button className="btn btn-ghost btn-sm" onClick={() => setDraft(null)}>Close</button>
@@ -524,7 +524,7 @@ export default function StoreRoom() {
                       ))}
                     </div>
                   )}
-                  <label className="btn btn-gold btn-sm" style={{ cursor: uploading ? "wait" : "pointer" }}>
+                  <label className="btn btn-sm" style={{ cursor: uploading ? "wait" : "pointer" }}>
                     {uploading ? "Uploading…" : "+ Add pictures"}
                     <input
                       type="file"

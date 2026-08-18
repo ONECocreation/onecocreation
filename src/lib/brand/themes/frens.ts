@@ -34,12 +34,12 @@ export const frensTheme: BrandTheme = {
   copy: {
     productName: "Pac's Arcade",
     memberNoun: "fren",
-    loginKicker: "PAC'S ARCADE ▸ LOGIN",
+    loginKicker: "PAC'S ARCADE · LOGIN",
     loginTitle: "INSERT KEY",
     returningTitle: "RETURNING FREN?",
     returningBlurb:
       "Your key is your login — sign a fresh challenge and land on your profile. No password, nothing stored, nothing to leak.",
-    signInCta: "▶ SIGN IN WITH MY KEY",
+    signInCta: "SIGN IN WITH MY KEY",
     signingCta: "WAITING FOR YOUR KEY…",
     doorsHeading: "NO ACCOUNT? TWO DOORS, ONE ARCADE",
     doorsFootnote:

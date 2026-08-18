@@ -222,7 +222,7 @@ export default function MoneyRoom() {
           <option value="all">all time</option>
         </select>
         <span style={{ flex: 1 }} />
-        <a className="btn btn-gold btn-sm" href={exportHref("csv")} download>Download CSV ⚡</a>
+        <a className="btn btn-sm" href={exportHref("csv")} download>Download CSV ⚡</a>
         <a className="btn btn-ghost btn-sm" href={exportHref("quickbooks")} download>QuickBooks</a>
       </div>
       {kind === "tips" ? (
@@ -316,12 +316,12 @@ export default function MoneyRoom() {
             )}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
               {detail.state === "settled" && (
-                <button className="btn btn-gold btn-sm" onClick={() => fulfil(detail)} disabled={busy}>
+                <button className="btn btn-sm" onClick={() => fulfil(detail)} disabled={busy}>
                   {busy ? "Marking…" : "Mark fulfilled ✓"}
                 </button>
               )}
               <a className="btn btn-ghost btn-sm" href={`/store/order/${detail.id}`} target="_blank" rel="noreferrer">
-                Open order page →
+                Open order page
               </a>
               <button className="btn btn-ghost btn-sm" onClick={() => setDetail(null)}>Close</button>
             </div>

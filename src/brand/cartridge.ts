@@ -79,6 +79,14 @@ export const cartridge = {
     { quote: "Good to hear you 😊", name: "Shawnah", who: "@possiblyeverything-shawnah1406", href: "https://www.youtube.com/watch?v=Gt24u_BAybA" },
   ],
 
+  /** THE ARCADE'S TIME DOOR (A9, 0018.05.24 a₿): the orrery's second ladder
+   *  rung — the house clock's own time server, CORS open. A cartridge value,
+   *  not code: another brand points this at ITS time server, or empties it
+   *  ("") to sail on its own seam + the honest ~ model alone. */
+  doors: {
+    timeTipUrl: "https://time.pacsarcade.org/api/chain/tip?full=1",
+  },
+
   meta: {
     title: "One Cocreation — Where Heaven and Earth Meet",
     description:

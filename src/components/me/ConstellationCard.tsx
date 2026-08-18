@@ -91,7 +91,7 @@ export default function ConstellationCard() {
             {!s.done && s.href && (
               <Link href={s.href} style={{ fontSize: ".66rem", fontWeight: 700, textTransform: "uppercase",
                 letterSpacing: ".06em", color: "var(--gold-deep)", textDecoration: "none" }}>
-                light it →
+                light it
               </Link>
             )}
           </div>

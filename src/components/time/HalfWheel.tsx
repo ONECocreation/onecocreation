@@ -210,7 +210,7 @@ function cardFor(r: Ring, h: number, now: Date, tipTs: number | null): Card {
 
 /* the comment strip's one-liner, in the big map's voice */
 function stripFor(r: Ring | null, h: number, now: Date, tipTs: number | null): string {
-  if (!r) return `block ${h.toLocaleString()} · ${bftDate(h)} · tap a ring to learn its lap`;
+  if (!r) return `★ block ${h.toLocaleString()} · ${bftDate(h)} · tap a ring to learn its lap`;
   const c = cardFor(r, h, now, tipTs);
   const span = r.max ? `${compactNum(r.max)} blocks` : r.mod ? `${compactNum(r.mod)} blocks` : "the block's beat";
   return `${r.label.toUpperCase()} · ${span} · ${c.big} — ${c.l1} · ${c.l2}`;
@@ -425,11 +425,18 @@ export default function HalfWheel() {
       const blockPx = fitPx(ctx, blockTxt, w - 60, 17, true);
       ctx.font = `bold ${blockPx}px ui-monospace, monospace`;
       const blockW = ctx.measureText(blockTxt).width;
-      pill(12, hg - 44, blockW + 24, 32);
-      ctx.shadowColor = "rgba(255,176,31,0.5)";
+      /* the star-in-a-box, CYAN (info) — time marks are not money; the box
+         rides just left of the height, same baseline */
+      const starSide = blockPx + 6;
+      pill(12, hg - 44, blockW + 24 + starSide + 10, 32);
+      ctx.shadowColor = "rgba(111,215,224,0.5)";
       ctx.shadowBlur = 12;
-      ctx.fillStyle = "#ffb01f";
-      let bx = 24;
+      ctx.strokeStyle = "#6fd7e0";
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(20, hg - 22 - blockPx + 2, starSide, starSide);
+      ctx.fillStyle = "#6fd7e0";
+      ctx.fillText("★", 24, hg - 21);
+      let bx = 24 + starSide + 8;
       if (loaded && !reduced) bx += (Math.random() - 0.5) * 1.6; // the tremble
       ctx.fillText(blockTxt, bx, hg - 21);
       ctx.shadowBlur = 0;
@@ -621,7 +628,8 @@ export default function HalfWheel() {
               <>
                 <span className="text-neon">~ {doorAnswer.date}</span>{" "}
                 <span className="text-white/60">
-                  · ★~{doorAnswer.height.toLocaleString()} — the nearest block · full ceremony at /bday
+                  · <span className="starbox" aria-hidden="true" /> ~{doorAnswer.height.toLocaleString()} — the
+                  nearest block · full ceremony at /bday
                 </span>
               </>
             )}

@@ -68,7 +68,7 @@ export default function DiscountsDesk() {
                 onClick={() => save(codes.map((x) => (x.code === c.code ? { ...x, enabled: !x.enabled } : x)))}
                 style={{ background: "none", border: 0, cursor: "pointer", fontFamily: "inherit", padding: "6px 4px",
                   fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em",
-                  color: "var(--gold-deep)" }}
+                  color: "var(--info)" }}
               >
                 {c.enabled ? "turn off" : "turn on"}
               </button>
@@ -114,7 +114,7 @@ export default function DiscountsDesk() {
           style={field}
         />
         <button
-          className="btn btn-gold btn-sm"
+          className="btn btn-sm"
           disabled={busy || !draft.code}
           onClick={() => {
             save([...codes.filter((x) => x.code !== draft.code), draft]);

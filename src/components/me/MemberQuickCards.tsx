@@ -91,7 +91,7 @@ export default function MemberQuickCards() {
                 {o.bookingId && (
                   <Link href={`/book/receipt/${o.bookingId}`} style={{ fontSize: ".72rem", fontWeight: 700,
                     textTransform: "uppercase", letterSpacing: ".05em", color: "var(--gold-deep)", textDecoration: "none" }}>
-                    receipt →
+                    receipt
                   </Link>
                 )}
               </li>

@@ -104,20 +104,20 @@ export default function RoomsShelf() {
                   : "opens with any membership"}
             </p>
             {r.open ? (
-              <Link className="btn btn-gold btn-sm" href={`/rooms/${r.slug}`}>
+              <Link className="btn btn-sm" href={`/rooms/${r.slug}`}>
                 Enter the room
               </Link>
             ) : !feed.signedIn ? (
               r.minTier === "all" ? (
-                <Link className="btn btn-gold btn-sm" href="/login">
+                <Link className="btn btn-sm" href="/login">
                   Sign in · join free
                 </Link>
               ) : (
                 /* paid rooms are not free — say so honestly (Admiral) */
                 <span style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   <Link className="btn btn-ghost btn-sm" href="/login">Sign in</Link>
-                  <Link className="btn btn-gold btn-sm" href={`/packages/${TIER_SLUG[r.minTier]}`}>
-                    Get {r.neededName} →
+                  <Link className="btn btn-sm" href={`/packages/${TIER_SLUG[r.minTier]}`}>
+                    Get {r.neededName}
                   </Link>
                 </span>
               )
@@ -126,7 +126,7 @@ export default function RoomsShelf() {
                 className="btn btn-ghost btn-sm"
                 href={r.neededName ? `/packages/${TIER_SLUG[r.minTier]}` : "/memberships"}
               >
-                See {r.neededName ?? "memberships"} →
+                See {r.neededName ?? "memberships"}
               </Link>
             )}
           </div>

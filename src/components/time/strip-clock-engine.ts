@@ -5,9 +5,11 @@
  * flatter rectangle").
  *
  * Sources of law, REUSED never re-ported:
- *  - studies/clock-study-pupil.html via living-clock-engine.ts — the shared
- *    study constants (FIAT_SETS, GHOST_BMP, FRUITS, FIAT_CARDINALS,
- *    FIAT_EAT, strainOf, jit) are imported from there;
+ *  - studies/clock-study-pupil.html — the shared study constants
+ *    (FIAT_SETS, GHOST_BMP, FRUITS, FIAT_CARDINALS, FIAT_EAT, strainOf,
+ *    jit) now live IN THIS FILE (inlined when the unmounted LivingClock
+ *    cluster was deleted, ~0018.05.24 a₿ — the strip is their surviving
+ *    home); the LivingTip seam type below too;
  *  - MoonClock.tsx — the badge-scale collapse of the study's block-paced
  *    behaviors: everything on the ring is a PURE FUNCTION of the tip height
  *    and the real block age (frightened AHEAD of Pac, GONE behind him, the
@@ -39,16 +41,55 @@
  * moving part imperatively — no ref reads in render, no setState in effects.
  */
 
-import {
-  FIAT_CARDINALS,
-  FIAT_EAT,
-  FIAT_SETS,
-  FRUITS,
-  GHOST_BMP,
-  jit,
-  strainOf,
-} from "@/components/time/living-clock-engine";
 import { bftDatePlain, bftTime, estimateHeight, estimatedBlockAtMs } from "@/lib/bb/bft";
+
+/** One reading through the seam — /api/chain/tip?full=1, relayed by TimeDoor. */
+export interface LivingTip {
+  height: number | null;
+  /** true = the seam was dark and height is a genesis-anchored ~ guess */
+  estimated: boolean;
+  /** mempool vsize vs one block, 0..1 */
+  fill: number;
+  memCount: number | null;
+  /** unix seconds the tip block was mined (chain fact), if the seam knew */
+  tipTimestamp: number | null;
+  diffChange: number | null;
+  diffRemaining: number | null;
+}
+
+/* ═══ constants — ported verbatim from the pupil study (the strip is their
+   surviving home after the LivingClock deletion) ═══ */
+/* THE RING CLOCK GRID — 12 hour positions; the reward coin holds hour 12
+   (path fraction 0, the top); the fiat ghosts take hours 1–11. The pellet
+   count stays divisible by the 12 clock-hours. */
+const RING_SLOTS = 12;
+const FIAT_SETS = [
+  ["$", "€", "¥", "£", "₹", "₽", "₩", "₺", "₪", "₫", "₦"],
+  ["€", "₹", "₽", "₩", "$", "£", "¥", "Fr", "kr", "zł", "₴"],
+  ["£", "₩", "₺", "₪", "₫", "₦", "R$", "R", "$", "€", "¥"],
+];
+const GHOST_BMP = [
+  "00011111000", "00111111100", "01111111110", "11111111111", "11111111111",
+  "11111111111", "11111111111", "11111111111", "11111111111", "11111111111", "11011011011",
+];
+/* THE FRUIT LADDER — laps 1–9's prizes at 12 o'clock; the 10th is the ₿. */
+const FRUITS = ["🍒", "🍓", "🍊", "🥨", "🍎", "🍈", "👾", "🔔", "🗝️"];
+/* the 11 clock-hours 1–11 (hour 12 = fraction 0 = the coin) */
+const FIAT_CARDINALS = Array.from({ length: RING_SLOTS - 1 }, (_, i) => (i + 1) / RING_SLOTS);
+/* shared mouth-TOUCH lookahead (lap fraction) — a ghost is EATEN the instant
+   Pac's mouth reaches it (the study's balanced value) */
+const FIAT_EAT = 0.016;
+
+/* ═══ THE STRAIN MAP — driven by REAL block age, never a fake easing curve ═══ */
+function strainOf(ageSec: number) {
+  const glow = Math.min(1, Math.pow(Math.max(0, ageSec) / 1500, 0.85));
+  let amp = 0;
+  if (ageSec > 300) amp = Math.min(0.25, ((ageSec - 300) / 300) * 0.25);
+  if (ageSec > 600) amp = 0.25 + Math.min(1.35, Math.pow((ageSec - 600) / 240, 1.4) * 0.25);
+  return { glow, amp };
+}
+const jit = (t: number, s: number) =>
+  Math.sin(t * 13.7 + s * 5.1) * 0.6 + Math.sin(t * 7.3 + s * 9.2) * 0.3 + Math.sin(t * 29.1 + s * 2.7) * 0.1;
 
 /** One reading through the seam — height + the chain's own tip timestamp. */
 export interface StripTip {
@@ -73,7 +114,6 @@ const GEOM = {
   pacR: 6, // Pac's radius; sprite ≈ 2.9× (the study's constant ratio)
   fiatScale: 0.92, // the mini fiat-ghost scale
 };
-const RING_SLOTS = 12; // pellet count stays divisible by the 12 clock-hours
 
 /* the tricolor ghost body: three phase-offset silhouette layers (the study's
    buildPixelGhost); colours + shimmer live in CSS, the currency IS the face */

@@ -71,7 +71,7 @@ export default function MembershipsPage() {
           </div>
 
           <div style={{ marginTop: 34, display: "flex", justifyContent: "center" }}>
-            <Link className="btn btn-gold btn-shimmer" href="/packages">
+            <Link className="btn btn-shimmer" href="/packages">
               Get Started Today
             </Link>
           </div>

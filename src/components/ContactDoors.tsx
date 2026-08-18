@@ -29,7 +29,7 @@ export default function ContactDoors() {
             Mon · Wed · Fri @ ~11:11 (MST/PST) — or there abouts ;)
           </p>
           <span className="push" style={{ paddingTop: 12, fontSize: ".74rem", fontWeight: 700, textTransform: "uppercase",
-            letterSpacing: ".06em", color: "var(--gold-deep)" }}>@Onecocreation ↗</span>
+            letterSpacing: ".06em", color: "var(--gold-deep)" }}>@Onecocreation</span>
         </div>
       </a>
       <Link className="card reveal" href="/services" style={{ textDecoration: "none", transitionDelay: ".2s" }}>
@@ -40,7 +40,7 @@ export default function ContactDoors() {
             The silent sessions — where the mobile studio travels.
           </p>
           <span className="push" style={{ paddingTop: 12, fontSize: ".74rem", fontWeight: 700, textTransform: "uppercase",
-            letterSpacing: ".06em", color: "var(--gold-deep)" }}>the way of the heart →</span>
+            letterSpacing: ".06em", color: "var(--gold-deep)" }}>the way of the heart</span>
         </div>
       </Link>
     </div>

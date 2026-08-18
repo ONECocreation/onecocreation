@@ -260,7 +260,7 @@ export default function BuddyDevice({
       <div className="mt-3 flex flex-wrap gap-2 font-mono text-[10px] uppercase tracking-wider text-white/50">
         <span className="rounded border border-edge px-2 py-1">Stage · {stage}</span>
         <span className="rounded border border-edge px-2 py-1">Age · {ageDays} d</span>
-        <span className="rounded border border-coin/30 px-2 py-1 text-coin">Born · <BftDate height={buddy.bornBlock} /></span>
+        <span className="rounded border border-cyan/30 px-2 py-1 text-cyan">Born · <BftDate height={buddy.bornBlock} /></span>
         <span className="rounded border border-edge px-2 py-1">{animal.emoji} {animal.name}</span>
       </div>
 

@@ -78,7 +78,7 @@ export default function QuickView({ item }: { item: QuickViewItem }) {
           <p style={{ margin: "12px 0 0", fontFamily: "var(--serif, sans-serif)", fontSize: "1.25rem",
             color: "var(--gold-deep, #B4862B)" }}>{item.priceLabel}</p>
           <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
-            <Link className="btn btn-gold btn-sm" href={item.href}>{item.doorLabel}</Link>
+            <Link className="btn btn-sm" href={item.href}>{item.doorLabel}</Link>
             {item.canBasket && (
               <button className="btn btn-ghost btn-sm" onClick={addToBasket}>Add to basket 🧺</button>
             )}

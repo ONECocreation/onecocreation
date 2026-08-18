@@ -20,7 +20,7 @@ export default function NotFound() {
           Whatever you were reaching for has moved on, or never was. The field is still here —
           come back to the center.
         </p>
-        <Link className="btn btn-gold" href="/">
+        <Link className="btn" href="/">
           Return home
         </Link>
       </div>

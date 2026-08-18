@@ -926,24 +926,30 @@ footer {
   .scar-railclock__height {
     display: inline-flex; align-items: center; gap: 5px;
     font-size: 12px; font-weight: 800;
-    color: var(--color-coin); font-variant-numeric: tabular-nums;
+    /* the height numeral wears CYAN like its starbox — heights are info,
+       not money (coordinator ruling, 0018.05.24 a₿) */
+    color: var(--color-cyan); font-variant-numeric: tabular-nums;
   }
-  /* the star-in-a-box — "the StarDate is our block height"; precedes every height */
+  /* the star-in-a-box — "the StarDate is our block height"; precedes every
+     height. CYAN (info): time marks are not money (the MediaKit law) */
   .scar-starbox {
     display: inline-grid; place-items: center;
     width: 14px; height: 14px; flex: none;
     border: 1.3px solid currentColor; border-radius: 3px;
     font-size: 8px; line-height: 1;
+    color: var(--color-cyan);
   }
   .scar-starbox::before { content: "★"; }
-  /* the a₿ era marker — coin-tinted (it reads as bitcoin), display only */
+  /* the a₿ era marker — CYAN (info), display only; rides AFTER the date */
   .scar-ab {
     font-family: var(--font-console);
     font-size: 9px; letter-spacing: .1em; font-weight: 800;
-    color: var(--color-coin);
-    border: 2px solid color-mix(in srgb, var(--color-coin) 40%, var(--scar-ops-d));
+    color: var(--color-cyan);
+    border: 2px solid color-mix(in srgb, var(--color-cyan) 40%, var(--scar-ops-d));
     border-radius: 4px; padding: 2px 6px;
   }
+  /* date+marker is one unbreakable unit (the marker never wraps) */
+  .scar-nowrap { white-space: nowrap; }
 
   /* ── top bar — an LCARS segmented bar; the ops arm underlines it ───────── */
   .scar-topbar {
@@ -1533,18 +1539,19 @@ footer {
    • prefers-reduced-motion → "all steady (flip → crossfade)": no spin,
      no tremble — the clock still ticks by a plain value swap.
 
-   OWNER FORMAT RULING (mid-build, binding): COLONS between the date
-   segments (`yyyy:mm:dd`), ONE a₿ marker on the time.
+   FORMAT LAW (the canonical order — supersedes the mid-build colon ruling):
+   DOTS between the date segments (`yyyy.mm.dd`), the a₿ marker AFTER the
+   date, cyan (info) — one order for both epochs, everywhere.
 
    CLOCK HIERARCHY RULING (owner, binding): "The time should be BIG. The
    date can be smaller and below — it's an afterthought." The face stacks:
-   `hh:mm a₿` on top at full size, `yyyy:mm:dd` beneath in tiny dim cards.
+   `hh:mm` on top at full size, `yyyy.mm.dd a₿` beneath in tiny dim cards.
 
    Sized in em so the mini corner badge and the /time hero share one build. */
 .fclk { display: inline-flex; flex-direction: column; align-items: center; gap: .18em; }
 .fclk-grp { display: inline-flex; align-items: stretch; gap: .09em; white-space: nowrap; }
 .fclk-date { font-size: .30em; opacity: .55; }   /* the afterthought row */
-.fclk-ab { align-self: center; font-size: .34em; line-height: 1; color: rgba(247, 201, 72, .85); margin-left: .45em; }
+.fclk-ab { align-self: center; font-size: 1.15em; line-height: 1; color: #6fd7e0; margin-left: .6em; }  /* the marker: cyan (info), after the date */
 .fclk-card {
   position: relative; display: inline-flex; align-items: center; justify-content: center;
   width: .72em; height: 1.12em; border-radius: .12em; overflow: hidden;

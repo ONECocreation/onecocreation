@@ -175,7 +175,7 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
     return (
       <div className="card" style={{ padding: 24, maxWidth: 520 }}>
         <p style={{ margin: "0 0 12px" }}>This room opens for members — sign in and it knows you.</p>
-        <Link className="btn btn-gold btn-sm" href="/login">Sign in · join free</Link>
+        <Link className="btn btn-sm" href="/login">Sign in · join free</Link>
       </div>
     );
   if (state === "locked")
@@ -185,7 +185,7 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
         <p style={{ color: "var(--muted)", fontSize: ".88rem", margin: "0 0 14px" }}>
           The lock is an invitation — everything inside stays waiting for you.
         </p>
-        <Link className="btn btn-gold btn-sm" href="/memberships">See the memberships</Link>
+        <Link className="btn btn-sm" href="/memberships">See the memberships</Link>
       </div>
     );
   if (state === "error")
@@ -275,7 +275,7 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
           /* paper input — literal paper ink both themes, the house input law */
           style={{ flex: 1, minWidth: 0, padding: "12px 18px", borderRadius: 999, border: "1.5px solid rgba(139,118,196,.4)", background: "rgba(255,255,255,.94)", color: "#4a4458", fontSize: ".92rem" }}
         />
-        <button className="btn btn-gold btn-sm" type="submit" disabled={sending || !draft.trim()}>
+        <button className="btn btn-sm" type="submit" disabled={sending || !draft.trim()}>
           {sending ? "…" : "Send"}
         </button>
       </form>

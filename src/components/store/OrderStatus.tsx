@@ -171,8 +171,14 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
           <p style={{ margin: "4px 0 0", fontSize: ".8rem", color: "var(--info, #5f4b96)" }}>unlocks for {prettySubject(order.entitlementSubject)}</p>
         )}
         <p style={{ margin: "10px 0 0", fontSize: ".76rem", color: "var(--muted, #897f97)" }}>
-          placed ~{bftDateTime(estimateHeight(order.createdAtMs))}
-          {order.settledAtMs && <> · paid ~{bftDateTime(estimateHeight(order.settledAtMs))}</>}
+          placed{" "}
+          <span style={{ whiteSpace: "nowrap" }}>~{bftDateTime(estimateHeight(order.createdAtMs))}</span>
+          {order.settledAtMs && (
+            <>
+              {" "}· paid{" "}
+              <span style={{ whiteSpace: "nowrap" }}>~{bftDateTime(estimateHeight(order.settledAtMs))}</span>
+            </>
+          )}
         </p>
         <p style={{ margin: "4px 0 0", fontSize: ".68rem", color: "var(--muted, #897f97)", opacity: 0.7 }}>order {order.id}</p>
       </div>

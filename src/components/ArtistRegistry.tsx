@@ -64,11 +64,17 @@ type NameCheck =
 
 type Tab = "request" | "board" | "watch";
 
-/** BFT stamp, house standard: the real block when recorded (▣), a ~estimate
-    from the timestamp when not. */
-function bftStamp(at: string, blockHeight: number | null): string {
-  if (blockHeight != null) return `▣ ${blockHeight.toLocaleString()} · ${bftDateTime(blockHeight)}`;
-  return `~ ${bftDateTime(estimateHeight(new Date(at).getTime()))}`;
+/** BFT stamp, house standard: the real block when recorded (★-in-a-box),
+    a ~estimate from the timestamp when not. */
+function BftStamp({ at, blockHeight }: { at: string; blockHeight: number | null }) {
+  if (blockHeight != null)
+    return (
+      <>
+        <span className="starbox" aria-hidden="true" /> {blockHeight.toLocaleString()} ·{" "}
+        {bftDateTime(blockHeight)}
+      </>
+    );
+  return <>~ {bftDateTime(estimateHeight(new Date(at).getTime()))}</>;
 }
 
 function StatusPill({ s }: { s: RequestStatus }) {
@@ -77,7 +83,7 @@ function StatusPill({ s }: { s: RequestStatus }) {
     auction: { cls: "border-pink text-pink glow-pink", label: "IN AUCTION" },
     won: { cls: "border-neon text-neon glow-neon", label: "WON" },
     lost: { cls: "border-ghost text-ghost", label: "LOST" },
-    anchored: { cls: "border-neon text-neon glow-neon", label: "▣ ANCHORED" },
+    anchored: { cls: "border-neon text-neon glow-neon", label: "ANCHORED" },
   };
   const m = map[s];
   return (
@@ -490,7 +496,7 @@ function RequestTab({
                     <StatusPill s={r.status} />
                   </div>
                   <span className="font-mono text-[11px] text-white/40">
-                    {bftStamp(r.createdAt, r.blockHeight)}
+                    <BftStamp at={r.createdAt} blockHeight={r.blockHeight} />
                   </span>
                 </div>
                 {r.note && <p className="mt-2 font-body text-xs text-white/50">{r.note}</p>}
@@ -720,7 +726,7 @@ function WatchTab({
               <div key={w.name} className="border-b border-edge px-4 py-3 last:border-b-0">
                 <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
                   <span className="font-arcade text-base text-cyan">@{w.name}</span>
-                  <span className="text-white/40">{bftStamp(w.addedAt, w.blockHeight)}</span>
+                  <span className="text-white/40"><BftStamp at={w.addedAt} blockHeight={w.blockHeight} /></span>
                   <div className="flex gap-2">
                     <button
                       onClick={() => checkName(w.name)}

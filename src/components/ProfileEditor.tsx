@@ -198,7 +198,7 @@ export default function ProfileEditor({
   if (!open) {
     return (
       <div className="space-y-2">
-        <button type="button" onClick={openEditor} className="btn btn-gold btn-sm">
+        <button type="button" onClick={openEditor} className="btn btn-sm">
           ✎ Edit profile
         </button>
         {published && relayResults && <RelayResults results={relayResults} />}

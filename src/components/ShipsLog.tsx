@@ -2,7 +2,7 @@ import { SHIP_LOG } from "@/lib/shiplog";
 import { bftDateTime } from "@/lib/bb/bft";
 
 /** The ship's log lane on the duty roster — bulleted daily summaries,
-    BFT-stamped (marker assumed), committed with every push. */
+    BFT-stamped (yyyy.mm.dd hh:mm a₿, marker after), committed with every push. */
 export default function ShipsLog() {
   return (
     <div className="mx-auto mt-10 max-w-3xl px-6 pb-16">
@@ -15,7 +15,7 @@ export default function ShipsLog() {
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <p className="font-pixel text-xs text-cyan">{e.title}</p>
               <p className="font-mono text-[10px] tabular-nums text-white/40">
-                ▣ {e.height.toLocaleString()} · {bftDateTime(e.height)}
+                <span className="starbox" aria-hidden="true" /> {e.height.toLocaleString()} · {bftDateTime(e.height)}
               </p>
             </div>
             <ul className="mt-2 space-y-1">

@@ -243,7 +243,7 @@ export default function StatusReportsPanel() {
                   data-accent={current.accent}
                   className="btn-pill btn-pill--solid"
                 >
-                  {current.gesture.label} →
+                  {current.gesture.label}
                 </Link>
                 <p className="mt-2 font-mono text-[11px] text-white/40">
                   the act itself lives on its own board — this opens it

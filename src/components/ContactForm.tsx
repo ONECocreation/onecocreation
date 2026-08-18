@@ -53,7 +53,7 @@ export default function ContactForm() {
       <input value={company} onChange={(e) => setCompany(e.target.value)} tabIndex={-1} autoComplete="off"
         aria-hidden style={{ position: "absolute", left: -9999, width: 1, height: 1, opacity: 0 }} placeholder="company" />
       <div style={{ display: "flex", justifyContent: "center", marginTop: 4 }}>
-        <button className="btn btn-gold" onClick={send} disabled={state === "busy" || !name || !email || !message}>
+        <button className="btn" onClick={send} disabled={state === "busy" || !name || !email || !message}>
           {state === "busy" ? "Sending…" : "SEND ✉️"}
         </button>
       </div>

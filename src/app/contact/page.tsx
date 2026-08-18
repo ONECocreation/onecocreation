@@ -92,7 +92,7 @@ export default function ContactPage() {
                   receive an email confirming your account and access to the booking calendar.
                 </p>
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <Link className="btn btn-gold btn-sm" href="/welcome">Create an account</Link>
+                  <Link className="btn btn-sm" href="/welcome">Create an account</Link>
                   <Link className="btn btn-ghost btn-sm" href="/services">ConsciousCuts ✂️</Link>
                 </div>
               </div>

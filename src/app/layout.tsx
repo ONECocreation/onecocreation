@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Montserrat, Press_Start_2P, Roboto } from "next/font/google";
+import { Barlow, Open_Sans, Press_Start_2P, Roboto } from "next/font/google";
 import localFont from "next/font/local";
 import { EASY_MODE_BOOT_SCRIPT } from "@pacsarcade/arcade-ui";
 import { BrandProvider, oneCocreationBrand } from "@/lib/brand";
@@ -14,12 +14,13 @@ import "./globals.css";
 import "./cartridge.css";
 import "./house.css";
 
-const retronoid = localFont({
-  src: "../../public/fonts/Retronoid.ttf",
-  variable: "--font-retronoid",
-});
+/* Retronoid (the arcade skin's display face) moved OFF the root (QW9,
+   ~0018.05.24 a₿) — it ships only to arcade-skin routes via
+   components/ArcadeFonts. Press Start 2P stays here: the signed-in member
+   chip in the site header wears font-pixel on EVERY page. Montserrat
+   dropped: --disp leads with Barlow and never fell back to it. */
 
-/* Self-hosted like Retronoid — easy mode must not lean on a third-party CDN */
+/* Self-hosted — easy mode must not lean on a third-party CDN */
 const openDyslexic = localFont({
   src: [
     { path: "../../public/fonts/OpenDyslexic-Regular.woff2", weight: "400" },
@@ -32,12 +33,6 @@ const pressStart2P = Press_Start_2P({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-press-start",
-});
-
-const montserrat = Montserrat({
-  weight: ["700", "800"],
-  subsets: ["latin"],
-  variable: "--font-disp",
 });
 
 /* Love's blessed FONT TRIO, leg 1 — Barlow carries H1/display (0018.05.17).
@@ -54,6 +49,16 @@ const roboto = Roboto({
   weight: ["400", "700"],
   subsets: ["latin"],
   variable: "--font-roboto",
+});
+
+/* The restored primary CTA's own voice (the flagged fidelity item): Open
+   Sans 700 letterspaced caps, white square — exactly the original site's
+   button face (live-extracted, onecocreation-live-capture §0.3). */
+const openSans = Open_Sans({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-open-sans",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -93,7 +98,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${retronoid.variable} ${pressStart2P.variable} ${roboto.variable} ${openDyslexic.variable} ${montserrat.variable} ${barlow.variable}`}
+      className={`${pressStart2P.variable} ${roboto.variable} ${openDyslexic.variable} ${barlow.variable} ${openSans.variable}`}
     >
       <body>
         <script dangerouslySetInnerHTML={{ __html:

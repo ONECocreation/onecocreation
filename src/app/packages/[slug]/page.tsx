@@ -143,7 +143,7 @@ export default async function TierPage({ params }: { params: Promise<{ slug: str
                     <div className="body" style={{ alignItems: "center", textAlign: "center" }}>
                       <h3 style={{ fontWeight: 400, fontSize: "1.1rem", margin: 0 }}>{rt.name}</h3>
                       <div className="price" style={{ fontSize: "1.2rem" }}>${rt.priceUsd}<small>/mo</small></div>
-                      <span className="btn btn-gold btn-sm push" style={{ marginTop: 10 }}>YES!</span>
+                      <span className="btn btn-sm push" style={{ marginTop: 10 }}>YES!</span>
                     </div>
                   </Link>
                 );

@@ -144,11 +144,12 @@ export default function StripClock() {
           </span>
         </span>
 
-        {/* the facts INSIDE the card — the study's HEIGHT caption + the date
-            line ("date is fine"); no separate BLOCK text anywhere */}
+        {/* the facts INSIDE the card — the study's HEIGHT caption (star-in-
+            a-box, canonical) + the date line ("date is fine"); no separate
+            BLOCK text anywhere */}
         <span className="sclk-facts">
           <span className="sclk-height">
-            HEIGHT <b className="sclk-h-num">—</b>
+            HEIGHT <span className="sclk-starbox" aria-hidden="true" /> <b className="sclk-h-num">—</b>
           </span>
           <span className="sclk-date">
             <span className="sclk-d-num">————.——.——</span> <span className="sclk-ab">a₿</span>

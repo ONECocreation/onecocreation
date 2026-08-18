@@ -82,7 +82,7 @@ export default function ManageBooking({
           <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
             <button
               onClick={() => setOpen(open === "reschedule" ? "none" : "reschedule")}
-              className={`btn btn-sm ${open === "reschedule" ? "btn-gold" : "btn-ghost"}`}
+              className={`btn btn-sm ${open === "reschedule" ? "btn-on" : "btn-ghost"}`}
             >
               {open === "reschedule" ? "Keep my time" : "Reschedule"}
             </button>

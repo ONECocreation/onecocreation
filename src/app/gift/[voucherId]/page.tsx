@@ -36,7 +36,7 @@ export default async function GiftPage({ params }: { params: Promise<{ voucherId
           </p>
         </header>
         {voucher.redeemedAtMs ? (
-          <Link className="btn btn-gold" href={`/book/receipt/${voucher.bookingId}`}>
+          <Link className="btn" href={`/book/receipt/${voucher.bookingId}`}>
             See my booking
           </Link>
         ) : !service || service.status !== "live" ? (

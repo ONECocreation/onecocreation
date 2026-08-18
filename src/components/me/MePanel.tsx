@@ -24,9 +24,9 @@ const MAX_SESSIONS = 8;
  *    live signal from the big relays and signing through the signer doors.
  */
 
-/* Space accent — a quiet tint difference between spaces (house ink). */
-function accentColor(space: string): string {
-  return space === "pacsarcade" ? "var(--gold-2, #ebcb77)" : "var(--teal-bright, #8FD0D8)";
+/* Space accent — info-cyan (identity), never gold: gold stays money. */
+function accentColor(): string {
+  return "var(--teal-bright, #8FD0D8)";
 }
 
 /* the house glass shell (Admiral, 0018.05.15) — the cyan wireframe retired */
@@ -37,7 +37,7 @@ const glassCard: React.CSSProperties = {
 };
 const secLabel: React.CSSProperties = {
   margin: "0 0 6px", fontSize: ".7rem", fontWeight: 700, letterSpacing: ".14em",
-  textTransform: "uppercase", color: "var(--gold-deep, #b4862b)",
+  textTransform: "uppercase", color: "var(--info, #5f4b96)",
 };
 const tealLink: React.CSSProperties = { color: "var(--teal-bright, #8FD0D8)", textDecoration: "underline" };
 
@@ -82,7 +82,7 @@ export default function MePanel() {
           /me is your own control room — sessions, names, profile card. Sign in
           with your key to open it.
         </p>
-        <Link href="/login" className="btn btn-gold" style={{ width: "100%", boxSizing: "border-box", textAlign: "center" }}>Sign in</Link>
+        <Link href="/login" className="btn" style={{ width: "100%", boxSizing: "border-box", textAlign: "center" }}>Sign in</Link>
         <p className="mt-4" style={{ fontSize: ".78rem", color: "var(--muted)" }}>
           New here?{" "}
           <Link href="/welcome" style={tealLink}>
@@ -106,7 +106,7 @@ export default function MePanel() {
         <p style={{ ...secLabel, marginBottom: 8 }}>Your active name</p>
         <p className="break-all" style={{ fontFamily: "var(--serif, sans-serif)", fontSize: "clamp(1.6rem,7vw,2.5rem)", lineHeight: 1.15, color: "var(--ink-strong)", margin: 0 }}>
           {fren.handle}
-          <span style={{ color: accentColor(fren.space) }}>@{fren.space}</span>
+          <span style={{ color: accentColor() }}>@{fren.space}</span>
         </p>
         <p className="mt-1" style={{ fontSize: ".7rem", letterSpacing: ".08em", textTransform: "uppercase", color: "var(--muted)" }}>
           {SPACE_ROLES[fren.space] ?? "verse"} space ·{" "}
@@ -144,7 +144,7 @@ export default function MePanel() {
                     <li key={`${h.handle}@${h.space}`} className="flex items-center gap-2">
                       <span style={{ fontFamily: "monospace", fontSize: ".9rem", color: "var(--ink-strong)" }}>
                         {h.handle}
-                        <span style={{ color: accentColor(h.space) }}>@{h.space}</span>
+                        <span style={{ color: accentColor() }}>@{h.space}</span>
                       </span>
                       {active ? (
                         <span style={{ fontSize: ".68rem", textTransform: "uppercase", color: "var(--teal-bright, #8FD0D8)" }}>◆ active</span>
@@ -189,12 +189,12 @@ export default function MePanel() {
               <li
                 key={`${a.handle}@${a.space}`}
                 className="flex flex-wrap items-center gap-3 px-3 py-2"
-                style={{ borderRadius: 12, border: active ? "1.5px solid var(--gold-deep, #b4862b)" : "1px solid var(--glass-edge)",
+                style={{ borderRadius: 12, border: active ? "1.5px solid var(--lavender, #8B76C4)" : "1px solid var(--glass-edge)",
                   background: active ? "rgba(217,178,78,.08)" : "transparent" }}
               >
                 <span className="min-w-0 flex-1 truncate" style={{ fontFamily: "monospace", fontSize: ".9rem", color: "var(--ink-strong)" }}>
                   {a.handle}
-                  <span style={{ color: accentColor(a.space) }}>@{a.space}</span>
+                  <span style={{ color: accentColor() }}>@{a.space}</span>
                 </span>
                 {active ? (
                   <span style={{ fontSize: ".68rem", textTransform: "uppercase", color: "var(--teal-bright, #8FD0D8)" }}>◆ active</span>

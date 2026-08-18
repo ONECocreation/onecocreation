@@ -406,7 +406,7 @@ export default function BriefsPanel() {
               data-accent="cyan"
               className="btn-pill btn-pill--muted inline-flex min-h-11 items-center"
             >
-              ⚙ SET UP IN CONNECTIONS →
+              ⚙ SET UP IN CONNECTIONS
             </a>
             <button onClick={pull} disabled={busy === "pull"} data-accent="cyan" className="btn-pill">
               {busy === "pull" ? "PULLING…" : "⟳ PULL BRIEFS"}

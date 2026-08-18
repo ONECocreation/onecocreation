@@ -40,7 +40,7 @@ export default function LettersRoom({ recent }: { recent: { key: string; subject
               {n.subject}
             </b>
             <span style={{ fontSize: ".7rem", fontWeight: 700, textTransform: "uppercase",
-              letterSpacing: ".06em", color: "var(--gold-deep)" }}>read →</span>
+              letterSpacing: ".06em", color: "var(--gold-deep)" }}>read</span>
           </Link>
         ))}
       </div>
@@ -78,7 +78,7 @@ export default function LettersRoom({ recent }: { recent: { key: string; subject
           Letters travel by email — add yours to your profile and everything Love sends you gathers here.
         </p>
         <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
-          <Link className="btn btn-gold btn-sm" href="/me">Your profile →</Link>
+          <Link className="btn btn-sm" href="/me">Your profile</Link>
           <Link className="btn btn-ghost btn-sm" href="/news">The public news</Link>
         </div>
         {who.operator && operatorNote}
@@ -109,13 +109,13 @@ export default function LettersRoom({ recent }: { recent: { key: string; subject
               </span>
             </span>
             <span style={{ fontSize: ".72rem", fontWeight: 700, textTransform: "uppercase",
-              letterSpacing: ".06em", color: "var(--gold-deep)", whiteSpace: "nowrap" }}>read →</span>
+              letterSpacing: ".06em", color: "var(--gold-deep)", whiteSpace: "nowrap" }}>read</span>
           </Link>
         ))}
       </div>
       {who.letters.length === 0 && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
-          <Link className="btn btn-ghost btn-sm" href="/news">Browse the public news →</Link>
+          <Link className="btn btn-ghost btn-sm" href="/news">Browse the public news</Link>
         </div>
       )}
       {who.operator && operatorNote}

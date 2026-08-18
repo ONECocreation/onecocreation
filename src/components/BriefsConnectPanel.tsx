@@ -104,8 +104,8 @@ export default function BriefsConnectPanel() {
                 )}
                 <a href="/a/action#approvals" className="text-cyan underline hover:text-white">
                   {config?.githubTokenSet
-                    ? "manage the key in the merge queue →"
-                    : "connect the GitHub PAT in the merge queue →"}
+                    ? "manage the key in the merge queue"
+                    : "connect the GitHub PAT in the merge queue"}
                 </a>
               </div>
             </div>
@@ -115,7 +115,7 @@ export default function BriefsConnectPanel() {
         <p className="text-center font-mono text-[11px] text-white/40">
           THE ⟳ PULL LIVES ON THE{" "}
           <a href="/a/briefs" className="text-cyan underline hover:text-white">
-            BRIEFS PAGE →
+            BRIEFS PAGE
           </a>{" "}
           — IT PULLS BOTH SOURCES AT ONCE. CONTENT FLOWS REPO → STORE, NEVER INTO GIT.
         </p>

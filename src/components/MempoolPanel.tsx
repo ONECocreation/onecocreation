@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { bftDateTime, bftDatePlain, estimateHeight } from "@/lib/bb/bft";
+import { bftDate, bftDateTime, estimateHeight } from "@/lib/bb/bft";
 
 /**
  * The chain node — link this deployment to its OWN mempool instance. The
@@ -223,8 +223,8 @@ export default function MempoolPanel() {
             <Row label="TIP">
               {status?.reachable && status.height != null ? (
                 <span className="text-white/80">
-                  ★{status.height.toLocaleString()}{" "}
-                  <span className="text-white/40">· {bftDatePlain(status.height)}</span>
+                  <span className="starbox" aria-hidden="true" /> {status.height.toLocaleString()}{" "}
+                  <span className="text-white/40">· {bftDate(status.height)}</span>
                 </span>
               ) : (
                 <span className="text-white/40">—</span>

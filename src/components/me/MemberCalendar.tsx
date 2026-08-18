@@ -65,7 +65,7 @@ export default function MemberCalendar() {
     return (
       <div>
         <p style={{ color: "var(--muted)" }}>No sessions on your calendar yet.</p>
-        <Link className="btn btn-gold" href="/book" style={{ marginTop: 10, display: "inline-block" }}>
+        <Link className="btn" href="/book" style={{ marginTop: 10, display: "inline-block" }}>
           Book a session
         </Link>
       </div>
@@ -106,12 +106,12 @@ export default function MemberCalendar() {
             </div>
             <div style={{ display: "flex", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
               {b.meetingUrl && (
-                <a className="btn btn-gold btn-sm" href={b.meetingUrl} target="_blank" rel="noreferrer">
+                <a className="btn btn-sm" href={b.meetingUrl} target="_blank" rel="noreferrer">
                   Join the meeting
                 </a>
               )}
               {hasLocation && (
-                <button className="btn btn-gold btn-sm" onClick={() => copyLocation(b)}>
+                <button className="btn btn-sm" onClick={() => copyLocation(b)}>
                   {copied === b.bookingId ? "Copied ✓" : "📍 Location"}
                 </button>
               )}

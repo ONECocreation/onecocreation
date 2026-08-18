@@ -181,7 +181,7 @@ export default function Kind0Doors({
           type="button"
           onClick={signNip07}
           disabled={busy !== "idle"}
-          className="btn btn-gold btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
+          className="btn btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
         >
           {busy === "nip07" ? "Waiting for your key…" : label}
         </button>
@@ -215,7 +215,7 @@ export default function Kind0Doors({
             type="button"
             onClick={signBunker}
             disabled={busy !== "idle"}
-            className="btn btn-gold btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
+            className="btn btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
           >
             {busy === "bunker" ? "Asking your signer…" : "Connect, sign & publish"}
           </button>
@@ -239,7 +239,7 @@ export default function Kind0Doors({
                   <button
                     type="button"
                     onClick={copyInvite}
-                    className="btn btn-gold btn-sm" style={{ flex: 1 }}
+                    className="btn btn-sm" style={{ flex: 1 }}
                   >
                     {copied ? "Copied ✓" : "Copy invite"}
                   </button>
@@ -257,7 +257,7 @@ export default function Kind0Doors({
                 type="button"
                 onClick={makeInvite}
                 disabled={busy !== "idle"}
-                className="btn btn-gold btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
+                className="btn btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
               >
                 Mint a connect invite
               </button>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BdayChecker from "@/components/BdayChecker";
+import ArcadeFonts from "@/components/ArcadeFonts";
 
 export const metadata: Metadata = {
   title: "Bitcoin Birthday — One Cocreation",
@@ -18,7 +19,8 @@ export const metadata: Metadata = {
  */
 export default function BdayPage() {
   return (
-    <main className="mgmt-ground">
+    <ArcadeFonts>
+      <main className="mgmt-ground">
       <SiteHeader />
       <section className="mgmt-wrap mgmt-body" style={{ maxWidth: 640 }}>
         <header className="mgmt-head">
@@ -34,5 +36,6 @@ export default function BdayPage() {
       </section>
       <SiteFooter />
     </main>
+    </ArcadeFonts>
   );
 }

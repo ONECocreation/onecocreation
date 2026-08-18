@@ -86,7 +86,7 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
               <button
                 onClick={verify}
                 disabled={busy}
-                className="btn btn-gold min-h-11 w-full touch-manipulation"
+                className="btn min-h-11 w-full touch-manipulation"
               >
                 {busy ? "Reading your signature…" : "Verify operator key"}
               </button>

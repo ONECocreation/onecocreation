@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { estimateHeight } from "@/lib/bb/bft";
-import type { LivingTip } from "@/components/time/living-clock-engine";
+import type { LivingTip } from "@/components/time/strip-clock-engine";
 import Converters from "@/components/time/Converters";
 
 /**
@@ -144,7 +144,7 @@ export default function TimeDoor({ children }: { children?: ReactNode }) {
                 /* the queue holds more than one block — say THAT, not a
                    pinned percentage (the owner's honesty order) */
                 <>
-                  <b className="text-coin">next block is full</b>
+                  <b className="text-cyan">next block is full</b>
                   {memCount != null && (
                     <> · {memCount.toLocaleString()} payments waiting</>
                   )}
@@ -152,12 +152,12 @@ export default function TimeDoor({ children }: { children?: ReactNode }) {
               ) : (
                 <>
                   next block filling{" "}
-                  <b className="text-coin whitespace-nowrap">~{Math.round(fill * 100)}%</b>
+                  <b className="text-cyan whitespace-nowrap">~{Math.round(fill * 100)}%</b>
                 </>
               )}
             </span>
             <span className="whitespace-nowrap tabular-nums">
-              tip ★{estimated ? "~" : ""}
+              tip <span className="starbox" aria-hidden="true" /> {estimated ? "~" : ""}
               {height?.toLocaleString() ?? "—"}
             </span>
           </div>
@@ -181,7 +181,8 @@ export default function TimeDoor({ children }: { children?: ReactNode }) {
           <p className="mt-2 text-pretty font-mono text-[10px] text-white/40">
             {landed != null ? (
               <span className="text-neon">
-                ★{landed.toLocaleString()} just landed — the clock advanced ten minutes. tick tock.
+                <span className="starbox" aria-hidden="true" /> {landed.toLocaleString()} just
+                landed — the clock advanced ten minutes. tick tock.
               </span>
             ) : estimated ? (
               <>~ the network is unreachable right now — the clock keeps counting on the honest estimate, and will snap true when the chain answers.</>

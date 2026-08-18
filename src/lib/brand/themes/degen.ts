@@ -46,12 +46,12 @@ export const degenTheme: BrandTheme = {
   copy: {
     productName: "Degen Wonderland",
     memberNoun: "degen",
-    loginKicker: "DEGEN WONDERLAND ▸ SIGN IN",
+    loginKicker: "DEGEN WONDERLAND · SIGN IN",
     loginTitle: "DOWN THE RABBIT HOLE",
     returningTitle: "BACK AGAIN, DEGEN?",
     returningBlurb:
       "Your key is your login — sign a fresh challenge and step back through the looking glass. No password, nothing stored, nothing to leak.",
-    signInCta: "▶ SIGN IN WITH MY KEY",
+    signInCta: "SIGN IN WITH MY KEY",
     signingCta: "WAITING FOR YOUR KEY…",
     doorsHeading: "NEW HERE? PICK YOUR RABBIT HOLE",
     doorsFootnote:

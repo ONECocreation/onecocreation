@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
-import { GENESIS_MS, bftTime, bftDatePlain } from "@/lib/bb/bft";
+import { bftTime, bftDate, bftDatePlain, estimateHeightAt } from "@/lib/bb/bft";
 import { USA_ZONES, zipToTz } from "@/lib/us-zip-tz";
 
 /**
@@ -28,10 +28,13 @@ interface ServiceView {
   pricingMode: "fixed" | "pwyc";
 }
 
-/** BFT — the block is the clock. A FUTURE slot rides the genesis-anchored
- *  estimate (~144 blocks a day), and wears the honest `~`. */
+/** BFT — the block is the clock. A FUTURE slot rides the CHAIN-ANCHORED
+ *  estimate (estimateHeightAt — halvings + the pupil's recent-block anchor;
+ *  the flat genesis model runs months behind and is banned for now/future),
+ *  and wears the honest `~`. One clock: same bridge the orrery, the
+ *  converters, and every other face read through. */
 const BFT = "BFT";
-const estHeight = (iso: string) => Math.floor((Date.parse(iso) - GENESIS_MS) / 600_000);
+const estHeight = (iso: string) => estimateHeightAt(Date.parse(iso));
 
 function fmtTime(iso: string, tz: string): string {
   if (tz === BFT) return `~${bftTime(estHeight(iso))}`;
@@ -43,7 +46,7 @@ function fmtTime(iso: string, tz: string): string {
 }
 
 function fmtDayHeading(iso: string, tz: string): string {
-  if (tz === BFT) return `~${bftDatePlain(estHeight(iso))} a₿`;
+  if (tz === BFT) return `~${bftDate(estHeight(iso))}`;
   return new Intl.DateTimeFormat(undefined, {
     timeZone: tz,
     weekday: "long",
@@ -52,9 +55,10 @@ function fmtDayHeading(iso: string, tz: string): string {
   }).format(new Date(iso));
 }
 
-/** The date-pill face: short, calm — "Thu Aug 6". */
+/** The date-pill face: short, calm — "Thu Aug 6". The marker law: the a₿
+ *  rides every BFT date, after the date, even on the small pill. */
 function fmtDayPill(iso: string, tz: string): string {
-  if (tz === BFT) return `~${bftDatePlain(estHeight(iso))}`;
+  if (tz === BFT) return `~${bftDate(estHeight(iso))}`;
   return new Intl.DateTimeFormat(undefined, {
     timeZone: tz,
     weekday: "short",

@@ -150,7 +150,7 @@ export default function SignerDoors({
           <button
             onClick={signBunker}
             disabled={busy !== "idle"}
-            className="btn btn-gold btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
+            className="btn btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
           >
             {busy === "bunker" ? "Asking your signer…" : "Connect & sign"}
           </button>
@@ -173,7 +173,7 @@ export default function SignerDoors({
                 <div className="flex gap-2">
                   <button
                     onClick={copyInvite}
-                    className="btn btn-gold btn-sm" style={{ flex: 1 }}
+                    className="btn btn-sm" style={{ flex: 1 }}
                   >
                     {copied ? "Copied ✓" : "Copy invite"}
                   </button>
@@ -189,7 +189,7 @@ export default function SignerDoors({
               <button
                 onClick={makeInvite}
                 disabled={busy !== "idle"}
-                className="btn btn-gold btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
+                className="btn btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
               >
                 Mint a connect invite
               </button>
@@ -226,7 +226,7 @@ export default function SignerDoors({
               </p>
               <button
                 onClick={openSignerApp}
-                className="btn btn-gold btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
+                className="btn btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
               >
                 Open my signer app
               </button>

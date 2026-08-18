@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BbConsole from "@/components/BbConsole";
+import ArcadeFonts from "@/components/ArcadeFonts";
 
 export const metadata: Metadata = {
   title: "Bitcoin Buddy — One Cocreation",
@@ -16,7 +17,8 @@ export const metadata: Metadata = {
  */
 export default function BbPage() {
   return (
-    <main className="mgmt-ground">
+    <ArcadeFonts>
+      <main className="mgmt-ground">
       <SiteHeader />
       <section className="mgmt-wrap mgmt-body" style={{ maxWidth: 880 }}>
         <header className="mgmt-head">
@@ -33,5 +35,6 @@ export default function BbPage() {
       </section>
       <SiteFooter />
     </main>
+    </ArcadeFonts>
   );
 }

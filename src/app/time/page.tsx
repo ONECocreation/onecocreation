@@ -167,9 +167,9 @@ function ThePaper() {
           beneath it is <Key>the sun&apos;s velocity — one block of speed
           every <NB>~10 minutes</NB></Key>. The seconds live inside the
           block, and blocks are random — ten minutes is only the average —
-          so when one runs long the face holds at :59 and visibly strains.
-          It never lies; it struggles in the open. That&apos;s why estimates
-          wear the <span className="font-mono text-coin">~</span>.
+          so when one runs long the face holds at :59. It never lies; it
+          struggles in the open. That&apos;s why estimates
+          wear the <span className="font-mono text-cyan">~</span>.
         </p>
         <p>
           Around the light, every ring is one of bitcoin&apos;s periods, and
@@ -228,9 +228,9 @@ function ThePaper() {
         <p>
           This clock makes exactly one promise:{" "}
           <Key>every mark on it maps to a chain fact.</Key>{" "}
-          <span className="font-mono text-coin">★</span> before a
+          <span className="font-mono text-cyan">★</span> before a
           number means a real, recorded block height — history every node
-          agrees on. <span className="font-mono text-coin">~</span> means an
+          agrees on. <span className="font-mono text-cyan">~</span> means an
           estimate — the network was unreachable, or a wall-clock moment was
           converted at <NB>~10 minutes</NB> a block.
         </p>
@@ -251,7 +251,7 @@ function ThePaper() {
           rel="noopener noreferrer"
           className="text-coin/80 underline underline-offset-4 hover:text-coin"
         >
-          read the paper on GitHub ↗
+          read the paper on GitHub
         </a>
       </p>
     </div>

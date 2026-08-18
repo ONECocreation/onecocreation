@@ -90,10 +90,10 @@ function fiatLabel(f: { amount: number; currency: string }): string {
     goes STRAIGHT to its own page (Admiral, 0018.05.15). */
 function doorFor(item: StoreItem): { href: string; label: string } {
   // the journey (Admiral, 0018.05.15): store → quick view → DETAIL → cart/time
-  if (item.kind === "service") return { href: `/store/${item.id}`, label: "The full story →" };
+  if (item.kind === "service") return { href: `/store/${item.id}`, label: "The full story" };
   if (item.kind === "package") {
     const page = TIER_PAGES.find((p) => p.tier === item.entitlementTier);
-    return { href: page ? `/packages/${page.slug}` : "/packages", label: "See the package →" };
+    return { href: page ? `/packages/${page.slug}` : "/packages", label: "See the package" };
   }
   return { href: `/store/${item.id}`, label: item.kind === "digital" ? "Get it ⚡" : "View ⚡" };
 }
@@ -201,7 +201,7 @@ export default async function StorePage() {
                       </div>
                       {/* doors: centered at the card's foot (Admiral, 0018.05.15) */}
                       <div className="push" style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", width: "100%" }}>
-                        <Link className="btn btn-gold btn-sm" href={door.href}>{door.label}</Link>
+                        <Link className="btn btn-sm" href={door.href}>{door.label}</Link>
                         <QuickView
                           item={{
                             id: item.id,

@@ -44,14 +44,16 @@ export const sheet: React.CSSProperties = {
 };
 
 export function SectionHead({ label }: { label: string }) {
+  /* the section pill is LAVENDER (info) — never gold-by-default (the
+     relaxed gold law: gold is curated to money + earned accents) */
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "26px 0 10px" }}>
       <span style={{ borderRadius: 999, padding: "4px 16px", fontSize: ".72rem", fontWeight: 700,
-        letterSpacing: ".08em", textTransform: "uppercase", color: "var(--gold-deep, #b4862b)",
-        border: "1.5px solid rgba(180,134,43,.45)", background: "rgba(217,178,78,.10)", whiteSpace: "nowrap" }}>
+        letterSpacing: ".08em", textTransform: "uppercase", color: "var(--info, #5f4b96)",
+        border: "1.5px solid rgba(139,118,196,.45)", background: "rgba(139,118,196,.10)", whiteSpace: "nowrap" }}>
         {label}
       </span>
-      <span style={{ flex: 1, height: 1, background: "rgba(180,134,43,.25)" }} />
+      <span style={{ flex: 1, height: 1, background: "rgba(139,118,196,.25)" }} />
     </div>
   );
 }

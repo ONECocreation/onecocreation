@@ -70,7 +70,7 @@ function unpointedFloor(handle: string): string {
 </head>
 <body>
 <main>
-  <p class="dim">ONE COCREATION ▸ CHAT</p>
+  <p class="dim">ONE COCREATION · CHAT</p>
   <h1>The floor isn&#8217;t pointed yet</h1>
   <p>You&#8217;re signed in, @${safe} — the gate knows you. But no chat node is
      linked to this deployment, so there&#8217;s no floor to open. No pretend

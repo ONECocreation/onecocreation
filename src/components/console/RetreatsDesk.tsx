@@ -100,11 +100,11 @@ export default function RetreatsDesk() {
                 <a href={`/retreats/${r.id}`} target="_blank"
                   style={{ background: "none", border: 0, fontSize: ".68rem", fontWeight: 700,
                     textTransform: "uppercase", letterSpacing: ".05em", color: "var(--muted)", padding: "6px 4px" }}>
-                  view ↗
+                  view
                 </a>
                 <button onClick={() => { setDraft(r); setErr(""); }}
                   style={{ background: "none", border: 0, cursor: "pointer", fontFamily: "inherit", fontSize: ".68rem",
-                    fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color: "var(--gold-deep)", padding: "6px 4px" }}>
+                    fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color: "var(--info)", padding: "6px 4px" }}>
                   edit
                 </button>
                 <button onClick={() => remove(r)} disabled={busy}
@@ -122,7 +122,7 @@ export default function RetreatsDesk() {
       </ul>
 
       {!draft ? (
-        <button className="btn btn-gold btn-sm" style={{ marginTop: 10 }} onClick={() => { setDraft(BLANK); setErr(""); }}>
+        <button className="btn btn-sm" style={{ marginTop: 10 }} onClick={() => { setDraft(BLANK); setErr(""); }}>
           + New retreat
         </button>
       ) : (
@@ -182,7 +182,7 @@ export default function RetreatsDesk() {
             style={{ ...field, width: "100%", minHeight: 64, resize: "vertical" }} />
           {err && <p style={{ color: "var(--err)", fontSize: ".8rem", margin: "8px 0 0" }}>{err}</p>}
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button className="btn btn-gold btn-sm" onClick={save} disabled={busy}>
+            <button className="btn btn-sm" onClick={save} disabled={busy}>
               {busy ? "Saving…" : draft.status === "live" ? "Save & open the doors" : "Save"}
             </button>
             <button className="btn btn-ghost btn-sm" onClick={() => setDraft(null)}>Close</button>

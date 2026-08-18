@@ -49,12 +49,12 @@ export const frensEarthTheme: BrandTheme = {
   copy: {
     productName: "frens.earth",
     memberNoun: "fren",
-    loginKicker: "FRENS.EARTH ▸ LOGIN",
+    loginKicker: "FRENS.EARTH · LOGIN",
     loginTitle: "KEYS OPEN DOORS",
     returningTitle: "WELCOME HOME, FREN",
     returningBlurb:
       "Your key is your login — sign a fresh challenge and you're home. We don't ask for trust here; we verify it. Nothing stored, nothing to leak.",
-    signInCta: "▶ VERIFY ME",
+    signInCta: "VERIFY ME",
     signingCta: "READING YOUR SIGNATURE…",
     doorsHeading: "NO TAG YET? THE GARDEN HAS A GATE",
     doorsFootnote:

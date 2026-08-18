@@ -46,7 +46,7 @@ export default async function NewsPage() {
                   {n.subject}
                 </b>
                 <span style={{ fontSize: ".72rem", fontWeight: 700, textTransform: "uppercase",
-                  letterSpacing: ".06em", color: "var(--gold-deep)" }}>read →</span>
+                  letterSpacing: ".06em", color: "var(--gold-deep)" }}>read</span>
               </Link>
             ))}
             {notes.length === 0 && (

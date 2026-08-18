@@ -100,9 +100,9 @@ export default function ServiceCard({ svc, delay = 0 }: { svc: ServiceCardData; 
             )}
             <div className="push" onClick={(e) => e.stopPropagation()}
               style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 18 }}>
-              <Link className="btn btn-gold btn-sm" href={`/book/${svc.id}`}>Book ⚡</Link>
+              <Link className="btn btn-sm" href={`/book/${svc.id}`}>Book ⚡</Link>
               <button className="btn btn-ghost btn-sm" onClick={flip} aria-expanded={flipped}>more info</button>
-              <Link className="btn-quiet btn-quiet--gold" href={detailsHref}>full details →</Link>
+              <Link className="btn-quiet btn-quiet--accent" href={detailsHref}>full details</Link>
             </div>
           </div>
         </div>
@@ -126,13 +126,13 @@ export default function ServiceCard({ svc, delay = 0 }: { svc: ServiceCardData; 
               </p>
             </div>
             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
-              <Link className="btn btn-gold btn-sm" href={`/book/${svc.id}`}>Book ⚡</Link>
+              <Link className="btn btn-sm" href={`/book/${svc.id}`}>Book ⚡</Link>
               {svc.inStore && (
-                <button className="btn-quiet btn-quiet--gold" onClick={addToBasket} disabled={busy}>
+                <button className="btn-quiet btn-quiet--accent" onClick={addToBasket} disabled={busy}>
                   {busy ? "adding…" : "add to basket 🧺"}
                 </button>
               )}
-              <Link className="btn-quiet btn-quiet--gold" href={detailsHref}>full details →</Link>
+              <Link className="btn-quiet btn-quiet--accent" href={detailsHref}>full details</Link>
               <button className="btn-quiet" onClick={flip}>flip back</button>
             </div>
           </div>

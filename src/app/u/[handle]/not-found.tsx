@@ -10,7 +10,7 @@ export default function FrenNotFound() {
         That&apos;s not a valid name — names are 3-20 characters, a-z, 0-9 and hyphens.
         Pick one that fits and claim it.
       </p>
-      <Link href="/" className="btn btn-gold"> Claim a Name
+      <Link href="/" className="btn"> Claim a Name
       </Link>
       <p className="font-pixel text-xs text-white/40">
         <Link href="/" className="text-cyan hover:glow-cyan">

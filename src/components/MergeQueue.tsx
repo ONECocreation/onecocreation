@@ -691,7 +691,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
         </div>
         {justLive ? (
           <p className="mt-2 font-mono text-[10px] text-neon">
-            it&apos;s live — <a href="/a/testing" className="underline underline-offset-2 hover:text-white">test it in Bug Testing →</a>
+            it&apos;s live — <a href="/a/testing" className="underline underline-offset-2 hover:text-white">test it in Bug Testing</a>
           </p>
         ) : (
           <p className="mt-2 font-mono text-[10px] text-white/40">
@@ -766,7 +766,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
           {expiry && daysLeft !== null && (
             <p className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] tabular-nums uppercase">
               <span className={daysLeft <= 14 ? "text-ghost" : "text-white/40"}>
-                key expires in ~{daysLeft} days · ▣ ~{(daysLeft * 144).toLocaleString()} blocks
+                key expires in ~{daysLeft} days · <span className="starbox" aria-hidden="true" /> ~{(daysLeft * 144).toLocaleString()} blocks
               </span>
               <button
                 onClick={downloadRenewalIcs}

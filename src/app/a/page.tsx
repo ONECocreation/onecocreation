@@ -49,7 +49,7 @@ async function TipJarsCard({ banner = false }: { banner?: boolean }) {
         </span>
       ))}
       <span style={{ marginLeft: "auto", fontSize: ".68rem", textTransform: "uppercase", letterSpacing: ".08em", color: "var(--gold-deep, #d9b24e)" }}>
-        the books →
+        the books
       </span>
     </Link>
   );
@@ -94,7 +94,7 @@ export default async function ConsoleOverviewPage() {
             <li>📺 <b>Mon · Wed · Fri ~11:11</b> — go live on <a className="underline" href="https://www.youtube.com/@Onecocreation" target="_blank" rel="noreferrer">YouTube</a></li>
             <li>⚑ <b>Daily</b> — tap a flagged session on the calendar above; saving notes closes it out</li>
             <li>✉️ <b>Weekly</b> — write &amp; publish the news: <Link className="underline" href="/a/letters">Letters</Link> (it lands on <Link className="underline" href="/news">/news</Link> + every inbox)</li>
-            <li>🎁 <b>Every visit</b> — give-what-you-can offers waiting: <Link className="underline" href="/a/money">Money Jars → offers desk</Link></li>
+            <li>🎁 <b>Every visit</b> — give-what-you-can offers waiting: <Link className="underline" href="/a/money">Money Jars · offers desk</Link></li>
             <li>📅 <b>Weekly</b> — hours &amp; days off ring true: the calendar above</li>
             <li>👥 <b>Monthly</b> — who&apos;s new, who needs a hand: <Link className="underline" href="/a/people">People</Link></li>
           </ul>

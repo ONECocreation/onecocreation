@@ -67,7 +67,7 @@ function KeyRow({
             placeholder={placeholder}
             style={{ ...field, flex: "1 1 220px", fontFamily: "monospace" }}
           />
-          <button className="btn btn-gold btn-sm" onClick={save} disabled={busy || !value.trim()}>
+          <button className="btn btn-sm" onClick={save} disabled={busy || !value.trim()}>
             {busy ? "Saving…" : "Save to the vault"}
           </button>
           {status?.saved && (
@@ -114,7 +114,7 @@ export default function StripeRailCard() {
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
         <b style={{ fontSize: ".95rem" }}>Card rail — Stripe</b>
         {bothSaved
-          ? <Chip tone="gold">keys in the vault — rail ships next build</Chip>
+          ? <Chip tone="lavender">keys in the vault — rail ships next build</Chip>
           : <Chip tone="grey">two keys to paste</Chip>}
       </div>
       <p style={{ margin: "6px 0 4px", fontSize: ".78rem", color: "var(--muted)" }}>

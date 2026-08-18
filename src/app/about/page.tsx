@@ -270,7 +270,7 @@ export default async function AboutPage() {
                     ${t.priceUsd}/mo · ⚡ ≈ {t.priceSats.toLocaleString()} sats — readings, breath,
                     toning, light language, a held field
                   </p>
-                  <Link className="btn btn-gold" href="/packages/weekly-intuitive">YES!</Link>
+                  <Link className="btn" href="/packages/weekly-intuitive">YES!</Link>
                 </div>
               </div>
             </div>
@@ -305,7 +305,7 @@ export default async function AboutPage() {
                 Ready to get started?
               </Editable>
               <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
-                <Link className="btn btn-gold" href="/welcome">Create your free account ✨</Link>
+                <Link className="btn" href="/welcome">Create your free account ✨</Link>
                 <Link className="btn btn-teal" href="/services">ConsciousCuts &amp; Waxing ✂️</Link>
               </div>
             </div>

@@ -137,8 +137,8 @@ export default function BookingReceipt({ bookingId }: { bookingId: string }) {
           <p style={{ margin: 0, fontWeight: 700, fontSize: ".9rem", color: "var(--ok, #7fb98f)" }}>✓ paid and confirmed</p>
           {booking.meetingUrl ? (
             <div style={{ marginTop: 12, display: "flex", justifyContent: "center" }}>
-              <a href={booking.meetingUrl} className="btn btn-gold btn-sm" rel="noreferrer">
-                Join the meeting →
+              <a href={booking.meetingUrl} className="btn btn-sm" rel="noreferrer">
+                Join the meeting
               </a>
             </div>
           ) : (

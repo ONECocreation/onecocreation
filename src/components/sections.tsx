@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { ROOMS } from "@/lib/matrix";
@@ -28,7 +29,7 @@ export function Hero() {
         <h1>Leap of Faith</h1>
         <div className="sub">A Fresh Step Into a New Mindset</div>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link className="btn btn-gold btn-shimmer" href="/packages">Begin the Journey</Link>
+          <Link className="btn btn-shimmer" href="/packages">Begin the Journey</Link>
           <Link className="btn btn-ghost" href="/#free">Receive the Free Meditation</Link>
         </div>
       </div>
@@ -42,7 +43,7 @@ export function About() {
       <div className="wrap">
         <p className="kicker center">Smiles, Love</p>
         <h2 className="center sec-h" style={{ marginBottom: "1em" }}>My Story</h2>
-        <div style={{ display: "grid", gap: 40, gridTemplateColumns: "minmax(0,.8fr) minmax(0,1.2fr)", alignItems: "center" }}>
+        <div className="two-col" style={{ "--cols": "minmax(0,.8fr) minmax(0,1.2fr)" } as CSSProperties}>
           <img src={cartridge.portraits.headshot} alt="Love — founder of One Cocreation" style={{ borderRadius: 24, boxShadow: "var(--soft)" }} />
           <div>
             <p>I have been a solo adventurer for a while now — like most, on the hero&apos;s journey. Over time I found none of us are here to shrink, but to standout. Not here to separate, but to gather together — to bring kindness to the world, to be unapologetically US.</p>
@@ -51,7 +52,7 @@ export function About() {
             </p>
             {/* the short version lives here; the whole journey has its own room */}
             <Link className="btn btn-ghost btn-sm" href="/about" style={{ marginTop: 6, display: "inline-block" }}>
-              Read my full story →
+              Read my full story
             </Link>
           </div>
         </div>
@@ -91,7 +92,7 @@ export function Packages() {
                   <div className="sats">⚡ ≈ {t.priceSats.toLocaleString()} sats / month</div>
                   <ul className="feat">{c.feats.map((f) => <li key={f}>{f}</li>)}</ul>
                   <div className="push" style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-                    <Link className={`btn tier-btn--${c.accent}`} href={`/packages/${TIER_PAGES.find((p) => p.tier === c.tier)?.slug}`}>YES! →</Link>
+                    <Link className={`btn tier-btn--${c.accent}`} href={`/packages/${TIER_PAGES.find((p) => p.tier === c.tier)?.slug}`}>YES!</Link>
                   </div>
                 </div>
               </div>
@@ -140,13 +141,11 @@ export function Jewelry() {
                 <div className="price" style={{ fontSize: "1.2rem" }}>${it.usd}</div>
                 <div className="sats">⚡ ≈ {it.sats} sats</div>
                 <p style={{ fontSize: ".72rem", color: "var(--muted)", margin: "8px 0 12px" }}>Handmade · ships in 3–5 days</p>
-                <Link className="btn btn-ghost btn-sm push" href="/support">Add ⚡</Link>
-                <span style={{ display: "block", textAlign: "center", fontSize: ".66rem", textTransform: "uppercase", color: "var(--rose)", marginTop: 8 }}>Artist photo coming</span>
               </div>
             </div>
           ))}
         </div>
-        <p className="note"><b>Physical goods</b> — each piece is handmade and posted to you. Checkout is bitcoin/lightning (or dollars), non-custodial to Love&apos;s own node; shipping &amp; address collected at checkout. <em>(Placeholder motifs — Love&apos;s real product photos drop straight in.)</em></p>
+        <p className="note"><b>Physical goods</b> — each piece is handmade and posted to you. Checkout is bitcoin/lightning (or dollars), non-custodial to Love&apos;s own node; shipping &amp; address collected at checkout. <em>These are stand-in images — photos of the real pieces are coming soon.</em></p>
       </div>
     </section>
   );
@@ -236,7 +235,7 @@ export function Classes() {
           </div></div>
         </div>
         <div className="center reveal" style={{ marginTop: 24 }}>
-          <Link className="btn btn-gold" href="/classes">Enter your rooms →</Link>
+          <Link className="btn" href="/classes">Enter your rooms</Link>
         </div>
         <p className="note reveal"><b>Matrix-powered</b> — paying for a package sends your invite automatically, One Cocreation-branded (replacing Patreon / Mighty Networks / Kajabi). Your rooms, your keys.</p>
       </div>
@@ -301,7 +300,7 @@ export function Donations() {
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", margin: "26px 0 4px" }}>
             <Link className="btn btn-ghost" href="/book">Book a Session</Link>
             <Link className="btn btn-ghost" href="/store">Visit the Store</Link>
-            <Link className="btn btn-ghost" href="/support">The Full Support Room →</Link>
+            <Link className="btn btn-ghost" href="/support">The Full Support Room</Link>
           </div>
         </div>
       </div>
@@ -313,7 +312,7 @@ export function FreeMeditation() {
   return (
     <section id="free">
       <div className="wrap">
-        <div style={{ display: "grid", gap: 36, gridTemplateColumns: "1fr 1fr", alignItems: "center" }}>
+        <div className="two-col" style={{ gap: 36 }}>
           <img src="/images/newsletter.webp" alt="Free guided meditation" style={{ borderRadius: 24, boxShadow: "var(--soft)" }} />
           <div>
             <p className="kicker">Be in the Know</p>

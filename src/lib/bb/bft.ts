@@ -3,10 +3,12 @@
  * (`knowledge-engine/services/common/bft.py` + `docs/BFT.md`).
  *
  * 13 months × 28 days × 144 blocks/day; genesis = a₿ 0. Dates render ₿-marked
- * ("a₿ 0016.05.23") so they read as bitcoin dates. The moon is block-timed —
- * one lunation per 28-day month — and each year carries a 12-animal sign
- * (AB 0 / 2009 = Ox; new year M01·D01 is a new moon). Signs are lore, not
- * finance (same house rule as the Observatory's zodiac).
+ * with the marker AFTER the date ("0016.05.23 a₿") so they read as bitcoin
+ * dates — ONE order for both epochs (the day-first b₿ inversion is dead,
+ * Pac's ruling). The moon is block-timed — one lunation per 28-day month —
+ * and each year carries a 12-animal sign (AB 0 / 2009 = Ox; new year M01·D01
+ * is a new moon). Signs are lore, not finance (same house rule as the
+ * Observatory's zodiac).
  */
 
 export const BLOCKS_PER_DAY = 144;
@@ -33,19 +35,22 @@ export function bft(height: number): BftDate {
 
 const pad = (n: number, w: number) => String(n).padStart(w, "0");
 
-/** ₿-marked After-Bitcoin date, marker AFTER the date (Pac, 2026-07-11):
+/** ₿-marked After-Bitcoin date, marker AFTER the date (Pac, ~0018.04.14 a₿):
     "0016.05.23 a₿". */
 export function bftDate(height: number): string {
   const b = bft(height);
   return `${pad(b.year, 4)}.${pad(b.month, 2)}.${pad(b.day, 2)} a₿`;
 }
 
-/* The display standard (Pac, 2026-07-11): date = yyyy.mm.dd · time = hh:mm
-   (the 144-block day mapped onto a 24h clock — 6 blocks an hour, ten
-   "minutes" a block) · date+time = "yyyy.mm.dd hh:mm". The a₿ marker is
-   ASSUMED on new items (queues, requests, logs) — no prefix clutter. */
+/* The display standard (Pac, ~0018.04.14 a₿; marker law reaffirmed
+   ~0018.05.24 a₿ — the in-repo "marker is assumed" relaxation is
+   SUPERSEDED): date = yyyy.mm.dd · time = hh:mm (the 144-block day mapped
+   onto a 24h clock — 6 blocks an hour, ten "minutes" a block) · date+time =
+   "yyyy.mm.dd hh:mm a₿" — the a₿ marker ALWAYS rides the stamp, after the
+   date, one order for both epochs. */
 
-/** Plain BFT date, marker assumed: "0018.04.15". */
+/** Plain BFT date, no marker (compose your own — the marker law wants
+    `bftDate` wherever the stamp stands alone): "0018.04.15". */
 export function bftDatePlain(height: number): string {
   const b = bft(height);
   return `${pad(b.year, 4)}.${pad(b.month, 2)}.${pad(b.day, 2)}`;
@@ -57,16 +62,162 @@ export function bftTime(height: number): string {
   return `${pad(Math.floor(bid / 6), 2)}:${pad((bid % 6) * 10, 2)}`;
 }
 
-/** Full stamp: "yyyy.mm.dd hh:mm" — the standard for new items. */
+/** Full stamp, marker after: "yyyy.mm.dd hh:mm a₿" — the standard. */
 export function bftDateTime(height: number): string {
-  return `${bftDatePlain(height)} ${bftTime(height)}`;
+  return `${bftDatePlain(height)} ${bftTime(height)} a₿`;
 }
 
-/** Pre-genesis wall-clock (negative-time / ghost side), marker after:
-    "yyyy.dd.mm[.ss] b₿". */
+/** Pre-genesis wall-clock (negative-time / ghost side), marker after, the
+    SAME big-to-small order as a₿ (the day-first b₿ inversion is dead,
+    Pac's ruling): "yyyy.mm.dd[.ss] b₿". */
 export function beforeBitcoin(year: number, month: number, day: number, second?: number): string {
-  const base = `${pad(year, 4)}.${pad(day, 2)}.${pad(month, 2)}`;
+  const base = `${pad(year, 4)}.${pad(month, 2)}.${pad(day, 2)}`;
   return `${second == null ? base : `${base}.${pad(second, 2)}`} b₿`;
+}
+
+/* ── THE CANONICAL BRIDGE (ported 0018.05.24 a₿, coordinator ruling) ──
+   Verbatim-faithful ports from the canonical public package —
+   github.com/PacsArcade/bitcoin-federated-time v0.3.0 (MIT), `bft/__init__.py`.
+   The math is integer-identical; only the dress is TypeScript. Two genesis
+   instants live in this file ON PURPOSE: GENESIS_MS (midnight, above) is the
+   house calendar's own boundary — Converters/HalfWheel/BdayChecker already
+   ride it; GENESIS_UNIX_S (below) is the chain's real birth certificate,
+   the canonical bridge's anchor. They differ by ~110 blocks and both are
+   honest about which they are. */
+
+/** Canonical GENESIS_UNIX (`__init__.py:42`): block 0's own timestamp,
+    2009-01-03 18:15:05 UTC. The bridge anchors HERE. */
+export const GENESIS_UNIX_S = 1_231_006_505;
+
+const DAYS_PER_MONTH = 28;   // canonical (`__init__.py:49`)
+const DAYS_PER_YEAR = 364;   // 13 × 28 — drifts from the sun on purpose
+const MONTHS_PER_YEAR = 13;  // canonical (`__init__.py:50`)
+const DIFFICULTY_EPOCH_BLOCKS = 2016; // canonical (`__init__.py:35`)
+const SECONDS_PER_BLOCK = 600;        // the 10-minute target (`__init__.py:43`)
+
+export interface BftKnown {
+  known: true;
+  height: number;
+  epoch: "AB" | "BB";
+  year: number;
+  month: number;        // 1..13
+  day: number;          // 1..28
+  monthIndex: number;   // 0..12
+  label: string;
+  dayOfYear?: number;          // AB only (1..364)
+  weekOfMonth?: number;        // AB only
+  beat?: number;               // AB only — block within the day
+  dayProgress?: number;        // AB only, %
+  diffEpoch?: number;          // AB only
+  blocksBeforeGenesis?: number; // BB only
+  note?: string;               // BB only
+}
+export type BftReading = BftKnown | { known: false; height: null };
+
+/** Canonical `from_height` (`__init__.py:86`) — decompose a block height
+    into a BFT date, BOTH epochs: heights ≥ 0 are After Bitcoin; a negative
+    height's MAGNITUDE decomposes the same way, counting back from genesis
+    (Before Bitcoin). All integer block math — two nodes at the same height
+    agree on the date. */
+export function fromHeight(height: number): BftKnown;
+export function fromHeight(height: number | null): BftReading;
+export function fromHeight(height: number | null): BftReading {
+  if (height == null) return { known: false, height: null };
+  const h = Math.trunc(height);
+  if (h < 0) {                             // inverse: before the genesis block
+    const before = -h;                     // magnitude, decomposed counting back
+    const doe = Math.floor(before / BLOCKS_PER_DAY);
+    const by = Math.floor(doe / DAYS_PER_YEAR);
+    const doy = doe % DAYS_PER_YEAR;
+    const mi = Math.floor(doy / DAYS_PER_MONTH);
+    const dom = doy % DAYS_PER_MONTH;
+    return { known: true, height: h, epoch: "BB",
+      blocksBeforeGenesis: before,
+      year: by, month: mi + 1, day: dom + 1, monthIndex: mi,
+      label: `BB ${by} · M${pad(mi + 1, 2)} · D${pad(dom + 1, 2)}`,
+      note: "Before Bitcoin: the clock runs in reverse here — time the chain cannot vouch for" };
+  }
+  const dayOfEpoch = Math.floor(h / BLOCKS_PER_DAY);
+  const blockOfDay = h % BLOCKS_PER_DAY;
+  const yearIndex = Math.floor(dayOfEpoch / DAYS_PER_YEAR);
+  const dayOfYear = dayOfEpoch % DAYS_PER_YEAR;
+  const monthIndex = Math.floor(dayOfYear / DAYS_PER_MONTH);
+  const dayOfMonth = dayOfYear % DAYS_PER_MONTH;
+  return { known: true, height: h, epoch: "AB",
+    year: yearIndex, month: monthIndex + 1, day: dayOfMonth + 1,
+    monthIndex, dayOfYear: dayOfYear + 1,
+    weekOfMonth: Math.floor(dayOfMonth / 7) + 1,
+    beat: blockOfDay,
+    dayProgress: Math.round((1000 * blockOfDay) / BLOCKS_PER_DAY) / 10,
+    diffEpoch: Math.floor(h / DIFFICULTY_EPOCH_BLOCKS),
+    label: `AB ${yearIndex} · M${pad(monthIndex + 1, 2)} · D${pad(dayOfMonth + 1, 2)}` };
+}
+
+/** Canonical `format_date` (`__init__.py:126`) — the calendar date rendered.
+    Default style "date" is the house standard: ₿-marked, marker AFTER, ONE
+    order for both epochs — "0018.04.20 a₿" / "0003.06.09 b₿" (the day-first
+    b₿ inversion is dead, Pac's ruling). "short" → "AB 18 · M04 · D20";
+    "long" adds the block + difficulty epoch. `monthNames` (13) supplies
+    blessed month lore in short/long when set, else M01..M13. */
+export function formatDate(
+  height: number | null,
+  monthNames?: readonly string[],
+  style: "date" | "short" | "long" = "date",
+): string {
+  const d = fromHeight(height);
+  if (!d.known) return "BFT —";
+  if (style === "date") {
+    // year zero-padded to 4; the display year IS bitcoin's age — genesis
+    // opens 0000. ONE order for both epochs (Pac's law, no inversion).
+    return `${pad(d.year, 4)}.${pad(d.month, 2)}.${pad(d.day, 2)} ${d.epoch === "BB" ? "b₿" : "a₿"}`;
+  }
+  const mi = d.monthIndex;
+  const month = monthNames && monthNames.length >= MONTHS_PER_YEAR && monthNames[mi]
+    ? String(monthNames[mi])
+    : `M${pad(d.month, 2)}`;
+  if (d.epoch === "BB") return `BB ${d.year} · ${month} · D${pad(d.day, 2)}`;
+  const short = `${d.epoch} ${d.year} · ${month} · D${pad(d.day, 2)}`;
+  return style === "long"
+    ? `${short}  (block ${d.height.toLocaleString("en-US")} · diff-epoch ${d.diffEpoch})`
+    : short;
+}
+
+/** Canonical `height_at` (`__init__.py:169`) — estimate the block height
+    for a Gregorian UTC date/time: (seconds since genesis) ÷ 600. Dates
+    before the genesis block return a NEGATIVE height — the BB inverse.
+    ESTIMATE, deliberately: real blocks don't arrive exactly every 10
+    minutes, so the arithmetic is exact and the wall-clock mapping is
+    modeled — a real tip height is the truth when you have it. (Python's
+    calendar.timegm takes any year; Date.UTC misreads 0–99 as 19xx, so the
+    year is pinned with setUTCFullYear. Python's round() is half-to-even,
+    JS's half-up — a 1-block edge at exact :05 marks, immaterial here.) */
+export function heightAt(
+  year: number, month: number, day: number,
+  hour = 0, minute = 0, second = 0,
+): number {
+  const dt = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+  dt.setUTCFullYear(year);
+  return Math.round((dt.getTime() / 1000 - GENESIS_UNIX_S) / SECONDS_PER_BLOCK);
+}
+
+/** Canonical `from_gregorian` (`__init__.py:186`) — a Gregorian UTC moment
+    rendered in BFT: the estimated height plus the readings of it. The
+    canonical package returns its full clock(); this port carries the
+    readings this house owns (the calendar + the hh:mm beat — no clock
+    before genesis). `estimate` is a standing reminder the height is
+    modeled, never looked up. */
+export function fromGregorian(
+  year: number, month: number, day: number,
+  hour = 0, minute = 0, second = 0,
+): { height: number; calendar: BftReading; hhmm: string | null; estimate: true; beforeBitcoin: boolean } {
+  const h = heightAt(year, month, day, hour, minute, second);
+  return {
+    height: h,
+    calendar: fromHeight(h),
+    hhmm: h >= 0 ? bftTime(h) : null,
+    estimate: true,
+    beforeBitcoin: h < 0,
+  };
 }
 
 export const MOON_PHASES: ReadonlyArray<readonly [string, string]> = [
@@ -157,16 +308,25 @@ export function deriveTraits(bornBlock: number, name: string): BuddyTraits {
  */
 let _tipCache: { height: number; at: number; tipTimestamp: number | null } | null = null;
 
-/** Heights the chain passed on well-recorded days (the halvings). The network
- * has averaged FASTER than 600s/block for most of its life, so a pure
- * genesis ÷ 10min guess drifts ~250 days behind by 2026 — these anchors keep
- * a date→height estimate honest in every era. */
-const CHAIN_ANCHORS: ReadonlyArray<readonly [number, number]> = [
-  [GENESIS_MS, 0],
-  [Date.UTC(2012, 10, 28), 210_000],
-  [Date.UTC(2016, 6, 9), 420_000],
-  [Date.UTC(2020, 4, 11), 630_000],
-  [Date.UTC(2024, 3, 20), 840_000],
+/** Heights the chain passed on well-recorded days. The network has averaged
+ * FASTER than 600s/block for most of its life, so a pure genesis ÷ 10min
+ * guess drifts ~250 days behind by 0018 — these anchors keep a date→height
+ * estimate honest in every era. The table rides the canonical package's
+ * (github.com/PacsArcade/bitcoin-federated-time): genesis at the REAL birth
+ * instant (GENESIS_UNIX, not the calendar's midnight), pizza day exact
+ * (`bft/holidays.py` — chain-verified, 0018.04.15 a₿), the four halvings,
+ * and the pupil's verified recent anchor (studies/clock-study-pupil.html —
+ * RECENT_ANCHOR: block 957,877 at unix 1783959226) so the offline model
+ * lands within a whisker of now instead of a year low.
+ * Exported for the orrery's dial walk — ONE table, every clock. */
+export const CHAIN_ANCHORS: ReadonlyArray<readonly [number, number]> = [
+  [GENESIS_UNIX_S * 1000, 0],
+  [Date.UTC(2010, 4, 22), 57_043],        // pizza day
+  [Date.UTC(2012, 10, 28), 210_000],      // halving I
+  [Date.UTC(2016, 6, 9), 420_000],        // halving II
+  [Date.UTC(2020, 4, 11), 630_000],       // halving III
+  [Date.UTC(2024, 3, 20), 840_000],       // halving IV
+  [Date.UTC(2026, 6, 13, 16, 13, 46), 957_877], // the pupil's RECENT_ANCHOR
 ];
 
 /**

@@ -61,14 +61,16 @@ export default function BftTrayClock({ variant }: { variant: "rail" | "bar" }) {
       <div className="scar-mbar__clock" title={title}>
         <span className="scar-mbar__time">
           <span className="scar-clockdot" aria-hidden="true" />
-          <span>{time}</span>{" "}
-          <span className="scar-ab" title={abTitle}>
-            a₿
-          </span>
+          <span>{time}</span>
         </span>
         <span className="scar-mbar__sub">
           <span className="scar-starbox" aria-hidden="true" /> <span>{height}</span> ·{" "}
-          <span>{date}</span>
+          <span className="scar-nowrap">
+            {date}{" "}
+            <span className="scar-ab" title={abTitle}>
+              a₿
+            </span>
+          </span>
         </span>
       </div>
     );
@@ -80,13 +82,17 @@ export default function BftTrayClock({ variant }: { variant: "rail" | "bar" }) {
         <span className="scar-clockdot" aria-hidden="true" />
         <span>{time}</span>
       </div>
-      <div className="scar-railclock__date">{date}</div>
+      <div className="scar-railclock__date">
+        <span className="scar-nowrap">
+          {date}{" "}
+          <span className="scar-ab" title={abTitle}>
+            a₿
+          </span>
+        </span>
+      </div>
       <div className="scar-railclock__foot">
         <span className="scar-railclock__height">
           <span className="scar-starbox" aria-hidden="true" /> <span>{height}</span>
-        </span>
-        <span className="scar-ab" title={abTitle}>
-          a₿
         </span>
       </div>
     </div>

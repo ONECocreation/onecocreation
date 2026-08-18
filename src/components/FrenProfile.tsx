@@ -163,8 +163,11 @@ export default function FrenProfile({
             )}
             {sinceBlock !== null ? (
               <p className="mt-1 font-pixel text-[10px] text-white/40">
-                MEMBER SINCE BLOCK <span className="text-cyan">{sinceBlock.toLocaleString()}</span>
-                {/* Bitcoin time, not the old calendar (Pac, 2026-07-11) */}
+                MEMBER SINCE BLOCK{" "}
+                <span className="text-cyan">
+                  <span className="starbox" aria-hidden="true" /> {sinceBlock.toLocaleString()}
+                </span>
+                {/* Bitcoin time, not the old calendar (Pac, ~0018.04.14 a₿) */}
                 <span className="text-white/25">{" "}· {bftDate(sinceBlock)}</span>
               </p>
             ) : (

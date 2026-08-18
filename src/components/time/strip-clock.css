@@ -216,8 +216,16 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.1em;
 }
+/* star-in-a-box on the height, cyan (info) — time marks are not money */
+.sclk-starbox {
+  display: inline-grid; place-items: center;
+  width: 9px; height: 9px; margin: 0 2px; vertical-align: -1px;
+  border: 1px solid currentColor; border-radius: 2px;
+  color: #6fd7e0; font-size: 6px; line-height: 1; letter-spacing: 0;
+}
+.sclk-starbox::before { content: "★"; }
 .sclk-date { font-size: 10px; letter-spacing: 0.18em; color: #b9b2c6; }
-.sclk-date .sclk-ab { color: rgba(247, 147, 26, 0.8); letter-spacing: 0.05em; }
+.sclk-date .sclk-ab { color: #6fd7e0; letter-spacing: 0.05em; }
 .sclk-oldcal { font-size: 7.5px; letter-spacing: 0.22em; text-transform: uppercase; color: #6d6684; }
 
 /* narrow phones: the old-cal line yields first, then the clock shrinks */
