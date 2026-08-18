@@ -56,7 +56,7 @@ function DateResult({ value, tip }: { value: string; tip: number | null }) {
   }
 
   const height = estimateHeightAt(utc, tip); // anchored: halvings + the live tip (bft.ts)
-  const moon = moonPhase(height);
+  const moon = moonPhase(height, utc); // the typed day's own instant — not the flat model
   const animal = yearAnimal(height);
   return (
     <div className="mt-3 border-2 border-neon bg-neon/10 p-4">
