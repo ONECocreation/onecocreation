@@ -22,8 +22,7 @@ session secret, so sign-in just works) and opens a clean local registry. Then:
    browser if you don't have any;
 2. hit **PLAY** — [Bitcoin Buddy](http://localhost:3000/bb) is already wired;
 3. start building — the operator console lives at `/a` (set `OPERATOR_NPUBS`
-   in `.env.local` to your npub to open it), tickets at `/support`, the
-   manuals in [`rtfm/`](rtfm/).
+   in `.env.local` to your npub to open it), tickets at `/support`.
 
 ## How it works
 
@@ -87,9 +86,8 @@ Then:
 3. Reserved names live in `src/lib/registry.ts` (`RESERVED`) — review them for
    your community.
 4. **Rebrand.** The registry / claim / NIP-05 core is config-driven, but the
-   visible copy is not yet fully themeable (that migration is tracked in
-   [`docs/themeable-signin-plugin.md`](docs/themeable-signin-plugin.md)). Until
-   it lands, hand-edit the Pac's Arcade branding in the hero + cards
+   visible copy is not yet fully themeable. Until it lands, hand-edit the
+   Pac's Arcade branding in the hero + cards
    (`src/components/RegistrationPage.tsx`), the claim ceremony
    (`src/components/TagClaim.tsx`), header nav + footer (`ArcadeHeader.tsx`,
    `EarthFooter.tsx`), the profile (`FrenProfile.tsx`), page metadata
