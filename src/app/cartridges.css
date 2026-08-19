@@ -1,0 +1,179 @@
+/* ════════════════════════════════════════════════════════════════════
+   THE NON-DEFAULT CARTRIDGE TWINS (S9 — the cartridges become real,
+   0018.05.28 a₿).
+
+   cartridge.css is LOVE's file and stays it. The other two voices pour
+   HERE, gated on html[data-oc-cartridge="pacman"|"earthside"] — the one
+   attribute the root layout sets, and only when the selection flips off
+   the default (src/brand/cartridge.ts, one line). With LOVE active the
+   attribute never renders: every rule below is inert, and Love's output
+   carries zero bytes of this file. The same seam the dawn twin proved —
+   token pours, no stylesheet fork, no rule overrides of Love's
+   selectors, no specificity debt.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── NUMBER ONE × PACMAN — the Screen. Pac's ruling: the design IS the
+   dark celestial build deployed at onecocreation.vercel.app, so the
+   palette tokens stay Love's night and the pour is thin. What the
+   cartridge adds is a VOICE and a MOTION BUDGET:
+
+   1. Press Start 2P leads the display layer — ADOPTED as this
+      cartridge's display face (the next/font registration on <html>
+      finally has a live reader: --serif/--disp/--font-h1 carry the
+      hero stacks and prices, --font-pixel carries .button + h5/h6, and
+      --font-arcade answers any arcade-kit surface). PS2P is furniture
+      here, not dead weight.
+   2. The arcade motion budget (Pac, S9: "feel free to enhance this
+      design with visual things like the parralax so it's not flat.
+      should feel interactive warm. easy to understand.") — ADDITIVE,
+      non-default only, static by default: everything sits inside
+      prefers-reduced-motion: no-preference, so reduced-motion users get
+      the still page, fully composed. The pan is the CSS scroll-timeline
+      rendering of the live-extracted parallax mechanism
+      (onecocreation-live-capture §0.1: the ground moves slower than the
+      page as the section crosses the viewport) — no JS, no
+      background-attachment:fixed; authored pages already have the real
+      IO+rAF parallax via the studio's ParallaxBand/ParallaxImg. ── */
+html[data-oc-cartridge="pacman"]{
+  --serif:var(--font-press-start),'Press Start 2P',monospace;
+  --disp:var(--font-press-start),'Press Start 2P',monospace;
+  --font-h1:var(--font-press-start),'Press Start 2P',monospace;
+  --font-pixel:var(--font-press-start),'Press Start 2P',monospace;
+  --font-arcade:var(--font-press-start),'Press Start 2P',monospace;
+}
+
+@media (prefers-reduced-motion: no-preference){
+  /* the cabinet breath — the hero's glow swells and settles, slow */
+  html[data-oc-cartridge="pacman"] .hero::before{
+    animation:nebula-drift 70s ease-in-out infinite alternate,pac-breath 9s ease-in-out infinite}
+  @supports (animation-timeline: view()){
+    /* the nebula pans against the scroll — depth, not flatness. The pan
+       rides the `translate` property so it composes with the drift's
+       `transform` instead of fighting it */
+    html[data-oc-cartridge="pacman"] .hero::before{
+      animation:nebula-drift 70s ease-in-out infinite alternate,pac-breath 9s ease-in-out infinite,pac-hero-pan linear both;
+      animation-timeline:auto,auto,view()}
+  }
+}
+@keyframes pac-breath{0%,100%{opacity:.14}50%{opacity:.2}}
+@keyframes pac-hero-pan{from{translate:0 -4%}to{translate:0 4%}}
+
+/* ── EARTHSIDE — the Earth. K3's authored direction, Pac's verdict
+   0018.05.25 a₿: kept ("i like the layout structure and square buttons").
+   Warm paper, umber ink, copper wire. DAYLIGHT-FIRST: the bare attribute
+   is the paper day, and the night twin is the DERIVED one — it rides the
+   same data-oc-theme switch the dawn uses, so on EARTHSIDE the switch's
+   "light" side is the default truth and flipping it reaches the NIGHT
+   (the boot script and toggle stay untouched; a quirk of one switch
+   serving two hemispheres, said plainly). Serif: STRUCK site-wide — no
+   font pour here at all, Barlow display and the humanist body stack are
+   already the law. Gold stays money; copper (#C77B4A, the cartridge's
+   own long-idle token) is THE accent. ── */
+html[data-oc-cartridge="earthside"]{
+  /* the paper day — the proposal's palette table is the truth */
+  --space:#F6EFE3; --ground:#F6EFE3;
+  --panel:rgba(255,252,246,.82); --edge:rgba(199,123,74,.4);
+  --ink:#2B2016; --muted:#8A7560;
+  --ink-strong:#241A10; --ink-body:#5C4A38;
+  --glass:rgba(255,252,246,.72); --glass-edge:rgba(199,123,74,.38);
+  --ghost-bg:rgba(199,123,74,.12); --ghost-ink:#5C4A38;
+  --glass-strong:rgba(255,252,246,.92);
+  --sheet-bg:#FFFBF4;
+  --field-bg:rgba(255,255,255,.94); --field-ink:#2B2016;
+  --soft-sm:0 18px 44px -28px rgba(90,60,30,.35);
+  --soft:0 24px 60px -30px rgba(90,60,30,.4);
+  --info:#23636E; /* info/time speaks teal — semantic lock */
+  --rose:#C56E8B; /* kickers keep their rose — semantic lock */
+  /* the nav, re-inked copper on warm charcoal — the header never
+     theme-flips, so these hold in both earthside twins; --nav-gold is
+     the nav-link ink SLOT here (gold itself stays with money) */
+  --nav-gold:#C77B4A; --nav-hover:#EAD9CB;
+  --here-grad:linear-gradient(90deg,#C77B4A 0%,#EAD9CB 100%);
+  --here-wash:linear-gradient(90deg,rgba(199,123,74,.16),rgba(234,217,203,.16));
+  --pop-bg:rgba(36,28,20,.97); --pop-edge:rgba(199,123,74,.45);
+  /* the band ladder, re-toned to earth — the cosmic walk keeps its shape
+     and changes its light (day set; the night ladder rides below) */
+  --band-1:#EFE5D2; --band-2:#F6EFE3; --band-3:#EEE4D3;
+  --band-4:#E3E7DE; --band-5:#F1E7D8; --band-6:#F3E3DC;
+  --band-7:#E7E3D9; --band-8:#EAE2D4; --band-9:#F0E6D3;
+}
+
+/* the ground under everything — sun-warmed paper, held still like the
+   house's own fixed-attachment law */
+html[data-oc-cartridge="earthside"] body{
+  background:
+    radial-gradient(900px 500px at 50% -4%, rgba(199,123,74,.14), transparent 60%),
+    radial-gradient(760px 620px at 88% 12%, rgba(156,79,46,.08), transparent 62%),
+    linear-gradient(180deg,#F6EFE3 0%, #EFE5D2 55%, #EAD9CB 100%);
+  background-attachment:fixed;
+}
+
+/* the hero trades the nebula for a copper sun-wash — the red-rock
+   photograph is an ASSET SLOT (missing art, listed in the lane report);
+   the wash is honest ground, not invented art */
+html[data-oc-cartridge="earthside"] .hero::before{
+  background:radial-gradient(700px 420px at 50% 0%, rgba(199,123,74,.18), transparent 62%);
+  opacity:1; animation:none;
+}
+html[data-oc-cartridge="earthside"] .hero::after{
+  background:linear-gradient(180deg,transparent,#EFE5D2);
+}
+
+/* the classes band steps off the nebula onto the paper ladder */
+html[data-oc-cartridge="earthside"] #classes{
+  background:linear-gradient(180deg,var(--band-3) 0%,var(--band-5) 100%);
+}
+
+/* the buttons Pac liked — square (already house law), letterpress not
+   neon: 1.5px umber border, paper fill, the copper sweep on hover */
+html[data-oc-cartridge="earthside"] .btn{
+  border:1.5px solid var(--ink); background:var(--ground); color:var(--ink);
+  transition:background .25s ease, color .25s ease, border-color .25s ease, transform .25s ease;
+}
+html[data-oc-cartridge="earthside"] .btn:hover{
+  background:var(--copper); border-color:var(--copper); color:#F6EFE3;
+}
+
+/* ── the NIGHT TWIN (derived; closes the verdict's open token table) —
+   the paper dims to the warm charcoal #241C14 family, copper holds, teal
+   stays info, gold stays money. It rides the existing light switch, so
+   these rules must also out-specify the dawn's blanket repaints — same
+   !important, higher specificity, later in the cascade; Love's own rules
+   are untouched. ── */
+html[data-oc-cartridge="earthside"][data-oc-theme="light"]{
+  --space:#241C14; --ground:#241C14;
+  --panel:rgba(46,36,24,.78); --edge:rgba(199,123,74,.42);
+  --ink:#F0E6D8; --muted:#A8917A;
+  --ink-strong:#F8EFE0; --ink-body:#D8C9B4;
+  --glass:rgba(46,36,24,.72); --glass-edge:rgba(199,123,74,.4);
+  --ghost-bg:rgba(199,123,74,.16); --ghost-ink:#EAD9CB;
+  --glass-strong:rgba(36,28,20,.92);
+  --sheet-bg:#2E2418;
+  --field-bg:rgba(60,48,32,.96); --field-ink:#F0E6D8;
+  --soft-sm:0 18px 44px -28px rgba(0,0,0,.6);
+  --soft:0 24px 60px -30px rgba(0,0,0,.7);
+  --info:#8FD0D8; /* teal-bright at night — semantic lock holds */
+  --band-1:#2A2117; --band-2:#241C14; --band-3:#2E241A;
+  --band-4:#232B25; --band-5:#2E2418; --band-6:#2C2118;
+  --band-7:#262019; --band-8:#27211A; --band-9:#2C2214;
+}
+html[data-oc-cartridge="earthside"][data-oc-theme="light"] body{
+  background:
+    radial-gradient(900px 500px at 50% -4%, rgba(199,123,74,.12), transparent 60%),
+    linear-gradient(180deg,#241C14 0%, #2E2418 55%, #241C14 100%);
+  background-attachment:fixed;
+}
+html[data-oc-cartridge="earthside"][data-oc-theme="light"] main:not(.lions-gate-dark){
+  background:#241C14!important;
+}
+html[data-oc-cartridge="earthside"][data-oc-theme="light"] main section:not(.keep-dark):not(.lions-gate){
+  background:linear-gradient(180deg,#241C14,#2E2418)!important;
+}
+html[data-oc-cartridge="earthside"][data-oc-theme="light"] .hero::after{
+  background:linear-gradient(180deg,transparent,#241C14);
+}
+
+/* EARTHSIDE still open (said honestly in the lane report): the deckle
+   divider on photo edges, typography proofing on real Letters copy, and
+   the keep-dark rooms' celestial night all want component-level or
+   asset-level work, not more tokens. */

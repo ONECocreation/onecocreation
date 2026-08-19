@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { getPalette, setPalette, defaultPalette, isPalette, getPaletteDawn, setPaletteDawn, defaultPaletteDawn, isPaletteDawn } from "@/lib/brand-palette";
 import { cartridge } from "@/brand/cartridge";
-import { IDENTITY_FIELDS, identitySnapshot, isIdentityField, writeIdentityField } from "@/lib/cartridge-identity";
+import { IDENTITY_FIELDS, identitySnapshot, isIdentityField, isVoiceRow, writeIdentityField, writeVoiceRow } from "@/lib/cartridge-identity";
 
 export const dynamic = "force-dynamic";
 
@@ -27,20 +27,40 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: true, palette, dawn, default: defaultPalette(), defaultDawn: defaultPaletteDawn(),
     identity: identitySnapshot(cartridge),
+    voices: cartridge.voices.map((v) => ({ quote: v.quote, name: v.name, who: v.who, href: v.href })),
     identityNote: "the dressing read from the running server — a cartridge edit reaches this list after a reload or a fresh deploy",
   });
 }
 
 /** POST { palette } — save (promote-to-token); { reset: true } — back to the
  *  cartridge default; { identity: { field, value } } — dress ONE cartridge
- *  identity field (src/lib/cartridge-identity writes the file, one literal
- *  at a time, exactly-once or not at all). */
+ *  identity field; { voice: { op, index, row } } — add, edit or remove ONE
+ *  voice of the field (src/lib/cartridge-identity writes the file, one
+ *  literal — or one pinned row — at a time, exactly-once or not at all). */
 export async function POST(request: Request) {
   const denied = gate(request);
   if (denied) return denied;
   const body = (await request.json().catch(() => null)) as
-    | { palette?: unknown; dawn?: unknown; reset?: boolean; identity?: unknown }
+    | { palette?: unknown; dawn?: unknown; reset?: boolean; identity?: unknown; voice?: unknown }
     | null;
+  if (body?.voice !== undefined) {
+    const v = body.voice as { op?: unknown; index?: unknown; row?: unknown } | null;
+    const op = v?.op;
+    if (!v || (op !== "add" && op !== "edit" && op !== "remove")) {
+      return NextResponse.json(
+        { ok: false, reason: `voice must be { op: "add" | "edit" | "remove", index, row: { quote, name, who, href } }` },
+        { status: 400 },
+      );
+    }
+    if (op !== "add" && (typeof v.index !== "number" || !Number.isInteger(v.index) || v.index < 0)) {
+      return NextResponse.json({ ok: false, reason: "edit and remove name the voice by its index on the shelf" }, { status: 400 });
+    }
+    if (op !== "remove" && !isVoiceRow(v.row)) {
+      return NextResponse.json({ ok: false, reason: "a voice row is { quote, name, who, href } — all four, as strings" }, { status: 400 });
+    }
+    const result = await writeVoiceRow(op, typeof v.index === "number" ? v.index : -1, isVoiceRow(v.row) ? v.row : undefined);
+    return NextResponse.json(result, { status: result.ok ? 200 : result.status });
+  }
   if (body?.identity !== undefined) {
     const id = body.identity as { field?: unknown; value?: unknown } | null;
     if (!id || !isIdentityField(id.field) || typeof id.value !== "string") {

@@ -1,10 +1,24 @@
 /**
- * THE BRAND CARTRIDGE (walk steps 7–8, Admiral's walk, 0018.05.15).
+ * THE BRAND CARTRIDGES (walk steps 7–8, Admiral's walk, 0018.05.15;
+ * the registry, S9 — the cartridges become real, 0018.05.28 a₿).
  *
  * One object carries the brand's non-CSS identity: the name, the emoji
  * constellation, every logo and hero-image path, the tier art, and the
  * metadata. A new artist edits THIS file (and cartridge.css beside it in
  * src/app) — never hunts literals through components.
+ *
+ * S9 made the one cartridge a REGISTRY of three directions — LOVE (the
+ * ShinePages original, THE DEFAULT), NUMBER ONE × PACMAN (the deployed
+ * dark design, arcade-voiced), EARTHSIDE (K3's authored earth direction,
+ * Pac's verdict 0018.05.25 a₿). `love` below is the original object
+ * moved VERBATIM — every field line byte-identical, so the dressing
+ * room's anchors (src/lib/cartridge-identity.ts) still match exactly
+ * once; the other two live in src/brand/cartridges/ beside this file for
+ * the same reason. Consumers keep importing `cartridge` and never learn
+ * about the registry: the selection at the bottom is the one line a fork
+ * flips (the nav.accent precedent, whole-cartridge scale), and with
+ * "love" selected the machinery emits ZERO extra bytes — no attribute,
+ * no pour, no reorder.
  *
  * The RENDERED palette lives in src/app/cartridge.css (:root, dark-first).
  * The `palette` here is the sign-in contract's set (MediaKit, the login
@@ -13,7 +27,12 @@
  * serve different rooms on purpose.
  */
 
-export const cartridge = {
+import { pacman } from "./cartridges/pacman";
+import { earthside } from "./cartridges/earthside";
+
+/** LOVE — the ShinePages original, fidelity-guarded. The whole object is
+ *  the pre-registry cartridge, verbatim. */
+const love = {
   name: "One Cocreation",
 
   /** the four-glyph signature that rides under every stacked hero */
@@ -173,4 +192,49 @@ export const cartridge = {
   },
 } as const;
 
-export type Cartridge = typeof cartridge;
+/** THE CARTRIDGE IDS (S9) — the three directions: LOVE (Heaven, the
+ *  default), NUMBER ONE × PACMAN (the Screen), EARTHSIDE (the Earth). */
+export type CartridgeId = "love" | "pacman" | "earthside";
+
+/**
+ * THE CARTRIDGE SHAPE — DERIVED from love's object, never hand-written in
+ * parallel (a parallel interface drifts; a derived one cannot): same keys,
+ * string literals widened to `string` so the other voices can speak their
+ * own values, arrays kept readonly as `as const` made them. Two honest
+ * exceptions, both named `accent`: nav.accent keeps its `"gold" | "dawn"`
+ * cast union (the dressing room's write rail pours it), and a sign-in
+ * door's accent widens to the house's four door inks — LoginPanel's
+ * ACCENT_INK map is the real constraint, so the type says it.
+ */
+type CartridgeShape<T> = T extends string
+  ? string
+  : T extends readonly (infer R)[]
+    ? readonly CartridgeShape<R>[]
+    : T extends object
+      ? {
+          [K in keyof T]: K extends "accent"
+            ? T[K] extends "gold" | "dawn"
+              ? T[K]
+              : "cyan" | "pink" | "coin" | "neon"
+            : CartridgeShape<T[K]>;
+        }
+      : T;
+
+export type Cartridge = CartridgeShape<typeof love>;
+
+/** THE REGISTRY (S9) — one entry per direction. */
+export const cartridges: Record<CartridgeId, Cartridge> = { love, pacman, earthside };
+
+/**
+ * THE SELECTION (S9) — the one line a fork flips, the nav.accent
+ * precedent at whole-cartridge scale. The root layout reads it: with
+ * "love" it sets NOTHING (byte-identical output); with another cartridge
+ * it sets html[data-oc-cartridge] and that cartridge's twin in
+ * src/app/cartridges.css pours its tokens — no stylesheet fork, no rule
+ * overrides, no specificity debt.
+ */
+export const activeCartridgeId: CartridgeId = "love";
+
+/** THE ONE ACCESSOR — the active cartridge, resolved once. Consumers
+ *  import `cartridge` exactly as before the registry existed. */
+export const cartridge: Cartridge = cartridges[activeCartridgeId];

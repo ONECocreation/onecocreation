@@ -10,7 +10,7 @@ import {
   SLOT_LABELS,
   type PaletteKey,
 } from "@/lib/use-brand-palette";
-import type { IdentityField } from "@/lib/cartridge-identity"; /* type-only — the module itself is server-side (fs) and never enters this bundle */
+import type { IdentityField, VoiceRow } from "@/lib/cartridge-identity"; /* type-only — the module itself is server-side (fs) and never enters this bundle */
 import { effectivePalette, contrastRatio } from "@pacsarcade/puck-config/tokens";
 import { ONECOCREATION } from "@/brand/tokens";
 
@@ -30,10 +30,12 @@ import { ONECOCREATION } from "@/brand/tokens";
  * (.oc-pv-dark / .oc-pv-light from studio/preview.css); the live-preview
  * <style> the useBrandPalette hook injects targets those scopes, so every
  * tweak lands in both panes instantly. Below the panes sits THE DRESSING
- * ROOM (S8, cartridge hardening): the cartridge's non-CSS identity —
- * logos, hero art, the time door, the copy tokens and the nav accent —
- * read and written through /api/brand's identity branch, one cartridge
- * literal at a time. LEGIBILITY DOCTRINE throughout:
+ * ROOM (S8, cartridge hardening; finished S9): the cartridge's non-CSS
+ * identity — logos, hero art, the time door, the copy tokens, the sign-in
+ * ceremony, the meta pair, portraits, tier art, the thank-you, the voices
+ * of the field and the nav accent — read and written through /api/brand's
+ * identity branch, one cartridge literal (or one pinned voice row) at a
+ * time. LEGIBILITY DOCTRINE throughout:
  * labels sit on solid/text-safe grounds, override state is gold ring PLUS
  * a dot (never colour alone), all icon controls carry title + aria-label.
  */
@@ -223,10 +225,47 @@ const IDENTITY_GROUPS: { title: string; blurb: string; rows: DressingRow[] }[] =
       { field: "copy.tagline", label: "tagline" },
       { field: "copy.memberNoun", label: "one member is called" },
     ]},
+  { title: "Sign-in", blurb: "the words the login ceremony speaks",
+    rows: [
+      { field: "signIn.copy.returningTitle", label: "welcome back" },
+      { field: "signIn.copy.returningBlurb", label: "welcome blurb" },
+      { field: "signIn.copy.signInCta", label: "sign-in button" },
+      { field: "signIn.copy.signingCta", label: "signing button" },
+      { field: "signIn.copy.doorsHeading", label: "doors heading" },
+      { field: "signIn.copy.doorsFootnote", label: "doors footnote" },
+    ]},
+  { title: "Meta", blurb: "how the wide web is told the house's name",
+    rows: [
+      { field: "meta.title", label: "tab title" },
+      { field: "meta.description", label: "search snippet",
+        hint: "a snippet runs long — up to 240 characters" },
+    ]},
+  { title: "Portraits", blurb: "Love, and the ConsciousCuts chair",
+    rows: [
+      { field: "portraits.headshot", label: "headshot" },
+      { field: "portraits.cuts.women", label: "cut — women" },
+      { field: "portraits.cuts.wax", label: "cut — wax" },
+      { field: "portraits.cuts.men", label: "cut — men" },
+    ]},
+  { title: "Tier art", blurb: "the membership ladder's pictures",
+    rows: [
+      { field: "tierArt.A", label: "tier A" },
+      { field: "tierArt.B", label: "tier B" },
+      { field: "tierArt.C", label: "tier C" },
+    ]},
+  { title: "Thank-you", blurb: "the moment after a paid order",
+    rows: [
+      { field: "thanks.video", label: "video loop" },
+      { field: "thanks.poster", label: "poster" },
+      { field: "thanks.heading", label: "heading" },
+      { field: "thanks.message", label: "message" },
+    ]},
 ];
 
 type Dressing = Partial<Record<IdentityField, string>>;
 type DressingMsg = { field: IdentityField; ok: boolean; text: string };
+type VoiceMsg = { key: string; ok: boolean; text: string };
+const EMPTY_VOICE: VoiceRow = { quote: "", name: "", who: "", href: "" };
 
 const fieldInput: React.CSSProperties = {
   flex: "1 1 240px", minWidth: 0, background: "#0e0c1a", /* S2: pinned — needs a ruling */
@@ -241,6 +280,13 @@ function IdentityRoom() {
   const [loadNote, setLoadNote] = useState<string | null>(null);
   const [busyField, setBusyField] = useState<IdentityField | null>(null);
   const [msg, setMsg] = useState<DressingMsg | null>(null);
+  /* voices of the field — the one list in the cartridge; drafts mirror the
+     saved rows one input set per row, plus one empty set for the add */
+  const [voices, setVoices] = useState<VoiceRow[] | null>(null);
+  const [voiceDraft, setVoiceDraft] = useState<VoiceRow[]>([]);
+  const [newVoice, setNewVoice] = useState<VoiceRow>(EMPTY_VOICE);
+  const [busyVoice, setBusyVoice] = useState<string | null>(null);
+  const [voiceMsg, setVoiceMsg] = useState<VoiceMsg | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -251,6 +297,9 @@ function IdentityRoom() {
         if (d.ok && d.identity) {
           setValues(d.identity);
           setDraft(d.identity);
+          const vs: VoiceRow[] = Array.isArray(d.voices) ? d.voices : [];
+          setVoices(vs);
+          setVoiceDraft(vs.map((v) => ({ ...v })));
         } else {
           setLoadNote("the dressing room opens with the operator key — sign in and it will be here");
         }
@@ -284,7 +333,39 @@ function IdentityRoom() {
     }
   }
 
-  function msgChip(m: DressingMsg) {
+  async function saveVoice(op: "add" | "edit" | "remove", index: number, row?: VoiceRow) {
+    const key = op === "add" ? "voice-add" : `voice-${index}`;
+    setBusyVoice(key);
+    setVoiceMsg(null);
+    try {
+      const res = await fetch("/api/brand", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voice: { op, index, row } }),
+      });
+      const d = await res.json();
+      if (d.ok) {
+        /* the saved shelf mirrors the write the rail landed */
+        const next = op === "add" ? [...(voices ?? []), row!]
+          : op === "edit" ? (voices ?? []).map((v, i) => (i === index ? row! : v))
+          : (voices ?? []).filter((_, i) => i !== index);
+        setVoices(next);
+        setVoiceDraft(next.map((v) => ({ ...v })));
+        if (op === "add") setNewVoice(EMPTY_VOICE);
+        /* the reload/redeploy note rides every save — shown verbatim */
+        setVoiceMsg({ key, ok: true, text: d.note ?? "saved into the cartridge" });
+      } else {
+        /* the API's honest reason, verbatim */
+        setVoiceMsg({ key, ok: false, text: d.reason ?? "the save did not land" });
+      }
+    } catch {
+      setVoiceMsg({ key, ok: false, text: "the save could not reach the server" });
+    } finally {
+      setBusyVoice(null);
+    }
+  }
+
+  function msgChip(m: { ok: boolean; text: string }) {
     return (
       <p role="status" style={{ margin: "6px 0 0", display: "inline-block",
         padding: "5px 11px", borderRadius: 8, fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
@@ -380,9 +461,109 @@ function IdentityRoom() {
     );
   }
 
+  /* one voice row's four inputs — quote wide, name / handle / link narrow */
+  function voiceInputs(r: VoiceRow, onChange: (next: VoiceRow) => void, keyPrefix: string) {
+    const slots: { k: keyof VoiceRow; label: string; grow: string }[] = [
+      { k: "quote", label: "quote", grow: "1 1 100%" },
+      { k: "name", label: "name", grow: "1 1 140px" },
+      { k: "who", label: "handle", grow: "1 1 160px" },
+      { k: "href", label: "link", grow: "2 1 260px" },
+    ];
+    return (
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, flex: "1 1 100%" }}>
+        {slots.map(({ k, label, grow }) => (
+          <input
+            key={k}
+            value={r[k]}
+            onChange={(e) => onChange({ ...r, [k]: e.target.value })}
+            aria-label={`${keyPrefix} — ${label}`}
+            placeholder={label}
+            spellCheck={false}
+            style={{ ...fieldInput, flex: grow }}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  function voicesRoom() {
+    if (voices === null) return null;
+    const removeBtn: React.CSSProperties = { ...pill, padding: "6px 14px", fontSize: 12.5,
+      background: "none", color: "#F2C4CE", /* S2: pinned — needs a ruling */
+      textDecoration: "underline" };
+    return (
+      <div style={{ marginTop: 20 }}>
+        <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+          textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
+          color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>
+          Voices of the field
+        </div>
+        <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS,
+          color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+          {"real words from the field, each linked to the video it lives under — curate freely, keep them honest (the shelf holds a dozen)"}
+        </p>
+        {voices.length === 0 && (
+          <p style={{ margin: "0 0 12px", fontSize: 13, fontFamily: SANS,
+            color: "#D9D2E4" /* S2: pinned — needs a ruling */ }}>
+            the shelf stands empty — a voice is real words or nothing
+          </p>
+        )}
+        {voices.map((saved, i) => {
+          const d = voiceDraft[i] ?? saved;
+          const dirtyRow = d.quote !== saved.quote || d.name !== saved.name || d.who !== saved.who || d.href !== saved.href;
+          const key = `voice-${i}`;
+          const busy = busyVoice === key;
+          return (
+            <div key={i} style={{ marginBottom: 14, paddingBottom: 12,
+              borderBottom: "1px solid rgba(139,118,196,.18)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                {voiceInputs(d, (next) => setVoiceDraft((all) => all.map((v, j) => (j === i ? next : v))), `voice ${i + 1}`)}
+                <button
+                  onClick={() => saveVoice("edit", i, d)}
+                  disabled={!dirtyRow || busyVoice !== null}
+                  title={dirtyRow ? "save this voice into the cartridge" : "no unsaved change"}
+                  aria-label={dirtyRow ? `save voice ${i + 1}` : `voice ${i + 1} saved`}
+                  style={{ ...pill, padding: "6px 14px", fontSize: 12.5,
+                    background: dirtyRow ? "linear-gradient(135deg,#EBCB77,#D9B24E)" /* S2: gold law — decorative, reported */ : "rgba(139,118,196,.15)",
+                    color: dirtyRow ? "#3a2a06" /* S2: gold law — decorative, reported */ : "#9a8fae", /* S2: pinned — needs a ruling */
+                    cursor: dirtyRow && !busyVoice ? "pointer" : "default" }}>
+                  {busy ? "Saving…" : dirtyRow ? "Save" : "Saved"}
+                </button>
+                <button
+                  onClick={() => saveVoice("remove", i)}
+                  disabled={busyVoice !== null}
+                  title="take this voice off the shelf"
+                  aria-label={`remove voice ${i + 1}`}
+                  style={removeBtn}>
+                  remove
+                </button>
+              </div>
+              {voiceMsg && voiceMsg.key === key && <div>{msgChip(voiceMsg)}</div>}
+            </div>
+          );
+        })}
+        {/* the add form — one empty row at the foot of the shelf */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          {voiceInputs(newVoice, setNewVoice, "a new voice")}
+          <button
+            onClick={() => saveVoice("add", -1, newVoice)}
+            disabled={busyVoice !== null || !newVoice.quote || !newVoice.name || !newVoice.who || !newVoice.href}
+            title="set this voice on the shelf"
+            aria-label="add this voice"
+            style={{ ...pill, padding: "6px 14px", fontSize: 12.5,
+              background: "rgba(139,118,196,.22)", color: "#F4ECFF", /* S2: pinned — needs a ruling */
+              cursor: busyVoice ? "default" : "pointer" }}>
+            {busyVoice === "voice-add" ? "Saving…" : "+ add this voice"}
+          </button>
+        </div>
+        {voiceMsg && voiceMsg.key === "voice-add" && <div>{msgChip(voiceMsg)}</div>}
+      </div>
+    );
+  }
+
   return (
     <section
-      aria-label="the dressing room — the cartridge's logos, hero art, doors and voice"
+      aria-label="the dressing room — the cartridge's logos, hero art, doors, voice, sign-in, meta, portraits, tier art, thank-you and voices"
       style={{ margin: "0 16px 24px", padding: "18px 20px 22px", borderRadius: 16,
         border: "1px solid rgba(139,118,196,.35)",
         background: "#12101f" /* S2: pinned — needs a ruling — a solid ground under every word (doctrine) */ }}
@@ -393,7 +574,7 @@ function IdentityRoom() {
       </div>
       <p style={{ margin: "0 0 18px", fontSize: 13, lineHeight: 1.55, fontFamily: SANS,
         color: "#D9D2E4" /* S2: pinned — needs a ruling */ }}>
-        {"the cartridge's non-CSS dressing — logos, hero art, the time door and the words the site speaks. A save writes the cartridge file itself; the running server catches up on its next reload (dev does it alone) or a fresh deploy."}
+        {"the cartridge's non-CSS dressing — logos, hero art, the time door, the words the site speaks, the sign-in ceremony, the meta pair, portraits, tier art, the thank-you and the voices of the field. A save writes the cartridge file itself; the running server catches up on its next reload (dev does it alone) or a fresh deploy."}
       </p>
 
       {values === null && !loadNote && (
@@ -437,6 +618,9 @@ function IdentityRoom() {
               the colour the nav links wear
             </p>
             {navAccent()}
+          </div>
+          <div style={{ flex: "1 1 100%" }}>
+            {voicesRoom()}
           </div>
         </div>
       )}

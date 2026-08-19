@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Barlow, Open_Sans, Press_Start_2P, Roboto } from "next/font/google";
 import localFont from "next/font/local";
 import { EASY_MODE_BOOT_SCRIPT } from "@pacsarcade/arcade-ui";
+import { activeCartridgeId, cartridge } from "@/brand/cartridge";
 import ScrollFix from "@/components/ScrollFix";
 import AliveEffects from "@/components/AliveEffects";
 import CartridgeVars from "@/components/CartridgeVars";
@@ -13,6 +14,9 @@ import "./globals.css";
    the admin shell — cartridge first, house reads its tokens. */
 import "./cartridge.css";
 import "./house.css";
+/* S9 (0018.05.28 a₿): the non-default cartridge twins — inert unless the
+   selection flips and <html> wears data-oc-cartridge (layout below). */
+import "./cartridges.css";
 
 /* Retronoid (the arcade skin's display face) moved OFF the root (QW9,
    ~0018.05.24 a₿) — it ships only to arcade-skin routes via
@@ -62,9 +66,11 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "One Cocreation — Where Heaven and Earth Meet",
-  description:
-    "Intuitive sessions, meditations and community with Love. Pay in dollars or bitcoin — sats land in One Cocreation's own node, never held by anyone else.",
+  /* S9 (0018.05.28 a₿): read from the ACTIVE cartridge — with LOVE
+     selected these are byte-for-byte the literals that sat here before
+     the registry; a fork flipping the selection retitles the site too */
+  title: cartridge.meta.title,
+  description: cartridge.meta.description,
   /* Module 6 — installable on the home screen; iOS reads these, the
      manifest (src/app/manifest.ts) covers the rest */
   appleWebApp: {
@@ -81,8 +87,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  // S2 (0018.05.25 a₿): = --space, kept literal — a meta theme-color tag can't resolve var()
-  themeColor: "#0a0a14",
+  // S2 (0018.05.25 a₿): = --space of the ACTIVE cartridge (S9), kept to a
+  // literal string in the cartridge — a meta theme-color tag can't resolve var()
+  themeColor: cartridge.meta.themeColor,
 };
 
 /**
@@ -100,6 +107,13 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${pressStart2P.variable} ${roboto.variable} ${openDyslexic.variable} ${barlow.variable} ${openSans.variable}`}
+      /* S9 (0018.05.28 a₿): the cartridge selection surfaces as ONE
+         attribute — and only off the default. With LOVE active the prop
+         is NOT PASSED AT ALL: a conditional spread, not an undefined
+         value — undefined still serializes into the flight payload and
+         costs bytes (caught by the rendered before/after diff); with
+         another cartridge the twin in cartridges.css pours its tokens. */
+      {...(activeCartridgeId === "love" ? {} : { "data-oc-cartridge": activeCartridgeId })}
     >
       <body>
         <script dangerouslySetInnerHTML={{ __html:
