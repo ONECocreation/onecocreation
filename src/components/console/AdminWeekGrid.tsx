@@ -286,7 +286,7 @@ export default function AdminWeekGrid() {
      Admiral's walk, 0018.05.15) — the verbatim overlay/sheet copy is gone */
   const field: React.CSSProperties = {
     border: "1px solid rgba(139,118,196,.45)", borderRadius: 8, padding: "6px 9px",
-    background: "#fff", fontSize: ".9rem",
+    background: "var(--field-bg, rgba(255,255,255,.94))", fontSize: ".9rem",
   };
   const BUSY_WASH = "repeating-linear-gradient(45deg, rgba(120,116,130,.16), rgba(120,116,130,.16) 5px, transparent 5px, transparent 10px)";
 
@@ -495,7 +495,7 @@ export default function AdminWeekGrid() {
                           <span style={{ fontWeight: isToday ? 700 : 500, fontSize: ".82rem", color: isToday ? "var(--teal-bright)" : "var(--ink-strong)" }}>{d.getDate()}</span>
                           {off && (
                             <span style={{ fontSize: ".56rem", textTransform: "uppercase", fontWeight: 700,
-                              color: retreatDay ? "#2e6b77" : "var(--err)" }}>
+                              color: retreatDay ? "var(--teal-deep)" : "var(--err)" }}>
                               {retreatDay ? "retreat" : "off"}
                             </span>
                           )}
@@ -620,7 +620,7 @@ export default function AdminWeekGrid() {
                   key={name}
                   style={{
                     ...field, cursor: "pointer", userSelect: "none",
-                    background: days[i] ? "rgba(78,138,95,.16)" : "#fff",
+                    background: days[i] ? "rgba(78,138,95,.16)" : "var(--field-bg, rgba(255,255,255,.94))",
                     borderColor: days[i] ? "rgba(78,138,95,.6)" : "rgba(139,118,196,.45)",
                   }}
                 >

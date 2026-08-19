@@ -43,13 +43,15 @@ interface Signoff {
   gesture: string;
   status: "open" | "signed";
   comment?: string;
-  at?: number;
+  at?: number | null;
   atEstimated?: boolean;
 }
 
-/** BFT stamp, honest: `~ ` when the network was dark at sign time (the height
-    is a genesis estimate, never a block fact). */
-const stamp = (at: number, estimated?: boolean) => `${estimated ? "~ " : ""}${bftDateTime(at)}`;
+/** BFT stamp, honest: no height when no node answered → "—" (ruling
+    0018.05.26 a₿: dashes over estimates). The `~ ` prefix survives only on
+    legacy pre-ruling records whose height is a genesis estimate. */
+const stamp = (at?: number | null, estimated?: boolean) =>
+  at == null ? "—" : `${estimated ? "~ " : ""}${bftDateTime(at)}`;
 
 const CHANGE_GLYPH: Record<SignoffChange["kind"], { glyph: string; cls: string }> = {
   add: { glyph: "+", cls: "text-neon" },
@@ -170,7 +172,7 @@ export default function SignoffsPanel() {
             <span>
               raised by <b className="font-bold text-white/60">{current.raisedBy}</b>
             </span>
-            {current.at && (
+            {current.status === "signed" && (
               <span className="text-neon/80">✓ signed · {stamp(current.at, current.atEstimated)}</span>
             )}
           </>
@@ -255,7 +257,7 @@ export default function SignoffsPanel() {
             ) : (
               <div className="mt-5 border-t border-edge pt-4">
                 <p className="font-pixel text-[10px] uppercase text-neon">
-                  ✓ SIGNED{current.at ? ` · ${stamp(current.at, current.atEstimated)}` : ""}
+                  ✓ SIGNED · {stamp(current.at, current.atEstimated)}
                 </p>
                 {current.comment && (
                   <p className="mt-2 font-mono text-[11px] leading-relaxed text-white/50">
@@ -292,7 +294,7 @@ export default function SignoffsPanel() {
           <span className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-[10px] uppercase text-white/30">{t.id}</span>
             {chips(t)}
-            {t.status === "signed" && t.at && (
+            {t.status === "signed" && (
               <span className="font-mono text-[10px] text-white/30">✓ {stamp(t.at, t.atEstimated)}</span>
             )}
           </span>

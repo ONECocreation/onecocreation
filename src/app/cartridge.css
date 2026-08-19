@@ -28,8 +28,19 @@
   --ok:#7fb98f; --warn:#EBCB77; --err:#E7899E; --info:#9d86d9;
   --teal-bright:#8FD0D8;
   --gold:#D9B24E; --gold-2:#EBCB77; --gold-deep:#D9B24E;
+  /* money & brand metal (S2 token walk, 0018.05.25 a₿) */
+  --bitcoin:#f7931a; /* the block-break pulse — bitcoin orange */
+  --nav-gold:#FAC51C; /* Love's original nav gold — the dawn note below tells it */
+  --gold-ink:#3a2a06; /* ink on gold fills */
+  --gold-ground:#2b1f05; /* dark gold wash */
+  --btn-ink:#3E3E3E; /* the CTA ink — Love's button law */
   --teal:#4EA0AF; --teal-deep:#23636E;
   --purple:#9B26D6; --lavender:#8B76C4; --rose:#E7B2C3; --copper:#C77B4A;
+  /* the soft gradient ends — each pairs with its named twin above */
+  --lavender-soft:#cbbbea; /* chip/btn gradient light end, pairs --lavender */
+  --rose-soft:#efc6da; /* tier-b gradient light end, pairs --rose */
+  --ok-soft:#9ee0ad; /* studio success, lighter than --ok */
+  --lavender-bright:#C79AE8; /* the wordmark span — --lavender turned up */
   /* — Love's law: no serifs; token name kept for churn-safety, points at Barlow now (0018.05.17 FONT TRIO) */
   --serif:var(--font-barlow,'Barlow'),'Barlow',-apple-system,sans-serif;
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
@@ -51,6 +62,79 @@
      with it. Version A is the retinted, template-clean alternate) */
   --here-grad:linear-gradient(90deg,#EBCB77 0%,#9d86d9 100%);
   --here-glow:rgba(180,150,200,.55); --here-ink:#F4ECFF;
+  /* ── the night-chrome families (S2 token walk, 0018.05.25 a₿): all
+     night-surface chrome, no dawn twins — values verbatim from the
+     inventory, each named to the family it serves ── */
+  /* the mail family — letter grounds, panels, creams, muted inks */
+  --mail-ground:#faf7f2; /* letter page ground */
+  --mail-panel:#2b2733; /* email card ground */
+  --mail-cream:#e8e2d8; /* cream panel */
+  --mail-cream-2:#efe9df; /* cream panel, lighter */
+  --mail-muted:#8a8494; /* muted mail ink */
+  --mail-muted-2:#6b6478; /* muted mail ink, deeper */
+  --mail-deep:#0e0c18; /* deepest mail ground */
+  /* SCAR/console greens — the console's pale inks, dims, nodes, sheets */
+  --scar-ink:#cfe0d6; /* pale console green ink */
+  --scar-ink-deep:#0d1712; /* ink on ops-green */
+  --scar-ink-hover:#e6f0e9; /* console ink, hover */
+  --scar-ink-bright:#eafff1; /* parent-open ink, brightest */
+  --scar-dim:#839388; /* SCAR muted green text */
+  --scar-dim-2:#5f6f63; /* dashed no-read state */
+  --scar-mute:#7f9578; /* SCAR dim readouts */
+  --scar-node:#17211b; /* rail node/stat ground */
+  --scar-sub:#16221b; /* sub-btn mix base */
+  --scar-pale:#c5cfc0; /* brandline pale */
+  --scar-brand-ink:#17111f; /* ink on the brand gradient */
+  --scar-brand-deep:#6f4fc4; /* brand gradient low, pairs --color-pink */
+  --scar-rank-ink:#dfd0da; /* hud rank mix */
+  --scar-sheet:#1a231d; /* mobile sheet gradient, high */
+  --scar-sheet-lo:#0f1510; /* mobile sheet gradient, low */
+  --console-mute:#9fb39a; /* muted pill/btn green */
+  --console-mute-hover:#4a5f47; /* muted pill, hover */
+  --console-mute-ink:#cfe0c9; /* ink on the muted hover */
+  --console-seg:#0b110a; /* dark seg ground in color-mix */
+  --console-card-hi:#1a2419; /* card gradient, high */
+  --console-card-lo:#10160f; /* card gradient, low */
+  --console-bloom:#16241c; /* ground radial tint */
+  --console-pale:#dfe8db; /* color-mix lightener */
+  --console-pale-2:#b9c7b3; /* eyebrow mix */
+  --console-ink:#f1efe7; /* bright console text */
+  /* LCARS remap extras — the override block's own inks + cap gradient */
+  --lcars-ink:#f4eee0; /* lcars override ink */
+  --lcars-dim:#93889f; /* lcars override dim */
+  --lcars-cap-hi:#223318; /* cap gradient, high */
+  --lcars-cap-lo:#131d0d; /* cap gradient, low */
+  /* the room accent ramps — each hue with its soft end */
+  --room-gold:#c79433; /* room accent, gold */
+  --room-gold-soft:#f6e2b0; /* room gold, soft end */
+  --room-teal:#5f9b90; /* room accent, teal */
+  --room-teal-soft:#b8dcd4; /* room teal, soft end */
+  --room-rose:#b06a97; /* room accent, rose */
+  --room-lavender:#6f57a8; /* room accent, lavender */
+  --room-lavender-soft:#cbb7ee; /* room lavender, soft end */
+  /* the studio */
+  --studio-mat:#0f0c1d; /* the Puck canvas mat */
+  --studio-shell:#0a0a12; /* the preview shell ground */
+  /* gradient stops — hero/body/pendant/sky/boot-beam, said once */
+  --hero-grad-0:#0b0a18; /* house hero gradient, top stop */
+  --hero-grad-1:#16111f; /* house hero gradient, mid stop */
+  --body-grad-1:#191325; /* body ground gradient, mid stop */
+  --body-grad-2:#1c1730; /* body ground gradient, end stop */
+  --body-grad-dawn-1:#F7EFF3; /* body gradient at dawn, mid stop */
+  --body-grad-dawn-2:#F1EEF8; /* body gradient at dawn, end stop */
+  --pendant-0:#fff6ef; /* pendant radial, center */
+  --pendant-1:#efe3f0; /* pendant radial, mid */
+  --pendant-2:#e6d9ee; /* pendant radial, edge */
+  --sky-cream:#F6EFD9; /* CosmicSky cream */
+  --sky-veil-mid:#463a58; /* sky-veil gradient, mid stop */
+  --sky-warm-dawn-0:#f5ead5; /* sky-warm at dawn, top stop */
+  --sky-warm-dawn-1:#f7efe2; /* sky-warm at dawn, end stop */
+  --boot-beam-hi:#f4fdff; /* CRT wake beam, hot center */
+  --boot-beam-mid:#bfefff; /* CRT wake beam, mid */
+  --boot-beam-deep:#04141a; /* CRT wake beam, deep edge */
+  /* misc singles */
+  --footer-ink:#cabfda; /* site-footer body ink */
+  --copilot-user:#f3c7c1; /* copilot user-bubble tint */
 }
 html[data-oc-theme="light"]{
   --panel:rgba(255,255,255,.6); --edge:rgba(139,118,196,.28);
@@ -140,15 +224,15 @@ html[data-oc-theme="light"]{--band-1:#F3EEF4;--band-2:#ECEAF6;--band-3:#EFE9F7;
    flips #classes' background to cream, but the literals never flipped with
    it, leaving near-invisible pale text (Admiral's sighting, 0018.05.24).
    Removed — the base .sec-h/.kicker rules in house.css already read the
-   tokens and flip correctly. .lead keeps its brighter-than---muted literal
-   for contrast against the nebula image in dark, with an explicit light
+   tokens and flip correctly. .lead keeps the brighter --ink-body for
+   contrast against the nebula image in dark, with an explicit light
    counterpart below. */
-#classes .lead{color:#CFC5E2}
+#classes .lead{color:var(--ink-body)}
 html[data-oc-theme="light"] #classes .lead{color:var(--muted)}
 /* readability in the nebula (community classes1.png): cards go SOLID warm
    glass, ink stays ink, and the note bar earns its own light */
 #classes .card{background:rgba(252,247,240,.94);backdrop-filter:blur(6px)}
-#classes .roomrow{color:#464050;border-bottom-color:rgba(139,118,196,.28)}
+#classes .roomrow{color:var(--field-ink);border-bottom-color:rgba(139,118,196,.28)}
 #classes .lockpill{background:rgba(217,178,78,.26);color:#8a6410}
 #classes .note{background:rgba(252,247,240,.92);color:#544e64;border-color:rgba(255,255,255,.7)}
 #classes .note b{color:var(--gold-deep)}
@@ -162,7 +246,7 @@ html[data-oc-theme="light"] #classes .lead{color:var(--muted)}
    the light-theme repaint below still out-specifies these for non-keep-dark
    sections, and the sky light overrides out-specify the repaint. ── */
 .sky-night{background:linear-gradient(180deg,#1a1428 0%,#141021 100%)!important}
-.sky-veil{background:radial-gradient(700px 420px at 50% 0%,rgba(120,86,180,.34),transparent 60%),linear-gradient(180deg,#241a33 0%,#463a58 50%,#1a1428 100%)!important}
+.sky-veil{background:radial-gradient(700px 420px at 50% 0%,rgba(120,86,180,.34),transparent 60%),linear-gradient(180deg,#241a33 0%,var(--sky-veil-mid) 50%,#1a1428 100%)!important}
 .sky-glass{background:linear-gradient(180deg,#1a1428 0%,#241a33 100%)!important}
 .sky-warm{background:linear-gradient(180deg,#241c15 0%,#241722 100%)!important}
 /* keep-dark sections hold the NIGHT tokens in both themes — text and
@@ -187,7 +271,7 @@ html[data-oc-theme="light"] main:not(.lions-gate-dark){background:#FCF7F0!import
 html[data-oc-theme="light"] main section.sky-night:not(.keep-dark):not(.lions-gate){background:linear-gradient(180deg,#FCF7F0 0%,#F3EEF4 100%)!important}
 html[data-oc-theme="light"] main section.sky-veil:not(.keep-dark):not(.lions-gate){background:radial-gradient(700px 420px at 50% 0%,rgba(214,178,214,.38),transparent 60%),linear-gradient(180deg,#F8EDF0 0%,#EFE9F7 55%,#F3EEF4 100%)!important}
 html[data-oc-theme="light"] main section.sky-glass:not(.keep-dark):not(.lions-gate){background:#F3EEF4!important}
-html[data-oc-theme="light"] main section.sky-warm:not(.keep-dark):not(.lions-gate){background:linear-gradient(180deg,#f5ead5 0%,#f7efe2 100%)!important}
+html[data-oc-theme="light"] main section.sky-warm:not(.keep-dark):not(.lions-gate){background:linear-gradient(180deg,var(--sky-warm-dawn-0) 0%,var(--sky-warm-dawn-1) 100%)!important}
 /* the hero fade lands wherever the page continues */
 .hero::after{background:linear-gradient(180deg,transparent,#1a1428)}
 html[data-oc-theme="light"] .hero::after{background:linear-gradient(180deg,transparent,#F3EEF4)}

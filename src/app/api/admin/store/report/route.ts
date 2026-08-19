@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { listItems, listOrders, type OrderState } from "@/lib/store";
-import { bftDateTime, estimateHeight } from "@/lib/bb/bft";
+import { bftDateTime } from "@/lib/bb/bft";
+import { serverBlockInfo } from "@/lib/chain-tip-server";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, reason: "operator session required" }, { status: 401 });
   }
 
-  const [items, orders] = await Promise.all([listItems({ includeHidden: true }), listOrders()]);
+  const [items, orders, tip] = await Promise.all([
+    listItems({ includeHidden: true }),
+    listOrders(),
+    serverBlockInfo(),
+  ]);
 
   const byState = Object.fromEntries(ORDER_STATES.map((s) => [s, 0])) as Record<OrderState, number>;
   let settledSats = 0;
@@ -60,8 +65,8 @@ export async function GET(request: Request) {
       settledSats,
       needsAttention: orders.filter((o) => o.state === "settled").map((o) => o.id),
     },
-    /* estimateHeight is a genesis-anchored guess, so the stamp wears the
-       honest ~ (bft-display law) */
-    generatedAt: `~${bftDateTime(estimateHeight())}`,
+    /* the live tip stamped real, or the honest dash when no node answers — no
+       estimate is ever stamped (fleet ruling 0018.05.26 a₿) */
+    generatedAt: tip.height != null ? bftDateTime(tip.height) : "—",
   });
 }

@@ -158,6 +158,11 @@ export function brandShell(bodyHtml: string, opts?: { unsubscribeUrl?: string })
   const footer = opts?.unsubscribeUrl
     ? `<p style="margin-top:28px;font-size:12px;color:#8a8494;">You are receiving this because you joined the One Cocreation list. <a href="${opts.unsubscribeUrl}" style="color:#8a8494;">Unsubscribe</a> any time.</p>`
     : "";
+  /* S2: the wordmark's gold span stays literal — decorative gold awaits the
+     taste-maker's ruling (gold law). */
+  /* S2: everything else here stays literal — inboxes don't resolve var()
+     (integrator ruling 0018.05.25 a₿); --mail-* remains the cartridge.css
+     palette record. */
   return `<!doctype html><html><body style="margin:0;padding:0;background:#faf7f2;">
 <div style="max-width:560px;margin:0 auto;padding:32px 24px;font-family:Arial,Helvetica,sans-serif;color:#2b2733;">
   <div style="text-align:center;padding-bottom:20px;border-bottom:1px solid #e8e2d8;">
@@ -200,6 +205,9 @@ const abs = (u: string) => (u.startsWith("http") ? u : `${SITE}${u}`);
 export function pill(href: string, label: string, size: "sm" | "lg" = "sm"): string {
   const pad = size === "lg" ? "13px 30px" : "10px 24px";
   const fs = size === "lg" ? "15px" : "13px";
+  /* S2: gold pill + white ink stay literal — decorative gold awaits a ruling
+     (gold law), no --white token exists, and richShell's unsubscribe re-color
+     string-matches "#b4862b". */
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-table;"><tr>
     <td bgcolor="#b4862b" style="border-radius:999px;background:#b4862b;">
       <a href="${abs(href)}" style="display:inline-block;padding:${pad};font-family:Arial,sans-serif;font-size:${fs};color:#ffffff;text-decoration:none;border-radius:999px;"><font color="#ffffff">${label}</font></a>
@@ -223,6 +231,14 @@ export function richShell(letter: RichLetter): string {
     )
     .join("");
 
+  /* S2: kept literal — #f4f0e9 (shell ground; near --mail-ground but not on
+     the approved harmonize list), #ffffff (no --white token), and #ECE3C9 on
+     the always-night --mail-deep bar (var(--ghost-ink) would flip dark-on-dark
+     at dawn). All need a ruling. */
+  /* S2: the --mail-* / --field-ink mappings here reverted to literal —
+     inboxes don't resolve var() (integrator ruling 0018.05.25 a₿); --mail-*
+     stays defined in cartridge.css as the documented palette record. The
+     unsubscribe re-color keys off "#b4862b", which pill() keeps literal. */
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f0e9;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f0e9;"><tr><td align="center" style="padding:18px 10px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;font-family:Arial,Helvetica,sans-serif;">

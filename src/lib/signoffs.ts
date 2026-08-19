@@ -60,9 +60,9 @@ export interface Signoff {
   gesture: string;
   status: SignoffStatus;
   comment?: string;
-  at?: number; // block height at sign time — BFT-stamped
-  /** the network was dark at sign time — `at` is a genesis ~estimate, never a
-      block fact; the UI wears the honest `~ ` */
+  at?: number | null; // block height at sign time — null when no node answered (the UI wears the honest —)
+  /** legacy: pre-0018.05.26 a₿ records flagged a network-dark stamp as a
+      genesis ~estimate; new records etch null, never a guess */
   atEstimated?: boolean;
   by?: string; // operator pubkey (hex)
   sig?: string;
@@ -172,8 +172,8 @@ export const SEED_SIGNOFFS: Signoff[] = [
 interface SignRecord {
   id: string;
   comment?: string;
-  at: number; // block height at sign time
-  atEstimated?: boolean; // network dark at sign time — `at` is a ~estimate, not a block fact
+  at: number | null; // block height at sign time — null when no node answered
+  atEstimated?: boolean; // legacy ~estimate flag on pre-0018.05.26 a₿ records; never written anymore
   by: string; // operator pubkey (hex)
   sig: string;
 }
@@ -319,13 +319,12 @@ export async function recordSignoff(event: {
 
   const comment = (rawComment ?? "").trim().slice(0, 4000) || undefined;
   /* the REAL block, own node first (serverBlockInfo) — an unreachable network
-     records the estimate FLAGGED, never as a bare block fact */
-  const { height, estimated } = await serverBlockInfo();
+     records an honest null, never an estimate (fleet ruling 0018.05.26 a₿) */
+  const { height } = await serverBlockInfo();
   const record: SignRecord = {
     id,
     comment,
     at: height,
-    atEstimated: estimated || undefined,
     by: event.pubkey,
     sig: event.sig,
   };
@@ -337,7 +336,6 @@ export async function recordSignoff(event: {
       status: "signed",
       comment,
       at: height,
-      atEstimated: estimated || undefined,
       by: event.pubkey,
       sig: event.sig,
     },

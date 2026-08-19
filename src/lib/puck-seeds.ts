@@ -1063,14 +1063,66 @@ const observerOldContent: Block[] = [
   ]),
 ];
 
+/* STUDIO P1: the new-site seeds carry honest root props (page title +
+   description for SEO/social) so a publish is a real page from the first
+   push — titles/descriptions mirror the hand-built pages they rebuild. The
+   *-old archive lane keeps `root: {}` (archive pages don't need fresh meta).
+   Reads tolerate a bare `root: {}`: /p falls back to cartridge.meta, and
+   Puck migrates to root.props on the next save. */
 export const SEEDS: Record<string, PuckPageData> = {
-  about: { content: aboutContent, root: {} },
-  home: { content: homeContent, root: {} },
-  book: { content: bookContent, root: {} },
-  memberships: { content: membershipsContent, root: {} },
-  support: { content: supportContent, root: {} },
-  classes: { content: classesContent, root: {} },
-  store: { content: storeContent, root: {} },
+  about: { content: aboutContent, root: { props: {
+    title: "My Story — Love · One Cocreation",
+    description: "Smiles, Love — the solo adventurer's story, the Claires, and the Bridge where Heaven and Earth meet.",
+  } } },
+  home: { content: homeContent, root: { props: {
+    title: cartridge.meta.title,
+    description: cartridge.meta.description,
+  } } },
+  book: { content: bookContent, root: { props: {
+    title: "Sessions — book a time",
+    description: "Pick a session, choose a real open time — you're held.",
+  } } },
+  memberships: { content: membershipsContent, root: { props: {
+    title: "Memberships — One Cocreation",
+    description: "Welcome to The Heart Field, where Heaven and Earth Meet.",
+  } } },
+  support: { content: supportContent, root: { props: {
+    title: "Support — One Cocreation",
+    description: "Tend the field — gifts land whole with Love, and Pay It Forward flows onward to the beings holding this Earth.",
+  } } },
+  classes: { content: classesContent, root: { props: {
+    title: "Classes & Community — One Cocreation",
+    description: "Your luminous rooms — classes and commons on One Cocreation's own server.",
+  } } },
+  store: { content: storeContent, root: { props: {
+    title: "Store — One Cocreation",
+    description: "Sessions, meditations, memberships, and wares from One Cocreation — paid in bitcoin, straight to the artist.",
+  } } },
+  /* STUDIO P2: the popup lane. THE ONE REAL POPUP — the rebuild of the
+     original platform's only popup ("Free Guide"), retargeted to the Free
+     Meditation door (/meditation). The copy is Love's own, quoted from the
+     /meditation section (src/components/sections.tsx FreeMeditation):
+     "A Free Meditation, With Love" / "Unzip Into the New You" /
+     "no strings, only love". The Image restores the original popup's
+     light-body graphic (gate punch-list 0018.05.25 a₿ — the text-only
+     rebuild read thinner than Love's original; same asset the home-old
+     seed references). The Button wears rose, not gold — gold is
+     MONEY ONLY (house law, cartridge.ts). Seed protection applies: the
+     panels and the API treat popup:* keys here as protected. */
+  "popup:free-guide": { content: [
+    blk("Eyebrow", { text: "A gift, no strings", align: "center", style: st() }),
+    blk("Heading", { text: "A Free Meditation, With Love", level: "h2", align: "center", style: st() }),
+    blk("Image", {
+      src: `${RAW}/popup-free-guide/unzip-9141826.png`,
+      alt: "Unzip Into The New You — the free meditation's light-body graphic",
+      width: 320, radius: "soft", align: "center",
+    }),
+    blk("Text", {
+      text: "Receive \u201cUnzip Into the New You\u201d — a free guided meditation, plus a weekly note of inspiration. No strings, only love.",
+      align: "center", style: st(),
+    }),
+    blk("Button", { label: "Receive the meditation", href: "/meditation", variant: "rose", align: "center", style: st() }),
+  ], root: { props: { title: "A Free Meditation — One Cocreation" } } },
   /* the "(old)" archive lane — Love's original ShinePages pages */
   "home-old": { content: homeOldContent, root: {} },
   "about-old": { content: aboutOldContent, root: {} },

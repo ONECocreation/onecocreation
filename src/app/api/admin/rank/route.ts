@@ -58,8 +58,10 @@ export async function GET(request: Request) {
   }
 
   const tip = await serverBlockInfo();
+  /* no estimate rung anymore (0018.05.26 a₿) — when no node answers, height is
+     null and the tenure math is skipped, never run on a guess */
   const blocksSinceClaim =
-    claimHeight != null ? Math.max(0, tip.height - claimHeight) : null;
+    claimHeight != null && tip.height != null ? Math.max(0, tip.height - claimHeight) : null;
 
   /* the ladder — tenure walks it; certs (none stored yet) would open the
      officer track. Flag tiers are appointed, so the office label rides
@@ -103,7 +105,6 @@ export async function GET(request: Request) {
     claimHeight,
     blocksSinceClaim,
     months: blocksSinceClaim != null ? Math.floor(blocksSinceClaim / BLOCKS_PER_MONTH) : null,
-    tipEstimated: tip.estimated,
     points: byCrew.get(me) ?? 0,
     commendations,
   });

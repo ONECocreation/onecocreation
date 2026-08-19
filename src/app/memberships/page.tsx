@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import PopupHost from "@/components/PopupHost";
 
 export const metadata: Metadata = {
   title: "Memberships — One Cocreation",
@@ -78,6 +79,8 @@ export default function MembershipsPage() {
         </div>
       </main>
       <SiteFooter />
+      {/* STUDIO P2: popup host — no-op unless a live popup lists /memberships */}
+      <PopupHost />
     </>
   );
 }

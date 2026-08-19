@@ -194,6 +194,7 @@ export default function LettersRoom() {
                       className="ml-1 border border-neutral-600 px-2 py-0.5 text-[10px] uppercase text-yellow-400">
                       preview
                     </a>
+                    {/* S2: pinned — needs a ruling: this desk page is night chrome (the Tailwind around it never dawns); the theme-aware --ok/--muted would flip at dawn */}
                     {!l.noPublish && (
                       <button onClick={() => flipAudience(l.key!)}
                         title="public letters show on /news and the guest feed; members letters only in their receivers' /letters"

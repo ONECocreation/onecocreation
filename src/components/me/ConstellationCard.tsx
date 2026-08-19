@@ -82,7 +82,7 @@ export default function ConstellationCard() {
         {stars.map((s) => (
           <div key={s.t} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0",
             borderBottom: "1px solid rgba(139,118,196,.2)", fontSize: ".85rem",
-            color: s.done ? "#7fb98f" : "var(--ink-body)" }}>
+            color: s.done ? "var(--ok, #7fb98f)" : "var(--ink-body)" }}>
             <span aria-hidden>{s.done ? "✦" : "○"}</span>
             <span style={{ flex: 1 }}>
               {s.t}

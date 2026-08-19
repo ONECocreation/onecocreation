@@ -89,7 +89,7 @@ export default function ServiceCard({ svc, delay = 0 }: { svc: ServiceCardData; 
               <span style={{ fontSize: ".74rem", letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)" }}>
                 {svc.durationMin} minutes
               </span>
-              <span style={{ marginLeft: "auto", fontFamily: "var(--serif)", fontSize: "1.25rem", color: "#EBCB77" }}>
+              <span style={{ marginLeft: "auto", fontFamily: "var(--serif)", fontSize: "1.25rem", color: "var(--gold-2)" }}>
                 {priceLine}
               </span>
             </div>
@@ -116,7 +116,7 @@ export default function ServiceCard({ svc, delay = 0 }: { svc: ServiceCardData; 
             </h3>
             <p style={{ margin: "4px 0 0", textAlign: "center", fontSize: ".74rem", letterSpacing: ".1em",
               textTransform: "uppercase", color: "var(--muted)" }}>
-              {svc.durationMin} minutes{priceLine && <> · <span style={{ color: "#EBCB77" }}>{priceLine}</span></>}
+              {svc.durationMin} minutes{priceLine && <> · <span style={{ color: "var(--gold-2)" }}>{priceLine}</span></>}
             </p>
             <div className="flip-scroll" style={{ margin: "12px 0 0", paddingRight: 4,
               borderTop: "1px solid rgba(139,118,196,.3)" }}>

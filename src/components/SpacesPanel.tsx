@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { bftDate, bftDateTime, estimateHeight } from "@/lib/bb/bft";
+import { bftDate, bftDateTime } from "@/lib/bb/bft";
 
 /**
  * The Spaces node console, v2 (the admiral's cleanup, 2026-07-11):
@@ -12,7 +12,8 @@ import { bftDate, bftDateTime, estimateHeight } from "@/lib/bb/bft";
  *              configurable per POKE node. (Sparks parked: the welcome
  *              letter rides the newsletter and posts to @frens on nostr.)
  * All dates are Bitcoin Federated Time — the old calendar is burned; rows
- * without a recorded block get a best-effort ~estimate from their timestamp.
+ * without a recorded block wear an honest dash (fleet ruling 0018.05.26 a₿:
+ * dashes over estimates — the estimate rung is DELETED, not gated).
  */
 
 type Tab = "node" | "anchor" | "ceremony";
@@ -45,7 +46,8 @@ function shortNpub(n: string): string {
 
 /** BFT stamp for a queue row, house standard (yyyy.mm.dd hh:mm a₿ — the
     marker always rides the stamp, after the date): the real block when
-    recorded, a ~estimate from the claim timestamp when not. */
+    recorded, an honest dash when not — fleet ruling 0018.05.26 a₿ (dashes
+    over estimates; the estimate rung is DELETED, not gated). */
 function BftStamp({ e }: { e: QueuedEntry }) {
   if (e.blockHeight != null)
     return (
@@ -54,7 +56,7 @@ function BftStamp({ e }: { e: QueuedEntry }) {
         {bftDateTime(e.blockHeight)}
       </>
     );
-  return <>~ {bftDateTime(estimateHeight(new Date(e.requestedAt).getTime()))}</>;
+  return <>—</>;
 }
 
 function Pill({ ok, children }: { ok: boolean; children: ReactNode }) {

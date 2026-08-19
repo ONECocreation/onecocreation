@@ -30,10 +30,10 @@ export async function POST(request: Request) {
   }
   let blockHeight: number | null = null;
   try {
-    /* own node first (serverBlockInfo); an estimate never gets etched as a
-       block fact — null renders the honest ~ from the wall timestamp */
+    /* own node first (serverBlockInfo); a guess never gets etched as a block
+       fact — no estimate rung (0018.05.26 a₿), so null when no node answers */
     const tip = await serverBlockInfo();
-    if (!tip.estimated) blockHeight = tip.height;
+    if (tip.height != null) blockHeight = tip.height;
   } catch {
     /* the stamp is a nicety — never block a request on the tip lookup */
   }

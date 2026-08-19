@@ -8,6 +8,9 @@ import { getLetterOverride, bodyToHtml } from "@/lib/letters";
  * the newsletter door sent the meditation but the JOIN door only added the
  * subscriber — a member who joined without touching the form never got her
  * gift. Both doors now pour from this jug.
+ *
+ * S2: the gold CTA pills below stay literal — decorative gold awaits the
+ * taste-maker's ruling (gold law); their #fff ink has no token twin.
  */
 
 /** "Unzip Into the New You" — the promise on every form, sent immediately. */

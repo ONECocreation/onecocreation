@@ -63,7 +63,7 @@ export default function FrenBadge() {
           background: "none",
           border: "none",
           cursor: "pointer",
-          color: "var(--gold-2, #D9B24E)",
+          color: "var(--gold-2, #EBCB77)",
           font: "inherit",
           fontWeight: 700,
           letterSpacing: ".05em",
@@ -109,7 +109,7 @@ export default function FrenBadge() {
               style={{
                 display: "block",
                 padding: "9px 18px",
-                color: "#ECE3C9",
+                color: "#ECE3C9", /* S2: pinned — needs a ruling (always-night --pop-* dropdown; no pinned-night ink token) */
                 fontSize: ".8rem",
                 letterSpacing: ".04em",
                 textTransform: "uppercase",
@@ -133,7 +133,7 @@ export default function FrenBadge() {
               border: "none",
               borderTop: "1px solid rgba(217,178,78,.25)",
               marginTop: 6,
-              color: "#C79AE8",
+              color: "var(--lavender-bright)",
               fontSize: ".8rem",
               letterSpacing: ".04em",
               textTransform: "uppercase",

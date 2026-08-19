@@ -143,7 +143,7 @@ export default function MediaField({
 
   const mono = "ui-monospace, Menlo, Consolas, monospace";
   const btn: React.CSSProperties = {
-    border: "1px solid rgba(139,118,196,.35)", background: "#1b1530", color: "#F4ECFF",
+    border: "1px solid rgba(139,118,196,.35)", background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)",
     borderRadius: 8, padding: "4px 10px", fontSize: 11, cursor: "pointer", fontFamily: "inherit",
   };
 
@@ -152,15 +152,15 @@ export default function MediaField({
       {/* current image + toggle */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
         <div style={{ width: 40, height: 30, borderRadius: 6, flex: "none", overflow: "hidden",
-          border: "1px solid rgba(139,118,196,.35)", background: "#0f0c1d", display: "grid", placeItems: "center" }}>
+          border: "1px solid rgba(139,118,196,.35)", background: "var(--studio-mat)", display: "grid", placeItems: "center" }}>
           {value ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={value} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
-            <span style={{ fontSize: 9, color: "#9a8fae" }}>—</span>
+            <span style={{ fontSize: 9, color: "var(--puck-color-text-muted)" }}>—</span>
           )}
         </div>
-        <span style={{ flex: 1, minWidth: 0, fontFamily: mono, fontSize: 10, color: "#9a8fae",
+        <span style={{ flex: 1, minWidth: 0, fontFamily: mono, fontSize: 10, color: "var(--puck-color-text-muted)",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {value ? value.split("/").pop() : "no image yet"}
         </span>
@@ -171,11 +171,11 @@ export default function MediaField({
 
       {open && (
         <div style={{ border: "1px solid rgba(139,118,196,.25)", borderRadius: 10, padding: 8,
-          background: "#12101f", display: "flex", flexDirection: "column", gap: 8 }}>
+          background: "var(--puck-color-surface)", display: "flex", flexDirection: "column", gap: 8 }}>
           {/* doors: upload + url */}
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <button type="button" disabled={busy || ready === false} onClick={() => fileRef.current?.click()}
-              style={{ ...btn, background: "#D9B24E", color: "#2b1f05", fontWeight: 700, opacity: busy || ready === false ? 0.5 : 1 }}>
+              style={{ ...btn, background: "#D9B24E", color: "#2b1f05" /* S2: gold law — decorative, reported */, fontWeight: 700, opacity: busy || ready === false ? 0.5 : 1 }}>
               {busy ? "uploading…" : "⇪ upload"}
             </button>
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
@@ -190,14 +190,14 @@ export default function MediaField({
                   if (v) onChange(v);
                 }
               }}
-              style={{ flex: 1, minWidth: 0, background: "#1b1530", border: "1px solid rgba(139,118,196,.3)",
-                borderRadius: 8, color: "#F4ECFF", fontSize: 11, padding: "5px 8px", fontFamily: mono }}
+              style={{ flex: 1, minWidth: 0, background: "var(--puck-color-surface-subtle)", border: "1px solid rgba(139,118,196,.3)",
+                borderRadius: 8, color: "var(--puck-color-text)", fontSize: 11, padding: "5px 8px", fontFamily: mono }}
             />
           </div>
 
           {ready === false && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ fontSize: 10.5, color: "#EBCB77", lineHeight: 1.5 }}>
+              <div style={{ fontSize: 10.5, color: "#EBCB77" /* S2: gold law — decorative, reported */, lineHeight: 1.5 }}>
                 Connect the library: paste a GitHub token with access to the assets
                 repo — it&apos;s checked live, saved server-side, and never shown again.
               </div>
@@ -208,18 +208,18 @@ export default function MediaField({
                   value={tokenDraft}
                   onChange={(e) => setTokenDraft(e.target.value)}
                   autoComplete="off"
-                  style={{ flex: 1, minWidth: 0, background: "#1b1530", border: "1px solid rgba(139,118,196,.3)",
-                    borderRadius: 8, color: "#F4ECFF", fontSize: 11, padding: "5px 8px", fontFamily: mono }}
+                  style={{ flex: 1, minWidth: 0, background: "var(--puck-color-surface-subtle)", border: "1px solid rgba(139,118,196,.3)",
+                    borderRadius: 8, color: "var(--puck-color-text)", fontSize: 11, padding: "5px 8px", fontFamily: mono }}
                 />
                 <button type="button" disabled={busy || !tokenDraft.trim()} onClick={connect}
-                  style={{ ...btn, background: "#D9B24E", color: "#2b1f05", fontWeight: 700,
+                  style={{ ...btn, background: "#D9B24E", color: "#2b1f05" /* S2: gold law — decorative, reported */, fontWeight: 700,
                     opacity: busy || !tokenDraft.trim() ? 0.5 : 1 }}>
                   {busy ? "checking…" : "connect"}
                 </button>
               </div>
             </div>
           )}
-          {note && <div style={{ fontSize: 10.5, color: note.endsWith("✓") ? "#9ee0ad" : "#E7899E" }}>{note}</div>}
+          {note && <div style={{ fontSize: 10.5, color: note.endsWith("✓") ? "var(--ok-soft)" : "#E7899E" /* S2: pinned — needs a ruling */ }}>{note}</div>}
 
           {/* the library grid — ONE capped scroll area */}
           {items.length > 0 && (
@@ -227,15 +227,15 @@ export default function MediaField({
               maxHeight: 168, overflowY: "auto", paddingRight: 2 }}>
               {items.map((it) => (
                 <button key={it.url} type="button" title={it.name} onClick={() => { onChange(it.url); setNote(""); }}
-                  style={{ padding: 0, border: value === it.url ? "2px solid #EBCB77" : "1px solid rgba(139,118,196,.3)",
-                    borderRadius: 7, overflow: "hidden", cursor: "pointer", background: "#0f0c1d",
+                  style={{ padding: 0, border: value === it.url ? "2px solid #EBCB77" /* S2: gold law — decorative, reported */ : "1px solid rgba(139,118,196,.3)",
+                    borderRadius: 7, overflow: "hidden", cursor: "pointer", background: "var(--studio-mat)",
                     display: "flex", flexDirection: "column" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={it.url} alt={it.name} loading="lazy"
                     style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", display: "block" }} />
                   {/* the name, visible — text-safe panel per the legibility doctrine */}
-                  <span style={{ display: "block", width: "100%", padding: "3px 5px", background: "#1b1530",
-                    color: "#D9D2E4", fontSize: 9.5, fontFamily: mono, textAlign: "left",
+                  <span style={{ display: "block", width: "100%", padding: "3px 5px", background: "var(--puck-color-surface-subtle)",
+                    color: "var(--puck-color-text-secondary)", fontSize: 9.5, fontFamily: mono, textAlign: "left",
                     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {it.name}
                   </span>
@@ -244,7 +244,7 @@ export default function MediaField({
             </div>
           )}
           {ready && items.length === 0 && (
-            <div style={{ fontSize: 10.5, color: "#9a8fae" }}>the library is empty — upload the first picture</div>
+            <div style={{ fontSize: 10.5, color: "var(--puck-color-text-muted)" }}>the library is empty — upload the first picture</div>
           )}
         </div>
       )}

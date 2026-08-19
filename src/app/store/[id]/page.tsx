@@ -44,7 +44,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
           <p className="reveal" style={{ margin: "16px auto 0", whiteSpace: "pre-line", fontSize: ".95rem",
             color: "var(--ink-body)", maxWidth: 560, transitionDelay: ".1s" }}>{item.blurb}</p>
           {item.media?.deliverable && (
-            <p style={{ margin: "10px 0 0", fontSize: ".82rem", color: "#5f4b96" }}>
+            <p style={{ margin: "10px 0 0", fontSize: ".82rem", color: "var(--info)" }}>
               ✦ includes {item.media.deliverable.label} ({item.media.deliverable.kind} download) —
               delivered after purchase, from your receipt page
             </p>

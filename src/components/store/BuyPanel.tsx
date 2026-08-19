@@ -13,7 +13,7 @@ import type { StoreItem } from "@/lib/store";
 
 const glassField: React.CSSProperties = {
   border: "1px solid rgba(139,118,196,.45)", borderRadius: 10, padding: "9px 12px",
-  background: "rgba(255,255,255,.92)", fontSize: "1rem", color: "#4a4458",
+  background: "rgba(255,255,255,.92)", fontSize: "1rem", color: "var(--field-ink)",
   fontFamily: "inherit", width: "100%", boxSizing: "border-box",
 };
 
@@ -98,7 +98,7 @@ the shelf opens for checkout very soon — browse with love ✨
         Pay in bitcoin — quick as a breath on lightning — and it lands straight with the artist.
       </p>
       {gated && (
-        <p style={{ margin: "8px 0 0", fontSize: ".8rem", color: "#5f4b96" }}>
+        <p style={{ margin: "8px 0 0", fontSize: ".8rem", color: "var(--info)" }}>
           unlocks for your account — your email at checkout becomes it, or sign in first.
         </p>
       )}
@@ -183,8 +183,8 @@ the shelf opens for checkout very soon — browse with love ✨
           Add to basket 🧺
         </button>
       </div>
-      {basketNote && <p style={{ margin: "10px 0 0", fontSize: ".8rem", color: "#3c6b49" }}>{basketNote}</p>}
-      {error && <p style={{ margin: "10px 0 0", fontSize: ".8rem", color: "#a34e6c" }}>{error}</p>}
+      {basketNote && <p style={{ margin: "10px 0 0", fontSize: ".8rem", color: "var(--ok)" }}>{basketNote}</p>}
+      {error && <p style={{ margin: "10px 0 0", fontSize: ".8rem", color: "var(--err)" }}>{error}</p>}
     </div>
   );
 }

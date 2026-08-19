@@ -5,7 +5,7 @@ import DiscountsDesk from "@/components/console/DiscountsDesk";
 import PwycDesk from "@/components/console/PwycDesk";
 import StripeRailCard from "@/components/console/StripeRailCard";
 import { Chip, SectionHead, field, overlay, sheet } from "@/components/console/glass";
-import { bftDateTime, estimateHeight } from "@/lib/bb/bft";
+import { bftDateTime, estimateHeightAt } from "@/lib/bb/bft";
 import type { OrderRecord } from "@/lib/store";
 
 /**
@@ -179,7 +179,7 @@ export default function MoneyRoom() {
                 {(pulse?.spark ?? []).map((v, i) => (
                   <span key={i} style={{ flex: 1, borderRadius: "2px 2px 0 0", opacity: 0.75,
                     height: `${Math.max(8, Math.round((v / max) * 100))}%`,
-                    background: v > 0 ? "linear-gradient(180deg,#ebcb77,#b4862b)" : "rgba(139,118,196,.18)" }} />
+                    background: v > 0 ? "linear-gradient(180deg,var(--gold-2),var(--gold-deep))" : "rgba(139,118,196,.18)" }} />
                 ))}
               </div>
             </div>
@@ -235,7 +235,7 @@ export default function MoneyRoom() {
         <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 6px", fontSize: ".82rem" }}>
           <thead>
             <tr>
-              {["~When (BFT)", "What", "Who", "Sats", "State"].map((h) => (
+              {["When (BFT)", "What", "Who", "Sats", "State"].map((h) => (
                 <th key={h} style={{ fontSize: ".6rem", letterSpacing: ".1em", textTransform: "uppercase",
                   color: "var(--muted)", textAlign: "left", padding: "0 10px", fontWeight: 600 }}>{h}</th>
               ))}
@@ -252,7 +252,9 @@ export default function MoneyRoom() {
                 <tr key={o.id} onClick={() => setDetail(o)} title="tap for the order's popup">
                   <td style={{ ...td, borderRadius: "12px 0 0 12px", borderLeft: "1px solid rgba(139,118,196,.16)",
                     whiteSpace: "nowrap", color: "var(--muted)" }}>
-                    {bftDateTime(estimateHeight(o.createdAtMs)).split(" ")[0]}
+                    {/* fleet ruling 0018.05.26 a₿ — dashes over estimates:
+                        an order records no block height, so no ~guess */}
+                    —
                   </td>
                   <td style={td}>
                     {o.lineItems[0]?.title}
@@ -283,7 +285,11 @@ export default function MoneyRoom() {
               Order {detail.id.slice(0, 8)}
             </h3>
             <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 10px" }}>
-              ~{bftDateTime(estimateHeight(detail.createdAtMs))} · {new Date(detail.createdAtMs).toLocaleString()}
+              {/* fleet ruling 0018.05.26 a₿ — dashes over estimates: an order
+                  records no block height, so the ledger stamp is an honest dash;
+                  the real wall-clock moment beside it wears the BFT calendar with
+                  the ~ of a modeled height (gate 0018.05.25 a₿ — never Gregorian) */}
+              — · ~{bftDateTime(estimateHeightAt(detail.createdAtMs))}
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 10px" }}>
               {detail.lineItems.map((l, i) => (

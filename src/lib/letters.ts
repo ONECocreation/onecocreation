@@ -203,6 +203,7 @@ export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUr
   return richShell({ heroUrl, bodyHtml, sections, cta, unsubscribeUrl: opts?.unsubscribeUrl, webUrl: opts?.webUrl });
 }
 
+/* S2: the link gold inside stays literal — decorative gold awaits the taste-maker's ruling (gold law). */
 export function bodyToHtml(body: string): string {
   const esc = body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const inline = esc

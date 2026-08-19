@@ -183,6 +183,7 @@ export async function sendOfferNotify(order: OrderRecord): Promise<void> {
 
   const slots = {
     who: `<p style="margin:0 0 1.15em;line-height:1.75;">From <b>${esc(who)}</b> · order ${order.id.slice(0, 8)}</p>`,
+    // S2: stays literal — inboxes don't resolve var() (integrator ruling 0018.05.25 a₿).
     lines:
       linesHtml(order) +
       `<p style="margin:0 0 1.15em;line-height:1.75;color:#6b6478;">The gap: <b>${gap.toLocaleString()} sats</b> — accepted, the Pay-It-Forward jar may carry it.</p>`,
@@ -232,6 +233,8 @@ export async function decideOfferWithLetters(
   if (to) {
     const slots: Record<string, string> = { lines: buyerLinesHtml(order) };
     if (!accept) {
+      // S2: refund-door gold stays literal — inboxes don't resolve var()
+      // (integrator ruling 0018.05.25 a₿); money surface, gold law intact.
       slots.refund = refundLink
         ? `<p style="text-align:center;margin:24px 0;"><a href="${refundLink}" style="background:#b4862b;color:#fff;padding:12px 26px;border-radius:999px;text-decoration:none;">Claim your sats back</a></p>
            <p style="margin:0 0 1.15em;line-height:1.75;">The link lets you take them over lightning or on-chain — your pick.</p>`

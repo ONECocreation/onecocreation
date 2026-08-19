@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { bftDate, estimateHeight } from "@/lib/bb/bft";
+import { bftDate } from "@/lib/bb/bft";
 import type { HandleStatus } from "@/lib/registry";
 import { ANCHOR_BLOCKS_OUT, SPACE_ROLES } from "@/lib/identity-config";
 import { ARTIST_GATE_CERT_COUNT, CLASSES_URL } from "@/lib/classes";
@@ -47,7 +47,8 @@ async function copyToClipboard(text: string): Promise<boolean> {
 
 /* Bitcoin time, not calendar time: entries claimed after round 2 carry the
    tip height; older frens get it backfilled from mempool.space's
-   closest-block-to-timestamp lookup. Best-effort — the date is the fallback. */
+   closest-block-to-timestamp lookup. Best-effort — an honest dash is the
+   fallback (fleet ruling 0018.05.26 a₿: dashes over estimates). */
 function usePlayerSinceBlock(
   stored: number | null | undefined,
   requestedAt: string
@@ -109,12 +110,10 @@ export default function FrenProfile({
   const { state: signal, profile, raw, applyLocal } = useNostrProfile(npub);
   const sinceBlock = usePlayerSinceBlock(blockHeight, requestedAt);
   const tipHeight = useTipHeight();
-  const registered = new Date(requestedAt);
-  /* NEVER the old calendar (Pac, 2026-07-11): with no recorded or backfilled
-     block, the wall timestamp converts to an honest ~BFT estimate instead. */
-  const registeredLabel = isNaN(registered.getTime())
-    ? null
-    : `~ ${bftDate(estimateHeight(registered.getTime()))}`;
+  /* fleet ruling 0018.05.26 a₿ — dashes over estimates, estimate rungs
+     DELETED: with no recorded or backfilled block, MEMBER SINCE wears an
+     honest dash, never a ~guess from the wall clock. */
+  const registeredLabel = "—";
 
   return (
     <main className="mgmt-ground">
@@ -470,7 +469,7 @@ export default function FrenProfile({
         {/* The controller — now a pull-cord: it opens when a fren wants to
             know what nostr can DO (the ON AIR card above already shows the
             profile itself). The levels stay inside as the fun on-ramp. */}
-        <section className="border-4 border-neon bg-panel shadow-[8px_8px_0_#ff00ff]">
+        <section className="border-4 border-neon bg-panel shadow-[8px_8px_0_var(--color-pink)]">
           <details>
             <summary className="cursor-pointer p-6 sm:p-8">
               <span className="mb-1 block font-pixel text-xs text-neon glow-neon">NEXT LEVEL</span>

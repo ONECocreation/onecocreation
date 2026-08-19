@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Notice from "@/components/Notice";
+import { BLOCKS_PER_DAY } from "@/lib/bb/bft";
 
 /**
  * The merge queue — SCAR's authorize-with-key lane. Each open PR gets one
@@ -766,7 +767,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
           {expiry && daysLeft !== null && (
             <p className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] tabular-nums uppercase">
               <span className={daysLeft <= 14 ? "text-ghost" : "text-white/40"}>
-                key expires in ~{daysLeft} days · <span className="starbox" aria-hidden="true" /> ~{(daysLeft * 144).toLocaleString()} blocks
+                key expires in ~{daysLeft} days · <span className="starbox" aria-hidden="true" /> ~{(daysLeft * BLOCKS_PER_DAY).toLocaleString()} blocks
               </span>
               <button
                 onClick={downloadRenewalIcs}

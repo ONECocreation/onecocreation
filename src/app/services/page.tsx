@@ -52,6 +52,8 @@ export default async function ServicesPage() {
             backgroundSize: "cover", backgroundPosition: "center 30%",
           }} />
           <div aria-hidden style={{ position: "absolute", inset: 0,
+            /* S2 (0018.05.25 a₿): band literals stay literal — keep-dark holds
+               the night; var(--band-*) would repaint dawn light-on-light */
             background: "linear-gradient(180deg, rgba(20,18,40,.28) 0%, rgba(26,20,40,.12) 45%, #1a1428 98%)" }} />
           <CosmicSky />
           <div style={{ position: "relative", zIndex: 2 }}>
@@ -85,7 +87,7 @@ export default async function ServicesPage() {
         </section>
 
         {/* ══ 2 · WELCOME TO The Way of the Heart — night lavender ══ */}
-        <section className="keep-dark" style={{ padding: "64px 0", background: "linear-gradient(180deg,#1a1428 0%,#241a33 100%)" }}>
+        <section className="keep-dark" style={{ padding: "64px 0", background: "linear-gradient(180deg,#1a1428 0%,#241a33 100%)" }}>{/* S2: band literals pinned — keep-dark holds the night, var(--band-*) repaints at dawn */}
           <div className="wrap center reveal" style={{ maxWidth: 640 }}>
             <p className="kicker" style={{ color: "var(--rose)" }}>Welcome To</p>
             <h2 className="sec-h" style={{ marginBottom: ".4em", color: "var(--ink-strong)" }}>The Way of the Heart</h2>
@@ -142,7 +144,7 @@ export default async function ServicesPage() {
         </section>
 
         {/* ══ 4 · BECOME A FREE MEMBER — night waters ══ */}
-        <section className="keep-dark" style={{ padding: "70px 0", background: "linear-gradient(180deg,#1a1428 0%,#12202a 60%,#161726 100%)" }}>
+        <section className="keep-dark" style={{ padding: "70px 0", background: "linear-gradient(180deg,#1a1428 0%,#12202a 60%,#161726 100%)" }}>{/* S2: band literals pinned — keep-dark holds the night */}
           <div className="wrap">
             <div className="center reveal" style={{ marginBottom: 26 }}>
               <h2 className="stack-hero">
@@ -179,7 +181,7 @@ export default async function ServicesPage() {
         </section>
 
         {/* ══ 5 · HOW IT WORKS — embers in the dark ══ */}
-        <section className="keep-dark" style={{ padding: "70px 0", background: "linear-gradient(180deg,#161726 0%,#241c15 60%,#1a1428 100%)" }}>
+        <section className="keep-dark" style={{ padding: "70px 0", background: "linear-gradient(180deg,#161726 0%,#241c15 60%,#1a1428 100%)" }}>{/* S2: band literals pinned — keep-dark holds the night */}
           <div className="wrap">
             <div className="center reveal" style={{ marginBottom: 10 }}>
               <h2 className="stack-hero">
@@ -219,7 +221,7 @@ export default async function ServicesPage() {
         <Services />
 
         {/* ══ 7 · real voices — moonlit rose ══ */}
-        <section className="keep-dark" style={{ padding: "70px 0", background: "linear-gradient(180deg,#1a1428 0%,#241722 60%,#1a1428 100%)" }}>
+        <section className="keep-dark" style={{ padding: "70px 0", background: "linear-gradient(180deg,#1a1428 0%,#241722 60%,#1a1428 100%)" }}>{/* S2: band literals pinned — keep-dark holds the night */}
           <div className="wrap">
             <div className="center reveal" style={{ marginBottom: 26 }}>
               <p className="kicker" style={{ color: "var(--rose)" }}>Real Voices from the Chair</p>
@@ -250,7 +252,7 @@ export default async function ServicesPage() {
         </section>
 
         {/* ══ 8 · Monthly Paid Memberships — light cards on the night ══ */}
-        <section className="keep-dark" style={{ padding: "70px 0", background: "linear-gradient(180deg,#1a1428 0%,#141a2b 100%)" }}>
+        <section className="keep-dark" style={{ padding: "70px 0", background: "linear-gradient(180deg,#1a1428 0%,#141a2b 100%)" }}>{/* S2: band literals pinned — keep-dark holds the night */}
           <div className="wrap">
             <div className="center reveal" style={{ marginBottom: 26 }}>
               <h2 className="stack-hero">

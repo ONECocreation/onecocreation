@@ -101,7 +101,7 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
                   just her ordinary sign-in; the gate recognizes the address */}
               <p className="mt-5" style={{ fontSize: ".78rem", color: "var(--muted)" }}>
                 Holding an email seat? Just{" "}
-                <a href="/login" style={{ color: "var(--gold-deep, #b4862b)", textDecoration: "underline" }}>
+                <a href="/login" style={{ color: "var(--gold-deep, #D9B24E)", textDecoration: "underline" }}>
                   sign in with your email
                 </a>{" "}
                 and come back — this door will know you.

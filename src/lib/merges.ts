@@ -30,15 +30,14 @@ import { serverBlockInfo } from "./chain-tip-server";
  */
 
 /** The BFT stamp for a SIGNED record, from the REAL block — our own node first
-    (sovereign truth), mempool.space only if it's dark, a genesis estimate (the
-    honest `~ `) only if both are unreachable. A signature must carry true block
-    time, not the sun-time guess `estimateHeight()` returns (which lags the chain
-    by months, since early blocks ran faster than ten minutes). The ladder lives
-    in serverBlockInfo() (chain-tip-server.ts) — the one server tip for every
-    record-writer. */
+    (sovereign truth), mempool.space only if it's dark, an honest — when no node
+    answers. No estimate rung survives (fleet ruling 0018.05.26 a₿: dashes over
+    estimates) — a signature carries true block time or no stamp at all, never a
+    guess. The ladder lives in serverBlockInfo() (chain-tip-server.ts) — the one
+    server tip for every record-writer. */
 async function signingStamp(): Promise<string> {
-  const { height, estimated } = await serverBlockInfo();
-  return estimated ? `~ ${bftDateTime(height)}` : bftDateTime(height);
+  const { height } = await serverBlockInfo();
+  return height != null ? bftDateTime(height) : "—";
 }
 
 const GH = "https://api.github.com";

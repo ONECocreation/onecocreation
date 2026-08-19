@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { bft, bftTime } from "@/lib/bb/bft";
+import "./flip-clock.css"; // the .fclk-* + .bft-pac styles ride WITH the kit (they lived in onecocreation's globals.css until the transplant, 0018.05.26 a₿)
 
 /**
  * The split-flap BFT flip clock — ONE build for the mini corner badge and

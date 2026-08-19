@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
-import { bftDateTime, estimateHeight } from "@/lib/bb/bft";
 import { cartridge } from "@/brand/cartridge";
 
 /** The moment after the sats land: Love herself says thank you — a living
@@ -171,12 +170,15 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
           <p style={{ margin: "4px 0 0", fontSize: ".8rem", color: "var(--info, #5f4b96)" }}>unlocks for {prettySubject(order.entitlementSubject)}</p>
         )}
         <p style={{ margin: "10px 0 0", fontSize: ".76rem", color: "var(--muted, #897f97)" }}>
+          {/* fleet ruling 0018.05.26 a₿ — dashes over estimates: an order
+              records no block height, so the stamps wear honest dashes,
+              never a ~guess from the wall clock */}
           placed{" "}
-          <span style={{ whiteSpace: "nowrap" }}>~{bftDateTime(estimateHeight(order.createdAtMs))}</span>
+          <span style={{ whiteSpace: "nowrap" }}>—</span>
           {order.settledAtMs && (
             <>
               {" "}· paid{" "}
-              <span style={{ whiteSpace: "nowrap" }}>~{bftDateTime(estimateHeight(order.settledAtMs))}</span>
+              <span style={{ whiteSpace: "nowrap" }}>—</span>
             </>
           )}
         </p>

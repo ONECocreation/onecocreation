@@ -298,13 +298,16 @@ export function deriveTraits(bornBlock: number, name: string): BuddyTraits {
 }
 
 /**
- * Best-effort current block height, "tied to bitcoin". Sovereignty fix (the
- * admiral, 2026-07-11): read the tip from the fleet's OWN door — the same-origin
+ * Current block height, "tied to bitcoin" — LIVE OR NOTHING. Sovereignty fix
+ * (the admiral, 2026-07-11): read the tip from the fleet's OWN door — the same-origin
  * /api/chain/tip proxy, which reads the admiral's configured mempool node (its
  * own instance when pointed, the public mempool.space only as a fallback). If
  * the proxy is unreachable (e.g. server-side render, offline), fall back to a
- * direct mempool.space read, then to a genesis-anchored estimate (~10 min/block).
- * Cached briefly so a page doesn't hammer anything.
+ * direct mempool.space read — and STOP there. The genesis-anchored estimate
+ * rung is DELETED, not gated (fleet ruling 0018.05.26 a₿: dashes over
+ * estimates — a modeled height never reaches a onecocreation DOM). When the
+ * chain can't be reached there is no height: `null`. Cached briefly so a
+ * page doesn't hammer anything.
  */
 let _tipCache: { height: number; at: number; tipTimestamp: number | null } | null = null;
 
@@ -333,6 +336,12 @@ export const CHAIN_ANCHORS: ReadonlyArray<readonly [number, number]> = [
  * Date → ~height, anchored. Interpolates between chain anchors for historical
  * dates; when the live tip is known it becomes the final anchor, so "today"
  * lands on today's height and futures extend from the real tip at 600s/block.
+ *
+ * WHO THIS RIDES FOR (fleet ruling 0018.05.26 a₿ — dashes over estimates on
+ * onecocreation surfaces): the estimate model (estimateHeightAt /
+ * estimateHeight / estimatedBlockAtMs) stays exported as KIT CORE — the
+ * transplant package (transplant/frens-earth-time, the arcade's own clocks)
+ * and canonical-package parity want it. Nothing in src/ may RENDER from it.
  */
 export function estimateHeightAt(
   utcMs: number,
@@ -375,22 +384,22 @@ export function estimatedBlockAtMs(height: number): number {
   return t0 + (height - 0.5 - h0) * 600_000;
 }
 
-/** `estimated: true` = the network was unreachable and the height is a
-    genesis-anchored ~10-min/block guess — display it with the honest `~`. */
+/** `height: null` = the chain didn't answer — every face renders dashes,
+    never a modeled number (fleet ruling 0018.05.26 a₿: the estimate rung is
+    DELETED, not gated). */
 export interface BlockInfo {
-  height: number;
-  estimated: boolean;
+  height: number | null;
   /** unix seconds the tip block was mined — the CHAIN's own anchor for the
       block age, so every clock agrees on Pac's lap and the seconds no
       matter when the page loaded (`?full=1` reading). Null when only a
-      bare height was known. */
+      bare height was known — and always null when there's no reading. */
   tipTimestamp: number | null;
 }
 
 export async function currentBlockInfo(opts?: { fresh?: boolean }): Promise<BlockInfo> {
   const now = Date.now();
   if (!opts?.fresh && _tipCache && now - _tipCache.at < 60_000)
-    return { height: _tipCache.height, estimated: false, tipTimestamp: _tipCache.tipTimestamp };
+    return { height: _tipCache.height, tipTimestamp: _tipCache.tipTimestamp };
 
   // the fleet's own door first — /api/chain/tip reads the configured node
   // (?full=1 adds the tip's own timestamp: the strip clock's seconds anchor)
@@ -407,7 +416,7 @@ export async function currentBlockInfo(opts?: { fresh?: boolean }): Promise<Bloc
         const ts =
           typeof d.tipTimestamp === "number" && Number.isFinite(d.tipTimestamp) ? d.tipTimestamp : null;
         _tipCache = { height: d.height, at: now, tipTimestamp: ts };
-        return { height: d.height, estimated: false, tipTimestamp: ts };
+        return { height: d.height, tipTimestamp: ts };
       }
     }
   } catch {
@@ -415,7 +424,7 @@ export async function currentBlockInfo(opts?: { fresh?: boolean }): Promise<Bloc
   }
 
   // fallback: direct mempool.space read (relative fetch can't resolve
-  // server-side, and the proxy may be down) — keeps the clock ticking
+  // server-side, and the proxy may be down)
   try {
     const res = await fetch("https://mempool.space/api/blocks/tip/height", {
       cache: "no-store",
@@ -425,15 +434,18 @@ export async function currentBlockInfo(opts?: { fresh?: boolean }): Promise<Bloc
       const h = parseInt((await res.text()).trim(), 10);
       if (Number.isFinite(h) && h > 0) {
         _tipCache = { height: h, at: now, tipTimestamp: null };
-        return { height: h, estimated: false, tipTimestamp: null };
+        return { height: h, tipTimestamp: null };
       }
     }
   } catch {
-    /* offline / blocked → fall through to the estimate */
+    /* offline / blocked → fall through to the honest null */
   }
-  return { height: estimateHeight(now), estimated: true, tipTimestamp: null };
+  // NO estimate rung (fleet ruling 0018.05.26 a₿): no reading IS the answer.
+  return { height: null, tipTimestamp: null };
 }
 
-export async function currentBlock(): Promise<number> {
+/** The live height, or null when the chain didn't answer — callers render
+    dashes on null, never a guess. */
+export async function currentBlock(): Promise<number | null> {
   return (await currentBlockInfo()).height;
 }

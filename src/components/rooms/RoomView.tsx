@@ -33,10 +33,10 @@ interface Props {
 const TEACHERS = new Set(["adminpacman", "love", "onecocreation"]);
 
 const AVA_GRADIENTS = [
-  "linear-gradient(135deg,#cbbbea,#8b76c4)",
-  "linear-gradient(135deg,#efc6da,#c56e8b)",
-  "linear-gradient(135deg,#f6e2b0,#c79433)",
-  "linear-gradient(135deg,#b8dcd4,#5f9b90)",
+  "linear-gradient(135deg,var(--lavender-soft),var(--lavender))",
+  "linear-gradient(135deg,var(--rose-soft),var(--rose))",
+  "linear-gradient(135deg,var(--room-gold-soft),var(--room-gold))",
+  "linear-gradient(135deg,var(--room-teal-soft),var(--room-teal))",
 ];
 const TEACHER_GRADIENT = "linear-gradient(135deg,#ebcb77,#b4862b)";
 
@@ -195,7 +195,7 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
   return (
     <div className="card" style={{ padding: 0, overflow: "hidden" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 22px", borderBottom: "1px solid var(--glass-edge)", background: "var(--glass)" }}>
-        <div style={{ width: 40, height: 40, borderRadius: "50%", flex: "none", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--serif)", background: kind === "class" ? TEACHER_GRADIENT : "linear-gradient(135deg,#efc6da,#c56e8b)" }}>
+        <div style={{ width: 40, height: 40, borderRadius: "50%", flex: "none", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--serif)", background: kind === "class" ? TEACHER_GRADIENT : "linear-gradient(135deg,var(--rose-soft),var(--rose))" }}>
           {kind === "class" ? "✦" : "♡"}
         </div>
         <div style={{ minWidth: 0 }}>
@@ -273,7 +273,7 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
           onChange={(e) => setDraft(e.target.value)}
           placeholder={kind === "class" ? "Write to the room…" : "Write to the field…"}
           /* paper input — literal paper ink both themes, the house input law */
-          style={{ flex: 1, minWidth: 0, padding: "12px 18px", borderRadius: 999, border: "1.5px solid rgba(139,118,196,.4)", background: "rgba(255,255,255,.94)", color: "#4a4458", fontSize: ".92rem" }}
+          style={{ flex: 1, minWidth: 0, padding: "12px 18px", borderRadius: 999, border: "1.5px solid rgba(139,118,196,.4)", background: "rgba(255,255,255,.94)", color: "var(--field-ink)", fontSize: ".92rem" }}
         />
         <button className="btn btn-sm" type="submit" disabled={sending || !draft.trim()}>
           {sending ? "…" : "Send"}

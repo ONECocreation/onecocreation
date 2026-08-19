@@ -42,7 +42,7 @@ async function TipJarsCard({ banner = false }: { banner?: boolean }) {
       }}
     >
       {(Object.keys(JAR_LABELS) as (keyof typeof ledger.totals)[]).map((jar) => (
-        <span key={jar} style={{ fontSize: ".8rem", color: "var(--muted, #999)" }}>
+        <span key={jar} style={{ fontSize: ".8rem", color: "var(--muted, #9a8fae)" }}>
           {JAR_LABELS[jar]}{" "}
           <b style={{ color: "var(--gold-deep, #d9b24e)" }}>{ledger.totals[jar].settledSats.toLocaleString()}</b>
           <span style={{ fontSize: ".68rem" }}> sats</span>

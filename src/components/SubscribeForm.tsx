@@ -59,7 +59,7 @@ export default function SubscribeForm({ source = "site" }: { source?: string }) 
           borderRadius: 999,
           border: "1.5px solid rgba(180,134,43,.75)",
           background: "rgba(255,255,255,.94)",
-          color: "#4a4458", /* paper ink, both themes — the house input law */
+          color: "var(--field-ink)", /* paper ink, both themes — the house input law */
           fontSize: ".95rem",
         }}
       />

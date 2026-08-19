@@ -9,7 +9,8 @@ import { CONSOLE_SITE } from "@/lib/console";
  * The SCAR·LET OVERVIEW — the console front page (the room the ◗ SCAR·LET
  * brand block opens). Three honest reads, no invented numbers:
  *   • SITE HEALTH — the console serving, the live chain tip (★-box height
- *     through the fleet's own door, ~ when estimated), and the nodes wired
+ *     through the fleet's own door, "—" when the node is dark — never a
+ *     modeled height, fleet ruling 0018.05.26 a₿), and the nodes wired
  *     out of the four doors (spaces · chat · mud · chain).
  *   • NEEDS YOU — the real board counts (sign-offs, decisions, briefs,
  *     tickets), each stat card a door into its room. People-and-work counts
@@ -33,14 +34,16 @@ interface Counts {
 }
 
 export default function OverviewPanel() {
-  const [tip, setTip] = useState<{ height: number; estimated: boolean } | null>(null);
+  /* undefined = still reading · null = the node is dark (no estimate rung —
+     fleet ruling 0018.05.26 a₿) · number = the live tip */
+  const [tip, setTip] = useState<number | null | undefined>(undefined);
   const [wired, setWired] = useState<{ up: number; dark: string[] } | null>(null);
   const [counts, setCounts] = useState<Counts | null>(null);
 
   useEffect(() => {
     let alive = true;
     currentBlockInfo().then((i) => {
-      if (alive) setTip(i);
+      if (alive) setTip(i.height);
     });
     // the four doors — reachable counts as wired; anything else is honest-dark
     Promise.all(
@@ -98,11 +101,15 @@ export default function OverviewPanel() {
         <div className="scar-stat" data-accent="cyan">
           <div className="scar-stat__n" style={{ fontSize: 15 }}>
             <span className="scar-starbox" aria-hidden="true" />{" "}
-            {tip ? `${tip.estimated ? "~" : ""}${tip.height.toLocaleString()}` : "…"}
+            {tip === undefined ? "…" : tip === null ? "—" : tip.toLocaleString()}
           </div>
           <div className="scar-stat__l">Chain tip</div>
           <div className="scar-stat__sub">
-            {tip?.estimated ? "~ genesis estimate — wire a node" : "the fleet's own door · read-only"}
+            {tip === undefined
+              ? "reading the tip…"
+              : tip === null
+                ? "node dark — no live reading · wire a node"
+                : "the fleet's own door · read-only"}
           </div>
         </div>
         <div className="scar-stat" data-accent="cyan">

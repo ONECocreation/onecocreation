@@ -1,0 +1,14 @@
+/* ParallaxBand (STUDIO P2). The base state IS the reduced-motion / no-JS
+   state: a static, centered, slightly oversized image. ParallaxImg's effect
+   overwrites height/top/transform from the band's own measurements. */
+.oc-parallax-img {
+  position: absolute;
+  left: 50%;
+  top: -10%;
+  height: 120%;
+  width: 100%;
+  object-fit: cover;
+  transform: translate3d(-50%, 0, 0);
+  pointer-events: none;
+  z-index: 0;
+}

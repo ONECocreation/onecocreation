@@ -40,14 +40,15 @@ export default async function BookIndexPage() {
       <section className="keep-dark sky-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
         <CosmicSky />
         <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "64px 22px 56px" }}>
-          <p className="kicker" style={{ color: "#E7B2C3" }}>One-on-One with Love</p>
+          <p className="kicker" style={{ color: "var(--rose)" }}>One-on-One with Love</p>
           <h1 className="stack-hero">
-            <span className="sh-ink" style={{ color: "#F4ECFF" }}>BOOK</span>
-            <span className="sh-teal" style={{ color: "#8FD0D8" }}>A SESSION</span>
+            <span className="sh-ink" style={{ color: "var(--ink-strong)" }}>BOOK</span>
+            <span className="sh-teal" style={{ color: "var(--teal-bright)" }}>A SESSION</span>
           </h1>
-          <div className="constellation" aria-hidden style={{ color: "#F4ECFF" }}>{cartridge.constellation}</div>
-          <p style={{ fontFamily: "var(--serif)", color: "#D9D2E4", fontSize: "1.05rem",
+          <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
+          <p style={{ fontFamily: "var(--serif)", color: "var(--ink-body)", fontSize: "1.05rem",
             maxWidth: 460, margin: "18px auto 0" }}>
+            {/* S2: gold law — decorative gold, held for a ruling */}
             Pick a session, choose a real open time — <b style={{ color: "#EBCB77" }}>you&apos;re held.</b>
           </p>
         </div>

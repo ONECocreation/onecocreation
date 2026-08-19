@@ -19,6 +19,8 @@ export default function CosmicSky({ shooting = true }: { shooting?: boolean }) {
     if (!ctx) return;
 
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // canvas paint can't read var() — the star cream resolves once, here (0018.05.25 a₿)
+    const starCream = getComputedStyle(document.documentElement).getPropertyValue("--sky-cream").trim() || "#F6EFD9";
     let w = 0, h = 0, raf = 0;
 
     interface Star { x: number; y: number; r: number; base: number; tw: number; ph: number }
@@ -51,7 +53,7 @@ export default function CosmicSky({ shooting = true }: { shooting?: boolean }) {
       for (const s of stars) {
         const a = still ? s.base : s.base * (0.55 + 0.45 * Math.sin(t / 1000 * s.tw + s.ph));
         ctx!.globalAlpha = Math.max(0.05, a);
-        ctx!.fillStyle = "#F6EFD9";
+        ctx!.fillStyle = starCream;
         ctx!.beginPath();
         ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx!.fill();

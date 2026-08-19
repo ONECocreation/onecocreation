@@ -19,15 +19,17 @@ import { bftDateTime } from "@/lib/bb/bft";
 
 interface DeployRecord {
   by: string; // signer pubkey hex
-  at: number; // BFT block height
-  atEstimated?: boolean; // network dark at record time — `at` is a ~estimate
+  at: number | null; // BFT block height — null when no node answered
+  atEstimated?: boolean; // legacy ~estimate flag on pre-0018.05.26 a₿ records; never written anymore
   jobId: string;
   ts: number;
 }
 
-/** BFT stamp, honest: `~ ` when the network was dark at record time (the
-    height is a genesis estimate, never a block fact). */
-const stamp = (at: number, estimated?: boolean) => `${estimated ? "~ " : ""}${bftDateTime(at)}`;
+/** BFT stamp, honest: no height when no node answered → "—" (ruling
+    0018.05.26 a₿: dashes over estimates). The `~ ` prefix survives only on
+    legacy pre-ruling records whose height is a genesis estimate. */
+const stamp = (at?: number | null, estimated?: boolean) =>
+  at == null ? "—" : `${estimated ? "~ " : ""}${bftDateTime(at)}`;
 
 export default function DeployPanel() {
   const [configured, setConfigured] = useState<boolean | null>(null);

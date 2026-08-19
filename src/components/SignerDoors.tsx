@@ -144,7 +144,7 @@ export default function SignerDoors({
               placeholder="bunker://… or name@domain"
               autoComplete="off"
               spellCheck={false}
-              style={{ marginTop: 6, width: "100%", boxSizing: "border-box", borderRadius: 999, border: "1.5px solid rgba(180,134,43,.65)", background: "rgba(255,255,255,.94)", color: "#4a4458", padding: "10px 16px", fontFamily: "monospace", fontSize: ".85rem" }}
+              style={{ marginTop: 6, width: "100%", boxSizing: "border-box", borderRadius: 999, border: "1.5px solid rgba(180,134,43,.65)", background: "rgba(255,255,255,.94)", color: "var(--field-ink)", padding: "10px 16px", fontFamily: "monospace", fontSize: ".85rem" }}
             />
           </label>
           <button

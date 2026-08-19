@@ -208,7 +208,7 @@ export default function CartPanel() {
   // inputs are always lit paper — their ink stays dark in both themes
   const glassField: React.CSSProperties = {
     border: "1px solid rgba(139,118,196,.45)", borderRadius: 10, padding: "9px 12px",
-    background: "rgba(255,255,255,.92)", fontSize: "1rem", color: "#4a4458",
+    background: "rgba(255,255,255,.92)", fontSize: "1rem", color: "var(--field-ink)",
     fontFamily: "inherit", width: "100%", boxSizing: "border-box",
   };
   const fieldLabel: React.CSSProperties = {
@@ -219,7 +219,7 @@ export default function CartPanel() {
     borderRadius: 999, padding: "6px 14px", fontSize: ".76rem", fontWeight: 700, cursor: "pointer",
     border: gold ? "1.5px solid rgba(217,178,78,.6)" : "1.5px solid rgba(139,118,196,.5)",
     background: gold ? "rgba(217,178,78,.18)" : "var(--ghost-bg)",
-    color: gold ? "#EBCB77" : "var(--ghost-ink)", fontFamily: "inherit",
+    color: gold ? "var(--gold-2)" : "var(--ghost-ink)", fontFamily: "inherit",
   });
   /* the quiet links ride .btn-quiet now (cartridge walk step 5) — one
      override keeps the basket's lowercase intimate voice */
@@ -245,7 +245,7 @@ export default function CartPanel() {
                     {new Intl.DateTimeFormat(undefined, {
                       weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
                     }).format(new Date(l.slot.startUtc))}
-                    <span style={{ color: "#3c6b49" }}> · held for you — {holdLeft(l.slot.holdUntilMs)} left</span>
+                    <span style={{ color: "var(--ok)" }}> · held for you — {holdLeft(l.slot.holdUntilMs)} left</span>
                   </p>
                 )}
                 <p style={{ margin: "2px 0 0", fontSize: ".82rem", fontFamily: "var(--serif, sans-serif)", color: "var(--gold-deep, #b4862b)" }}>
@@ -345,7 +345,7 @@ export default function CartPanel() {
           </p>
         )}
         {gated && (
-          <p style={{ margin: "6px auto 0", fontSize: ".78rem", color: "#5f4b96", maxWidth: 480 }}>
+          <p style={{ margin: "6px auto 0", fontSize: ".78rem", color: "var(--info)", maxWidth: 480 }}>
             part of this basket unlocks for your account — sign in, or just add your email below: it becomes your account.
           </p>
         )}
@@ -407,7 +407,7 @@ export default function CartPanel() {
           {busy ? "Opening invoice…" : needsTime ? "Choose your time first ⏰" : "Checkout ⚡"}
         </button>
       </div>
-      {error && <p style={{ margin: "10px 0 0", fontSize: ".8rem", color: "#a34e6c", textAlign: "center" }}>{error}</p>}
+      {error && <p style={{ margin: "10px 0 0", fontSize: ".8rem", color: "var(--err)", textAlign: "center" }}>{error}</p>}
     </div>
   );
 }

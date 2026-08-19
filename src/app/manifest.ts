@@ -13,6 +13,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "Where Heaven and Earth Meet — intuitive sessions, meditations and community with Love. Pay in dollars or bitcoin, non-custodial always.",
     start_url: "/",
     display: "standalone",
+    /* S2 (0018.05.25 a₿): = --space, kept literal — the manifest is served
+       as JSON, var() won't resolve */
     background_color: "#0a0a14",
     theme_color: "#0a0a14",
     icons: [

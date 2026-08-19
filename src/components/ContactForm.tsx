@@ -5,7 +5,7 @@ import { useState } from "react";
 /** Her form, our rails: name · email · subject · message · SEND. */
 const field: React.CSSProperties = {
   border: "1px solid rgba(139,118,196,.45)", borderRadius: 10, padding: "10px 13px",
-  background: "rgba(255,255,255,.94)", fontSize: "1rem", color: "#4a4458",
+  background: "rgba(255,255,255,.94)", fontSize: "1rem", color: "var(--field-ink)",
   fontFamily: "inherit", width: "100%", boxSizing: "border-box",
 };
 
@@ -37,7 +37,7 @@ export default function ContactForm() {
 
   if (state === "sent") {
     return (
-      <p style={{ fontFamily: "var(--serif)", fontSize: "1.1rem", color: "#3c6b49", textAlign: "center", margin: "20px 0" }}>
+      <p style={{ fontFamily: "var(--serif)", fontSize: "1.1rem", color: "var(--ok)", textAlign: "center", margin: "20px 0" }}>
         Sent with love 💛 — Love will write back to {email}.
       </p>
     );
@@ -57,7 +57,7 @@ export default function ContactForm() {
           {state === "busy" ? "Sending…" : "SEND ✉️"}
         </button>
       </div>
-      {note && <p style={{ margin: 0, fontSize: ".82rem", color: "#a34e6c", textAlign: "center" }}>{note}</p>}
+      {note && <p style={{ margin: 0, fontSize: ".82rem", color: "var(--err)", textAlign: "center" }}>{note}</p>}
     </div>
   );
 }

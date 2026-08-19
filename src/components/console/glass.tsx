@@ -63,7 +63,7 @@ const CHIP_TONES = {
   grey: { background: "rgba(137,127,151,.12)", color: "var(--muted)", border: "1px dashed rgba(137,127,151,.5)" },
   rose: { background: "rgba(197,110,139,.13)", color: "var(--err)", border: "1px solid rgba(197,110,139,.4)" },
   lavender: { background: "rgba(139,118,196,.14)", color: "var(--info)", border: "1px solid rgba(139,118,196,.4)" },
-  teal: { background: "rgba(78,160,175,.13)", color: "#2e6b77", border: "1px solid rgba(78,160,175,.4)" },
+  teal: { background: "rgba(78,160,175,.13)", color: "var(--teal-deep)", border: "1px solid rgba(78,160,175,.4)" },
   gold: { background: "rgba(217,178,78,.14)", color: "var(--warn)", border: "1px solid rgba(180,134,43,.5)" },
 } as const;
 

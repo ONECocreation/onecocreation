@@ -80,13 +80,13 @@ export default function Copilot({
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minWidth: 0, fontFamily: sans }}>
       {/* header */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 12px", borderBottom: "1px solid rgba(139,118,196,.2)", flex: "none" }}>
-        <span style={{ width: 8, height: 8, borderRadius: 999, background: ready === false ? "#E7899E" : "#7fb98f", flex: "none" }} />
-        <b style={{ fontSize: 12, color: "#F4ECFF" }}>Number One</b>
-        <span style={{ fontFamily: mono, fontSize: 9, color: "#9a8fae", letterSpacing: ".08em" }}>· copilot</span>
+        <span style={{ width: 8, height: 8, borderRadius: 999, background: ready === false ? "var(--err)" : "var(--ok)", flex: "none" }} />
+        <b style={{ fontSize: 12, color: "var(--ink-strong)" }}>Number One</b>
+        <span style={{ fontFamily: mono, fontSize: 9, color: "var(--muted)", letterSpacing: ".08em" }}>· copilot</span>
       </div>
 
       {ready === false && (
-        <div style={{ padding: "9px 12px", background: "rgba(192,57,43,.16)", color: "#f3c7c1", fontSize: 11.5, lineHeight: 1.5, flex: "none" }}>
+        <div style={{ padding: "9px 12px", background: "rgba(192,57,43,.16)", color: "var(--copilot-user)", fontSize: 11.5, lineHeight: 1.5, flex: "none" }}>
           The AI key on the server is missing or invalid — ask the Admiral to re-add <code>ANTHROPIC_API_KEY</code>.
         </div>
       )}
@@ -100,23 +100,25 @@ export default function Copilot({
               alignSelf: t.role === "love" ? "flex-end" : "flex-start",
               maxWidth: "90%",
               padding: "6px 10px", borderRadius: 10, fontSize: 12, lineHeight: 1.5,
+              // S2 gold-law hold (0018.05.25 a₿): the love bubble wears
+              // decorative gold — money-only family, left literal + reported
               background: t.role === "love" ? "#D9B24E" : "rgba(139,118,196,.16)",
-              color: t.role === "love" ? "#2b1f05" : "#D9D2E4",
+              color: t.role === "love" ? "#2b1f05" : "var(--ink-body)",
             }}
           >
             {t.text}
           </div>
         ))}
         {busy && (
-          <div style={{ alignSelf: "flex-start", padding: "6px 10px", borderRadius: 10, fontSize: 12, background: "rgba(139,118,196,.16)", color: "#9a8fae" }}>
+          <div style={{ alignSelf: "flex-start", padding: "6px 10px", borderRadius: 10, fontSize: 12, background: "rgba(139,118,196,.16)", color: "var(--muted)" }}>
             building…
           </div>
         )}
       </div>
 
       {/* the contract, stated where she works */}
-      <div style={{ margin: "0 10px 8px", padding: "6px 9px", border: "1px dashed rgba(139,118,196,.3)", borderRadius: 9, fontFamily: mono, fontSize: 9, color: "#9a8fae", letterSpacing: ".04em", flex: "none" }}>
-        builds from your house pieces — <b style={{ color: "#8FD0D8", fontWeight: 600 }}>checked by the rails</b> before it lands
+      <div style={{ margin: "0 10px 8px", padding: "6px 9px", border: "1px dashed rgba(139,118,196,.3)", borderRadius: 9, fontFamily: mono, fontSize: 9, color: "var(--muted)", letterSpacing: ".04em", flex: "none" }}>
+        builds from your house pieces — <b style={{ color: "var(--teal-bright)", fontWeight: 600 }}>checked by the rails</b> before it lands
       </div>
 
       {/* input */}
@@ -130,7 +132,7 @@ export default function Copilot({
           placeholder="tell Number One what you want…"
           rows={2}
           style={{
-            flex: 1, minWidth: 0, resize: "none", background: "#12102099", color: "#F4ECFF",
+            flex: 1, minWidth: 0, resize: "none", background: "color-mix(in oklab, var(--puck-color-surface) 60%, transparent)", color: "var(--ink-strong)",
             border: "1px solid rgba(139,118,196,.3)", borderRadius: 9, padding: "7px 9px",
             fontSize: 12, fontFamily: "inherit", lineHeight: 1.4,
           }}
@@ -139,6 +141,8 @@ export default function Copilot({
           onClick={send}
           disabled={busy || !draft.trim()}
           style={{
+            // S2 gold-law hold (0018.05.25 a₿): decorative gold on Send —
+            // money-only family, left literal + reported
             background: "#D9B24E", color: "#2b1f05", border: "none", borderRadius: 9,
             padding: "0 12px", fontWeight: 800, fontSize: 12, alignSelf: "stretch",
             cursor: busy || !draft.trim() ? "default" : "pointer",

@@ -20,6 +20,10 @@ export const dynamic = "force-dynamic";
  */
 
 function page(opts: { emoji: string; title: string; message: string; sub?: string }): NextResponse {
+  /* S2: the wordmark + "the desk" gold stay literal — decorative gold awaits
+     the taste-maker's ruling (gold law). */
+  /* S2: everything stays literal — this page loads no stylesheet, so var()
+     never resolves (integrator ruling 0018.05.25 a₿). */
   const html = `<!doctype html><html><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex"/>
@@ -31,7 +35,7 @@ function page(opts: { emoji: string; title: string; message: string; sub?: strin
   </div>
   <div style="font-size:44px;margin:34px 0 10px;">${opts.emoji}</div>
   <h1 style="font-weight:400;font-size:24px;margin:0 0 14px;">${opts.title}</h1>
-  <p style="font-size:15px;line-height:1.7;margin:0 0 8px;color:#4a4456;">${opts.message}</p>
+  <p style="font-size:15px;line-height:1.7;margin:0 0 8px;color:#4a4458;">${opts.message}</p>
   ${opts.sub ? `<p style="font-size:13px;line-height:1.6;margin:0;color:#8a8494;">${opts.sub}</p>` : ""}
   <p style="margin-top:36px;padding-top:16px;border-top:1px solid #e8e2d8;font-size:12px;color:#8a8494;">
     One Cocreation · <a href="/a" style="color:#b4862b;">the desk</a> holds every offer's record

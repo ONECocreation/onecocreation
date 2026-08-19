@@ -33,10 +33,10 @@ export default function ContactPage() {
         <section className="keep-dark sky-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
           <CosmicSky />
           <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "64px 22px 60px" }}>
-            <p className="kicker" style={{ color: "#E7B2C3" }}>E.T. Phone Home</p>
+            <p className="kicker" style={{ color: "var(--rose)" }}>E.T. Phone Home</p>
             <h1 className="stack-hero">
               <span className="sh-ink" style={{ color: "var(--ink-strong)" }}>I&apos;LL BE</span>
-              <span className="sh-teal" style={{ color: "#8FD0D8" }}>RIGHT HERE</span>
+              <span className="sh-teal" style={{ color: "var(--teal-bright)" }}>RIGHT HERE</span>
             </h1>
             <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
           </div>

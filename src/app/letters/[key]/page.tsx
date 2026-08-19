@@ -32,7 +32,7 @@ export default async function LetterPage({ params }: { params: Promise<{ key: st
       <section className="wrap" style={{ maxWidth: 680 }}>
         {/* the letter IS the page — same html the inbox got */}
         <div
-          style={{ borderRadius: 20, overflow: "hidden", background: "#FBF6EF", boxShadow: "0 30px 70px -24px rgba(5,3,16,.8)", margin: "10px 0 30px" }}
+          style={{ borderRadius: 20, overflow: "hidden", background: "var(--cream)", boxShadow: "0 30px 70px -24px rgba(5,3,16,.8)", margin: "10px 0 30px" }}
           dangerouslySetInnerHTML={{ __html: letterHtml(tpl.body, { webUrl: `/letters/${key}` }) }}
         />
       </section>

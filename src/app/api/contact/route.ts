@@ -22,6 +22,9 @@ export async function POST(request: Request) {
   }
   const subject = body.subject?.trim().slice(0, 160) || "A note from the site";
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  /* S2: pinned — needs a ruling: inbox HTML is an always-light room, and
+     #3f3a4e/#897f97 are the DAWN faces of the theme-aware --ink-strong/--muted;
+     the gold quote-bar is decorative (gold law). All three stay literal. */
   await enqueue([{
     to: process.env.CONTACT_INBOX ?? "love@onecocreation.com",
     subject: `✉️ ${subject} — from ${name}`,

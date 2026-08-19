@@ -9,13 +9,17 @@ import { newBuddyId } from "@/lib/bb/store";
 /**
  * The hatchery: name a buddy and (optionally) bring it to life from a photo of
  * something you own — pixelized with the background dropped out so it's a real
- * pet, not a photo box (design notes Part 5). Hatches at the current block.
+ * pet, not a photo box (design notes Part 5). Hatches at the current block —
+ * and ONLY a live one: the chain must witness a birth (fleet ruling
+ * 0018.05.26 a₿), so a dark node keeps the hatch shut and no bornBlock is
+ * ever etched from a guess.
  */
 export default function Hatchery({
   npub, currentBlock, onHatched,
 }: {
   npub: Npub;
-  currentBlock: number;
+  /* live tip or null (node dark — no reading, no birth) */
+  currentBlock: number | null;
   onHatched: (b: StoredBuddy) => void;
 }) {
   const [name, setName] = useState("");
@@ -42,6 +46,7 @@ export default function Hatchery({
   }, [recompute]);
 
   const hatch = () => {
+    if (currentBlock == null) return; // the chain must witness a birth — no live tip, no bornBlock
     const sprite = preview || defaultCritter(npub + clean);
     onHatched({
       id: newBuddyId(),
@@ -103,10 +108,20 @@ export default function Hatchery({
         <label className="font-mono text-[10px] uppercase tracking-widest text-white/40">Name your Buddy</label>
         <input type="text" maxLength={14} placeholder="e.g. Nubbins" value={name} onChange={(e) => setName(e.target.value)}
           className="rounded-lg border border-edge bg-[#0b120e] px-3 py-2.5 font-mono text-sm tracking-wide text-white outline-none focus:border-pink" />
-        <span className="font-mono text-[11px] text-pink">{clean}@onecocreation · born <BftDate height={currentBlock} /></span>
+        <span className="font-mono text-[11px] text-pink">
+          {clean}@onecocreation · born{" "}
+          {currentBlock != null ? <BftDate height={currentBlock} /> : "—"}
+        </span>
       </div>
 
-      <button onClick={hatch} className="button w-full text-center">Hatch your Buddy 💜</button>
+      <button onClick={hatch} disabled={currentBlock == null} className="button w-full text-center disabled:cursor-not-allowed disabled:opacity-50">
+        Hatch your Buddy 💜
+      </button>
+      {currentBlock == null && (
+        <p className="-mt-3 text-center font-mono text-[10px] uppercase tracking-wider text-white/40">
+          The chain must witness a birth — node dark, try again when the tip reads
+        </p>
+      )}
     </div>
   );
 }

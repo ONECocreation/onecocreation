@@ -1,5 +1,6 @@
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import PopupHost from "@/components/PopupHost";
 import {
   Hero, About, Packages, Services, Classes, Affirmations, Donations, FreeMeditation, Contact,
 } from "@/components/sections";
@@ -27,6 +28,9 @@ export default function Home() {
         <Contact />
       </main>
       <SiteFooter />
+      {/* STUDIO P2: the popup registry's host — a no-op unless a live popup
+          lists this route */}
+      <PopupHost />
     </>
   );
 }

@@ -14,6 +14,7 @@ import { getAllCopyOverrides } from "@/lib/copy";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
 import PaletteVars from "@/components/PaletteVars";
+import PopupHost from "@/components/PopupHost";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -63,6 +64,8 @@ export default async function AboutPage() {
         <PaletteVars />
         <main><Render config={config} data={puck as Data} /></main>
         <SiteFooter />
+        {/* STUDIO P2: popup host rides both branches of this page */}
+        <PopupHost />
       </>
     );
   }
@@ -313,6 +316,7 @@ export default async function AboutPage() {
         </section>
       </main>
       <SiteFooter />
+      <PopupHost />
     </>
   );
 }

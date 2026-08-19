@@ -61,7 +61,7 @@ export default async function RetreatsPage() {
                     </small>
                   </div>
                   <p style={{ fontSize: ".82rem", fontWeight: 700, margin: "6px 0 14px",
-                    color: r.seatsLeft > 0 ? "#2e6b77" : "var(--rose)" }}>
+                    color: r.seatsLeft > 0 ? "var(--teal-deep)" : "var(--rose)" }}>
                     {r.seatsLeft > 0 ? `${r.seatsLeft} of ${r.seats} seats left` : "all seats taken"}
                   </p>
                   <div className="push">

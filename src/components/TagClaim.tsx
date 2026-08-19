@@ -71,7 +71,7 @@ function RPGDialog({
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 px-4">
       <div
-        className={`w-full max-w-lg border-4 bg-[#0a0a14] p-6 ${border}`}
+        className={`w-full max-w-lg border-4 bg-[var(--space)] p-6 ${border}`}
         role="dialog"
         aria-label={title}
       >
@@ -363,7 +363,7 @@ export default function TagClaim({
       </button>
     );
     return (
-      <div className="mx-auto max-w-2xl border-4 border-neon bg-panel p-8 shadow-[8px_8px_0_#ff00ff]">
+      <div className="mx-auto max-w-2xl border-4 border-neon bg-panel p-8 shadow-[8px_8px_0_var(--color-pink)]">
         <p className="text-center font-pixel text-2xl text-neon glow-neon mb-6">NAME REGISTERED</p>
         <p className="text-center font-arcade text-[clamp(1.4rem,7vw,2.25rem)] leading-tight break-all text-coin glow-coin mb-8">
           {claimed.handle}
@@ -587,7 +587,7 @@ export default function TagClaim({
               checked={savedConfirmed}
               onChange={(e) => setSavedConfirmed(e.target.checked)}
               disabled={copied !== "sec" && !savedConfirmed}
-              className="mt-1 h-4 w-4 accent-[#39ff14]"
+              className="mt-1 h-4 w-4 accent-[var(--color-neon)]"
             />
             I saved my secret key somewhere safe.
           </label>

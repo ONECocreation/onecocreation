@@ -106,24 +106,24 @@ export function Packages() {
 }
 
 function Pendant({ from, to }: { from: string; to: string }) {
-  const id = `g${from.replace("#", "")}`;
+  const id = `g${from.replace(/[^a-z0-9]/gi, "")}`;
   return (
     <svg viewBox="0 0 120 120" aria-hidden="true">
       <defs><radialGradient id={id} cx="45%" cy="38%"><stop offset="0%" stopColor={from} /><stop offset="100%" stopColor={to} /></radialGradient></defs>
       <ellipse cx="60" cy="66" rx="25" ry="33" fill={`url(#${id})`} />
-      <path d="M60 20 C41 34 41 60 60 66 C79 60 79 34 60 20" fill="none" stroke="#C77B4A" strokeWidth="3" />
-      <path d="M35 60 Q60 94 85 60" fill="none" stroke="#C77B4A" strokeWidth="3" />
-      <circle cx="60" cy="14" r="6" fill="none" stroke="#C77B4A" strokeWidth="3" />
+      <path d="M60 20 C41 34 41 60 60 66 C79 60 79 34 60 20" fill="none" stroke="var(--copper)" strokeWidth="3" />
+      <path d="M35 60 Q60 94 85 60" fill="none" stroke="var(--copper)" strokeWidth="3" />
+      <circle cx="60" cy="14" r="6" fill="none" stroke="var(--copper)" strokeWidth="3" />
     </svg>
   );
 }
 
 export function Jewelry() {
   const items = [
-    { name: "Rose Quartz Spiral", story: "Divine feminine — soft heart-opening.", usd: 88, sats: "88,000", from: "#efc6da", to: "#b06a97" },
-    { name: "Amethyst Ascension", story: "Crown-chakra clarity, held in wire.", usd: 111, sats: "111,000", from: "#cbb7ee", to: "#6f57a8" },
-    { name: "Amazonite Waters", story: "Throat-song truth — for speaking your knowing.", usd: 77, sats: "77,000", from: "#bfe3dc", to: "#5f9b90" },
-    { name: "Citrine Sun", story: "Divine masculine — warmth and the golden spiral.", usd: 99, sats: "99,000", from: "#f6e2b0", to: "#c79433" },
+    { name: "Rose Quartz Spiral", story: "Divine feminine — soft heart-opening.", usd: 88, sats: "88,000", from: "var(--rose-soft)", to: "var(--room-rose)" },
+    { name: "Amethyst Ascension", story: "Crown-chakra clarity, held in wire.", usd: 111, sats: "111,000", from: "var(--room-lavender-soft)", to: "var(--room-lavender)" },
+    { name: "Amazonite Waters", story: "Throat-song truth — for speaking your knowing.", usd: 77, sats: "77,000", from: "var(--room-teal-soft)", to: "var(--room-teal)" },
+    { name: "Citrine Sun", story: "Divine masculine — warmth and the golden spiral.", usd: 99, sats: "99,000", from: "var(--room-gold-soft)", to: "var(--room-gold)" },
   ];
   return (
     <section id="jewelry">

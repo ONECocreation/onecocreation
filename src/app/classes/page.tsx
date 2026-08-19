@@ -4,6 +4,7 @@ import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
 import RoomsShelf from "@/components/rooms/RoomsShelf";
 import CommunitySpotlight from "@/components/CommunitySpotlight";
+import PopupHost from "@/components/PopupHost";
 import { cartridge } from "@/brand/cartridge";
 
 export const metadata: Metadata = {
@@ -55,6 +56,8 @@ export default function ClassesPage() {
         </section>
       </main>
       <SiteFooter />
+      {/* STUDIO P2: popup host — no-op unless a live popup lists /classes */}
+      <PopupHost />
     </>
   );
 }

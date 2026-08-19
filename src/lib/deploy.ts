@@ -69,8 +69,8 @@ export async function triggerDeploy(): Promise<{ ok: boolean; job?: unknown; rea
 
 export interface DeployRecord {
   by: string; // operator pubkey hex — the signer
-  at: number; // BFT block height at record time (the block IS the record)
-  atEstimated?: boolean; // network dark at record time — `at` is a ~estimate, not a block fact
+  at: number | null; // BFT block height at record time — null when no node answered (the block IS the record)
+  atEstimated?: boolean; // legacy ~estimate flag on pre-0018.05.26 a₿ records; never written anymore
   jobId: string; // Vercel deploy job id (or "" if the hook returned none)
   ts: number; // wall-clock ms, for ordering
 }
@@ -113,21 +113,20 @@ async function writeLog(log: DeployRecord[]): Promise<void> {
 }
 
 /** Record one ship, newest kept, capped ~20. `at` is the block height the
-    caller read from serverBlockInfo (the route stamps it, like recordDecision);
-    `atEstimated` rides along so a network-dark stamp never reads as a block fact. */
+    caller read from serverBlockInfo (the route stamps it, like recordDecision) —
+    null when no node answered, so a network-dark stamp never reads as a block
+    fact (no estimate rung since 0018.05.26 a₿). */
 export async function recordDeploy({
   by,
   at,
-  atEstimated,
   jobId,
 }: {
   by: string;
-  at: number;
-  atEstimated?: boolean;
+  at: number | null;
   jobId: string;
 }): Promise<void> {
   const log = await readLog();
-  log.push({ by, at, atEstimated, jobId, ts: Date.now() });
+  log.push({ by, at, jobId, ts: Date.now() });
   const trimmed = log.slice(-LOG_CAP);
   await writeLog(trimmed);
 }
@@ -186,12 +185,11 @@ export async function authorizeDeploy(event: Parameters<typeof verifyDeployEvent
 
   const jobId = (fired.job as { id?: string })?.id ?? "";
   /* the REAL block, own node first (serverBlockInfo) — an unreachable network
-     records the estimate FLAGGED, never as a bare block fact */
-  const { height, estimated } = await serverBlockInfo();
+     records an honest null, never an estimate (fleet ruling 0018.05.26 a₿) */
+  const { height } = await serverBlockInfo();
   await recordDeploy({
     by: verified.pubkey,
     at: height,
-    atEstimated: estimated || undefined,
     jobId,
   });
   return { ok: true, job: fired.job, note: "deploy triggered ✓" };

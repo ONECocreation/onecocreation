@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Transplant cargo (TASK-03 Part 3): kit files bound for frens.earth —
+    // not app code, not built or linted here (tsconfig excludes it too).
+    "transplant/**",
   ]),
 ]);
 

@@ -81,6 +81,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // S2 (0018.05.25 a₿): = --space, kept literal — a meta theme-color tag can't resolve var()
   themeColor: "#0a0a14",
 };
 

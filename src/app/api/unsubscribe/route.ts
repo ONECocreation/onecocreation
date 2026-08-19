@@ -17,6 +17,8 @@ async function unsubscribe(request: Request): Promise<Response> {
   }
   await removeSubscriber(email);
 
+  // S2: the door-link gold below stays literal — decorative gold awaits a ruling (gold law).
+  // S2: stays literal — this page loads no stylesheet, so var() never resolves (integrator ruling 0018.05.25 a₿).
   return new Response(
     `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;background:#faf7f2;color:#2b2733;">
      <div style="max-width:480px;margin:15vh auto;text-align:center;padding:0 20px;">

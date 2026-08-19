@@ -72,7 +72,7 @@ export default function EmailDoor({ bare = false }: { bare?: boolean }) {
     borderRadius: 999,
     border: "1.5px solid rgba(180,134,43,.65)",
     background: "rgba(255,255,255,.94)",
-    color: "#4a4458",
+    color: "var(--field-ink)",
     fontSize: ".95rem",
   };
 

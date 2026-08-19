@@ -249,7 +249,7 @@ export default function ProfileEditor({
                   onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
                   rows={3}
                   placeholder={f.hint}
-                  style={{ width: "100%", boxSizing: "border-box", borderRadius: 12, border: "1.5px solid rgba(180,134,43,.5)", background: "rgba(255,255,255,.94)", color: "#4a4458", padding: "10px 14px", fontSize: ".9rem", fontFamily: "inherit" }}
+                  style={{ width: "100%", boxSizing: "border-box", borderRadius: 12, border: "1.5px solid rgba(180,134,43,.5)", background: "rgba(255,255,255,.94)", color: "var(--field-ink)", padding: "10px 14px", fontSize: ".9rem", fontFamily: "inherit" }}
                 />
               ) : (
                 <input
@@ -258,7 +258,7 @@ export default function ProfileEditor({
                   value={draft[f.key]}
                   onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
                   placeholder={f.hint}
-                  style={{ width: "100%", boxSizing: "border-box", borderRadius: 12, border: "1.5px solid rgba(180,134,43,.5)", background: "rgba(255,255,255,.94)", color: "#4a4458", padding: "10px 14px", fontSize: ".85rem", fontFamily: "monospace" }}
+                  style={{ width: "100%", boxSizing: "border-box", borderRadius: 12, border: "1.5px solid rgba(180,134,43,.5)", background: "rgba(255,255,255,.94)", color: "var(--field-ink)", padding: "10px 14px", fontSize: ".85rem", fontFamily: "monospace" }}
                 />
               )}
               {f.key === "lud16" && (

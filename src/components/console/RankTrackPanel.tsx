@@ -22,7 +22,6 @@ interface RankRead {
   next: { grade: string; name: string } | null;
   blocksSinceClaim: number | null;
   months: number | null;
-  tipEstimated: boolean;
   points: number;
   commendations: { who: string; n: number; you: boolean }[];
 }
@@ -53,7 +52,6 @@ export default function RankTrackPanel() {
     read?.blocksSinceClaim != null
       ? Math.round(((read.blocksSinceClaim % BLOCKS_PER_MONTH) / BLOCKS_PER_MONTH) * 100)
       : 0;
-  const tilde = read?.tipEstimated ? "~" : "";
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
@@ -122,10 +120,8 @@ export default function RankTrackPanel() {
                     <span className="scar-meter-notches" aria-hidden="true" />
                   </div>
                   <p className="mt-2 font-mono text-[11px] text-white/50">
-                    {tilde}
                     {read.blocksSinceClaim.toLocaleString()} blocks on the board ·{" "}
-                    {tilde}
-                    {read.months} BFT month{read.months === 1 ? "" : "s"}
+                    {read.months ?? "—"} BFT month{read.months === 1 ? "" : "s"}
                   </p>
                 </div>
               ) : (

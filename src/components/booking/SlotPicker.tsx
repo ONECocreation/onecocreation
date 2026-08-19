@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
-import { bftTime, bftDate, bftDatePlain, estimateHeightAt } from "@/lib/bb/bft";
 import { USA_ZONES, zipToTz } from "@/lib/us-zip-tz";
 
 /**
@@ -28,16 +27,13 @@ interface ServiceView {
   pricingMode: "fixed" | "pwyc";
 }
 
-/** BFT — the block is the clock. A FUTURE slot rides the CHAIN-ANCHORED
- *  estimate (estimateHeightAt — halvings + the pupil's recent-block anchor;
- *  the flat genesis model runs months behind and is banned for now/future),
- *  and wears the honest `~`. One clock: same bridge the orrery, the
- *  converters, and every other face read through. */
-const BFT = "BFT";
-const estHeight = (iso: string) => estimateHeightAt(Date.parse(iso));
+/* THE ₿FT LANE IS RETIRED (fleet ruling 0018.05.26 a₿ — dashes over
+   estimates, estimate rungs DELETED not gated). Every slot here is a
+   FUTURE instant; its block height can only ever be estimated, so the
+   lane could offer nothing but `~` guesses. It returns only if a
+   chain-anchored way to vouch future slots ever exists. */
 
 function fmtTime(iso: string, tz: string): string {
-  if (tz === BFT) return `~${bftTime(estHeight(iso))}`;
   return new Intl.DateTimeFormat(undefined, {
     timeZone: tz,
     hour: "numeric",
@@ -46,7 +42,6 @@ function fmtTime(iso: string, tz: string): string {
 }
 
 function fmtDayHeading(iso: string, tz: string): string {
-  if (tz === BFT) return `~${bftDate(estHeight(iso))}`;
   return new Intl.DateTimeFormat(undefined, {
     timeZone: tz,
     weekday: "long",
@@ -55,21 +50,8 @@ function fmtDayHeading(iso: string, tz: string): string {
   }).format(new Date(iso));
 }
 
-/** The date-pill face: short, calm — "Thu Aug 6". The marker law: the a₿
- *  rides every BFT date, after the date, even on the small pill. */
-function fmtDayPill(iso: string, tz: string): string {
-  if (tz === BFT) return `~${bftDate(estHeight(iso))}`;
-  return new Intl.DateTimeFormat(undefined, {
-    timeZone: tz,
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  }).format(new Date(iso));
-}
-
 /** Group key = the calendar day AS THE VIEWER'S ZONE sees it, not UTC's. */
 function dayKey(iso: string, tz: string): string {
-  if (tz === BFT) return bftDatePlain(estHeight(iso)); // the 144-block day
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
     year: "numeric",
@@ -161,6 +143,7 @@ function MonthCalendar({
               <span style={{
                 position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)",
                 width: 5, height: 5, borderRadius: "50%",
+                /* S2: gold law — the dot's dark gold is decorative, held for a ruling */
                 background: active ? "#3a2a06" : "var(--gold-deep, #b4862b)",
               }} />
             </button>
@@ -178,7 +161,6 @@ function MonthCalendar({
 
 /** "PDT", "GMT+1" — the short label a human recognizes. */
 function zoneLabel(tz: string): string {
-  if (tz === BFT) return "block time";
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(new Date());
   return parts.find((p) => p.type === "timeZoneName")?.value ?? tz;
 }
@@ -240,7 +222,10 @@ export default function SlotPicker({
   // The visitor's own zone, detected — and switchable, because travellers and
   // people booking on someone else's behalf both exist.
   const detected = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
-  const [viewerTz, setViewerTz] = useState(detected);
+  const [viewerTz, setViewerTzState] = useState(detected);
+  // a stale "BFT" from anywhere (saved state, a hand-rolled link) lands on
+  // the detected zone instead — the lane itself is retired, see above
+  const setViewerTz = (tz: string) => setViewerTzState(tz === "BFT" ? detected : tz);
   const [zipForTz, setZipForTz] = useState("");
   // less is more (Admiral): pick a DAY first, then that day's times
   const [chosenDay, setChosenDay] = useState<string | null>(null);
@@ -417,11 +402,11 @@ export default function SlotPicker({
 
   const glassField: React.CSSProperties = {
     border: "1px solid rgba(139,118,196,.45)", borderRadius: 10, padding: "6px 10px",
-    background: "rgba(255,255,255,.92)", fontSize: ".8rem", color: "#4a4458", fontFamily: "inherit",
+    background: "rgba(255,255,255,.92)", fontSize: ".8rem", color: "var(--field-ink, #4a4458)", fontFamily: "inherit",
   };
 
   if (loading) return <p style={{ marginTop: 32, fontSize: ".9rem", color: "var(--muted, #897f97)", textAlign: "center" }}>Finding open times…</p>;
-  if (error) return <p style={{ marginTop: 32, fontSize: ".9rem", color: "#a34e6c", textAlign: "center" }}>◌ {error}</p>;
+  if (error) return <p style={{ marginTop: 32, fontSize: ".9rem", color: "var(--err, #E7899E)", textAlign: "center" }}>◌ {error}</p>;
 
   return (
     <div className="mt-8">
@@ -440,7 +425,6 @@ export default function SlotPicker({
               [artistTz, `the host's clock — ${artistTz}`],
               ...USA_ZONES.map(({ tz, label }) => [tz, label] as [string, string]),
               ["UTC", "UTC"],
-              [BFT, "₿FT — Bitcoin Federated Time"],
             ])].map(([tz, label]) => (
               <option key={tz} value={tz}>{label}</option>
             ))}
@@ -479,35 +463,12 @@ export default function SlotPicker({
             alignItems: "start",
           }}
         >
-          {/* step 1 — a TRADITIONAL month calendar (Admiral, 0018.05.17);
-              the block-time viewer keeps the list (₿FT days aren't Gregorian) */}
-          {viewerTz === BFT ? (
-            <ul className="chip-grid" style={{ "--chip-min": "140px", alignSelf: "start" } as React.CSSProperties}>
-              {days.map(([key, daySlots]) => {
-                const active = chosenDay === key;
-                return (
-                  <li key={key}>
-                    <button
-                      type="button"
-                      className="chip-select"
-                      onClick={() => { setChosenDay(active ? null : key); setChosen(null); }}
-                      aria-pressed={active}
-                      style={{ fontSize: ".85rem" }}
-                    >
-                      {fmtDayPill(daySlots[0].startUtc, viewerTz)}
-                      <span style={{ marginLeft: 6, fontSize: ".72rem", opacity: 0.7 }}>{daySlots.length}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <MonthCalendar
-              days={days}
-              chosenDay={chosenDay}
-              onPick={(key) => { setChosenDay(chosenDay === key ? null : key); setChosen(null); }}
-            />
-          )}
+          {/* step 1 — a TRADITIONAL month calendar (Admiral, 0018.05.17) */}
+          <MonthCalendar
+            days={days}
+            chosenDay={chosenDay}
+            onPick={(key) => { setChosenDay(chosenDay === key ? null : key); setChosen(null); }}
+          />
 
           {/* step 2 — the day's times in their own glass panel beside the
               calendar (the booking-split, uicookies 07) */}
@@ -675,7 +636,7 @@ export default function SlotPicker({
             </p>
           )}
 
-          {bookError && <p style={{ margin: "12px 0 0", fontSize: ".8rem", color: "#a34e6c" }}>◌ {bookError}</p>}
+          {bookError && <p style={{ margin: "12px 0 0", fontSize: ".8rem", color: "var(--err, #E7899E)" }}>◌ {bookError}</p>}
 
           {/* the doors — bottom center, evenly spaced (the Admiral's law) */}
           <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginTop: 18 }}>

@@ -24,7 +24,7 @@ export default function BbConsole() {
   const { fren, checked } = useFrenSession();
   const [clientNpub, setClientNpub] = useState<string | null>(null);
   const [block, setBlock] = useState<number | null>(null);
-  const [blockEstimated, setBlockEstimated] = useState(false);
+  const [blockChecked, setBlockChecked] = useState(false);
   const [buddies, setBuddies] = useState<StoredBuddy[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hatching, setHatching] = useState(false);
@@ -34,13 +34,14 @@ export default function BbConsole() {
 
   /* Live block, refreshed each minute (the BftClock cadence): the buddy's
      age, the scene's light and the block-break shimmer all ride the tip.
-     `estimated` = offline fallback → every height renders the honest ~. */
+     No estimate rung (fleet ruling 0018.05.26 a₿): a dark node reads null
+     and the console says so — a modeled height never reaches the DOM. */
   useEffect(() => {
     let on = true;
     const tick = () => currentBlockInfo().then((i) => {
       if (!on) return;
       setBlock(i.height);
-      setBlockEstimated(i.estimated);
+      setBlockChecked(true);
     });
     tick();
     const id = setInterval(tick, 60_000);
@@ -137,9 +138,10 @@ export default function BbConsole() {
   }
 
   if (block == null) {
+    /* covers both first-load sync and a permanently dark node — say which */
     return (
       <p className="mx-auto max-w-md text-center font-pixel text-xs text-cyan pulse-neon">
-        SYNCING TO THE BLOCK…
+        {blockChecked ? "NODE DARK — NO LIVE BLOCK" : "SYNCING TO THE BLOCK…"}
       </p>
     );
   }
@@ -207,7 +209,7 @@ export default function BbConsole() {
       )}
 
       {active && !showHatchery ? (
-        <BuddyDevice buddy={active} currentBlock={block} estimatedBlock={blockEstimated} onChange={handleChange} onNew={() => setHatching(true)} />
+        <BuddyDevice buddy={active} currentBlock={block} onChange={handleChange} onNew={() => setHatching(true)} />
       ) : (
         <Hatchery npub={npub} currentBlock={block} onHatched={handleHatched} />
       )}

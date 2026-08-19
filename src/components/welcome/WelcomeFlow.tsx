@@ -17,7 +17,7 @@ import { cartridge } from "@/brand/cartridge";
 
 const glassField: React.CSSProperties = {
   border: "1.5px solid rgba(180,134,43,.65)", borderRadius: 999,
-  background: "rgba(255,255,255,.94)", color: "#4a4458",
+  background: "rgba(255,255,255,.94)", color: "var(--field-ink)",
   padding: "13px 20px", fontSize: "1rem", width: "100%", boxSizing: "border-box",
   textAlign: "center", fontFamily: "inherit",
 };
@@ -136,7 +136,7 @@ export default function WelcomeFlow() {
           </div>
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email"
             placeholder="your@email.com" style={{ ...glassField, margin: "16px 0 12px" }} />
-          {note && <p style={{ margin: "0 0 10px", fontSize: ".8rem", color: "#E7B2C3" }}>{note}</p>}
+          {note && <p style={{ margin: "0 0 10px", fontSize: ".8rem", color: "var(--rose)" }}>{note}</p>}
           <button className="btn btn-shimmer" onClick={start} disabled={busy || !email.includes("@")}>
             {busy ? "Sending your code…" : "YES! — join free"}
           </button>
@@ -166,7 +166,7 @@ export default function WelcomeFlow() {
           <input value={code} onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
             inputMode="numeric" placeholder="••••••"
             style={{ ...glassField, margin: "16px 0 12px", letterSpacing: ".4em", fontSize: "1.3rem" }} />
-          {note && <p style={{ margin: "0 0 10px", fontSize: ".8rem", color: "#E7B2C3" }}>{note}</p>}
+          {note && <p style={{ margin: "0 0 10px", fontSize: ".8rem", color: "var(--rose)" }}>{note}</p>}
           <button className="btn" onClick={verify} disabled={busy || code.length !== 6}>
             {busy ? "Opening the door…" : "Step in ✨"}
           </button>
@@ -198,10 +198,10 @@ export default function WelcomeFlow() {
               onChange={(e) => setAccountName(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
               placeholder="your community name" style={{ ...glassField, textAlign: "right", paddingRight: 150 }} />
             <span style={{ position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)",
-              color: "#897F97", fontSize: ".9rem", pointerEvents: "none" }}>@onecocreation</span>
+              color: "var(--muted)", fontSize: ".9rem", pointerEvents: "none" }}>@onecocreation</span>
           </div>
           <p style={{ margin: "0 0 10px", fontSize: ".74rem", fontWeight: 700, minHeight: "1.2em",
-            color: avail === "free" ? "#7fb98f" : avail === "taken" || avail === "bad" ? "#E7B2C3" : "var(--muted)" }}>
+            color: avail === "free" ? "var(--ok)" : avail === "taken" || avail === "bad" ? "var(--rose)" : "var(--muted)" }}>
             {avail === "free" ? "✓ name available" : avail === "taken" ? "already claimed — try another"
               : avail === "bad" ? "letters, numbers, - and _ only" : avail === "checking" ? "listening…" : " "}
           </p>
@@ -212,7 +212,7 @@ export default function WelcomeFlow() {
           <input value={callMe} onChange={(e) => setCallMe(e.target.value)}
             placeholder={`call me… ${accountName ? `(or just "${accountName}")` : ""}`}
             style={{ ...glassField, marginBottom: 12 }} maxLength={48} />
-          {note && <p style={{ margin: "0 0 10px", fontSize: ".8rem", color: "#E7B2C3" }}>{note}</p>}
+          {note && <p style={{ margin: "0 0 10px", fontSize: ".8rem", color: "var(--rose)" }}>{note}</p>}
           <button className="btn" onClick={saveNames} disabled={busy}>
             {busy ? "Weaving you in…" : "Claim it 💫"}
           </button>

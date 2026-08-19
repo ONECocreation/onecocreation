@@ -46,11 +46,11 @@ export default function ThemeLantern() {
         {shadesOn && (
           <g>
             {/* the shades: two lenses + bridge, riding the sun's brow */}
-            <rect x="7.4" y="10.4" width="4.7" height="3.5" rx="1.6" fill="#141021" />
-            <rect x="13.9" y="10.4" width="4.7" height="3.5" rx="1.6" fill="#141021" />
-            <line x1="12.1" y1="11.6" x2="13.9" y2="11.6" stroke="#141021" strokeWidth="1.4" />
-            <line x1="7.4" y1="11.2" x2="5.6" y2="10.4" stroke="#141021" strokeWidth="1.2" strokeLinecap="round" />
-            <line x1="18.6" y1="11.2" x2="20.4" y2="10.4" stroke="#141021" strokeWidth="1.2" strokeLinecap="round" />
+            <rect x="7.4" y="10.4" width="4.7" height="3.5" rx="1.6" fill="var(--ground)" />
+            <rect x="13.9" y="10.4" width="4.7" height="3.5" rx="1.6" fill="var(--ground)" />
+            <line x1="12.1" y1="11.6" x2="13.9" y2="11.6" stroke="var(--ground)" strokeWidth="1.4" />
+            <line x1="7.4" y1="11.2" x2="5.6" y2="10.4" stroke="var(--ground)" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="18.6" y1="11.2" x2="20.4" y2="10.4" stroke="var(--ground)" strokeWidth="1.2" strokeLinecap="round" />
           </g>
         )}
       </svg>

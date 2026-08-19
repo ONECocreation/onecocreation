@@ -19,19 +19,19 @@
   font-size:clamp(1.1rem,3.4vw,1.9rem);color:var(--gold-deep);letter-spacing:0}
 .stack-hero .sh-sub{font-size:clamp(1.3rem,4.6vw,2.4rem)}
 .constellation{font-size:1.25rem;letter-spacing:.4em;margin:12px 0 0}
-.btn-teal{background:linear-gradient(135deg,#8FD0D8,var(--teal-deep));color:#fff}
+.btn-teal{background:linear-gradient(135deg,var(--teal-bright),var(--teal-deep));color:#fff}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;color:var(--ink);font-family:var(--font-body);line-height:1.7;font-size:19px;-webkit-font-smoothing:antialiased;
   background:
     radial-gradient(900px 500px at 50% -4%, rgba(120,86,180,.22), transparent 60%),
     radial-gradient(760px 620px at 88% 12%, rgba(78,160,175,.1), transparent 62%),
-    linear-gradient(180deg,#141021 0%, #191325 45%, #1c1730 100%);background-attachment:fixed}
+    linear-gradient(180deg,var(--ground) 0%, var(--body-grad-1) 45%, var(--body-grad-2) 100%);background-attachment:fixed}
 html[data-oc-theme="light"] body{
   background:
     radial-gradient(900px 500px at 50% -4%, rgba(235,203,119,.28), transparent 60%),
     radial-gradient(760px 620px at 88% 12%, rgba(231,178,195,.26), transparent 62%),
-    linear-gradient(180deg,#FCF7F0 0%, #F7EFF3 45%, #F1EEF8 100%);background-attachment:fixed}
+    linear-gradient(180deg,var(--ground) 0%, var(--body-grad-dawn-1) 45%, var(--body-grad-dawn-2) 100%);background-attachment:fixed}
 img{max-width:100%;display:block}
 a{color:var(--lavender);text-decoration:none}
 h1,h2,h3,h4{line-height:1.16;margin:0 0 .45em;color:var(--ink-strong);font-weight:700}
@@ -66,11 +66,11 @@ section{padding:76px 0;position:relative}
   font-family:var(--font-open-sans),'Open Sans',-apple-system,'Segoe UI',sans-serif;
   font-weight:700;letter-spacing:2px;font-size:1.5rem;line-height:1.25;
   text-transform:uppercase;text-align:center;cursor:pointer;border:0;
-  background:#fff;color:#3E3E3E;
+  background:#fff;color:var(--btn-ink);
   transition:transform .18s;-webkit-tap-highlight-color:transparent}
 .btn:hover{transform:translateY(-3px)}
-.btn-gold{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:#3a2a06;
-  text-shadow:0 1px 1px rgba(58,42,6,.4),0 0 8px rgba(58,42,6,.35)}
+.btn-gold{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:var(--gold-ink);
+  text-shadow:0 1px 1px color-mix(in oklab, var(--gold-ink) 40%, transparent),0 0 8px color-mix(in oklab, var(--gold-ink) 35%, transparent)}
 .btn-rose{background:linear-gradient(135deg,#E7B2C3,#C56E8B);color:#fff}
 .btn-ghost{background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px var(--edge)}
 /* the small variant — same square law, compact for dense rooms */
@@ -84,14 +84,14 @@ section{padding:76px 0;position:relative}
    curated to money now (the relaxed gold law, ~0018.05.24 a₿) */
 .btn-quiet--accent{color:var(--info)}
 .chip-select{border-radius:999px;padding:9px 16px;font-size:.88rem;cursor:pointer;font-family:inherit;
-  font-weight:500;border:1.5px solid rgba(139,118,196,.4);background:rgba(255,255,255,.8);color:#4a4458}
+  font-weight:500;border:1.5px solid rgba(139,118,196,.4);background:rgba(255,255,255,.8);color:var(--field-ink)}
 /* pressed = lavender (interactive state), never gold — gold is not the
    default "selected" paint anymore */
 .chip-select[aria-pressed="true"],.chip-select.on{font-weight:700;border-color:var(--lavender);
-  background:linear-gradient(135deg,#cbbbea,var(--lavender));color:#fff}
+  background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:#fff}
 /* the active/pressed BUTTON state (view switchers, rail toggles) — same
    lavender law as the chips */
-.btn-on{background:linear-gradient(135deg,#cbbbea,var(--lavender));color:#fff}
+.btn-on{background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:#fff}
 .btn-round{width:var(--size,40px);height:var(--size,40px);border-radius:50%;cursor:pointer;
   display:grid;place-items:center;font-size:1.1rem;border:1.5px solid rgba(235,203,119,.6);
   background:rgba(14,12,24,.6);color:#ebcb77}
@@ -206,20 +206,20 @@ section{padding:76px 0;position:relative}
 .logo{display:flex;align-items:center;gap:10px}
 .logo .wm{font-family:var(--serif);line-height:.98}
 .logo .wm b{display:block;color:var(--gold-2);font-size:1.24rem;letter-spacing:.14em}
-.logo .wm span{display:block;color:#c79ae8;font-size:.85rem;letter-spacing:.07em}
+.logo .wm span{display:block;color:var(--lavender-bright);font-size:.85rem;letter-spacing:.07em}
 .site-nav{margin-left:auto;display:flex;align-items:center;gap:15px;flex-wrap:wrap}
-.site-nav a{font-size:.95rem;letter-spacing:.04em;color:#ECE3C9;text-transform:uppercase;font-weight:600}
+.site-nav a{font-size:.95rem;letter-spacing:.04em;color:var(--ghost-ink);text-transform:uppercase;font-weight:600}
 .site-nav a:hover{color:var(--gold-2)}
-.site-nav .sats-pill{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:#3a2a06;padding:8px 15px;border-radius:999px}
-.site-footer{background:rgba(14,12,24,.9);color:#cabfda;padding:52px 0 36px;text-align:center;margin-top:30px}
+.site-nav .sats-pill{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:var(--gold-ink);padding:8px 15px;border-radius:999px}
+.site-footer{background:rgba(14,12,24,.9);color:var(--footer-ink);padding:52px 0 36px;text-align:center;margin-top:30px}
 .site-footer .fnav{display:flex;flex-wrap:wrap;gap:15px;justify-content:center;margin:16px 0;font-size:.8rem;text-transform:uppercase}
 .site-footer .fnav a{color:#ECE3C9}
-.site-footer .legal{color:#8a82a0;font-size:.8rem}
-.site-footer .rebuild{max-width:680px;margin:20px auto 0;font-size:.78rem;color:#7c749a;border-top:1px solid rgba(255,255,255,.12);padding-top:16px}
+.site-footer .legal{color:var(--muted);font-size:.8rem}
+.site-footer .rebuild{max-width:680px;margin:20px auto 0;font-size:.78rem;color:var(--muted);border-top:1px solid rgba(255,255,255,.12);padding-top:16px}
 
 /* hero + glyph */
 .hero{text-align:center;padding:96px 0 90px;position:relative;overflow:hidden;
-  background:radial-gradient(760px 460px at 50% 14%, rgba(120,86,180,.5), transparent 62%),linear-gradient(180deg,#0b0a18,#16111f 55%,#241a33)}
+  background:radial-gradient(760px 460px at 50% 14%, rgba(120,86,180,.5), transparent 62%),linear-gradient(180deg,var(--hero-grad-0),var(--hero-grad-1) 55%,var(--band-2))}
 .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:150px;z-index:2}
 /* the moon breathes too — a slow lean-in for image heroes: a background
    LAYER inside an overflow-hidden section, scaled gently over time */
@@ -234,15 +234,15 @@ section{padding:76px 0;position:relative}
 .hero::before,.hero::after{pointer-events:none}
 .hero canvas{pointer-events:none!important}
 .hero .days{font-family:var(--serif);letter-spacing:.55em;color:var(--gold-2);text-transform:uppercase;font-size:1.3rem}
-.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(2.7rem,9vw,5rem);color:#F4ECFF;letter-spacing:.05em;margin:.08em 0;text-shadow:0 0 44px rgba(232,185,35,.4)}
-.hero .sub{font-family:var(--serif);letter-spacing:.18em;text-transform:uppercase;color:#EEC2D0;margin:.4em 0 1.6em}
+.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(2.7rem,9vw,5rem);color:var(--ink-strong);letter-spacing:.05em;margin:.08em 0;text-shadow:0 0 44px rgba(232,185,35,.4)}
+.hero .sub{font-family:var(--serif);letter-spacing:.18em;text-transform:uppercase;color:var(--rose);margin:.4em 0 1.6em}
 .glyph{width:min(300px,70vw);margin:0 auto 22px;filter:drop-shadow(0 0 8px rgba(255,255,255,.85)) drop-shadow(0 0 30px rgba(232,185,35,.4))}
 
 /* jewelry */
 .jgrid{display:grid;gap:26px}
 @media(min-width:640px){.jgrid{grid-template-columns:repeat(2,1fr)}}
 @media(min-width:960px){.jgrid{grid-template-columns:repeat(4,1fr)}}
-.pendant{aspect-ratio:1/1;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,#fff6ef,#efe3f0 60%,#e6d9ee)}
+.pendant{aspect-ratio:1/1;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,var(--pendant-0),var(--pendant-1) 60%,var(--pendant-2))}
 .pendant svg{width:74%}
 
 /* services / rooms */
@@ -331,13 +331,13 @@ html[data-oc-theme="light"] .theme-sun{color:#B4862B;border-color:rgba(180,134,4
 .pen-editable:focus{outline:2px solid var(--gold-deep);outline-offset:4px;background:rgba(217,178,78,.09)}
 
 .pen-revert{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;
-  border:1.5px solid var(--gold-deep);background:#141021;color:var(--gold-2);font-size:12px;
+  border:1.5px solid var(--gold-deep);background:var(--ground);color:var(--gold-2);font-size:12px;
   line-height:1;cursor:pointer;display:grid;place-items:center;opacity:.75;z-index:2}
 .pen-revert:hover{opacity:1;transform:rotate(-18deg)}
 .pen-saved{position:absolute;top:-10px;right:20px;font-size:.68rem;font-weight:700;
-  color:var(--teal-bright);background:#141021;padding:2px 8px;border-radius:999px;z-index:2}
+  color:var(--teal-bright);background:var(--ground);padding:2px 8px;border-radius:999px;z-index:2}
 .pen-counter{position:absolute;bottom:-18px;right:0;font-size:.66rem;color:var(--rose);
-  background:#141021;padding:1px 7px;border-radius:999px;z-index:2}
+  background:var(--ground);padding:1px 7px;border-radius:999px;z-index:2}
 
 /* tier pills — each plan wears its name; the door to its own page */
 .tier-pills{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:18px 0 30px}
@@ -372,14 +372,14 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
 .mgmt-body [class*="border-2"],.mgmt-body [class*="border-4"]{border-width:1.5px!important;border-color:rgba(139,118,196,.35)!important;border-radius:20px}
 .mgmt-body [class*="text-neon"]{color:var(--rose)!important}
 .mgmt-body [class*="text-pink"]{color:var(--magenta)!important}
-.mgmt-body .button{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:#3a2a06;border:none;border-radius:999px;font-family:var(--sans);letter-spacing:.05em}
+.mgmt-body .button{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:var(--gold-ink);border:none;border-radius:999px;font-family:var(--sans);letter-spacing:.05em}
 
 /* per-package accents — the name pill up top matches its Learn More below */
-.tier-pill--a,.tier-btn--a{border:1.5px solid var(--lavender);color:#5f4b96}
+.tier-pill--a,.tier-btn--a{border:1.5px solid var(--lavender);color:var(--info)}
 .tier-btn--a:hover,.tier-pill--a:hover{background:rgba(139,118,196,.14)}
-.tier-pill--b,.tier-btn--b{border:1.5px solid var(--rose);color:#a34e6c}
+.tier-pill--b,.tier-btn--b{border:1.5px solid var(--rose);color:var(--err)}
 .tier-btn--b:hover,.tier-pill--b:hover{background:rgba(197,110,139,.12)}
-.tier-pill--c,.tier-btn--c{border:0;background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:#3a2a06}
+.tier-pill--c,.tier-btn--c{border:0;background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:var(--gold-ink)}
 .tier-btn--c:hover,.tier-pill--c:hover{filter:brightness(1.06)}
 .tier-name-pill{display:inline-block;border-radius:999px;padding:8px 18px;font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
 
@@ -387,10 +387,10 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
 .mgmt-body .button{box-shadow:var(--soft)!important;border:none!important}
 
 /* Weekly Intuitive + Observer pills fill in like Evening Star's gold */
-.tier-pill--a,.tier-btn--a{border:0;background:linear-gradient(135deg,#cbbbea,var(--lavender));color:#fff}
-.tier-btn--a:hover,.tier-pill--a:hover{filter:brightness(1.06);background:linear-gradient(135deg,#cbbbea,var(--lavender))}
-.tier-pill--b,.tier-btn--b{border:0;background:linear-gradient(135deg,#efc6da,var(--rose));color:#fff}
-.tier-btn--b:hover,.tier-pill--b:hover{filter:brightness(1.06);background:linear-gradient(135deg,#efc6da,var(--rose))}
+.tier-pill--a,.tier-btn--a{border:0;background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:#fff}
+.tier-btn--a:hover,.tier-pill--a:hover{filter:brightness(1.06);background:linear-gradient(135deg,var(--lavender-soft),var(--lavender))}
+.tier-pill--b,.tier-btn--b{border:0;background:linear-gradient(135deg,var(--rose-soft),var(--rose));color:#fff}
+.tier-btn--b:hover,.tier-pill--b:hover{filter:brightness(1.06);background:linear-gradient(135deg,var(--rose-soft),var(--rose))}
 
 /* the nav's right tail (member name + Support) never wraps under the menu —
    the Admiral's persistent catch; it lives OUTSIDE the wrapping nav now */
@@ -434,7 +434,7 @@ html,body{overflow-x:clip}
    is 0-1-1 and out-ranks a bare .nav-link (0-1-0) — it repainted every
    door cream and killed the version colors + hover (gate catch, 0018.05.24 a₿) */
 .site-nav .nav-link{background:none;border:none;cursor:pointer;font-family:inherit;display:inline-block;
-  font-size:.95rem;line-height:1.2;letter-spacing:.04em;color:#FAC51C;text-transform:uppercase;font-weight:600;padding:6px 0;
+  font-size:.95rem;line-height:1.2;letter-spacing:.04em;color:var(--nav-gold);text-transform:uppercase;font-weight:600;padding:6px 0;
   position:relative}
 .site-nav .nav-link:hover{color:var(--gold-2)}
 /* ── where you are, lit (mockup C blessed — the dawn underline) ── */
@@ -450,7 +450,7 @@ html,body{overflow-x:clip}
 .nav-sub{position:absolute;top:calc(100% + 8px);left:0;min-width:220px;z-index:var(--z-sheet,60);
   background:var(--pop-bg);border:1.5px solid var(--pop-edge);border-radius:14px;padding:8px 0;
   box-shadow:var(--pop-shadow)}
-.nav-sub a{display:block;padding:9px 18px;color:#FAC51C;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
+.nav-sub a{display:block;padding:9px 18px;color:var(--nav-gold);font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
 .nav-sub a:hover{color:var(--gold-2)}
 /* hover-open, click-through (Admiral, 0018.05.15): the sub is always in the
    DOM and breathes open on hover/focus; the close lingers .18s so the cursor

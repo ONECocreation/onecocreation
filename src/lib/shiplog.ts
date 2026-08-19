@@ -14,6 +14,16 @@ export interface ShipLogEntry {
 
 export const SHIP_LOG: ShipLogEntry[] = [
   {
+    height: 963084,
+    title: "THE ESTIMATE RUNG FALLS",
+    bullets: [
+      "Fleet ruling 0018.05.26 a₿, actioned fleet-wide from this repo: dashes over estimates, estimate rungs DELETED not gated. currentBlockInfo() and serverBlockInfo() lose the genesis-anchored third rung — when neither the fleet's door nor a direct read answers, `height: null` IS the answer, and every face renders the dash. No modeled height reaches a onecocreation DOM, a record stamp, or an API response ever again",
+      "The sweep: consoles (tray clock, overview, rank track) and panels (mempool, chat, spaces, seats, orders, the money page) went live-or-dashes; the record writers (merges, signoffs, decisions, briefs, deploys) etch a real height or '—' — legacy pre-ruling records keep their historical ~ as history; the SlotPicker's BFT lane is RETIRED, not gated — a future slot can only ever be estimated, so the lane could offer nothing but guesses",
+      "The hatch law lands with it: a buddy is born only when the chain witnesses it — /bb's Hatchery refuses to etch a bornBlock from a guess (button disabled with the honest reason while the node's dark), and a dark node mid-session reads 'NODE DARK — NO LIVE BLOCK' instead of sailing on a model",
+      "The arcade time experience went HOME — the orrery, the half-wheel, the time door, the converters, the strip clock, the flip-clock ring and the birthday checker left as a transplant package for frens.earth (transplant/frens-earth-time/, the template-leak cleanup, TASK-03 Part 3). /time and /bday are honest placeholder faces — canonical date + boxed-star height, live-or-dashes — until Love's own face for the door is drawn. The estimate model stays exported from bft.ts as kit core for the transplant + canonical parity; it just never renders here",
+    ],
+  },
+  {
     height: 958910,
     title: "THE CONSOLE WEARS THE V2 CHART",
     bullets: [

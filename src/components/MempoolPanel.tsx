@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { bftDate, bftDateTime, estimateHeight } from "@/lib/bb/bft";
+import { bftDate, bftDateTime } from "@/lib/bb/bft";
 
 /**
  * The chain node — link this deployment to its OWN mempool instance. The
@@ -55,7 +55,9 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 export default function MempoolPanel() {
   const [status, setStatus] = useState<MempoolStatus | null>(null);
   const [busy, setBusy] = useState(false);
-  const [checked, setChecked] = useState<{ height: number; estimated: boolean } | null>(null);
+  /* null height = the node is dark — no estimate rung (fleet ruling
+     0018.05.26 a₿), a modeled height never reaches this DOM */
+  const [checked, setChecked] = useState<{ height: number | null } | null>(null);
   const [config, setConfig] = useState<NodesConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,13 +77,11 @@ export default function MempoolPanel() {
         return;
       }
       setStatus(data);
-      /* the test just read the REAL tip — that IS the checked block; only a
-         dark node falls back to the honest ~estimate */
-      setChecked(
-        data.reachable && typeof data.height === "number"
-          ? { height: data.height, estimated: false }
-          : { height: estimateHeight(), estimated: true },
-      );
+      /* the test just read the REAL tip — that IS the checked block; a dark
+         node is no reading (null), never an estimate */
+      setChecked({
+        height: data.reachable && typeof data.height === "number" ? data.height : null,
+      });
     } catch {
       setError("couldn't reach the app — try again");
     } finally {
@@ -231,13 +231,12 @@ export default function MempoolPanel() {
               )}
             </Row>
             <Row label="CHECKED">
-              {checked != null ? (
-                <span className="text-white/60">
-                  {checked.estimated ? "~ " : ""}
-                  {bftDateTime(checked.height)}
-                </span>
-              ) : (
+              {checked == null ? (
                 "—"
+              ) : checked.height != null ? (
+                <span className="text-white/60">{bftDateTime(checked.height)}</span>
+              ) : (
+                <span className="text-white/40">— · node dark, no reading</span>
               )}
             </Row>
             {status?.reason && (

@@ -49,7 +49,7 @@ export default async function RetreatPage({ params }: { params: Promise<{ id: st
             {prettySpan(r.startDate, r.endDate)} · {days} days · {r.location}
           </p>
           <p style={{ fontSize: ".92rem", fontWeight: 700, margin: "0 0 22px",
-            color: seatsLeft > 0 ? "#2e6b77" : "var(--rose)" }}>
+            color: seatsLeft > 0 ? "var(--teal-deep)" : "var(--rose)" }}>
             {seatsLeft > 0 ? `${seatsLeft} of ${r.seats} seats left` : "all seats are taken"}
           </p>
           <p className="lead" style={{ whiteSpace: "pre-line", marginBottom: 30 }}>{r.blurb}</p>

@@ -28,15 +28,17 @@ interface Decision {
   status: "open" | "revise" | "decided";
   choice?: string;
   note?: string;
-  at?: number;
+  at?: number | null;
   atEstimated?: boolean;
   revise?: boolean;
   source?: string;
 }
 
-/** BFT stamp, honest: `~ ` when the network was dark at record time (the
-    height is a genesis estimate, never a block fact). */
-const stamp = (at: number, estimated?: boolean) => `${estimated ? "~ " : ""}${bftDateTime(at)}`;
+/** BFT stamp, honest: no height when no node answered → "—" (ruling
+    0018.05.26 a₿: dashes over estimates). The `~ ` prefix survives only on
+    legacy pre-ruling records whose height is a genesis estimate. */
+const stamp = (at?: number | null, estimated?: boolean) =>
+  at == null ? "—" : `${estimated ? "~ " : ""}${bftDateTime(at)}`;
 
 export default function DecisionsPanel() {
   const [decisions, setDecisions] = useState<Decision[] | null>(null);

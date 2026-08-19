@@ -53,7 +53,7 @@ const ANGLES = [135, 90, 45, 160, 20];
 /** dark-on-light or light-on-dark, never mid-on-mid: pick the ink that
  *  clears BOTH gradient stops best (doctrine — measured, not assumed) */
 function gradientInk(a: string, b: string): string {
-  const dark = "#141021", light = "#ffffff";
+  const dark = "#141021", light = "#ffffff"; /* S2: contrast-math anchors (contrastRatio parses hex), not styles — kept, reported */
   const minDark = Math.min(contrastRatio(dark, a), contrastRatio(dark, b));
   const minLight = Math.min(contrastRatio(light, a), contrastRatio(light, b));
   return minDark >= minLight ? dark : light;
@@ -71,7 +71,7 @@ function GradientLab({ hexes, shuffleN, onShuffle }: {
   /* the label chip: a text-safe panel over the busy gradient (doctrine) */
   const chip: React.CSSProperties = {
     position: "absolute", left: 10, bottom: 8,
-    background: "rgba(12,10,22,.85)", color: "#F4ECFF",
+    background: "rgba(12,10,22,.85)", color: "#F4ECFF", /* S2: pinned — needs a ruling (chip stays dark over both panes' gradients) */
     fontFamily: MONO, fontSize: 11.5, fontWeight: 700,
     padding: "3px 9px", borderRadius: 7, letterSpacing: ".04em",
   };
@@ -127,7 +127,7 @@ function ThemePane({ variant, hexes, dawnOverrides, onSwatch, onClearDawn, shuff
         border: "1px solid rgba(139,118,196,.35)", overflow: "hidden",
         /* the pv class sets background: var(--ground) — a solid hex; this
            is belt-and-braces so the pane NEVER shows a see-through ground */
-        backgroundColor: isDawn ? "#fcf7f0" : "#141021" }}
+        backgroundColor: isDawn ? "#fcf7f0" : "#141021" /* S2: pinned — needs a ruling */ }}
     >
       <div style={{ padding: "16px 18px 30px" }}>
         <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".2em", fontWeight: 800,
@@ -151,13 +151,13 @@ function ThemePane({ variant, hexes, dawnOverrides, onSwatch, onClearDawn, shuff
                   aria-label={title}
                   style={{ position: "relative", width: 44, height: 36, borderRadius: 9,
                     cursor: "pointer", padding: 0, background: hexes[k],
-                    border: overridden ? "2px solid #B4862B" : "1px solid var(--edge)",
+                    border: overridden ? "2px solid #B4862B" /* S2: gold law — decorative, reported */ : "1px solid var(--edge)",
                     boxShadow: overridden ? "0 0 0 2px rgba(180,134,43,.35)" : "none" }}
                 >
                   {overridden && (
                     /* the non-colour cue: a dot chip — survives grayscale */
                     <span aria-hidden style={{ position: "absolute", top: -6, right: -6,
-                      width: 13, height: 13, borderRadius: "50%", background: "#B4862B",
+                      width: 13, height: 13, borderRadius: "50%", background: "#B4862B", /* S2: gold law — decorative, reported */
                       border: "2px solid var(--ground)", display: "block" }} />
                   )}
                 </button>
@@ -212,34 +212,34 @@ export default function BrandBoard() {
   const dawnHexes = pal ? effectivePalette(ONECOCREATION, ["dawn"], overrides) : null;
 
   return (
-    <div style={{ height: "100%", overflowY: "auto", background: "#141021", fontFamily: SANS }}>
+    <div style={{ height: "100%", overflowY: "auto", background: "#141021" /* S2: pinned — needs a ruling */, fontFamily: SANS }}>
       {/* control rail */}
       <div style={{ position: "sticky", top: 0, zIndex: 20, display: "flex", alignItems: "center",
-        gap: 10, flexWrap: "wrap", padding: "10px 14px", background: "#12101f",
+        gap: 10, flexWrap: "wrap", padding: "10px 14px", background: "#12101f", /* S2: pinned — needs a ruling */
         borderBottom: "1px solid rgba(139,118,196,.3)" }}>
         <span style={{ fontFamily: MONO, fontWeight: 800, letterSpacing: ".22em",
-          color: "#F4ECFF", fontSize: 13, whiteSpace: "nowrap" }}>
-          ■ <i style={{ fontStyle: "normal", color: "#EBCB77" }}>BRAND BOARD</i>
+          color: "#F4ECFF" /* S2: pinned — needs a ruling */, fontSize: 13, whiteSpace: "nowrap" }}>
+          ■ <i style={{ fontStyle: "normal", color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>BRAND BOARD</i>
         </span>
         <button onClick={roll} title="roll a new palette (clears dawn overrides)"
-          style={{ ...pill, background: "#1b1530", color: "#EBCB77", border: "1px solid #D9B24E" }}>
+          style={{ ...pill, background: "#1b1530" /* S2: pinned — needs a ruling */, color: "#EBCB77" /* S2: gold law — decorative, reported */, border: "1px solid #D9B24E" /* S2: gold law — decorative, reported */ }}>
           🎲 roll
         </button>
         <button onClick={() => save()} disabled={!dirty || busy}
           title={dirty ? "save this palette to the brand — every slot-coloured block follows" : "no unsaved palette changes"}
           style={{ ...pill,
-            background: dirty ? "linear-gradient(135deg,#EBCB77,#D9B24E)" : "rgba(139,118,196,.15)",
-            color: dirty ? "#3a2a06" : "#9a8fae", cursor: dirty && !busy ? "pointer" : "default" }}>
+            background: dirty ? "linear-gradient(135deg,#EBCB77,#D9B24E)" /* S2: gold law — decorative, reported */ : "rgba(139,118,196,.15)",
+            color: dirty ? "#3a2a06" /* S2: gold law — decorative, reported */ : "#9a8fae" /* S2: pinned — needs a ruling */, cursor: dirty && !busy ? "pointer" : "default" }}>
           {busy ? "Saving…" : dirty ? "Save to brand" : "Saved"}
         </button>
         <button onClick={() => reset()} disabled={busy}
           title="back to the cartridge default (both themes)"
-          style={{ ...pill, background: "none", color: "#D9D2E4", textDecoration: "underline", padding: "6px 6px" }}>
+          style={{ ...pill, background: "none", color: "#D9D2E4" /* S2: pinned — needs a ruling */, textDecoration: "underline", padding: "6px 6px" }}>
           reset
         </button>
         <span style={{ flex: 1 }} />
         <button onClick={backToStudio} title="back to the page you were editing"
-          style={{ ...pill, background: "rgba(139,118,196,.22)", color: "#F4ECFF" }}>
+          style={{ ...pill, background: "rgba(139,118,196,.22)", color: "#F4ECFF" /* S2: pinned — needs a ruling */ }}>
           ← back to studio
         </button>
       </div>
@@ -267,7 +267,7 @@ export default function BrandBoard() {
           />
         </div>
       ) : (
-        <p style={{ padding: 24, color: "#D9D2E4", fontSize: 14 }}>loading palette…</p>
+        <p style={{ padding: 24, color: "#D9D2E4" /* S2: pinned — needs a ruling */, fontSize: 14 }}>loading palette…</p>
       )}
     </div>
   );

@@ -12,6 +12,7 @@ import { siteBase } from "./subscribers";
 /** The doors close kindly, never silently. */
 export async function sendRevokeLetter(to: string, tier: Tier, refunded: boolean): Promise<void> {
   const name = TIERS[tier].name;
+  // S2: the gold CTA below stays literal — decorative gold awaits the taste-maker's ruling (gold law).
   await enqueue([{
     to,
     subject: `The door rests — ${name}`,

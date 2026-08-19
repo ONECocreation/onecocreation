@@ -68,7 +68,7 @@ const GROUPS: {
 
 /** the cosmic walk — each shelf carries its own tone (0018.05.15) */
 const BANDS: Record<string, { bg: string; dark?: boolean }> = {
-  sessions: { bg: "linear-gradient(180deg,#141021 0%,#12202a 100%)" },
+  sessions: { bg: "linear-gradient(180deg,var(--ground) 0%,var(--band-4) 100%)" },
   meditations: {
     bg: `linear-gradient(180deg, rgba(14,10,28,.66), rgba(14,10,28,.78)), url(${cartridge.hero.nebula}) center / cover no-repeat`,
     dark: true,
@@ -165,7 +165,8 @@ export default async function StorePage() {
                       <img className="thumb" src={shot} alt={item.title} />
                     ) : (
                       <div className="thumb" style={{ display: "grid", placeItems: "center", fontSize: "2.6rem",
-                        background: "linear-gradient(135deg,#f3dce3,#cbbbea)" }}>
+                        /* #f3dce3 stays literal — it's the cartridge.ts `blush` brand def, kept as data (S2) */
+                        background: "linear-gradient(135deg,#f3dce3,var(--lavender-soft))" }}>
                         {group.icon}
                       </div>
                     )}

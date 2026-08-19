@@ -84,6 +84,8 @@ export async function sendBookingConfirmation(
   });
 
   const name = booking.customer.name ? `, ${booking.customer.name}` : "";
+  // S2: pinned — needs a ruling: the #b4862b link golds in this letter stay
+  // literal — brandShell inlines everything and mail clients don't resolve var()
   const meetingRow = booking.meetingUrl
     ? `<p><b>Where:</b> <a href="${booking.meetingUrl}" style="color:#b4862b;">${booking.meetingUrl}</a></p>`
     : "";

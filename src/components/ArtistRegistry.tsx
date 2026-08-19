@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { bftDate, bftDateTime, estimateHeight } from "@/lib/bb/bft";
+import { bftDate, bftDateTime } from "@/lib/bb/bft";
 
 /**
  * The Artist Registry — the brand-kit door for artists:
@@ -65,8 +65,9 @@ type NameCheck =
 type Tab = "request" | "board" | "watch";
 
 /** BFT stamp, house standard: the real block when recorded (★-in-a-box),
-    a ~estimate from the timestamp when not. */
-function BftStamp({ at, blockHeight }: { at: string; blockHeight: number | null }) {
+    an honest dash when not — fleet ruling 0018.05.26 a₿ (dashes over
+    estimates; the estimate rung is DELETED, not gated). */
+function BftStamp({ blockHeight }: { at: string; blockHeight: number | null }) {
   if (blockHeight != null)
     return (
       <>
@@ -74,7 +75,7 @@ function BftStamp({ at, blockHeight }: { at: string; blockHeight: number | null 
         {bftDateTime(blockHeight)}
       </>
     );
-  return <>~ {bftDateTime(estimateHeight(new Date(at).getTime()))}</>;
+  return <>—</>;
 }
 
 function StatusPill({ s }: { s: RequestStatus }) {

@@ -260,12 +260,12 @@ export default function LoginPanel() {
                   border: "none",
                   outline: "none",
                   background: "transparent",
-                  color: "#4a4458",
+                  color: "var(--field-ink)",
                   padding: "10px 2px",
                   fontSize: "1rem",
                 }}
               />
-              <span style={{ fontWeight: 700, whiteSpace: "nowrap", color: "var(--info, #5f4b96)" }}>
+              <span style={{ fontWeight: 700, whiteSpace: "nowrap", color: "var(--info, #9d86d9)" }}>
                 @onecocreation
               </span>
             </div>
@@ -321,7 +321,7 @@ export default function LoginPanel() {
                 style={{
                   ...tabBase,
                   ...(door === k
-                    ? { background: "linear-gradient(135deg,#cbbbea,var(--lavender, #8B76C4))", color: "#fff", border: "1.5px solid transparent" }
+                    ? { background: "linear-gradient(135deg,var(--lavender-soft),var(--lavender, #8B76C4))", color: "#fff", border: "1.5px solid transparent" }
                     : { background: "transparent", color: "var(--ink-body)", border: "1.5px solid rgba(139,118,196,.4)" }),
                 }}
               >

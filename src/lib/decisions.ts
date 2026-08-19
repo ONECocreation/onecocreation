@@ -39,9 +39,9 @@ export interface Decision {
   status: DecisionStatus;
   choice?: string; // optionKey the admiral recorded
   note?: string; // the admiral's note at record time (or what-to-change on a revise)
-  at?: number; // block height at record — BFT-stamped in the UI
-  /** the network was dark at record time — `at` is a genesis ~estimate, never
-      a block fact; the UI wears the honest `~ ` */
+  at?: number | null; // block height at record — BFT-stamped in the UI, an honest — when no node answered
+  /** legacy: pre-0018.05.26 a₿ records flagged a network-dark stamp as a
+      genesis ~estimate; new records etch null, never a guess */
   atEstimated?: boolean;
   revise?: boolean; // sent back for rework — a note with no choice
   source?: string; // where the ruling surfaced (topic / briefing)
@@ -205,8 +205,8 @@ interface Ruling {
   choice?: string; // absent on a revise (a note with no pick)
   note?: string;
   revise?: boolean; // sent back for rework — carries a note + at, no choice
-  at: number; // block height at record time
-  atEstimated?: boolean; // network dark at record time — `at` is a ~estimate, not a block fact
+  at: number | null; // block height at record time — null when no node answered
+  atEstimated?: boolean; // legacy ~estimate flag on pre-0018.05.26 a₿ records; never written anymore
 }
 interface Board {
   rulings: Ruling[];
@@ -354,14 +354,13 @@ export async function recordDecision(
   }
   const trimmed = (note ?? "").trim().slice(0, 2000) || undefined;
   /* the REAL block, own node first (serverBlockInfo) — an unreachable network
-     records the estimate FLAGGED, never as a bare block fact */
-  const { height, estimated } = await serverBlockInfo();
+     records an honest null, never an estimate (fleet ruling 0018.05.26 a₿) */
+  const { height } = await serverBlockInfo();
   const ruling: Ruling = {
     id,
     choice,
     note: trimmed,
     at: height,
-    atEstimated: estimated || undefined,
   };
   await writeRuling(ruling);
   return {
@@ -372,7 +371,6 @@ export async function recordDecision(
       choice,
       note: trimmed,
       at: height,
-      atEstimated: estimated || undefined,
     },
   };
 }
@@ -393,14 +391,13 @@ export async function recordRevise(
   if (!seed) return { ok: false, reason: "no such decision on the board" };
   const trimmed = (note ?? "").trim().slice(0, 2000);
   if (!trimmed) return { ok: false, reason: "a send-back needs a note — say what to change" };
-  /* same honest stamp as recordDecision — the flag rides the record */
-  const { height, estimated } = await serverBlockInfo();
+  /* same honest stamp as recordDecision — null when no node answered */
+  const { height } = await serverBlockInfo();
   const ruling: Ruling = {
     id,
     revise: true,
     note: trimmed,
     at: height,
-    atEstimated: estimated || undefined,
   };
   await writeRuling(ruling);
   return {
@@ -411,7 +408,6 @@ export async function recordRevise(
       revise: true,
       note: trimmed,
       at: height,
-      atEstimated: estimated || undefined,
     },
   };
 }

@@ -62,9 +62,9 @@ export interface BriefReview {
   tier: BriefTier; // the tier its brief lives in — reviews key on (tier, slug)
   status: "signed" | "revise"; // signed off, or sent back for another pass
   comment?: string;
-  at: number; // block height at record — the block IS the record
-  /** the network was dark at record time — `at` is a genesis ~estimate, never
-      a block fact; the UI wears the honest `~ ` */
+  at: number | null; // block height at record — the block IS the record; null when no node answered
+  /** legacy: pre-0018.05.26 a₿ records flagged a network-dark stamp as a
+      genesis ~estimate; new records etch null, never a guess */
   atEstimated?: boolean;
   by?: string; // operator pubkey hex
   sig?: string; // the per-action signature — the record IS the proof
@@ -74,7 +74,7 @@ export interface BriefReview {
 export interface Brief extends BriefContent {
   status: BriefStatus;
   comment?: string;
-  at?: number;
+  at?: number | null;
   atEstimated?: boolean;
   by?: string;
   sig?: string;
@@ -417,15 +417,14 @@ export async function recordReview(event: {
   }
 
   /* the REAL block, own node first (serverBlockInfo) — an unreachable network
-     records the estimate FLAGGED, never as a bare block fact */
-  const { height, estimated } = await serverBlockInfo();
+     records an honest null, never an estimate (fleet ruling 0018.05.26 a₿) */
+  const { height } = await serverBlockInfo();
   const review: BriefReview = {
     slug,
     tier,
     status: action === "sendback" ? "revise" : "signed",
     comment,
     at: height,
-    atEstimated: estimated || undefined,
     by: event.pubkey,
     sig: event.sig,
   };

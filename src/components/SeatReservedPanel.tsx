@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { bftDateTime, estimateHeightAt } from "@/lib/bb/bft";
 
 /**
  * SEAT A RESERVED NAME — the captain's hand on the registry. Reserved names
@@ -71,13 +70,11 @@ export default function SeatReservedPanel({ space }: { space: string }) {
             KEY: <span className="text-white">{entry.npub}</span>
           </p>
           <p>STATUS: {entry.status.toUpperCase()}</p>
-          {/* BFT, never the old calendar (the honest-time law): a wall-clock
-              request stamp rides the anchored estimate, wearing the ~ */}
+          {/* fleet ruling 0018.05.26 a₿ — dashes over estimates: the seat
+              moment has no recorded block yet, so the stamp is an honest
+              dash, never a ~guess from the wall clock */}
           <p>
-            SEATED:{" "}
-            <span className="whitespace-nowrap">
-              ~{bftDateTime(estimateHeightAt(new Date(entry.requestedAt).getTime()))}
-            </span>
+            SEATED: <span className="whitespace-nowrap">—</span>
           </p>
           {typeof entry.blockHeight === "number" && (
             <p>

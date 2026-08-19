@@ -379,7 +379,7 @@ export default function StoreRoom() {
                       <img src={face} alt="" style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover" }} />
                     ) : (
                       <span style={{ width: 44, height: 44, borderRadius: 10, display: "grid", placeItems: "center",
-                        background: "linear-gradient(135deg,#cbbbea,#8b76c4)", color: "#fff", fontSize: "1.1rem" }}>✦</span>
+                        background: "linear-gradient(135deg,var(--lavender-soft),var(--lavender))", color: "#fff", fontSize: "1.1rem" }}>✦</span>
                     )}
                   </td>
                   <td style={td}>

@@ -34,6 +34,16 @@ async function kv(cmd: unknown[]): Promise<unknown> {
 const liveKey = (slug: string) => `puck:page:${slug}`;
 const draftKey = (slug: string) => `puck:draft:${slug}`;
 const INDEX_KEY = "puck:pages";
+/* STUDIO P1: the pages panel's display order — seeds hold their canonical
+   order as defaults, this key only records the operator's rearrangement */
+const ORDER_KEY = "puck:page-order";
+
+/** False in dev when KV_REST_API_* aren't set — every helper below then
+ *  quietly no-ops/returns null, and the pages panel shows its controls
+ *  disabled-with-reason instead of pretending to write. */
+export function puckStoreReady(): boolean {
+  return restEnv() !== null;
+}
 
 export interface PuckPageData {
   content: unknown[];
@@ -93,4 +103,96 @@ export async function listPuckPages(): Promise<string[]> {
   } catch {
     return [];
   }
+}
+
+/* ── STUDIO P1: page management (the pages panel) ──────────────────────────
+   Same silent-null contract as above: with no KV these simply no-op, and the
+   API route reports readiness separately so the UI can be honest about it. */
+
+/** Rename: move DRAFT + LIVE onto the new slug and update index + order. */
+export async function renamePuckPage(oldSlug: string, newSlug: string): Promise<void> {
+  const [draft, live] = await Promise.all([getPuckDraft(oldSlug), getPuckPage(oldSlug)]);
+  if (draft) await kv(["SET", draftKey(newSlug), JSON.stringify(draft)]);
+  if (live) await kv(["SET", liveKey(newSlug), JSON.stringify(live)]);
+  await kv(["DEL", draftKey(oldSlug), liveKey(oldSlug)]);
+  await kv(["SREM", INDEX_KEY, oldSlug]);
+  await kv(["SADD", INDEX_KEY, newSlug]);
+  const order = await getPageOrder();
+  if (order?.includes(oldSlug)) await setPageOrder(order.map((s) => (s === oldSlug ? newSlug : s)));
+}
+
+/** Delete: remove DRAFT, LIVE, the index entry and any order entry. */
+export async function deletePuckPage(slug: string): Promise<void> {
+  await kv(["DEL", draftKey(slug), liveKey(slug)]);
+  await kv(["SREM", INDEX_KEY, slug]);
+  const order = await getPageOrder();
+  if (order?.includes(slug)) await setPageOrder(order.filter((s) => s !== slug));
+}
+
+/** Duplicate: write dest's DRAFT from src's DRAFT ?? LIVE. Returns false
+ *  when src has neither (the API route handles seed sources itself). */
+export async function duplicatePuckPage(src: string, dest: string): Promise<boolean> {
+  const data = (await getPuckDraft(src)) ?? (await getPuckPage(src));
+  if (!data) return false;
+  await setPuckDraft(dest, data);
+  return true;
+}
+
+/** The operator's page order; [] when never set, null on read trouble. */
+export async function getPageOrder(): Promise<string[] | null> {
+  try {
+    const raw = (await kv(["GET", ORDER_KEY])) as string | null;
+    if (!raw) return [];
+    const arr = JSON.parse(raw) as unknown;
+    return Array.isArray(arr) ? arr.filter((s): s is string => typeof s === "string") : [];
+  } catch {
+    return null;
+  }
+}
+
+export async function setPageOrder(order: string[]): Promise<void> {
+  await kv(["SET", ORDER_KEY, JSON.stringify(order)]);
+}
+
+/* ── STUDIO P2: the popup registry ─────────────────────────────────────────
+   Popups are full Puck documents in the `popup:<name>` slug lane (they ride
+   the same draft/live keys as pages — colons are fine in KV keys). WHEN and
+   WHERE each one shows is content, not code: this trigger map, overlaid on
+   the code-side defaults (src/lib/puck-popups.ts). */
+
+/** When/where a popup renders — editable in the studio's popups panel. */
+export interface PopupTrigger {
+  enabled: boolean;
+  delayMs: number;
+  oncePerSession: boolean;
+  pages: string[];
+}
+
+const POPUP_CONFIG_KEY = "puck:popup-config";
+
+/** The operator's trigger overrides; null on read trouble, {} when never set. */
+export async function getPopupTriggers(): Promise<Record<string, PopupTrigger> | null> {
+  try {
+    const raw = (await kv(["GET", POPUP_CONFIG_KEY])) as string | null;
+    if (!raw) return {};
+    const obj = JSON.parse(raw) as unknown;
+    return obj && typeof obj === "object" && !Array.isArray(obj)
+      ? (obj as Record<string, PopupTrigger>)
+      : {};
+  } catch {
+    return null;
+  }
+}
+
+export async function setPopupTrigger(name: string, trigger: PopupTrigger): Promise<void> {
+  const all = (await getPopupTriggers()) ?? {};
+  all[name] = trigger;
+  await kv(["SET", POPUP_CONFIG_KEY, JSON.stringify(all)]);
+}
+
+export async function removePopupTrigger(name: string): Promise<void> {
+  const all = await getPopupTriggers();
+  if (!all || !(name in all)) return;
+  delete all[name];
+  await kv(["SET", POPUP_CONFIG_KEY, JSON.stringify(all)]);
 }

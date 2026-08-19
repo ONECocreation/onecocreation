@@ -1,5 +1,5 @@
 import { effectiveMempoolNode, MEMPOOL_URL_DEFAULT } from "./nodeconfig";
-import { estimateHeight, type BlockInfo } from "./bb/bft";
+import type { BlockInfo } from "./bb/bft";
 
 /**
  * The SERVER-side block tip — sovereign truth for every record-writer.
@@ -9,9 +9,10 @@ import { estimateHeight, type BlockInfo } from "./bb/bft";
  * always fell through to the public mempool.space. This is the server path that
  * honors sovereignty: the admiral's configured node FIRST
  * (effectiveMempoolNode(): stored → env → public), the public mempool.space
- * only if that's dark, and a genesis-anchored ~10-min/block estimate only when
- * both are unreachable — flagged `estimated: true` so no writer ever etches a
- * guess as a block fact. Same ladder merges.ts's signingStamp always walked;
+ * only if that's dark — and NOTHING when both are unreachable. The estimate
+ * rung is DELETED, not gated (fleet ruling 0018.05.26 a₿: dashes over
+ * estimates): `height: null` means no reading, and no writer etches a guess
+ * as a block fact. Same ladder merges.ts's signingStamp always walked;
  * this is its single source of truth now.
  */
 export async function serverBlockInfo(): Promise<BlockInfo> {
@@ -28,14 +29,15 @@ export async function serverBlockInfo(): Promise<BlockInfo> {
         if (res.ok) {
           const h = parseInt((await res.text()).trim(), 10);
           if (Number.isFinite(h) && h > 0)
-            return { height: h, estimated: false, tipTimestamp: null }; // bare-height read — no chain stamp here
+            return { height: h, tipTimestamp: null }; // bare-height read — no chain stamp here
         }
       } catch {
         /* this base is dark — try the next */
       }
     }
   } catch {
-    /* node config unavailable — fall through to the honest estimate */
+    /* node config unavailable — fall through to the honest null */
   }
-  return { height: estimateHeight(), estimated: true, tipTimestamp: null };
+  // NO estimate rung (fleet ruling 0018.05.26 a₿): no reading IS the answer.
+  return { height: null, tipTimestamp: null };
 }

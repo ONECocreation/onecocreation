@@ -20,12 +20,12 @@ const ACTIONS: { a: BuddyCareAction; icon: string; label: string }[] = [
 const meterColor = (v: number) => `hsl(${(Math.max(0, v) / 100) * 142} 78% 60%)`;
 
 export default function BuddyDevice({
-  buddy, currentBlock, estimatedBlock = false, onChange, onNew,
+  buddy, currentBlock, onChange, onNew,
 }: {
   buddy: StoredBuddy;
-  currentBlock: number;
-  /** true when the height is an offline estimate — heights render with the honest ~. */
-  estimatedBlock?: boolean;
+  /* live tip or null (no reading — fleet ruling 0018.05.26 a₿): every slot
+     that consumes the height renders an honest dash on null, never a guess */
+  currentBlock: number | null;
   onChange: (b: StoredBuddy) => void;
   onNew: () => void;
 }) {
@@ -100,7 +100,7 @@ export default function BuddyDevice({
   const doAction = useCallback((a: BuddyCareAction) => {
     if (!aliveRef.current) return;
     if ((coolRef.current[a] ?? 0) > Date.now()) return;
-    const { index } = stageForAgeDays(Math.max(0, (blockRef.current - buddy.bornBlock) / 144));
+    const { index } = stageForAgeDays(Math.max(0, ((blockRef.current ?? buddy.bornBlock) - buddy.bornBlock) / 144));
     const res = applyCare(a, vitalsRef.current, STAGES[index]);
     say(res.quip);
     if (!res.reaction) return; // e.g. too tired to play — no cooldown, no change
@@ -165,9 +165,10 @@ export default function BuddyDevice({
     let shimmerAt = -1; // rAF-clock ms of the last block break
 
     const draw = (t: number) => {
-      if (blockRef.current !== bgHeight) {
+      const tipNow = blockRef.current;
+      if (tipNow != null && tipNow !== bgHeight) {
         if (bgHeight !== -1 && !reduce) shimmerAt = t; // the block broke mid-visit
-        bgHeight = blockRef.current;
+        bgHeight = tipNow;
         scene = bftScene(bgHeight);
         drawBftBackground(bgctx, W, H, scene);
       }
@@ -216,7 +217,7 @@ export default function BuddyDevice({
           else if (type === "sleep") { sy = 1 - e * 0.22; sx = 1 + e * 0.08; }  // gentle settle down
           else if (type === "talk") { rot = Math.sin(p * Math.PI * 2) * 0.14 * e; sy = 1 + e * 0.05; } // chatty sway
         }
-        const ageDays = Math.max(0, (blockRef.current - buddy.bornBlock) / 144);
+        const ageDays = Math.max(0, ((blockRef.current ?? buddy.bornBlock) - buddy.bornBlock) / 144);
         const grow = 1 + stageForAgeDays(ageDays).index * 0.12;
         const size = 150 * grow;
         ctx.save();
@@ -235,16 +236,18 @@ export default function BuddyDevice({
   }, [buddy.bornBlock]);
 
   // ---- derived display ----
-  const ageDays = Math.max(0, Math.floor((currentBlock - buddy.bornBlock) / 144));
-  const stage = stageForAgeDays(ageDays).stage;
+  /* null tip = no reading: age/stage/sky all take the honest dash below */
+  const ageDays = currentBlock != null
+    ? Math.max(0, Math.floor((currentBlock - buddy.bornBlock) / 144))
+    : null;
+  const stage = ageDays != null ? stageForAgeDays(ageDays).stage : null;
   const status = statusLine(buddy.name, vitals);
   const animal = yearAnimal(buddy.bornBlock);
   /* One source of truth for the sky: glyph + name + BFT day all come from
      moonPhase/bft — the old footer hardcoded a 🌙 crescent next to the real
      phase NAME, so mid-month it lied "🌙 Full" (fixed 0018.04.15 a₿). */
-  const moon = moonPhase(currentBlock, Date.now()); // the tip is NOW — the sky's own instant
-  const bftDay = bft(currentBlock).day;
-  const tilde = estimatedBlock ? "~" : "";
+  const moon = currentBlock != null ? moonPhase(currentBlock, Date.now()) : null; // the tip is NOW — the sky's own instant
+  const bftDay = currentBlock != null ? bft(currentBlock).day : null;
 
   return (
     <div className="mx-auto w-full max-w-md rounded-2xl border-2 border-edge bg-panel p-5">
@@ -258,8 +261,8 @@ export default function BuddyDevice({
         </span>
       </div>
       <div className="mt-3 flex flex-wrap gap-2 font-mono text-[10px] uppercase tracking-wider text-white/50">
-        <span className="rounded border border-edge px-2 py-1">Stage · {stage}</span>
-        <span className="rounded border border-edge px-2 py-1">Age · {ageDays} d</span>
+        <span className="rounded border border-edge px-2 py-1">Stage · {stage ?? "—"}</span>
+        <span className="rounded border border-edge px-2 py-1">Age · {ageDays != null ? `${ageDays} d` : "—"}</span>
         <span className="rounded border border-cyan/30 px-2 py-1 text-cyan">Born · <BftDate height={buddy.bornBlock} /></span>
         <span className="rounded border border-edge px-2 py-1">{animal.emoji} {animal.name}</span>
       </div>
@@ -284,7 +287,7 @@ export default function BuddyDevice({
             <div className="text-4xl">🪦</div>
             <p className="max-w-[30ch] font-mono text-xs leading-relaxed text-white">
               Here lies <strong style={{ color: C.ghost }}>{buddy.name}</strong><br />
-              lived {ageDays} day{ageDays === 1 ? "" : "s"} on the block<br />
+              lived {ageDays ?? "—"} day{ageDays === 1 ? "" : "s"} on the block<br />
               <span className="text-white/50">{cause}</span>
             </p>
             <button onClick={onNew} className="button mt-1">Bring home a new buddy</button>
@@ -327,7 +330,8 @@ export default function BuddyDevice({
 
       <div className="mt-4 flex items-center justify-between gap-2">
         <span className="font-mono text-[10px] tracking-wider text-white/40">
-          Tick tock · blk {tilde}{currentBlock.toLocaleString()} · D{String(bftDay).padStart(2, "0")} {moon.emoji} {moon.name}
+          Tick tock · blk {currentBlock != null ? currentBlock.toLocaleString() : "—"} · D
+          {bftDay != null ? String(bftDay).padStart(2, "0") : "--"} {moon != null ? `${moon.emoji} ${moon.name}` : "—"}
         </span>
         <button onClick={onNew} className="font-mono text-[10px] uppercase tracking-widest text-white/40 hover:text-neon">＋ New</button>
       </div>

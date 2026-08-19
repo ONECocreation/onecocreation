@@ -123,7 +123,7 @@ export interface PriceSnapshot {
   currency: string; // "SATS" or ISO-4217
   rate?: number;
   rateSource?: string;
-  at: string; // ISO — raw record; surfaces render BFT with ~
+  at: string; // ISO — raw record; surfaces render BFT live-or-dashes (fleet ruling 0018.05.26 a₿ — the ~ estimate is dead)
 }
 
 export interface OrderRecord {
