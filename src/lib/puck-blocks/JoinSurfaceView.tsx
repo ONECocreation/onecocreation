@@ -24,9 +24,20 @@ import { applyFrenSession } from "@/hooks/useFrenSession";
  */
 
 /* P3-ruled surface copy — used EXACTLY as ruled; not a field, never
-   paraphrased, never split. */
+   paraphrased, never split.
+
+   RE-SCOPED 0018.05.29 on Pac's ruling ("queued now, etched later") after
+   primary-source research: Spaces TOP-LEVEL names are live on mainnet, but
+   SUB-NAMES under a community space are alpha and explicitly not
+   production-mainnet-safe per the protocol's own maintainers. The previous
+   wording promised the anchoring in the present tense. This says what is
+   actually true — the name is yours immediately, and the bitcoin etching is
+   queued — which is also exactly what the registry's queued/committed state
+   machine already does. Restore the present tense only when the protocol
+   ships a release that is not labelled alpha.
+   See ~/dev/briefings/spaces-protocol-verdict.md */
 const PROMISE =
-  "private where you need it, secure as a foundation, one branded name you choose under your community — bitcoin-backed by the Spaces protocol, honest to the block.";
+  "private where you need it, secure as a foundation, one branded name you choose under your community — yours the moment you claim it, queued now and etched onto bitcoin through the Spaces protocol. Honest to the block.";
 
 /* hydration-safe one-shot signer read — the machinery's own pattern
    (SignerDoors.useIsAndroid / Kind0Doors.useHasSigner) */
