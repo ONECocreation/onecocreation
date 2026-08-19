@@ -32,7 +32,10 @@
   --glass-night:rgba(22,17,40,.66); --glass-night-edge:rgba(139,118,196,.35);
   --field-bg:rgba(255,255,255,.94); --field-ink:#4a4458; --sheet-bg:rgba(28,22,50,.98);
   --soft-sm:0 18px 44px -28px rgba(5,3,16,.6);
-  --ok:#7fb98f; --warn:#EBCB77; --err:#E7899E; --info:#9d86d9;
+  /* --warn is deep orange, NOT gold: gold means money (Pac's ruling A, 0018.05.28).
+     It was byte-identical to --gold-2 (#EBCB77), so a caution painted exact money-gold
+     and passed review because the token was named --warn. Delta-E 28.5 from --gold-2 now. */
+  --ok:#7fb98f; --warn:#E9954C; --err:#E7899E; --info:#9d86d9;
   --teal-bright:#8FD0D8;
   --gold:#D9B24E; --gold-2:#EBCB77; --gold-deep:#D9B24E;
   /* money & brand metal (S2 token walk, 0018.05.25 a₿) */
@@ -205,7 +208,8 @@ html[data-oc-theme="light"],.oc-pv-light{  --panel:rgba(255,255,255,.6); --edge:
   --ground:#FCF7F0;
   --soft-sm:0 18px 44px -28px rgba(120,100,160,.45);
   --sheet-bg:#fffdf8;
-  --ok:#3c6b49; --warn:#7a5a12; --err:#a34e6c; --info:#5f4b96;
+  /* dawn follows night's hue family so the token means one thing at any hour */
+  --ok:#3c6b49; --warn:#8C4A12; --err:#a34e6c; --info:#5f4b96;
   --teal-bright:#23636E;
   --gold-deep:#B4862B; --rose:#C56E8B;
   --soft:0 24px 60px -30px rgba(120,100,160,.55);

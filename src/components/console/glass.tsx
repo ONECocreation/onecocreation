@@ -64,7 +64,9 @@ const CHIP_TONES = {
   rose: { background: "rgba(197,110,139,.13)", color: "var(--err)", border: "1px solid rgba(197,110,139,.4)" },
   lavender: { background: "rgba(139,118,196,.14)", color: "var(--info)", border: "1px solid rgba(139,118,196,.4)" },
   teal: { background: "rgba(78,160,175,.13)", color: "var(--teal-deep)", border: "1px solid rgba(78,160,175,.4)" },
-  gold: { background: "rgba(217,178,78,.14)", color: "var(--warn)", border: "1px solid rgba(180,134,43,.5)" },
+  /* gold-as-warmth, deliberately: this chip read --warn only because --warn used to BE the
+     gold hex. With --warn retuned to orange (ruling A) it says --gold-2 outright. */
+  gold: { background: "rgba(217,178,78,.14)", color: "var(--gold-2)", border: "1px solid rgba(180,134,43,.5)" },
 } as const;
 
 export function Chip({ tone, children }: { tone: keyof typeof CHIP_TONES; children: React.ReactNode }) {
