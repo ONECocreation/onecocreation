@@ -154,7 +154,7 @@ export default async function AboutPage() {
                 that the knowingness I have had for years is actually one of my{" "}
                 <b style={{ color: "var(--gold-2)" }}>Claires</b>! And now IAM.
               </Editable>
-              <Editable id="about.p7" as="p" style={{ ...story, fontFamily: "var(--font-body)", fontSize: "1.15rem", color: "var(--ink-strong)" }} override={ov["about.p7"]}>
+              <Editable id="about.p7" as="p" style={{ ...story, fontFamily: "var(--font-body-app)", fontSize: "1.15rem", color: "var(--ink-strong)" }} override={ov["about.p7"]}>
                 IAM trusting the Senses I never knew were a gift — and assisting others to trust
                 theirs. To hear, to tune into the body and tune up the body, to receive the light that
                 is coming into this planet with more grace and ease.
@@ -216,7 +216,7 @@ export default async function AboutPage() {
               as One bring all to balanced form. A Cocreation where Heaven meets Earth — whether
               it&apos;s Heaven on earth, or a paradise in the making.
             </Editable>
-            <Editable id="about.p12" as="p" style={{ ...story, fontFamily: "var(--font-body)", fontSize: "1.1rem", color: "var(--ink-strong)" }} override={ov["about.p12"]}>
+            <Editable id="about.p12" as="p" style={{ ...story, fontFamily: "var(--font-body-app)", fontSize: "1.1rem", color: "var(--ink-strong)" }} override={ov["about.p12"]}>
               This is what you came for. To be this Bridge for the New Earth. You are the Anointed,
               the Chosen, the One that is Answering the Call.
             </Editable>

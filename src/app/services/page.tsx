@@ -91,7 +91,7 @@ export default async function ServicesPage() {
           <div className="wrap center reveal" style={{ maxWidth: 640 }}>
             <p className="kicker" style={{ color: "var(--rose)" }}>Welcome To</p>
             <h2 className="sec-h" style={{ marginBottom: ".4em", color: "var(--ink-strong)" }}>The Way of the Heart</h2>
-            <p style={{ fontFamily: "var(--font-body)", fontSize: "1.1rem", color: "var(--ink-body)" }}>
+            <p style={{ fontFamily: "var(--font-body-app)", fontSize: "1.1rem", color: "var(--ink-body)" }}>
               Mindfulness in action. Sessions where you don&apos;t have to keep up conversation.
               You get to choose… <b style={{ color: "var(--gold-2)" }}>To BE Silent or Not to be Silent — that is the Question.</b>
             </p>

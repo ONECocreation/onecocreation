@@ -140,9 +140,10 @@ header > div.border-t-2 { display: none; }
 /* ── THE CREW ENTRANCE — the velvet rope on the homepage ──────────────────
    An arcade-marquee doorway to the operator console (/a): chase bulbs across
    the lintel, heartlight rope colours, deep-loam ground — the night-garden
-   palette straight from the house cartridge (src/lib/brand/themes/
-   frens-earth.ts). Honest by design: the card itself says the door is a
-   sign-in gate. Bulbs hold still under prefers-reduced-motion. */
+   palette of the old house brand theme (the frens-earth set, retired with
+   the sign-in kit S8 0018.05.26; the values live here now). Honest by
+   design: the card itself says the door is a sign-in gate. Bulbs hold still
+   under prefers-reduced-motion. */
 .crew-rope {
   position: relative;
   display: block;
@@ -1469,8 +1470,9 @@ footer {
 /* ==========================================================================
    THE BRAND CARTRIDGE — the theme seam's THIRD position (the dressing room's
    "insert a cartridge" made real on the shell). A TOKEN-LEVEL remap only,
-   same law as the LCARS tribute: the values are this site's own BrandTheme —
-   src/lib/brand/themes/frens-earth.ts, the NIGHT GARDEN — mapped onto the
+   same law as the LCARS tribute: the values are this site's old house brand
+   theme — the NIGHT GARDEN (the frens-earth BrandTheme set, retired with
+   the sign-in kit S8 0018.05.26; the hexes live below now) — mapped onto the
    house semantic slots (harvest gold = money ONLY, sprout = live,
    verification teal = info, ember = danger, 💜 heartlight = flair). Fonts
    stay the pixel DNA because the cartridge's font slots do too. Today this
@@ -1480,7 +1482,7 @@ footer {
    ========================================================================== */
 
 [data-console-theme="cartridge"] {
-  /* frensEarthTheme.tokens, verbatim */
+  /* the night-garden tokens, verbatim (the retired frens-earth set) */
   --color-void: #0d1210;
   --color-panel: #151d18;
   --color-edge: #2f4033;

@@ -8,12 +8,13 @@ import { specimenShelf } from "@/lib/certs";
 import { CONSOLE_SITE } from "@/lib/console";
 
 /**
- * DRESSING ROOM — where a candidate frens.earth identity gets worn by the REAL
- * components before it goes live. The cert foundry's specimen shelf rides up
- * top (moved off the old deck): every cert ships as box art, and the block it
- * etched at decides the case. The brand tester itself (pick a theme, compare
- * with live, watch the sign-in render in it) sits below. Operators only —
- * same key-is-the-operator gate as every /a tab.
+ * DRESSING ROOM — the brand cartridge, previewed by the REAL components.
+ * The cert foundry's specimen shelf rides up top (moved off the old deck):
+ * every cert ships as box art, and the block it etched at decides the case.
+ * Below, the brand kit: the cartridge's sign-in palette and faces, and the
+ * actual front door wearing them (the multi-brand theme tester was retired
+ * with the sign-in kit, S8 0018.05.26 — one brand, one cartridge).
+ * Operators only — same key-is-the-operator gate as every /a tab.
  */
 export const metadata: Metadata = {
   title: "Dressing room — One Cocreation admin",
@@ -40,10 +41,10 @@ export default async function AdminBrandPage() {
         </p>
         <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">DRESSING ROOM</h1>
         <p className="max-w-2xl font-body text-sm text-white/55">
-          Where a candidate {CONSOLE_SITE.domain} identity gets{" "}
-          <b className="text-white/75">worn by the real components</b> before it goes live. Every
-          cert ships as box art — the block it etched at decides the case. No randomness: look at
-          the block.
+          One brand, one cartridge — the sign-in below is the{" "}
+          <b className="text-white/75">real front door</b>, wearing {CONSOLE_SITE.domain}&apos;s
+          own cartridge. Every cert ships as box art — the block it etched at decides the case. No
+          randomness: look at the block.
         </p>
       </div>
 

@@ -2,70 +2,19 @@
  * Studio preview panes (the loop, Admiral-approved 2026-08-11: "we look at
  * both light and dark modes"). The site themes by flipping
  * html[data-oc-theme="light"] on the WHOLE document, so it can't show light
- * and dark at once. These two wrapper classes re-declare the theme tokens
- * scoped to a container, so the preview can render the same page in both
- * skins side by side. Values mirror src/app/cartridge.css — keep in sync
- * when the palette changes (same tokens the live site uses; the preview must
- * look like the real site, not an approximation).
+ * and dark at once. The wrapper classes below are SCOPES ONLY — they carry
+ * no token values. The values live once in src/app/cartridge.css: its night
+ * :root block also selects .oc-pv-dark, its dawn
+ * html[data-oc-theme="light"] block also selects .oc-pv-light (S8 cartridge
+ * hardening, 2026-08-19). A brand swap in the cartridge flows into both
+ * panes with zero studio edits; the preview IS the real site, not an
+ * approximation.
  */
 
 .oc-pv-dark,
 .oc-pv-light {
-  /* dark-first base — the :root token set from cartridge.css */
-  --space: #0a0a14;
-  --panel: rgba(24, 19, 44, 0.72);
-  --edge: rgba(139, 118, 196, 0.34);
-  --cream: #fbf6ef;
-  --ink: #e9e2f2;
-  --muted: #9a8fae;
-  --ink-strong: #f4ecff;
-  --ink-body: #d9d2e4;
-  --glass: rgba(22, 17, 40, 0.66);
-  --glass-edge: rgba(139, 118, 196, 0.35);
-  --warm-panel: linear-gradient(150deg, rgba(40, 29, 54, 0.82), rgba(56, 32, 48, 0.7));
-  --warm-edge: rgba(217, 178, 78, 0.45);
-  --ground: #141021;
-  --field-bg: rgba(255, 255, 255, 0.94);
-  --field-ink: #4a4458;
-  --ok: #7fb98f;
-  --warn: #ebcb77;
-  --err: #e7899e;
-  --info: #9d86d9;
-  --teal-bright: #8fd0d8;
-  --gold: #d9b24e;
-  --gold-2: #ebcb77;
-  --gold-deep: #d9b24e;
-  --teal: #4ea0af;
-  --teal-deep: #23636e;
-  --purple: #9b26d6;
-  --lavender: #8b76c4;
-  --rose: #e7b2c3;
-  --copper: #c77b4a;
-
   background: var(--ground);
   color: var(--ink);
-}
-
-.oc-pv-light {
-  /* the dawn — html[data-oc-theme="light"] overrides from cartridge.css */
-  --panel: rgba(255, 255, 255, 0.6);
-  --edge: rgba(139, 118, 196, 0.28);
-  --ink: #4a4458;
-  --muted: #897f97;
-  --ink-strong: #3f3a4e;
-  --ink-body: #544e64;
-  --glass: rgba(252, 247, 240, 0.62);
-  --glass-edge: rgba(255, 255, 255, 0.6);
-  --warm-panel: linear-gradient(150deg, rgba(255, 255, 255, 0.66), rgba(243, 220, 227, 0.5));
-  --warm-edge: rgba(217, 178, 78, 0.4);
-  --ground: #fcf7f0;
-  --ok: #3c6b49;
-  --warn: #7a5a12;
-  --err: #a34e6c;
-  --info: #5f4b96;
-  --teal-bright: #23636e;
-  --gold-deep: #b4862b;
-  --rose: #c56e8b;
 }
 
 /* the preview shell: two panes, each its own theme, scrolling independently */

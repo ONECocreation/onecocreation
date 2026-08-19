@@ -7,9 +7,10 @@
  * src/app) — never hunts literals through components.
  *
  * The RENDERED palette lives in src/app/cartridge.css (:root, dark-first).
- * The `palette` here is the sign-in contract's set (BrandProvider, MediaKit,
- * the login ceremony) — paper-era values, kept as they were so the contract
- * surfaces don't shift; the two sets serve different rooms on purpose.
+ * The `palette` here is the sign-in contract's set (MediaKit, the login
+ * ceremony, the kit-variable block in cartridge.css) — paper-era values,
+ * kept as they were so the contract surfaces don't shift; the two sets
+ * serve different rooms on purpose.
  */
 
 export const cartridge = {
@@ -87,6 +88,18 @@ export const cartridge = {
     timeTipUrl: "https://time.pacsarcade.org/api/chain/tip?full=1",
   },
 
+  /** THE NAV ACCENT (S8, cartridge hardening) — "gold" is Love's original
+   *  nav (#FAC51C links, live-extracted from the production render — the
+   *  shipped onecocreation default, Version B); "dawn" is the kit's offered
+   *  retint (rose→lavender, Version A, navfix 10a — gold then lives on
+   *  money + the coin mark only). One line a fork flips; the recipe rides
+   *  cartridge.css as inert --nav-dawn-* data and components/CartridgeVars
+   *  pours it over the consumed nav tokens. With "gold" nothing extra
+   *  renders. */
+  nav: {
+    accent: "gold" as "gold" | "dawn",
+  },
+
   meta: {
     title: "One Cocreation — Where Heaven and Earth Meet",
     description:
@@ -123,6 +136,40 @@ export const cartridge = {
     productName: "One Cocreation",
     tagline: "The Way of the Heart",
     memberNoun: "soul",
+  },
+
+  /**
+   * THE SIGN-IN DOOR (S8 cartridge hardening, 0018.05.26) — the words and
+   * the community door the login ceremony speaks, moved here from the
+   * retired multi-brand sign-in kit (src/lib/brand; this site has ONE
+   * brand, and it lives in this cartridge). `copy` is the six strings
+   * LoginPanel reads; `doors` is the card under the sign-in. The name
+   * stays free without saying so (Pac, 0018.05.26 — that framing was for
+   * frens.earth): sovereignty is stated, the sales line is not.
+   */
+  signIn: {
+    copy: {
+      /* the two-breath voice (Admiral, 0018.05.15) — warm, zero machinery */
+      returningTitle: "Good to see you again",
+      returningBlurb:
+        "One tap to sign, and you're in. No passwords, nothing stored, nothing to leak — your name stays yours.",
+      signInCta: "Open the door 🔑",
+      signingCta: "One breath — reading your signature…",
+      doorsHeading: "New here?",
+      doorsFootnote:
+        "Your name@onecocreation is yours — sovereign. Where Heaven and Earth meet.",
+    },
+    doors: [
+      {
+        tag: "@onecocreation",
+        role: "join the field",
+        blurb:
+          "Claim your name and the doors open — the booking calendar, the free meditation, Heartfield Commons.",
+        href: "/welcome",
+        cta: "Walk the welcome path →",
+        accent: "pink",
+      },
+    ],
   },
 } as const;
 

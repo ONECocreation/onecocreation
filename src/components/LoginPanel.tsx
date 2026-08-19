@@ -9,7 +9,7 @@ import SignerNudge from "@/components/SignerNudge";
 import SignerDoors from "@/components/SignerDoors";
 import EmailDoor from "@/components/EmailDoor";
 import useFrenSession, { applyFrenSession } from "@/hooks/useFrenSession";
-import { useBrand, type DoorAccent } from "@/lib/brand";
+import { cartridge } from "@/brand/cartridge";
 
 /* one-shot environment read, hydration-safe and lint-clean */
 const noopSubscribe = () => () => {};
@@ -17,7 +17,8 @@ function useHasSigner(): boolean | null {
   return useSyncExternalStore(noopSubscribe, () => !!window.nostr, () => null);
 }
 
-/* the contract's door accents mapped onto house ink (Admiral, 0018.05.15) */
+/* the cartridge's door accents mapped onto house ink (Admiral, 0018.05.15) */
+type DoorAccent = "cyan" | "pink" | "coin" | "neon";
 const ACCENT_INK: Record<DoorAccent, string> = {
   cyan: "var(--info, #9d86d9)",
   pink: "var(--rose, #E7B2C3)",
@@ -64,7 +65,7 @@ export default function LoginPanel() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { fren: existing, signOut } = useFrenSession();
-  const { copy, doors } = useBrand();
+  const { copy, doors } = cartridge.signIn;
 
   /* the WELCOME state — an unrecognized key parks here, never in an error */
   const [newKey, setNewKey] = useState<string | null>(null);

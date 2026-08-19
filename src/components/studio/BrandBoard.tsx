@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Render } from "@puckeditor/core";
 import { config } from "@/lib/puck-config";
 import { BOARD_SAMPLE } from "@/lib/board-sample";
@@ -10,6 +10,7 @@ import {
   SLOT_LABELS,
   type PaletteKey,
 } from "@/lib/use-brand-palette";
+import type { IdentityField } from "@/lib/cartridge-identity"; /* type-only — the module itself is server-side (fs) and never enters this bundle */
 import { effectivePalette, contrastRatio } from "@pacsarcade/puck-config/tokens";
 import { ONECOCREATION } from "@/brand/tokens";
 
@@ -28,7 +29,11 @@ import { ONECOCREATION } from "@/brand/tokens";
  * The panes are the SAME dual-theme mechanism as Preview & publish
  * (.oc-pv-dark / .oc-pv-light from studio/preview.css); the live-preview
  * <style> the useBrandPalette hook injects targets those scopes, so every
- * tweak lands in both panes instantly. LEGIBILITY DOCTRINE throughout:
+ * tweak lands in both panes instantly. Below the panes sits THE DRESSING
+ * ROOM (S8, cartridge hardening): the cartridge's non-CSS identity —
+ * logos, hero art, the time door, the copy tokens and the nav accent —
+ * read and written through /api/brand's identity branch, one cartridge
+ * literal at a time. LEGIBILITY DOCTRINE throughout:
  * labels sit on solid/text-safe grounds, override state is gold ring PLUS
  * a dot (never colour alone), all icon controls carry title + aria-label.
  */
@@ -189,6 +194,256 @@ function ThemePane({ variant, hexes, dawnOverrides, onSwatch, onClearDawn, shuff
   );
 }
 
+/* ── the dressing room (cartridge identity) ───────────────────────────── */
+type DressingRow = { field: IdentityField; label: string; hint?: string };
+const IDENTITY_GROUPS: { title: string; blurb: string; rows: DressingRow[] }[] = [
+  { title: "Logos", blurb: "the marks at the head of the house",
+    rows: [
+      { field: "logo.lockup", label: "lockup" },
+      { field: "logo.mark", label: "mark" },
+      { field: "logo.consciouscuts", label: "ConsciousCuts" },
+    ]},
+  { title: "Hero art", blurb: "the sky the pages open under",
+    rows: [
+      { field: "hero.moon", label: "moon" },
+      { field: "hero.nebula", label: "nebula" },
+      { field: "hero.meteors", label: "meteors" },
+      { field: "hero.heavenEarth", label: "heaven & earth" },
+      { field: "hero.loveSidelook", label: "love sidelook" },
+      { field: "hero.lionsGate", label: "lions gate" },
+    ]},
+  { title: "Doors", blurb: "where the house reaches out",
+    rows: [
+      { field: "doors.timeTipUrl", label: "time door",
+        hint: "an https:// address — or left empty, to sail on its own seam" },
+    ]},
+  { title: "Voice", blurb: "the short words the site speaks",
+    rows: [
+      { field: "copy.productName", label: "name" },
+      { field: "copy.tagline", label: "tagline" },
+      { field: "copy.memberNoun", label: "one member is called" },
+    ]},
+];
+
+type Dressing = Partial<Record<IdentityField, string>>;
+type DressingMsg = { field: IdentityField; ok: boolean; text: string };
+
+const fieldInput: React.CSSProperties = {
+  flex: "1 1 240px", minWidth: 0, background: "#0e0c1a", /* S2: pinned — needs a ruling */
+  color: "#F4ECFF", /* S2: pinned — needs a ruling */
+  border: "1px solid rgba(139,118,196,.4)", borderRadius: 8,
+  padding: "7px 10px", fontFamily: MONO, fontSize: 12.5, outline: "none",
+};
+
+function IdentityRoom() {
+  const [values, setValues] = useState<Dressing | null>(null);
+  const [draft, setDraft] = useState<Dressing>({});
+  const [loadNote, setLoadNote] = useState<string | null>(null);
+  const [busyField, setBusyField] = useState<IdentityField | null>(null);
+  const [msg, setMsg] = useState<DressingMsg | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/brand")
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        if (d.ok && d.identity) {
+          setValues(d.identity);
+          setDraft(d.identity);
+        } else {
+          setLoadNote("the dressing room opens with the operator key — sign in and it will be here");
+        }
+      })
+      .catch(() => { if (!cancelled) setLoadNote("the dressing room could not be reached just now — a breath, then reload"); });
+    return () => { cancelled = true; };
+  }, []);
+
+  async function saveField(field: IdentityField, value: string) {
+    setBusyField(field);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/brand", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identity: { field, value } }),
+      });
+      const d = await res.json();
+      if (d.ok) {
+        setValues((v) => ({ ...(v ?? {}), [field]: value }));
+        /* the reload/redeploy note rides every save — shown verbatim */
+        setMsg({ field, ok: true, text: d.note ?? "saved into the cartridge" });
+      } else {
+        /* the API's honest reason, verbatim */
+        setMsg({ field, ok: false, text: d.reason ?? "the save did not land" });
+      }
+    } catch {
+      setMsg({ field, ok: false, text: "the save could not reach the server" });
+    } finally {
+      setBusyField(null);
+    }
+  }
+
+  function msgChip(m: DressingMsg) {
+    return (
+      <p role="status" style={{ margin: "6px 0 0", display: "inline-block",
+        padding: "5px 11px", borderRadius: 8, fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
+        background: m.ok ? "#16281c" : "#331820", /* S2: pinned — needs a ruling */
+        color: m.ok ? "#BFE6C9" : "#F2C4CE" /* S2: pinned — needs a ruling */ }}>
+        {m.text}
+      </p>
+    );
+  }
+
+  function row(r: DressingRow) {
+    const current = values?.[r.field] ?? "";
+    const next = draft[r.field] ?? "";
+    const dirtyRow = next !== current;
+    const busy = busyField === r.field;
+    return (
+      <div key={r.field} style={{ marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, width: 148, flexShrink: 0,
+            color: "#F4ECFF" /* S2: pinned — needs a ruling */ }}>
+            {r.label}
+          </span>
+          <input
+            value={next}
+            onChange={(e) => setDraft((d) => ({ ...d, [r.field]: e.target.value }))}
+            aria-label={`${r.label} — currently ${current || "empty"}`}
+            spellCheck={false}
+            style={fieldInput}
+          />
+          <button
+            onClick={() => saveField(r.field, next)}
+            disabled={!dirtyRow || busyField !== null}
+            title={dirtyRow ? `save this ${r.label} into the cartridge` : "no unsaved change"}
+            aria-label={dirtyRow ? `save ${r.label}` : `${r.label} saved`}
+            style={{ ...pill, padding: "6px 14px", fontSize: 12.5,
+              background: dirtyRow ? "linear-gradient(135deg,#EBCB77,#D9B24E)" /* S2: gold law — decorative, reported */ : "rgba(139,118,196,.15)",
+              color: dirtyRow ? "#3a2a06" /* S2: gold law — decorative, reported */ : "#9a8fae", /* S2: pinned — needs a ruling */
+              cursor: dirtyRow && !busyField ? "pointer" : "default" }}>
+            {busy ? "Saving…" : dirtyRow ? "Save" : "Saved"}
+          </button>
+        </div>
+        {r.hint && (
+          <p style={{ margin: "4px 0 0 158px", fontSize: 12, fontFamily: SANS,
+            color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+            {r.hint}
+          </p>
+        )}
+        {msg && msg.field === r.field && <div style={{ marginLeft: 158 }}>{msgChip(msg)}</div>}
+      </div>
+    );
+  }
+
+  function navAccent() {
+    const current = values?.["nav.accent"] ?? "gold";
+    const choices: { v: "gold" | "dawn"; label: string }[] = [
+      { v: "gold", label: "gold" },
+      { v: "dawn", label: "dawn" },
+    ];
+    return (
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, width: 148, flexShrink: 0,
+            color: "#F4ECFF" /* S2: pinned — needs a ruling */ }}>
+            nav accent
+          </span>
+          {choices.map(({ v, label }) => {
+            const active = current === v;
+            const busy = busyField === "nav.accent";
+            return (
+              <button
+                key={v}
+                onClick={() => { if (!active) { setDraft((d) => ({ ...d, "nav.accent": v })); saveField("nav.accent", v); } }}
+                disabled={busyField !== null}
+                title={active ? `${label} — the current nav accent` : `dress the nav in ${label}`}
+                aria-label={`nav accent ${label}${active ? " (current)" : ""}`}
+                style={{ ...pill,
+                  background: active ? "rgba(139,118,196,.25)" : "rgba(139,118,196,.1)",
+                  color: "#F4ECFF", /* S2: pinned — needs a ruling */
+                  /* active = gold ring PLUS a dot — never colour alone (doctrine) */
+                  border: active ? "2px solid #B4862B" /* S2: gold law — decorative, reported */ : "1px solid rgba(139,118,196,.4)",
+                  cursor: busyField ? "default" : "pointer" }}>
+                {busy && !active ? `${label} …` : label}{active ? " •" : ""}
+              </button>
+            );
+          })}
+        </div>
+        <p style={{ margin: "8px 0 0 158px", fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
+          color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+          {"“gold” is Love's original nav — “dawn” is the kit's rose→lavender retint, and gold then lives on money and the coin mark alone."}
+        </p>
+        {msg && msg.field === "nav.accent" && <div style={{ marginLeft: 158 }}>{msgChip(msg)}</div>}
+      </div>
+    );
+  }
+
+  return (
+    <section
+      aria-label="the dressing room — the cartridge's logos, hero art, doors and voice"
+      style={{ margin: "0 16px 24px", padding: "18px 20px 22px", borderRadius: 16,
+        border: "1px solid rgba(139,118,196,.35)",
+        background: "#12101f" /* S2: pinned — needs a ruling — a solid ground under every word (doctrine) */ }}
+    >
+      <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".2em", fontWeight: 800,
+        textTransform: "uppercase", color: "#F4ECFF" /* S2: pinned — needs a ruling */, marginBottom: 6 }}>
+        ✦ The dressing room
+      </div>
+      <p style={{ margin: "0 0 18px", fontSize: 13, lineHeight: 1.55, fontFamily: SANS,
+        color: "#D9D2E4" /* S2: pinned — needs a ruling */ }}>
+        {"the cartridge's non-CSS dressing — logos, hero art, the time door and the words the site speaks. A save writes the cartridge file itself; the running server catches up on its next reload (dev does it alone) or a fresh deploy."}
+      </p>
+
+      {values === null && !loadNote && (
+        <p style={{ margin: 0, fontSize: 13, fontFamily: SANS,
+          color: "#D9D2E4" /* S2: pinned — needs a ruling */ }}>
+          opening the dressing room…
+        </p>
+      )}
+      {loadNote && (
+        <p role="status" style={{ margin: 0, display: "inline-block", padding: "5px 11px",
+          borderRadius: 8, fontSize: 12.5, fontFamily: SANS,
+          background: "#331820", color: "#F2C4CE" /* S2: pinned — needs a ruling */ }}>
+          {loadNote}
+        </p>
+      )}
+
+      {values && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 40px", alignItems: "flex-start" }}>
+          {IDENTITY_GROUPS.map((g) => (
+            <div key={g.title} style={{ flex: "1 1 420px", minWidth: 0 }}>
+              <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+                textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
+                color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>
+                {g.title}
+              </div>
+              <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS,
+                color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+                {g.blurb}
+              </p>
+              {g.rows.map(row)}
+            </div>
+          ))}
+          <div style={{ flex: "1 1 420px", minWidth: 0 }}>
+            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+              textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
+              color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>
+              Nav accent
+            </div>
+            <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS,
+              color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+              the colour the nav links wear
+            </p>
+            {navAccent()}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 /* ── the board ────────────────────────────────────────────────────────── */
 export default function BrandBoard() {
   const { pal, dawn, dirty, busy, roll, clearDawn, eyedrop, save, reset } = useBrandPalette();
@@ -269,6 +524,9 @@ export default function BrandBoard() {
       ) : (
         <p style={{ padding: 24, color: "#D9D2E4" /* S2: pinned — needs a ruling */, fontSize: 14 }}>loading palette…</p>
       )}
+
+      {/* the dressing room — the cartridge's non-CSS identity */}
+      <IdentityRoom />
     </div>
   );
 }

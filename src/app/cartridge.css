@@ -12,8 +12,15 @@
    ════════════════════════════════════════════════════════════════════ */
 
 /* ══ DARK-FIRST (the Admiral's ruling, 0018.05.15): the night is the
-   default truth; html[data-oc-theme="light"] restores the dawn. ══ */
-:root{
+   default truth; html[data-oc-theme="light"] restores the dawn.
+   .oc-pv-dark/.oc-pv-light ride the SAME declarations (S8 cartridge
+   hardening): the studio preview's panes are scopes, not mirrors — the
+   wrapper classes select this one token set, so a brand swap here flows
+   into the both-skins preview with zero studio edits. The pane classes
+   apply directly to each pane container, so a pane's tokens beat whatever
+   the document root inherited (a .oc-pv-dark pane stays night inside a
+   dawn document; a .oc-pv-light pane stays dawn inside a night one). ══ */
+:root,.oc-pv-dark{
   --space:#0a0a14; --panel:rgba(24,19,44,.72); --edge:rgba(139,118,196,.34);
   --cream:#FBF6EF; --ink:#E9E2F2; --muted:#9a8fae;
   --ink-strong:#F4ECFF; --ink-body:#D9D2E4;
@@ -31,6 +38,7 @@
   /* money & brand metal (S2 token walk, 0018.05.25 a₿) */
   --bitcoin:#f7931a; /* the block-break pulse — bitcoin orange */
   --nav-gold:#FAC51C; /* Love's original nav gold — the dawn note below tells it */
+  --nav-hover:var(--gold-2); /* the nav's hover — its own token so the dawn can take it off gold */
   --gold-ink:#3a2a06; /* ink on gold fills */
   --gold-ground:#2b1f05; /* dark gold wash */
   --btn-ink:#3E3E3E; /* the CTA ink — Love's button law */
@@ -62,6 +70,16 @@
      with it. Version A is the retinted, template-clean alternate) */
   --here-grad:linear-gradient(90deg,#EBCB77 0%,#9d86d9 100%);
   --here-glow:rgba(180,150,200,.55); --here-ink:#F4ECFF;
+  --here-wash:linear-gradient(90deg,rgba(235,203,119,.14),rgba(157,134,217,.14)); /* .nav-sub a.is-here ground */
+  /* the DAWN retint recipe (Version A, navfix 10a ~0018.05.24 a₿) — the
+     kit's offered alternative to Love's gold nav: rose #E7B2C3 rising into
+     lavender --info, gold then reserved for money + the coin mark. Inert
+     data, nothing consumes it, until a fork flips cartridge.nav.accent to
+     "dawn" and CartridgeVars pours it over the four tokens above. */
+  --nav-dawn-link:#ECE3C9; /* 10a's door cream — the night --ghost-ink, pinned literal: the header never theme-flips */
+  --nav-dawn-hover:var(--info);
+  --nav-dawn-grad:linear-gradient(90deg,#E7B2C3 0%,#9d86d9 100%);
+  --nav-dawn-wash:linear-gradient(90deg,rgba(231,178,195,.14),rgba(157,134,217,.14));
   /* ── the night-chrome families (S2 token walk, 0018.05.25 a₿): all
      night-surface chrome, no dawn twins — values verbatim from the
      inventory, each named to the family it serves ── */
@@ -136,8 +154,48 @@
   --footer-ink:#cabfda; /* site-footer body ink */
   --copilot-user:#f3c7c1; /* copilot user-bubble tint */
 }
-html[data-oc-theme="light"]{
-  --panel:rgba(255,255,255,.6); --edge:rgba(139,118,196,.28);
+
+/* ── S8 CARTRIDGE HARDENING (0018.05.26) — the retired BrandProvider wrapped
+   the whole app and redeclared the sign-in kit's variables on that wrapper,
+   so everything inside resolved THESE values, not the stylesheets' :root.
+   Moved here, verbatim, so retiring the provider changes nothing rendered.
+   The console themes ([data-console-theme="lcars"|"cartridge"] in
+   globals.css) redeclare deeper and still win, exactly as they did inside
+   the wrapper. The values are the cartridge's own `palette`/`fonts`
+   (src/brand/cartridge.ts) mapped onto the kit's slots. ── */
+:root{
+  /* the kit's semantic slots, wearing Love's palette (coin = gold = MONEY
+     only, neon = lavender, cyan = purple, ghost = rose, pink = magenta) */
+  --color-void:#0a0a14; --color-panel:rgba(22,18,40,.66); --color-edge:rgba(168,130,240,.22);
+  --color-coin:#D9B24E; --color-neon:#8B76C4; --color-cyan:#9B26D6;
+  --color-ghost:#C56E8B; --color-pink:#C42EC9;
+  /* the arcade legacy base (globals.css links / .button / header edge) —
+     --secondary and --foreground have no live readers left (house.css owns
+     .card and body) but ride along verbatim, as the provider emitted them */
+  --background:#0a0a14; --foreground:#FBF6EF; --primary:#D9B24E;
+  --secondary:rgba(22,18,40,.66); --border:rgba(168,130,240,.22); --accent:#C42EC9;
+  /* the kit's type roles — Barlow display, the soft sans elsewhere (no pixel
+     type on a celestial brand). --font-press-start is deliberately NOT
+     redeclared: next/font owns that variable on <html> and the cascade
+     order isn't ours to bet on, so its live readers are re-faced below
+     instead — same face, no gamble. */
+  --font-arcade:var(--font-barlow,'Barlow'),'Barlow',-apple-system,sans-serif;
+  --font-pixel:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  /* the kit's body face, kept SPLIT from the trio's --font-body above:
+     body{} sat outside the old wrapper and always read the trio's Helvetica,
+     while font-body readers inside it got this soft sans — the split stays
+     exactly as it rendered */
+  --font-body-app:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+}
+/* the wrapper's --font-body / --font-press-start overrides, re-homed on the
+   live readers themselves (unlayered on purpose — beats globals' @layer
+   base): .font-body is the Tailwind utility; .button + h5/h6 are the only
+   live --font-press-start readers (house.css owns h1–h4; .faq-question,
+   .crew-rope and .retro-text have no consumers left) */
+.font-body{font-family:var(--font-body-app)}
+.button,h5,h6{font-family:var(--font-pixel)}
+
+html[data-oc-theme="light"],.oc-pv-light{  --panel:rgba(255,255,255,.6); --edge:rgba(139,118,196,.28);
   --ink:#4A4458; --muted:#897F97;
   --ink-strong:#3f3a4e; --ink-body:#544e64;
   --glass:rgba(252,247,240,.62); --glass-edge:rgba(255,255,255,.6);
@@ -207,10 +265,12 @@ html[data-oc-theme="light"] .lions-gate{
    its tone to the next: dawn → lions gate → waters → the nebula rooms →
    golden hour → rose → dusk → home. Nothing flat. ── */
 /* THE BAND LADDER (cartridge walk step 3, 0018.05.15): section tones are
-   tokens — a new brand swaps the ladder, not the selectors */
-:root{--band-1:#1a1428;--band-2:#241a33;--band-3:#1e1a2f;--band-4:#12202a;
+   tokens — a new brand swaps the ladder, not the selectors. The preview
+   panes ride these too (S8): without the pane scopes a dawn pane in a
+   night document inherited the NIGHT bands. */
+:root,.oc-pv-dark{--band-1:#1a1428;--band-2:#241a33;--band-3:#1e1a2f;--band-4:#12202a;
   --band-5:#241c15;--band-6:#241722;--band-7:#161b2b;--band-8:#141a2b;--band-9:#221b12}
-html[data-oc-theme="light"]{--band-1:#F3EEF4;--band-2:#ECEAF6;--band-3:#EFE9F7;
+html[data-oc-theme="light"],.oc-pv-light{--band-1:#F3EEF4;--band-2:#ECEAF6;--band-3:#EFE9F7;
   --band-4:#E7EEF0;--band-5:#F3EFE6;--band-6:#F8EDF0;--band-7:#E7ECF3;--band-8:#EAE3F3;--band-9:#FBF4EA}
 #about{background:linear-gradient(180deg,var(--band-1) 0%,var(--band-2) 62%,var(--band-3) 100%)}
 #services{background:linear-gradient(180deg,var(--band-3) 0%,var(--band-4) 60%,var(--band-5) 100%)}

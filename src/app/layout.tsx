@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Barlow, Open_Sans, Press_Start_2P, Roboto } from "next/font/google";
 import localFont from "next/font/local";
 import { EASY_MODE_BOOT_SCRIPT } from "@pacsarcade/arcade-ui";
-import { BrandProvider, oneCocreationBrand } from "@/lib/brand";
 import ScrollFix from "@/components/ScrollFix";
 import AliveEffects from "@/components/AliveEffects";
+import CartridgeVars from "@/components/CartridgeVars";
 import { PenModeProvider } from "@/components/PenMode";
 import "./globals.css";
 /* The face, split in two (cartridge walk step 8): cartridge.css is the
@@ -105,13 +105,16 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html:
           "try{if(localStorage.getItem('oc-theme')==='light')document.documentElement.setAttribute('data-oc-theme','light')}catch(e){}" }} />
         <script dangerouslySetInnerHTML={{ __html: EASY_MODE_BOOT_SCRIPT }} />
-        <BrandProvider theme={oneCocreationBrand}>
-          <PenModeProvider>
-            <ScrollFix />
-            <AliveEffects />
-            {children}
-          </PenModeProvider>
-        </BrandProvider>
+        <CartridgeVars />
+        {/* S8 (0018.05.26): the multi-brand sign-in kit is retired — the one
+            brand lives in the cartridge (src/brand/cartridge.ts); the CSS
+            variables the old BrandProvider wrapper injected moved to
+            cartridge.css :root, verbatim, so nothing rendered shifts */}
+        <PenModeProvider>
+          <ScrollFix />
+          <AliveEffects />
+          {children}
+        </PenModeProvider>
       </body>
     </html>
   );

@@ -436,7 +436,7 @@ html,body{overflow-x:clip}
 .site-nav .nav-link{background:none;border:none;cursor:pointer;font-family:inherit;display:inline-block;
   font-size:.95rem;line-height:1.2;letter-spacing:.04em;color:var(--nav-gold);text-transform:uppercase;font-weight:600;padding:6px 0;
   position:relative}
-.site-nav .nav-link:hover{color:var(--gold-2)}
+.site-nav .nav-link:hover{color:var(--nav-hover,var(--gold-2))}
 /* ── where you are, lit (mockup C blessed — the dawn underline) ── */
 .nav-link.is-here{color:var(--here-ink,#F4ECFF);text-shadow:0 0 10px rgba(200,170,220,.35)}
 .nav-link.is-here::after{content:"";position:absolute;left:1px;right:1px;bottom:-3px;height:2.5px;
@@ -444,14 +444,14 @@ html,body{overflow-x:clip}
   box-shadow:0 0 12px 1px var(--here-glow,rgba(180,150,200,.55));
   animation:here-dawn .35s ease;transform-origin:left center}
 .nav-sub a.is-here{color:var(--here-ink,#F4ECFF);
-  background:linear-gradient(90deg,rgba(235,203,119,.14),rgba(157,134,217,.14))}
+  background:var(--here-wash,linear-gradient(90deg,rgba(235,203,119,.14),rgba(157,134,217,.14)))}
 @keyframes here-dawn{from{opacity:0;transform:scaleX(.55)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.nav-link.is-here::after{animation:none}}
 .nav-sub{position:absolute;top:calc(100% + 8px);left:0;min-width:220px;z-index:var(--z-sheet,60);
   background:var(--pop-bg);border:1.5px solid var(--pop-edge);border-radius:14px;padding:8px 0;
   box-shadow:var(--pop-shadow)}
 .nav-sub a{display:block;padding:9px 18px;color:var(--nav-gold);font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
-.nav-sub a:hover{color:var(--gold-2)}
+.nav-sub a:hover{color:var(--nav-hover,var(--gold-2))}
 /* hover-open, click-through (Admiral, 0018.05.15): the sub is always in the
    DOM and breathes open on hover/focus; the close lingers .18s so the cursor
    can cross the 8px gap (the ::before bridge catches it too). */
