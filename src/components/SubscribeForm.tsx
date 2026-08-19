@@ -6,8 +6,12 @@ import { useState } from "react";
  * The list's front door on the page (flow 1). Posts to /api/subscribe; the
  * lead magnet rides the response. Every state speaks honestly — including
  * the 503 when the rail is dark.
+ *
+ * The button label is the consuming surface's voice (Pac's FREE ruling,
+ * 0018.05.26): the default keeps the site's existing wording so nothing
+ * regresses; a surface that shouldn't shout FREE passes its own `cta`.
  */
-export default function SubscribeForm({ source = "site" }: { source?: string }) {
+export default function SubscribeForm({ source = "site", cta = "Send My Free Meditation" }: { source?: string; cta?: string }) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
   const [note, setNote] = useState("");
@@ -64,7 +68,7 @@ export default function SubscribeForm({ source = "site" }: { source?: string }) 
         }}
       />
       <button className="btn btn-rose" type="submit" disabled={state === "busy"}>
-        {state === "busy" ? "Sending…" : "Send My Free Meditation"}
+        {state === "busy" ? "Sending…" : cta}
       </button>
       {state === "error" && <p style={{ width: "100%", color: "var(--muted)", fontSize: ".85rem" }}>{note}</p>}
     </form>

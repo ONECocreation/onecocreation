@@ -97,6 +97,8 @@ export default function TagClaim({
   nip05Domain,
   onHandlePreview,
   initialHandle,
+  claimCta = "CLAIM YOUR TAG — FREE",
+  claimSubline = "Free forever. No email, no password, no account — your keys are your login.",
 }: {
   space: string;
   nip05Domain: string;
@@ -104,6 +106,13 @@ export default function TagClaim({
   onHandlePreview?: (handle: string) => void;
   /** Pre-filled tag — how GAME OVER's "press start" hands the name over */
   initialHandle?: string;
+  /** Step-3 button + subline — the PITCH is the consuming site's voice, not
+      the kit's (Pac's FREE ruling, 0018.05.26: the kit provides the
+      machinery, each community supplies its own voice). The defaults are
+      frens.earth's wording, so nothing regresses there; onecocreation's
+      Join surface passes its own, quieter copy. */
+  claimCta?: string;
+  claimSubline?: string;
 }) {
   const [handle, setHandle] = useState(initialHandle ?? "");
   const [availability, setAvailability] = useState<Availability>("idle");
@@ -884,13 +893,13 @@ export default function TagClaim({
           disabled={availability !== "available" || !npub || !savedConfirmed || claiming}
           className="button w-full disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {claiming ? "INSERTING COIN…" : "CLAIM YOUR TAG — FREE"}
+          {claiming ? "INSERTING COIN…" : claimCta}
         </button>
         {claimError && (
           <p className="mt-3 font-pixel text-xs text-ghost glow-ghost">{claimError.toUpperCase()}</p>
         )}
         <p className="mt-3 font-body text-xs text-white/50">
-          Free forever. No email, no password, no account — your keys are your login.
+          {claimSubline}
         </p>
       </div>
     </div>

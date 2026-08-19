@@ -3,6 +3,9 @@ import { cartridge } from "@/brand/cartridge";
 import { ONECOCREATION } from "@/brand/tokens";
 import MediaField from "@/components/studio/MediaField";
 import { createParallaxBand } from "@/lib/puck-blocks/parallax-band";
+import { createJoinSurface } from "@/lib/puck-blocks/join-surface";
+import { createFormDoors } from "@/lib/puck-blocks/form-doors";
+import { NIP05_DOMAIN, SPACE_NAME } from "@/lib/identity-config";
 
 /**
  * Puck config — now a thin shim over the fleet's shared registry
@@ -82,10 +85,23 @@ components.ParallaxBand = createParallaxBand({
   mediaField,
 }) as unknown as (typeof components)[string];
 
+/* STUDIO P3 (ALT-2A ruled): the Join surface + the form doors are LOCAL
+   blocks binding this repo's existing claim machinery (TagClaim, the
+   Doors, the brand contract) — the package stays vendored-untouched. The
+   space binding comes from identity-config, so a fork re-points it with
+   its own NEXT_PUBLIC_SPACE_NAME / NEXT_PUBLIC_NIP05_DOMAIN. */
+components.JoinSurface = createJoinSurface({
+  space: SPACE_NAME,
+  nip05Domain: NIP05_DOMAIN,
+}) as unknown as (typeof components)[string];
+components.FormDoors = createFormDoors() as unknown as (typeof components)[string];
+
 /* the library rail: ParallaxBand joins the Layout group, appended at the
    end (after Divider — the package's array order is never reordered) */
 const categories = base.categories as Record<string, { title?: string; components?: string[]; defaultExpanded?: boolean }>;
 const layout = categories.layout ?? {};
+/* P3's binding blocks join the Actions group, appended the same way */
+const actions = categories.actions ?? {};
 
 export const config = {
   ...base,
@@ -93,6 +109,7 @@ export const config = {
   categories: {
     ...categories,
     layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand"] },
+    actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors"] },
   },
   /* STUDIO P1: page-level SEO lives on the Puck root — plain fields edited
      through Puck.Fields' root section; the registry's root RENDER stays the
