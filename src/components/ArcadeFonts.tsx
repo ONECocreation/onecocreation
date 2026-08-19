@@ -6,10 +6,13 @@ import type { ReactNode } from "react";
  * ships ONLY to the arcade-skin routes (the /a console, /u profiles, /bb,
  * /bday, /media, /time, /welcome) — the celestial brand's law is "no pixel
  * type on a celestial brand", so the root layout no longer pays for it.
- * (Press Start 2P stays on the root layout: the signed-in member chip in
- * the site header wears font-pixel on EVERY page.) Wrap any arcade-skin
- * surface in this and the variable cascades through its subtree; the
- * font-arcade fallback chain degrades to Press Start 2P elsewhere.
+ * (Press Start 2P stays on the root layout for the PACMAN cartridge, which
+ * adopted it as its display face — cartridges.css pours
+ * var(--font-press-start), and next/font registers that variable on
+ * <html>. Nothing celestial reads it: the kit's font-pixel / font-arcade
+ * tokens are re-faced by cartridge.css, the console theme, or a cartridge
+ * twin before they can ever reach PS2P.) Wrap any arcade-skin surface in
+ * this and the variable cascades through its subtree.
  */
 const retronoid = localFont({
   src: "../../public/fonts/Retronoid.ttf",

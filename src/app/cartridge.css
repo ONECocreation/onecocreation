@@ -180,8 +180,9 @@
   /* the kit's type roles — Barlow display, the soft sans elsewhere (no pixel
      type on a celestial brand). --font-press-start is deliberately NOT
      redeclared: next/font owns that variable on <html> and the cascade
-     order isn't ours to bet on, so its live readers are re-faced below
-     instead — same face, no gamble. */
+     order isn't ours to bet on. S10 struck its last declarations from
+     globals.css — every one provably dead — so no celestial surface reads
+     it; the faces it once pretended to set are held below. */
   --font-arcade:var(--font-barlow,'Barlow'),'Barlow',-apple-system,sans-serif;
   --font-pixel:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   /* the kit's body face, kept SPLIT from the trio's --font-body above:
@@ -192,9 +193,10 @@
 }
 /* the wrapper's --font-body / --font-press-start overrides, re-homed on the
    live readers themselves (unlayered on purpose — beats globals' @layer
-   base): .font-body is the Tailwind utility; .button + h5/h6 are the only
-   live --font-press-start readers (house.css owns h1–h4; .faq-question,
-   .crew-rope and .retro-text have no consumers left) */
+   base): .font-body is the Tailwind utility; .button + h5/h6 are held on the
+   soft sans — their PS2P declarations in globals were dead weight (house.css
+   owns h1–h4; .faq-question, .crew-rope and .retro-text have no consumers)
+   and S10 removed them, so THIS rule is now what keeps those faces */
 .font-body{font-family:var(--font-body-app)}
 .button,h5,h6{font-family:var(--font-pixel)}
 

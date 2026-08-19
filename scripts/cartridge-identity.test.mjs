@@ -14,6 +14,14 @@
  * exactly-once proof, and the originals it extracts feed the strongest
  * assertions — the round trips: write a dressed value, write the original
  * back through the rail, and the file must be BYTE-IDENTICAL to pristine.
+ *
+ * S10 (the cartridge becomes a choice) extended it: `cartridge.id` writes
+ * the selection line, and its lawful values are the registry's own ids —
+ * the harness derives that list from the file's own `CartridgeId` union
+ * (never re-types it), writes every id, and proves an unknown id — and a
+ * missing list — are refused before disk is touched. S10's cleanup lane
+ * added `meta.themeColor`: the browser-chrome tint, exactly #rrggbb or
+ * refused (red, #fff, #1234567 all rejected before disk).
  */
 
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, chmodSync, rmSync } from "fs";
@@ -44,6 +52,7 @@ function t(name, cond, extra = "") {
 
 /* ── the harness's own anchor table (mirrors SPECS in the rail) ───────── */
 const ANCHORS = {
+  "cartridge.id":       /(export const activeCartridgeId: CartridgeId = ")([^"]*)(";)/,
   "logo.lockup":        /(lockup:\s*")([^"]*)(")/,
   "logo.mark":          /(mark:\s*")([^"]*)(")/,
   "logo.consciouscuts": /(consciouscuts:\s*")([^"]*)(")/,
@@ -66,6 +75,7 @@ const ANCHORS = {
   "signIn.copy.doorsFootnote":  /(doorsFootnote:\s*")([^"]*)(")/,
   "meta.title":         /(title:\s*")([^"]*)(")/,
   "meta.description":   /(description:\s*")([^"]*)(")/,
+  "meta.themeColor":    /(    themeColor:\s*")([^"]*)(")/,
   "portraits.headshot":   /(headshot:\s*")([^"]*)(")/,
   "portraits.cuts.women": /(      women:\s*")([^"]*)(")/,
   "portraits.cuts.wax":   /(      wax:\s*")([^"]*)(")/,
@@ -91,15 +101,23 @@ for (const f of IDENTITY_FIELDS) {
 t("the rail's field list and the anchor table agree",
   IDENTITY_FIELDS.every((f) => f in ANCHORS) && Object.keys(ANCHORS).every((f) => (IDENTITY_FIELDS).includes(f)));
 
+/* the registry's ids, derived from the file's own union — never re-typed,
+   so a fourth cartridge extends this harness the day it joins the type */
+const IDS = (pristine.match(/export type CartridgeId = ([^;]+);/)?.[1].match(/"([^"]+)"/g) ?? [])
+  .map((s) => s.slice(1, -1));
+t("the harness derives the cartridge ids from the real union", IDS.length >= 3, IDS.join(", "));
+
 /* ── good writes, every field, each round-tripped byte-identically ────── */
 /* `$&` and `$1` ride the dressed values: the rail must pour them
    LITERALLY, never interpret */
 const ASSET = "/images/dressing-room-$&-test.webp";
 const COPY = "Dressed $& anew $1";
 const GOOD = {
+  "cartridge.id": IDS[1] ?? "pacman",
   "doors.timeTipUrl": "https://time.example.org/api/chain/tip?full=1",
   "nav.accent": "dawn",
   "meta.description": "A search snippet runs longer than a copy token — this one is a hundred and thirty characters on purpose, to prove the raised ceiling. $&",
+  "meta.themeColor": "#1234AB", /* mixed case on purpose — the hex law takes either */
 };
 const goodValue = (f) =>
   GOOD[f] ??
@@ -107,10 +125,30 @@ const goodValue = (f) =>
 
 for (const field of IDENTITY_FIELDS) {
   reset();
-  const w = await writeIdentityField(field, goodValue(field));
+  const w = await writeIdentityField(field, goodValue(field), IDS);
   t(`write ${field} lands`, w.ok === true && onDisk().includes(goodValue(field)), !w.ok && w.reason);
-  const back = await writeIdentityField(field, originals[field]);
+  const back = await writeIdentityField(field, originals[field], IDS);
   t(`write ${field} round-trips byte-identically`, back.ok === true && onDisk() === pristine);
+}
+
+/* ── the cartridge choice — every id in the union lands, nothing else ── */
+for (const id of IDS) {
+  reset();
+  const w = await writeIdentityField("cartridge.id", id, IDS);
+  t(`write cartridge.id ← ${id} lands`, w.ok === true && onDisk().includes(`activeCartridgeId: CartridgeId = "${id}";`), !w.ok && w.reason);
+  const back = await writeIdentityField("cartridge.id", originals["cartridge.id"], IDS);
+  t(`cartridge.id ← ${id} round-trips byte-identically`, back.ok === true && onDisk() === pristine);
+}
+reset();
+{
+  const w = await writeIdentityField("cartridge.id", "sega", IDS);
+  t("an unknown cartridge is refused before disk, file untouched",
+    w.ok === false && w.status === 400 && onDisk() === pristine, w.ok ? "accepted!" : w.reason);
+}
+{
+  const w = await writeIdentityField("cartridge.id", IDS[1]);
+  t("without the registry's list the rail refuses honestly, file untouched",
+    w.ok === false && w.status === 400 && onDisk() === pristine, w.ok ? "accepted!" : w.reason);
 }
 
 /* the time door may also sail empty */
@@ -135,6 +173,10 @@ const REJECTS = [
   ["nav.accent", ""],
   ["meta.description", ""],
   ["meta.description", "x".repeat(241)],
+  ["meta.themeColor", "red"],
+  ["meta.themeColor", "#fff"],
+  ["meta.themeColor", "#1234567"],
+  ["meta.themeColor", "#12345g"],
 ];
 for (const [field, value] of REJECTS) {
   reset();

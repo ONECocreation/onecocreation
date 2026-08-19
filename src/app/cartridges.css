@@ -96,6 +96,16 @@ html[data-oc-cartridge="earthside"]{
   --band-1:#EFE5D2; --band-2:#F6EFE3; --band-3:#EEE4D3;
   --band-4:#E3E7DE; --band-5:#F1E7D8; --band-6:#F3E3DC;
   --band-7:#E7E3D9; --band-8:#EAE2D4; --band-9:#F0E6D3;
+  /* S10 lane 3 (earthside finishing) — the rooms that read house tokens
+     instead of the pour: the hero's gradient stops step onto the paper,
+     bright teal deepens (the celestial #8FD0D8 is a night ink — pale and
+     unreadable on paper; #23636E is the value the dawn already proved),
+     the living sky's stars become copper dust, and the keep-dark glass
+     warms to charcoal so darkGlass panels stop reading celestial */
+  --hero-grad-0:#EFE5D2; --hero-grad-1:#F6EFE3;
+  --teal-bright:#23636E;
+  --sky-cream:#C77B4A;
+  --glass-night:rgba(46,36,24,.78); --glass-night-edge:rgba(199,123,74,.42);
 }
 
 /* the ground under everything — sun-warmed paper, held still like the
@@ -108,15 +118,107 @@ html[data-oc-cartridge="earthside"] body{
   background-attachment:fixed;
 }
 
-/* the hero trades the nebula for a copper sun-wash — the red-rock
-   photograph is an ASSET SLOT (missing art, listed in the lane report);
-   the wash is honest ground, not invented art */
+/* the hero steps off the celestial gradient entirely (S10 lane 3): the
+   purple sun-radial and night stops were baked into house.css's .hero —
+   same shape here, warm light. The glyph that draws in white light on
+   Love's void would vanish on paper, so it re-inks to copper letterpress
+   (the fill needs !important — Love's reduced-motion and .ll-done rules
+   pin fill:#fff !important; scoped specificity alone can't out-vote them) */
+html[data-oc-cartridge="earthside"] .hero{
+  background:radial-gradient(760px 460px at 50% 14%, rgba(199,123,74,.3), transparent 62%),
+    linear-gradient(180deg,var(--hero-grad-0),var(--hero-grad-1) 55%,var(--band-2));
+}
 html[data-oc-cartridge="earthside"] .hero::before{
   background:radial-gradient(700px 420px at 50% 0%, rgba(199,123,74,.18), transparent 62%);
   opacity:1; animation:none;
 }
 html[data-oc-cartridge="earthside"] .hero::after{
   background:linear-gradient(180deg,transparent,#EFE5D2);
+}
+html[data-oc-cartridge="earthside"] .ll-line{
+  stroke:#B4693C; fill:#B4693C!important;
+  filter:drop-shadow(0 0 5px rgba(199,123,74,.5)) drop-shadow(0 0 16px rgba(199,123,74,.26));
+}
+html[data-oc-cartridge="earthside"] .llstage .tw{
+  background:radial-gradient(circle,#C77B4A 0%,rgba(199,123,74,.5) 45%,transparent 72%);
+  filter:drop-shadow(0 0 5px rgba(199,123,74,.55));
+}
+/* the hero's own ink on paper — the celestial drop-glow around the
+   display line was white-on-gold haze; umber holds the letterpress read */
+html[data-oc-cartridge="earthside"] .hero h1{text-shadow:0 0 34px rgba(199,123,74,.35)}
+
+/* keep-dark rooms hold the cartridge's OWN night (S10 lane 3) — the law
+   stands (they never theme-flip), but the night they hold under EARTHSIDE
+   is the warm charcoal of the night twin, not Love's celestial purple.
+   Ink pour first, then the four skies re-laddered warm; all scoped, all
+   inert without the attribute. */
+html[data-oc-cartridge="earthside"] main .keep-dark{
+  --ink-strong:#F8EFE0; --ink-body:#D8C9B4; --muted:#A8917A;
+  --rose:#E7B2C3; --gold-deep:#D9B24E; --teal-bright:#8FD0D8;
+  --glass:var(--glass-night); --glass-edge:var(--glass-night-edge);
+}
+html[data-oc-cartridge="earthside"] main section.keep-dark.sky-night{
+  background:linear-gradient(180deg,#2A2117 0%,#241C14 100%)!important}
+html[data-oc-cartridge="earthside"] main section.keep-dark.sky-veil{
+  background:radial-gradient(700px 420px at 50% 0%,rgba(199,123,74,.3),transparent 60%),
+    linear-gradient(180deg,#2E2418 0%,#3A2C1C 50%,#241C14 100%)!important}
+html[data-oc-cartridge="earthside"] main section.keep-dark.sky-glass{
+  background:linear-gradient(180deg,#241C14 0%,#2E2418 100%)!important}
+html[data-oc-cartridge="earthside"] main section.keep-dark.sky-warm{
+  background:linear-gradient(180deg,#2E2418 0%,#2C2118 100%)!important}
+
+/* the aurora's violet plume was Love's nebula — under EARTHSIDE it
+   re-hues to clay (the teal and gold plumes already speak earth) */
+html[data-oc-cartridge="earthside"] .aurora i:nth-child(2){
+  background:radial-gradient(closest-side,rgba(156,79,46,.6),transparent 70%)}
+
+/* the four skies at midday — non-keep-dark sky sections (the home
+   sessions shelf, the about/contact/classes rooms) step onto the paper
+   ladder, the same pattern as Love's dawn repaint but earthen; keep-dark
+   skies are excluded — their warm charcoal rules sit above */
+html[data-oc-cartridge="earthside"] main section.sky-night:not(.keep-dark):not(.lions-gate){
+  background:linear-gradient(180deg,#F1E7D8 0%,#EFE5D2 100%)!important}
+html[data-oc-cartridge="earthside"] main section.sky-veil:not(.keep-dark):not(.lions-gate){
+  background:radial-gradient(700px 420px at 50% 0%,rgba(199,123,74,.16),transparent 60%),
+    linear-gradient(180deg,#F3E3DC 0%,#EFE5D2 55%,#EEE4D3 100%)!important}
+html[data-oc-cartridge="earthside"] main section.sky-glass:not(.keep-dark):not(.lions-gate){
+  background:#EFE5D2!important}
+html[data-oc-cartridge="earthside"] main section.sky-warm:not(.keep-dark):not(.lions-gate){
+  background:linear-gradient(180deg,#F1E7D8 0%,#F3E3DC 100%)!important}
+
+/* the lion, re-veiled — the art is REAL (her own trove) and stays; only
+   the veil changes light: warm paper by day, warm charcoal on the
+   keep-dark-law page and in the night twin */
+html[data-oc-cartridge="earthside"] .lions-gate{
+  background:linear-gradient(rgba(246,239,227,.8), rgba(246,239,227,.88)),
+    url("/images/lions-gate.webp") center top / cover no-repeat;
+}
+html[data-oc-cartridge="earthside"] .lions-gate-dark{
+  background:linear-gradient(rgba(30,23,16,.6), rgba(30,23,16,.76)),
+    url("/images/lions-gate.webp") center top / cover no-repeat;
+}
+html[data-oc-cartridge="earthside"] .lions-gate-dark .sec-h{color:#F8EFE0}
+html[data-oc-cartridge="earthside"] .lions-gate-dark p{color:#D8C9B4}
+
+/* THE DECKLE (S10 lane 3 — the proposal's torn-paper edge on photos):
+   pure CSS masks, no SVG filters, no new assets. A stepped-back core plus
+   scallop passes at two mismatched pitches reads as a hand-torn edge
+   rather than a stamp perforation; amplitude stays under 12px so the
+   photograph does the talking. It hangs on the ONE place a photograph
+   hands back to paper today — the lion band's bottom edge, a divider
+   (the S9 note's own word). A four-edge variant on the portraits was
+   tried and PULLED: at thumbnail scale the scallops read die-cut, a
+   novelty — the divider is the honest surface. The studio pages' seeded
+   photo bands are puck-seeds.ts territory — PROTECTED — they keep their
+   hard edges until the seeds can be touched. */
+html[data-oc-cartridge="earthside"] .lions-gate{
+  mask-image:
+    linear-gradient(#000 0 0),
+    radial-gradient(circle 10px at 50% 50%, #000 98%, #0000),
+    radial-gradient(circle 7px at 50% 50%, #000 98%, #0000);
+  mask-size:100% calc(100% - 12px), 23px 32px, 37px 24px;
+  mask-position:0 0, 0 100%, 11px 100%;
+  mask-repeat:no-repeat, repeat-x, repeat-x;
 }
 
 /* the classes band steps off the nebula onto the paper ladder */
@@ -156,6 +258,29 @@ html[data-oc-cartridge="earthside"][data-oc-theme="light"]{
   --band-1:#2A2117; --band-2:#241C14; --band-3:#2E241A;
   --band-4:#232B25; --band-5:#2E2418; --band-6:#2C2118;
   --band-7:#262019; --band-8:#27211A; --band-9:#2C2214;
+  /* S10 lane 3: the same three rooms, night side — hero stops warm
+     charcoal, teal BRIGHTENS back (deep teal would sink into the
+     charcoal), the dust goes sand */
+  --hero-grad-0:#1E1710; --hero-grad-1:#2A2117;
+  --teal-bright:#8FD0D8;
+  --sky-cream:#EAD9CB;
+}
+html[data-oc-cartridge="earthside"][data-oc-theme="light"] .hero{
+  background:radial-gradient(760px 460px at 50% 14%, rgba(199,123,74,.2), transparent 62%),
+    linear-gradient(180deg,var(--hero-grad-0),var(--hero-grad-1) 55%,var(--band-2));
+}
+html[data-oc-cartridge="earthside"][data-oc-theme="light"] .ll-line{
+  stroke:#F4E3C8; fill:#F4E3C8!important;
+  filter:drop-shadow(0 0 6px rgba(244,227,200,.6)) drop-shadow(0 0 20px rgba(199,123,74,.4));
+}
+html[data-oc-cartridge="earthside"][data-oc-theme="light"] .llstage .tw{
+  background:radial-gradient(circle,#F4E3C8 0%,rgba(234,217,203,.55) 45%,transparent 72%);
+  filter:drop-shadow(0 0 6px rgba(244,227,200,.7));
+}
+html[data-oc-cartridge="earthside"][data-oc-theme="light"] .hero h1{text-shadow:0 0 40px rgba(199,123,74,.45)}
+html[data-oc-cartridge="earthside"][data-oc-theme="light"] .lions-gate{
+  background:linear-gradient(rgba(36,28,20,.62), rgba(36,28,20,.78)),
+    url("/images/lions-gate.webp") center top / cover no-repeat;
 }
 html[data-oc-cartridge="earthside"][data-oc-theme="light"] body{
   background:
@@ -173,7 +298,10 @@ html[data-oc-cartridge="earthside"][data-oc-theme="light"] .hero::after{
   background:linear-gradient(180deg,transparent,#241C14);
 }
 
-/* EARTHSIDE still open (said honestly in the lane report): the deckle
-   divider on photo edges, typography proofing on real Letters copy, and
-   the keep-dark rooms' celestial night all want component-level or
-   asset-level work, not more tokens. */
+/* EARTHSIDE, after S10 lane 3: the deckle divider, the typography
+   proofing, and the keep-dark re-tone all landed above. Still open (said
+   honestly in the lane report): the seeded studio pages' keep-dark bands
+   and the vendored Band veil are puck-seeds.ts / @pacsarcade/puck-config
+   territory — PROTECTED, reported not touched; the theme-switch inversion
+   question awaits Pac's ruling; and the red-rock art slots stay labeled
+   ASSET SLOT until the photography lands. */

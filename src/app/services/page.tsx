@@ -8,7 +8,7 @@ import { Services } from "@/components/sections";
 import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { readConfig } from "@/lib/booking";
-import { cartridge } from "@/brand/cartridge";
+import { activeCartridgeId, cartridge } from "@/brand/cartridge";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -21,6 +21,14 @@ export const dynamic = "force-dynamic";
  * with scroll-zoom, real photography on the session cards, and light only
  * where light means something. Her page's copy, her cosmos, our rails.
  */
+
+/* S10 lane 3 (earthside finishing): keep-dark holds the cartridge's OWN
+   night. With LOVE selected the celestial literals below emit verbatim
+   (the byte-identical law — this helper collapses to its first argument);
+   under EARTHSIDE the same bands and veils wear the warm charcoal of the
+   cartridge's night twin instead. */
+const kd = (love: string, earth: string): string =>
+  activeCartridgeId === "earthside" ? earth : love;
 
 const TIER_CARDS = [
   { tier: "A" as const, img: cartridge.tierArt.A },
@@ -53,14 +61,21 @@ export default async function ServicesPage() {
           }} />
           <div aria-hidden style={{ position: "absolute", inset: 0,
             /* S2 (0018.05.25 a₿): band literals stay literal — keep-dark holds
-               the night; var(--band-*) would repaint dawn light-on-light */
-            background: "linear-gradient(180deg, rgba(20,18,40,.28) 0%, rgba(26,20,40,.12) 45%, #1a1428 98%)" }} />
+               the night; var(--band-*) would repaint dawn light-on-light.
+               S10 lane 3: kd() swaps in the cartridge's own night (see above) */
+            background: kd(
+              "linear-gradient(180deg, rgba(20,18,40,.28) 0%, rgba(26,20,40,.12) 45%, #1a1428 98%)",
+              "linear-gradient(180deg, rgba(58,42,26,.24) 0%, rgba(46,36,24,.1) 45%, #241C14 98%)") }} />
           <CosmicSky />
           <div style={{ position: "relative", zIndex: 2 }}>
             <div className="wrap reveal" style={{ padding: "56px 22px 96px" }}>
               <img src={cartridge.hero.heavenEarth} alt="Where Heaven and Earth Meet"
                 style={{ width: "min(480px, 88%)", margin: "0 auto 34px", display: "block",
-                  filter: "drop-shadow(0 1px 10px rgba(255,255,255,.9)) drop-shadow(0 0 26px rgba(255,255,255,.6))" }} />
+                  /* the white glow was mixed for Love's void — under EARTHSIDE
+                     the same script wears a warm ember glow */
+                  filter: kd(
+                    "drop-shadow(0 1px 10px rgba(255,255,255,.9)) drop-shadow(0 0 26px rgba(255,255,255,.6))",
+                    "drop-shadow(0 2px 10px rgba(90,60,30,.5)) drop-shadow(0 0 22px rgba(199,123,74,.4))") }} />
               <div style={{ display: "grid", gap: 30, alignItems: "center",
                 gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))", maxWidth: 900, margin: "0 auto" }}>
                 <img src={cartridge.hero.loveSidelook} alt="Love"
@@ -87,7 +102,7 @@ export default async function ServicesPage() {
         </section>
 
         {/* ══ 2 · WELCOME TO The Way of the Heart — night lavender ══ */}
-        <section className="keep-dark" style={{ padding: "64px 0", background: "linear-gradient(180deg,#1a1428 0%,#241a33 100%)" }}>{/* S2: band literals pinned — keep-dark holds the night, var(--band-*) repaints at dawn */}
+        <section className="keep-dark" style={{ padding: "64px 0", background: kd("linear-gradient(180deg,#1a1428 0%,#241a33 100%)", "linear-gradient(180deg,#241C14 0%,#2E2418 100%)") }}>{/* S2: band literals pinned — keep-dark holds the night, var(--band-*) repaints at dawn; S10 lane 3: kd() carries the cartridge's own night */}
           <div className="wrap center reveal" style={{ maxWidth: 640 }}>
             <p className="kicker" style={{ color: "var(--rose)" }}>Welcome To</p>
             <h2 className="sec-h" style={{ marginBottom: ".4em", color: "var(--ink-strong)" }}>The Way of the Heart</h2>
@@ -112,7 +127,9 @@ export default async function ServicesPage() {
             backgroundSize: "cover", backgroundPosition: "center",
           }} />
           <div aria-hidden style={{ position: "absolute", inset: 0,
-            background: "linear-gradient(180deg, rgba(14,10,28,.6), rgba(26,20,40,.78))" }} />
+            background: kd(
+              "linear-gradient(180deg, rgba(14,10,28,.6), rgba(26,20,40,.78))",
+              "linear-gradient(180deg, rgba(30,23,15,.58), rgba(46,36,24,.78))") }} />
           <div className="wrap reveal" style={{ position: "relative", zIndex: 2, padding: "72px 22px", display: "grid", gap: 34, alignItems: "center",
             gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))", maxWidth: 940, margin: "0 auto" }}>
             <div className="center">
@@ -144,7 +161,7 @@ export default async function ServicesPage() {
         </section>
 
         {/* ══ 4 · BECOME A FREE MEMBER — night waters ══ */}
-        <section className="keep-dark" style={{ padding: "70px 0", background: "linear-gradient(180deg,#1a1428 0%,#12202a 60%,#161726 100%)" }}>{/* S2: band literals pinned — keep-dark holds the night */}
+        <section className="keep-dark" style={{ padding: "70px 0", background: kd("linear-gradient(180deg,#1a1428 0%,#12202a 60%,#161726 100%)", "linear-gradient(180deg,#241C14 0%,#232B25 60%,#262019 100%)") }}>{/* S2: band literals pinned — keep-dark holds the night */}
           <div className="wrap">
             <div className="center reveal" style={{ marginBottom: 26 }}>
               <h2 className="stack-hero">
@@ -181,7 +198,7 @@ export default async function ServicesPage() {
         </section>
 
         {/* ══ 5 · HOW IT WORKS — embers in the dark ══ */}
-        <section className="keep-dark" style={{ padding: "70px 0", background: "linear-gradient(180deg,#161726 0%,#241c15 60%,#1a1428 100%)" }}>{/* S2: band literals pinned — keep-dark holds the night */}
+        <section className="keep-dark" style={{ padding: "70px 0", background: kd("linear-gradient(180deg,#161726 0%,#241c15 60%,#1a1428 100%)", "linear-gradient(180deg,#262019 0%,#2E2418 60%,#241C14 100%)") }}>{/* S2: band literals pinned — keep-dark holds the night */}
           <div className="wrap">
             <div className="center reveal" style={{ marginBottom: 10 }}>
               <h2 className="stack-hero">
@@ -221,7 +238,7 @@ export default async function ServicesPage() {
         <Services />
 
         {/* ══ 7 · real voices — moonlit rose ══ */}
-        <section className="keep-dark" style={{ padding: "70px 0", background: "linear-gradient(180deg,#1a1428 0%,#241722 60%,#1a1428 100%)" }}>{/* S2: band literals pinned — keep-dark holds the night */}
+        <section className="keep-dark" style={{ padding: "70px 0", background: kd("linear-gradient(180deg,#1a1428 0%,#241722 60%,#1a1428 100%)", "linear-gradient(180deg,#241C14 0%,#2C2118 60%,#241C14 100%)") }}>{/* S2: band literals pinned — keep-dark holds the night */}
           <div className="wrap">
             <div className="center reveal" style={{ marginBottom: 26 }}>
               <p className="kicker" style={{ color: "var(--rose)" }}>Real Voices from the Chair</p>
@@ -252,7 +269,7 @@ export default async function ServicesPage() {
         </section>
 
         {/* ══ 8 · Monthly Paid Memberships — light cards on the night ══ */}
-        <section className="keep-dark" style={{ padding: "70px 0", background: "linear-gradient(180deg,#1a1428 0%,#141a2b 100%)" }}>{/* S2: band literals pinned — keep-dark holds the night */}
+        <section className="keep-dark" style={{ padding: "70px 0", background: kd("linear-gradient(180deg,#1a1428 0%,#141a2b 100%)", "linear-gradient(180deg,#241C14 0%,#27211A 100%)") }}>{/* S2: band literals pinned — keep-dark holds the night */}
           <div className="wrap">
             <div className="center reveal" style={{ marginBottom: 26 }}>
               <h2 className="stack-hero">
@@ -290,7 +307,9 @@ export default async function ServicesPage() {
             backgroundSize: "cover", backgroundPosition: "center 20%",
           }} />
           <div aria-hidden style={{ position: "absolute", inset: 0,
-            background: "linear-gradient(180deg, rgba(16,12,30,.55), rgba(16,12,30,.74))" }} />
+            background: kd(
+              "linear-gradient(180deg, rgba(16,12,30,.55), rgba(16,12,30,.74))",
+              "linear-gradient(180deg, rgba(28,21,14,.55), rgba(28,21,14,.74))") }} />
           <div className="aurora" aria-hidden><i /><i /><i /></div>
           <CosmicSky />
           <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "76px 22px", maxWidth: 620 }}>

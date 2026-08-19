@@ -32,10 +32,11 @@ import { ONECOCREATION } from "@/brand/tokens";
  * tweak lands in both panes instantly. Below the panes sits THE DRESSING
  * ROOM (S8, cartridge hardening; finished S9): the cartridge's non-CSS
  * identity — logos, hero art, the time door, the copy tokens, the sign-in
- * ceremony, the meta pair, portraits, tier art, the thank-you, the voices
- * of the field and the nav accent — read and written through /api/brand's
- * identity branch, one cartridge literal (or one pinned voice row) at a
- * time. LEGIBILITY DOCTRINE throughout:
+ * ceremony, the meta trio, portraits, tier art, the thank-you, the voices
+ * of the field and the nav accent — and, since S10, the SELECTION itself:
+ * which cartridge the whole site wears by default. All of it read and
+ * written through /api/brand's identity branch, one cartridge literal (or
+ * one pinned voice row) at a time. LEGIBILITY DOCTRINE throughout:
  * labels sit on solid/text-safe grounds, override state is gold ring PLUS
  * a dot (never colour alone), all icon controls carry title + aria-label.
  */
@@ -239,6 +240,8 @@ const IDENTITY_GROUPS: { title: string; blurb: string; rows: DressingRow[] }[] =
       { field: "meta.title", label: "tab title" },
       { field: "meta.description", label: "search snippet",
         hint: "a snippet runs long — up to 240 characters" },
+      { field: "meta.themeColor", label: "browser chrome",
+        hint: "the tint the browser chrome wears — exactly #rrggbb" },
     ]},
   { title: "Portraits", blurb: "Love, and the ConsciousCuts chair",
     rows: [
@@ -280,6 +283,9 @@ function IdentityRoom() {
   const [loadNote, setLoadNote] = useState<string | null>(null);
   const [busyField, setBusyField] = useState<IdentityField | null>(null);
   const [msg, setMsg] = useState<DressingMsg | null>(null);
+  /* the registry's shelf — id, name and a four-token palette hint per
+     direction — so the picker can show the choice it offers */
+  const [choices, setChoices] = useState<{ id: string; name: string; swatches: string[] }[]>([]);
   /* voices of the field — the one list in the cartridge; drafts mirror the
      saved rows one input set per row, plus one empty set for the add */
   const [voices, setVoices] = useState<VoiceRow[] | null>(null);
@@ -297,6 +303,7 @@ function IdentityRoom() {
         if (d.ok && d.identity) {
           setValues(d.identity);
           setDraft(d.identity);
+          setChoices(Array.isArray(d.cartridges) ? d.cartridges : []);
           const vs: VoiceRow[] = Array.isArray(d.voices) ? d.voices : [];
           setVoices(vs);
           setVoiceDraft(vs.map((v) => ({ ...v })));
@@ -414,6 +421,53 @@ function IdentityRoom() {
           </p>
         )}
         {msg && msg.field === r.field && <div style={{ marginLeft: 158 }}>{msgChip(msg)}</div>}
+      </div>
+    );
+  }
+
+  /* the selection itself — same choice-pill idiom as the nav accent:
+     clicking a cartridge IS the save, the current one wears gold ring +
+     dot (never colour alone), and the STALE_NOTE rides back verbatim */
+  function cartridgePicker() {
+    const current = values?.["cartridge.id"] ?? "";
+    return (
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, width: 148, flexShrink: 0,
+            color: "#F4ECFF" /* S2: pinned — needs a ruling */ }}>
+            cartridge
+          </span>
+          {choices.map((c) => {
+            const active = current === c.id;
+            const busy = busyField === "cartridge.id";
+            return (
+              <button
+                key={c.id}
+                onClick={() => { if (!active) { setDraft((d) => ({ ...d, "cartridge.id": c.id })); saveField("cartridge.id", c.id); } }}
+                disabled={busyField !== null}
+                title={active ? `${c.name} — the cartridge the site wears` : `dress the whole site in ${c.name}`}
+                aria-label={`cartridge ${c.name}${active ? " (current)" : ""}`}
+                style={{ ...pill, display: "inline-flex", alignItems: "center", gap: 7,
+                  background: active ? "rgba(139,118,196,.25)" : "rgba(139,118,196,.1)",
+                  color: "#F4ECFF", /* S2: pinned — needs a ruling */
+                  /* active = gold ring PLUS a dot — never colour alone (doctrine) */
+                  border: active ? "2px solid #B4862B" /* S2: gold law — decorative, reported */ : "1px solid rgba(139,118,196,.4)",
+                  cursor: busyField ? "default" : "pointer" }}>
+                {/* a hint of the direction's contract palette — swatches, not a live preview */}
+                {c.swatches.map((s, i) => (
+                  <span key={i} aria-hidden style={{ width: 10, height: 10, borderRadius: 3, flexShrink: 0,
+                    background: s, border: "1px solid rgba(255,255,255,.3)", display: "inline-block" }} />
+                ))}
+                {busy && !active ? `${c.name} …` : c.name}{active ? " •" : ""}
+              </button>
+            );
+          })}
+        </div>
+        <p style={{ margin: "8px 0 0 158px", fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
+          color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+          {"this chooses the site's DEFAULT cartridge for EVERYONE — a deployment choice written into the cartridge file, live only after a reload or a fresh deploy. It is not a per-visitor preview, and it is not the visitor's own night/dawn toggle (data-oc-theme); the dots are a hint of each direction's palette, nothing more."}
+        </p>
+        {msg && msg.field === "cartridge.id" && <div style={{ marginLeft: 158 }}>{msgChip(msg)}</div>}
       </div>
     );
   }
@@ -563,7 +617,7 @@ function IdentityRoom() {
 
   return (
     <section
-      aria-label="the dressing room — the cartridge's logos, hero art, doors, voice, sign-in, meta, portraits, tier art, thank-you and voices"
+      aria-label="the dressing room — the cartridge selection, logos, hero art, doors, voice, sign-in, meta, portraits, tier art, thank-you and voices"
       style={{ margin: "0 16px 24px", padding: "18px 20px 22px", borderRadius: 16,
         border: "1px solid rgba(139,118,196,.35)",
         background: "#12101f" /* S2: pinned — needs a ruling — a solid ground under every word (doctrine) */ }}
@@ -574,7 +628,7 @@ function IdentityRoom() {
       </div>
       <p style={{ margin: "0 0 18px", fontSize: 13, lineHeight: 1.55, fontFamily: SANS,
         color: "#D9D2E4" /* S2: pinned — needs a ruling */ }}>
-        {"the cartridge's non-CSS dressing — logos, hero art, the time door, the words the site speaks, the sign-in ceremony, the meta pair, portraits, tier art, the thank-you and the voices of the field. A save writes the cartridge file itself; the running server catches up on its next reload (dev does it alone) or a fresh deploy."}
+        {"the cartridge's non-CSS dressing — which cartridge the site wears, then its logos, hero art, the time door, the words the site speaks, the sign-in ceremony, the meta trio, portraits, tier art, the thank-you and the voices of the field. A save writes the cartridge file itself; the running server catches up on its next reload (dev does it alone) or a fresh deploy."}
       </p>
 
       {values === null && !loadNote && (
@@ -593,6 +647,18 @@ function IdentityRoom() {
 
       {values && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 40px", alignItems: "flex-start" }}>
+          <div style={{ flex: "1 1 100%" }}>
+            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+              textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
+              color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>
+              Cartridge
+            </div>
+            <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS,
+              color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+              which dressing the whole site wears — the one line a fork flips
+            </p>
+            {cartridgePicker()}
+          </div>
           {IDENTITY_GROUPS.map((g) => (
             <div key={g.title} style={{ flex: "1 1 420px", minWidth: 0 }}>
               <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",

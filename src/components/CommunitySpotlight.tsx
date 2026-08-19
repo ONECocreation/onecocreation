@@ -4,16 +4,18 @@ import { cartridge } from "@/brand/cartridge";
 /**
  * THE COMMUNITY SPOTLIGHT (Admiral's word, 0018.05.15): before the rooms
  * open, say WHO holds them — Love is a healer, and this is what she does:
- * the silent haircuts, the retreats, the 11:11 lives. Under it, the Voices
+ * the retreats, the 11:11 lives, the silent haircuts LAST (Pac's ruling,
+ * site-wide — the same order src/lib/booking.ts's SERVICE_RANK encodes).
+ * Under it, the Voices
  * of the Field — her real YouTube comments — drift by on a slow ticker
  * (pause on hover, still and wrapped for reduced-motion). Each voice is a
  * door to the video it was left under.
  */
 export default function CommunitySpotlight() {
   const doors = [
-    { icon: "✂️", title: "Silent Haircuts", sub: "ConsciousCuts & Waxing — soul work in sacred silence, where the mobile studio travels.", href: "/services", cta: "the way of the heart" },
     { icon: "🏜️", title: "Retreats", sub: "Days together at a place — held, fed, and walked in the field.", href: "/retreats", cta: "see what's forming" },
     { icon: "📺", title: "11:11 Live with Love", sub: "Mon · Wed · Fri @ ~11:11 (MST/PST) — or there abouts ;)", href: "https://www.youtube.com/@Onecocreation", cta: "@Onecocreation", external: true },
+    { icon: "✂️", title: "Silent Haircuts", sub: "ConsciousCuts & Waxing — soul work in sacred silence, where the mobile studio travels.", href: "/services", cta: "the way of the heart" },
   ];
   return (
     <div style={{ margin: "0 0 34px" }}>

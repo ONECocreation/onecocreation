@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { getPalette, setPalette, defaultPalette, isPalette, getPaletteDawn, setPaletteDawn, defaultPaletteDawn, isPaletteDawn } from "@/lib/brand-palette";
-import { cartridge } from "@/brand/cartridge";
+import { cartridge, cartridges, activeCartridgeId, type CartridgeId } from "@/brand/cartridge";
 import { IDENTITY_FIELDS, identitySnapshot, isIdentityField, isVoiceRow, writeIdentityField, writeVoiceRow } from "@/lib/cartridge-identity";
 
 export const dynamic = "force-dynamic";
+
+/* the registry's own ids — derived, never re-typed: a fourth cartridge
+   joins the validator's list the day it joins the registry */
+const CARTRIDGE_IDS = Object.keys(cartridges) as CartridgeId[];
 
 /* Same gate() as api/puck & api/copilot — saving a palette re-skins every
    slot-coloured block on the site, so it is operator-only. */
@@ -19,14 +23,20 @@ function gate(request: Request): NextResponse | null {
  *  CSS variables in the layout, never this endpoint), plus the cartridge's
  *  identity values for the board's dressing room. `identity` is read from
  *  the cartridge THIS SERVER imported — a file edit lands here only after
- *  a reload or a fresh deploy (identityNote says so). */
+ *  a reload or a fresh deploy (identityNote says so). `cartridges` is the
+ *  registry's shelf — id, name and a four-token hint of each direction's
+ *  contract palette — so the board can render the picker. */
 export async function GET(request: Request) {
   const denied = gate(request);
   if (denied) return denied;
   const [palette, dawn] = await Promise.all([getPalette(), getPaletteDawn()]);
   return NextResponse.json({
     ok: true, palette, dawn, default: defaultPalette(), defaultDawn: defaultPaletteDawn(),
-    identity: identitySnapshot(cartridge),
+    identity: identitySnapshot(cartridge, activeCartridgeId),
+    cartridges: CARTRIDGE_IDS.map((id) => {
+      const c = cartridges[id];
+      return { id, name: c.name, swatches: [c.palette.space, c.palette.cream, c.palette.purple, c.palette.copper] };
+    }),
     voices: cartridge.voices.map((v) => ({ quote: v.quote, name: v.name, who: v.who, href: v.href })),
     identityNote: "the dressing read from the running server — a cartridge edit reaches this list after a reload or a fresh deploy",
   });
@@ -34,9 +44,10 @@ export async function GET(request: Request) {
 
 /** POST { palette } — save (promote-to-token); { reset: true } — back to the
  *  cartridge default; { identity: { field, value } } — dress ONE cartridge
- *  identity field; { voice: { op, index, row } } — add, edit or remove ONE
- *  voice of the field (src/lib/cartridge-identity writes the file, one
- *  literal — or one pinned row — at a time, exactly-once or not at all). */
+ *  identity field (cartridge.id included — the registry's ids ride along);
+ *  { voice: { op, index, row } } — add, edit or remove ONE voice of the
+ *  field (src/lib/cartridge-identity writes the file, one literal — or one
+ *  pinned row — at a time, exactly-once or not at all). */
 export async function POST(request: Request) {
   const denied = gate(request);
   if (denied) return denied;
@@ -69,7 +80,7 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    const result = await writeIdentityField(id.field, id.value);
+    const result = await writeIdentityField(id.field, id.value, CARTRIDGE_IDS);
     return NextResponse.json(result, { status: result.ok ? 200 : result.status });
   }
   if (body?.reset) {

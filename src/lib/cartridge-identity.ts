@@ -1,5 +1,9 @@
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
+/* type-only, erased at compile — the module never READS the cartridge,
+   it only borrows the union's name so the id list the route hands down
+   is provably the registry's own */
+import type { CartridgeId } from "@/brand/cartridge";
 
 /**
  * Cartridge identity — the dressing room's write rail (S8, cartridge
@@ -21,7 +25,7 @@ import path from "path";
  * says so plainly and rides every successful response.
  *
  * S9 (the cartridges become real, 0018.05.28 a₿) finished the room: the
- * sign-in copy, the meta pair, the portraits and tier art, the thank-you,
+ * sign-in copy, the meta block, the portraits and tier art, the thank-you,
  * and VOICES — the one list in the cartridge. A list is not a scalar, so
  * it gets its own honest machinery below (writeVoiceRow): ONE block anchor
  * pins the whole `voices: [ … ]` literal exactly once, every row inside it
@@ -30,9 +34,24 @@ import path from "path";
  * a file-wide guess. The registry moved pacman and earthside into their
  * own files (src/brand/cartridges/) so every anchor here still matches
  * cartridge.ts exactly once; the rail reads THAT file alone, always.
+ *
+ * S10 (the cartridge becomes a choice) put the SELECTION itself on the
+ * rail: `cartridge.id` writes the `activeCartridgeId` line — the one line
+ * a fork flips. Its lawful values are the registry's own ids, and this
+ * module cannot read the registry (FS-pure, still): the route hands
+ * `Object.keys(cartridges)` down with every write, so a fourth cartridge
+ * extends the validator the day it joins the registry — and no list
+ * handed down means no write, honestly refused.
+ *
+ * S10's cleanup lane added `meta.themeColor` — the browser-chrome tint
+ * the root layout pours into its viewport export. Its validator keeps the
+ * palette's own hex law (src/lib/brand-palette.ts's HEX: exactly #rrggbb,
+ * either case), and its anchor pins the meta block's indentation so the
+ * key can never drift to a same-named line elsewhere.
  */
 
 export const IDENTITY_FIELDS = [
+  "cartridge.id",
   "logo.lockup", "logo.mark", "logo.consciouscuts",
   "hero.moon", "hero.nebula", "hero.meteors",
   "hero.heavenEarth", "hero.loveSidelook", "hero.lionsGate",
@@ -42,7 +61,7 @@ export const IDENTITY_FIELDS = [
   "signIn.copy.returningTitle", "signIn.copy.returningBlurb",
   "signIn.copy.signInCta", "signIn.copy.signingCta",
   "signIn.copy.doorsHeading", "signIn.copy.doorsFootnote",
-  "meta.title", "meta.description",
+  "meta.title", "meta.description", "meta.themeColor",
   "portraits.headshot",
   "portraits.cuts.women", "portraits.cuts.wax", "portraits.cuts.men",
   "tierArt.A", "tierArt.B", "tierArt.C",
@@ -90,6 +109,16 @@ function accent(v: string): string | null {
   return v === "gold" || v === "dawn" ? null : `the nav accent is "gold" or "dawn"`;
 }
 
+/** the active cartridge — the selection line itself. The lawful values are
+ *  the registry's own ids, handed down by the route (this module is FS-pure
+ *  and never reads the registry), so a fourth cartridge extends the list the
+ *  day it joins. No list handed down, no write — refused honestly, never a
+ *  silent guess. */
+function cartridgeIdChoice(v: string, ids?: readonly CartridgeId[]): string | null {
+  if (!ids || ids.length === 0) return "the registry's id list was not handed to the rail — no edit was made";
+  return (ids as readonly string[]).includes(v) ? null : `the cartridge is one of the registry's own: ${ids.join(", ")}`;
+}
+
 /** the meta description — a search snippet runs longer than a copy token,
  *  so the ceiling is raised for THIS field alone (240, the snippet's real
  *  budget), deliberately and per-field: the shared copy ceiling stays at
@@ -100,12 +129,24 @@ function metaDescription(v: string): string | null {
   return null;
 }
 
-type Spec = { anchor: RegExp; validate: (v: string) => string | null };
+/** the browser-chrome tint — exactly #rrggbb, either case: the same hex
+ *  law the palette rail keeps (src/lib/brand-palette.ts's HEX). The regex
+ *  alone satisfies the one law — no `"` `\` or line break can pass it */
+function hexColor(v: string): string | null {
+  if (!/^#[0-9a-fA-F]{6}$/.test(v)) return "the browser chrome takes exactly #rrggbb — six hex digits, either case";
+  return null;
+}
+
+type Spec = { anchor: RegExp; validate: (v: string, cartridgeIds?: readonly CartridgeId[]) => string | null };
 
 /* one anchor per field, pinned to its unique key line. nav.accent carries
    its ` as "gold" | "dawn` tail so it cannot be confused with the sign-in
    door's own `accent: "pink"` — the group-3 tail is re-emitted untouched. */
 const SPECS: Record<IdentityField, Spec> = {
+  /* the selection line (S10): the type-annotation tail is what makes it
+     unique — without it the anchor could drift to the accessor's
+     `cartridges[activeCartridgeId]` two lines below */
+  "cartridge.id": { anchor: /(export const activeCartridgeId: CartridgeId = ")([^"]*)(";)/, validate: cartridgeIdChoice },
   "logo.lockup":        { anchor: /(lockup:\s*")([^"]*)(")/,        validate: assetPath },
   "logo.mark":          { anchor: /(mark:\s*")([^"]*)(")/,          validate: assetPath },
   "logo.consciouscuts": { anchor: /(consciouscuts:\s*")([^"]*)(")/, validate: assetPath },
@@ -131,6 +172,10 @@ const SPECS: Record<IdentityField, Spec> = {
   "signIn.copy.doorsFootnote":  { anchor: /(doorsFootnote:\s*")([^"]*)(")/,  validate: copyLine },
   "meta.title":       { anchor: /(title:\s*")([^"]*)(")/,       validate: copyLine },
   "meta.description": { anchor: /(description:\s*")([^"]*)(")/, validate: metaDescription },
+  /* the meta block's own indentation rides group 1 — the portraits.cuts.*
+     trick, so the key can never drift to a same-named line in another
+     block */
+  "meta.themeColor":  { anchor: /(    themeColor:\s*")([^"]*)(")/, validate: hexColor },
   /* nested keys pin their own indentation inside group 1, so a short key
      can never drift to a same-named line in another block — and `men:`
      can never land inside `women:`, which contains it as a substring */
@@ -159,10 +204,12 @@ const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 /** Validate, then replace ONE literal in the cartridge file and write it
  *  back. Exactly-once or not at all; FS trouble comes back as an honest
- *  structured error, never a thrown surprise. */
-export async function writeIdentityField(field: IdentityField, value: string): Promise<IdentityWrite> {
+ *  structured error, never a thrown surprise. `cartridgeIds` is the
+ *  registry's own key list, handed down by the route — only the
+ *  cartridge.id validator spends it. */
+export async function writeIdentityField(field: IdentityField, value: string, cartridgeIds?: readonly CartridgeId[]): Promise<IdentityWrite> {
   const spec = SPECS[field];
-  const invalid = spec.validate(value);
+  const invalid = spec.validate(value, cartridgeIds);
   if (invalid) return { ok: false, reason: invalid, status: 400 };
 
   let source: string;
@@ -306,8 +353,10 @@ export async function writeVoiceRow(op: VoiceOp, index: number, row?: VoiceRow):
   return { ok: true, op, index: op === "add" ? rows.length : index, note: STALE_NOTE };
 }
 
-/* the structural read side — no import of the cartridge, so this module
-   stays FS-pure and the route passes in whatever cartridge it holds */
+/* the structural read side — no runtime import of the cartridge (the
+   CartridgeId at the top is type-only, erased at compile), so this module
+   stays FS-pure and the route passes in whatever cartridge it holds — and,
+   for the selection, whatever id it resolved */
 type CartridgeLike = {
   logo: Record<"lockup" | "mark" | "consciouscuts", string>;
   hero: Record<"moon" | "nebula" | "meteors" | "heavenEarth" | "loveSidelook" | "lionsGate", string>;
@@ -315,16 +364,19 @@ type CartridgeLike = {
   copy: Record<"productName" | "tagline" | "memberNoun", string>;
   nav: { accent: string };
   signIn: { copy: Record<"returningTitle" | "returningBlurb" | "signInCta" | "signingCta" | "doorsHeading" | "doorsFootnote", string> };
-  meta: Record<"title" | "description", string>;
+  meta: Record<"title" | "description" | "themeColor", string>;
   portraits: { headshot: string; cuts: Record<"women" | "wax" | "men", string> };
   tierArt: Record<"A" | "B" | "C", string>;
   thanks: Record<"video" | "poster" | "heading" | "message", string>;
 };
 
 /** the current identity values, read from the cartridge the runtime
- *  imported (possibly staler than the file on disk — see STALE_NOTE). */
-export function identitySnapshot(c: CartridgeLike): Record<IdentityField, string> {
+ *  imported (possibly staler than the file on disk — see STALE_NOTE). The
+ *  selection is not ON the cartridge object, so the route hands the id it
+ *  resolved alongside. */
+export function identitySnapshot(c: CartridgeLike, activeId: CartridgeId): Record<IdentityField, string> {
   return {
+    "cartridge.id": activeId,
     "logo.lockup": c.logo.lockup,
     "logo.mark": c.logo.mark,
     "logo.consciouscuts": c.logo.consciouscuts,
@@ -347,6 +399,7 @@ export function identitySnapshot(c: CartridgeLike): Record<IdentityField, string
     "signIn.copy.doorsFootnote": c.signIn.copy.doorsFootnote,
     "meta.title": c.meta.title,
     "meta.description": c.meta.description,
+    "meta.themeColor": c.meta.themeColor,
     "portraits.headshot": c.portraits.headshot,
     "portraits.cuts.women": c.portraits.cuts.women,
     "portraits.cuts.wax": c.portraits.cuts.wax,

@@ -20,9 +20,14 @@ import "./cartridges.css";
 
 /* Retronoid (the arcade skin's display face) moved OFF the root (QW9,
    ~0018.05.24 a₿) — it ships only to arcade-skin routes via
-   components/ArcadeFonts. Press Start 2P stays here: the signed-in member
-   chip in the site header wears font-pixel on EVERY page. Montserrat
-   dropped: --disp leads with Barlow and never fell back to it. */
+   components/ArcadeFonts. Press Start 2P stays here for the PACMAN
+   cartridge, which adopted it as its display face: the twin in
+   cartridges.css pours var(--font-press-start) over the display tokens,
+   and next/font must register that variable on <html> for the pour to
+   resolve. LOVE reads nothing from it — the kit's font-pixel/font-arcade
+   tokens are re-faced in cartridge.css, and S10 struck globals' last dead
+   PS2P declarations. Montserrat dropped: --disp leads with Barlow and
+   never fell back to it. */
 
 /* Self-hosted — easy mode must not lean on a third-party CDN */
 const openDyslexic = localFont({

@@ -176,13 +176,11 @@ header > div.border-t-2 { display: none; }
 }
 .crew-rope__kicker {
   display: block;
-  font-family: var(--font-press-start), monospace;
   font-size: 10px; letter-spacing: .22em; text-transform: uppercase;
   color: #b795ff;
 }
 .crew-rope__title {
   display: block; margin-top: 12px;
-  font-family: var(--font-retronoid), var(--font-press-start), monospace;
   font-size: clamp(1.05rem, 3.4vw, 1.45rem); line-height: 1.3;
   text-transform: uppercase;
   color: var(--console-ink);
@@ -200,7 +198,6 @@ header > div.border-t-2 { display: none; }
   min-height: 44px; margin-top: 16px; padding: 0 20px;
   border: 2px solid color-mix(in srgb, #b795ff 60%, transparent);
   border-radius: 999px;
-  font-family: var(--font-press-start), monospace;
   font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
   color: #b795ff;
   background: rgba(183, 149, 255, 0.08);
@@ -242,7 +239,6 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6, .retro-text {
-  font-family: var(--font-press-start), cursive;
   text-transform: uppercase;
 }
 
@@ -396,7 +392,6 @@ section {
   display: inline-block;
   background-color: var(--primary);
   color: var(--background);
-  font-family: var(--font-press-start), cursive;
   font-size: 1rem;
   padding: 1rem 2rem;
   border: 4px solid var(--background);
@@ -537,7 +532,6 @@ footer {
 }
 
 .faq-question {
-  font-family: var(--font-press-start), cursive;
   font-size: 0.9rem;
   color: var(--primary);
   margin-bottom: 1rem;
