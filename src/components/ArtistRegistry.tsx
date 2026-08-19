@@ -256,7 +256,7 @@ export default function ArtistRegistry() {
           <p>
             The Artist Registry rides your tag. Sign in with your key (or{" "}
             <Link href="/" className="text-cyan hover:glow-cyan underline">
-              claim a free tag
+              claim a tag
             </Link>
             ) and come back through this door.
           </p>

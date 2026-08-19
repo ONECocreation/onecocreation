@@ -122,7 +122,7 @@ const aboutContent: Block[] = [
     rich("We can BE the Now and create a more collaborative future for us and all — as IAM, WE ARE. The shifts are already here: a breaking down and a synchronistic leveling up, occurring now with Gaia. <b>The New Earth and the New Human, as Onecocreation.</b>", "center"),
     text("Ready to get started?", "center", st({ color: "ink", size: 19, font: "display", spaceAbove: 20, spaceBelow: 16 })),
     buttons([
-      { label: "Create your free account ✨", href: "/welcome", variant: "gold" },
+      { label: "Create your account ✨", href: "/welcome", variant: "gold" },
       { label: "ConsciousCuts & Waxing ✂️", href: "/services", variant: "teal" },
     ], "center"),
   ]),

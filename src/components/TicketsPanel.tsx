@@ -143,7 +143,7 @@ export default function TicketsPanel({ mode }: { mode: "support" | "crew" }) {
           <p className="mb-2 font-pixel text-[10px] uppercase text-cyan">SIGN IN FIRST</p>
           <p>
             Tickets ride your <span className="text-pink">@frens</span> tag. Sign in with your key
-            (or <a href="/" className="text-cyan hover:glow-cyan underline">claim a free tag</a>)
+            (or <a href="/" className="text-cyan hover:glow-cyan underline">claim a tag</a>)
             and this is where you&apos;ll raise and track them.
           </p>
         </div>

@@ -288,11 +288,11 @@ export default function LoginPanel() {
               type="submit"
               disabled={claimBusy || wish.trim().length < 3 || avail === "taken"}
             >
-              {claimBusy ? "Claiming…" : "Claim my name — free"}
+              {claimBusy ? "Claiming…" : "Claim my name"}
             </button>
           </form>
           <p style={{ ...quietNote, margin: "14px 0 0" }}>
-            Free, sovereign, verifiable. Then we&apos;ll walk you in: dress your profile, add an
+            Sovereign, verifiable. Then we&apos;ll walk you in: dress your profile, add an
             email if you like — or skip it all and look around.
           </p>
           {claimNote && <p style={{ margin: "12px 0 0", fontSize: ".8rem", color: "var(--err, #E7899E)" }}>{claimNote}</p>}

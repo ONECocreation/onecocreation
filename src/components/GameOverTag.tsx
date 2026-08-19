@@ -55,9 +55,6 @@ export default function GameOverTag({
       <Link href={registerHref} className="font-pixel text-xs text-cyan hover:glow-cyan">
         Search another name
       </Link>
-      <p className="font-pixel text-[10px] uppercase text-white/40">
-        Registration is free — on the house
-      </p>
       <p className="font-pixel text-xs text-white/40">
         <Link href="/" className="text-cyan hover:glow-cyan">
           Back to One Cocreation

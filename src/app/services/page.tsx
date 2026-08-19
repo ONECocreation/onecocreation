@@ -91,7 +91,7 @@ export default async function ServicesPage() {
                       fontSize: "1.3rem", color: "var(--ink-strong)", margin: "16px 0 2px" }}>WELCOME</div>
                     <div className="constellation" aria-hidden style={{ margin: "2px 0 0" }}>{cartridge.constellation}</div>
                     <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginTop: 20 }}>
-                      <Link className="btn btn-shimmer" href="/welcome">Create an account — free</Link>
+                      <Link className="btn btn-shimmer" href="/welcome">Create an account</Link>
                       <a className="btn btn-teal" href="#silent">Is a silent session for you?</a>
                     </div>
                   </StackedHero>
@@ -192,7 +192,7 @@ export default async function ServicesPage() {
               ))}
             </div>
             <div className="center reveal" style={{ marginTop: 26 }}>
-              <Link className="btn" href="/welcome">Create your free membership ✨</Link>
+              <Link className="btn" href="/welcome">Create your membership ✨</Link>
             </div>
           </div>
         </section>

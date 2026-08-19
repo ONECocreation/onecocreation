@@ -138,7 +138,7 @@ export default function WelcomeFlow() {
             placeholder="your@email.com" style={{ ...glassField, margin: "16px 0 12px" }} />
           {note && <p style={{ margin: "0 0 10px", fontSize: ".8rem", color: "var(--rose)" }}>{note}</p>}
           <button className="btn btn-shimmer" onClick={start} disabled={busy || !email.includes("@")}>
-            {busy ? "Sending your code…" : "YES! — join free"}
+            {busy ? "Sending your code…" : "YES! — join"}
           </button>
           <p style={{ marginTop: 16 }}>
             <Link href="/login" style={{ fontSize: ".7rem", fontWeight: 700, textTransform: "uppercase",

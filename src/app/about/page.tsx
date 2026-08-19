@@ -308,7 +308,7 @@ export default async function AboutPage() {
                 Ready to get started?
               </Editable>
               <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
-                <Link className="btn" href="/welcome">Create your free account ✨</Link>
+                <Link className="btn" href="/welcome">Create your account ✨</Link>
                 <Link className="btn btn-teal" href="/services">ConsciousCuts &amp; Waxing ✂️</Link>
               </div>
             </div>
