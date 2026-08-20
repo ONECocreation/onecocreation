@@ -7,7 +7,6 @@ import ScrollFix from "@/components/ScrollFix";
 import AliveEffects from "@/components/AliveEffects";
 import CartridgeVars from "@/components/CartridgeVars";
 import CartridgePreview from "@/components/CartridgePreview";
-import { PenModeProvider } from "@/components/PenMode";
 import "./globals.css";
 /* The face, split in two (cartridge walk step 8): cartridge.css is the
    BRAND (tokens, bands, faces, imagery), house.css is the brand-free
@@ -135,11 +134,9 @@ export default function RootLayout({
             brand lives in the cartridge (src/brand/cartridge.ts); the CSS
             variables the old BrandProvider wrapper injected moved to
             cartridge.css :root, verbatim, so nothing rendered shifts */}
-        <PenModeProvider>
-          <ScrollFix />
-          <AliveEffects />
-          {children}
-        </PenModeProvider>
+        <ScrollFix />
+        <AliveEffects />
+        {children}
       </body>
     </html>
   );

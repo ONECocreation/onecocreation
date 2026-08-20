@@ -1,7 +1,6 @@
 import Link from "next/link";
 import FrenBadge from "./FrenBadge";
 import ThemeLantern from "./ThemeLantern";
-import PenToggle from "./PenToggle";
 import NavMenu from "./NavMenu";
 import BasketChip from "./BasketChip";
 import { cartridge } from "@/brand/cartridge";
@@ -20,7 +19,6 @@ export default function SiteHeader() {
         <NavMenu />
         <div className="nav-tail">
           <ThemeLantern />
-          <PenToggle />
           <BasketChip />
           <FrenBadge />
         </div>

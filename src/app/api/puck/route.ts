@@ -16,7 +16,7 @@ import { lintForPublish, hasErrors } from "@/lib/lint";
 
 export const dynamic = "force-dynamic";
 
-/* Same gate() as api/copy & api/copilot — every write re-checks the operator
+/* Same gate() as api/copilot — every write re-checks the operator
    cookie server-side, no matter what the client believes. */
 function gate(request: Request): NextResponse | null {
   if (!operatorFromCookieHeader(request.headers.get("cookie"))) {

@@ -11,8 +11,7 @@ import { SPACE_ROLES } from "@/lib/identity-config";
 /* The admin deck row — for a live operator session OR a fren whose key is on
    the operator allowlist (`eligible`: the door shows, the gate still takes a
    fresh signature). Cookies are httpOnly, so the menu asks the whoami
-   endpoint (useIsOperator, shared with Love's Pen toggle); everyone else
-   never sees the row. */
+   endpoint (useIsOperator); everyone else never sees the row. */
 
 function AdminDeckRow() {
   return (

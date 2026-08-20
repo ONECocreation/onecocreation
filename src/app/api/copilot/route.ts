@@ -6,7 +6,7 @@ import { lintForPublish, hasErrors } from "@/lib/lint";
 
 export const dynamic = "force-dynamic";
 
-/* Same gate() as api/puck & api/copy: the copilot spends model tokens and
+/* Same gate() as api/puck: the copilot spends model tokens and
    can rewrite a page, so it is operator-only, re-checked server-side no
    matter what the client believes. */
 function gate(request: Request): NextResponse | null {

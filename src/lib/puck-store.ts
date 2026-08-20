@@ -9,7 +9,7 @@
  *
  * Public routes read LIVE only, so visitors never see unpublished work. The
  * studio loads DRAFT (falling back to LIVE, then a page seed). Publish copies
- * DRAFT → LIVE. Same bare Upstash-REST kv() helper as copy.ts/letters.ts.
+ * DRAFT → LIVE. Same bare Upstash-REST kv() helper as letters.ts.
  */
 
 function restEnv(): { url: string; token: string } | null {

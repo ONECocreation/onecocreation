@@ -8,7 +8,7 @@ import { ONECOCREATION } from "@/brand/tokens";
  * new palette instantly. Defaults come from the brand cartridge
  * (@pacsarcade/puck-config/tokens).
  *
- * Same bare Upstash-REST kv() helper as copy.ts/puck-store.ts (each lib file
+ * Same bare Upstash-REST kv() helper as puck-store.ts (each lib file
  * carries its own, per the house pattern).
  */
 

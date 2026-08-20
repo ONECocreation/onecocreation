@@ -317,28 +317,6 @@ section{padding:76px 0;position:relative}
 .theme-sun:hover{transform:rotate(20deg);border-color:rgba(235,203,119,.8)}
 html[data-oc-theme="light"] .theme-sun{color:#B4862B;border-color:rgba(180,134,43,.5)}
 
-/* Love's Pen — the header toggle (operator-only, P1 2026-08-10) and the
-   inline-edit affordance it switches on for every <Editable>. */
-.pen-toggle{width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(235,203,119,.45);
-  background:none;font-size:16px;cursor:pointer;display:grid;place-items:center;padding:0;
-  transition:transform .18s ease,border-color .18s ease,background .18s ease}
-.pen-toggle:hover{transform:rotate(-8deg);border-color:rgba(235,203,119,.8)}
-.pen-toggle.is-on{background:rgba(217,178,78,.18);border-color:var(--gold-deep)}
-
-.pen-editable{outline:1px dashed transparent;outline-offset:4px;border-radius:4px;
-  cursor:text;transition:outline-color .15s ease,background .15s ease}
-.pen-editable:hover{outline-color:rgba(180,134,43,.55);background:rgba(217,178,78,.06)}
-.pen-editable:focus{outline:2px solid var(--gold-deep);outline-offset:4px;background:rgba(217,178,78,.09)}
-
-.pen-revert{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;
-  border:1.5px solid var(--gold-deep);background:var(--ground);color:var(--gold-2);font-size:12px;
-  line-height:1;cursor:pointer;display:grid;place-items:center;opacity:.75;z-index:2}
-.pen-revert:hover{opacity:1;transform:rotate(-18deg)}
-.pen-saved{position:absolute;top:-10px;right:20px;font-size:.68rem;font-weight:700;
-  color:var(--teal-bright);background:var(--ground);padding:2px 8px;border-radius:999px;z-index:2}
-.pen-counter{position:absolute;bottom:-18px;right:0;font-size:.66rem;color:var(--rose);
-  background:var(--ground);padding:1px 7px;border-radius:999px;z-index:2}
-
 /* tier pills — each plan wears its name; the door to its own page */
 .tier-pills{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:18px 0 30px}
 .tier-pill{border:1.5px solid rgba(180,134,43,.5);color:var(--gold-deep);border-radius:999px;
