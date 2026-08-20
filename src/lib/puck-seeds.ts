@@ -1,5 +1,5 @@
 import type { PuckPageData } from "./puck-store";
-import { cartridge } from "@/brand/cartridge";
+import { activeCartridgeId, cartridge } from "@/brand/cartridge";
 
 /**
  * Puck page seeds (PUCK P4, Admiral-approved 2026-08-11). A seed is the
@@ -39,9 +39,26 @@ const panel = (content: Block[]) => blk("Panel", { content });
 const twocol = (left: Block[], right: Block[], gap = 26, valign = "top") => blk("TwoColumns", { gap, valign, left, right });
 const band = (background: string, hold: string, content: Block[]) => blk("Band", { background, hold, content });
 
+/* S11 lane 1 — the seeds learn the cartridge. A sky band's `hold` is a MOOD
+   decision, not a colour: "night" pins the band dark even when the theme
+   flips light (the .keep-dark trick); "theme" lets it follow the theme.
+   LOVE is dark-first, so her sky bands hold the night; EARTHSIDE is
+   daylight-first paper, so the SAME bands follow the theme — they ride the
+   paper day and dim to the warm-charcoal twin only when the switch does;
+   PACMAN IS the dark build and keeps the night. Resolved once, off the
+   compile-time selection (the kd() precedent in app/services/page.tsx) —
+   with LOVE active the value is today's "night" verbatim, the
+   byte-identical law, and both moods' sky classes are already re-toned per
+   cartridge in app/cartridges.css (S10 lane 3). Bands over a PHOTO or
+   colour ground (nebula, meteors, bgSrc, bgColor) keep their literal
+   "night" under EVERY cartridge: the vendored Band veil is dark
+   (@pacsarcade/puck-config), so their ink must stay light — re-toning that
+   veil is package territory, not seed territory. */
+const skyHold: string = activeCartridgeId === "earthside" ? "theme" : "night";
+
 const aboutContent: Block[] = [
   // 1 - Smiles Love: the faces, under a living dawn
-  band("sky-veil", "night", [
+  band("sky-veil", skyHold, [
     eyebrow("Smiles, Love", "center"),
     stacked("MY", "STORY", "h1", "center"),
     text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
@@ -53,7 +70,7 @@ const aboutContent: Block[] = [
   ]),
 
   // 2 - the hero's journey, her words whole
-  band("sky-glass", "night", [
+  band("sky-glass", skyHold, [
     rich("I have been a solo adventurer for a while now. Like most, on the hero’s journey. A call put out. A readiness to answer that call… but well? How many of you have heard that same call, but your companion’s <b>Procrastination, Uncertainty, Imposter and Fear</b> wanted to take over the itinerary."),
     rich("Maybe like me, you never felt like you belonged here. I didn’t understand the unkindness I saw in this world and I played small — wanting to be seen but not noticed. I people-pleased to avoid confrontation. I was an introvert and proud to <i>not</i> be a part of anything. Why? Because that meant that I wasn’t the one being rejected. That WAS me."),
     quote("None of us are here to shrink, but to standout. Not here to separate, but gather together — to be unapologetically US!"),
@@ -296,7 +313,7 @@ const homeContent: Block[] = [
   ]),
 
   // 6 - ConsciousCuts, LAST among the offerings (Love's meeting, 0018.05.11)
-  hm.band("sky-veil", "night", [
+  hm.band("sky-veil", skyHold, [
     hm.heading("ConsciousCuts & Waxing 🦋", "h2", "center", st({ color: "ink" })),
     hm.text("The Way of the Heart, one-on-one. Sessions where you don’t have to keep up conversation. Pick a time — you’re held.", "center", st({ color: "muted" })),
     hm.note("── live sessions shelf stays code-side (the real booking cards) ──"),
@@ -348,7 +365,7 @@ const homeContent: Block[] = [
 /* ── book — the Sessions door: night hero + the living 2×2 ──────────────── */
 const bk = kit("bk");
 const bookContent: Block[] = [
-  bk.band("sky-veil", "night", [
+  bk.band("sky-veil", skyHold, [
     bk.eyebrow("One-on-One with Love", "center"),
     bk.stacked("BOOK", "A SESSION", "h1", "center"),
     bk.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
@@ -364,7 +381,7 @@ const bookContent: Block[] = [
 /* ── memberships — the lion page, Love's words from her live site ───────── */
 const mb = kit("mb");
 const membershipsContent: Block[] = [
-  mb.band("sky-veil", "night", [
+  mb.band("sky-veil", skyHold, [
     mb.eyebrow("Memberships"),
     mb.heading("Welcome to The Heart Field — where “Heaven and Earth Meet”", "h1"),
     mb.rich("<b>3 Different Memberships</b>"),
@@ -437,7 +454,7 @@ const supportContent: Block[] = [
 /* ── classes — the Community door: commons hero + the live shelves ──────── */
 const cm = kit("cm");
 const classesContent: Block[] = [
-  cm.band("sky-veil", "night", [
+  cm.band("sky-veil", skyHold, [
     cm.eyebrow("The Heartfield Commons", "center"),
     cm.stacked("CLASSES &", "COMMUNITY", "h1", "center"),
     cm.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
@@ -446,7 +463,7 @@ const classesContent: Block[] = [
   cm.band("sky-glass", "theme", [
     cm.note("── live community spotlight stays code-side (who holds the field + the voices) ──"),
   ]),
-  cm.band("sky-glass", "night", [
+  cm.band("sky-glass", skyHold, [
     cm.note("── live rooms shelf stays code-side (tier-gated Matrix doors) ──"),
   ]),
 ];
@@ -475,7 +492,7 @@ const storeContent: Block[] = [
     sr.text("Made or chosen by hand, shipped with love.", "center"),
     sr.note("── live product grid stays code-side ──"),
   ]),
-  sr.band("sky-veil", "night", [
+  sr.band("sky-veil", skyHold, [
     sr.heading("✂️ ConsciousCuts & Soul Sessions", "h2", "center"),
     sr.text("One-on-one time on Love’s real calendar — pick a session, choose an open time, you’re held.", "center"),
     sr.note("── live product grid stays code-side ──"),
@@ -686,7 +703,7 @@ const consciousCutsOldContent: Block[] = [
       ])],
     ),
   ], { bgSrc: `${RAW}/consciouscuts-waxing/IMG_0292-8983552.jpeg` }),
-  cco.band("sky-glass", "night", [
+  cco.band("sky-glass", skyHold, [
     cco.heading("HOW IT WORKS", "h2"),
     cco.text("CREATE YOUR FREE MEMBERSHIP"),
     cco.text("HERES WHERE THE ADVENTURE BEGINS!"),
@@ -963,7 +980,7 @@ const leapOfFaithOldContent: Block[] = [
       ])],
     ),
   ], { bgColor: "#DBD4E4" }),
-  lfo.band("sky-veil", "night", [
+  lfo.band("sky-veil", skyHold, [
     lfo.note("── original had: dark film-reel band of Conscious Cuts & Waxing style cards ('A Curious Traveler' + stock hair-model photos) ──"),
     lfo.heading("IS A SILENT HAIR SESSION FOR YOU?", "h2", "center"),
   ]),

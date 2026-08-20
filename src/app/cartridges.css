@@ -2,10 +2,10 @@
    THE NON-DEFAULT CARTRIDGE TWINS (S9 — the cartridges become real,
    0018.05.28 a₿).
 
-   cartridge.css is LOVE's file and stays it. The other two voices pour
-   HERE, gated on html[data-oc-cartridge="pacman"|"earthside"] — the one
-   attribute the root layout sets, and only when the selection flips off
-   the default (src/brand/cartridge.ts, one line). With LOVE active the
+   cartridge.css is LOVE's file and stays it. The other voices pour
+   HERE, gated on html[data-oc-cartridge="pacman"|"earthside"|"blank"] —
+   the one attribute the root layout sets, and only when the selection
+   flips off the default (src/brand/cartridge.ts, one line). With LOVE active the
    attribute never renders: every rule below is inert, and Love's output
    carries zero bytes of this file. The same seam the dawn twin proved —
    token pours, no stylesheet fork, no rule overrides of Love's
@@ -305,3 +305,74 @@ html[data-oc-cartridge="earthside"][data-oc-theme="light"] .hero::after{
    territory — PROTECTED, reported not touched; the theme-switch inversion
    question awaits Pac's ruling; and the red-rock art slots stay labeled
    ASSET SLOT until the photography lands. */
+
+/* ── BLANK — the template (TASK-09/S11 lane 3). Not a brand: the plain
+   starting point a stranger adds to prove the kit leaves home. Neutral
+   paper, neutral ink, SYSTEM FONTS — no font registration, no invented
+   hue. Gold stays money and is NOT poured here: --nav-gold is the
+   nav-link ink SLOT (the header never theme-flips), gold itself keeps
+   its money meaning untouched in cartridge.css.
+
+   Deliberately thin. What a fourth cartridge gets for free is the token
+   pour below; what it does NOT get is written down, not painted over:
+   the hero's celestial gradient and the four skies are baked into
+   cartridge.css/house.css selectors, the keep-dark rooms hold night
+   tokens, and /services' keep-dark bands are inline literals behind a
+   two-way kd(love, earth) branch (src/app/services/page.tsx) that a
+   fourth cartridge silently falls out of. BLANK wears those rooms in
+   Love's night on purpose — the seam is the finding, documented in
+   docs/adding-a-cartridge.md, not hidden behind !important.
+
+   The theme switch quirk, said plainly: the bare attribute IS the plain
+   day; flipping the visitor's night/dawn toggle reaches LOVE's dawn
+   repaint (the switch's "light" side), which is cream-and-lavender, not
+   blank. One switch, two meanings — the same quirk EARTHSIDE rides,
+   from the other side. ── */
+html[data-oc-cartridge="blank"]{
+  --space:#F5F4F0; --ground:#F5F4F0;
+  --panel:rgba(255,255,255,.82); --edge:rgba(60,60,60,.18);
+  --ink:#2A2A2A; --muted:#777770;
+  --ink-strong:#1F1F1F; --ink-body:#4A4A44;
+  --glass:rgba(255,255,255,.72); --glass-edge:rgba(60,60,60,.16);
+  --ghost-bg:rgba(60,60,60,.08); --ghost-ink:#4A4A44;
+  --glass-strong:rgba(255,255,255,.94);
+  --sheet-bg:#FDFCFA;
+  --field-bg:rgba(255,255,255,.96); --field-ink:#2A2A2A;
+  --soft-sm:0 18px 44px -28px rgba(60,60,60,.3);
+  --soft:0 24px 60px -30px rgba(60,60,60,.35);
+  --info:#4A6A75; /* info/time speaks a gray-teal — semantic lock */
+  --rose:#8A8A82; /* kickers, wearing gray — the template has no rose */
+  /* the nav, re-inked neutral on the header's own dark — --nav-gold is
+     the nav-link ink SLOT here (gold itself stays with money) */
+  --nav-gold:#D8D6CE; --nav-hover:#8A8A82;
+  --here-grad:linear-gradient(90deg,#8A8A82 0%,#C9C7BE 100%);
+  --here-wash:linear-gradient(90deg,rgba(90,90,82,.14),rgba(201,199,190,.14));
+  --pop-bg:rgba(28,28,26,.97); --pop-edge:rgba(120,120,110,.4);
+  /* the band ladder, flattened to paper steps — the cosmic walk keeps
+     its shape and loses its cosmos */
+  --band-1:#EEEDE8; --band-2:#F5F4F0; --band-3:#EFEEEA;
+  --band-4:#E9E8E3; --band-5:#F1F0EB; --band-6:#EFEDEA;
+  --band-7:#E7E6E1; --band-8:#EBEAE5; --band-9:#F0EFEA;
+  --hero-grad-0:#E9E8E3; --hero-grad-1:#F5F4F0;
+  --teal-bright:#4A6A75;
+  --sky-cream:#8A8A82;
+  --glass-night:rgba(36,36,34,.78); --glass-night-edge:rgba(120,120,110,.35);
+  /* the type law: system stack in every role — no Barlow, no PS2P, no
+     download, the plainest thing that renders */
+  --serif:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --disp:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-h1:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-h2:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-h3:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-body-app:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-pixel:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-arcade:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+}
+
+/* the ground under everything — plain paper, held still like the
+   house's own fixed-attachment law */
+html[data-oc-cartridge="blank"] body{
+  background:#F5F4F0;
+  background-attachment:fixed;
+}

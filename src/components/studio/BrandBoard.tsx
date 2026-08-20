@@ -425,6 +425,16 @@ function IdentityRoom() {
     );
   }
 
+  /* S11 lane 2 — see it before you wear it. The other gesture: not a save,
+     a LOOK. Sets the flag the site-wide strip (components/CartridgePreview)
+     reads, then opens the real site in a new tab. sessionStorage, on
+     purpose: the preview dies with the tab, belongs to this browser alone,
+     and never travels to a visitor. */
+  function previewCartridge(id: string) {
+    try { sessionStorage.setItem("oc-cartridge-preview", id); } catch { /* private mode — the new tab simply shows no preview */ }
+    window.open("/", "_blank", "noopener");
+  }
+
   /* the selection itself — same choice-pill idiom as the nav accent:
      clicking a cartridge IS the save, the current one wears gold ring +
      dot (never colour alone), and the STALE_NOTE rides back verbatim */
@@ -466,6 +476,37 @@ function IdentityRoom() {
         <p style={{ margin: "8px 0 0 158px", fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
           color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
           {"this chooses the site's DEFAULT cartridge for EVERYONE — a deployment choice written into the cartridge file, live only after a reload or a fresh deploy. It is not a per-visitor preview, and it is not the visitor's own night/dawn toggle (data-oc-theme); the dots are a hint of each direction's palette, nothing more."}
+        </p>
+        {/* the PREVIEW row (S11 lane 2) — deliberately NOT pills: bare
+            underlined text buttons with an eye, so the hand never confuses
+            LOOKING with CHOOSING. Clicking one saves nothing — it sets a
+            flag in this browser's session storage and opens the real site
+            in a new tab wearing that cartridge's skin. */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+          <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, width: 148, flexShrink: 0,
+            color: "#F4ECFF" /* S2: pinned — needs a ruling */ }}>
+            preview
+          </span>
+          {choices.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => previewCartridge(c.id)}
+              title={`see the real site wearing ${c.name} (${c.id}) — a new tab, this browser only, the default unmoved`}
+              aria-label={`preview the site under the ${c.id} cartridge`}
+              style={{ ...pill, background: "none", border: "none", borderRadius: 0, padding: "4px 2px",
+                color: "#B9A8E8", /* S2: pinned — needs a ruling */
+                textDecoration: "underline", textUnderlineOffset: 3,
+                borderBottom: "1px dashed rgba(185,168,232,.5)" /* S2: pinned — needs a ruling */ }}>
+              {/* the id rides the name — LOVE and EARTHSIDE share the brand
+                  name "One Cocreation", and a preview button may never leave
+                  the operator guessing WHICH dressing it opens */}
+              👁 {c.name} <span style={{ opacity: .7, fontWeight: 400 }}>({c.id})</span>
+            </button>
+          ))}
+        </div>
+        <p style={{ margin: "8px 0 0 158px", fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
+          color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+          {"preview is the operator's LOOK, not a save: the flag lives in THIS browser's session storage, set from this gated room alone — it is not a per-visitor theme switcher, it changes nothing for anyone else, and the default above does not move. What pours is the cartridge's SKIN (tokens, faces, bands, the hero's treatment); the dressing — logos, hero art, the words — is read from the saved cartridge and stays. While the flag lives, a strip at the foot of every page says PREVIEW and names the cartridge; its exit clears the flag and reloads. The visitor's night/dawn toggle still works inside a preview — the two compose, and neither lies about the other."}
         </p>
         {msg && msg.field === "cartridge.id" && <div style={{ marginLeft: 158 }}>{msgChip(msg)}</div>}
       </div>

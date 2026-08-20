@@ -6,6 +6,7 @@ import { activeCartridgeId, cartridge } from "@/brand/cartridge";
 import ScrollFix from "@/components/ScrollFix";
 import AliveEffects from "@/components/AliveEffects";
 import CartridgeVars from "@/components/CartridgeVars";
+import CartridgePreview from "@/components/CartridgePreview";
 import { PenModeProvider } from "@/components/PenMode";
 import "./globals.css";
 /* The face, split in two (cartridge walk step 8): cartridge.css is the
@@ -125,6 +126,11 @@ export default function RootLayout({
           "try{if(localStorage.getItem('oc-theme')==='light')document.documentElement.setAttribute('data-oc-theme','light')}catch(e){}" }} />
         <script dangerouslySetInnerHTML={{ __html: EASY_MODE_BOOT_SCRIPT }} />
         <CartridgeVars />
+        {/* S11 lane 2 — see it before you wear it: the operator's cartridge
+            PREVIEW. With no flag in sessionStorage this renders and touches
+            NOTHING; only the gated dressing room sets the flag, and only the
+            operator's own browser ever pours the twin + wears the strip. */}
+        <CartridgePreview />
         {/* S8 (0018.05.26): the multi-brand sign-in kit is retired — the one
             brand lives in the cartridge (src/brand/cartridge.ts); the CSS
             variables the old BrandProvider wrapper injected moved to
