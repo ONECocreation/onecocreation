@@ -26,7 +26,7 @@ import { applyFrenSession } from "@/hooks/useFrenSession";
 /* P3-ruled surface copy — used EXACTLY as ruled; not a field, never
    paraphrased, never split.
 
-   RE-SCOPED 0018.05.29 on Pac's ruling ("queued now, etched later") after
+   RE-SCOPED 0018.05.26 on Pac's ruling ("queued now, etched later") after
    primary-source research: Spaces TOP-LEVEL names are live on mainnet, but
    SUB-NAMES under a community space are alpha and explicitly not
    production-mainnet-safe per the protocol's own maintainers. The previous
