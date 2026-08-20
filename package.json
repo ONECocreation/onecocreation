@@ -47,5 +47,11 @@
     "tailwindcss": "^4",
     "typescript": "^5"
   },
+  "overrides": {
+    "postcss": "8.5.26",
+    "next": {
+      "sharp": "0.35.3"
+    }
+  },
   "description": "One Cocreation — Love's site, cloned from the frens.earth store framework."
 }
