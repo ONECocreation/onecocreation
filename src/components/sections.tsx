@@ -313,7 +313,7 @@ export function FreeMeditation() {
     <section id="free">
       <div className="wrap">
         <div className="two-col" style={{ gap: 36 }}>
-          <img src="/images/newsletter.webp" alt="Free guided meditation" style={{ borderRadius: 24, boxShadow: "var(--soft)" }} />
+          <img src="/images/dusk-lake-storm-light.webp" alt="Love's own photograph: a still lake under mountains at dusk, orange light breaking through storm cloud" style={{ borderRadius: 24, boxShadow: "var(--soft)" }} />
           <div>
             <p className="kicker">Be in the Know</p>
             <h2 className="sec-h">A Free Meditation, With Love</h2>
