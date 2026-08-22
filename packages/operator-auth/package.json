@@ -1,0 +1,16 @@
+{
+  "name": "@pacsarcade/operator-auth",
+  "version": "0.1.0",
+  "description": "Operator auth for puck-studio consoles — the operator IS a key, not a password: a kind-22242 signed-challenge login (PACS-CONSOLE-<ts>) against an npub allowlist, an HMAC session token in an httpOnly cookie, and an optional email seat that rides the host's fren sessions. Brand-neutral: env names, cookie name and the fren-session reader all arrive as config.",
+  "license": "MIT",
+  "repository": "github:PacsArcade/puck-studio",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "peerDependencies": {
+    "nostr-tools": ">=2"
+  }
+}

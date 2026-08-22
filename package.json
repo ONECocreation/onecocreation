@@ -22,6 +22,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",
     "@pacsarcade/arcade-ui": "https://github.com/PacsArcade/arcade-ui/archive/8e2dd386e0d541a525ac4f3c69ac75c454396e47.tar.gz",
+    "@pacsarcade/operator-auth": "file:packages/operator-auth",
     "@pacsarcade/plugin-rails": "https://github.com/PacsArcade/puck-studio/releases/download/plugin-rails-v0.3.0/pacsarcade-plugin-rails-0.3.0.tgz",
     "@pacsarcade/presence": "https://github.com/PacsArcade/puck-studio/releases/download/presence-v0.1.0/pacsarcade-presence-0.1.0.tgz",
     "@pacsarcade/puck-changelog": "https://github.com/PacsArcade/puck-studio/releases/download/puck-changelog-v0.1.1/pacsarcade-puck-changelog-0.1.1.tgz",

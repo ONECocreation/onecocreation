@@ -54,7 +54,8 @@ Production needs two secrets: `BLOB_READ_WRITE_TOKEN` (a Vercel Blob store
 connected to the project — the registry) and `SEAT_SECRET` (any long random
 string; it signs the sign-in cookie — without it, returning login, tag
 release, and the admin side all 500). Set `OPERATOR_NPUBS` too if you want
-the operator console, and `GITHUB_TOKEN` (fine-grained PAT: contents +
+the operator console (`OPERATOR_EMAILS` adds an email seat — an operator
+in through her ordinary email sign-in), and `GITHUB_TOKEN` (fine-grained PAT: contents +
 pull-requests write) if the SCAR merge queue should execute merges. No
 database, no user accounts — see [`.env.example`](.env.example) for the
 full list.
