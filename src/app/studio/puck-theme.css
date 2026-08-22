@@ -19,29 +19,29 @@
   --puck-color-surface: #12101f;
   --puck-color-surface-subtle: #1b1530;
   --puck-color-surface-muted: #221a38;
-  --puck-color-surface-inverse: #f4ecff;
+  --puck-color-surface-inverse: var(--ink-strong);
   --puck-color-bg-disabled: #1b1530;
   --puck-color-overlay-backdrop: rgba(10, 8, 20, 0.7);
 
   /* text — the inks */
-  --puck-color-text: #f4ecff;
-  --puck-color-text-primary: #f4ecff;
-  --puck-color-text-secondary: #d9d2e4;
-  --puck-color-text-muted: #9a8fae;
-  --puck-color-text-subtle: #9a8fae;
+  --puck-color-text: var(--ink-strong);
+  --puck-color-text-primary: var(--ink-strong);
+  --puck-color-text-secondary: var(--ink-body);
+  --puck-color-text-muted: var(--muted);
+  --puck-color-text-subtle: var(--muted);
   --puck-color-text-disabled: #6f6683;
-  --puck-color-text-inverse: #141021;
+  --puck-color-text-inverse: var(--ground);
 
   /* borders — the lavender edges */
   --puck-color-border: rgba(139, 118, 196, 0.32);
   --puck-color-border-muted: rgba(139, 118, 196, 0.18);
   --puck-color-border-hover: rgba(139, 118, 196, 0.55);
-  --puck-color-border-inverse: #141021;
+  --puck-color-border-inverse: var(--ground);
 
   /* interactive — the gold */
-  --puck-color-interactive: #d9b24e;
-  --puck-color-interactive-hover: #ebcb77;
-  --puck-color-interactive-active: #ebcb77;
+  --puck-color-interactive: var(--gold);
+  --puck-color-interactive-hover: var(--gold-2);
+  --puck-color-interactive-active: var(--gold-2);
   --puck-color-interactive-soft: rgba(217, 178, 78, 0.14);
   --puck-color-interactive-soft-hover: rgba(217, 178, 78, 0.22);
   --puck-color-interactive-subtle: rgba(139, 118, 196, 0.14);
@@ -51,7 +51,7 @@
 
   /* selection + focus — gold ring, lavender halo */
   --puck-color-focus-ring: rgba(217, 178, 78, 0.65);
-  --puck-color-selection-border: #d9b24e;
+  --puck-color-selection-border: var(--gold);
   --puck-color-selection-bg: rgba(217, 178, 78, 0.12);
   --puck-color-highlight: rgba(139, 118, 196, 0.25);
   --puck-color-line-placeholder: rgba(139, 118, 196, 0.5);
@@ -129,7 +129,7 @@
   height: 8px;
 }
 .oc-studio *::-webkit-scrollbar-thumb {
-  background: rgba(139, 118, 196, 0.35);
+  background: var(--glass-night-edge); /* rgba(139,118,196,.35) — the one lavender-alpha the cartridge already holds verbatim (--glass-edge twins it but flips at dawn; the studio chrome stays night) */
   border-radius: 8px;
 }
 .oc-studio *::-webkit-scrollbar-track {
