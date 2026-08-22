@@ -291,6 +291,18 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     blurb: "the jars, the codes, and the books — exports by type and date",
     tone: "neon",
   },
+  {
+    /* the DRESSING ROOM, promoted to a top-level berth: it reached the nav
+       only as a child of fleet, which is houseOnly — so under `site` chrome
+       /a/brand was unreachable (SITE_LABELS already anticipated key "brand").
+       The fleet sub stays — the arcade's accordion is unchanged. */
+    key: "brand",
+    href: "/a/brand",
+    label: "DRESSING ROOM",
+    short: "BRAND",
+    blurb: "the dressing room — the cert foundry and the brand kit",
+    tone: "cyan",
+  },
 ];
 
 /** Every level-1 + level-2 sub of a room, flattened (for path matching). */
