@@ -4,6 +4,10 @@ import SiteConsoleShell from "@/components/console/SiteConsoleShell";
 import ArcadeFonts from "@/components/ArcadeFonts";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { CONSOLE_CHROME } from "@/lib/console";
+/* The console's own wall (S19 lane 3): every scar-* rule + the scar token
+   family, lifted verbatim out of globals.css/cartridge.css — it loads only
+   here, where the console mounts, so the public site no longer carries it. */
+import "../scar.css";
 
 /**
  * The /a layout — mounts the SCAR·LET LCARS shell (elbow ribbon + top bar +
