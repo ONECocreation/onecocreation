@@ -1,0 +1,212 @@
+/* ════════════════════════════════════════════════════════════════════
+   STUDIO TOKENS — the chrome's physics layer (lane 2 of the token
+   refactor, 0018.08.22). Five families — space, elevation, motion,
+   state, density — scoped under .oc-studio so nothing leaks outside the
+   editor (same scoping law as puck-theme.css). NOTHING consumes these
+   yet; lane 3 dissolves the inline styles into them.
+
+   DERIVATION LAW: wherever a token touches the brand it references the
+   cartridge (src/app/cartridge.css) BY VAR — ink/lavender/gold, the
+   studio mat, the card float — so a cartridge swap re-skins the studio.
+   Pure physics (durations, easings, dp geometry, alpha scalars) are
+   literals, attributed:
+
+   · Material Design / material-web 2.5.0 (Apache-2.0) — TOKENS ONLY,
+     values retyped, never vendored; nothing installed (the library is
+     in maintenance mode). Motion durations + easings
+     (tokens/versions/v0_192/_md-sys-motion.scss), state-layer opacities
+     (_md-sys-state.scss), elevation dp ladder + two-shadow geometry
+     (_md-sys-elevation.scss), the 8px space unit + multipliers
+     (labs/gb/styles/space/md-space-tokens.scss — the scale is sound,
+     the package is unsupported; we copy the numbers, not the code).
+   · Eva Design System / Nebular 17.0.0 (MIT, © Akveo) — CONCEPTS ONLY,
+     nothing installed: interaction state named INTO the token
+     (-hover/-focus/-active/-disabled), and density as a named 5-step
+     type (tiny|small|medium|large|giant) threaded through every
+     component. Eva's palette is NOT taken — the cartridge is the only
+     colour source.
+   ════════════════════════════════════════════════════════════════════ */
+
+.oc-studio {
+  /* ── SPACE (Material labs 8px unit × multipliers, Apache-2.0) ─────
+     A CHROME ladder, not the page ladder: src/brand/tokens.ts:145 ships
+     spacing.stops [8,16,24,32,48,96] for section rhythm — forcing it on
+     the chrome would blow up the 2/4/6/8/10/12px paddings the dense
+     rails actually use. The chrome gets its own ladder: the Material
+     8px unit at .25/.5/.75… multipliers — 0/2/4/6/8/10/12/14/16/20/24/
+     32px — which covers every padding the studio renders today. */
+  --oc-space-unit: 8px;
+  --oc-space-0: 0;
+  --oc-space-1: calc(var(--oc-space-unit) * 0.25); /* 2px */
+  --oc-space-2: calc(var(--oc-space-unit) * 0.5);  /* 4px */
+  --oc-space-3: calc(var(--oc-space-unit) * 0.75); /* 6px */
+  --oc-space-4: var(--oc-space-unit);              /* 8px */
+  --oc-space-5: calc(var(--oc-space-unit) * 1.25); /* 10px */
+  --oc-space-6: calc(var(--oc-space-unit) * 1.5);  /* 12px */
+  --oc-space-7: calc(var(--oc-space-unit) * 1.75); /* 14px */
+  --oc-space-8: calc(var(--oc-space-unit) * 2);    /* 16px */
+  --oc-space-9: calc(var(--oc-space-unit) * 2.5);  /* 20px */
+  --oc-space-10: calc(var(--oc-space-unit) * 3);   /* 24px */
+  --oc-space-11: calc(var(--oc-space-unit) * 4);   /* 32px */
+
+  /* ── ELEVATION (Material dp ladder, Apache-2.0; ink from the cartridge)
+     Six levels, dp 0/1/3/6/8/12, each two stacked shadows — key light
+     + ambient — geometry verbatim from Material's elevation table
+     (key .30 alpha, ambient .15). The shadow INK is brand: the Puck
+     canvas mat pushed toward black, so a cartridge swap re-shades the
+     depth with it. An editor is flat — elev-3+ means popover, nothing
+     more. */
+  --oc-elev-ink: color-mix(in srgb, var(--studio-mat) 65%, black);
+  --oc-elev-0: none;
+  --oc-elev-1:
+    0 1px 2px 0 color-mix(in srgb, var(--oc-elev-ink) 30%, transparent),
+    0 1px 3px 1px color-mix(in srgb, var(--oc-elev-ink) 15%, transparent);
+  --oc-elev-2:
+    0 1px 2px 0 color-mix(in srgb, var(--oc-elev-ink) 30%, transparent),
+    0 2px 6px 2px color-mix(in srgb, var(--oc-elev-ink) 15%, transparent);
+  --oc-elev-3:
+    0 1px 3px 0 color-mix(in srgb, var(--oc-elev-ink) 30%, transparent),
+    0 4px 8px 3px color-mix(in srgb, var(--oc-elev-ink) 15%, transparent);
+  --oc-elev-4:
+    0 2px 3px 0 color-mix(in srgb, var(--oc-elev-ink) 30%, transparent),
+    0 6px 10px 4px color-mix(in srgb, var(--oc-elev-ink) 15%, transparent);
+  --oc-elev-5:
+    0 4px 4px 0 color-mix(in srgb, var(--oc-elev-ink) 30%, transparent),
+    0 8px 12px 6px color-mix(in srgb, var(--oc-elev-ink) 15%, transparent);
+  /* the cartridge's own card float, aliased for floating panels that
+     should ride the house shadow rather than the dp ladder */
+  --oc-elev-float: var(--soft-sm);
+
+  /* ── MOTION (Material sys-motion, Apache-2.0) ─────────────────────
+     Durations 50→1000ms in short/medium/long/extra-long quads and the
+     six easings, verbatim literals. Editor chrome lives at
+     short2–medium1 (100–250ms) — anything ≥400ms is a phone transition,
+     not a panel; the quads above that exist for completeness, not
+     invitation. */
+  --oc-motion-dur-short1: 50ms;
+  --oc-motion-dur-short2: 100ms;
+  --oc-motion-dur-short3: 150ms;
+  --oc-motion-dur-short4: 200ms;
+  --oc-motion-dur-medium1: 250ms;
+  --oc-motion-dur-medium2: 300ms;
+  --oc-motion-dur-medium3: 350ms;
+  --oc-motion-dur-medium4: 400ms;
+  --oc-motion-dur-long1: 450ms;
+  --oc-motion-dur-long2: 500ms;
+  --oc-motion-dur-long3: 550ms;
+  --oc-motion-dur-long4: 600ms;
+  --oc-motion-dur-xlong1: 700ms;
+  --oc-motion-dur-xlong2: 800ms;
+  --oc-motion-dur-xlong3: 900ms;
+  --oc-motion-dur-xlong4: 1000ms;
+  --oc-motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --oc-motion-ease-standard-decelerate: cubic-bezier(0, 0, 0, 1);
+  --oc-motion-ease-standard-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --oc-motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --oc-motion-ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --oc-motion-ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  /* the studio's three working tempos (Material guidance: chrome stays
+     at short2–medium1) — composites, so consumers name intent not ms */
+  --oc-motion-hover: var(--oc-motion-dur-short2) var(--oc-motion-ease-standard);
+  --oc-motion-panel: var(--oc-motion-dur-medium1) var(--oc-motion-ease-emphasized);
+  --oc-motion-pop: var(--oc-motion-dur-short4) var(--oc-motion-ease-emphasized-decelerate);
+
+  /* ── STATE (Material state-layer opacities, Apache-2.0; Eva's
+     state-named-into-the-token ergonomics, MIT concepts) ────────────
+     Interaction feedback is ONE translucent overlay of a cartridge ink
+     at a fixed opacity — hover .08 / focus .12 / active .12 / dragged
+     .16, disabled ink .38 / disabled ground .12 — never a bespoke hover
+     colour per control. Each overlay is built from a cartridge token BY
+     VAR, so the whole family re-skins on a cartridge swap. The scalars
+     stand alone for one-off layers; the named layers are the contract. */
+  --oc-state-opacity-hover: 0.08;
+  --oc-state-opacity-focus: 0.12;
+  --oc-state-opacity-active: 0.12;
+  --oc-state-opacity-dragged: 0.16;
+  --oc-state-opacity-disabled-ink: 0.38;
+  --oc-state-opacity-disabled-bg: 0.12;
+  /* ink layers — rails, panels, neutral controls (cartridge --ink-strong) */
+  --oc-state-ink-hover: color-mix(in srgb, var(--ink-strong) calc(var(--oc-state-opacity-hover) * 100%), transparent);
+  --oc-state-ink-focus: color-mix(in srgb, var(--ink-strong) calc(var(--oc-state-opacity-focus) * 100%), transparent);
+  --oc-state-ink-active: color-mix(in srgb, var(--ink-strong) calc(var(--oc-state-opacity-active) * 100%), transparent);
+  --oc-state-ink-dragged: color-mix(in srgb, var(--ink-strong) calc(var(--oc-state-opacity-dragged) * 100%), transparent);
+  /* gold layers — the interactive metal, MONEY-law aware: it is the
+     cartridge's interactive colour, layered not re-hexed (cartridge --gold) */
+  --oc-state-gold-hover: color-mix(in srgb, var(--gold) calc(var(--oc-state-opacity-hover) * 100%), transparent);
+  --oc-state-gold-focus: color-mix(in srgb, var(--gold) calc(var(--oc-state-opacity-focus) * 100%), transparent);
+  --oc-state-gold-active: color-mix(in srgb, var(--gold) calc(var(--oc-state-opacity-active) * 100%), transparent);
+  --oc-state-gold-dragged: color-mix(in srgb, var(--gold) calc(var(--oc-state-opacity-dragged) * 100%), transparent);
+  /* lavender layers — edges, selection-adjacent surfaces (cartridge --lavender) */
+  --oc-state-lavender-hover: color-mix(in srgb, var(--lavender) calc(var(--oc-state-opacity-hover) * 100%), transparent);
+  --oc-state-lavender-focus: color-mix(in srgb, var(--lavender) calc(var(--oc-state-opacity-focus) * 100%), transparent);
+  --oc-state-lavender-active: color-mix(in srgb, var(--lavender) calc(var(--oc-state-opacity-active) * 100%), transparent);
+  --oc-state-lavender-dragged: color-mix(in srgb, var(--lavender) calc(var(--oc-state-opacity-dragged) * 100%), transparent);
+  /* the disabled pair (Eva's -disabled state; Material's .38/.12) */
+  --oc-state-ink-disabled: color-mix(in srgb, var(--ink-strong) calc(var(--oc-state-opacity-disabled-ink) * 100%), transparent);
+  --oc-state-bg-disabled: color-mix(in srgb, var(--ink-strong) calc(var(--oc-state-opacity-disabled-bg) * 100%), transparent);
+
+  /* ── DENSITY (Eva's named 5-step type, MIT concepts; values from
+     Eva's size tables, px at 16px base) ─────────────────────────────
+     tiny|small|medium|large|giant threaded through height, padding,
+     font and icon. The studio chrome defaults to SMALL — the editor is
+     tiny/small territory; medium+ exists so the same type can size a
+     touch surface. Padding/font/icon are Eva's button tables verbatim
+     (.3125rem .625rem …, icons .75–1.5rem, text .625–1.125rem);
+     heights are house — Eva never tokenized height — set so small lands
+     on the 24–28px row an editor tree actually wants. */
+  --oc-density-tiny-h: 22px;
+  --oc-density-tiny-pad-y: 5px;
+  --oc-density-tiny-pad-x: 10px;
+  --oc-density-tiny-font: 10px;
+  --oc-density-tiny-icon: 12px;
+  --oc-density-small-h: 26px;
+  --oc-density-small-pad-y: 7px;
+  --oc-density-small-pad-x: 14px;
+  --oc-density-small-font: 12px;
+  --oc-density-small-icon: 16px;
+  --oc-density-medium-h: 32px;
+  --oc-density-medium-pad-y: 11px;
+  --oc-density-medium-pad-x: 18px;
+  --oc-density-medium-font: 14px;
+  --oc-density-medium-icon: 20px;
+  --oc-density-large-h: 40px;
+  --oc-density-large-pad-y: 13px;
+  --oc-density-large-pad-x: 18px;
+  --oc-density-large-font: 16px;
+  --oc-density-large-icon: 24px;
+  --oc-density-giant-h: 48px;
+  --oc-density-giant-pad-y: 15px;
+  --oc-density-giant-pad-x: 22px;
+  --oc-density-giant-font: 18px;
+  --oc-density-giant-icon: 24px;
+  /* the studio's working density = small — one knob, retargetable */
+  --oc-density-h: var(--oc-density-small-h);
+  --oc-density-pad-y: var(--oc-density-small-pad-y);
+  --oc-density-pad-x: var(--oc-density-small-pad-x);
+  --oc-density-font: var(--oc-density-small-font);
+  --oc-density-icon: var(--oc-density-small-icon);
+}
+
+/* the house's motion-safe rail, kept at the token source: reduced-motion
+   collapses every duration, so consumers of --oc-motion-* inherit the
+   law without each writing its own media query */
+@media (prefers-reduced-motion: reduce) {
+  .oc-studio {
+    --oc-motion-dur-short1: 0.01ms;
+    --oc-motion-dur-short2: 0.01ms;
+    --oc-motion-dur-short3: 0.01ms;
+    --oc-motion-dur-short4: 0.01ms;
+    --oc-motion-dur-medium1: 0.01ms;
+    --oc-motion-dur-medium2: 0.01ms;
+    --oc-motion-dur-medium3: 0.01ms;
+    --oc-motion-dur-medium4: 0.01ms;
+    --oc-motion-dur-long1: 0.01ms;
+    --oc-motion-dur-long2: 0.01ms;
+    --oc-motion-dur-long3: 0.01ms;
+    --oc-motion-dur-long4: 0.01ms;
+    --oc-motion-dur-xlong1: 0.01ms;
+    --oc-motion-dur-xlong2: 0.01ms;
+    --oc-motion-dur-xlong3: 0.01ms;
+    --oc-motion-dur-xlong4: 0.01ms;
+  }
+}

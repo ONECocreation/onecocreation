@@ -1,4 +1,5 @@
 import "./puck-theme.css";
+import "./studio-tokens.css";
 import "./preview.css";
 
 /**
