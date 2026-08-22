@@ -166,7 +166,7 @@ export function brandShell(bodyHtml: string, opts?: { unsubscribeUrl?: string })
   return `<!doctype html><html><body style="margin:0;padding:0;background:#faf7f2;">
 <div style="max-width:560px;margin:0 auto;padding:32px 24px;font-family:Arial,Helvetica,sans-serif;color:#2b2733;">
   <div style="text-align:center;padding-bottom:20px;border-bottom:1px solid #e8e2d8;">
-    <img src="https://onecocreation-adminpacmans-projects.vercel.app/brand/onecocreation-mark.svg" width="44" height="44" alt="" style="vertical-align:middle;margin-right:10px"/><span style="font-size:20px;letter-spacing:.12em;color:#2b2733;vertical-align:middle;">ONE <span style="color:#b4862b;">Cocreation</span></span>
+    <img src="https://onecocreation.com/brand/onecocreation-mark.svg" width="44" height="44" alt="" style="vertical-align:middle;margin-right:10px"/><span style="font-size:20px;letter-spacing:.12em;color:#2b2733;vertical-align:middle;">ONE <span style="color:#b4862b;">Cocreation</span></span>
   </div>
   <div style="padding-top:24px;font-size:15px;line-height:1.65;">${bodyHtml}</div>
   <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e8e2d8;text-align:center;font-size:12px;color:#8a8494;">
@@ -197,7 +197,7 @@ export interface RichLetter {
   webUrl?: string;
 }
 
-const SITE = "https://onecocreation-adminpacmans-projects.vercel.app";
+const SITE = "https://onecocreation.com";
 const abs = (u: string) => (u.startsWith("http") ? u : `${SITE}${u}`);
 
 /** The bulletproof pill: a real table cell with bgcolor — survives clients
