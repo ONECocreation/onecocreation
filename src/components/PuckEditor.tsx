@@ -40,9 +40,6 @@ type LiveState = "idle" | "publishing" | "live" | "error";
 type PanelKey = "lib" | "fields" | "cop";
 const PANELS_LS = "oc-studio-panels";
 
-const SANS = "'Helvetica Neue', Helvetica, Arial, sans-serif";
-const MONO = "ui-monospace, Menlo, Consolas, monospace";
-
 export default function PuckEditor({ slug, data }: { slug: string; data: Data }) {
   const [liveData, setLiveData] = useState<Data>(data);
   const liveRef = useRef<Data>(data);
@@ -263,8 +260,9 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
   }
 
   const pill: React.CSSProperties = {
-    padding: "5px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700,
-    letterSpacing: ".03em", border: "none", cursor: "pointer", fontFamily: SANS, whiteSpace: "nowrap",
+    padding: "var(--oc-density-tiny-pad-y) var(--oc-space-6)", /* 5px 12px — tiny pad-y holds the 5px, the ladder the 12px */
+    borderRadius: 999, fontSize: "var(--oc-density-small-font)" /* 12px */, fontWeight: 700,
+    letterSpacing: ".03em", border: "none", cursor: "pointer", fontFamily: "var(--font-body)", whiteSpace: "nowrap",
   };
   const GOLD = "var(--gold-deep, #D9B24E)"; /* S2: fallback repaired to the token's night value (integrator ruling 0018.05.25 a₿) */
   const errCount = findings.filter((f) => f.severity === "error").length;
@@ -296,11 +294,11 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
 
         <StudioZoomProvider columnRef={canvasColRef}>
         {/* ══ top bar ══ */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px",
-          background: "var(--puck-color-surface)", borderBottom: "1px solid rgba(139,118,196,.3)", flex: "none",
-          fontFamily: SANS, flexWrap: "wrap" }}>
-          <span style={{ fontFamily: MONO, fontWeight: 800, letterSpacing: ".22em", color: "var(--puck-color-text)", fontSize: 13, whiteSpace: "nowrap" }}>
-            ■ <i style={{ fontStyle: "normal", color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>STUDIO</i>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--oc-space-4)", padding: "var(--oc-space-4) var(--oc-space-6)",
+          background: "var(--puck-color-surface)", borderBottom: "1px solid var(--puck-color-interactive-inverse-active)", flex: "none",
+          fontFamily: "var(--font-body)", flexWrap: "wrap" }}>
+          <span style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", /* no brand mono home — the literal stays (open ruling) */ fontWeight: 800, letterSpacing: ".22em", color: "var(--puck-color-text)", fontSize: 13, whiteSpace: "nowrap" }}>
+            ■ <i style={{ fontStyle: "normal", color: "var(--gold-2)" /* S2: gold law — decorative, reported */ }}>STUDIO</i>
           </span>
 
           {/* page switcher — LEGIBILITY DOCTRINE: solid night panel, full
@@ -310,7 +308,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
             value={switcherOptions.includes(slug) ? slug : "home"}
             onChange={(e) => goToPage(e.target.value)}
             style={{ ...pill, fontSize: 13, background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)",
-              border: "1px solid rgba(139,118,196,.45)", paddingRight: 8, cursor: "pointer" }}
+              border: "1px solid rgba(139,118,196,.45)", paddingRight: "var(--oc-space-4)", cursor: "pointer" }}
             title="Switch page"
           >
             {switcherOptions.map((p) => <option key={p} value={p} style={{ background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)" }}>{p === "practice" ? "✎ practice (sandbox)" : p}</option>)}
@@ -320,26 +318,26 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
           <button
             onClick={() => { setShowPages((v) => !v); setShowPopups(false); /* one popover at a time (gate 0018.05.25 a₿) */ }}
             title="pages — create, rename, duplicate, delete, reorder"
-            style={{ ...pill, background: showPages ? "rgba(217,178,78,.18)" : "rgba(139,118,196,.2)", color: showPages ? "#EBCB77" /* S2: gold law — decorative, reported */ : "var(--puck-color-text)" }}
+            style={{ ...pill, background: showPages ? "rgba(217,178,78,.18)" : "var(--puck-color-interactive-neutral-hover)", color: showPages ? "var(--gold-2)" /* S2: gold law — decorative, reported */ : "var(--puck-color-text)" }}
           >▤ pages</button>
           {/* STUDIO P2: the popup registry's room — same popover idiom */}
           <button
             onClick={() => { setShowPopups((v) => !v); setShowPages(false); /* one popover at a time (gate 0018.05.25 a₿) */ }}
             title="popups — create, edit when/where they show, delete"
-            style={{ ...pill, background: showPopups ? "rgba(217,178,78,.18)" : "rgba(139,118,196,.2)", color: showPopups ? "#EBCB77" /* S2: gold law — decorative, reported */ : "var(--puck-color-text)" }}
+            style={{ ...pill, background: showPopups ? "rgba(217,178,78,.18)" : "var(--puck-color-interactive-neutral-hover)", color: showPopups ? "var(--gold-2)" /* S2: gold law — decorative, reported */ : "var(--puck-color-text)" }}
           >◱ popups</button>
 
           <button
             onClick={() => { void goBrandBoard(); }}
             title="the brand board — palette, type ladder, gradients, both skins"
-            style={{ ...pill, background: "rgba(139,118,196,.2)", color: "var(--puck-color-text)" }}
+            style={{ ...pill, background: "var(--puck-color-interactive-neutral-hover)", color: "var(--puck-color-text)" }}
           >🎨 Brand</button>
           <button
             onClick={() => setShowFindings((v) => !v)}
             title="brand guidelines — checked as you edit"
             style={{ ...pill,
               background: errCount ? "rgba(231,137,158,.18)" : findings.length ? "rgba(235,203,119,.15)" : "rgba(127,185,143,.14)",
-              color: errCount ? "#E7899E" /* S2: pinned — needs a ruling */ : findings.length ? "#EBCB77" /* S2: gold law — decorative, reported */ : "var(--ok-soft)" }}
+              color: errCount ? "#E7899E" /* S2: pinned — needs a ruling */ : findings.length ? "var(--gold-2)" /* S2: gold law — decorative, reported */ : "var(--ok-soft)" }}
           >
             {errCount ? `${errCount} to fix`
               : warnCount ? `⚠ ${warnCount} warning${warnCount === 1 ? "" : "s"}`
@@ -351,14 +349,14 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
           <button
             onClick={() => setMatrix((v) => { const n = !v; try { localStorage.setItem("oc-studio-matrix", n ? "1" : "0"); } catch { /* private mode */ } return n; })}
             title="see every breakpoint at once — click an artboard to edit that size"
-            style={{ ...pill, background: matrix ? "rgba(217,178,78,.18)" : "rgba(139,118,196,.2)", color: matrix ? "#EBCB77" /* S2: gold law — decorative, reported */ : "var(--puck-color-text)" }}
+            style={{ ...pill, background: matrix ? "rgba(217,178,78,.18)" : "var(--puck-color-interactive-neutral-hover)", color: matrix ? "var(--gold-2)" /* S2: gold law — decorative, reported */ : "var(--puck-color-text)" }}
           >▦ matrix</button>
-          <button onClick={zen} title="fold every panel — just the site" style={{ ...pill, background: "rgba(139,118,196,.2)", color: "var(--puck-color-text)" }}>⛶ zen</button>
+          <button onClick={zen} title="fold every panel — just the site" style={{ ...pill, background: "var(--puck-color-interactive-neutral-hover)", color: "var(--puck-color-text)" }}>⛶ zen</button>
 
           <span style={{ flex: 1 }} />
           <PresenceChips client={presence} />
 
-          <span style={{ fontFamily: MONO, fontSize: 10.5, color: "var(--puck-color-text-muted)", whiteSpace: "nowrap" }}>
+          <span style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", fontSize: 10.5, color: "var(--puck-color-text-muted)", whiteSpace: "nowrap" }}>
             {live === "publishing" ? "publishing…"
               : live === "error" ? <span style={{ color: "#E7899E" /* S2: pinned — needs a ruling */ }}>publish held — see rails</span>
               : dirty ? (draftSaved ? "● draft saved · not live" : "editing…")
@@ -368,7 +366,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
                 </a>
               ) : "● draft"}
           </span>
-          <button onClick={() => setPreview(true)} style={{ ...pill, background: `linear-gradient(135deg, #EBCB77, ${GOLD})`, color: "#3a2a06" /* S2: gold law — decorative, reported */ }} title="see it in both skins — publishing lives there (look before it goes live)">Preview & publish</button>
+          <button onClick={() => setPreview(true)} style={{ ...pill, background: `linear-gradient(135deg, var(--gold-2), ${GOLD})`, color: "var(--gold-ink)" /* S2: gold law — decorative, reported */ }} title="see it in both skins — publishing lives there (look before it goes live)">Preview & publish</button>
         </div>
 
         {/* ══ panes: library · canvas · style · Number One ══ */}
@@ -378,7 +376,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
               {/* SEARCH INSERT: type to filter the library; matches render
                   as a flat draggable Drawer, the stock view hides (display
                   none keeps Puck.Components mounted) */}
-              <div style={{ padding: "2px 10px 8px" }}>
+              <div style={{ padding: "var(--oc-space-1) var(--oc-space-5) var(--oc-space-4)" }}>
                 <input
                   value={libQuery}
                   onChange={(e) => setLibQuery(e.target.value)}
@@ -387,7 +385,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
                   title="search blocks to insert"
                   style={{ width: "100%", boxSizing: "border-box", background: "var(--puck-color-surface-subtle)",
                     color: "var(--puck-color-text)", border: "1px solid rgba(139,118,196,.45)",
-                    borderRadius: 8, padding: "7px 10px", fontSize: 13, fontFamily: SANS }}
+                    borderRadius: 8, padding: "var(--oc-density-small-pad-y) var(--oc-space-5)", fontSize: 13, fontFamily: "var(--font-body)" }}
                 />
               </div>
               {libQuery.trim() !== "" && <SearchDrawer query={libQuery} />}
@@ -400,7 +398,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
 
           <div style={{ flex: 1, minWidth: 0, overflow: "hidden", background: "var(--studio-mat)", display: "flex", flexDirection: "column" }}>
             {matrix && (
-              <div style={{ flex: "none", padding: "10px 12px 0" }}>
+              <div style={{ flex: "none", padding: "var(--oc-space-5) var(--oc-space-6) var(--oc-space-0)" }}>
                 <ArtboardRail tokens={ONECOCREATION} height={320} log={changelog} />
               </div>
             )}
@@ -458,7 +456,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
             <strong style={{ fontSize: 13 }}>Preview — this draft in both skins</strong>
             <span style={{ flex: 1 }} />
           <PresenceChips client={presence} />
-            <button onClick={publishAll} style={{ ...pill, background: "rgba(217,178,78,.18)", color: "#EBCB77" /* S2: gold law — decorative, reported */ }} title="push every staged page live (each is rails-checked)">Publish all</button>
+            <button onClick={publishAll} style={{ ...pill, background: "rgba(217,178,78,.18)", color: "var(--gold-2)" /* S2: gold law — decorative, reported */ }} title="push every staged page live (each is rails-checked)">Publish all</button>
             <button onClick={publishLive} style={{ ...pill, background: GOLD, color: "#fff" }}>Publish to live</button>
             <button onClick={() => setPreview(false)} style={{ ...pill, background: "rgba(139,118,196,.22)", color: "var(--puck-color-text)" }}>← Back to editing</button>
           </div>
@@ -496,7 +494,7 @@ function UndoRedoPills({ pill }: { pill: React.CSSProperties }) {
   const history = usePuckStore((s) => s.history);
   const dim = (on: boolean): React.CSSProperties => ({
     ...pill,
-    background: "rgba(139,118,196,.2)",
+    background: "var(--puck-color-interactive-neutral-hover)", /* rgba(139,118,196,.2) — puck-theme holds it verbatim */
     color: on ? "var(--puck-color-text)" : "var(--puck-color-text-disabled)",
     cursor: on ? "pointer" : "default",
   });
@@ -521,8 +519,8 @@ function PresenceBanner({ client, slug }: { client: PresenceClient | null; slug:
   return (
     <div style={{ position: "fixed", left: "50%", top: 52, transform: "translateX(-50%)", zIndex: 1080,
       background: "var(--puck-color-surface-muted)", border: "1px solid rgba(235,203,119,.5)", borderRadius: 10,
-      padding: "7px 14px", fontSize: 12.5, color: "#EBCB77" /* S2: gold law — decorative, reported */,
-      fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", boxShadow: "0 8px 24px rgba(0,0,0,.4)" }}>
+      padding: "var(--oc-density-small-pad-y) var(--oc-space-7)", fontSize: 12.5, color: "var(--gold-2)" /* S2: gold law — decorative, reported */,
+      fontFamily: "var(--font-body)", boxShadow: "0 8px 24px rgba(0,0,0,.4)" }}>
       {who} {clashers.length > 1 ? "are" : "is"} also editing this page{unsaved ? " (with unsaved changes)" : ""} —
       saves are last-writer-wins; coordinate or take turns.
     </div>
@@ -594,13 +592,13 @@ function SearchDrawer({ query }: { query: string }) {
   });
   if (matches.length === 0) {
     return (
-      <p style={{ padding: "4px 12px 10px", fontSize: 12.5, color: "var(--puck-color-text-muted)", fontFamily: SANS }}>
+      <p style={{ padding: "var(--oc-space-2) var(--oc-space-6) var(--oc-space-5)", fontSize: 12.5, color: "var(--puck-color-text-muted)", fontFamily: "var(--font-body)" }}>
         no blocks match &ldquo;{query.trim()}&rdquo;
       </p>
     );
   }
   return (
-    <div style={{ padding: "0 10px 10px" }}>
+    <div style={{ padding: "var(--oc-space-0) var(--oc-space-5) var(--oc-space-5)" }}>
       <Drawer>
         {matches.map((key) => (
           <Drawer.Item key={key} name={key} label={comps[key]?.label ?? key} />
@@ -635,11 +633,11 @@ function FindingsPanel({ findings, errCount }: { findings: Finding[]; errCount: 
 
   return (
     <div style={{ position: "fixed", left: "50%", top: 52, transform: "translateX(-50%)",
-      zIndex: 1090, width: 480, maxWidth: "calc(100vw - 32px)", maxHeight: "50vh", overflowY: "auto",
+      zIndex: 1090, width: 480, maxWidth: "calc(100vw - var(--oc-space-11))", maxHeight: "50vh", overflowY: "auto",
       background: "var(--puck-color-surface)", border: "1px solid rgba(139,118,196,.4)", borderRadius: 14,
-      padding: "12px 14px", boxShadow: "0 16px 44px rgba(0,0,0,.55)", fontFamily: SANS }}>
-      <style>{`.oc-finding-row[data-focusable="1"]:hover{background:rgba(139,118,196,.14);border-radius:8px}`}</style>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--puck-color-text)", marginBottom: 8 }}>
+      padding: "var(--oc-space-6) var(--oc-space-7)", boxShadow: "0 16px 44px rgba(0,0,0,.55)", fontFamily: "var(--font-body)" }}>
+      <style>{`.oc-finding-row[data-focusable="1"]:hover{background:var(--puck-color-interactive-subtle);border-radius:8px}`}</style>
+      <div style={{ fontSize: "var(--oc-density-small-font)", fontWeight: 700, color: "var(--puck-color-text)", marginBottom: "var(--oc-space-4)" }}>
         Brand guidelines — {errCount} to fix before this page can go live, {findings.length - errCount} suggestions
       </div>
       {findings.map((f, i) => {
@@ -654,11 +652,11 @@ function FindingsPanel({ findings, errCount }: { findings: Finding[]; errCount: 
             title={focusable ? "click to select this block on the canvas" : undefined}
             onClick={focusable ? () => focusFinding(f) : undefined}
             onKeyDown={focusable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); focusFinding(f); } } : undefined}
-            style={{ display: "flex", gap: 8, padding: "6px 4px",
-              borderTop: "1px solid rgba(139,118,196,.15)", fontSize: 12, lineHeight: 1.45,
+            style={{ display: "flex", gap: "var(--oc-space-4)", padding: "var(--oc-space-3) var(--oc-space-2)",
+              borderTop: "1px solid rgba(139,118,196,.15)", fontSize: "var(--oc-density-small-font)", lineHeight: 1.45,
               cursor: focusable ? "pointer" : "default", alignItems: "flex-start" }}
           >
-            <span style={{ flex: "none", fontWeight: 800, color: f.severity === "error" ? "#E7899E" /* S2: pinned — needs a ruling */ : "#EBCB77" /* S2: gold law — decorative, reported */ }}>
+            <span style={{ flex: "none", fontWeight: 800, color: f.severity === "error" ? "#E7899E" /* S2: pinned — needs a ruling */ : "var(--gold-2)" /* S2: gold law — decorative, reported */ }}>
               {f.severity === "error" ? "✕" : "⚠"}
             </span>
             <span style={{ color: "var(--puck-color-text-secondary)", flex: 1 }}>
@@ -689,13 +687,13 @@ function Panel({ k, side, label, width, children, collapsed, wideChrome, onToggl
       <div style={{
         width: isOpen && !overlay ? width : 30, flex: "none", display: "flex", flexDirection: "column",
         background: "var(--puck-color-surface)", minWidth: 0, position: "relative", transition: "width .2s ease",
-        borderLeft: side === "right" ? "1px solid rgba(139,118,196,.25)" : "none",
-        borderRight: side === "left" ? "1px solid rgba(139,118,196,.25)" : "none",
+        borderLeft: side === "right" ? "1px solid var(--puck-color-highlight)" : "none",
+        borderRight: side === "left" ? "1px solid var(--puck-color-highlight)" : "none",
       }}>
         {overlay && (
           <div style={{ position: "absolute", right: 30, top: 0, bottom: 0, width,
             zIndex: 30, background: "var(--puck-color-surface)", display: "flex", flexDirection: "column",
-            borderLeft: "1px solid rgba(139,118,196,.35)", boxShadow: "-14px 0 34px rgba(0,0,0,.45)" }}>
+            borderLeft: "1px solid var(--glass-night-edge)", boxShadow: "-14px 0 34px rgba(0,0,0,.45)" }}>
             {children}
           </div>
         )}
@@ -703,17 +701,17 @@ function Panel({ k, side, label, width, children, collapsed, wideChrome, onToggl
           onClick={() => onToggle(k)}
           title={isOpen ? `collapse ${label}` : `open ${label}`}
           data-oc-panel-tab={k}
-          style={{ position: "absolute", top: 8, right: isOpen ? 6 : 5, zIndex: 6, width: 18, height: 18,
-            borderRadius: 5, border: "1px solid rgba(139,118,196,.3)", background: "var(--puck-color-surface-subtle)",
-            color: "var(--puck-color-text-muted)", fontSize: 10, lineHeight: 1, cursor: "pointer", padding: 0 }}
+          style={{ position: "absolute", top: "var(--oc-space-4)", right: isOpen ? "var(--oc-space-3)" : 5, zIndex: 6, width: 18, height: 18,
+            borderRadius: 5, border: "1px solid var(--puck-color-interactive-inverse-active)", background: "var(--puck-color-surface-subtle)",
+            color: "var(--puck-color-text-muted)", fontSize: "var(--oc-density-tiny-font)", lineHeight: 1, cursor: "pointer", padding: "var(--oc-space-0)" }}
         >
           {isOpen ? (side === "left" ? "«" : "»") : (side === "left" ? "»" : "«")}
         </button>
         {isOpen && !overlay ? children : !isOpen ? (
           <button onClick={() => onToggle(k)}
             style={{ background: "none", border: "none", cursor: "pointer", marginTop: 44,
-              writingMode: "vertical-rl", fontFamily: MONO, fontSize: 10, letterSpacing: ".3em",
-              color: "var(--puck-color-text-muted)", textTransform: "uppercase", padding: 0 }}>
+              writingMode: "vertical-rl", fontFamily: "ui-monospace, Menlo, Consolas, monospace", fontSize: "var(--oc-density-tiny-font)", letterSpacing: ".3em",
+              color: "var(--puck-color-text-muted)", textTransform: "uppercase", padding: "var(--oc-space-0)" }}>
             {label}
           </button>
         ) : null}
