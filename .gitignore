@@ -84,6 +84,10 @@ next-env.d.ts
 # store/deliverables/) — the paid files, NEVER tracked, never under public/
 /data/deliverables/
 
+# the studio's page store, filesystem driver (PUCK_STORE_DRIVER=filesystem,
+# local dev) — prod uses KV, drafts are unpublished work: never tracked
+/data/puck-store/
+
 # fren profile art (avatars/banners), dev driver (prod uses public Blob) — never tracked
 /public/fren-media/
 .claude/worktrees/

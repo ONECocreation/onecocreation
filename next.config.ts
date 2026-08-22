@@ -3,8 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* API routes require a server runtime; the old `output: 'export'` static
      export is retired along with the Plesk deploy. */
-  /* arcade-ui ships raw TS — Next transpiles it */
-  transpilePackages: ["@pacsarcade/arcade-ui", "@pacsarcade/puck-config", "@pacsarcade/plugin-rails", "@pacsarcade/puck-changelog", "@pacsarcade/variant-engine", "@pacsarcade/presence", "@pacsarcade/operator-auth"],
+  /* @pacsarcade/* packages ship raw TS — Next transpiles them */
+  transpilePackages: ["@pacsarcade/arcade-ui", "@pacsarcade/puck-config", "@pacsarcade/plugin-rails", "@pacsarcade/puck-changelog", "@pacsarcade/variant-engine", "@pacsarcade/presence", "@pacsarcade/operator-auth", "@pacsarcade/page-store"],
   /* stamped once per BUILD — SCARLET compares it to a signature's timestamp
      to answer "is the change I signed live yet?" (deploys are CLI-pushed,
      so a new build IS the deploy) */
