@@ -74,12 +74,12 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
       <SiteHeader />
       <div className="mgmt-wrap mgmt-body" style={{ maxWidth: 640 }}>
       <div className="flex flex-1 items-center justify-center px-6 py-16">
-        <div className="w-full max-w-md p-8 text-center" style={{ background: "rgba(255,255,255,.6)", border: "1.5px solid rgba(139,118,196,.35)", borderRadius: 20 }}>
+        <div className="w-full max-w-md p-8 text-center" style={{ background: "var(--panel, #1b1530)", /* was rgba(255,255,255,.6) glass — composited to a grey no ink was measured against (Admiral's sighting, studio-feedback1) */ border: "1.5px solid rgba(139,118,196,.35)", borderRadius: 20 }}>
           <p className="mgmt-eyebrow mb-4">Operators</p>
           <h1 className="mgmt-title mb-4">Operator sign-in</h1>
-          <p className="mb-6 font-body text-sm text-white/70">
-            This door is for operators. Sign a fresh challenge with an operator key and
-            step through — we don&apos;t ask who you are, we verify it.
+          <p className="mb-6 font-body text-sm text-white/85">
+            This area is for site operators. Sign in with your operator key &mdash;
+            one click if your signer extension is installed.
           </p>
           {configured ? (
             <>
@@ -91,8 +91,9 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
                 {busy ? "Reading your signature…" : "Verify operator key"}
               </button>
               <details className="mt-4 text-left">
-                <summary className="cursor-pointer font-pixel text-[9px] uppercase text-white/50">
-                  On a phone, or no extension here? More doors </summary>
+                <summary className="cursor-pointer list-none rounded-lg border px-4 py-2.5 text-center font-body text-xs uppercase tracking-wider"
+                  style={{ borderColor: "rgba(139,118,196,.45)", color: "var(--ink, #E9E2F2)", letterSpacing: ".08em" }}>
+                  Other ways to sign in</summary>
                 <div className="mt-3">
                   <SignerDoors kind="console" submit={submitConsole} />
                 </div>
@@ -100,11 +101,11 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
               {/* the email seat (Love's door, 0018.05.15) — no key ceremony,
                   just her ordinary sign-in; the gate recognizes the address */}
               <p className="mt-5" style={{ fontSize: ".78rem", color: "var(--muted)" }}>
-                Holding an email seat? Just{" "}
+                Prefer email?{" "}
                 <a href="/login" style={{ color: "var(--gold-deep, #D9B24E)", textDecoration: "underline" }}>
-                  sign in with your email
+                  Sign in with your email
                 </a>{" "}
-                and come back — this door will know you.
+                &mdash; then come back here and you&apos;re in.
               </p>
             </>
           ) : (
