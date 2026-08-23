@@ -1,6 +1,8 @@
 import "./puck-theme.css";
 import "./studio-tokens.css";
 import "./preview.css";
+import BenchNotes from "@/components/BenchNotes";
+import { benchEnabled } from "@/lib/bench-gate";
 
 /**
  * The studio's OWN top-level layout (PUCK P2, Admiral-approved 2026-08-10 —
@@ -24,6 +26,9 @@ export default function StudioLayout({
   return (
     <div style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", overflow: "hidden" }}>
       {children}
+      {/* S26 lane 3 — the bench feedback rail. The gate reads env on the
+          server: production builds never render it, and its route 404s too. */}
+      {benchEnabled() ? <BenchNotes /> : null}
     </div>
   );
 }
