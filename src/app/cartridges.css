@@ -3,7 +3,7 @@
    0018.05.28 a₿).
 
    cartridge.css is LOVE's file and stays it. The other voices pour
-   HERE, gated on html[data-oc-cartridge="pacman"|"earthside"|"blank"] —
+   HERE, gated on html[data-oc-cartridge="pacman"|"earthside"|"blank"|"mono"] —
    the one attribute the root layout sets, and only when the selection
    flips off the default (src/brand/cartridge.ts, one line). With LOVE active the
    attribute never renders: every rule below is inert, and Love's output
@@ -375,4 +375,239 @@ html[data-oc-cartridge="blank"]{
 html[data-oc-cartridge="blank"] body{
   background:#F5F4F0;
   background-attachment:fixed;
+}
+
+/* ── MONO — the Terminal (TASK-22/S24 lane 2, 0018.06.01 a₿). The Admiral's
+   ruled starter-pack option for brands that want the terminal feel: the
+   TYPE is the identity (the house's own mono stack in every role —
+   display, body, labels), the palette is graphite and phosphor with ONE
+   signal green (gold stays money — fleet semantic lock; teal stays
+   info/time — semantic lock).
+
+   DARK-FIRST, BOTH LIGHTS HONEST FROM BIRTH (the S20/S21 laws applied at
+   creation, not retrofitted): the bare attribute is the night terminal;
+   the dawn rides the SAME data-oc-theme switch Love's dawn rides and is
+   derived the house way — surfaces keep their offsets, inks re-derive
+   deep on sage paper, state hues hold their meaning, keep-dark rooms hold
+   the cartridge's OWN night (not Love's celestial purple). Every body-ink
+   pair measured ≥ 4.5:1 by WCAG luminance in BOTH themes (tightest: dawn
+   muted 5.25:1 — the full table rides the lane report).
+
+   Unlike BLANK this is NOT a thin twin: the hero, the four skies, the
+   keep-dark pours, the glyph and the lion veils are all re-told in
+   terminal light, because a cartridge born after S20/S21 does not get to
+   wear Love's skies and call it a finding. What MONO still does not get
+   is written down in the lane report (the /services kd() two-way branch,
+   page copy, the sign-in kit's --color-* family — the same seams
+   docs/adding-a-cartridge.md names, unchanged). ── */
+html[data-oc-cartridge="mono"]{
+  /* the night terminal — graphite grounds, phosphor ink, one green */
+  --space:#0B0D0E; --ground:#0B0D0E;
+  --panel:rgba(20,24,26,.78); --edge:rgba(146,160,150,.26);
+  --ink:#DEE4E1; --muted:#97A29B;
+  --ink-strong:#F2F6F3; --ink-body:#C2CBC6;
+  --glass:rgba(18,22,24,.66); --glass-edge:rgba(146,160,150,.3);
+  --ghost-bg:rgba(255,255,255,.07); --ghost-ink:#D9E2DC;
+  --glass-strong:rgba(16,20,22,.88);
+  --sheet-bg:rgba(18,22,24,.98);
+  --field-bg:rgba(255,255,255,.94); --field-ink:#23282A;
+  --soft-sm:0 18px 44px -28px rgba(0,0,0,.55);
+  --soft:0 24px 60px -30px rgba(0,0,0,.65);
+  /* the signal green — kickers (--rose) and links (--lavender family)
+     speak phosphor; info/time speaks a technical cyan (semantic lock) */
+  --rose:#8FCE9D; --lavender:#93D2A1; --lavender-soft:#C9EAD0;
+  --lavender-bright:#A9E3B5;
+  --info:#8FC0CC; --teal-bright:#8FC0CC; --teal:#4E7E8A; --teal-deep:#23525C;
+  /* the nav, re-inked phosphor on the header's own dark — the header
+     never theme-flips, so these hold in both mono twins; --nav-gold is
+     the nav-link ink SLOT here (gold itself stays with money) */
+  --nav-gold:#A9DCB6; --nav-hover:#D9E2DC;
+  --here-grad:linear-gradient(90deg,#8FCE9D 0%,#97A29B 100%);
+  --here-wash:linear-gradient(90deg,rgba(143,206,157,.14),rgba(151,162,155,.14));
+  --here-ink:#F2F6F3;
+  --pop-bg:rgba(12,14,15,.97); --pop-edge:rgba(143,206,157,.35);
+  /* the band ladder, graphite steps — the cosmic walk keeps its shape
+     and loses its cosmos */
+  --band-1:#121517; --band-2:#0C0E10; --band-3:#14181B;
+  --band-4:#101719; --band-5:#151812; --band-6:#171419;
+  --band-7:#14171B; --band-8:#14181C; --band-9:#171812;
+  --hero-grad-0:#0A0C0D; --hero-grad-1:#121619;
+  --sky-cream:#8FCE9D; /* the living sky's stars → green dust */
+  --glass-night:rgba(18,22,24,.66); --glass-night-edge:rgba(146,160,150,.3);
+  /* the type law: the house's own mono stack in EVERY role — display,
+     body, labels. One voice, no download (the same literal the studio
+     chrome inlines; S24 lane 1's --font-mono is its studio-side twin) */
+  --serif:ui-monospace,Menlo,Consolas,monospace;
+  --disp:ui-monospace,Menlo,Consolas,monospace;
+  --sans:ui-monospace,Menlo,Consolas,monospace;
+  --font-h1:ui-monospace,Menlo,Consolas,monospace;
+  --font-h2:ui-monospace,Menlo,Consolas,monospace;
+  --font-h3:ui-monospace,Menlo,Consolas,monospace;
+  --font-body:ui-monospace,Menlo,Consolas,monospace;
+  --font-body-app:ui-monospace,Menlo,Consolas,monospace;
+  --font-pixel:ui-monospace,Menlo,Consolas,monospace;
+  --font-arcade:ui-monospace,Menlo,Consolas,monospace;
+}
+
+/* the ground under everything — the dark bench, a breath of green,
+   held still like the house's own fixed-attachment law */
+html[data-oc-cartridge="mono"] body{
+  background:
+    radial-gradient(900px 500px at 50% -4%, rgba(143,206,157,.06), transparent 60%),
+    radial-gradient(760px 620px at 88% 12%, rgba(143,192,204,.05), transparent 62%),
+    linear-gradient(180deg,#0B0D0E 0%, #101417 45%, #14181B 100%);
+  background-attachment:fixed;
+}
+
+/* the hero steps off the celestial gradient — same shape, terminal light:
+   the purple sun-radial becomes a phosphor glow, the nebula layer becomes
+   faint scanlines (the terminal's own texture — no art invented), and the
+   glyph that draws in white light re-inks to the signal green (the fill
+   needs !important — Love's reduced-motion and .ll-done rules pin
+   fill:#fff !important; scoped specificity alone can't out-vote them).
+   The hero is keep-dark (sections.tsx:21) — it holds THIS night in both
+   themes, so the gradient stops are literals, never tokens the dawn
+   re-pours, and the dawn block below does not repaint the hero at all
+   (only its ::after fade, which hands off to the paper band) */
+html[data-oc-cartridge="mono"] .hero{
+  background:radial-gradient(760px 460px at 50% 14%, rgba(143,206,157,.12), transparent 62%),
+    linear-gradient(180deg,#0A0C0D,#121619 55%,#0C0E10);
+}
+html[data-oc-cartridge="mono"] .hero::before{
+  background:repeating-linear-gradient(0deg, rgba(143,206,157,.05) 0 1px, transparent 1px 4px);
+  opacity:.55; animation:none;
+}
+html[data-oc-cartridge="mono"] .hero::after{
+  background:linear-gradient(180deg,transparent,#121517);
+}
+html[data-oc-cartridge="mono"] .ll-line{
+  stroke:#B9E6C3; fill:#B9E6C3!important;
+  filter:drop-shadow(0 0 6px rgba(143,206,157,.7)) drop-shadow(0 0 20px rgba(143,206,157,.35));
+}
+html[data-oc-cartridge="mono"] .llstage .tw{
+  background:radial-gradient(circle,#B9E6C3 0%,rgba(143,206,157,.55) 45%,transparent 72%);
+  filter:drop-shadow(0 0 6px rgba(143,206,157,.8));
+}
+html[data-oc-cartridge="mono"] .hero h1{text-shadow:0 0 34px rgba(143,206,157,.3)}
+
+/* the four skies, re-laddered graphite — they hold in BOTH themes for
+   keep-dark rooms; the dawn's paper repaint of non-keep-dark skies sits
+   in the dawn block below */
+html[data-oc-cartridge="mono"] main section.sky-night{
+  background:linear-gradient(180deg,#121517 0%,#0B0D0E 100%)!important}
+html[data-oc-cartridge="mono"] main section.sky-veil{
+  background:radial-gradient(700px 420px at 50% 0%,rgba(143,206,157,.14),transparent 60%),
+    linear-gradient(180deg,#14181B 0%,#1A2124 50%,#101315 100%)!important}
+html[data-oc-cartridge="mono"] main section.sky-glass{
+  background:linear-gradient(180deg,#101315 0%,#14181B 100%)!important}
+html[data-oc-cartridge="mono"] main section.sky-warm{
+  background:linear-gradient(180deg,#151812 0%,#131611 100%)!important}
+
+/* keep-dark rooms hold MONO'S OWN night (the S20 law: a keep-dark room
+   holds its cartridge's night, not Love's) — the law stands in both
+   themes; the pour rides the bare attribute so dawn never flips it */
+html[data-oc-cartridge="mono"] main .keep-dark{
+  --ink-strong:#F2F6F3; --ink-body:#C2CBC6; --muted:#97A29B;
+  --rose:#8FCE9D; --gold-deep:#D9B24E; --teal-bright:#8FC0CC;
+  --glass:var(--glass-night); --glass-edge:var(--glass-night-edge);
+}
+
+/* the classes band steps off Love's nebula onto the graphite ladder */
+html[data-oc-cartridge="mono"] #classes{
+  background:linear-gradient(180deg,var(--band-3) 0%,var(--band-5) 100%);
+}
+
+/* the aurora's violet plume was Love's nebula — under MONO it re-hues to
+   the signal green (the teal and gold plumes already read technical) */
+html[data-oc-cartridge="mono"] .aurora i:nth-child(2){
+  background:radial-gradient(closest-side,rgba(80,160,110,.5),transparent 70%)}
+
+/* the lion, re-veiled — the art path is this cartridge's own ASSET SLOT
+   (nothing renders until the community's art lands); only the veil light
+   is told here: graphite night, holding on the keep-dark-law page */
+html[data-oc-cartridge="mono"] .lions-gate{
+  background:linear-gradient(rgba(12,14,15,.8), rgba(14,17,19,.9)),
+    url("/images/mono/gate.webp") center top / cover no-repeat;
+}
+html[data-oc-cartridge="mono"] .lions-gate-dark{
+  background:linear-gradient(rgba(11,13,14,.62), rgba(11,13,14,.78)),
+    url("/images/mono/gate.webp") center top / cover no-repeat;
+}
+html[data-oc-cartridge="mono"] .lions-gate-dark .sec-h{color:#F2F6F3}
+html[data-oc-cartridge="mono"] .lions-gate-dark p{color:#C2CBC6}
+
+/* ── the DAWN TWIN — the light terminal: sage paper, deep phosphor ink,
+   the green deepens along its own ramp. Derived the house way: surfaces
+   keep the night's offsets, inks re-derive (WCAG-measured, the table in
+   the lane report), state hues hold meaning (info stays cyan, gold stays
+   money). These rules out-specify Love's dawn blanket repaints — same
+   !important, higher specificity, later in the cascade; Love's own rules
+   are untouched. ── */
+html[data-oc-cartridge="mono"][data-oc-theme="light"]{
+  --space:#EFF1EC; --ground:#EFF1EC;
+  --panel:rgba(255,255,255,.72); --edge:rgba(40,48,42,.2);
+  --ink:#232A25; --muted:#5C665E;
+  --ink-strong:#151A17; --ink-body:#3C453F;
+  --glass:rgba(252,253,250,.62); --glass-edge:rgba(40,48,42,.18);
+  --ghost-bg:rgba(40,48,42,.07); --ghost-ink:#3C453F;
+  --glass-strong:rgba(252,253,250,.9);
+  --sheet-bg:#FBFCF9;
+  --field-bg:rgba(255,255,255,.96); --field-ink:#232A25;
+  --soft-sm:0 18px 44px -28px rgba(60,70,62,.35);
+  --soft:0 24px 60px -30px rgba(60,70,62,.45);
+  /* the signal green, deepened for paper (5.6:1 — measured); info keeps
+     its cyan, deepened too (semantic lock holds in both lights) */
+  --rose:#2E6B41; --lavender:#2E6B41; --lavender-soft:#7FA88A;
+  --info:#2F5D68; --teal-bright:#2F5D68;
+  /* the band ladder, paper steps — same offsets as the night ladder */
+  --band-1:#E7EAE3; --band-2:#EFF1EC; --band-3:#E5E9E4;
+  --band-4:#E2E8E4; --band-5:#E9EAE2; --band-6:#EAE7E4;
+  --band-7:#E4E7E9; --band-8:#E6E9E7; --band-9:#EBEAE0;
+  /* NOT poured at dawn: the hero gradient stops and --sky-cream — the
+     hero is keep-dark (it holds the night terminal in both themes), so
+     the hero stops and the star dust keep their night values; only the
+     ::after fade below hands off to the paper */
+}
+
+html[data-oc-cartridge="mono"][data-oc-theme="light"] body{
+  background:
+    radial-gradient(900px 500px at 50% -4%, rgba(46,107,65,.08), transparent 60%),
+    radial-gradient(760px 620px at 88% 12%, rgba(47,93,104,.06), transparent 62%),
+    linear-gradient(180deg,#EFF1EC 0%, #E9ECE6 45%, #E4E8E2 100%);
+  background-attachment:fixed;
+}
+
+/* the blanket repaints Love's dawn owns, re-told on mono's paper (the
+   earthside precedent: same !important, higher specificity, later) */
+html[data-oc-cartridge="mono"][data-oc-theme="light"] main:not(.lions-gate-dark){
+  background:#EFF1EC!important;
+}
+html[data-oc-cartridge="mono"][data-oc-theme="light"] main section:not(.keep-dark):not(.lions-gate){
+  background:linear-gradient(180deg,#EFF1EC,#E7EAE3)!important;
+}
+
+/* the four skies at midday — paper analogs of the graphite skies;
+   keep-dark skies are excluded, their graphite rules above hold */
+html[data-oc-cartridge="mono"][data-oc-theme="light"] main section.sky-night:not(.keep-dark):not(.lions-gate){
+  background:linear-gradient(180deg,#EFF1EC 0%,#E7EAE3 100%)!important}
+html[data-oc-cartridge="mono"][data-oc-theme="light"] main section.sky-veil:not(.keep-dark):not(.lions-gate){
+  background:radial-gradient(700px 420px at 50% 0%,rgba(46,107,65,.1),transparent 60%),
+    linear-gradient(180deg,#E9ECE6 0%,#E5E9E4 55%,#E7EAE3 100%)!important}
+html[data-oc-cartridge="mono"][data-oc-theme="light"] main section.sky-glass:not(.keep-dark):not(.lions-gate){
+  background:#E7EAE3!important}
+html[data-oc-cartridge="mono"][data-oc-theme="light"] main section.sky-warm:not(.keep-dark):not(.lions-gate){
+  background:linear-gradient(180deg,#EBEAE0 0%,#E9E8DF 100%)!important}
+
+/* the hero at dawn HOLDS THE NIGHT TERMINAL — it is keep-dark, so the
+   graphite ground, the green glyph and the scanlines above stand; the
+   only dawn rule the hero needs is the fade's handoff to the paper band
+   (Love's own dawn does the same: the hero holds night, the fade repaints) */
+html[data-oc-cartridge="mono"][data-oc-theme="light"] .hero::after{
+  background:linear-gradient(180deg,transparent,#E7EAE3);
+}
+
+/* the lion at dawn — the veil steps onto the paper */
+html[data-oc-cartridge="mono"][data-oc-theme="light"] .lions-gate{
+  background:linear-gradient(rgba(239,241,236,.82), rgba(239,241,236,.9)),
+    url("/images/mono/gate.webp") center top / cover no-repeat;
 }

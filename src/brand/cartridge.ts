@@ -12,8 +12,10 @@
  * dark design, arcade-voiced), EARTHSIDE (K3's authored earth direction,
  * Pac's verdict 0018.05.25 a₿); TASK-09/S11 added a fourth, BLANK — the
  * plain template for the next community, the proof a stranger can add one
- * (the field report: docs/adding-a-cartridge.md). `love` below is the
- * original object moved VERBATIM — every field line byte-identical, so
+ * (the field report: docs/adding-a-cartridge.md); TASK-22/S24 added a
+ * fifth, MONO — the terminal option in the starter pack, monospace in
+ * every role, dark-first with an honest dawn from birth. `love` below is
+ * the original object moved VERBATIM — every field line byte-identical, so
  * the dressing room's anchors (src/lib/cartridge-identity.ts) still match
  * exactly once; the others live in src/brand/cartridges/ beside this file
  * for the same reason. Consumers keep importing `cartridge` and never learn
@@ -32,6 +34,7 @@
 import { pacman } from "./cartridges/pacman";
 import { earthside } from "./cartridges/earthside";
 import { blank } from "./cartridges/blank";
+import { mono } from "./cartridges/mono";
 
 /** LOVE — the ShinePages original, fidelity-guarded. The whole object is
  *  the pre-registry cartridge, verbatim. */
@@ -197,8 +200,9 @@ const love = {
 
 /** THE CARTRIDGE IDS (S9) — the three authored directions: LOVE (Heaven,
  *  the default), NUMBER ONE × PACMAN (the Screen), EARTHSIDE (the Earth) —
- *  plus BLANK (TASK-09/S11), the plain template for the next community. */
-export type CartridgeId = "love" | "pacman" | "earthside" | "blank";
+ *  plus BLANK (TASK-09/S11), the plain template for the next community,
+ *  and MONO (TASK-22/S24), the terminal option. */
+export type CartridgeId = "love" | "pacman" | "earthside" | "blank" | "mono";
 
 /**
  * THE CARTRIDGE SHAPE — DERIVED from love's object, never hand-written in
@@ -227,7 +231,7 @@ type CartridgeShape<T> = T extends string
 export type Cartridge = CartridgeShape<typeof love>;
 
 /** THE REGISTRY (S9) — one entry per direction. */
-export const cartridges: Record<CartridgeId, Cartridge> = { love, pacman, earthside, blank };
+export const cartridges: Record<CartridgeId, Cartridge> = { love, pacman, earthside, blank, mono };
 
 /**
  * THE SELECTION (S9) — the one line a fork flips, the nav.accent
