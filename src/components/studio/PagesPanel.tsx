@@ -120,7 +120,7 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
 
   const btn = (on: boolean): React.CSSProperties => ({
     flex: "none", padding: "2px 7px", borderRadius: 6, fontSize: 11, lineHeight: 1.6,
-    border: "1px solid rgba(139,118,196,.35)", background: "var(--puck-color-surface-subtle)", fontFamily: SANS,
+    border: "1px solid var(--oc-structural-edge, rgba(139,118,196,.35))", background: "var(--puck-color-surface-subtle)", fontFamily: SANS,
     color: on ? "var(--puck-color-text)" : "var(--puck-color-text-disabled)", cursor: on ? "pointer" : "not-allowed",
   });
   const off = !storeReady || busy;
@@ -129,8 +129,8 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
   return (
     <div style={{ position: "fixed", left: 12, top: 52, zIndex: 1090, width: 380,
       maxWidth: "calc(100vw - 24px)", maxHeight: "70vh", display: "flex", flexDirection: "column",
-      background: "var(--puck-color-surface)", border: "1px solid rgba(139,118,196,.4)", borderRadius: 14,
-      padding: "12px 14px", boxShadow: "0 16px 44px rgba(0,0,0,.55)", fontFamily: SANS }}>
+      background: "var(--puck-color-surface)", border: "1px solid var(--oc-popover-edge, rgba(139,118,196,.4))", borderRadius: 14,
+      padding: "12px 14px", boxShadow: "var(--oc-popover-shadow, 0 16px 44px rgba(0,0,0,.55))", fontFamily: SANS }}>
       <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: "var(--puck-color-text)" }}>Pages</span>
         <span style={{ flex: 1 }} />
@@ -138,10 +138,10 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
       </div>
 
       {!storeReady && (
-        <p style={{ margin: "0 0 8px", fontSize: 11.5, lineHeight: 1.5, color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>{offNote}</p>
+        <p style={{ margin: "0 0 8px", fontSize: 11.5, lineHeight: 1.5, color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>{offNote}</p>
       )}
       {error && (
-        <p style={{ margin: "0 0 8px", fontSize: 11.5, lineHeight: 1.5, color: "#E7899E" /* S2: pinned — needs a ruling */ }}>{error}</p>
+        <p style={{ margin: "0 0 8px", fontSize: 11.5, lineHeight: 1.5, color: "var(--err)" /* S2: pinned — the ruling landed (S22 B2): the literal WAS night --err, so the pin rides the token */ }}>{error}</p>
       )}
 
       {/* create — validated inline; the server re-checks and can still 409 */}
@@ -155,7 +155,7 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
           disabled={off}
           title={storeReady ? "lowercase letters, numbers and dashes" : offNote}
           style={{ flex: 1, minWidth: 0, background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)",
-            border: "1px solid rgba(139,118,196,.45)", borderRadius: 8,
+            border: "1px solid var(--oc-input-edge, rgba(139,118,196,.45))", borderRadius: 8,
             padding: "6px 10px", fontSize: 12.5, fontFamily: MONO }}
         />
         <button onClick={() => void create()} disabled={off} title={storeReady ? "create the page and open it" : offNote}
@@ -178,7 +178,7 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
                   autoFocus
                   aria-label={naming.mode === "rename" ? `rename ${p}` : `duplicate ${p} as`}
                   style={{ flex: 1, minWidth: 0, background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)",
-                    border: "1px solid rgba(139,118,196,.45)", borderRadius: 8,
+                    border: "1px solid var(--oc-input-edge, rgba(139,118,196,.45))", borderRadius: 8,
                     padding: "4px 8px", fontSize: 12, fontFamily: MONO }}
                 />
                 <button onClick={() => void commitNaming()} disabled={busy} style={btn(!busy)}>Save</button>
@@ -191,7 +191,7 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
               borderTop: "1px solid rgba(139,118,196,.15)" }}>
               <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis",
                 fontFamily: MONO, fontSize: 12, whiteSpace: "nowrap",
-                color: isCurrent ? "#EBCB77" /* S2: gold law — decorative, reported */ : "var(--puck-color-text-secondary)" }}
+                color: isCurrent ? "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */ : "var(--puck-color-text-secondary)" }}
                 title={isCurrent ? "the page you're editing" : studioPath(p)}>
                 {isCurrent ? "● " : ""}{p}
               </span>
@@ -210,7 +210,7 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
               {!isSeed && (
                 <button onClick={() => void remove(p)} disabled={off}
                   title={storeReady ? `delete ${p} (draft and live)` : offNote}
-                  style={{ ...btn(!off), color: off ? "var(--puck-color-text-disabled)" : "#E7899E" /* S2: pinned — needs a ruling */ }}>✕</button>
+                  style={{ ...btn(!off), color: off ? "var(--puck-color-text-disabled)" : "var(--err)" /* S2: pinned — the ruling landed (S22 B2): the literal WAS night --err */ }}>✕</button>
               )}
             </div>
           );

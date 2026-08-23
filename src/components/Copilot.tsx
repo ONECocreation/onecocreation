@@ -86,7 +86,7 @@ export default function Copilot({
       </div>
 
       {ready === false && (
-        <div style={{ padding: "9px 12px", background: "rgba(192,57,43,.16)", color: "var(--copilot-user)", fontSize: 11.5, lineHeight: 1.5, flex: "none" }}>
+        <div style={{ padding: "9px 12px", background: "var(--oc-err-pill-bg, rgba(192,57,43,.16))", color: "var(--oc-err-text, var(--copilot-user))", fontSize: 11.5, lineHeight: 1.5, flex: "none" }}>
           The AI key on the server is missing or invalid — ask the Admiral to re-add <code>ANTHROPIC_API_KEY</code>.
         </div>
       )}
@@ -117,7 +117,7 @@ export default function Copilot({
       </div>
 
       {/* the contract, stated where she works */}
-      <div style={{ margin: "0 10px 8px", padding: "6px 9px", border: "1px dashed rgba(139,118,196,.3)", borderRadius: 9, fontFamily: mono, fontSize: 9, color: "var(--muted)", letterSpacing: ".04em", flex: "none" }}>
+      <div style={{ margin: "0 10px 8px", padding: "6px 9px", border: "1px dashed var(--oc-field-edge, rgba(139,118,196,.3))", borderRadius: 9, fontFamily: mono, fontSize: 9, color: "var(--muted)", letterSpacing: ".04em", flex: "none" }}>
         builds from your house pieces — <b style={{ color: "var(--teal-bright)", fontWeight: 600 }}>checked by the rails</b> before it lands
       </div>
 
@@ -133,7 +133,7 @@ export default function Copilot({
           rows={2}
           style={{
             flex: 1, minWidth: 0, resize: "none", background: "color-mix(in oklab, var(--puck-color-surface) 60%, transparent)", color: "var(--ink-strong)",
-            border: "1px solid rgba(139,118,196,.3)", borderRadius: 9, padding: "7px 9px",
+            border: "1px solid var(--oc-field-edge, rgba(139,118,196,.3))", borderRadius: 9, padding: "7px 9px",
             fontSize: 12, fontFamily: "inherit", lineHeight: 1.4,
           }}
         />

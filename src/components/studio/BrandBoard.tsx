@@ -132,7 +132,7 @@ function ThemePane({ variant, hexes, dawnOverrides, onSwatch, onClearDawn, shuff
       className={isDawn ? "oc-pv-light" : "oc-pv-dark"}
       aria-label={isDawn ? "dawn (light theme) pane" : "night (dark theme) pane"}
       style={{ flex: "1 1 460px", minWidth: 0, borderRadius: 16,
-        border: "1px solid rgba(139,118,196,.35)", overflow: "hidden",
+        border: "1px solid var(--oc-structural-edge, rgba(139,118,196,.35))", overflow: "hidden",
         /* the pv class sets background: var(--ground) — a solid hex; this
            is belt-and-braces so the pane NEVER shows a see-through ground */
         backgroundColor: isDawn ? "#fcf7f0" : "#141021" /* S2: pinned — needs a ruling */ }}
@@ -271,9 +271,9 @@ type VoiceMsg = { key: string; ok: boolean; text: string };
 const EMPTY_VOICE: VoiceRow = { quote: "", name: "", who: "", href: "" };
 
 const fieldInput: React.CSSProperties = {
-  flex: "1 1 240px", minWidth: 0, background: "#0e0c1a", /* S2: pinned — needs a ruling */
-  color: "#F4ECFF", /* S2: pinned — needs a ruling */
-  border: "1px solid rgba(139,118,196,.4)", borderRadius: 8,
+  flex: "1 1 240px", minWidth: 0, background: "var(--oc-input-well, #0e0c1a)", /* S2: pinned — the ruling landed (S22, the A4 offset move): the recessed well keeps its night depth below the ground; the dawn citizen at exactly that depth is the mat */
+  color: "var(--ink-strong)", /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong, so the pin rides the token */
+  border: "1px solid var(--oc-control-edge, rgba(139,118,196,.4))", borderRadius: 8,
   padding: "7px 10px", fontFamily: MONO, fontSize: 12.5, outline: "none",
 };
 
@@ -376,8 +376,8 @@ function IdentityRoom() {
     return (
       <p role="status" style={{ margin: "6px 0 0", display: "inline-block",
         padding: "5px 11px", borderRadius: 8, fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
-        background: m.ok ? "#16281c" : "#331820", /* S2: pinned — needs a ruling */
-        color: m.ok ? "#BFE6C9" : "#F2C4CE" /* S2: pinned — needs a ruling */ }}>
+        background: m.ok ? "var(--oc-ok-pill-bg, #16281c)" : "var(--oc-err-pill-bg, #331820)", /* S2: pinned — the ruling landed (S22 F3/F1): the washes thin at dawn so the status inks keep their margin */
+        color: m.ok ? "var(--oc-ok-text, #BFE6C9)" : "var(--oc-err-text, #F2C4CE)" /* S2: pinned — the ruling landed (S22 F3/F1): the inks ride the cartridge's dawn status pair */ }}>
         {m.text}
       </p>
     );
@@ -392,7 +392,7 @@ function IdentityRoom() {
       <div key={r.field} style={{ marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, width: 148, flexShrink: 0,
-            color: "#F4ECFF" /* S2: pinned — needs a ruling */ }}>
+            color: "var(--ink-strong)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */ }}>
             {r.label}
           </span>
           <input
@@ -409,14 +409,14 @@ function IdentityRoom() {
             aria-label={dirtyRow ? `save ${r.label}` : `${r.label} saved`}
             style={{ ...pill, padding: "6px 14px", fontSize: 12.5,
               background: dirtyRow ? "linear-gradient(135deg,#EBCB77,#D9B24E)" /* S2: gold law — decorative, reported */ : "rgba(139,118,196,.15)",
-              color: dirtyRow ? "#3a2a06" /* S2: gold law — decorative, reported */ : "#9a8fae", /* S2: pinned — needs a ruling */
+              color: dirtyRow ? "#3a2a06" /* S2: gold law — decorative, reported */ : "var(--muted)", /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */
               cursor: dirtyRow && !busyField ? "pointer" : "default" }}>
             {busy ? "Saving…" : dirtyRow ? "Save" : "Saved"}
           </button>
         </div>
         {r.hint && (
           <p style={{ margin: "4px 0 0 158px", fontSize: 12, fontFamily: SANS,
-            color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+            color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
             {r.hint}
           </p>
         )}
@@ -444,7 +444,7 @@ function IdentityRoom() {
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, width: 148, flexShrink: 0,
-            color: "#F4ECFF" /* S2: pinned — needs a ruling */ }}>
+            color: "var(--ink-strong)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */ }}>
             cartridge
           </span>
           {choices.map((c) => {
@@ -459,9 +459,9 @@ function IdentityRoom() {
                 aria-label={`cartridge ${c.name}${active ? " (current)" : ""}`}
                 style={{ ...pill, display: "inline-flex", alignItems: "center", gap: 7,
                   background: active ? "rgba(139,118,196,.25)" : "rgba(139,118,196,.1)",
-                  color: "#F4ECFF", /* S2: pinned — needs a ruling */
+                  color: "var(--ink-strong)", /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */
                   /* active = gold ring PLUS a dot — never colour alone (doctrine) */
-                  border: active ? "2px solid #B4862B" /* S2: gold law — decorative, reported */ : "1px solid rgba(139,118,196,.4)",
+                  border: active ? "2px solid #B4862B" /* S2: gold law — decorative, reported */ : "1px solid var(--oc-control-edge, rgba(139,118,196,.4))" /* S22 D10 */,
                   cursor: busyField ? "default" : "pointer" }}>
                 {/* a hint of the direction's contract palette — swatches, not a live preview */}
                 {c.swatches.map((s, i) => (
@@ -474,7 +474,7 @@ function IdentityRoom() {
           })}
         </div>
         <p style={{ margin: "8px 0 0 158px", fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
-          color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+          color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
           {"this chooses the site's DEFAULT cartridge for EVERYONE — a deployment choice written into the cartridge file, live only after a reload or a fresh deploy. It is not a per-visitor preview, and it is not the visitor's own night/dawn toggle (data-oc-theme); the dots are a hint of each direction's palette, nothing more."}
         </p>
         {/* the PREVIEW row (S11 lane 2) — deliberately NOT pills: bare
@@ -484,7 +484,7 @@ function IdentityRoom() {
             in a new tab wearing that cartridge's skin. */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
           <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, width: 148, flexShrink: 0,
-            color: "#F4ECFF" /* S2: pinned — needs a ruling */ }}>
+            color: "var(--ink-strong)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */ }}>
             preview
           </span>
           {choices.map((c) => (
@@ -505,7 +505,7 @@ function IdentityRoom() {
           ))}
         </div>
         <p style={{ margin: "8px 0 0 158px", fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
-          color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+          color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
           {"preview is the operator's LOOK, not a save: the flag lives in THIS browser's session storage, set from this gated room alone — it is not a per-visitor theme switcher, it changes nothing for anyone else, and the default above does not move. What pours is the cartridge's SKIN (tokens, faces, bands, the hero's treatment); the dressing — logos, hero art, the words — is read from the saved cartridge and stays. While the flag lives, a strip at the foot of every page says PREVIEW and names the cartridge; its exit clears the flag and reloads. The visitor's night/dawn toggle still works inside a preview — the two compose, and neither lies about the other."}
         </p>
         {msg && msg.field === "cartridge.id" && <div style={{ marginLeft: 158 }}>{msgChip(msg)}</div>}
@@ -523,7 +523,7 @@ function IdentityRoom() {
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, width: 148, flexShrink: 0,
-            color: "#F4ECFF" /* S2: pinned — needs a ruling */ }}>
+            color: "var(--ink-strong)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */ }}>
             nav accent
           </span>
           {choices.map(({ v, label }) => {
@@ -538,9 +538,9 @@ function IdentityRoom() {
                 aria-label={`nav accent ${label}${active ? " (current)" : ""}`}
                 style={{ ...pill,
                   background: active ? "rgba(139,118,196,.25)" : "rgba(139,118,196,.1)",
-                  color: "#F4ECFF", /* S2: pinned — needs a ruling */
+                  color: "var(--ink-strong)", /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */
                   /* active = gold ring PLUS a dot — never colour alone (doctrine) */
-                  border: active ? "2px solid #B4862B" /* S2: gold law — decorative, reported */ : "1px solid rgba(139,118,196,.4)",
+                  border: active ? "2px solid #B4862B" /* S2: gold law — decorative, reported */ : "1px solid var(--oc-control-edge, rgba(139,118,196,.4))" /* S22 D10 */,
                   cursor: busyField ? "default" : "pointer" }}>
                 {busy && !active ? `${label} …` : label}{active ? " •" : ""}
               </button>
@@ -548,7 +548,7 @@ function IdentityRoom() {
           })}
         </div>
         <p style={{ margin: "8px 0 0 158px", fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
-          color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+          color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
           {"“gold” is Love's original nav — “dawn” is the kit's rose→lavender retint, and gold then lives on money and the coin mark alone."}
         </p>
         {msg && msg.field === "nav.accent" && <div style={{ marginLeft: 158 }}>{msgChip(msg)}</div>}
@@ -584,22 +584,22 @@ function IdentityRoom() {
   function voicesRoom() {
     if (voices === null) return null;
     const removeBtn: React.CSSProperties = { ...pill, padding: "6px 14px", fontSize: 12.5,
-      background: "none", color: "#F2C4CE", /* S2: pinned — needs a ruling */
+      background: "none", color: "var(--oc-err-text, #F2C4CE)", /* S2: pinned — the ruling landed (S22 F1): the ink rides the cartridge's dawn err */
       textDecoration: "underline" };
     return (
       <div style={{ marginTop: 20 }}>
         <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
           textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
-          color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>
+          color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>
           Voices of the field
         </div>
         <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS,
-          color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+          color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
           {"real words from the field, each linked to the video it lives under — curate freely, keep them honest (the shelf holds a dozen)"}
         </p>
         {voices.length === 0 && (
           <p style={{ margin: "0 0 12px", fontSize: 13, fontFamily: SANS,
-            color: "#D9D2E4" /* S2: pinned — needs a ruling */ }}>
+            color: "var(--ink-body)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-body */ }}>
             the shelf stands empty — a voice is real words or nothing
           </p>
         )}
@@ -620,7 +620,7 @@ function IdentityRoom() {
                   aria-label={dirtyRow ? `save voice ${i + 1}` : `voice ${i + 1} saved`}
                   style={{ ...pill, padding: "6px 14px", fontSize: 12.5,
                     background: dirtyRow ? "linear-gradient(135deg,#EBCB77,#D9B24E)" /* S2: gold law — decorative, reported */ : "rgba(139,118,196,.15)",
-                    color: dirtyRow ? "#3a2a06" /* S2: gold law — decorative, reported */ : "#9a8fae", /* S2: pinned — needs a ruling */
+                    color: dirtyRow ? "#3a2a06" /* S2: gold law — decorative, reported */ : "var(--muted)", /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */
                     cursor: dirtyRow && !busyVoice ? "pointer" : "default" }}>
                   {busy ? "Saving…" : dirtyRow ? "Save" : "Saved"}
                 </button>
@@ -646,7 +646,7 @@ function IdentityRoom() {
             title="set this voice on the shelf"
             aria-label="add this voice"
             style={{ ...pill, padding: "6px 14px", fontSize: 12.5,
-              background: "rgba(139,118,196,.22)", color: "#F4ECFF", /* S2: pinned — needs a ruling */
+              background: "rgba(139,118,196,.22)", color: "var(--ink-strong)", /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */
               cursor: busyVoice ? "default" : "pointer" }}>
             {busyVoice === "voice-add" ? "Saving…" : "+ add this voice"}
           </button>
@@ -660,28 +660,28 @@ function IdentityRoom() {
     <section
       aria-label="the dressing room — the cartridge selection, logos, hero art, doors, voice, sign-in, meta, portraits, tier art, thank-you and voices"
       style={{ margin: "0 16px 24px", padding: "18px 20px 22px", borderRadius: 16,
-        border: "1px solid rgba(139,118,196,.35)",
-        background: "#12101f" /* S2: pinned — needs a ruling — a solid ground under every word (doctrine) */ }}
+        border: "1px solid var(--oc-structural-edge, rgba(139,118,196,.35))",
+        background: "var(--puck-color-surface)" /* S2: pinned — the ruling landed (S22 A1): the literal WAS night --puck-color-surface — a solid ground under every word (doctrine) */ }}
     >
       <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".2em", fontWeight: 800,
-        textTransform: "uppercase", color: "#F4ECFF" /* S2: pinned — needs a ruling */, marginBottom: 6 }}>
+        textTransform: "uppercase", color: "var(--ink-strong)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */, marginBottom: 6 }}>
         ✦ The dressing room
       </div>
       <p style={{ margin: "0 0 18px", fontSize: 13, lineHeight: 1.55, fontFamily: SANS,
-        color: "#D9D2E4" /* S2: pinned — needs a ruling */ }}>
+        color: "var(--ink-body)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-body */ }}>
         {"the cartridge's non-CSS dressing — which cartridge the site wears, then its logos, hero art, the time door, the words the site speaks, the sign-in ceremony, the meta trio, portraits, tier art, the thank-you and the voices of the field. A save writes the cartridge file itself; the running server catches up on its next reload (dev does it alone) or a fresh deploy."}
       </p>
 
       {values === null && !loadNote && (
         <p style={{ margin: 0, fontSize: 13, fontFamily: SANS,
-          color: "#D9D2E4" /* S2: pinned — needs a ruling */ }}>
+          color: "var(--ink-body)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-body */ }}>
           opening the dressing room…
         </p>
       )}
       {loadNote && (
         <p role="status" style={{ margin: 0, display: "inline-block", padding: "5px 11px",
           borderRadius: 8, fontSize: 12.5, fontFamily: SANS,
-          background: "#331820", color: "#F2C4CE" /* S2: pinned — needs a ruling */ }}>
+          background: "var(--oc-err-pill-bg, #331820)", color: "var(--oc-err-text, #F2C4CE)" /* S2: pinned — the ruling landed (S22 F1): the wash thins at dawn, the ink rides the cartridge's dawn err */ }}>
           {loadNote}
         </p>
       )}
@@ -691,11 +691,11 @@ function IdentityRoom() {
           <div style={{ flex: "1 1 100%" }}>
             <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
               textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
-              color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>
+              color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>
               Cartridge
             </div>
             <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS,
-              color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+              color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
               which dressing the whole site wears — the one line a fork flips
             </p>
             {cartridgePicker()}
@@ -704,11 +704,11 @@ function IdentityRoom() {
             <div key={g.title} style={{ flex: "1 1 420px", minWidth: 0 }}>
               <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
                 textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
-                color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>
+                color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>
                 {g.title}
               </div>
               <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS,
-                color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+                color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
                 {g.blurb}
               </p>
               {g.rows.map(row)}
@@ -717,11 +717,11 @@ function IdentityRoom() {
           <div style={{ flex: "1 1 420px", minWidth: 0 }}>
             <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
               textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
-              color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>
+              color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>
               Nav accent
             </div>
             <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS,
-              color: "#9a8fae" /* S2: pinned — needs a ruling */ }}>
+              color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
               the colour the nav links wear
             </p>
             {navAccent()}
@@ -758,34 +758,35 @@ export default function BrandBoard() {
   const dawnHexes = pal ? effectivePalette(ONECOCREATION, ["dawn"], overrides) : null;
 
   return (
-    <div style={{ height: "100%", overflowY: "auto", background: "#141021" /* S2: pinned — needs a ruling */, fontFamily: SANS }}>
+    <div className="oc-studio" /* S22: the board scopes into the studio so the dawn override block reaches it — it spends no --puck-color-* tokens, so the night redeclarations are inert on it (the only night-visible side effect: the house scrollbar styles, puck-theme.css, now dress this scroll area too) */
+      style={{ height: "100%", overflowY: "auto", background: "var(--ground)" /* S2: pinned — the ruling landed (S22 A6): the literal WAS night --ground, so the pin rides the token */, fontFamily: SANS }}>
       {/* control rail */}
       <div style={{ position: "sticky", top: 0, zIndex: 20, display: "flex", alignItems: "center",
-        gap: 10, flexWrap: "wrap", padding: "10px 14px", background: "#12101f", /* S2: pinned — needs a ruling */
-        borderBottom: "1px solid rgba(139,118,196,.3)" }}>
+        gap: 10, flexWrap: "wrap", padding: "10px 14px", background: "var(--puck-color-surface)", /* S2: pinned — the ruling landed (S22 A1): the literal WAS night --puck-color-surface, so the pin rides the token */
+        borderBottom: "1px solid var(--oc-field-edge, rgba(139,118,196,.3))" /* S22 D7 */ }}>
         <span style={{ fontFamily: MONO, fontWeight: 800, letterSpacing: ".22em",
-          color: "#F4ECFF" /* S2: pinned — needs a ruling */, fontSize: 13, whiteSpace: "nowrap" }}>
-          ■ <i style={{ fontStyle: "normal", color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>BRAND BOARD</i>
+          color: "var(--ink-strong)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */, fontSize: 13, whiteSpace: "nowrap" }}>
+          ■ <i style={{ fontStyle: "normal", color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>BRAND BOARD</i>
         </span>
         <button onClick={roll} title="roll a new palette (clears dawn overrides)"
-          style={{ ...pill, background: "#1b1530" /* S2: pinned — needs a ruling */, color: "#EBCB77" /* S2: gold law — decorative, reported */, border: "1px solid #D9B24E" /* S2: gold law — decorative, reported */ }}>
+          style={{ ...pill, background: "var(--puck-color-surface-subtle)" /* S2: pinned — the ruling landed (S22 A2): the literal WAS night --puck-color-surface-subtle */, color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */, border: "1px solid var(--gold-deep)" /* S2: gold law — the ruling landed (S22 C1): the literal WAS night --gold-deep, so the solid gold edge rides the cartridge's designed dawn gold */ }}>
           🎲 roll
         </button>
         <button onClick={() => save()} disabled={!dirty || busy}
           title={dirty ? "save this palette to the brand — every slot-coloured block follows" : "no unsaved palette changes"}
           style={{ ...pill,
             background: dirty ? "linear-gradient(135deg,#EBCB77,#D9B24E)" /* S2: gold law — decorative, reported */ : "rgba(139,118,196,.15)",
-            color: dirty ? "#3a2a06" /* S2: gold law — decorative, reported */ : "#9a8fae" /* S2: pinned — needs a ruling */, cursor: dirty && !busy ? "pointer" : "default" }}>
+            color: dirty ? "#3a2a06" /* S2: gold law — decorative, reported */ : "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */, cursor: dirty && !busy ? "pointer" : "default" }}>
           {busy ? "Saving…" : dirty ? "Save to brand" : "Saved"}
         </button>
         <button onClick={() => reset()} disabled={busy}
           title="back to the cartridge default (both themes)"
-          style={{ ...pill, background: "none", color: "#D9D2E4" /* S2: pinned — needs a ruling */, textDecoration: "underline", padding: "6px 6px" }}>
+          style={{ ...pill, background: "none", color: "var(--ink-body)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-body */, textDecoration: "underline", padding: "6px 6px" }}>
           reset
         </button>
         <span style={{ flex: 1 }} />
         <button onClick={backToStudio} title="back to the page you were editing"
-          style={{ ...pill, background: "rgba(139,118,196,.22)", color: "#F4ECFF" /* S2: pinned — needs a ruling */ }}>
+          style={{ ...pill, background: "rgba(139,118,196,.22)", color: "var(--ink-strong)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */ }}>
           ← back to studio
         </button>
       </div>
@@ -813,7 +814,7 @@ export default function BrandBoard() {
           />
         </div>
       ) : (
-        <p style={{ padding: 24, color: "#D9D2E4" /* S2: pinned — needs a ruling */, fontSize: 14 }}>loading palette…</p>
+        <p style={{ padding: 24, color: "var(--ink-body)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-body */, fontSize: 14 }}>loading palette…</p>
       )}
 
       {/* the dressing room — the cartridge's non-CSS identity */}

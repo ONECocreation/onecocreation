@@ -143,7 +143,7 @@ export default function MediaField({
 
   const mono = "ui-monospace, Menlo, Consolas, monospace";
   const btn: React.CSSProperties = {
-    border: "1px solid rgba(139,118,196,.35)", background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)",
+    border: "1px solid var(--oc-structural-edge, rgba(139,118,196,.35))", background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)",
     borderRadius: 8, padding: "4px 10px", fontSize: 11, cursor: "pointer", fontFamily: "inherit",
   };
 
@@ -152,7 +152,7 @@ export default function MediaField({
       {/* current image + toggle */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
         <div style={{ width: 40, height: 30, borderRadius: 6, flex: "none", overflow: "hidden",
-          border: "1px solid rgba(139,118,196,.35)", background: "var(--studio-mat)", display: "grid", placeItems: "center" }}>
+          border: "1px solid var(--oc-structural-edge, rgba(139,118,196,.35))", background: "var(--studio-mat)", display: "grid", placeItems: "center" }}>
           {value ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={value} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -190,14 +190,14 @@ export default function MediaField({
                   if (v) onChange(v);
                 }
               }}
-              style={{ flex: 1, minWidth: 0, background: "var(--puck-color-surface-subtle)", border: "1px solid rgba(139,118,196,.3)",
+              style={{ flex: 1, minWidth: 0, background: "var(--puck-color-surface-subtle)", border: "1px solid var(--oc-field-edge, rgba(139,118,196,.3))",
                 borderRadius: 8, color: "var(--puck-color-text)", fontSize: 11, padding: "5px 8px", fontFamily: mono }}
             />
           </div>
 
           {ready === false && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ fontSize: 10.5, color: "#EBCB77" /* S2: gold law — decorative, reported */, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 10.5, color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */, lineHeight: 1.5 }}>
                 Connect the library: paste a GitHub token with access to the assets
                 repo — it&apos;s checked live, saved server-side, and never shown again.
               </div>
@@ -208,7 +208,7 @@ export default function MediaField({
                   value={tokenDraft}
                   onChange={(e) => setTokenDraft(e.target.value)}
                   autoComplete="off"
-                  style={{ flex: 1, minWidth: 0, background: "var(--puck-color-surface-subtle)", border: "1px solid rgba(139,118,196,.3)",
+                  style={{ flex: 1, minWidth: 0, background: "var(--puck-color-surface-subtle)", border: "1px solid var(--oc-field-edge, rgba(139,118,196,.3))",
                     borderRadius: 8, color: "var(--puck-color-text)", fontSize: 11, padding: "5px 8px", fontFamily: mono }}
                 />
                 <button type="button" disabled={busy || !tokenDraft.trim()} onClick={connect}
@@ -219,7 +219,7 @@ export default function MediaField({
               </div>
             </div>
           )}
-          {note && <div style={{ fontSize: 10.5, color: note.endsWith("✓") ? "var(--ok-soft)" : "#E7899E" /* S2: pinned — needs a ruling */ }}>{note}</div>}
+          {note && <div style={{ fontSize: 10.5, color: note.endsWith("✓") ? "var(--oc-ok-text, var(--ok-soft))" /* S22 B4 */ : "var(--err)" /* S2: pinned — the ruling landed (S22 B2): the literal WAS night --err */ }}>{note}</div>}
 
           {/* the library grid — ONE capped scroll area */}
           {items.length > 0 && (
@@ -227,7 +227,7 @@ export default function MediaField({
               maxHeight: 168, overflowY: "auto", paddingRight: 2 }}>
               {items.map((it) => (
                 <button key={it.url} type="button" title={it.name} onClick={() => { onChange(it.url); setNote(""); }}
-                  style={{ padding: 0, border: value === it.url ? "2px solid #EBCB77" /* S2: gold law — decorative, reported */ : "1px solid rgba(139,118,196,.3)",
+                  style={{ padding: 0, border: value === it.url ? "2px solid var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 C1): the selected-thumb edge drinks the caveat escape (the cartridge's dawn gold ink #8A6410, 4.69 on the mat — the C1 default --gold-deep measured a hair under the 3:1 bar at 2.87, and C1's own caveat names this escape) */ : "1px solid var(--oc-field-edge, rgba(139,118,196,.3))" /* S22 D7 — same rung as the input borders above */,
                     borderRadius: 7, overflow: "hidden", cursor: "pointer", background: "var(--studio-mat)",
                     display: "flex", flexDirection: "column" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}

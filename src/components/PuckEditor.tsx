@@ -693,7 +693,7 @@ function Panel({ k, side, label, width, children, collapsed, wideChrome, onToggl
         {overlay && (
           <div style={{ position: "absolute", right: 30, top: 0, bottom: 0, width,
             zIndex: 30, background: "var(--puck-color-surface)", display: "flex", flexDirection: "column",
-            borderLeft: "1px solid var(--glass-night-edge)", boxShadow: "var(--oc-drawer-shadow, -14px 0 34px rgba(0,0,0,.45))" }}>
+            borderLeft: "1px solid var(--oc-structural-edge, var(--glass-night-edge))" /* S22 — a D9 application (the site was never a table row, but the value+role IS the D9 rung: lav .35 structural edge → matched .45 at dawn); the S18 night pin stands as the fallback */, boxShadow: "var(--oc-drawer-shadow, -14px 0 34px rgba(0,0,0,.45))" }}>
             {children}
           </div>
         )}

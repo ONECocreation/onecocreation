@@ -91,13 +91,13 @@ export default function PopupsPanel({ pages, popups, storeReady, refresh, onClos
 
   const btn = (on: boolean): React.CSSProperties => ({
     flex: "none", padding: "2px 7px", borderRadius: 6, fontSize: 11, lineHeight: 1.6,
-    border: "1px solid rgba(139,118,196,.35)", background: "var(--puck-color-surface-subtle)", fontFamily: SANS,
+    border: "1px solid var(--oc-structural-edge, rgba(139,118,196,.35))", background: "var(--puck-color-surface-subtle)", fontFamily: SANS,
     color: on ? "var(--puck-color-text)" : "var(--puck-color-text-disabled)", cursor: on ? "pointer" : "not-allowed",
   });
   const off = !storeReady || busy;
   const offNote = "pages store not connected (dev: no KV_REST_API_*) — popup management is off";
   const input: React.CSSProperties = {
-    background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)", border: "1px solid rgba(139,118,196,.45)",
+    background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)", border: "1px solid var(--oc-input-edge, rgba(139,118,196,.45))",
     borderRadius: 8, padding: "5px 9px", fontSize: 12, fontFamily: MONO, minWidth: 0,
   };
   const check: React.CSSProperties = { display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--puck-color-text-secondary)" };
@@ -105,8 +105,8 @@ export default function PopupsPanel({ pages, popups, storeReady, refresh, onClos
   return (
     <div style={{ position: "fixed", left: 12, top: 52, zIndex: 1090, width: 400,
       maxWidth: "calc(100vw - 24px)", maxHeight: "70vh", display: "flex", flexDirection: "column",
-      background: "var(--puck-color-surface)", border: "1px solid rgba(139,118,196,.4)", borderRadius: 14,
-      padding: "12px 14px", boxShadow: "0 16px 44px rgba(0,0,0,.55)", fontFamily: SANS }}>
+      background: "var(--puck-color-surface)", border: "1px solid var(--oc-popover-edge, rgba(139,118,196,.4))", borderRadius: 14,
+      padding: "12px 14px", boxShadow: "var(--oc-popover-shadow, 0 16px 44px rgba(0,0,0,.55))", fontFamily: SANS }}>
       <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: "var(--puck-color-text)" }}>Popups</span>
         <span style={{ flex: 1 }} />
@@ -114,10 +114,10 @@ export default function PopupsPanel({ pages, popups, storeReady, refresh, onClos
       </div>
 
       {!storeReady && (
-        <p style={{ margin: "0 0 8px", fontSize: 11.5, lineHeight: 1.5, color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>{offNote}</p>
+        <p style={{ margin: "0 0 8px", fontSize: 11.5, lineHeight: 1.5, color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */ }}>{offNote}</p>
       )}
       {error && (
-        <p style={{ margin: "0 0 8px", fontSize: 11.5, lineHeight: 1.5, color: "#E7899E" /* S2: pinned — needs a ruling */ }}>{error}</p>
+        <p style={{ margin: "0 0 8px", fontSize: 11.5, lineHeight: 1.5, color: "var(--err)" /* S2: pinned — the ruling landed (S22 B2): the literal WAS night --err */ }}>{error}</p>
       )}
 
       {/* create — validates the <name> part; opens the new popup's canvas */}
@@ -149,7 +149,7 @@ export default function PopupsPanel({ pages, popups, storeReady, refresh, onClos
             return (
               <div key={n} style={{ padding: "7px 2px", borderTop: "1px solid rgba(139,118,196,.15)",
                 display: "flex", flexDirection: "column", gap: 7 }}>
-                <span style={{ fontFamily: MONO, fontSize: 12, color: "#EBCB77" /* S2: gold law — decorative, reported */ }}>{n}</span>
+                <span style={{ fontFamily: MONO, fontSize: 12, color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */ }}>{n}</span>
                 <label style={check}>
                   <input type="checkbox" checked={f.enabled} onChange={(e) => set({ enabled: e.target.checked })} />
                   shows on the site
@@ -185,7 +185,7 @@ export default function PopupsPanel({ pages, popups, storeReady, refresh, onClos
               <a href={`/studio/${popupSlug(n)}`} title={`edit ${popupSlug(n)} in the canvas`}
                 style={{ flex: "none", fontFamily: MONO, fontSize: 12, color: "var(--puck-color-text-secondary)", textDecoration: "none" }}>{n}</a>
               <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                fontSize: 10.5, color: t.enabled ? "var(--ok-soft)" : "var(--puck-color-text-muted)" }}
+                fontSize: 10.5, color: t.enabled ? "var(--oc-ok-text, var(--ok-soft))" /* S22 B4 — --ok-soft never flips; the cartridge's dawn ok does */ : "var(--puck-color-text-muted)" }}
                 title={t.enabled ? `shows after ${t.delayMs}ms on: ${t.pages.join(", ") || "(no pages)"}` : "dark — not showing"}>
                 {t.enabled ? `● ${t.delayMs}ms · ${t.pages.join(" ") || "no pages"}` : "○ off"}
               </span>
@@ -200,7 +200,7 @@ export default function PopupsPanel({ pages, popups, storeReady, refresh, onClos
               {!isSeed && (
                 <button onClick={() => void remove(n)} disabled={off}
                   title={storeReady ? `delete ${n} (draft, live and trigger)` : offNote}
-                  style={{ ...btn(!off), color: off ? "var(--puck-color-text-disabled)" : "#E7899E" /* S2: pinned — needs a ruling */ }}>✕</button>
+                  style={{ ...btn(!off), color: off ? "var(--puck-color-text-disabled)" : "var(--err)" /* S2: pinned — the ruling landed (S22 B2): the literal WAS night --err */ }}>✕</button>
               )}
             </div>
           );

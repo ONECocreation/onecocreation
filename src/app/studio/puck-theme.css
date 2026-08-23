@@ -121,6 +121,15 @@ html[data-oc-theme="light"] .oc-studio {
   --oc-popover-shadow: 0 16px 44px rgba(120, 100, 160, 0.4); /* G3 */
   --oc-drawer-shadow: -14px 0 34px rgba(120, 100, 160, 0.32);/* G4 */
   --oc-input-edge: rgba(139, 118, 196, 0.55);                /* D11 */
+
+  /* S22 — the sibling panels (Pages/Popups/MediaField/Copilot/BrandBoard)
+     drink these from their inline styles; every TSX fallback is the night
+     literal, so night resolves byte-identical and dawn alone reads these */
+  --oc-err-text: var(--err);                        /* F1 — the status chip/banner ink rides the cartridge's dawn err (the night literals #F2C4CE/#f3c7c1 stay as fallbacks) */
+  --oc-input-well: var(--studio-mat);               /* the A4 offset move — the recessed field well keeps its night depth below the ground, and the dawn citizen at exactly that depth is the mat */
+  --oc-structural-edge: rgba(139, 118, 196, 0.45);  /* D9 — the .35 structural edges' matched step (panel buttons, thumbs, pane/dressing-room borders, the overlay drawer's left edge) */
+  --oc-field-edge: rgba(139, 118, 196, 0.35);       /* D7 — the .30 field edges rise a rung */
+  --oc-control-edge: rgba(139, 118, 196, 0.5);      /* D10 — the .40 control edges rise a rung (the popover PANELS drink the landed --oc-popover-edge above, same rung) */
 }
 
 /* the same dawn law on the two non-token edges: the scrollbar thumb's
