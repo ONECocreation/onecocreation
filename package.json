@@ -17,7 +17,9 @@
     "lint": "eslint",
     "reset:registry": "node scripts/reset-registry.mjs",
     "sync:briefs": "node scripts/sync-briefs.mjs",
-    "check:leaks": "node scripts/check-no-leaked-assets.mjs"
+    "check:leaks": "node scripts/check-no-leaked-assets.mjs",
+    "studio:bench": "node scripts/studio-bench.mjs",
+    "studio:bench:fresh": "node scripts/studio-bench.mjs --fresh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",
