@@ -12,6 +12,10 @@
    #9a8fae, lavender edges, gold interactive — so the editor chrome IS
    the house, and a future artist clone that swaps the cartridge
    re-skins the studio with it.
+
+   S21 (ruled 0018.06.01): the studio goes dual-theme — the dawn-scoped
+   override block below carries every ruled dawn twin; the night
+   declarations above stand byte-identical.
    ════════════════════════════════════════════════════════════════════ */
 
 .oc-studio {
@@ -55,6 +59,80 @@
   --puck-color-selection-bg: rgba(217, 178, 78, 0.12);
   --puck-color-highlight: rgba(139, 118, 196, 0.25);
   --puck-color-line-placeholder: rgba(139, 118, 196, 0.5);
+}
+
+/* ── DAWN (the S21 ruled table, Admiral 0018.06.01) ──────────────────
+   One override block, scoped html[data-oc-theme="light"] .oc-studio —
+   specificity 0-2-1 against the night block's 0-1-0, so night resolves
+   exactly as it always did and dawn alone reads these twins. Rows that
+   measured "same alpha at dawn" (lavender .14–.25, the state layers'
+   ink/lavender families) are deliberately NOT here: no twin, no line.
+
+   The --oc-* tokens at the bottom are the dawn halves of values that
+   live in PuckEditor.tsx INLINE STYLES — a stylesheet override can't
+   reach those, so each TSX site reads var(--oc-…, <night literal>):
+   at night the token is undefined and the literal fallback renders
+   (night byte-identical by construction); at dawn this block supplies
+   the ruled twin. */
+html[data-oc-theme="light"] .oc-studio {
+  /* surfaces — the ground ladder, each keeping its night offset from
+     the dawn ground (A1/A2/A3); the scrim veils LIGHT at dawn, the
+     cartridge's own dawn habit (A7, ruling D1) */
+  --puck-color-surface: #FCF6EE;
+  --puck-color-surface-subtle: #FFFDF8;
+  --puck-color-surface-muted: #FFFFFF;
+  --puck-color-bg-disabled: #FFFDF8;
+  --puck-color-overlay-backdrop: rgba(252, 247, 240, 0.72);
+
+  /* text — disabled holds 0.56× the muted contrast, as at night (B1) */
+  --puck-color-text-disabled: #B4ADBD;
+
+  /* borders — the structural lavender alphas bumped to their matched
+     step so the dawn chrome doesn't read flabbier than night (D7/D8/
+     D12/D13); the decorative .14–.25 rungs stay */
+  --puck-color-border: rgba(139, 118, 196, 0.4);
+  --puck-color-border-hover: rgba(139, 118, 196, 0.7);
+  --puck-color-interactive-inverse-active: rgba(139, 118, 196, 0.35);
+
+  /* interactive — the gold solid roles ride --gold-deep, the
+     cartridge's designed dawn gold (C1); the washes ride it too, at
+     the ruled alphas (E1/E2/E4, ruling D4) */
+  --puck-color-interactive: var(--gold-deep);
+  --puck-color-interactive-soft: rgba(180, 134, 43, 0.25);
+  --puck-color-interactive-soft-hover: rgba(180, 134, 43, 0.43);
+
+  /* selection + focus — the ring goes solid dawn gold (C2, ruling D3) */
+  --puck-color-focus-ring: #B4862B;
+  --puck-color-selection-border: var(--gold-deep);
+  --puck-color-selection-bg: rgba(180, 134, 43, 0.21);
+  --puck-color-line-placeholder: rgba(139, 118, 196, 0.65);
+
+  /* the TSX-reachable twins (see the block comment above) */
+  --oc-gold-text: #8A6410;                        /* B3 — the cartridge's own dawn gold ink (the #classes lockpill ink) */
+  --oc-ok-text: var(--ok);                        /* B4/F3 — --ok-soft never flips; the cartridge's dawn ok does */
+  --oc-warn-text: var(--warn);                    /* F2 — the dawn warn pill speaks warn, not gold */
+  --oc-err-pill-bg: rgba(163, 78, 108, 0.08);     /* F1 — the wash thins so the err ink keeps its margin */
+  --oc-warn-pill-bg: rgba(140, 74, 18, 0.12);     /* F2 */
+  --oc-ok-pill-bg: rgba(60, 107, 73, 0.12);       /* F3 */
+  --oc-gold-active-bg: rgba(180, 134, 43, 0.34);  /* E3, ruling D4 */
+  --oc-toast-edge: rgba(180, 134, 43, 0.6);       /* E5 — deep gold at .60; full night match unreachable below solid, ruled so */
+  --oc-toast-shadow: 0 8px 24px rgba(120, 100, 160, 0.29);   /* G2 — the cartridge's night→dawn shadow law: lavender ink, alpha × .72 */
+  --oc-popover-edge: rgba(139, 118, 196, 0.5);               /* D10 */
+  --oc-popover-shadow: 0 16px 44px rgba(120, 100, 160, 0.4); /* G3 */
+  --oc-drawer-shadow: -14px 0 34px rgba(120, 100, 160, 0.32);/* G4 */
+  --oc-input-edge: rgba(139, 118, 196, 0.55);                /* D11 */
+}
+
+/* the same dawn law on the two non-token edges: the scrollbar thumb's
+   alpha steps .35 → .45 (D9 — the S18 night pin on --glass-night-edge
+   stands; dawn only raises the alpha) and the native select edge
+   .40 → .50 (D10) */
+html[data-oc-theme="light"] .oc-studio *::-webkit-scrollbar-thumb {
+  background: rgba(139, 118, 196, 0.45);
+}
+html[data-oc-theme="light"] .oc-studio select,
+html[data-oc-theme="light"] .oc-studio [class*="Input-select"] {
+  border-color: rgba(139, 118, 196, 0.5);
 }
 
 /* the drag-preview canvas root keeps its own white unless told otherwise;
@@ -129,7 +207,7 @@
   height: 8px;
 }
 .oc-studio *::-webkit-scrollbar-thumb {
-  background: var(--glass-night-edge); /* rgba(139,118,196,.35) — the one lavender-alpha the cartridge already holds verbatim (--glass-edge twins it but flips at dawn; the studio chrome stays night) */
+  background: var(--glass-night-edge); /* rgba(139,118,196,.35) — the one lavender-alpha the cartridge already holds verbatim (--glass-edge twins it but flips at dawn); S18 pinned the night value here, S21's dawn block above raises the alpha to .45 at dawn */
   border-radius: 8px;
 }
 .oc-studio *::-webkit-scrollbar-track {

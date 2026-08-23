@@ -55,8 +55,13 @@
   text-transform: uppercase;
   font-weight: 700;
   padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.25);
-  color: var(--gold-deep);
+  /* J1 (S21 ruled table): pinned in BOTH themes — the chip floats over one
+     always-night and one always-dawn pane at once, so it can never
+     theme-flip cleanly; the old translucent chip + --gold-deep ink read
+     1.03:1 over the dawn pane (a live bug even in night documents).
+     Near-solid night chip + never-flipping --gold: 6.12:1 over both panes */
+  background: rgba(20, 16, 33, 0.85);
+  color: var(--gold);
   backdrop-filter: blur(4px);
 }
 .oc-preview-pane .oc-pv-body {
@@ -68,4 +73,10 @@
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 1fr;
   }
+}
+
+/* D7 (S21 ruled table): the preview bar's structural lavender edge steps
+   .30 → .35 at dawn, the same matched-alpha bump the studio chrome gets */
+html[data-oc-theme="light"] .oc-preview-bar {
+  border-bottom-color: rgba(139, 118, 196, 0.35);
 }

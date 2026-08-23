@@ -192,6 +192,8 @@ html[data-oc-theme="light"],.oc-pv-light{  --panel:rgba(255,255,255,.6); --edge:
   --warm-panel:linear-gradient(150deg,rgba(255,255,255,.66),rgba(243,220,227,.5)); --warm-edge:rgba(217,178,78,.4);
   --glass-strong:rgba(252,247,240,.88);
   --ground:#FCF7F0;
+  --studio-mat:#F3EEF4; /* the Puck canvas mat, dawn twin (S21 ruling D5) */
+  --studio-shell:#F9EEDE; /* the preview shell ground, dawn twin (S21 ruling D5) */
   --soft-sm:0 18px 44px -28px rgba(120,100,160,.45);
   --sheet-bg:#fffdf8;
   /* dawn follows night's hue family so the token means one thing at any hour */

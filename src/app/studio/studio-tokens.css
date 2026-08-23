@@ -187,6 +187,30 @@
   --oc-density-icon: var(--oc-density-small-icon);
 }
 
+/* ── DAWN (the S21 ruled table, Admiral 0018.06.01) ──────────────────
+   The studio goes dual-theme: this block carries every dawn twin the
+   ruling gives the physics layer, scoped html[data-oc-theme="light"]
+   .oc-studio (specificity 0-2-1 beats the 0-1-0 night block above, so
+   night resolution is untouched — not one declaration upstream moves).
+
+   · G1/D5 — the shadow ink moves WITH the mat: the cartridge's dawn
+     block now flips --studio-mat to #F3EEF4, and left alone the ink
+     would become color-mix(cream 65%, black) — a neutral grey the
+     house never designed. The cartridge's own dawn shadow law swaps
+     the ink to lavender-grey, so the ladder's ink is re-pinned here;
+     geometry and the .30/.15 alphas stand.
+   · H3/D4 — the gold state layers ride the cartridge's designed dawn
+     gold (--gold-deep) at the SAME Material alpha scalars; --gold
+     never flips, so unflipped layers would read at ~0.75× their night
+     visibility on cream. */
+html[data-oc-theme="light"] .oc-studio {
+  --oc-elev-ink: #7864A0;
+  --oc-state-gold-hover: color-mix(in srgb, var(--gold-deep) calc(var(--oc-state-opacity-hover) * 100%), transparent);
+  --oc-state-gold-focus: color-mix(in srgb, var(--gold-deep) calc(var(--oc-state-opacity-focus) * 100%), transparent);
+  --oc-state-gold-active: color-mix(in srgb, var(--gold-deep) calc(var(--oc-state-opacity-active) * 100%), transparent);
+  --oc-state-gold-dragged: color-mix(in srgb, var(--gold-deep) calc(var(--oc-state-opacity-dragged) * 100%), transparent);
+}
+
 /* the house's motion-safe rail, kept at the token source: reduced-motion
    collapses every duration, so consumers of --oc-motion-* inherit the
    law without each writing its own media query */

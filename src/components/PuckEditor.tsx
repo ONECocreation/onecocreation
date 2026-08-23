@@ -276,7 +276,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
 
 
   return (
-    <div className="oc-studio" style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100vh", overflow: "hidden", background: "#141021" /* S2: pinned — needs a ruling */ }}>
+    <div className="oc-studio" style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100vh", overflow: "hidden", background: "var(--ground)" /* S2: pinned — the ruling landed (S21 dawn table A6): the literal WAS night --ground byte-for-byte, so the pin rides the token; night identical, dawn takes the cartridge's designed ground */ }}>
       <Puck config={config} data={liveData} onChange={onChange} onPublish={publishLive} onAction={changelog.onAction} height="100%">
         <ChangelogBridge
           log={changelog}
@@ -298,7 +298,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
           background: "var(--puck-color-surface)", borderBottom: "1px solid var(--puck-color-interactive-inverse-active)", flex: "none",
           fontFamily: "var(--font-body)", flexWrap: "wrap" }}>
           <span style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", /* no brand mono home — the literal stays (open ruling) */ fontWeight: 800, letterSpacing: ".22em", color: "var(--puck-color-text)", fontSize: 13, whiteSpace: "nowrap" }}>
-            ■ <i style={{ fontStyle: "normal", color: "var(--gold-2)" /* S2: gold law — decorative, reported */ }}>STUDIO</i>
+            ■ <i style={{ fontStyle: "normal", color: "var(--oc-gold-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twin #8A6410 via token (B3) */ }}>STUDIO</i>
           </span>
 
           {/* page switcher — LEGIBILITY DOCTRINE: solid night panel, full
@@ -308,7 +308,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
             value={switcherOptions.includes(slug) ? slug : "home"}
             onChange={(e) => goToPage(e.target.value)}
             style={{ ...pill, fontSize: 13, background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)",
-              border: "1px solid rgba(139,118,196,.45)", paddingRight: "var(--oc-space-4)", cursor: "pointer" }}
+              border: "1px solid var(--oc-input-edge, rgba(139,118,196,.45))", paddingRight: "var(--oc-space-4)", cursor: "pointer" }}
             title="Switch page"
           >
             {switcherOptions.map((p) => <option key={p} value={p} style={{ background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)" }}>{p === "practice" ? "✎ practice (sandbox)" : p}</option>)}
@@ -318,13 +318,13 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
           <button
             onClick={() => { setShowPages((v) => !v); setShowPopups(false); /* one popover at a time (gate 0018.05.25 a₿) */ }}
             title="pages — create, rename, duplicate, delete, reorder"
-            style={{ ...pill, background: showPages ? "rgba(217,178,78,.18)" : "var(--puck-color-interactive-neutral-hover)", color: showPages ? "var(--gold-2)" /* S2: gold law — decorative, reported */ : "var(--puck-color-text)" }}
+            style={{ ...pill, background: showPages ? "var(--oc-gold-active-bg, rgba(217,178,78,.18))" : "var(--puck-color-interactive-neutral-hover)", color: showPages ? "var(--oc-gold-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twins via tokens (B3/E3) */ : "var(--puck-color-text)" }}
           >▤ pages</button>
           {/* STUDIO P2: the popup registry's room — same popover idiom */}
           <button
             onClick={() => { setShowPopups((v) => !v); setShowPages(false); /* one popover at a time (gate 0018.05.25 a₿) */ }}
             title="popups — create, edit when/where they show, delete"
-            style={{ ...pill, background: showPopups ? "rgba(217,178,78,.18)" : "var(--puck-color-interactive-neutral-hover)", color: showPopups ? "var(--gold-2)" /* S2: gold law — decorative, reported */ : "var(--puck-color-text)" }}
+            style={{ ...pill, background: showPopups ? "var(--oc-gold-active-bg, rgba(217,178,78,.18))" : "var(--puck-color-interactive-neutral-hover)", color: showPopups ? "var(--oc-gold-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twins via tokens (B3/E3) */ : "var(--puck-color-text)" }}
           >◱ popups</button>
 
           <button
@@ -336,8 +336,8 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
             onClick={() => setShowFindings((v) => !v)}
             title="brand guidelines — checked as you edit"
             style={{ ...pill,
-              background: errCount ? "rgba(231,137,158,.18)" : findings.length ? "rgba(235,203,119,.15)" : "rgba(127,185,143,.14)",
-              color: errCount ? "#E7899E" /* S2: pinned — needs a ruling */ : findings.length ? "var(--gold-2)" /* S2: gold law — decorative, reported */ : "var(--ok-soft)" }}
+              background: errCount ? "var(--oc-err-pill-bg, rgba(231,137,158,.18))" : findings.length ? "var(--oc-warn-pill-bg, rgba(235,203,119,.15))" : "var(--oc-ok-pill-bg, rgba(127,185,143,.14))",
+              color: errCount ? "var(--err)" /* S2: pinned — the ruling landed (S21 dawn table B2): the literal WAS night --err byte-for-byte; the token flips to the cartridge's dawn #A34E6C */ : findings.length ? "var(--oc-warn-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twin var(--warn) (F2) */ : "var(--oc-ok-text, var(--ok-soft))" /* S21 dawn twin var(--ok) (B4/F3) */ }}
           >
             {errCount ? `${errCount} to fix`
               : warnCount ? `⚠ ${warnCount} warning${warnCount === 1 ? "" : "s"}`
@@ -349,7 +349,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
           <button
             onClick={() => setMatrix((v) => { const n = !v; try { localStorage.setItem("oc-studio-matrix", n ? "1" : "0"); } catch { /* private mode */ } return n; })}
             title="see every breakpoint at once — click an artboard to edit that size"
-            style={{ ...pill, background: matrix ? "rgba(217,178,78,.18)" : "var(--puck-color-interactive-neutral-hover)", color: matrix ? "var(--gold-2)" /* S2: gold law — decorative, reported */ : "var(--puck-color-text)" }}
+            style={{ ...pill, background: matrix ? "var(--oc-gold-active-bg, rgba(217,178,78,.18))" : "var(--puck-color-interactive-neutral-hover)", color: matrix ? "var(--oc-gold-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twins via tokens (B3/E3) */ : "var(--puck-color-text)" }}
           >▦ matrix</button>
           <button onClick={zen} title="fold every panel — just the site" style={{ ...pill, background: "var(--puck-color-interactive-neutral-hover)", color: "var(--puck-color-text)" }}>⛶ zen</button>
 
@@ -358,10 +358,10 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
 
           <span style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", fontSize: 10.5, color: "var(--puck-color-text-muted)", whiteSpace: "nowrap" }}>
             {live === "publishing" ? "publishing…"
-              : live === "error" ? <span style={{ color: "#E7899E" /* S2: pinned — needs a ruling */ }}>publish held — see rails</span>
+              : live === "error" ? <span style={{ color: "var(--err)" /* S2: pinned — the ruling landed (S21 dawn table B2): the literal WAS night --err byte-for-byte; the token flips at dawn */ }}>publish held — see rails</span>
               : dirty ? (draftSaved ? "● draft saved · not live" : "editing…")
               : live === "live" ? (
-                <a href={liveUrl} target="_blank" rel="noreferrer" style={{ color: "var(--ok-soft)", textDecoration: "none" }}>
+                <a href={liveUrl} target="_blank" rel="noreferrer" style={{ color: "var(--oc-ok-text, var(--ok-soft))" /* S21 dawn twin var(--ok) (B4) */, textDecoration: "none" }}>
                   ● live at {liveUrl} ↗
                 </a>
               ) : "● draft"}
@@ -384,7 +384,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
                   aria-label="search blocks to insert"
                   title="search blocks to insert"
                   style={{ width: "100%", boxSizing: "border-box", background: "var(--puck-color-surface-subtle)",
-                    color: "var(--puck-color-text)", border: "1px solid rgba(139,118,196,.45)",
+                    color: "var(--puck-color-text)", border: "1px solid var(--oc-input-edge, rgba(139,118,196,.45))",
                     borderRadius: 8, padding: "var(--oc-density-small-pad-y) var(--oc-space-5)", fontSize: 13, fontFamily: "var(--font-body)" }}
                 />
               </div>
@@ -456,8 +456,8 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
             <strong style={{ fontSize: 13 }}>Preview — this draft in both skins</strong>
             <span style={{ flex: 1 }} />
           <PresenceChips client={presence} />
-            <button onClick={publishAll} style={{ ...pill, background: "rgba(217,178,78,.18)", color: "var(--gold-2)" /* S2: gold law — decorative, reported */ }} title="push every staged page live (each is rails-checked)">Publish all</button>
-            <button onClick={publishLive} style={{ ...pill, background: GOLD, color: "#fff" }}>Publish to live</button>
+            <button onClick={publishAll} style={{ ...pill, background: "var(--oc-gold-active-bg, rgba(217,178,78,.18))", color: "var(--oc-gold-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twins via tokens (B3/E3) */ }} title="push every staged page live (each is rails-checked)">Publish all</button>
+            <button onClick={publishLive} style={{ ...pill, background: GOLD, color: "#fff" /* D2 RULED (0018.06.01): white ink on gold stands in BOTH themes — the money-button brand moment; do not "fix" */ }}>Publish to live</button>
             <button onClick={() => setPreview(false)} style={{ ...pill, background: "rgba(139,118,196,.22)", color: "var(--puck-color-text)" }}>← Back to editing</button>
           </div>
           <div className="oc-preview-panes">
@@ -518,9 +518,9 @@ function PresenceBanner({ client, slug }: { client: PresenceClient | null; slug:
   const unsaved = clashers.some((p) => p.dirty);
   return (
     <div style={{ position: "fixed", left: "50%", top: 52, transform: "translateX(-50%)", zIndex: 1080,
-      background: "var(--puck-color-surface-muted)", border: "1px solid rgba(235,203,119,.5)", borderRadius: 10,
-      padding: "var(--oc-density-small-pad-y) var(--oc-space-7)", fontSize: 12.5, color: "var(--gold-2)" /* S2: gold law — decorative, reported */,
-      fontFamily: "var(--font-body)", boxShadow: "0 8px 24px rgba(0,0,0,.4)" }}>
+      background: "var(--puck-color-surface-muted)", border: "1px solid var(--oc-toast-edge, rgba(235,203,119,.5))", borderRadius: 10,
+      padding: "var(--oc-density-small-pad-y) var(--oc-space-7)", fontSize: 12.5, color: "var(--oc-gold-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twins via tokens (B3/E5) */,
+      fontFamily: "var(--font-body)", boxShadow: "var(--oc-toast-shadow, 0 8px 24px rgba(0,0,0,.4))" }}>
       {who} {clashers.length > 1 ? "are" : "is"} also editing this page{unsaved ? " (with unsaved changes)" : ""} —
       saves are last-writer-wins; coordinate or take turns.
     </div>
@@ -634,8 +634,8 @@ function FindingsPanel({ findings, errCount }: { findings: Finding[]; errCount: 
   return (
     <div style={{ position: "fixed", left: "50%", top: 52, transform: "translateX(-50%)",
       zIndex: 1090, width: 480, maxWidth: "calc(100vw - var(--oc-space-11))", maxHeight: "50vh", overflowY: "auto",
-      background: "var(--puck-color-surface)", border: "1px solid rgba(139,118,196,.4)", borderRadius: 14,
-      padding: "var(--oc-space-6) var(--oc-space-7)", boxShadow: "0 16px 44px rgba(0,0,0,.55)", fontFamily: "var(--font-body)" }}>
+      background: "var(--puck-color-surface)", border: "1px solid var(--oc-popover-edge, rgba(139,118,196,.4))", borderRadius: 14,
+      padding: "var(--oc-space-6) var(--oc-space-7)", boxShadow: "var(--oc-popover-shadow, 0 16px 44px rgba(0,0,0,.55))", fontFamily: "var(--font-body)" }}>
       <style>{`.oc-finding-row[data-focusable="1"]:hover{background:var(--puck-color-interactive-subtle);border-radius:8px}`}</style>
       <div style={{ fontSize: "var(--oc-density-small-font)", fontWeight: 700, color: "var(--puck-color-text)", marginBottom: "var(--oc-space-4)" }}>
         Brand guidelines — {errCount} to fix before this page can go live, {findings.length - errCount} suggestions
@@ -656,7 +656,7 @@ function FindingsPanel({ findings, errCount }: { findings: Finding[]; errCount: 
               borderTop: "1px solid rgba(139,118,196,.15)", fontSize: "var(--oc-density-small-font)", lineHeight: 1.45,
               cursor: focusable ? "pointer" : "default", alignItems: "flex-start" }}
           >
-            <span style={{ flex: "none", fontWeight: 800, color: f.severity === "error" ? "#E7899E" /* S2: pinned — needs a ruling */ : "var(--gold-2)" /* S2: gold law — decorative, reported */ }}>
+            <span style={{ flex: "none", fontWeight: 800, color: f.severity === "error" ? "var(--err)" /* S2: pinned — the ruling landed (S21 dawn table B2): the literal WAS night --err byte-for-byte; the token flips at dawn */ : "var(--oc-gold-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twin #8A6410 via token (B3) */ }}>
               {f.severity === "error" ? "✕" : "⚠"}
             </span>
             <span style={{ color: "var(--puck-color-text-secondary)", flex: 1 }}>
@@ -693,7 +693,7 @@ function Panel({ k, side, label, width, children, collapsed, wideChrome, onToggl
         {overlay && (
           <div style={{ position: "absolute", right: 30, top: 0, bottom: 0, width,
             zIndex: 30, background: "var(--puck-color-surface)", display: "flex", flexDirection: "column",
-            borderLeft: "1px solid var(--glass-night-edge)", boxShadow: "-14px 0 34px rgba(0,0,0,.45)" }}>
+            borderLeft: "1px solid var(--glass-night-edge)", boxShadow: "var(--oc-drawer-shadow, -14px 0 34px rgba(0,0,0,.45))" }}>
             {children}
           </div>
         )}
