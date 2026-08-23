@@ -494,9 +494,9 @@ function IdentityRoom() {
               title={`see the real site wearing ${c.name} (${c.id}) — a new tab, this browser only, the default unmoved`}
               aria-label={`preview the site under the ${c.id} cartridge`}
               style={{ ...pill, background: "none", border: "none", borderRadius: 0, padding: "4px 2px",
-                color: "#B9A8E8", /* S2: pinned — needs a ruling */
+                color: "var(--info)", /* RULED (Fable, 0018.06.01, S22 J-1): the preview link joins the semantic info family — #9d86d9 night / #5f4b96 dawn (6.67:1) */
                 textDecoration: "underline", textUnderlineOffset: 3,
-                borderBottom: "1px dashed rgba(185,168,232,.5)" /* S2: pinned — needs a ruling */ }}>
+                borderBottom: "1px dashed color-mix(in srgb, var(--info) 50%, transparent)" }}>
               {/* the id rides the name — LOVE and EARTHSIDE share the brand
                   name "One Cocreation", and a preview button may never leave
                   the operator guessing WHICH dressing it opens */}
