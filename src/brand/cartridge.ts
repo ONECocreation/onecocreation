@@ -243,6 +243,41 @@ export const cartridges: Record<CartridgeId, Cartridge> = { love, pacman, earths
  */
 export const activeCartridgeId: CartridgeId = "love";
 
+/**
+ * THE BENCH OVERRIDE (TASK-27/S29 lane 1, 0018.06.01 a₿) — the studio demo
+ * bench stops wearing Love's chrome (the Admiral's ruling: a clean template
+ * carries no branding — the free assets and the cartridges only). On the
+ * bench the render wears BLANK, or BENCH_CARTRIDGE's pick ("mono", …).
+ *
+ * The gate reads `NEXT_PUBLIC_BENCH_CARTRIDGE`, never BENCH_CARTRIDGE
+ * directly, for one reason: client components import `cartridge` too
+ * (LoginPanel, OrderStatus, WelcomeFlow, the editor canvas), and only
+ * NEXT_PUBLIC_ vars resolve IDENTICALLY on the server and in the browser —
+ * a server-only env would SSR blank and hydrate Love over it. The operator
+ * never sets the twin by hand: scripts/studio-bench.mjs mirrors
+ * BENCH_CARTRIDGE (default "blank") into it in the same breath that pins
+ * STUDIO_BENCH=1, so the override lives exactly where the bench gate lives.
+ *
+ * Zero production presence, two folds: a production build inlines
+ * NODE_ENV as "production" and the first half drops the branch; the var
+ * itself is never set outside the bench, so the ternary falls to
+ * `activeCartridgeId` and the emit is byte-identical (the visitor-route
+ * diff and the bundle grep are the proofs). An unknown id falls back to
+ * the selection too — a typo can never 500 the site.
+ */
+const benchCartridge = process.env.NEXT_PUBLIC_BENCH_CARTRIDGE;
+
+/** THE RENDER SELECTION — what the render actually wears: the bench pick
+ *  under the gate, the operator's one-line selection everywhere else. Pour
+ *  points (the root layout's data-oc-cartridge, services' kd(), the seeds'
+ *  skyHold, the brand API's snapshot) read THIS, never the raw line. */
+export const renderCartridgeId: CartridgeId =
+  process.env.NODE_ENV !== "production" &&
+  benchCartridge !== undefined &&
+  Object.prototype.hasOwnProperty.call(cartridges, benchCartridge)
+    ? (benchCartridge as CartridgeId)
+    : activeCartridgeId;
+
 /** THE ONE ACCESSOR — the active cartridge, resolved once. Consumers
  *  import `cartridge` exactly as before the registry existed. */
-export const cartridge: Cartridge = cartridges[activeCartridgeId];
+export const cartridge: Cartridge = cartridges[renderCartridgeId];

@@ -23,6 +23,10 @@
  *        PUCK_STORE_DRIVER=filesystem   pages save to disk, not KV
  *        PUCK_STORE_FS_DIR=bench-data   …this directory (git-ignored)
  *        STUDIO_BENCH=1                 the lane-3 feedback rail wakes
+ *        NEXT_PUBLIC_BENCH_CARTRIDGE    the bench's cartridge (S29: blank,
+ *                                       or BENCH_CARTRIDGE's pick) — the
+ *                                       NEXT_PUBLIC_ twin is what the
+ *                                       render gate reads; see cartridge.ts
  *      Real env vars beat .env.local in Next's loading order, so a
  *      PUCK_STORE_DRIVER=kv line in .env.local cannot hijack the bench.
  *
@@ -31,7 +35,7 @@
  * .env.local (see BENCH.md). No flags, no bypass, no code path that only
  * exists here. Node stdlib only; Ctrl+C forwards to the dev server.
  */
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -39,6 +43,25 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const benchDir = join(root, "bench-data");
 const fresh = process.argv.includes("--fresh");
+
+/* S29 lane 1 — the bench wears the BLANK cartridge (the Admiral's ruling:
+   a clean template carries no branding). BENCH_CARTRIDGE picks another
+   ("mono", …); the valid ids are DERIVED from the registry's own union in
+   src/brand/cartridge.ts — never re-typed here. The render gate reads the
+   NEXT_PUBLIC_ twin (only NEXT_PUBLIC_ vars resolve identically on server
+   and in the browser — a server-only env would hydrate Love over blank),
+   so this script mirrors the pick into it in the same breath that pins
+   STUDIO_BENCH=1. A typo warns and falls back to blank, never to Love. */
+const CARTRIDGE_IDS = (
+  readFileSync(join(root, "src", "brand", "cartridge.ts"), "utf8")
+    .match(/export type CartridgeId = ([^;]+);/)?.[1]
+    .match(/"([^"]+)"/g) ?? []
+).map((s) => s.slice(1, -1));
+let benchCartridge = process.env.BENCH_CARTRIDGE || "blank";
+if (!CARTRIDGE_IDS.includes(benchCartridge)) {
+  console.log(`[studio-bench] BENCH_CARTRIDGE="${benchCartridge}" is not a registry id (${CARTRIDGE_IDS.join(", ")}) — wearing "blank" instead`);
+  benchCartridge = "blank";
+}
 
 const run = (args) => {
   const r = spawnSync(process.execPath, args, { cwd: root, stdio: "inherit" });
@@ -59,7 +82,8 @@ if (fresh || benchEmpty) {
 
 /* 3 — the dev server, bench env pinned. Spawn next through node itself so
    there is no .bin shim to miss on any platform. */
-console.log("[studio-bench] booting — sign in at http://localhost:3000/studio (BENCH.md has the env recipe)");
+console.log(`[studio-bench] booting — sign in at http://localhost:3000/studio (BENCH.md has the env recipe)`);
+console.log(`[studio-bench] wearing the "${benchCartridge}" cartridge — switch with: BENCH_CARTRIDGE=mono npm run studio:bench`);
 const child = spawn(
   process.execPath,
   [join(root, "node_modules", "next", "dist", "bin", "next"), "dev"],
@@ -71,6 +95,7 @@ const child = spawn(
       PUCK_STORE_DRIVER: "filesystem",
       PUCK_STORE_FS_DIR: "bench-data",
       STUDIO_BENCH: "1",
+      NEXT_PUBLIC_BENCH_CARTRIDGE: benchCartridge,
     },
   },
 );

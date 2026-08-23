@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { getPalette, setPalette, defaultPalette, isPalette, getPaletteDawn, setPaletteDawn, defaultPaletteDawn, isPaletteDawn } from "@/lib/brand-palette";
-import { cartridge, cartridges, activeCartridgeId, type CartridgeId } from "@/brand/cartridge";
+import { cartridge, cartridges, renderCartridgeId, type CartridgeId } from "@/brand/cartridge";
 import { IDENTITY_FIELDS, identitySnapshot, isIdentityField, isVoiceRow, writeIdentityField, writeVoiceRow } from "@/lib/cartridge-identity";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   const [palette, dawn] = await Promise.all([getPalette(), getPaletteDawn()]);
   return NextResponse.json({
     ok: true, palette, dawn, default: defaultPalette(), defaultDawn: defaultPaletteDawn(),
-    identity: identitySnapshot(cartridge, activeCartridgeId),
+    identity: identitySnapshot(cartridge, renderCartridgeId),
     cartridges: CARTRIDGE_IDS.map((id) => {
       const c = cartridges[id];
       return { id, name: c.name, swatches: [c.palette.space, c.palette.cream, c.palette.purple, c.palette.copper] };

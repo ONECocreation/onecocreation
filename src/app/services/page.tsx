@@ -8,7 +8,7 @@ import { Services } from "@/components/sections";
 import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { readConfig } from "@/lib/booking";
-import { activeCartridgeId, cartridge } from "@/brand/cartridge";
+import { renderCartridgeId, cartridge } from "@/brand/cartridge";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -26,9 +26,10 @@ export const dynamic = "force-dynamic";
    night. With LOVE selected the celestial literals below emit verbatim
    (the byte-identical law — this helper collapses to its first argument);
    under EARTHSIDE the same bands and veils wear the warm charcoal of the
-   cartridge's night twin instead. */
+   cartridge's night twin instead. S29: reads the RENDER selection, so the
+   bench override (renderCartridgeId) behaves like the cartridge it wears. */
 const kd = (love: string, earth: string): string =>
-  activeCartridgeId === "earthside" ? earth : love;
+  renderCartridgeId === "earthside" ? earth : love;
 
 const TIER_CARDS = [
   { tier: "A" as const, img: cartridge.tierArt.A },

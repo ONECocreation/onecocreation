@@ -39,6 +39,10 @@ Seeds `bench-data/` **only if it's absent** (your edits survive restarts —
 a bench you can lose work on isn't a bench), then starts the dev server with
 the filesystem page store and the feedback rail switched on.
 
+The bench wears the **blank** cartridge — plain paper, no house branding.
+Switch it with `BENCH_CARTRIDGE` — e.g. `BENCH_CARTRIDGE=mono npm run
+studio:bench` (any registry id: love, pacman, earthside, blank, mono).
+
 ```
 npm run studio:bench:fresh
 ```

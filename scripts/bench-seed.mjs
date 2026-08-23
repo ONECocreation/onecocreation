@@ -40,11 +40,18 @@
  *
  * Every block type + prop below is spelled against the ACTUAL puck config
  * (node_modules/@pacsarcade/puck-config/src/index.tsx) — a seed that names a
- * nonexistent block breaks the editor. Every asset path exists under
- * public/ (npm run check:leaks guards; NO new binaries here). The content is
- * NEUTRAL demo content in the house voice — a bench, not Love's live pages;
- * the one date stamp is BFT (0018.06.01 a₿ = block 963,692, the mempool.space
- * tip at authoring — days 1–28, months 1–13, per house time law).
+ * nonexistent block breaks the editor. THE NEUTRALITY LAW (S29 — the
+ * Admiral's ruling: a clean template carries no branding): no wordmarks,
+ * no Love's copy, no Love's art. Every image is a labeled ASSET SLOT under
+ * /images/blank/ — the blank cartridge's own convention: the slots are
+ * labeled, the 404s are the truth (NO new binaries — check:leaks stays
+ * clean). Bands are "plain" and follow the theme: the sky-* backgrounds
+ * and the keep-dark night are Love's own, baked into cartridge.css —
+ * seeds never call them. The video slot is honestly empty: a template
+ * borrows no one's film. The content is neutral demo content in the house
+ * voice — a bench, not a brand; the one date stamp is BFT (0018.06.01 a₿
+ * = block 963,692, the mempool.space tip at authoring — days 1–28, months
+ * 1–13, per house time law).
  */
 import { rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -92,11 +99,11 @@ const kit = (prefix) => {
      rich text to edit, buttons to re-point ────────────────────────────── */
 const hm = kit("bench-home");
 const homeContent = [
-  hm.band("sky-veil", "night", [
-    hm.eyebrow("One Cocreation — the studio bench", "center"),
+  hm.band("plain", "theme", [
+    hm.eyebrow("The studio bench", "center"),
     hm.stacked("THE STUDIO", "BENCH", "h1", "center"),
     hm.text("A local proving ground. No cloud, no KV, no assets repo — everything below lives in bench-data/ on this machine.", "center", st({ size: 18, spaceAbove: 6 })),
-    hm.img("/images/heaven-earth.webp", "Where Heaven and Earth Meet — the house hero art", 520, "soft", "center"),
+    hm.img("/images/blank/heaven-earth.webp", "ASSET SLOT — the hero art belongs to the next community; the slot 404s honestly until it lands", 520, "soft", "center"),
     hm.buttons([
       { label: "See the tier cards →", href: "/p/memberships", variant: "gold" },
       { label: "Read the field notes", href: "/p/field-notes", variant: "quiet" },
@@ -120,48 +127,48 @@ const homeContent = [
 /* ── page 2 · memberships — tier cards: structured content to poke ─────── */
 const mb = kit("bench-memberships");
 const membershipsContent = [
-  mb.band("sky-glass", "night", [
+  mb.band("plain", "theme", [
     mb.eyebrow("Memberships — a demo shelf", "center"),
-    mb.heading("Three Ways Into the Field", "h1", "center"),
+    mb.heading("Three Tiers, Side by Side", "h1", "center"),
     mb.text("Tier cards are the studio's favourite patient: panels, lists, buttons and prices, all nested three-across. Each tier below includes everything before it.", "center"),
   ]),
   mb.band("plain", "theme", [
     mb.threecol(
       [mb.panel([
-        mb.img("/images/weekly-intuitive.webp", "The Weekly — tier card art", 300, "soft", "center"),
-        mb.heading("The Weekly", "h3", "center"),
-        mb.text("$33/mo — ⚡ ≈ 55,555 sats / month", "center"),
+        mb.img("/images/blank/tier-a.webp", "ASSET SLOT — tier art not yet drawn", 300, "soft", "center"),
+        mb.heading("Tier A", "h3", "center"),
+        mb.text("$10/mo", "center"),
         mb.list([
-          "Live weekly gathering — 4× a month",
-          "Breath, meditation and a held field",
-          "The commons room, open to every member",
+          "A perk, in the community's own words",
+          "Another perk — edit me",
+          "A third line, ready to rewrite",
         ]),
-        mb.button("Choose The Weekly →", "/p/memberships", "gold", "center"),
+        mb.button("Choose Tier A →", "/p/memberships", "gold", "center"),
       ])],
       [mb.panel([
-        mb.img("/images/observer.webp", "The Observer — tier card art", 300, "soft", "center"),
-        mb.heading("The Observer", "h3", "center"),
-        mb.text("$55.55/mo — ⚡ ≈ 88,888 sats / month", "center"),
+        mb.img("/images/blank/tier-b.webp", "ASSET SLOT — tier art not yet drawn", 300, "soft", "center"),
+        mb.heading("Tier B", "h3", "center"),
+        mb.text("$25/mo", "center"),
         mb.list([
-          "Everything in The Weekly",
-          "A recorded reading each week",
-          "The observers' circle room",
+          "Everything in Tier A",
+          "One more perk on top",
+          "A third line to restyle",
         ]),
-        mb.button("Choose The Observer →", "/p/memberships", "gold", "center"),
+        mb.button("Choose Tier B →", "/p/memberships", "gold", "center"),
       ])],
       [mb.panel([
-        mb.img("/images/evening-star.webp", "Evening Star — tier card art", 300, "soft", "center"),
-        mb.heading("Evening Star", "h3", "center"),
-        mb.text("$111.11/mo — ⚡ ≈ 177,777 sats / month", "center"),
+        mb.img("/images/blank/tier-c.webp", "ASSET SLOT — tier art not yet drawn", 300, "soft", "center"),
+        mb.heading("Tier C", "h3", "center"),
+        mb.text("$50/mo", "center"),
         mb.list([
-          "Everything in The Weekly & The Observer",
-          "A monthly one-to-one session",
-          "All classes and the full community",
+          "Everything in Tier A & Tier B",
+          "The top tier's own perk",
+          "A final line — make it sing",
         ]),
-        mb.button("Choose Evening Star →", "/p/memberships", "gold", "center"),
+        mb.button("Choose Tier C →", "/p/memberships", "gold", "center"),
       ])],
     ),
-    mb.note("Demo tiers — the prices are the house's real ones, the checkout is not wired on the bench. Poke the structure, not the sats."),
+    mb.note("Demo tiers — invented prices; the checkout is not wired on the bench. Poke the structure, not the sats."),
     mb.divider(),
     mb.faq([
       { q: "Can I edit these cards?", a: "That is what they are for. Open /studio/memberships, click any panel, and the fields rail lights up — swap the art, rewrite a list, restyle the price line." },
@@ -190,22 +197,22 @@ const fieldNotesContent = [
           "Bands and heroes never leave the root",
         ]),
       ])],
-      [fn.img("/images/newsletter.webp", "The free meditation's art, standing in as column art", 360, "round", "center")],
+      [fn.img("/images/blank/column-art.webp", "ASSET SLOT — column art not yet drawn", 360, "round", "center")],
       36,
       "center",
     ),
     fn.divider(),
     fn.heading("The gallery", "h2", "center"),
     fn.gallery([
-      { src: "/images/about/scene-1.webp", alt: "A heart shape found in the rock" },
-      { src: "/images/about/scene-2.webp", alt: "Desert road at sunset" },
-      { src: "/images/about/scene-3.webp", alt: "Storm light over open fields" },
-      { src: "/images/about/scene-4.webp", alt: "Clouds over the coastline" },
+      { src: "/images/blank/gallery-1.webp", alt: "ASSET SLOT — gallery photograph 1" },
+      { src: "/images/blank/gallery-2.webp", alt: "ASSET SLOT — gallery photograph 2" },
+      { src: "/images/blank/gallery-3.webp", alt: "ASSET SLOT — gallery photograph 3" },
+      { src: "/images/blank/gallery-4.webp", alt: "ASSET SLOT — gallery photograph 4" },
     ], "yes"),
     fn.spacer(24),
     fn.heading("The video", "h2", "center"),
-    fn.video("2LrWVQDnLd0", "16/9"),
-    fn.text("The Weekly Intuitive's own film — the Video block takes any YouTube link and frames it.", "center", st({ size: 15, spaceAbove: 14 })),
+    fn.video("", "16/9"),
+    fn.text("The video slot is honestly empty — the Video block takes any YouTube link and frames it, and a template borrows no one's film.", "center", st({ size: 15, spaceAbove: 14 })),
     fn.divider(),
     fn.twocol(
       [fn.card("A card", "The simplest glass in the kit — a title and a body. Duplicate it, stack it, restyle it.")],
@@ -225,26 +232,26 @@ const pu = kit("bench-popup");
 const popupContent = [
   pu.eyebrow("A bench hello", "center"),
   pu.heading("The Popup Works Too", "h2", "center", st()),
-  pu.img("/images/newsletter.webp", "The free meditation's art, standing in as popup art", 280, "soft", "center"),
+  pu.img("/images/blank/popup-art.webp", "ASSET SLOT — popup art not yet drawn", 280, "soft", "center"),
   pu.text("This card is a full Puck document at popup:bench-note — edit it in the studio like any page, and toggle when and where it fires from the popups panel.", "center"),
   pu.button("Read the field notes →", "/p/field-notes", "teal", "center"),
 ];
 
 const pages = {
   home: { content: homeContent, root: { props: {
-    title: "The Studio Bench — One Cocreation",
+    title: "The Studio Bench",
     description: "A local proving ground for the studio: three demo pages and a popup, seeded on the filesystem, no cloud required.",
   } } },
   memberships: { content: membershipsContent, root: { props: {
-    title: "Memberships (bench demo) — One Cocreation",
-    description: "Three ways into the field — tier cards as structured studio content: panels, lists, buttons and prices to poke.",
+    title: "Memberships (bench demo)",
+    description: "Three tiers side by side — tier cards as structured studio content: panels, lists, buttons and prices to poke.",
   } } },
   "field-notes": { content: fieldNotesContent, root: { props: {
-    title: "Field Notes (bench demo) — One Cocreation",
+    title: "Field Notes (bench demo)",
     description: "Blocks side by side — two columns, a gallery, a video and the oddments: the layout kit on one demo page.",
   } } },
   "popup:bench-note": { content: popupContent, root: { props: {
-    title: "The bench says hello — One Cocreation",
+    title: "The bench says hello",
   } } },
 };
 

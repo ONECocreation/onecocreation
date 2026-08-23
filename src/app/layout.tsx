@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Barlow, Open_Sans, Press_Start_2P, Roboto } from "next/font/google";
 import localFont from "next/font/local";
 import { EASY_MODE_BOOT_SCRIPT } from "@pacsarcade/arcade-ui";
-import { activeCartridgeId, cartridge } from "@/brand/cartridge";
+import { renderCartridgeId, cartridge } from "@/brand/cartridge";
 import ScrollFix from "@/components/ScrollFix";
 import AliveEffects from "@/components/AliveEffects";
 import CartridgeVars from "@/components/CartridgeVars";
@@ -117,8 +117,10 @@ export default function RootLayout({
          is NOT PASSED AT ALL: a conditional spread, not an undefined
          value — undefined still serializes into the flight payload and
          costs bytes (caught by the rendered before/after diff); with
-         another cartridge the twin in cartridges.css pours its tokens. */
-      {...(activeCartridgeId === "love" ? {} : { "data-oc-cartridge": activeCartridgeId })}
+         another cartridge the twin in cartridges.css pours its tokens.
+         S29: the pour reads the RENDER selection (renderCartridgeId) —
+         the bench override included — never the raw selection line. */
+      {...(renderCartridgeId === "love" ? {} : { "data-oc-cartridge": renderCartridgeId })}
     >
       <body>
         <script dangerouslySetInnerHTML={{ __html:

@@ -1,5 +1,5 @@
 import type { PuckPageData } from "./puck-store";
-import { activeCartridgeId, cartridge } from "@/brand/cartridge";
+import { renderCartridgeId, cartridge } from "@/brand/cartridge";
 
 /**
  * Puck page seeds (PUCK P4, Admiral-approved 2026-08-11). A seed is the
@@ -53,8 +53,10 @@ const band = (background: string, hold: string, content: Block[]) => blk("Band",
    colour ground (nebula, meteors, bgSrc, bgColor) keep their literal
    "night" under EVERY cartridge: the vendored Band veil is dark
    (@pacsarcade/puck-config), so their ink must stay light — re-toning that
-   veil is package territory, not seed territory. */
-const skyHold: string = activeCartridgeId === "earthside" ? "theme" : "night";
+   veil is package territory, not seed territory. S29: reads the RENDER
+   selection (renderCartridgeId) so the bench override resolves the same
+   way the cartridge it wears would. */
+const skyHold: string = renderCartridgeId === "earthside" ? "theme" : "night";
 
 const aboutContent: Block[] = [
   // 1 - Smiles Love: the faces, under a living dawn
