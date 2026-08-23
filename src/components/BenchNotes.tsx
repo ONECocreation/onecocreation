@@ -38,7 +38,8 @@ export default function BenchNotes() {
     <div
       style={{
         position: "fixed",
-        left: 12,
+        right: 12, /* bottom-RIGHT — the left corner belongs to Puck's viewport
+          controls and the pages drawer; the Admiral reported the box blocked there */
         bottom: 12,
         zIndex: 9999,
         fontFamily: "ui-monospace, Menlo, Consolas, monospace",
@@ -62,12 +63,12 @@ export default function BenchNotes() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              style={{ background: "none", border: "none", color: "#897F97", cursor: "pointer", font: "inherit" }}
+              style={{ background: "none", border: "none", color: "#9a8fae", cursor: "pointer", font: "inherit" }}
             >
               tuck away
             </button>
           </div>
-          <p style={{ margin: "6px 0", color: "#897F97", lineHeight: 1.4 }}>
+          <p style={{ margin: "6px 0", color: "#9a8fae", lineHeight: 1.4 }}>
             Notes land in <code>bench-data/notes.json</code> — they never leave this machine.
           </p>
           <textarea
