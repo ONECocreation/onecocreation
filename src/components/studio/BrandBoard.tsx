@@ -42,7 +42,7 @@ import { ONECOCREATION } from "@/brand/tokens";
  */
 
 const SANS = "'Helvetica Neue', Helvetica, Arial, sans-serif";
-const MONO = "ui-monospace, Menlo, Consolas, monospace";
+const MONO = "var(--font-mono)";
 
 const pill: React.CSSProperties = {
   padding: "6px 13px", borderRadius: 999, fontSize: 13, fontWeight: 700,

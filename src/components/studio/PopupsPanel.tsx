@@ -18,7 +18,7 @@ import { popupName, popupSlug, popupNameProblem, popupTriggerProblem, NEW_POPUP_
  */
 
 const SANS = "'Helvetica Neue', Helvetica, Arial, sans-serif";
-const MONO = "ui-monospace, Menlo, Consolas, monospace";
+const MONO = "var(--font-mono)";
 
 export default function PopupsPanel({ pages, popups, storeReady, refresh, onClose }: {
   pages: string[];

@@ -62,6 +62,13 @@
   --font-h2:'Helvetica Neue',Helvetica,Arial,sans-serif;
   --font-h3:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Verdana,sans-serif;
   --font-body:'Helvetica Neue',Helvetica,Arial,sans-serif;
+  /* the studio chrome's mono stack, given ONE home (S24 — S18's open
+     ruling #1 closed): Copilot, the panels, BrandBoard, MediaField and
+     the Puck header all poured this literal by hand. NOT globals'
+     --font-console, which runs a wider stack (SFMono-Regular /
+     Liberation Mono / Courier New). One-value — the dawn does not
+     re-skin a font stack. */
+  --font-mono:ui-monospace, Menlo, Consolas, monospace;
   --soft:0 24px 60px -30px rgba(5,3,16,.8);
   /* the nav-dropdown recipe, once — .nav-sub, the mobile sheet, and
      FrenBadge all pour from this jug (cartridge walk step 6, Admiral's

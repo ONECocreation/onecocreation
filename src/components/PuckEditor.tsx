@@ -297,7 +297,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
         <div style={{ display: "flex", alignItems: "center", gap: "var(--oc-space-4)", padding: "var(--oc-space-4) var(--oc-space-6)",
           background: "var(--puck-color-surface)", borderBottom: "1px solid var(--puck-color-interactive-inverse-active)", flex: "none",
           fontFamily: "var(--font-body)", flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", /* no brand mono home — the literal stays (open ruling) */ fontWeight: 800, letterSpacing: ".22em", color: "var(--puck-color-text)", fontSize: 13, whiteSpace: "nowrap" }}>
+          <span style={{ fontFamily: "var(--font-mono)", /* S24: the ruling closed — the cartridge's --font-mono carries the stack */ fontWeight: 800, letterSpacing: ".22em", color: "var(--puck-color-text)", fontSize: 13, whiteSpace: "nowrap" }}>
             ■ <i style={{ fontStyle: "normal", color: "var(--oc-gold-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twin #8A6410 via token (B3) */ }}>STUDIO</i>
           </span>
 
@@ -356,7 +356,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
           <span style={{ flex: 1 }} />
           <PresenceChips client={presence} />
 
-          <span style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", fontSize: 10.5, color: "var(--puck-color-text-muted)", whiteSpace: "nowrap" }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--puck-color-text-muted)", whiteSpace: "nowrap" }}>
             {live === "publishing" ? "publishing…"
               : live === "error" ? <span style={{ color: "var(--err)" /* S2: pinned — the ruling landed (S21 dawn table B2): the literal WAS night --err byte-for-byte; the token flips at dawn */ }}>publish held — see rails</span>
               : dirty ? (draftSaved ? "● draft saved · not live" : "editing…")
@@ -710,7 +710,7 @@ function Panel({ k, side, label, width, children, collapsed, wideChrome, onToggl
         {isOpen && !overlay ? children : !isOpen ? (
           <button onClick={() => onToggle(k)}
             style={{ background: "none", border: "none", cursor: "pointer", marginTop: 44,
-              writingMode: "vertical-rl", fontFamily: "ui-monospace, Menlo, Consolas, monospace", fontSize: "var(--oc-density-tiny-font)", letterSpacing: ".3em",
+              writingMode: "vertical-rl", fontFamily: "var(--font-mono)", fontSize: "var(--oc-density-tiny-font)", letterSpacing: ".3em",
               color: "var(--puck-color-text-muted)", textTransform: "uppercase", padding: "var(--oc-space-0)" }}>
             {label}
           </button>

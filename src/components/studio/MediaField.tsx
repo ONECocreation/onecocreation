@@ -141,7 +141,7 @@ export default function MediaField({
     }
   }
 
-  const mono = "ui-monospace, Menlo, Consolas, monospace";
+  const mono = "var(--font-mono)";
   const btn: React.CSSProperties = {
     border: "1px solid var(--oc-structural-edge, rgba(139,118,196,.35))", background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)",
     borderRadius: 8, padding: "4px 10px", fontSize: 11, cursor: "pointer", fontFamily: "inherit",

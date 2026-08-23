@@ -73,7 +73,7 @@ export default function Copilot({
     }
   }
 
-  const mono = "ui-monospace, Menlo, Consolas, monospace";
+  const mono = "var(--font-mono)";
   const sans = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 
   return (

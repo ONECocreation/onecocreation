@@ -17,7 +17,7 @@ import { slugProblem } from "@/lib/puck-slugs";
  */
 
 const SANS = "'Helvetica Neue', Helvetica, Arial, sans-serif";
-const MONO = "ui-monospace, Menlo, Consolas, monospace";
+const MONO = "var(--font-mono)";
 
 const studioPath = (s: string) => (s === "home" ? "/studio" : `/studio/${s}`);
 
