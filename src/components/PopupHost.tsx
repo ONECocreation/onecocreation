@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import type { Data } from "@puckeditor/core";
@@ -32,6 +33,18 @@ import type { PopupTrigger } from "@/lib/puck-store";
  */
 
 const seenKey = (name: string) => `oc-popup-seen:${name}`;
+
+/* the keep-dark law, hand-carried: the card is an always-night surface
+   (--pop-bg, deliberate — the header family), but it portals to <body>,
+   OUTSIDE the reach of `main .keep-dark` (cartridge.css) — so the same
+   eight night pins ride inline and the Puck seed content never flips to
+   dawn ink on the night card (S21: the 1.71 headline at dawn). Values
+   verbatim from the keep-dark scope. */
+const POPUP_NIGHT_PINS = {
+  "--ink-strong": "#F4ECFF", "--ink-body": "#D9D2E4", "--muted": "#9a8fae",
+  "--rose": "#E7B2C3", "--gold-deep": "#D9B24E", "--teal-bright": "#8FD0D8",
+  "--glass": "var(--glass-night)", "--glass-edge": "var(--glass-night-edge)",
+} as CSSProperties;
 
 export default function PopupHost() {
   const pathname = usePathname();
@@ -160,7 +173,7 @@ export default function PopupHost() {
         style={{ position: "relative", width: "min(440px, 100%)", maxHeight: "86vh", overflowY: "auto",
           background: "var(--pop-bg)", border: "1px solid rgba(139,118,196,.45)", borderRadius: 20,
           padding: "30px 26px", boxShadow: "0 30px 80px rgba(0,0,0,.6)",
-          animation: "ocPopupRise .25s ease" }}
+          animation: "ocPopupRise .25s ease", ...POPUP_NIGHT_PINS }}
       >
         <button
           ref={closeRef}

@@ -185,7 +185,7 @@
 .button,h5,h6{font-family:var(--font-pixel)}
 
 html[data-oc-theme="light"],.oc-pv-light{  --panel:rgba(255,255,255,.6); --edge:rgba(139,118,196,.28);
-  --ink:#4A4458; --muted:#897F97;
+  --ink:#4A4458; --muted:#6F6885; /* S21 D6: dawn muted deepens #897F97 → #6F6885 — 3.55 → 4.93 on cream; night --muted untouched */
   --ink-strong:#3f3a4e; --ink-body:#544e64;
   --glass:rgba(252,247,240,.62); --glass-edge:rgba(255,255,255,.6);
   --ghost-bg:rgba(255,255,255,.6); --ghost-ink:#5a5470;
@@ -247,9 +247,13 @@ html[data-oc-theme="light"] .lions-gate{
 .wild-card:hover .sprout{opacity:1;transform:translateY(0) scale(1)}
 .wild-body{padding:16px 20px 18px}
 .wild-body h3{font-weight:400;font-size:1.1rem;margin:0 0 2px;color:#3f3a4e}
-.wild-body p{color:#897F97;font-size:.85rem;margin:0 0 10px}
-.wild-cta{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#B4862B}
-.wild-cta--soon{color:#897F97}
+/* S21: body + CTA literals deepened along their own ramps (muted #897F97 →
+   #4E4860, gold-deep #B4862B → #614411) — the cards are 72%-white in BOTH
+   themes, and against the real composite ground rgb(189,188,193) the old
+   pair read 2.01 / 1.74; the new pair reads 4.60 / 4.75 (WCAG luminance) */
+.wild-body p{color:#4E4860;font-size:.85rem;margin:0 0 10px}
+.wild-cta{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#614411}
+.wild-cta--soon{color:#4E4860}
 @media(prefers-reduced-motion:reduce){.wild-card,.beast,.sprout{transition:none}.wild-card:hover .beast{transform:none}}
 
 /* ── THE COSMIC WALK (0018.05.15) — the homepage keeps its dark hero

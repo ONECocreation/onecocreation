@@ -122,7 +122,7 @@ export default async function AboutPage() {
         </section>
 
         {/* ══ 3 · the Claires — deep space interlude ══ */}
-        <section style={{ padding: 0 }}>
+        <section className="keep-dark" style={{ padding: 0 }}>
           <div style={{
             backgroundImage: `linear-gradient(180deg, rgba(14,10,28,.68), rgba(14,10,28,.78)), url(${cartridge.hero.nebula})`,
             backgroundSize: "cover", backgroundPosition: "center", position: "relative",
@@ -267,7 +267,7 @@ export default async function AboutPage() {
         </section>
 
         {/* ══ 7 · the New Era of Love — the close, under meteors ══ */}
-        <section style={{ padding: 0 }}>
+        <section className="keep-dark" style={{ padding: 0 }}>
           <div style={{
             backgroundImage: `linear-gradient(180deg, rgba(16,12,30,.6), rgba(16,12,30,.72)), url(${cartridge.hero.meteors})`,
             backgroundSize: "cover", backgroundPosition: "center 24%", position: "relative",

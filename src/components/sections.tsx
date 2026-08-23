@@ -18,7 +18,9 @@ import ContactDoors from "./ContactDoors";
 
 export function Hero() {
   return (
-    <section className="hero">
+    <section className="hero keep-dark">{/* keep-dark: the design holds the dark hero in both
+        themes — "light code draws in light against the void" (cartridge.css);
+        without it the dawn repaint erased the white glyph and the gold days */}
       {/* the living sky — twinkle + the odd shooting star, behind the light */}
       <CosmicSky />
       <div className="inner wrap">
