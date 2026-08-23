@@ -88,6 +88,10 @@ next-env.d.ts
 # local dev) — prod uses KV, drafts are unpublished work: never tracked
 /data/puck-store/
 
+# the studio demo bench's page store (PUCK_STORE_FS_DIR=bench-data) — rebuilt
+# from scratch by scripts/bench-seed.mjs, never tracked
+/bench-data/
+
 # fren profile art (avatars/banners), dev driver (prod uses public Blob) — never tracked
 /public/fren-media/
 .claude/worktrees/
