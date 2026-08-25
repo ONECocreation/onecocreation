@@ -110,13 +110,13 @@ export const blank: Cartridge = {
     cream: "#FBFAF7",
     blush: "#EEEDE8", // paper-deep
     ink: "#2A2A2A",
-    muted: "#777770",
+    muted: "#6E6E66",
     gold: "#D9B24E", // MONEY ONLY (sats / bitcoin) — fleet semantic lock
     goldDeep: "#B4862B",
     purple: "#555550", // a gray wearing the slot — the template has no purple
     magenta: "#6A6A62", // a gray wearing the slot
     lavender: "#E4E3DD", // a pale gray wearing the slot — fills, chips
-    rose: "#8A8A82", // a gray wearing the slot — kickers
+    rose: "#6E6E66", // a gray wearing the slot — kickers
     copper: "#555550", // a gray wearing the slot — interactive accent
   },
 

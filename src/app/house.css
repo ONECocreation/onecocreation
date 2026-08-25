@@ -69,8 +69,12 @@ section{padding:76px 0;position:relative}
   background:#fff;color:var(--btn-ink);
   transition:transform .18s;-webkit-tap-highlight-color:transparent}
 .btn:hover{transform:translateY(-3px)}
-.btn-gold{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:var(--gold-ink);
+.btn-gold{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink);
   text-shadow:0 1px 1px color-mix(in oklab, var(--gold-ink) 40%, transparent),0 0 8px color-mix(in oklab, var(--gold-ink) 35%, transparent)}
+/* S33 family 6: the money gradient's deep end reads --gold (was
+   --gold-deep) — night is byte-value-identical (#D9B24E either way); at
+   dawn the designed deep gold #B4862B left the gold ink a hair under the
+   bar (4.22), so the gradient runs light-end → the metal itself */
 .btn-rose{background:linear-gradient(135deg,#E7B2C3,#C56E8B);color:#fff}
 .btn-ghost{background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px var(--edge)}
 /* the small variant — same square law, compact for dense rooms */
@@ -210,12 +214,16 @@ section{padding:76px 0;position:relative}
 .site-nav{margin-left:auto;display:flex;align-items:center;gap:15px;flex-wrap:wrap}
 .site-nav a{font-size:.95rem;letter-spacing:.04em;color:var(--ghost-ink);text-transform:uppercase;font-weight:600}
 .site-nav a:hover{color:var(--gold-2)}
-.site-nav .sats-pill{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:var(--gold-ink);padding:8px 15px;border-radius:999px}
+.site-nav .sats-pill{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink);padding:8px 15px;border-radius:999px}
 .site-footer{background:rgba(14,12,24,.9);color:var(--footer-ink);padding:52px 0 36px;text-align:center;margin-top:30px}
 .site-footer .fnav{display:flex;flex-wrap:wrap;gap:15px;justify-content:center;margin:16px 0;font-size:.8rem;text-transform:uppercase}
 .site-footer .fnav a{color:#ECE3C9}
-.site-footer .legal{color:var(--muted);font-size:.8rem}
-.site-footer .rebuild{max-width:680px;margin:20px auto 0;font-size:.78rem;color:var(--muted);border-top:1px solid rgba(255,255,255,.12);padding-top:16px}
+.site-footer .legal{color:var(--footer-ink);font-size:.8rem}
+.site-footer .rebuild{max-width:680px;margin:20px auto 0;font-size:.78rem;color:var(--footer-ink);border-top:1px solid rgba(255,255,255,.12);padding-top:16px}
+/* S33 family 8: the footer small print reads its own --footer-ink (was
+   --muted) — the exact mirror of the vanilla pour's contrast commit
+   (112716f: 3.65:1 on the dark footer → 9.39:1); the footer is dark in
+   every cartridge, so the muted ink never belonged there */
 
 /* hero + glyph */
 .hero{text-align:center;padding:96px 0 90px;position:relative;overflow:hidden;
@@ -252,7 +260,7 @@ section{padding:76px 0;position:relative}
 .svc .meta p{margin:2px 0 0;font-size:.85rem;color:var(--muted)}
 .svc .pr{font-family:var(--serif);color:var(--gold-deep);font-weight:700}
 .roomrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,118,196,.3);color:var(--ink-body)}
-.lockpill{margin-left:auto;font-size:.66rem;text-transform:uppercase;color:var(--gold-deep);background:rgba(217,178,78,.16);border-radius:999px;padding:3px 11px;font-weight:700}
+.lockpill{margin-left:auto;font-size:.66rem;text-transform:uppercase;color:var(--gold-wash-ink);background:rgba(217,178,78,.16);border-radius:999px;padding:3px 11px;font-weight:700}
 .note{max-width:780px;margin:30px auto 0;text-align:center;font-size:.9rem;color:var(--ink-body);background:var(--glass);border:1px solid var(--glass-edge);border-radius:18px;padding:18px 22px}
 .note b{color:var(--gold-deep)}
 .stub{display:inline-block;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-deep);border:1px dashed rgba(180,134,43,.5);border-radius:999px;padding:5px 12px}
@@ -350,7 +358,7 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
 .mgmt-body [class*="border-2"],.mgmt-body [class*="border-4"]{border-width:1.5px!important;border-color:rgba(139,118,196,.35)!important;border-radius:20px}
 .mgmt-body [class*="text-neon"]{color:var(--rose)!important}
 .mgmt-body [class*="text-pink"]{color:var(--magenta)!important}
-.mgmt-body .button{background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:var(--gold-ink);border:none;border-radius:999px;font-family:var(--sans);letter-spacing:.05em}
+.mgmt-body .button{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink);border:none;border-radius:999px;font-family:var(--sans);letter-spacing:.05em}
 
 /* per-package accents — the name pill up top matches its Learn More below */
 .tier-pill--a,.tier-btn--a{border:1.5px solid var(--lavender);color:var(--info)}

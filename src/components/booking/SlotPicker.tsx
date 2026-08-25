@@ -93,7 +93,7 @@ function MonthCalendar({
      the class carries the circle; these carry the daylight */
   const navBtn: React.CSSProperties = {
     "--size": "34px", background: "var(--glass)", borderColor: "rgba(180,134,43,.45)",
-    color: "var(--gold-deep, #b4862b)", fontSize: "1rem", lineHeight: 1,
+    color: "var(--gold-wash-ink, #b4862b)", fontSize: "1rem", lineHeight: 1,
   } as React.CSSProperties;
 
   return (

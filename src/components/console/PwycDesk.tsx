@@ -65,7 +65,7 @@ export default function PwycDesk() {
     <div className="mt-8">
       <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "26px 0 10px" }}>
         <span style={{ borderRadius: 999, padding: "4px 16px", fontSize: ".72rem", fontWeight: 700,
-          letterSpacing: ".08em", textTransform: "uppercase", color: "var(--gold-deep, #b4862b)",
+          letterSpacing: ".08em", textTransform: "uppercase", color: "var(--gold-wash-ink, #b4862b)",
           border: "1.5px solid rgba(180,134,43,.45)", background: "rgba(217,178,78,.10)", whiteSpace: "nowrap" }}>
           Give-What-You-Can Offers
         </span>

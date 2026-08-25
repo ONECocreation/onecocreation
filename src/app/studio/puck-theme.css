@@ -19,12 +19,14 @@
    ════════════════════════════════════════════════════════════════════ */
 
 .oc-studio {
-  /* surfaces — the night grounds */
-  --puck-color-surface: #12101f;
-  --puck-color-surface-subtle: #1b1530;
-  --puck-color-surface-muted: #221a38;
+  /* surfaces — the night grounds, cartridge-owned (S33: the literals moved
+     to cartridge.css's :root byte-value-identical; a cartridge twin can
+     re-ladder the chrome — blank pours its paper rungs) */
+  --puck-color-surface: var(--studio-surface);
+  --puck-color-surface-subtle: var(--studio-surface-subtle);
+  --puck-color-surface-muted: var(--studio-surface-muted);
   --puck-color-surface-inverse: var(--ink-strong);
-  --puck-color-bg-disabled: #1b1530;
+  --puck-color-bg-disabled: var(--studio-surface-subtle);
   --puck-color-overlay-backdrop: rgba(10, 8, 20, 0.7);
 
   /* text — the inks */
@@ -77,11 +79,13 @@
 html[data-oc-theme="light"] .oc-studio {
   /* surfaces — the ground ladder, each keeping its night offset from
      the dawn ground (A1/A2/A3); the scrim veils LIGHT at dawn, the
-     cartridge's own dawn habit (A7, ruling D1) */
-  --puck-color-surface: #FCF6EE;
-  --puck-color-surface-subtle: #FFFDF8;
-  --puck-color-surface-muted: #FFFFFF;
-  --puck-color-bg-disabled: #FFFDF8;
+     cartridge's own dawn habit (A7, ruling D1). S33: the ruled dawn
+     literals moved to the cartridge's dawn block byte-value-identical —
+     read back here by var so a twin's pour holds in both themes */
+  --puck-color-surface: var(--studio-surface);
+  --puck-color-surface-subtle: var(--studio-surface-subtle);
+  --puck-color-surface-muted: var(--studio-surface-muted);
+  --puck-color-bg-disabled: var(--studio-surface-subtle);
   --puck-color-overlay-backdrop: rgba(252, 247, 240, 0.72);
 
   /* text — disabled holds 0.56× the muted contrast, as at night (B1) */
@@ -108,10 +112,10 @@ html[data-oc-theme="light"] .oc-studio {
   --puck-color-line-placeholder: rgba(139, 118, 196, 0.65);
 
   /* the TSX-reachable twins (see the block comment above) */
-  --oc-gold-text: #8A6410;                        /* B3 — the cartridge's own dawn gold ink (the #classes lockpill ink) */
+  --oc-gold-text: #6E4E0C;                        /* B3 — the cartridge's own dawn gold ink family; S33: deepened one rung toward --gold-ink (#8A6410 → #6E4E0C) — the old rung read 3.39 on the E3 active wash */
   --oc-ok-text: var(--ok);                        /* B4/F3 — --ok-soft never flips; the cartridge's dawn ok does */
   --oc-warn-text: var(--warn);                    /* F2 — the dawn warn pill speaks warn, not gold */
-  --oc-err-pill-bg: rgba(163, 78, 108, 0.08);     /* F1 — the wash thins so the err ink keeps its margin */
+  --oc-err-pill-bg: rgba(163, 78, 108, 0.03);     /* F1 — the wash thins so the err ink keeps its margin; S33: .08 → .03 (the old tint read 4.28 under the dawn shell) */
   --oc-warn-pill-bg: rgba(140, 74, 18, 0.12);     /* F2 */
   --oc-ok-pill-bg: rgba(60, 107, 73, 0.12);       /* F3 */
   --oc-gold-active-bg: rgba(180, 134, 43, 0.34);  /* E3, ruling D4 */

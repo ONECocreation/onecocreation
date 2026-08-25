@@ -322,7 +322,14 @@ export default function LoginPanel() {
                 style={{
                   ...tabBase,
                   ...(door === k
-                    ? { background: "linear-gradient(135deg,var(--lavender-soft),var(--lavender, #8B76C4))", color: "#fff", border: "1.5px solid transparent" }
+                    /* S33 family 5: the active door rides the soft rung flat
+                       with the cartridge's dark paper ink — NO ink value
+                       clears 4.5:1 on BOTH stops of the old soft→lavender
+                       gradient (white: 1.30–2.67 on the soft end; any dark
+                       ink: ≤2.11 on the deep end; mono·dawn admits no ink
+                       at all), so the chip keeps the lavender family in its
+                       edge and lets the glyph read */
+                    ? { background: "var(--lavender-soft)", color: "var(--field-ink)", border: "1.5px solid var(--lavender, #8B76C4)" }
                     : { background: "transparent", color: "var(--ink-body)", border: "1.5px solid rgba(139,118,196,.4)" }),
                 }}
               >

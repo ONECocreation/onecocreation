@@ -38,6 +38,11 @@
   --ok:#7fb98f; --warn:#E9954C; --err:#E7899E; --info:#9d86d9;
   --teal-bright:#8FD0D8;
   --gold:#D9B24E; --gold-2:#EBCB77; --gold-deep:#D9B24E;
+  /* ink on gold WASHES (S33 family 6): gold-deep melts into its own
+     10–16% washes on paper grounds (1.28–4.21 across 15 rows). Night
+     keeps the money metal itself; the paper-side rung pours per theme —
+     #7A5A12, the house's own deep-gold rung AttentionStrip already wore */
+  --gold-wash-ink:var(--gold-deep);
   /* money & brand metal (S2 token walk, 0018.05.25 a₿) */
   --bitcoin:#f7931a; /* the block-break pulse — bitcoin orange */
   --nav-gold:#FAC51C; /* Love's original nav gold — the dawn note below tells it */
@@ -105,6 +110,9 @@
   --console-mute-hover:#4a5f47; /* muted pill, hover */
   --console-mute-ink:#cfe0c9; /* ink on the muted hover */
   --console-seg:#0b110a; /* dark seg ground in color-mix */
+  --crew-violet:#b795ff; /* the crew rope's violet (S33: the CTA pair melts
+     on paper grounds, 1.99–2.12; the paper-side rung pours per theme —
+     #5F4B96, love's own violet ramp one rung past --lavender) */
   --console-card-hi:#1a2419; /* card gradient, high */
   --console-card-lo:#10160f; /* card gradient, low */
   --console-bloom:#16241c; /* ground radial tint */
@@ -127,6 +135,13 @@
   /* the studio */
   --studio-mat:#0f0c1d; /* the Puck canvas mat */
   --studio-shell:#0a0a12; /* the preview shell ground */
+  /* the studio's surface ladder, cartridge-owned (S33 family 1 — the
+     mechanism proposed in the lane report): puck-theme.css's night literals
+     move here byte-value-identical so a cartridge twin can re-ladder the
+     chrome; blank pours its paper rungs in cartridges.css */
+  --studio-surface:#12101F; /* puck panel ground */
+  --studio-surface-subtle:#1B1530; /* puck recessed wells/inputs */
+  --studio-surface-muted:#221A38; /* puck deepest wells */
   /* gradient stops — hero/body/pendant/sky/boot-beam, said once */
   --hero-grad-0:#0b0a18; /* house hero gradient, top stop */
   --hero-grad-1:#16111f; /* house hero gradient, mid stop */
@@ -201,12 +216,21 @@ html[data-oc-theme="light"],.oc-pv-light{  --panel:rgba(255,255,255,.6); --edge:
   --ground:#FCF7F0;
   --studio-mat:#F3EEF4; /* the Puck canvas mat, dawn twin (S21 ruling D5) */
   --studio-shell:#F9EEDE; /* the preview shell ground, dawn twin (S21 ruling D5) */
+  /* the studio surface ladder, dawn twins — the S21 ruled values, moved
+     from puck-theme.css byte-value-identical (S33 family 1) */
+  --studio-surface:#FCF6EE;
+  --studio-surface-subtle:#FFFDF8;
+  --studio-surface-muted:#FFFFFF;
   --soft-sm:0 18px 44px -28px rgba(120,100,160,.45);
   --sheet-bg:#fffdf8;
   /* dawn follows night's hue family so the token means one thing at any hour */
   --ok:#3c6b49; --warn:#8C4A12; --err:#a34e6c; --info:#5f4b96;
   --teal-bright:#23636E;
-  --gold-deep:#B4862B; --rose:#C56E8B;
+  --gold-deep:#B4862B; --rose:#AD5470;
+  /* S33: --rose deepened one rung along its own ramp (#C56E8B → #AD5470,
+     toward the dawn err) — the old rung read 3.30 on the cream; and the
+     paper-side pours for the gold-wash ink + the crew violet (family 6/7) */
+  --gold-wash-ink:#7A5A12; --crew-violet:#5F4B96;
   --soft:0 24px 60px -30px rgba(120,100,160,.55);
 }
 
@@ -238,7 +262,11 @@ html[data-oc-theme="light"] .lions-gate{
    animal itself is free to rise past the card's edge ── */
 .wild-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));margin-top:8px}
 .wild-card{display:block;border-radius:22px;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.9);
-  box-shadow:var(--soft);text-decoration:none;color:var(--ink);transition:transform .25s ease}
+  box-shadow:var(--soft);text-decoration:none;color:var(--btn-ink);transition:transform .25s ease}
+/* S33: the card's base ink reads --btn-ink (was var(--ink)) — the cards are
+   72%-white in BOTH themes (the S21 note below), so the theme ink read
+   near-invisible on them at night (1.48–1.49); the button law's dark ink
+   matches the card's own h3/body literals (#3f3a4e/#4E4860) */
 .wild-card:hover{transform:translateY(-6px)}
 .wild-card--soon{opacity:.92}
 .habitat{position:relative;height:104px;display:flex;align-items:flex-end;justify-content:center}

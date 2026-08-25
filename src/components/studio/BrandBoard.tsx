@@ -271,7 +271,7 @@ type VoiceMsg = { key: string; ok: boolean; text: string };
 const EMPTY_VOICE: VoiceRow = { quote: "", name: "", who: "", href: "" };
 
 const fieldInput: React.CSSProperties = {
-  flex: "1 1 240px", minWidth: 0, background: "var(--oc-input-well, #0e0c1a)", /* S2: pinned — the ruling landed (S22, the A4 offset move): the recessed well keeps its night depth below the ground; the dawn citizen at exactly that depth is the mat */
+  flex: "1 1 240px", minWidth: 0, background: "var(--oc-input-well, var(--studio-mat))", /* S2: pinned — the ruling landed (S22, the A4 offset move): the recessed well keeps its night depth below the ground; the dawn citizen at exactly that depth is the mat. S33: the fallback rides the mat token (was the #0e0c1a literal, one hex step off the mat) so a cartridge twin's mat pour reaches the well */
   color: "var(--ink-strong)", /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong, so the pin rides the token */
   border: "1px solid var(--oc-control-edge, rgba(139,118,196,.4))", borderRadius: 8,
   padding: "7px 10px", fontFamily: MONO, fontSize: 12.5, outline: "none",

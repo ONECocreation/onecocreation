@@ -25,7 +25,7 @@ const glassField: React.CSSProperties = {
 const giftChip: React.CSSProperties = {
   fontSize: ".64rem", fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase",
   borderRadius: 999, padding: "5px 12px", background: "rgba(217,178,78,.14)",
-  border: "1px solid rgba(217,178,78,.5)", color: "#EBCB77", whiteSpace: "nowrap",
+  border: "1px solid rgba(217,178,78,.5)", color: "var(--gold-wash-ink, #EBCB77)", whiteSpace: "nowrap",
 };
 
 export default function WelcomeFlow() {
