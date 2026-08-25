@@ -10,7 +10,7 @@ import type { Cartridge } from "../cartridge";
  * the provenance line rides the twin in cartridges.css too.
  *
  * THE DISPLAYED NAME is the house's own voice, never the upstream's:
- * "Borealis Cartridge" below is the lane's working pick — the report
+ * "Vela Cartridge" below is the lane's Admiral-ruled name (0018.06.03) — the report
  * carries the proposals, Fable/the Admiral rule the final name.
  *
  * THE MAPPING (S36 lane 3's table): Eva's dark theme = night, the
@@ -41,7 +41,7 @@ import type { Cartridge } from "../cartridge";
  * ASSET SLOT, voices an honest empty, the time door sailing empty.
  */
 export const eva: Cartridge = {
-  name: "Borealis Cartridge",
+  name: "Vela Cartridge",
 
   /** no signature yet — an honest empty, not a borrowed glyph set */
   constellation: "",
@@ -106,7 +106,7 @@ export const eva: Cartridge = {
   },
 
   meta: {
-    title: "Borealis Cartridge — The Northern-Light Option",
+    title: "Vela Cartridge — The Northern-Light Option",
     description:
       "A northern-light brand cartridge: the Eva design system's theme values, transcribed (values from Akveo Eva/Nebular theme maps, MIT). Dark-first, with an honest dawn.",
     themeColor: "#151A30", // the night ground (Eva basic-1000) — a literal, meta theme-color can't resolve var()
@@ -143,7 +143,7 @@ export const eva: Cartridge = {
   },
 
   copy: {
-    productName: "Borealis Cartridge",
+    productName: "Vela Cartridge",
     tagline: "A northern-light design language",
     memberNoun: "voyager",
   },

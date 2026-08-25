@@ -11,7 +11,7 @@ import type { Cartridge } from "../cartridge";
  *
  * THE NAMING LAW (Apache-2.0 §6 — trademarks withheld): the internal id
  * is `material`, a machine key; the DISPLAYED name is the house's own
- * voice, never "Material" as a brand position. "Blueprint Cartridge"
+ * voice, never "Material" as a brand position. "Contour Cartridge"
  * below is the lane's working pick — the report carries the proposals,
  * Fable/the Admiral rule the final name.
  *
@@ -42,7 +42,7 @@ import type { Cartridge } from "../cartridge";
  * ASSET SLOT, voices an honest empty, the time door sailing empty.
  */
 export const material: Cartridge = {
-  name: "Blueprint Cartridge",
+  name: "Contour Cartridge",
 
   /** no signature yet — an honest empty, not a borrowed glyph set */
   constellation: "",
@@ -107,7 +107,7 @@ export const material: Cartridge = {
   },
 
   meta: {
-    title: "Blueprint Cartridge — The Design-Language Option",
+    title: "Contour Cartridge — The Design-Language Option",
     description:
       "A measured brand cartridge: a palette/type reading of the Material Design 3 token language (values from Google material-web MD3 v0.192, Apache-2.0). Dark-first, with an honest dawn.",
     themeColor: "#141218", // the night ground (MD3 surface, neutral6) — a literal, meta theme-color can't resolve var()
@@ -143,7 +143,7 @@ export const material: Cartridge = {
   },
 
   copy: {
-    productName: "Blueprint Cartridge",
+    productName: "Contour Cartridge",
     tagline: "A measured design language",
     memberNoun: "maker",
   },
