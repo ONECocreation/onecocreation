@@ -202,3 +202,24 @@ export async function removeFromTierRooms(
 export function isMxid(v: string): boolean {
   return /^@[^:\s]+:[^:\s]+$/.test(v);
 }
+
+/**
+ * Post a plain-text message into a room, as the bot (TASK-37/S40 lane 1 —
+ * the announce). The alias comes from ROOMS, never free-form: callers
+ * validate upstream, so a typo here meets "room not found", not a new door.
+ * Used for Love's opening word when a class room opens and the goodbye when
+ * it rests; members already inside see it on RoomView's next poll.
+ */
+export async function postToRoom(
+  alias: string,
+  body: string,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const id = await resolveRoom(alias);
+  if (!id) return { ok: false, reason: "room not found on the homeserver" };
+  const txn = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const res = await call("POST", `/rooms/${encodeURIComponent(id)}/send/m.room.message/${encodeURIComponent(txn)}`, {
+    msgtype: "m.text",
+    body,
+  });
+  return res.ok ? { ok: true } : { ok: false, reason: res.reason };
+}

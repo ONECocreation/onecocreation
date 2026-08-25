@@ -5,6 +5,7 @@ import { EASY_MODE_BOOT_SCRIPT } from "@pacsarcade/arcade-ui";
 import { renderCartridgeId, cartridge } from "@/brand/cartridge";
 import ScrollFix from "@/components/ScrollFix";
 import AliveEffects from "@/components/AliveEffects";
+import LiveBanner from "@/components/LiveBanner";
 import CartridgeVars from "@/components/CartridgeVars";
 import CartridgePreview from "@/components/CartridgePreview";
 import "./globals.css";
@@ -138,6 +139,11 @@ export default function RootLayout({
             cartridge.css :root, verbatim, so nothing rendered shifts */}
         <ScrollFix />
         <AliveEffects />
+        {/* S40 lane 2 — the live banner: renders NOTHING while the flag is
+            dark (initial state null, so the served bytes carry no trace);
+            when /api/live says Love is live, the strip lights within ~30s
+            of the door opening. */}
+        <LiveBanner />
         {children}
       </body>
     </html>

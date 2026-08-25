@@ -8,6 +8,8 @@ import { CONSOLE_SITE, CONSOLE_CHROME, CONSOLE_ROOMS } from "@/lib/console";
 import { listTips, tipsConfigured, type TipLedger } from "@/lib/tips";
 import AdminWeekGrid from "@/components/console/AdminWeekGrid";
 import AttentionStrip from "@/components/console/AttentionStrip";
+import LiveDoorCard from "@/components/console/LiveDoorCard";
+import { getLiveState, roomForSlug, LIVE_SCHEDULE, LIVE_YOUTUBE } from "@/lib/live";
 
 const JAR_LABELS: Record<string, string> = {
   love: "Tip Love",
@@ -80,6 +82,9 @@ export default async function ConsoleOverviewPage() {
   }
 
   if (CONSOLE_CHROME === "site") {
+    // the live flag — the schedule line below and /live read this same truth
+    const live = await getLiveState();
+    const liveRoom = live.live && live.room ? roomForSlug(live.room) : undefined;
     // Home & Calendar (wireframe v2): the jars at a glance, then the week.
     return (
       <div>
@@ -87,11 +92,14 @@ export default async function ConsoleOverviewPage() {
         {/* the day's actions live WITH the calendar (Admiral, 0018.05.15) —
             goods to ship + offers waiting; sessions close out in their popups */}
         <AttentionStrip />
+        {/* S40 lane 1 — the class door's first home: open the room, the bot
+            carries the word, the banner lights */}
+        <LiveDoorCard />
         {/* THE WEEKLY RHYTHM (Admiral, 0018.05.18): where Love checks, when */}
         <div className="mt-6 border border-neutral-800 p-4 text-sm">
           <h2 className="text-sm text-neutral-100">Love&apos;s week — where to check</h2>
           <ul className="mt-2 space-y-1 text-xs text-neutral-300">
-            <li>📺 <b>Mon · Wed · Fri ~11:11</b> — go live on <a className="underline" href="https://www.youtube.com/@Onecocreation" target="_blank" rel="noreferrer">YouTube</a></li>
+            <li>📺 {liveRoom ? <>🔴 <b>LIVE now</b> — <Link className="underline" href="/live">{liveRoom.title}</Link> is open · the banner is up</> : <><b>{LIVE_SCHEDULE}</b> — go live on <a className="underline" href={LIVE_YOUTUBE} target="_blank" rel="noreferrer">YouTube</a></>}</li>
             <li>⚑ <b>Daily</b> — tap a flagged session on the calendar above; saving notes closes it out</li>
             <li>✉️ <b>Weekly</b> — write &amp; publish the news: <Link className="underline" href="/a/letters">Letters</Link> (it lands on <Link className="underline" href="/news">/news</Link> + every inbox)</li>
             <li>🎁 <b>Every visit</b> — give-what-you-can offers waiting: <Link className="underline" href="/a/money">Money Jars · offers desk</Link></li>
