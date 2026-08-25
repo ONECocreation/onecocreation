@@ -40,6 +40,9 @@ html[data-oc-cartridge="pacman"]{
   --font-h1:var(--font-press-start),'Press Start 2P',monospace;
   --font-pixel:var(--font-press-start),'Press Start 2P',monospace;
   --font-arcade:var(--font-press-start),'Press Start 2P',monospace;
+  /* the effect tokens (TASK-42/S45): deliberately NOT poured — pacman's
+     colors ride Love's pour (this twin re-tones type only), so the
+     aurora inherits Love's blobs with them, both themes */
 }
 
 @media (prefers-reduced-motion: no-preference){
@@ -123,6 +126,13 @@ html[data-oc-cartridge="earthside"]{
   --teal-bright:#23636E;
   --sky-cream:#C77B4A;
   --glass-night:rgba(46,36,24,.78); --glass-night-edge:rgba(199,123,74,.42);
+  /* the effect tokens (TASK-42/S45) — the aurora's blobs in daylight:
+     the copper, the earth rose, the deep teal; faint on the paper (the
+     paper-day muted is the tight budget; measured ≥4.5:1 over a blob at
+     full token strength — the aurora layer renders ×.8 on top) */
+  --oc-effect-a:rgba(199,123,74,.14); /* the copper */
+  --oc-effect-b:rgba(163,78,108,.1); /* the earth rose */
+  --oc-effect-c:rgba(35,99,110,.08); /* the deep teal */
 }
 
 /* the ground under everything — sun-warmed paper, held still like the
@@ -293,6 +303,12 @@ html[data-oc-cartridge="earthside"][data-oc-theme="light"]{
   --hero-grad-0:#1E1710; --hero-grad-1:#2A2117;
   --teal-bright:#8FD0D8;
   --sky-cream:#EAD9CB;
+  /* the effect tokens on the night side (TASK-42/S45) — copper holds,
+     the rose brightens, the sand dust joins; measured ≥4.5:1 for the
+     band's inks over a blob at full token strength */
+  --oc-effect-a:rgba(199,123,74,.12); /* the copper */
+  --oc-effect-b:rgba(197,110,139,.14); /* the brightened rose */
+  --oc-effect-c:rgba(143,208,216,.08); /* the bright teal */
 }
 html[data-oc-cartridge="earthside"][data-oc-theme="light"] .hero{
   background:radial-gradient(760px 460px at 50% 14%, rgba(199,123,74,.2), transparent 62%),
@@ -413,6 +429,14 @@ html[data-oc-cartridge="blank"]{
   --teal-bright:#4A6A75;
   --sky-cream:#8A8A82;
   --glass-night:rgba(36,36,34,.78); --glass-night-edge:rgba(120,120,110,.35);
+  /* the effect tokens (TASK-42/S45) — the aurora in blank is a WHISPER:
+     the hue slots wear grays here, and the plain paper's muted sits at
+     4.66:1, so .02 is what the WCAG math leaves a gray blob before the
+     band's text suffers. Honest, not broken — a brand with hues of its
+     own pours a bolder drift. Single-faced: both themes read this pour. */
+  --oc-effect-a:rgba(106,106,98,.02); /* the lavender slot's gray */
+  --oc-effect-b:rgba(110,110,102,.02); /* the rose slot's gray */
+  --oc-effect-c:rgba(74,106,117,.02); /* the gray-teal */
   /* the type law: system stack in every role — no Barlow, no PS2P, no
      download, the plainest thing that renders */
   --serif:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
@@ -503,6 +527,13 @@ html[data-oc-cartridge="mono"]{
   --font-body-app:ui-monospace,Menlo,Consolas,monospace;
   --font-pixel:ui-monospace,Menlo,Consolas,monospace;
   --font-arcade:ui-monospace,Menlo,Consolas,monospace;
+  /* the effect tokens (TASK-42/S45) — the aurora in terminal light: the
+     signal green, the technical cyan, the soft light rung. Alphas
+     measured so the band's text keeps ≥4.5:1 ON TOP of a blob at full
+     token strength (the layer renders ×.8); gold never pours a blob */
+  --oc-effect-a:rgba(143,206,157,.2); /* the signal green */
+  --oc-effect-b:rgba(143,192,204,.22); /* the technical cyan */
+  --oc-effect-c:rgba(201,234,208,.18); /* the soft light rung */
 }
 
 /* the ground under everything — the dark bench, a breath of green,
@@ -623,6 +654,12 @@ html[data-oc-cartridge="mono"][data-oc-theme="light"]{
      hero is keep-dark (it holds the night terminal in both themes), so
      the hero stops and the star dust keep their night values; only the
      ::after fade below hands off to the paper */
+  /* the effect tokens at dawn (TASK-42/S45) — the same three hues walked
+     down the night's own ramps, faint on the sage paper (the dawn muted
+     is the tight budget; measured ≥4.5:1 over a blob at full strength) */
+  --oc-effect-a:rgba(46,107,65,.08); /* the deepened signal green */
+  --oc-effect-b:rgba(47,93,104,.08); /* the deepened cyan */
+  --oc-effect-c:rgba(127,168,138,.16); /* the soft rung, deepened */
 }
 
 html[data-oc-cartridge="mono"][data-oc-theme="light"] body{
@@ -764,6 +801,12 @@ html[data-oc-cartridge="material"]{
   --font-body-app:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
   --font-pixel:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
   --font-arcade:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  /* the effect tokens (TASK-42/S45) — the aurora in the primary family:
+     primary80, tertiary80, the brightened info blue; measured ≥4.5:1
+     for the band's inks over a blob at full token strength */
+  --oc-effect-a:rgba(208,188,255,.1); /* primary80 */
+  --oc-effect-b:rgba(239,184,200,.1); /* tertiary80 */
+  --oc-effect-c:rgba(66,170,255,.14); /* the brightened info blue */
 }
 
 /* the ground under everything — the night surface with a breath of
@@ -894,6 +937,13 @@ html[data-oc-cartridge="material"][data-oc-theme="light"]{
      hero is keep-dark (it holds the night scheme in both themes), so
      the hero stops and the star dust keep their night values; only the
      ::after fade below hands off to the paper */
+  /* the effect tokens at dawn (TASK-42/S45) — primary40, the light 300
+     rung, the deepened info blue. The dawn's dark inks leave the blobs
+     the most room of any dawn twin — the reading is a real drift, not a
+     whisper; still measured ≥4.5:1 under every band ink */
+  --oc-effect-a:rgba(103,80,164,.38); /* primary40 */
+  --oc-effect-b:rgba(182,157,248,.46); /* the light 300 rung */
+  --oc-effect-c:rgba(0,87,194,.34); /* the deepened info blue */
 }
 
 html[data-oc-cartridge="material"][data-oc-theme="light"] body{
@@ -1037,6 +1087,12 @@ html[data-oc-cartridge="eva"]{
   --font-body-app:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   --font-pixel:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   --font-arcade:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  /* the effect tokens (TASK-42/S45) — the aurora in Eva's northern
+     light: the primary 400, the danger rose, the light 300 rung;
+     measured ≥4.5:1 for the band's inks over a blob at full strength */
+  --oc-effect-a:rgba(89,139,255,.18); /* the primary 400 */
+  --oc-effect-b:rgba(255,112,141,.16); /* the danger rose */
+  --oc-effect-c:rgba(166,193,255,.12); /* the light 300 rung */
 }
 
 /* the ground under everything — the northern dark with a breath of
@@ -1174,6 +1230,12 @@ html[data-oc-cartridge="eva"][data-oc-theme="light"]{
      hero is keep-dark (it holds the night scheme in both themes), so
      the hero stops and the star dust keep their night values; only the
      ::after fade below hands off to the paper */
+  /* the effect tokens at dawn (TASK-42/S45) — the primary 600 and the
+     dawn danger go faint on the near-white (the dawn muted is the tight
+     budget); the light 300 rung carries the drift */
+  --oc-effect-a:rgba(39,75,219,.05); /* the primary 600 */
+  --oc-effect-b:rgba(184,29,91,.04); /* the dawn danger rose */
+  --oc-effect-c:rgba(166,193,255,.16); /* the light 300 rung */
 }
 
 html[data-oc-cartridge="eva"][data-oc-theme="light"] body{

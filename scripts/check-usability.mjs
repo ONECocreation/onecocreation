@@ -18,7 +18,10 @@
  *        X dawn  = :root + love's dawn + twin[X] + twin[X][dawn]
  *      so a twin without a dawn section honestly shows what it inherits
  *      (the blank-dawn quirk included) — the sweep measures what renders,
- *      not what the files wish rendered.
+ *      not what the files wish rendered. Since TASK-42/S45 the contract
+ *      also carries the AURORA BAND pairs: the three band text roles
+ *      (ink-strong / ink-body / muted) over each cartridge's three
+ *      --oc-effect-* blob hues, the effects registry's contrast seam.
  *
  *   B. CO-DECLARED PAIRS — every CSS rule and every TSX inline-style object
  *      that declares color AND background(-color) in one block (the publish
@@ -527,6 +530,21 @@ const CONTRACT = [
   ...Array.from({ length: 9 }, (_, i) => ({
     name: `body copy on band ${i + 1}`, fg: "var(--ink-body)", bg: `var(--band-${i + 1})`, need: 4.5,
   })),
+  /* THE AURORA BAND (TASK-42/S45) — the effects registry's first effect
+     sits BEHIND a band's content, so the band's three text roles owe
+     contrast ON TOP of every blob hue at full token strength. Each
+     cartridge pours --oc-effect-a/b/c beside its other tokens (the
+     template owns the effect CSS; here the tokens are the inert seam —
+     poured so this sweep measures real values, never skips). The engine
+     composites each blob's alpha over the scope's ground — the rendered
+     aurora is gentler still (the layer's own opacity ×.8, then the
+     blur), so a pass here is a pass with margin. No scrim token was
+     needed in any of the 7 × 2 scopes at pour time. */
+  ...["a", "b", "c"].flatMap((blob) => [
+    { name: `aurora band: strong ink over blob ${blob}`, fg: "var(--ink-strong)", bg: `var(--oc-effect-${blob})`, need: 4.5 },
+    { name: `aurora band: body copy over blob ${blob}`, fg: "var(--ink-body)", bg: `var(--oc-effect-${blob})`, need: 4.5 },
+    { name: `aurora band: muted over blob ${blob}`, fg: "var(--muted)", bg: `var(--oc-effect-${blob})`, need: 4.5 },
+  ]),
 ];
 
 const STUDIO_CONTRACT = [
