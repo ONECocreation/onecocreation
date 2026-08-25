@@ -3,7 +3,7 @@
    0018.05.28 a₿).
 
    cartridge.css is LOVE's file and stays it. The other voices pour
-   HERE, gated on html[data-oc-cartridge="pacman"|"earthside"|"blank"|"mono"|"material"] —
+   HERE, gated on html[data-oc-cartridge="pacman"|"earthside"|"blank"|"mono"|"material"|"eva"] —
    the one attribute the root layout sets, and only when the selection
    flips off the default (src/brand/cartridge.ts, one line). With LOVE active the
    attribute never renders: every rule below is inert, and Love's output
@@ -939,4 +939,284 @@ html[data-oc-cartridge="material"][data-oc-theme="light"] .hero::after{
 html[data-oc-cartridge="material"][data-oc-theme="light"] .lions-gate{
   background:linear-gradient(rgba(254,247,255,.82), rgba(254,247,255,.9)),
     url("/images/material/gate.webp") center top / cover no-repeat;
+}
+
+/* ── EVA — the northern-light reading (TASK-35/S38 lane 2,
+   0018.06.03 a₿). The Eva design system's theme maps, transcribed as
+   VALUES ONLY (S36's verdict: Nebular's components are Angular-bound
+   and skipped; the maps are MIT data). Provenance: values from Akveo
+   Eva/Nebular theme maps (src/framework/theme/styles/themes/
+   _default.scss + _dark.scss), MIT. The displayed name is the house's
+   own voice (the twin in src/brand/cartridges/eva.ts carries the
+   working pick).
+
+   THE MAPPING (S36 lane 3): Eva's dark theme = night, the default
+   theme = dawn. The basic ramp carries surfaces and inks — night
+   ground color-basic-1000 #151A30, panels basic-800 #222B45, the hint
+   ink basic-600 #8F9BB3; primary #3366FF leads the accents. The state
+   hues are exact fits: success500 #00D68F → --ok, info500 #0095FF →
+   --info, danger500 #FF3D71 → --err.
+
+   THE WARN TRAP (house law, the --warn incident precedent in
+   cartridge.css): Eva's warning500 #FFAA00 is NEVER poured — its 40°
+   amber sits 7° of hue from bitcoin #F7931A (33°), and gold means
+   money ONLY. THE SHIFT, stated with its Δ: the caution re-hues to the
+   house's own ruled rungs — night #E9954C (ΔE 81.9 from #FFAA00,
+   ΔE 52.0 from #F7931A, hue 40° → 28°, toward red off the money band)
+   and dawn #8C4A12 (ΔE 150.9 from #FFAA00, ΔE 129.8 from #F7931A) —
+   both already the house's ruled caution ramp, so the shift lands on
+   proven ground, and material's borrowed warn wears the same rungs.
+
+   GOLD STAYS MONEY (fleet semantic lock): no Eva role pours --gold*.
+
+   FONTS: Eva's font-family-primary is Open Sans — named first in the
+   stack, never fetched (no new binaries; systems without the face fall
+   through to the nearest system sans).
+
+   DARK-FIRST, BOTH LIGHTS HONEST FROM BIRTH (the S20/S21 laws at
+   creation): every body-ink pair WCAG-measured ≥ 4.5:1 in BOTH themes
+   (the table rides the lane report; tightest: dawn ok 4.80). Like MONO
+   this is a full twin — the hero, the four skies, the keep-dark pours
+   and the lion veils are re-told in the system's own light, and the
+   studio chrome wears the cartridge (the S33 family-1 mechanism). ── */
+html[data-oc-cartridge="eva"]{
+  /* the night scheme — the Eva dark theme: basic-1000 grounds,
+     basic-100/600 inks, the primary family on the accents */
+  --space:#151A30; --ground:#151A30;
+  --panel:rgba(34,43,69,.78); --edge:rgba(143,155,179,.32);
+  --ink:#F7F9FC; --muted:#8F9BB3;
+  --ink-strong:#FFFFFF; --ink-body:#EDF1F7;
+  --glass:rgba(25,32,56,.66); --glass-edge:rgba(143,155,179,.3);
+  --ghost-bg:rgba(255,255,255,.08); --ghost-ink:#F7F9FC;
+  --glass-strong:rgba(21,26,48,.9);
+  --sheet-bg:rgba(25,32,56,.98);
+  --field-bg:rgba(255,255,255,.94); --field-ink:#222B45;
+  --soft-sm:0 18px 44px -28px rgba(16,20,38,.6);
+  --soft:0 24px 60px -30px rgba(16,20,38,.7);
+  /* the state hues — success/info/danger are Eva's exact 500 rungs;
+     --warn is THE SHIFTED CAUTION (the header note carries the Δ):
+     #FFAA00 never pours, the house's ruled night rung wears the role */
+  --ok:#00D68F; --warn:#E9954C; --err:#FF3D71; --info:#0095FF;
+  /* the accents — primary400 links at night (#3366FF itself reads
+     3.72 on the ground, so links wear the 400 rung), danger400
+     kickers; info speaks azure (semantic lock: the info CHANNEL) */
+  --rose:#FF708D; --lavender:#598BFF; --lavender-soft:#A6C1FF;
+  --lavender-bright:#D9E4FF;
+  --purple:#3366FF;
+  --teal-bright:#42AAFF; --teal:#0095FF; --teal-deep:#0057C2;
+  /* the nav, re-inked primary on the header's own dark — the header
+     never theme-flips, so these hold in both eva twins; --nav-gold is
+     the nav-link ink SLOT here (gold itself stays with money) */
+  --nav-gold:#A6C1FF; --nav-hover:#D9E4FF;
+  --here-grad:linear-gradient(90deg,#598BFF 0%,#8F9BB3 100%);
+  --here-wash:linear-gradient(90deg,rgba(89,139,255,.16),rgba(143,155,179,.14));
+  --here-ink:#101426;
+  --pop-bg:rgba(21,26,48,.97); --pop-edge:rgba(89,139,255,.35);
+  /* the band ladder, basic-ramp steps (1100/1000/900/800) — the cosmic
+     walk keeps its shape and trades its cosmos for the northern dark */
+  --band-1:#192038; --band-2:#151A30; --band-3:#222B45;
+  --band-4:#101426; --band-5:#222B45; --band-6:#192038;
+  --band-7:#101426; --band-8:#192038; --band-9:#222B45;
+  --hero-grad-0:#101426; --hero-grad-1:#192038;
+  --sky-cream:#A6C1FF; /* the living sky's stars → primary dust */
+  --glass-night:rgba(25,32,56,.66); --glass-night-edge:rgba(143,155,179,.3);
+  /* the studio chrome wears the cartridge (S33 family 1): the surface
+     ladder walks the basic ramp — shell 1100, mat 1000, then 900/800,
+     and the deepest well wears basic-700 */
+  --studio-shell:#101426; --studio-mat:#151A30;
+  --studio-surface:#192038; --studio-surface-subtle:#222B45; --studio-surface-muted:#2E3A59;
+  /* the type law: Open Sans named first in EVERY role — never fetched;
+     systems without the face fall through to the nearest system sans */
+  --serif:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --disp:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --sans:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-h1:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-h2:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-h3:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-body:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-body-app:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-pixel:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-arcade:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+}
+
+/* the ground under everything — the northern dark with a breath of
+   primary, held still like the house's own fixed-attachment law */
+html[data-oc-cartridge="eva"] body{
+  background:
+    radial-gradient(900px 500px at 50% -4%, rgba(51,102,255,.12), transparent 60%),
+    radial-gradient(760px 620px at 88% 12%, rgba(0,149,255,.05), transparent 62%),
+    linear-gradient(180deg,#151A30 0%, #101426 45%, #192038 100%);
+  background-attachment:fixed;
+}
+
+/* the hero steps off the celestial gradient — same shape, the system's
+   light: the purple sun-radial becomes a primary glow, the nebula
+   layer a soft azure wash (no art invented), and the glyph that draws
+   in white light re-inks to primary200 (the fill needs !important —
+   Love's reduced-motion and .ll-done rules pin fill:#fff !important;
+   scoped specificity alone can't out-vote them). The hero is keep-dark
+   (sections.tsx:21) — it holds THIS night in both themes, so the
+   gradient stops are literals, never tokens the dawn re-pours, and the
+   dawn block below does not repaint the hero at all (only its ::after
+   fade) */
+html[data-oc-cartridge="eva"] .hero{
+  background:radial-gradient(760px 460px at 50% 14%, rgba(51,102,255,.3), transparent 62%),
+    linear-gradient(180deg,#101426,#192038 55%,#151A30);
+}
+html[data-oc-cartridge="eva"] .hero::before{
+  background:radial-gradient(700px 420px at 50% 0%, rgba(89,139,255,.1), transparent 62%);
+  opacity:1; animation:none;
+}
+html[data-oc-cartridge="eva"] .hero::after{
+  background:linear-gradient(180deg,transparent,#192038);
+}
+html[data-oc-cartridge="eva"] .ll-line{
+  stroke:#D9E4FF; fill:#D9E4FF!important;
+  filter:drop-shadow(0 0 6px rgba(89,139,255,.7)) drop-shadow(0 0 20px rgba(51,102,255,.5));
+}
+html[data-oc-cartridge="eva"] .llstage .tw{
+  background:radial-gradient(circle,#D9E4FF 0%,rgba(89,139,255,.55) 45%,transparent 72%);
+  filter:drop-shadow(0 0 6px rgba(89,139,255,.8));
+}
+html[data-oc-cartridge="eva"] .hero h1{text-shadow:0 0 34px rgba(89,139,255,.3)}
+
+/* the four skies, re-laddered on the basic ramp — they hold in BOTH
+   themes for keep-dark rooms; the dawn's paper repaint of
+   non-keep-dark skies sits in the dawn block below */
+html[data-oc-cartridge="eva"] main section.sky-night{
+  background:linear-gradient(180deg,#192038 0%,#151A30 100%)!important}
+html[data-oc-cartridge="eva"] main section.sky-veil{
+  background:radial-gradient(700px 420px at 50% 0%,rgba(51,102,255,.22),transparent 60%),
+    linear-gradient(180deg,#222B45 0%,#2E3A59 50%,#151A30 100%)!important}
+html[data-oc-cartridge="eva"] main section.sky-glass{
+  background:linear-gradient(180deg,#151A30 0%,#222B45 100%)!important}
+html[data-oc-cartridge="eva"] main section.sky-warm{
+  background:linear-gradient(180deg,#222B45 0%,#192038 100%)!important}
+
+/* keep-dark rooms hold EVA'S OWN night (the S20 law: a keep-dark room
+   holds its cartridge's night, not Love's) — the law stands in both
+   themes; the pour rides the bare attribute so dawn never flips it */
+html[data-oc-cartridge="eva"] main .keep-dark{
+  --ink-strong:#FFFFFF; --ink-body:#EDF1F7; --muted:#8F9BB3;
+  --rose:#FF708D; --gold-deep:#D9B24E; --teal-bright:#42AAFF;
+  --glass:var(--glass-night); --glass-edge:var(--glass-night-edge);
+}
+
+/* the classes band steps off Love's nebula onto the basic ramp */
+html[data-oc-cartridge="eva"] #classes{
+  background:linear-gradient(180deg,var(--band-3) 0%,var(--band-5) 100%);
+}
+
+/* the aurora's violet plume was Love's nebula — under EVA it re-hues
+   to the system's own primary (the teal and gold plumes already read
+   arctic) */
+html[data-oc-cartridge="eva"] .aurora i:nth-child(2){
+  background:radial-gradient(closest-side,rgba(51,102,255,.5),transparent 70%)}
+
+/* the lion, re-veiled — the art path is this cartridge's own ASSET
+   SLOT (nothing renders until the community's art lands); only the
+   veil light is told here: the northern dark, holding on the
+   keep-dark-law page */
+html[data-oc-cartridge="eva"] .lions-gate{
+  background:linear-gradient(rgba(16,20,38,.8), rgba(21,26,48,.9)),
+    url("/images/eva/gate.webp") center top / cover no-repeat;
+}
+html[data-oc-cartridge="eva"] .lions-gate-dark{
+  background:linear-gradient(rgba(16,20,38,.62), rgba(16,20,38,.78)),
+    url("/images/eva/gate.webp") center top / cover no-repeat;
+}
+html[data-oc-cartridge="eva"] .lions-gate-dark .sec-h{color:#FFFFFF}
+html[data-oc-cartridge="eva"] .lions-gate-dark p{color:#EDF1F7}
+
+/* ── the DAWN TWIN — Eva's default theme: basic-200 paper, basic-800
+   inks, the accents deepen along their own ramps (primary600 links —
+   the 500 rung reads 4.43 on the paper, just under; the 600 holds at
+   6.39), the states deepen too (success900 after the 800 rung melted
+   on the rooms shelf's green wash — the material twin's same finding;
+   info700; danger800 for --err with danger700 on the kickers). The
+   muted ink is DERIVED: Eva's own text-hint basic-600 reads 2.65 on
+   its own ground, so the pour walks the ramp 55% of the way from
+   basic-600 to basic-700 (#636C8A, 4.93 measured). The shifted caution
+   wears the house's ruled paper rung. Surfaces keep the night's ladder
+   shape, gold stays money. These rules out-specify Love's dawn blanket
+   repaints — same !important, higher specificity, later in the
+   cascade; Love's own rules are untouched. ── */
+html[data-oc-cartridge="eva"][data-oc-theme="light"]{
+  --space:#F7F9FC; --ground:#F7F9FC;
+  --panel:rgba(255,255,255,.82); --edge:rgba(143,155,179,.4);
+  --ink:#222B45; --muted:#636C8A;
+  --ink-strong:#101426; --ink-body:#2E3A59;
+  --glass:rgba(255,255,255,.62); --glass-edge:rgba(143,155,179,.35);
+  --ghost-bg:rgba(34,43,69,.07); --ghost-ink:#2E3A59;
+  --glass-strong:rgba(255,255,255,.92);
+  --sheet-bg:#FFFFFF;
+  --field-bg:rgba(255,255,255,.96); --field-ink:#222B45;
+  --soft-sm:0 18px 44px -28px rgba(46,58,89,.3);
+  --soft:0 24px 60px -30px rgba(46,58,89,.4);
+  /* the state hues, paper-side — success900 (the 800 rung reads 4.10
+     on the rooms shelf's green wash; the 900 holds), info700,
+     danger800; --warn is the shifted caution's paper rung */
+  --ok:#004A45; --warn:#8C4A12; --err:#94124E; --info:#0057C2;
+  /* the accents, deepened for paper — primary600 links (6.39
+     measured), danger700 kickers; lavender-soft holds the LIGHT 300
+     rung (the sign-in kit paints field-ink text on it — the 400 rung
+     read 4.38) */
+  --rose:#B81D5B; --lavender:#274BDB; --lavender-soft:#A6C1FF;
+  --teal-bright:#0057C2; --teal:#0057C2; --teal-deep:#0041A8;
+  /* the band ladder, default-theme steps (basic-100–400) */
+  --band-1:#EDF1F7; --band-2:#F7F9FC; --band-3:#E4E9F2;
+  --band-4:#EDF1F7; --band-5:#FFFFFF; --band-6:#E4E9F2;
+  --band-7:#EDF1F7; --band-8:#F7F9FC; --band-9:#FFFFFF;
+  /* the studio ladder, paper-side (S33 family 1) */
+  --studio-shell:#E4E9F2; --studio-mat:#EDF1F7;
+  --studio-surface:#F7F9FC; --studio-surface-subtle:#FFFFFF; --studio-surface-muted:#FFFFFF;
+  /* NOT poured at dawn: the hero gradient stops and --sky-cream — the
+     hero is keep-dark (it holds the night scheme in both themes), so
+     the hero stops and the star dust keep their night values; only the
+     ::after fade below hands off to the paper */
+}
+
+html[data-oc-cartridge="eva"][data-oc-theme="light"] body{
+  background:
+    radial-gradient(900px 500px at 50% -4%, rgba(51,102,255,.06), transparent 60%),
+    radial-gradient(760px 620px at 88% 12%, rgba(0,87,194,.04), transparent 62%),
+    linear-gradient(180deg,#F7F9FC 0%, #EDF1F7 45%, #E4E9F2 100%);
+  background-attachment:fixed;
+}
+
+/* the blanket repaints Love's dawn owns, re-told on the default theme
+   (the mono/earthside precedent: same !important, higher specificity,
+   later) */
+html[data-oc-cartridge="eva"][data-oc-theme="light"] main:not(.lions-gate-dark){
+  background:#F7F9FC!important;
+}
+html[data-oc-cartridge="eva"][data-oc-theme="light"] main section:not(.keep-dark):not(.lions-gate){
+  background:linear-gradient(180deg,#F7F9FC,#EDF1F7)!important;
+}
+
+/* the four skies at midday — paper analogs of the northern skies;
+   keep-dark skies are excluded, their night rules above hold */
+html[data-oc-cartridge="eva"][data-oc-theme="light"] main section.sky-night:not(.keep-dark):not(.lions-gate){
+  background:linear-gradient(180deg,#F7F9FC 0%,#EDF1F7 100%)!important}
+html[data-oc-cartridge="eva"][data-oc-theme="light"] main section.sky-veil:not(.keep-dark):not(.lions-gate){
+  background:radial-gradient(700px 420px at 50% 0%,rgba(51,102,255,.08),transparent 60%),
+    linear-gradient(180deg,#FFFFFF 0%,#E4E9F2 55%,#EDF1F7 100%)!important}
+html[data-oc-cartridge="eva"][data-oc-theme="light"] main section.sky-glass:not(.keep-dark):not(.lions-gate){
+  background:#EDF1F7!important}
+html[data-oc-cartridge="eva"][data-oc-theme="light"] main section.sky-warm:not(.keep-dark):not(.lions-gate){
+  background:linear-gradient(180deg,#FFFFFF 0%,#F7F9FC 100%)!important}
+
+/* the hero at dawn HOLDS THE NIGHT SCHEME — it is keep-dark, so the
+   northern ground, the primary200 glyph and the azure wash above
+   stand; the only dawn rule the hero needs is the fade's handoff to
+   the paper band (Love's own dawn does the same: the hero holds night,
+   the fade repaints) */
+html[data-oc-cartridge="eva"][data-oc-theme="light"] .hero::after{
+  background:linear-gradient(180deg,transparent,#EDF1F7);
+}
+
+/* the lion at dawn — the veil steps onto the default theme */
+html[data-oc-cartridge="eva"][data-oc-theme="light"] .lions-gate{
+  background:linear-gradient(rgba(247,249,252,.82), rgba(247,249,252,.9)),
+    url("/images/eva/gate.webp") center top / cover no-repeat;
 }
