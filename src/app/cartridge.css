@@ -162,6 +162,20 @@
   /* misc singles */
   --footer-ink:#cabfda; /* site-footer body ink */
   --copilot-user:#f3c7c1; /* copilot user-bubble tint */
+  /* ── THE EFFECT TOKENS (TASK-42/S45) — the seam, poured ahead of the
+     effect itself: the effects gallery is the TEMPLATE's lane this task;
+     what lands here is only each cartridge's three aurora blob hues so
+     the contrast gate can sweep the aurora band across all 7 cartridges
+     × 2 themes (the blank-twin precedent: inert documentation of the
+     seam — no effect CSS ships in this repo yet, nothing renders).
+     LOVE's night drift: the lavender, the teal-bright, the rose. Alphas
+     measured so the band's ink-strong/ink-body/muted keep ≥4.5:1 ON TOP
+     of a blob at full token strength (the aurora layer renders ×.8 on
+     top of that — the gate measures the stricter value). Gold never
+     pours a blob — gold stays money. */
+  --oc-effect-a:rgba(139,118,196,.2); /* the lavender */
+  --oc-effect-b:rgba(143,208,216,.12); /* the teal-bright */
+  --oc-effect-c:rgba(231,178,195,.12); /* the rose */
 }
 
 /* ── S8 CARTRIDGE HARDENING (0018.05.26) — the retired BrandProvider wrapped
@@ -232,6 +246,12 @@ html[data-oc-theme="light"],.oc-pv-light{  --panel:rgba(255,255,255,.6); --edge:
      paper-side pours for the gold-wash ink + the crew violet (family 6/7) */
   --gold-wash-ink:#7A5A12; --crew-violet:#5F4B96;
   --soft:0 24px 60px -30px rgba(120,100,160,.55);
+  /* the effect tokens at dawn (TASK-42/S45) — the same three families
+     walked to their dawn rungs, faint on the cream (the dawn muted is
+     the tight budget; measured ≥4.5:1 over a blob at full strength) */
+  --oc-effect-a:rgba(95,75,150,.05); /* the dawn info violet */
+  --oc-effect-b:rgba(35,99,110,.05); /* the dawn teal-bright */
+  --oc-effect-c:rgba(173,84,112,.05); /* the dawn rose */
 }
 
 /* the nebula breathes behind the void — a slow drift, barely there */
