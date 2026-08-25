@@ -14,7 +14,14 @@
  * plain template for the next community, the proof a stranger can add one
  * (the field report: docs/adding-a-cartridge.md); TASK-22/S24 added a
  * fifth, MONO — the terminal option in the starter pack, monospace in
- * every role, dark-first with an honest dawn from birth. `love` below is
+ * every role, dark-first with an honest dawn from birth; TASK-35/S38
+ * added a sixth, MATERIAL — a palette/type reading of the Material
+ * Design 3 token language (values quarried from Google material-web
+ * MD3 v0.192, Apache-2.0; the displayed name stays the house's own
+ * voice, per the license's trademark lane), and a seventh, EVA — the
+ * Eva design system's theme values, transcribed (Akveo Eva/Nebular
+ * theme maps, MIT; the warn amber never pours — gold means money
+ * ONLY, the caution re-hues to the house's ruled rungs). `love` below is
  * the original object moved VERBATIM — every field line byte-identical, so
  * the dressing room's anchors (src/lib/cartridge-identity.ts) still match
  * exactly once; the others live in src/brand/cartridges/ beside this file
@@ -35,6 +42,8 @@ import { pacman } from "./cartridges/pacman";
 import { earthside } from "./cartridges/earthside";
 import { blank } from "./cartridges/blank";
 import { mono } from "./cartridges/mono";
+import { material } from "./cartridges/material";
+import { eva } from "./cartridges/eva";
 
 /** LOVE — the ShinePages original, fidelity-guarded. The whole object is
  *  the pre-registry cartridge, verbatim. */
@@ -201,8 +210,10 @@ const love = {
 /** THE CARTRIDGE IDS (S9) — the three authored directions: LOVE (Heaven,
  *  the default), NUMBER ONE × PACMAN (the Screen), EARTHSIDE (the Earth) —
  *  plus BLANK (TASK-09/S11), the plain template for the next community,
- *  and MONO (TASK-22/S24), the terminal option. */
-export type CartridgeId = "love" | "pacman" | "earthside" | "blank" | "mono";
+ *  MONO (TASK-22/S24), the terminal option, MATERIAL (TASK-35/S38
+ *  lane 1), the design-language reading, and EVA (TASK-35/S38 lane 2),
+ *  the northern-light reading. */
+export type CartridgeId = "love" | "pacman" | "earthside" | "blank" | "mono" | "material" | "eva";
 
 /**
  * THE CARTRIDGE SHAPE — DERIVED from love's object, never hand-written in
@@ -231,7 +242,7 @@ type CartridgeShape<T> = T extends string
 export type Cartridge = CartridgeShape<typeof love>;
 
 /** THE REGISTRY (S9) — one entry per direction. */
-export const cartridges: Record<CartridgeId, Cartridge> = { love, pacman, earthside, blank, mono };
+export const cartridges: Record<CartridgeId, Cartridge> = { love, pacman, earthside, blank, mono, material, eva };
 
 /**
  * THE SELECTION (S9) — the one line a fork flips, the nav.accent
