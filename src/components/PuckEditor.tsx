@@ -264,7 +264,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
     borderRadius: 999, fontSize: "var(--oc-density-small-font)" /* 12px */, fontWeight: 700,
     letterSpacing: ".03em", border: "none", cursor: "pointer", fontFamily: "var(--font-body)", whiteSpace: "nowrap",
   };
-  const GOLD = "var(--gold-deep, #D9B24E)"; /* S2: fallback repaired to the token's night value (integrator ruling 0018.05.25 a₿) */
+  const GOLD = "var(--gold-deep, #D9B24E)"; /* S2: fallback repaired to the token's night value (integrator ruling 0018.05.25 a₿). The D2-ruled "Publish to live" button keeps this EXACTLY — the ruling is sacred; S33 touches only the unruled Preview button below */
   const errCount = findings.filter((f) => f.severity === "error").length;
   const warnCount = findings.length - errCount;
   /* "brand" is RESERVED: /studio/brand is the brand board, never a page;
@@ -366,7 +366,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
                 </a>
               ) : "● draft"}
           </span>
-          <button onClick={() => setPreview(true)} style={{ ...pill, background: `linear-gradient(135deg, var(--gold-2), ${GOLD})`, color: "var(--gold-ink)" /* S2: gold law — decorative, reported */ }} title="see it in both skins — publishing lives there (look before it goes live)">Preview & publish</button>
+          <button onClick={() => setPreview(true)} style={{ ...pill, background: `linear-gradient(135deg, var(--gold-2), var(--gold, #D9B24E))`, color: "var(--gold-ink)" /* S2: gold law — decorative, reported; S33 family 6: the deep end rides --gold (was --gold-deep via GOLD) — night byte-value-identical (#D9B24E either way); at dawn the designed deep gold left the gold ink a hair under the bar (4.22). The D2-ruled publish button keeps GOLD untouched */ }} title="see it in both skins — publishing lives there (look before it goes live)">Preview & publish</button>
         </div>
 
         {/* ══ panes: library · canvas · style · Number One ══ */}

@@ -379,7 +379,7 @@ export default function StoreRoom() {
                       <img src={face} alt="" style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover" }} />
                     ) : (
                       <span style={{ width: 44, height: 44, borderRadius: 10, display: "grid", placeItems: "center",
-                        background: "linear-gradient(135deg,var(--lavender-soft),var(--lavender))", color: "#fff", fontSize: "1.1rem" }}>✦</span>
+                        background: "var(--lavender-soft)", color: "var(--field-ink)", fontSize: "1.1rem" }}>✦</span>
                     )}
                   </td>
                   <td style={td}>
@@ -509,7 +509,7 @@ export default function StoreRoom() {
                           <button onClick={() => removeImage(url)} aria-label="remove picture"
                             style={{ position: "absolute", top: -7, right: -7, width: 20, height: 20, borderRadius: "50%",
                               border: "1px solid rgba(139,118,196,.5)", background: "#fff", cursor: "pointer",
-                              fontSize: ".7rem", lineHeight: 1, color: "var(--ink)" }}>×</button>
+                              fontSize: ".7rem", lineHeight: 1, color: "var(--field-ink)" }}>×</button>
                           {idx === 0 ? (
                             <span style={{ display: "block", textAlign: "center", fontSize: ".6rem", fontWeight: 700,
                               color: "var(--gold-deep)", marginTop: 2 }}>★ default</span>

@@ -47,7 +47,7 @@ export default function AttentionStrip() {
 
   return (
     <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 12,
-      background: "rgba(217,178,78,.12)", border: "1.5px solid rgba(180,134,43,.45)", color: "#7a5a12" }}>
+      background: "rgba(217,178,78,.12)", border: "1.5px solid rgba(180,134,43,.45)", color: "var(--gold-wash-ink, #7a5a12)" }}>
       <p style={{ margin: 0, fontWeight: 700, fontSize: ".82rem" }}>⚑ waiting on your hand</p>
       {goods.map((o) => (
         <div key={o.id} style={{ display: "flex", flexWrap: "wrap", alignItems: "center",

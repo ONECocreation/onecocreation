@@ -110,7 +110,11 @@ export default function Copilot({
           </div>
         ))}
         {busy && (
-          <div style={{ alignSelf: "flex-start", padding: "6px 10px", borderRadius: 10, fontSize: 12, background: "rgba(139,118,196,.16)", color: "var(--muted)" }}>
+          <div style={{ alignSelf: "flex-start", padding: "6px 10px", borderRadius: 10, fontSize: 12, background: "rgba(139,118,196,.16)", color: "var(--ink-body)" }}>
+            {/* S33: the building pill speaks one rung up the ink ladder
+                (was --muted) — muted read 3.34–3.89 on the lavender wash
+                under the paper scopes; ink-body holds 5.8–11.4 everywhere
+                with zero new tokens */}
             building…
           </div>
         )}

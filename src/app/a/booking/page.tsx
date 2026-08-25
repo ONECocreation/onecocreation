@@ -306,7 +306,10 @@ export default function BookingRoom() {
       </p>
       {error && (
         <p style={{ margin: "10px 0 0", padding: "8px 14px", borderRadius: 10, fontSize: ".82rem",
-          color: "var(--err)", background: "rgba(197,110,139,.1)", border: "1px solid rgba(197,110,139,.4)" }}>
+          color: "var(--err)", background: "rgba(197,110,139,.04)", border: "1px solid rgba(197,110,139,.4)" }}>
+          {/* S33: the wash thins .10 → .04 so the err ink keeps its margin
+              on paper grounds (the old tint read 1.97–4.46 under the
+              paper scopes; the ink stays the cartridge's own --err) */}
           ◌ {error}
         </p>
       )}

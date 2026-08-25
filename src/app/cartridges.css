@@ -73,7 +73,7 @@ html[data-oc-cartridge="earthside"]{
   /* the paper day — the proposal's palette table is the truth */
   --space:#F6EFE3; --ground:#F6EFE3;
   --panel:rgba(255,252,246,.82); --edge:rgba(199,123,74,.4);
-  --ink:#2B2016; --muted:#8A7560;
+  --ink:#2B2016; --muted:#755F4B;
   --ink-strong:#241A10; --ink-body:#5C4A38;
   --glass:rgba(255,252,246,.72); --glass-edge:rgba(199,123,74,.38);
   --ghost-bg:rgba(199,123,74,.12); --ghost-ink:#5C4A38;
@@ -83,11 +83,28 @@ html[data-oc-cartridge="earthside"]{
   --soft-sm:0 18px 44px -28px rgba(90,60,30,.35);
   --soft:0 24px 60px -30px rgba(90,60,30,.4);
   --info:#23636E; /* info/time speaks teal — semantic lock */
-  --rose:#C56E8B; /* kickers keep their rose — semantic lock */
+  --rose:#A34E6C; /* kickers keep their rose — semantic lock; S33 deepened along the rose ramp (#C56E8B → #A34E6C, the house's own dawn-err rung): the old rung read 3.07 on the paper */
+  /* the state hues, paper-side (S33 family 7 — the S20 F-section
+     precedent: earthside is daylight-first, so the pastel night values
+     sat on the paper unreadable, 1.99–2.17; the house's own dawn ramp) */
+  --ok:#3c6b49; --warn:#8C4A12; --err:#a34e6c;
+  /* gold on gold washes speaks the deep rung on paper (S33 family 6) */
+  --gold-wash-ink:#7A5A12;
+  /* the crew rope's violet, deepened for paper (S33) */
+  --crew-violet:#5F4B96;
+  /* the copper hover, one rung deeper along its own ramp (S33 — #C77B4A
+     → #B4693C was still 3.68 under the cream ink; #96582E holds the hue
+     at 4.92) */
+  --copper-deep:#96582E;
+  /* S33: --muted deepened along its umber ramp (#8A7560 → #755F4B): the
+     old rung read 3.83 on the ground / 4.20 on the panel */
   /* the nav, re-inked copper on warm charcoal — the header never
      theme-flips, so these hold in both earthside twins; --nav-gold is
-     the nav-link ink SLOT here (gold itself stays with money) */
-  --nav-gold:#C77B4A; --nav-hover:#EAD9CB;
+     the nav-link ink SLOT here (gold itself stays with money). S33: the
+     nav ink steps one rung toward sand on the cartridge's own copper→sand
+     ramp (#C77B4A → #C78A5E, an 85/15 copper/sand mix): the old rung read
+     4.17 on the header's dark */
+  --nav-gold:#C78A5E; --nav-hover:#EAD9CB;
   --here-grad:linear-gradient(90deg,#C77B4A 0%,#EAD9CB 100%);
   --here-wash:linear-gradient(90deg,rgba(199,123,74,.16),rgba(234,217,203,.16));
   --pop-bg:rgba(36,28,20,.97); --pop-edge:rgba(199,123,74,.45);
@@ -233,7 +250,7 @@ html[data-oc-cartridge="earthside"] .btn{
   transition:background .25s ease, color .25s ease, border-color .25s ease, transform .25s ease;
 }
 html[data-oc-cartridge="earthside"] .btn:hover{
-  background:var(--copper); border-color:var(--copper); color:#F6EFE3;
+  background:var(--copper-deep); border-color:var(--copper-deep); color:#F6EFE3;
 }
 
 /* ── the NIGHT TWIN (derived; closes the verdict's open token table) —
@@ -251,10 +268,22 @@ html[data-oc-cartridge="earthside"][data-oc-theme="light"]{
   --ghost-bg:rgba(199,123,74,.16); --ghost-ink:#EAD9CB;
   --glass-strong:rgba(36,28,20,.92);
   --sheet-bg:#2E2418;
-  --field-bg:rgba(60,48,32,.96); --field-ink:#F0E6D8;
+  /* S33 family 2: the fields come back to the house input law — "inputs
+     are always lit paper, their ink stays dark in both themes" (the
+     components hold literal white grounds, so the charcoal field pair
+     poured light ink on white, 1.05–1.10); the day pair holds at night */
+  --field-bg:rgba(255,255,255,.94); --field-ink:#2B2016;
   --soft-sm:0 18px 44px -28px rgba(0,0,0,.6);
   --soft:0 24px 60px -30px rgba(0,0,0,.7);
   --info:#8FD0D8; /* teal-bright at night — semantic lock holds */
+  /* S33 family 7: the state hues hold their NIGHT ramp on the charcoal —
+     the bare twin's paper-side pours would read dark-on-dark here
+     (2.48–3.09), and love's dawn block re-pours under this scope */
+  --ok:#7fb98f; --warn:#E9954C; --err:#E7899E; --rose:#C56E8B;
+  /* S33 family 6: gold on gold washes keeps the night gold on charcoal */
+  --gold-wash-ink:#D9B24E;
+  /* S33: the crew rope keeps its night violet on charcoal */
+  --crew-violet:#b795ff;
   --band-1:#2A2117; --band-2:#241C14; --band-3:#2E241A;
   --band-4:#232B25; --band-5:#2E2418; --band-6:#2C2118;
   --band-7:#262019; --band-8:#27211A; --band-9:#2C2214;
@@ -331,7 +360,7 @@ html[data-oc-cartridge="earthside"][data-oc-theme="light"] .hero::after{
 html[data-oc-cartridge="blank"]{
   --space:#F5F4F0; --ground:#F5F4F0;
   --panel:rgba(255,255,255,.82); --edge:rgba(60,60,60,.18);
-  --ink:#2A2A2A; --muted:#777770;
+  --ink:#2A2A2A; --muted:#6E6E66;
   --ink-strong:#1F1F1F; --ink-body:#4A4A44;
   --glass:rgba(255,255,255,.72); --glass-edge:rgba(60,60,60,.16);
   --ghost-bg:rgba(60,60,60,.08); --ghost-ink:#4A4A44;
@@ -340,8 +369,35 @@ html[data-oc-cartridge="blank"]{
   --field-bg:rgba(255,255,255,.96); --field-ink:#2A2A2A;
   --soft-sm:0 18px 44px -28px rgba(60,60,60,.3);
   --soft:0 24px 60px -30px rgba(60,60,60,.35);
-  --info:#4A6A75; /* info/time speaks a gray-teal — semantic lock */
-  --rose:#8A8A82; /* kickers, wearing gray — the template has no rose */
+  --info:#45626C; /* info/time speaks a gray-teal — semantic lock; S33 deepened one rung along the ramp (#4A6A75 → #45626C): the old rung read 4.47 on the rooms shelf's lavender wash */
+  --rose:#6E6E66; /* kickers, wearing gray — the template has no rose; S33: the vanilla contrast pour's exact value (112716f, #8A8A82 → #6E6E66, 3.16 → 4.67 on paper) */
+  --lavender:#6A6A62; /* the link ink, wearing gray — the vanilla contrast pour's exact value (112716f, #8B76C4 → #6A6A62) */
+  --here-ink:#1F1F1F; /* the nav's here-pill ink on its own gray grad — the vanilla pour's exact value (112716f, #F4ECFF → #1F1F1F) */
+  /* the state hues, paper-side (S33 family 7, the S20 F-section precedent):
+     the house's own dawn ramp — blank's bare attribute IS the plain day,
+     so the pastel night values would sit on paper unreadable (2.07–2.25) */
+  --ok:#3c6b49; --warn:#8C4A12; --err:#a34e6c;
+  /* gold on gold washes speaks the deep rung on paper (S33 family 6 —
+     the rung AttentionStrip already wore as a literal, promoted to token) */
+  --gold-wash-ink:#7A5A12;
+  /* the crew rope's violet, deepened for paper (S33 — along love's own
+     violet ramp #b795ff → #8B76C4 → #5f4b96) */
+  --crew-violet:#5F4B96;
+  /* the studio chrome wears the cartridge (S33 family 1 — the mechanism
+     proposed in the lane report): the surface ladder steps onto blank's
+     own paper, every value already declared in this twin — the ground,
+     the sheet, the field white. Blank has no night (the documented
+     quirk), so the paper studio holds in both themes */
+  --studio-shell:#F5F4F0; --studio-mat:#FDFCFA;
+  --studio-surface:#FDFCFA; --studio-surface-subtle:#FFFFFF; --studio-surface-muted:#FFFFFF;
+  /* …and the studio's TSX-reachable accent tokens get blank's paper-side
+     values (S33 family 1, second half): the S21/S22 night fallbacks are
+     light-by-design (gold #EBCB77, pink #F3C7C1) — invisible on the paper
+     chrome (1.10–1.57). Values ride the ramps already derived in this
+     twin; the studio's own dawn block still out-specifies these at dawn */
+  --oc-gold-text:var(--gold-wash-ink);
+  --oc-err-text:var(--err);
+  --oc-err-pill-bg:rgba(163,78,108,.03);
   /* the nav, re-inked neutral on the header's own dark — --nav-gold is
      the nav-link ink SLOT here (gold itself stays with money) */
   --nav-gold:#D8D6CE; --nav-hover:#8A8A82;
