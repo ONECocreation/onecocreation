@@ -3,7 +3,7 @@
    0018.05.28 a₿).
 
    cartridge.css is LOVE's file and stays it. The other voices pour
-   HERE, gated on html[data-oc-cartridge="pacman"|"earthside"|"blank"|"mono"] —
+   HERE, gated on html[data-oc-cartridge="pacman"|"earthside"|"blank"|"mono"|"material"] —
    the one attribute the root layout sets, and only when the selection
    flips off the default (src/brand/cartridge.ts, one line). With LOVE active the
    attribute never renders: every rule below is inert, and Love's output
@@ -666,4 +666,277 @@ html[data-oc-cartridge="mono"][data-oc-theme="light"] .hero::after{
 html[data-oc-cartridge="mono"][data-oc-theme="light"] .lions-gate{
   background:linear-gradient(rgba(239,241,236,.82), rgba(239,241,236,.9)),
     url("/images/mono/gate.webp") center top / cover no-repeat;
+}
+
+/* ── MATERIAL — the design-language reading (TASK-35/S38 lane 1,
+   0018.06.03 a₿). A palette/type reading of the Material Design 3 token
+   system — VALUES ONLY, quarried: no @material/web, no components, no
+   runtime (S36's verdict). Provenance: values from Google material-web
+   MD3 v0.192 tokens (tokens/versions/v0_192/_md-ref-palette.scss +
+   _md-sys-color.scss), Apache-2.0. The naming law (license §6,
+   trademarks withheld): `material` is the internal machine id only; the
+   displayed name is the house's own voice (the twin in
+   src/brand/cartridges/material.ts carries the working pick).
+
+   THE MAPPING (S36 lane 3): MD3 dark scheme = night, light scheme =
+   dawn. The six-rung surface-container ladder COLLAPSES onto the
+   house's rungs — chosen, not mapped: night ground = surface neutral6
+   #141218, panels walk neutral10/12/17; inks are the on-surface family,
+   edges the outline rungs, accents the primary #6750a4/#d0bcff family
+   (tertiary on --rose, secondary80 on the copper slot). MD3 error is
+   the ONLY MD3 state hue and pours --err. MD3 ships no ok/warn/info —
+   THE CHOICE, stated: per S36's compose ruling ("MD3 for
+   surfaces/ink/accent, Eva for states") --ok/--warn/--info borrow Eva's
+   ramps (success #00d68f, info #0095ff, and the shifted caution — the
+   shift's Δ rides the eva twin's header note).
+
+   GOLD STAYS MONEY (fleet semantic lock): no MD3 role pours --gold*.
+
+   FONTS: MD3's typescale speaks Roboto — named first in the stack,
+   never fetched (no new binaries; systems without the face fall through
+   to the nearest system sans).
+
+   DARK-FIRST, BOTH LIGHTS HONEST FROM BIRTH (the S20/S21 laws at
+   creation): every body-ink pair WCAG-measured ≥ 4.5:1 in BOTH themes
+   (the table rides the lane report; tightest: dawn ok 4.81). Like MONO
+   this is a full twin — the hero, the four skies, the keep-dark pours
+   and the lion veils are re-told in the language's own light. The
+   studio chrome wears the cartridge too (the S33 family-1 mechanism):
+   the surface ladder below steps onto MD3's elevation rungs — MD3 dark
+   elevation lightens as it deepens, an exact fit for the house's
+   ladder. ── */
+html[data-oc-cartridge="material"]{
+  /* the night scheme — surface neutral6, on-surface inks, primary accents */
+  --space:#141218; --ground:#141218;
+  --panel:rgba(29,27,32,.78); --edge:rgba(147,143,153,.4);
+  --ink:#E6E0E9; --muted:#938F99;
+  --ink-strong:#FEF7FF; --ink-body:#E6E0E9;
+  --glass:rgba(33,31,38,.66); --glass-edge:rgba(147,143,153,.35);
+  --ghost-bg:rgba(255,255,255,.08); --ghost-ink:#E6E0E9;
+  --glass-strong:rgba(29,27,32,.9);
+  --sheet-bg:rgba(29,27,32,.98);
+  --field-bg:rgba(255,255,255,.94); --field-ink:#1D1B20;
+  --soft-sm:0 18px 44px -28px rgba(0,0,0,.55);
+  --soft:0 24px 60px -30px rgba(0,0,0,.65);
+  /* the state hues — --err is MD3's own (error80 #F2B8B5); ok/warn/info
+     borrow Eva's ramps per S36's compose ruling (the choice, stated in
+     the twin): success500 #00D68F, info500 #0095FF, and the shifted
+     caution (the house's ruled night rung — the Δ rides the eva pour) */
+  --ok:#00D68F; --warn:#E9954C; --err:#F2B8B5; --info:#0095FF;
+  /* the accents — primary80 links (--lavender), tertiary80 kickers
+     (--rose), info speaks azure (semantic lock: the info CHANNEL, the
+     cartridge's own voice) */
+  --rose:#EFB8C8; --lavender:#D0BCFF; --lavender-soft:#B69DF8;
+  --lavender-bright:#EADDFF;
+  --purple:#6750A4;
+  --teal-bright:#42AAFF; --teal:#0095FF; --teal-deep:#0057C2;
+  /* the nav, re-inked primary on the header's own dark — the header
+     never theme-flips, so these hold in both material twins; --nav-gold
+     is the nav-link ink SLOT here (gold itself stays with money) */
+  --nav-gold:#D0BCFF; --nav-hover:#EADDFF;
+  --here-grad:linear-gradient(90deg,#D0BCFF 0%,#938F99 100%);
+  --here-wash:linear-gradient(90deg,rgba(208,188,255,.14),rgba(147,143,153,.14));
+  --here-ink:#1D1B20;
+  --pop-bg:rgba(20,18,24,.97); --pop-edge:rgba(208,188,255,.3);
+  /* the band ladder, neutral-ladder steps (neutral4/6/10/12/17) — the
+     cosmic walk keeps its shape and trades its cosmos for elevation */
+  --band-1:#1D1B20; --band-2:#141218; --band-3:#211F26;
+  --band-4:#1D1B20; --band-5:#2B2930; --band-6:#211F26;
+  --band-7:#0F0D13; --band-8:#1D1B20; --band-9:#2B2930;
+  --hero-grad-0:#0F0D13; --hero-grad-1:#1D1B20;
+  --sky-cream:#D0BCFF; /* the living sky's stars → primary dust */
+  --glass-night:rgba(33,31,38,.66); --glass-night-edge:rgba(147,143,153,.35);
+  /* the studio chrome wears the cartridge (S33 family 1): the surface
+     ladder steps onto MD3's elevation rungs — shell neutral4, mat
+     neutral6, then the container rungs low/container/high, lightening
+     as they deepen exactly the way MD3 dark elevation does */
+  --studio-shell:#0F0D13; --studio-mat:#141218;
+  --studio-surface:#1D1B20; --studio-surface-subtle:#211F26; --studio-surface-muted:#2B2930;
+  /* the type law: Roboto named first in EVERY role — never fetched;
+     systems without the face fall through to the nearest system sans */
+  --serif:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --disp:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --sans:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-h1:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-h2:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-h3:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-body:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-body-app:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-pixel:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-arcade:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+
+/* the ground under everything — the night surface with a breath of
+   primary, held still like the house's own fixed-attachment law */
+html[data-oc-cartridge="material"] body{
+  background:
+    radial-gradient(900px 500px at 50% -4%, rgba(103,80,164,.14), transparent 60%),
+    radial-gradient(760px 620px at 88% 12%, rgba(208,188,255,.06), transparent 62%),
+    linear-gradient(180deg,#141218 0%, #0F0D13 45%, #1D1B20 100%);
+  background-attachment:fixed;
+}
+
+/* the hero steps off the celestial gradient — same shape, the
+   language's light: the purple sun-radial becomes a primary glow at
+   elevation, the nebula layer a soft surface-tint wash (no art
+   invented), and the glyph that draws in white light re-inks to
+   primary90 (the fill needs !important — Love's reduced-motion and
+   .ll-done rules pin fill:#fff !important; scoped specificity alone
+   can't out-vote them). The hero is keep-dark (sections.tsx:21) — it
+   holds THIS night in both themes, so the gradient stops are literals,
+   never tokens the dawn re-pours, and the dawn block below does not
+   repaint the hero at all (only its ::after fade) */
+html[data-oc-cartridge="material"] .hero{
+  background:radial-gradient(760px 460px at 50% 14%, rgba(103,80,164,.28), transparent 62%),
+    linear-gradient(180deg,#0F0D13,#1D1B20 55%,#141218);
+}
+html[data-oc-cartridge="material"] .hero::before{
+  background:radial-gradient(700px 420px at 50% 0%, rgba(208,188,255,.1), transparent 62%);
+  opacity:1; animation:none;
+}
+html[data-oc-cartridge="material"] .hero::after{
+  background:linear-gradient(180deg,transparent,#1D1B20);
+}
+html[data-oc-cartridge="material"] .ll-line{
+  stroke:#EADDFF; fill:#EADDFF!important;
+  filter:drop-shadow(0 0 6px rgba(208,188,255,.7)) drop-shadow(0 0 20px rgba(103,80,164,.5));
+}
+html[data-oc-cartridge="material"] .llstage .tw{
+  background:radial-gradient(circle,#EADDFF 0%,rgba(208,188,255,.55) 45%,transparent 72%);
+  filter:drop-shadow(0 0 6px rgba(208,188,255,.8));
+}
+html[data-oc-cartridge="material"] .hero h1{text-shadow:0 0 34px rgba(208,188,255,.3)}
+
+/* the four skies, re-laddered neutral — they hold in BOTH themes for
+   keep-dark rooms; the dawn's paper repaint of non-keep-dark skies sits
+   in the dawn block below */
+html[data-oc-cartridge="material"] main section.sky-night{
+  background:linear-gradient(180deg,#1D1B20 0%,#141218 100%)!important}
+html[data-oc-cartridge="material"] main section.sky-veil{
+  background:radial-gradient(700px 420px at 50% 0%,rgba(103,80,164,.22),transparent 60%),
+    linear-gradient(180deg,#211F26 0%,#2B2930 50%,#141218 100%)!important}
+html[data-oc-cartridge="material"] main section.sky-glass{
+  background:linear-gradient(180deg,#141218 0%,#211F26 100%)!important}
+html[data-oc-cartridge="material"] main section.sky-warm{
+  background:linear-gradient(180deg,#2B2930 0%,#211F26 100%)!important}
+
+/* keep-dark rooms hold MATERIAL'S OWN night (the S20 law: a keep-dark
+   room holds its cartridge's night, not Love's) — the law stands in
+   both themes; the pour rides the bare attribute so dawn never flips it */
+html[data-oc-cartridge="material"] main .keep-dark{
+  --ink-strong:#FEF7FF; --ink-body:#E6E0E9; --muted:#938F99;
+  --rose:#EFB8C8; --gold-deep:#D9B24E; --teal-bright:#42AAFF;
+  --glass:var(--glass-night); --glass-edge:var(--glass-night-edge);
+}
+
+/* the classes band steps off Love's nebula onto the neutral ladder */
+html[data-oc-cartridge="material"] #classes{
+  background:linear-gradient(180deg,var(--band-3) 0%,var(--band-5) 100%);
+}
+
+/* the aurora's violet plume was Love's nebula — under MATERIAL it
+   re-hues to the language's own primary violet (the teal and gold
+   plumes already read as elevation tints) */
+html[data-oc-cartridge="material"] .aurora i:nth-child(2){
+  background:radial-gradient(closest-side,rgba(103,80,164,.5),transparent 70%)}
+
+/* the lion, re-veiled — the art path is this cartridge's own ASSET SLOT
+   (nothing renders until the community's art lands); only the veil
+   light is told here: surface night, holding on the keep-dark-law page */
+html[data-oc-cartridge="material"] .lions-gate{
+  background:linear-gradient(rgba(15,13,19,.8), rgba(20,18,24,.9)),
+    url("/images/material/gate.webp") center top / cover no-repeat;
+}
+html[data-oc-cartridge="material"] .lions-gate-dark{
+  background:linear-gradient(rgba(15,13,19,.62), rgba(15,13,19,.78)),
+    url("/images/material/gate.webp") center top / cover no-repeat;
+}
+html[data-oc-cartridge="material"] .lions-gate-dark .sec-h{color:#FEF7FF}
+html[data-oc-cartridge="material"] .lions-gate-dark p{color:#E6E0E9}
+
+/* ── the DAWN TWIN — MD3's light scheme: neutral98 paper, neutral10
+   inks, the primary deepens to its 40 rung, tertiary to 40, error to
+   40; the borrowed Eva states deepen along THEIR ramps (success800,
+   info700, and the house's ruled paper-side caution). Surfaces keep the
+   night's ladder shape, inks re-derive (WCAG-measured, the table in the
+   lane report), gold stays money. These rules out-specify Love's dawn
+   blanket repaints — same !important, higher specificity, later in the
+   cascade; Love's own rules are untouched. ── */
+html[data-oc-cartridge="material"][data-oc-theme="light"]{
+  --space:#FEF7FF; --ground:#FEF7FF;
+  --panel:rgba(255,255,255,.72); --edge:rgba(121,116,126,.4);
+  --ink:#1D1B20; --muted:#49454F;
+  --ink-strong:#000000; --ink-body:#1D1B20;
+  --glass:rgba(247,242,250,.62); --glass-edge:rgba(121,116,126,.35);
+  --ghost-bg:rgba(29,27,32,.07); --ghost-ink:#49454F;
+  --glass-strong:rgba(247,242,250,.92);
+  --sheet-bg:#F7F2FA;
+  --field-bg:rgba(255,255,255,.96); --field-ink:#1D1B20;
+  --soft-sm:0 18px 44px -28px rgba(73,69,79,.35);
+  --soft:0 24px 60px -30px rgba(73,69,79,.45);
+  /* the state hues, paper-side: error40 is MD3's own; the borrowed
+     Eva states deepen along their own ramps (success500 reads 1.81 on
+     the paper, 700 3.41, 800 passes the bare ground at 4.81 but melts
+     on the rooms shelf's green wash at 4.10 — the 900 rung holds) */
+  --ok:#004A45; --warn:#8C4A12; --err:#B3261E; --info:#0057C2;
+  /* the accents, deepened for paper — primary40 links (6.12 measured),
+     tertiary40 kickers */
+  --rose:#7D5260; --lavender:#6750A4; --lavender-soft:#B69DF8;
+  --teal-bright:#0057C2; --teal:#0057C2; --teal-deep:#0041A8;
+  /* the band ladder, light-scheme steps (neutral90–98) */
+  --band-1:#F3EDF7; --band-2:#FEF7FF; --band-3:#ECE6F0;
+  --band-4:#E6E0E9; --band-5:#F7F2FA; --band-6:#ECE6F0;
+  --band-7:#E6E0E9; --band-8:#F3EDF7; --band-9:#F7F2FA;
+  /* the studio ladder, paper-side (S33 family 1) */
+  --studio-shell:#ECE6F0; --studio-mat:#F3EDF7;
+  --studio-surface:#FEF7FF; --studio-surface-subtle:#FFFFFF; --studio-surface-muted:#FFFFFF;
+  /* NOT poured at dawn: the hero gradient stops and --sky-cream — the
+     hero is keep-dark (it holds the night scheme in both themes), so
+     the hero stops and the star dust keep their night values; only the
+     ::after fade below hands off to the paper */
+}
+
+html[data-oc-cartridge="material"][data-oc-theme="light"] body{
+  background:
+    radial-gradient(900px 500px at 50% -4%, rgba(103,80,164,.08), transparent 60%),
+    radial-gradient(760px 620px at 88% 12%, rgba(0,87,194,.05), transparent 62%),
+    linear-gradient(180deg,#FEF7FF 0%, #F3EDF7 45%, #ECE6F0 100%);
+  background-attachment:fixed;
+}
+
+/* the blanket repaints Love's dawn owns, re-told on the light scheme
+   (the mono/earthside precedent: same !important, higher specificity,
+   later) */
+html[data-oc-cartridge="material"][data-oc-theme="light"] main:not(.lions-gate-dark){
+  background:#FEF7FF!important;
+}
+html[data-oc-cartridge="material"][data-oc-theme="light"] main section:not(.keep-dark):not(.lions-gate){
+  background:linear-gradient(180deg,#FEF7FF,#F3EDF7)!important;
+}
+
+/* the four skies at midday — paper analogs of the neutral skies;
+   keep-dark skies are excluded, their night rules above hold */
+html[data-oc-cartridge="material"][data-oc-theme="light"] main section.sky-night:not(.keep-dark):not(.lions-gate){
+  background:linear-gradient(180deg,#FEF7FF 0%,#F3EDF7 100%)!important}
+html[data-oc-cartridge="material"][data-oc-theme="light"] main section.sky-veil:not(.keep-dark):not(.lions-gate){
+  background:radial-gradient(700px 420px at 50% 0%,rgba(103,80,164,.1),transparent 60%),
+    linear-gradient(180deg,#F7F2FA 0%,#ECE6F0 55%,#F3EDF7 100%)!important}
+html[data-oc-cartridge="material"][data-oc-theme="light"] main section.sky-glass:not(.keep-dark):not(.lions-gate){
+  background:#F3EDF7!important}
+html[data-oc-cartridge="material"][data-oc-theme="light"] main section.sky-warm:not(.keep-dark):not(.lions-gate){
+  background:linear-gradient(180deg,#F7F2FA 0%,#F3EDF7 100%)!important}
+
+/* the hero at dawn HOLDS THE NIGHT SCHEME — it is keep-dark, so the
+   surface ground, the primary90 glyph and the tint wash above stand;
+   the only dawn rule the hero needs is the fade's handoff to the paper
+   band (Love's own dawn does the same: the hero holds night, the fade
+   repaints) */
+html[data-oc-cartridge="material"][data-oc-theme="light"] .hero::after{
+  background:linear-gradient(180deg,transparent,#F3EDF7);
+}
+
+/* the lion at dawn — the veil steps onto the light scheme */
+html[data-oc-cartridge="material"][data-oc-theme="light"] .lions-gate{
+  background:linear-gradient(rgba(254,247,255,.82), rgba(254,247,255,.9)),
+    url("/images/material/gate.webp") center top / cover no-repeat;
 }
