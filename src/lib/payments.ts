@@ -3,10 +3,14 @@ import type { ChargeEventType } from "./store";
 
 /**
  * The payments adapter — ONE interface, many rails (spec module 2).
- * v1 wires BTCPay (bitcoin on-chain + lightning, the artist's own node).
- * Square and Stripe slot behind the same shapes later: hosted-redirect
+ * BTCPay (bitcoin on-chain + lightning, the artist's own node) is the
+ * default rail. Square wires the fiat-card rail: hosted Payment Link,
+ * so the site never touches a card number (PCI stays on Square). Stripe
+ * still slots behind the same shapes later. Every rail: hosted-redirect
  * payUrl always, discriminated webhook events, idempotency key on create.
- * The app holds API tokens to the artist's own processors — never funds.
+ * The app holds API tokens to the artist's own processors — never funds;
+ * Square is the one rail where "the artist's own processor" means their
+ * own Square merchant account, not a shared one.
  */
 
 export type CanonicalChargeState = "charge_created" | "processing" | "settled" | "expired" | "invalid";
@@ -189,11 +193,293 @@ export async function btcpayRefundLink(chargeId: string): Promise<string | null>
   return null;
 }
 
-export function getAdapter(id: string): PaymentAdapter | null {
-  return id === "btcpay" ? btcpayAdapter : null;
+// ---------------------------------------------------------------------------
+// Square — the fiat-card rail (Payment Links / Checkout API)
+// ---------------------------------------------------------------------------
+//
+// Square is a CARD-FIAT rail only: it never accepts a sats amount, and this
+// adapter never invents a sats↔fiat rate to bridge that gap (the honest seam
+// the build spec asked for). createCharge() throws on currency "SATS" — the
+// caller must have already resolved the order to a fiat PriceSnapshot (the
+// store's Price.fiat field already carries the exact { amount: minor-units,
+// currency: ISO-4217 } shape Square's Money type wants, so no conversion is
+// needed for a fiat-priced item — only a refusal for a sats-only one).
+//
+// createCharge() uses the Payment Links API (POST /v2/online-checkout/
+// payment-links) — Square hosts the card form and the buyer never leaves it
+// to reach us, so no card data ever touches this codebase. It builds a full
+// `order` object (not the simpler "quick_pay" shape) SPECIFICALLY because
+// quick_pay carries no metadata field — this codebase's orderId has to ride
+// along on the Square Order itself (`order.metadata.orderId`) so the
+// webhook can recover which of OUR orders a Square event is about. The
+// response's `order_id` (the Order Square creates behind the link,
+// synchronously, at link-creation time) becomes our chargeId — every
+// payment/order webhook event correlates back to it; the payment_link id
+// itself never reappears in a webhook payload.
+//
+// status() polls the Orders API (GET /v2/orders/{id}) and reads `state`.
+// The webhook route resolves our internal orderId the same way: a fresh
+// GET /v2/orders/{id} read of the SAME order (squareOrderMetadata() below)
+// — a webhook is treated as "go re-check the source of truth," never as
+// self-sufficient payload data, because payment.updated events (unlike
+// order.updated ones) don't carry the order's metadata inline.
+// verifyWebhook() implements Square's documented HMAC-SHA256-over-
+// (notification-URL + raw-body) scheme, base64-encoded, header
+// `x-square-hmacsha256-signature`. Square's signature is computed over the
+// exact webhook subscription URL (not sent in any header), so the site's
+// own copy of that URL is a required, non-secret companion value —
+// SQUARE_WEBHOOK_URL below. Get it wrong (trailing slash, http vs https)
+// and every event silently fails verification, same honest-refusal shape
+// as a wrong secret.
+//
+// Endpoint base + version are PINNED, not auto-negotiated: Square ships a
+// dated API version with its own deprecation calendar. Bump SQUARE_API_
+// VERSION deliberately (check Square's changelog first) — never let it
+// drift silently.
+//
+// NO network call in this codebase has been exercised against Square's
+// servers — sandboxes aren't reachable from this environment. Every shape
+// below is built from documented request/response contracts, not a live
+// round-trip. Pac's sandbox run is the first real test.
+
+const SQUARE_API_VERSION = "2024-01-18"; // pinned — bump deliberately, see note above
+
+interface SquareEnv {
+  accessToken: string;
+  locationId: string;
+  environment: "sandbox" | "production";
 }
 
-/** The rail the shelf sells on today. Honest: null when nothing is wired. */
-export function liveAdapter(): PaymentAdapter | null {
+function squareEnv(): SquareEnv | null {
+  const accessToken = process.env.SQUARE_ACCESS_TOKEN;
+  const locationId = process.env.SQUARE_LOCATION_ID;
+  if (!accessToken || !locationId) return null;
+  const environment = process.env.SQUARE_ENVIRONMENT === "production" ? "production" : "sandbox";
+  return { accessToken, locationId, environment };
+}
+
+function squareBaseUrl(environment: SquareEnv["environment"]): string {
+  return environment === "production"
+    ? "https://connect.squareup.com"
+    : "https://connect.squareupsandbox.com";
+}
+
+async function squareFetch(pathname: string, env: SquareEnv, init?: RequestInit): Promise<Response> {
+  return fetch(`${squareBaseUrl(env.environment)}${pathname}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${env.accessToken}`,
+      "Content-Type": "application/json",
+      "Square-Version": SQUARE_API_VERSION,
+      ...init?.headers,
+    },
+    cache: "no-store",
+  });
+}
+
+/** Pure request-body builder — split out so the shape is unit-testable
+ *  without a network call (scripts/square-payments.test.mjs). Uses the full
+ *  `order` shape (not "quick_pay") so `metadata.orderId` can ride along —
+ *  see the file-header note on why the webhook needs it. */
+export function buildSquarePaymentLinkBody(
+  req: ChargeRequest,
+  idempotencyKey: string,
+  locationId: string,
+) {
+  return {
+    idempotency_key: idempotencyKey,
+    order: {
+      location_id: locationId,
+      line_items: [
+        {
+          name: `Order ${req.orderId}`.slice(0, 512),
+          quantity: "1",
+          base_price_money: { amount: req.amount, currency: req.currency },
+        },
+      ],
+      metadata: { orderId: req.orderId },
+    },
+    checkout_options: {
+      redirect_url: req.redirectUrl,
+    },
+  };
+}
+
+/** Orders API `state` → the canonical machine. Square has no order-level
+ *  "processing" — a card's brief authorization window still reads OPEN;
+ *  webhook payment.updated events (mapped below) are the finer-grained
+ *  signal when one has arrived. */
+export function mapOrderState(state: string | undefined): CanonicalChargeState {
+  switch (state) {
+    case "OPEN":
+      return "charge_created";
+    case "COMPLETED":
+      return "settled";
+    case "CANCELED":
+      return "expired";
+    default:
+      return "invalid";
+  }
+}
+
+/** Payment object `status` → the canonical event union (webhook path). */
+function mapPaymentStatus(status: string | undefined): ChargeEventType | null {
+  switch (status) {
+    case "COMPLETED":
+      return "settled";
+    case "APPROVED":
+    case "PENDING":
+      return "processing";
+    case "FAILED":
+      return "invalid";
+    case "CANCELED":
+      return "expired";
+    default:
+      return null;
+  }
+}
+
+interface SquareWebhookPayload {
+  type?: string;
+  data?: {
+    id?: string;
+    object?: {
+      payment?: { order_id?: string; status?: string };
+      order?: { id?: string; state?: string };
+    };
+  };
+}
+
+/** The two event families Square sends for a checkout: payment.* (finest
+ *  grain — has the payment's own status) and order.* (coarser — the
+ *  Order's own state). Both resolve to the same chargeId: the Square
+ *  order id. Pure + exported for offline testing. */
+export function mapSquareWebhookEvent(payload: SquareWebhookPayload): ChargeEvent | null {
+  const t = payload.type;
+  if (t === "payment.created" || t === "payment.updated") {
+    const payment = payload.data?.object?.payment;
+    const orderId = payment?.order_id;
+    const type = mapPaymentStatus(payment?.status);
+    return orderId && type ? { type, chargeId: orderId } : null;
+  }
+  if (t === "order.updated" || t === "order.fulfillment.updated") {
+    const order = payload.data?.object?.order;
+    const orderId = order?.id ?? payload.data?.id;
+    if (!orderId) return null;
+    // order-level state only carries NEW information for the two
+    // terminal states; OPEN says nothing beyond "still charge_created"
+    if (order?.state === "COMPLETED") return { type: "settled", chargeId: orderId };
+    if (order?.state === "CANCELED") return { type: "expired", chargeId: orderId };
+    return null;
+  }
+  return null;
+}
+
+export const squareAdapter: PaymentAdapter = {
+  id: "square",
+  rails: ["card"],
+
+  configured() {
+    return squareEnv() !== null;
+  },
+
+  async createCharge(req, idempotencyKey) {
+    if (req.currency === "SATS") {
+      // no invented rate — a sats-priced order simply cannot charge through
+      // Square; the caller is expected to have refused this earlier with an
+      // honest "not purchasable by card" rather than reach this line
+      throw new Error("square: fiat rail only — sats orders route through the bitcoin rail, never Square");
+    }
+    const env = squareEnv();
+    if (!env) throw new Error("square: not configured");
+    const res = await squareFetch("/v2/online-checkout/payment-links", env, {
+      method: "POST",
+      body: JSON.stringify(buildSquarePaymentLinkBody(req, idempotencyKey, env.locationId)),
+    });
+    if (!res.ok) throw new Error(`square: payment link create ${res.status}`);
+    const body = (await res.json()) as {
+      payment_link?: { id: string; order_id?: string; url?: string };
+    };
+    const link = body.payment_link;
+    if (!link?.order_id || !link.url) {
+      throw new Error("square: payment link response missing order_id/url");
+    }
+    return { chargeId: link.order_id, payUrl: link.url };
+  },
+
+  async status(chargeId) {
+    const env = squareEnv();
+    if (!env) throw new Error("square: not configured");
+    const res = await squareFetch(`/v2/orders/${chargeId}`, env);
+    if (!res.ok) throw new Error(`square: order read ${res.status}`);
+    const body = (await res.json()) as { order?: { state?: string } };
+    return mapOrderState(body.order?.state);
+  },
+
+  async verifyWebhook(rawBody, headers) {
+    const key = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
+    // the exact webhook subscription URL configured in the Square
+    // dashboard — not a secret, but required INPUT to the signature (see
+    // the file-header note); wrong value = every event fails to verify
+    const url = process.env.SQUARE_WEBHOOK_URL;
+    const sig = headers.get("x-square-hmacsha256-signature");
+    if (!key || !url || !sig) return null;
+    const expected = createHmac("sha256", key).update(url + rawBody).digest("base64");
+    let given: Buffer, want: Buffer;
+    try {
+      given = Buffer.from(sig, "base64");
+      want = Buffer.from(expected, "base64");
+    } catch {
+      return null;
+    }
+    if (given.length !== want.length || !timingSafeEqual(given, want)) return null;
+    let payload: SquareWebhookPayload;
+    try {
+      payload = JSON.parse(rawBody) as SquareWebhookPayload;
+    } catch {
+      return null;
+    }
+    return mapSquareWebhookEvent(payload);
+  },
+};
+
+/**
+ * Reads back the `metadata.orderId` this codebase stamped on a Square order
+ * at createCharge() time — the webhook route's answer to "which of OUR
+ * orders is this event about" (Square's payment.updated events don't carry
+ * order metadata inline, so a fresh read of the order is the reliable
+ * path; see the Square section's file-header note). Null on any failure —
+ * the webhook route's job is to treat that as "nothing to flip," same as
+ * an unverifiable signature, never to throw a 500 at Square's retrier.
+ */
+export async function squareOrderMetadata(squareOrderId: string): Promise<Record<string, string> | null> {
+  const env = squareEnv();
+  if (!env) return null;
+  try {
+    const res = await squareFetch(`/v2/orders/${squareOrderId}`, env);
+    if (!res.ok) return null;
+    const body = (await res.json()) as { order?: { metadata?: Record<string, string> } };
+    return body.order?.metadata ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function getAdapter(id: string): PaymentAdapter | null {
+  if (id === "btcpay") return btcpayAdapter;
+  if (id === "square") return squareAdapter;
+  return null;
+}
+
+/**
+ * The rail the shelf sells on. No argument = today's default (unchanged for
+ * every existing call site): BTCPay if configured, honest null otherwise.
+ * Pass "square" to ask for the card rail specifically — fiat-only, a sats
+ * order never reaches it. This is the one hook a "pay by card" surface
+ * needs; today only the single-item checkout's minimal seam uses it (see
+ * the `rail: "card"` field on POST /api/store/checkout).
+ */
+export function liveAdapter(rail?: "btcpay" | "square"): PaymentAdapter | null {
+  if (rail === "square") return squareAdapter.configured() ? squareAdapter : null;
   return btcpayAdapter.configured() ? btcpayAdapter : null;
 }

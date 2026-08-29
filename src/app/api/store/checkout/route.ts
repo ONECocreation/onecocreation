@@ -9,7 +9,7 @@ import {
   type OrderRecord,
   type PriceSnapshot,
 } from "@/lib/store";
-import { liveAdapter } from "@/lib/payments";
+import { liveAdapter, getAdapter } from "@/lib/payments";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 import { frenFromRequest } from "@/lib/fren-auth";
@@ -23,15 +23,17 @@ export const dynamic = "force-dynamic";
  * Digital/package items require a fren session — the entitlement subject is
  * captured HERE, because the paid webhook is server-to-server and the order
  * is the only identity source at grant time.
+ *
+ * PAYMENTS-LANE SEAM: `rail: "card"` asks for the Square rail specifically
+ * (fiat-only; a sats-only item is honestly refused, never rate-converted —
+ * see payments.ts's Square section). Omitted = today's unchanged default
+ * (sats-first, BTCPay). Body is parsed BEFORE the adapter is resolved so
+ * the requested rail can be read; a retry on an existing order always
+ * recharges on the rail it was ORIGINALLY created on
+ * (getAdapter(order.adapterId)), never whatever the retry's rail field
+ * asks for — a sats order can't silently become a card charge on retry.
  */
 export async function POST(request: Request) {
-  const adapter = liveAdapter();
-  if (!adapter) {
-    return NextResponse.json(
-      { ok: false, reason: "payment rail not connected — the shelf is browse-only" },
-      { status: 503 }
-    );
-  }
   if (!ordersConfigured()) {
     return NextResponse.json({ ok: false, reason: "order store not configured" }, { status: 503 });
   }
@@ -43,6 +45,7 @@ export async function POST(request: Request) {
     discountCode?: string;
     contact?: { email?: string };
     shipping?: { name?: string; address?: string };
+    rail?: "card";
   };
   try {
     body = await request.json();
@@ -50,16 +53,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, reason: "bad request" }, { status: 400 });
   }
 
+  const wantsCard = body.rail === "card";
+  const adapter = liveAdapter(wantsCard ? "square" : undefined);
+  if (!adapter) {
+    return NextResponse.json(
+      {
+        ok: false,
+        reason: wantsCard ? "card rail not connected" : "payment rail not connected — the shelf is browse-only",
+      },
+      { status: 503 }
+    );
+  }
+
   const origin = new URL(request.url).origin;
 
-  // re-charge an expired order: same order, fresh invoice
+  // re-charge an expired order: same order, fresh invoice — ALWAYS on the
+  // rail it was originally created on (getAdapter(order.adapterId)), never
+  // on whatever `rail` this retry happened to ask for. A sats order can't
+  // silently become a card charge (or vice versa) on retry.
   if (body.orderId) {
     const order = await getOrder(body.orderId);
     if (!order) return NextResponse.json({ ok: false, reason: "no such order" }, { status: 404 });
     if (!["expired", "underpaid", "charge_created"].includes(order.state)) {
       return NextResponse.json({ ok: false, reason: `order is ${order.state}` }, { status: 409 });
     }
-    const charge = await adapter.createCharge(
+    const chargeAdapter = getAdapter(order.adapterId) ?? adapter;
+    const charge = await chargeAdapter.createCharge(
       {
         orderId: order.id,
         amount: order.priceSnapshot.amount,
@@ -100,10 +119,18 @@ export async function POST(request: Request) {
     entitlementSubject = `${fren.handle}@${fren.space}`;
   }
 
-  // sats-primary: sale price (gold rail) wins when present
+  // sats-primary: sale price (gold rail) wins when present — EXCEPT on the
+  // card rail, which can only ever charge fiat (no invented sats↔fiat rate;
+  // an item with no fiat price is honestly not card-purchasable)
   const effective = item.sale ?? item.price;
+  if (wantsCard && !effective.fiat) {
+    return NextResponse.json(
+      { ok: false, reason: `"${item.title}" has no fiat price — not purchasable by card` },
+      { status: 409 }
+    );
+  }
   let snapshot: PriceSnapshot =
-    effective.sats != null
+    !wantsCard && effective.sats != null
       ? { amount: effective.sats, currency: "SATS", at: new Date().toISOString() }
       : { amount: effective.fiat!.amount, currency: effective.fiat!.currency, at: new Date().toISOString() };
 

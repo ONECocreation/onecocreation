@@ -82,7 +82,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
             </div>
           )}
           <div className="reveal" style={{ transitionDelay: ".18s" }}>
-            <BuyPanel item={item} railLive={liveAdapter() !== null} />
+            <BuyPanel item={item} railLive={liveAdapter() !== null} squareLive={liveAdapter("square") !== null} />
           </div>
         </div>
       </section>
