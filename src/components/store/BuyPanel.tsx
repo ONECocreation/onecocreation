@@ -22,7 +22,18 @@ const fieldLabel: React.CSSProperties = {
   textTransform: "uppercase", color: "var(--muted, #897f97)",
 };
 
-export default function BuyPanel({ item, railLive }: { item: StoreItem; railLive: boolean }) {
+export default function BuyPanel({
+  item,
+  railLive,
+  squareLive = false,
+}: {
+  item: StoreItem;
+  railLive: boolean;
+  /** true only when Square is env-configured — an unconfigured site never
+   *  renders a trace of this prop (the card option, the rail-picker chips,
+   *  the "pick how you'd like to pay" copy all stay dark). */
+  squareLive?: boolean;
+}) {
   const [email, setEmail] = useState("");
   const [discountCode, setDiscountCode] = useState("");
   const [shipName, setShipName] = useState("");
@@ -37,6 +48,17 @@ export default function BuyPanel({ item, railLive }: { item: StoreItem; railLive
   const sizes = item.sizes ?? [];
   const needsSize = sizes.length > 0;
 
+  // the card rail is fiat-only — no invented sats↔fiat rate, so it's only
+  // OFFERED when the item actually carries a fiat price (see payments.ts's
+  // Square section / the checkout route's honest "not purchasable by card"
+  // refusal, which this mirrors on the UI side rather than letting a click
+  // round-trip into that error).
+  const effective = item.sale ?? item.price;
+  const cardAvailable = squareLive && effective.fiat != null;
+  const bothAvailable = railLive && cardAvailable;
+  const [rail, setRail] = useState<"btcpay" | "square">(railLive ? "btcpay" : "square");
+  const anyRailLive = railLive || cardAvailable;
+
   async function buy() {
     setBusy(true);
     setError(null);
@@ -50,6 +72,7 @@ export default function BuyPanel({ item, railLive }: { item: StoreItem; railLive
           discountCode: discountCode.trim() || undefined,
           contact: email ? { email } : undefined,
           shipping: needsShipping ? { name: shipName, address: shipAddr } : undefined,
+          rail: rail === "square" ? "card" : undefined,
         }),
       });
       const data = await res.json();
@@ -77,7 +100,7 @@ export default function BuyPanel({ item, railLive }: { item: StoreItem; railLive
     return <p style={{ marginTop: 24, fontSize: ".9rem", color: "var(--muted, #897f97)" }}>Sold out — back when the artist restocks.</p>;
   }
 
-  if (!railLive) {
+  if (!anyRailLive) {
     return (
       <p style={{ marginTop: 24, fontSize: ".85rem", color: "var(--muted, #897f97)" }}>
 the shelf opens for checkout very soon — browse with love ✨
@@ -95,8 +118,34 @@ the shelf opens for checkout very soon — browse with love ✨
       }}
     >
       <p style={{ margin: 0, fontSize: ".82rem", color: "var(--muted, #897f97)" }}>
-        Pay in bitcoin — quick as a breath on lightning — and it lands straight with the artist.
+        {bothAvailable
+          ? "Pick how you'd like to pay."
+          : cardAvailable && !railLive
+            ? "Pay by card, through Square's own secure checkout."
+            : "Pay in bitcoin — quick as a breath on lightning — and it lands straight with the artist."}
       </p>
+      {bothAvailable && (
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 10 }}>
+          <button
+            type="button"
+            className="chip-select"
+            aria-pressed={rail === "btcpay"}
+            onClick={() => setRail("btcpay")}
+            style={{ fontSize: ".82rem" }}
+          >
+            ⚡ bitcoin
+          </button>
+          <button
+            type="button"
+            className="chip-select"
+            aria-pressed={rail === "square"}
+            onClick={() => setRail("square")}
+            style={{ fontSize: ".82rem" }}
+          >
+            💳 card
+          </button>
+        </div>
+      )}
       {gated && (
         <p style={{ margin: "8px 0 0", fontSize: ".8rem", color: "var(--info)" }}>
           unlocks for your account — your email at checkout becomes it, or sign in first.
