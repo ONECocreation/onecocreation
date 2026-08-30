@@ -126,6 +126,20 @@ export default function RootLayout({
       <body>
         <script dangerouslySetInnerHTML={{ __html:
           "try{if(localStorage.getItem('oc-theme')==='light')document.documentElement.setAttribute('data-oc-theme','light')}catch(e){}" }} />
+        {/* Lane CAL, loves-desk plan: the a₿|AD slider + counts toggle,
+            flash-free the same way oc-theme is above (kept as an inline
+            literal, not an import, so the server layout never crosses
+            into CalendarPrefs.tsx's "use client" boundary — the same
+            reason oc-theme's own script above isn't imported from
+            ThemeLantern.tsx). Literal MUST stay byte-identical to
+            CALENDAR_PREFS_BOOT_SCRIPT in src/components/calendar/CalendarPrefs.tsx. */}
+        <script dangerouslySetInnerHTML={{ __html:
+          "try{" +
+          "var p=localStorage.getItem('oc-cal-primary');" +
+          "if(p==='civil')document.documentElement.setAttribute('data-oc-cal-primary','civil');" +
+          "var c=localStorage.getItem('oc-cal-counts');" +
+          "if(c==='on')document.documentElement.setAttribute('data-oc-cal-counts','on');" +
+          "}catch(e){}" }} />
         <script dangerouslySetInnerHTML={{ __html: EASY_MODE_BOOT_SCRIPT }} />
         <CartridgeVars />
         {/* S11 lane 2 — see it before you wear it: the operator's cartridge

@@ -1,0 +1,96 @@
+/* ════════════════════════════════════════════════════════════════════
+   Calendar view — Love's Desk / the Classroom Four shared foundation
+   (Lane CAL, loves-desk plan). House/cartridge tokens ONLY — no hex
+   literals. Rose = --rose (blackout), lavender = --lavender (multi-day),
+   gold = --gold/--gold-2/--gold-deep (event pills — "gold means money"
+   stays intact: these pills mark LIVE SESSIONS per the ruled mockup, the
+   same non-money gold usage --nav-gold/--room-gold already carry).
+   "Today" rides --teal-bright, matching the one existing house precedent
+   (AdminWeekGrid's month view, src/components/console/AdminWeekGrid.tsx)
+   rather than the mockup's literal gold, to keep gold=money intact.
+   ════════════════════════════════════════════════════════════════════ */
+
+.cal-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ── the month grid ───────────────────────────────────────────────── */
+.cal-month-grid{display:grid;grid-template-columns:repeat(7,minmax(84px,1fr));gap:6px;min-width:588px}
+.cal-week-ribbon{display:grid;grid-template-columns:repeat(7,minmax(96px,1fr));gap:6px;min-width:672px}
+
+/* ── the day cell ──────────────────────────────────────────────────── */
+.cal-cell{position:relative;display:flex;flex-direction:column;gap:4px;min-height:64px;
+  padding:8px 9px 7px;border-radius:14px;background:var(--panel);border:1px solid var(--glass-edge);
+  font-family:var(--sans);color:var(--ink)}
+.cal-cell--blackout{background:rgba(231,178,195,.14);border-color:rgba(231,178,195,.4)}
+.cal-cell--multiday{background:rgba(139,118,196,.14);border-color:rgba(139,118,196,.4)}
+.cal-cell--today{border:2px solid var(--teal-bright);padding:7px 8px 6px}
+.cal-cell--selected{box-shadow:0 0 0 2px var(--gold-deep) inset}
+.cal-cell--boundary .cal-cell__month-abbr{opacity:1}
+
+.cal-cell__head{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.cal-cell__primary{font-family:var(--font-mono);font-weight:700;font-size:1.05rem;color:var(--ink-strong)}
+.cal-cell__corner{font-family:var(--font-mono);font-size:.68rem;color:var(--muted);white-space:nowrap}
+.cal-cell__month-abbr{opacity:.72;margin-right:2px;text-transform:uppercase;letter-spacing:.04em}
+
+.cal-cell__mark{align-self:flex-start;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--err);font-weight:700}
+.cal-cell__doy{position:absolute;bottom:5px;right:8px;font-family:var(--font-mono);font-size:.6rem;color:var(--muted);opacity:.75}
+.cal-cell__week-label{position:absolute;top:-1.4em;left:0;font-family:var(--font-mono);font-size:.6rem;
+  color:var(--muted);letter-spacing:.05em}
+
+.cal-cell__pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto}
+.cal-pill{display:inline-block;border-radius:999px;padding:2px 8px;font-size:.62rem;font-weight:700;
+  letter-spacing:.03em;line-height:1.5;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-pill--plain{background:var(--glass);border:1px solid var(--glass-edge);color:var(--ink-body)}
+.cal-pill--gold{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink)}
+.cal-pill--lav{background:rgba(139,118,196,.28);color:var(--ink-strong)}
+
+/* civil-primary: the a₿|AD slider swaps which value leads (positions
+   trade, not just weight — the Admiral's ruling). DayCell already swaps
+   the JSX; this class is the styling HOOK the ruling calls for, so a
+   future tweak (e.g. civil's numerals reading a touch smaller than a₿'s
+   D-prefixed ones) has a scope to land in without another prop. */
+.civil-primary .cal-cell__primary{letter-spacing:0}
+
+/* ── the legend row ───────────────────────────────────────────────── */
+.cal-legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:10px;
+  font-size:.72rem;color:var(--muted)}
+.cal-legend__swatch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.cal-legend__swatch--blackout{background:var(--rose)}
+.cal-legend__swatch--multiday{background:var(--lavender)}
+.cal-legend__swatch--today{border:2px solid var(--teal-bright);background:transparent}
+
+/* ── the Calendar⌄ options popover ────────────────────────────────── */
+.cal-options{position:relative;display:inline-block;font-family:var(--sans)}
+.cal-options__trigger{background:var(--glass);border:1px solid var(--glass-edge);color:var(--ink-body);
+  border-radius:999px;padding:8px 16px;font-size:.82rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.cal-options__trigger:hover{border-color:var(--lavender)}
+.cal-options__panel{position:absolute;top:calc(100% + 8px);right:0;z-index:var(--z-popup,70);
+  min-width:290px;background:var(--pop-bg);border:1.5px solid var(--pop-edge);border-radius:16px;
+  box-shadow:var(--pop-shadow);padding:16px 16px 14px}
+
+.cal-slider{display:flex;border-radius:999px;background:var(--glass);border:1px solid var(--glass-edge);
+  padding:3px;gap:3px}
+.cal-slider__seg{flex:1;border-radius:999px;padding:8px 10px;font-size:.78rem;font-weight:700;
+  letter-spacing:.03em;color:var(--muted);cursor:pointer;text-align:center;background:transparent;border:none}
+.cal-slider__seg[aria-pressed="true"]{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink)}
+
+.cal-counts-row{display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:10px}
+.cal-counts-label{font-size:.82rem;color:var(--ink-body)}
+.cal-counts-toggle{position:relative;width:38px;height:22px;border-radius:999px;background:var(--glass);
+  border:1px solid var(--glass-edge);cursor:pointer;flex:none;padding:0}
+.cal-counts-toggle::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+  background:var(--muted);transition:transform .14s ease,background .14s ease}
+.cal-counts-toggle[aria-pressed="true"]{border-color:var(--gold-deep)}
+.cal-counts-toggle[aria-pressed="true"]::after{transform:translateX(16px);background:var(--gold-deep)}
+
+.cal-options__hint{margin:12px 0 0;font-size:.68rem;line-height:1.55;color:var(--muted)}
+
+/* every control gets the house's visible focus ring */
+.cal-options__trigger:focus-visible,
+.cal-slider__seg:focus-visible,
+.cal-counts-toggle:focus-visible,
+.cal-cell:focus-visible{outline:2px solid var(--teal-bright);outline-offset:2px}
+
+@media(prefers-reduced-motion:reduce){
+  .cal-counts-toggle::after{transition:none}
+}
