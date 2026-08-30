@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { listItems, upsertItem, removeItem, validateItem, type StoreItem } from "@/lib/store";
-import { btcpayAdapter } from "@/lib/payments";
+import { btcpayAdapter, squareAdapter } from "@/lib/payments";
 import { blobStoreEnabled } from "@/lib/registry";
 import { TIERS } from "@/lib/entitlement";
 
@@ -29,9 +29,10 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: true,
     items: await listItems({ includeHidden: true }),
-    // honest rail states for the RAILS berths — btcpay is real (env-wired
-    // or not); square/stripe are S5 SOON berths, no config to report yet
-    rails: { btcpay: btcpayAdapter.configured() },
+    // honest rail states for the RAILS berths — btcpay and square are both
+    // real adapters now (env-wired or not); stripe stays a key drawer only
+    // (see StripeRailCard) until its own adapter ships
+    rails: { btcpay: btcpayAdapter.configured(), square: squareAdapter.configured() },
     partners: partnerRails(),
     // deliverable uploads: browser → blob directly when the blob store is
     // live; otherwise the dev driver (multipart to data/deliverables/)

@@ -392,7 +392,7 @@ async function getRedis(): Promise<RedisLike> {
   return redisClient;
 }
 
-async function kv(cmd: unknown[]): Promise<{ result: unknown } | null> {
+export async function kv(cmd: unknown[]): Promise<{ result: unknown } | null> {
   if (!vaultConfigured()) return null;
   const rest = restEnv();
   if (rest) {

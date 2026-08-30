@@ -250,7 +250,7 @@ interface SquareEnv {
   environment: "sandbox" | "production";
 }
 
-function squareEnv(): SquareEnv | null {
+export function squareEnv(): SquareEnv | null {
   const accessToken = process.env.SQUARE_ACCESS_TOKEN;
   const locationId = process.env.SQUARE_LOCATION_ID;
   if (!accessToken || !locationId) return null;
@@ -264,7 +264,7 @@ function squareBaseUrl(environment: SquareEnv["environment"]): string {
     : "https://connect.squareupsandbox.com";
 }
 
-async function squareFetch(pathname: string, env: SquareEnv, init?: RequestInit): Promise<Response> {
+export async function squareFetch(pathname: string, env: SquareEnv, init?: RequestInit): Promise<Response> {
   return fetch(`${squareBaseUrl(env.environment)}${pathname}`, {
     ...init,
     headers: {
@@ -463,6 +463,92 @@ export async function squareOrderMetadata(squareOrderId: string): Promise<Record
   } catch {
     return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Square bitcoin-enablement check (Admiral's walk — Pac's own Square
+// merchant account has bitcoin accepted; the admin desk asks Square's own
+// Location for that signal rather than assuming).
+// ---------------------------------------------------------------------------
+//
+// ⚠ FIRST-VERIFIED-BY-PAC'S-SANDBOX, same honest limit as every other Square
+// call in this file: no network reaches Square from this build environment,
+// so the exact field below is a documented-best-guess, not a confirmed
+// contract. Square's public API docs do not publish one dedicated "is
+// bitcoin accepted" boolean at the time this was written — Pac's dashboard
+// shows bitcoin acceptance as a Checkout/Payment-methods setting on the
+// LOCATION (Square's bitcoin rail is via Cash App's bitcoin balance; the
+// customer pays through Square's OWN hosted checkout page — this codebase
+// never touches bitcoin directly through Square, it only asks "would the
+// hosted page offer it"). GET /v2/locations/{id} is a real, well-documented
+// endpoint regardless of the exact field; this reads it and looks for a
+// bitcoin-shaped signal in `capabilities`. If NONE of the known keys are
+// present, the honest answer is `enabled: null` ("couldn't determine — check
+// the Square dashboard directly"), never a guessed true/false. The moment
+// Pac's sandbox run reports the real field, update BITCOIN_CAPABILITY_KEYS —
+// nothing else here should need to change.
+const BITCOIN_CAPABILITY_KEYS = ["BITCOIN", "CASH_APP_BITCOIN", "BITCOIN_PAYMENTS"];
+
+export interface SquareBitcoinStatus {
+  /** false = Square isn't configured at all — this was never asked */
+  checked: boolean;
+  /** true/false = a confident answer from a real response; null = asked, couldn't tell */
+  enabled: boolean | null;
+  /** always populated, human-readable, honest — the admin desk shows this verbatim */
+  reason: string;
+  checkedAtMs?: number;
+}
+
+let bitcoinStatusCache: { at: number; status: SquareBitcoinStatus } | null = null;
+/** brief + re-checkable, same convention as squareEnv's other short caches —
+ *  an operator who just flipped the toggle in their own Square dashboard
+ *  shouldn't have to wait long to see it reflected here. */
+const BITCOIN_CHECK_TTL_MS = 5 * 60 * 1000;
+
+/** Pure — split out so the capability-parsing logic is unit-testable without
+ *  a network call (scripts/square-payments.test.mjs). */
+export function findBitcoinCapability(capabilities: unknown): string | null {
+  if (!Array.isArray(capabilities)) return null;
+  const hit = capabilities.find((c) => typeof c === "string" && BITCOIN_CAPABILITY_KEYS.includes(c));
+  return typeof hit === "string" ? hit : null;
+}
+
+/**
+ * Query Square's own Location for a bitcoin-enablement signal. Never a
+ * silent failure — every path returns a populated `reason`. `force` bypasses
+ * the brief cache (the admin desk's "recheck" button).
+ */
+export async function squareBitcoinEnabled(force = false): Promise<SquareBitcoinStatus> {
+  const env = squareEnv();
+  if (!env) {
+    return { checked: false, enabled: null, reason: "Square isn't configured" }; // not cached — nothing was actually asked
+  }
+  if (!force && bitcoinStatusCache && Date.now() - bitcoinStatusCache.at < BITCOIN_CHECK_TTL_MS) {
+    return bitcoinStatusCache.status;
+  }
+  let status: SquareBitcoinStatus;
+  try {
+    const res = await squareFetch(`/v2/locations/${env.locationId}`, env);
+    if (!res.ok) {
+      status = { checked: true, enabled: null, reason: `Square location read failed (${res.status}) — could not verify`, checkedAtMs: Date.now() };
+    } else {
+      const body = (await res.json()) as { location?: { capabilities?: unknown } };
+      const hit = findBitcoinCapability(body.location?.capabilities);
+      status = hit
+        ? { checked: true, enabled: true, reason: `Square reports "${hit}" enabled on this location`, checkedAtMs: Date.now() }
+        : {
+            checked: true,
+            enabled: null,
+            reason:
+              "Square's location response carried no known bitcoin-capability field — this check is unverified against a real payload (see the file-header note); confirm in the Square dashboard (Settings → Checkout → Payment methods) for now",
+            checkedAtMs: Date.now(),
+          };
+    }
+  } catch (err) {
+    status = { checked: true, enabled: null, reason: `Square unreachable — ${err instanceof Error ? err.message : "network error"}`, checkedAtMs: Date.now() };
+  }
+  bitcoinStatusCache = { at: Date.now(), status };
+  return status;
 }
 
 export function getAdapter(id: string): PaymentAdapter | null {
