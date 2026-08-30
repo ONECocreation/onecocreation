@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
+import { blobStoreEnabled } from "@/lib/registry";
 import {
   listMaterials,
   addMaterial,
@@ -44,7 +45,10 @@ export async function GET(request: Request) {
   }
   const roomSlug = new URL(request.url).searchParams.get("room") ?? undefined;
   const items = await listMaterials(roomSlug);
-  return NextResponse.json({ ok: true, items });
+  // blob store live → uploads go browser → blob directly (the store's own
+  // uploads.deliverableDirect signal, same shape, so the shelf's uploader
+  // can pick the right path without guessing)
+  return NextResponse.json({ ok: true, items, blobDirect: blobStoreEnabled() });
 }
 
 interface AddBody {
