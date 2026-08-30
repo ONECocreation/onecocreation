@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import DiscountsDesk from "@/components/console/DiscountsDesk";
 import PwycDesk from "@/components/console/PwycDesk";
+import SquareCatalogDesk from "@/components/console/SquareCatalogDesk";
+import SquareRailCard from "@/components/console/SquareRailCard";
 import StripeRailCard from "@/components/console/StripeRailCard";
 import { Chip, SectionHead, field, overlay, sheet } from "@/components/console/glass";
 import { bftDateTime, estimateHeightAt } from "@/lib/bb/bft";
@@ -67,6 +69,7 @@ export default function MoneyRoom() {
   const [ledger, setLedger] = useState<Ledger | null>(null);
   const [denied, setDenied] = useState(false);
   const [railBtcpay, setRailBtcpay] = useState<boolean | null>(null);
+  const [railSquare, setRailSquare] = useState<boolean | null>(null);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [window_, setWindow_] = useState<"moon" | "week" | "all">("moon");
   const [kind, setKind] = useState<"all" | "sessions" | "goods" | "tips">("all");
@@ -90,7 +93,11 @@ export default function MoneyRoom() {
       .catch(() => {});
     fetch("/api/admin/store", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d?.ok && setRailBtcpay(Boolean(d.rails?.btcpay)))
+      .then((d) => {
+        if (!d?.ok) return;
+        setRailBtcpay(Boolean(d.rails?.btcpay));
+        setRailSquare(Boolean(d.rails?.square));
+      })
       .catch(() => {});
     loadOrders();
   }, []);
@@ -197,9 +204,19 @@ export default function MoneyRoom() {
           {railBtcpay == null ? null : railBtcpay ? <Chip tone="green">live</Chip> : <Chip tone="grey">not connected</Chip>}
           <span style={{ color: "var(--muted)" }}> · {railBtcpay ? "sats straight to Love" : "set BTCPAY_* env and redeploy"}</span>
         </span>
-        <span style={{ ...railCard, opacity: 0.7 }}><b>Square</b> <Chip tone="grey">soon</Chip></span>
+        <span style={railCard}>
+          <b>Square</b>{" "}
+          {railSquare == null ? null : railSquare ? <Chip tone="green">live</Chip> : <Chip tone="grey">not connected</Chip>}
+          <span style={{ color: "var(--muted)" }}> · {railSquare ? "cards via Square's hosted checkout" : "set SQUARE_* env and redeploy"}</span>
+        </span>
         <span style={{ ...railCard, opacity: 0.7 }}><b>Stripe</b> <Chip tone="grey">keys desk below</Chip></span>
       </div>
+
+      {/* the real Square desk (Admiral's walk — replaced the dead "soon"
+          chip): configured status, the exact env vars when it isn't, the
+          bitcoin-enablement check once it is */}
+      <SquareRailCard />
+      <SquareCatalogDesk />
 
       {/* Love's own key drawer + RTFM — storage and instructions only; the
           card rail that spends these keys ships next build (0018.05.23) */}

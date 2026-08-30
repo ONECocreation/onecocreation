@@ -129,12 +129,26 @@ Offline, everything that doesn't need a real Square server is covered by
 `node scripts/square-payments.test.mjs` — run it any time this file or
 `payments.ts`'s Square section changes.
 
+## What shipped, part two — the admin desk (Admiral's walk)
+
+`/a/money`'s Money Rails row used to show Square permanently stuck on a
+dead "soon" chip while an unwired Stripe key drawer sat live below it.
+That's fixed: `SquareRailCard.tsx` reads `squareAdapter.configured()` and
+shows either the exact `SQUARE_*` env vars to set, or (once configured) a
+bitcoin-enablement check against the merchant's own Square location
+(`squareBitcoinEnabled()` below). `SquareCatalogDesk.tsx` is the one-way
+Square-catalog-display admin surface — `src/lib/square-catalog.ts` reads
+Square's Catalog API (GET-only, never upserted into this store's own
+catalog, never synced back) and lets the operator pick which fetched
+items to keep an eye on here. Both are admin-desk-only; nothing here adds
+a Square item to the public storefront shelf — that's a bigger product
+call left for later.
+
 ## What's next (not in this port's scope)
 
-- **No UI posts `rail: "card"` besides `BuyPanel.tsx`'s single-item
-  quick-buy** — the admin desk (`/a/money` or equivalent) still needs a
-  "pay with card" affordance once Square is configured, and `api/cart/
-  checkout` (the basket) is still sats-first only.
+- `api/cart/checkout` (the basket) is still sats-first only — the card
+  rail is wired into the single-item quick-buy (`BuyPanel.tsx`) and the
+  admin desk above, not the multi-item basket.
 - **Refunds.** BTCPay has `btcpayRefundLink()` (a pull-payment the buyer
   claims); Square refunds are a different API (`POST /v2/refunds`, keyed
   off the Square **payment** id, not the order id this adapter stores as
