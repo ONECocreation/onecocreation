@@ -125,6 +125,16 @@ export interface BookingConfig {
    *  something reads this field. Absent/undefined = "bft".
    */
   calendarDefault?: "bft" | "civil";
+  /** SITE-WIDE default for the Classroom Four's member vantage switcher
+   *  (Sanctuary/Lesson Path/Circle — loves-desk-and-classroom-plan.md, Lane
+   *  ROOM), the exact same honest seam as `calendarDefault` just above: a
+   *  per-member choice always lives in localStorage (`oc-room-vantage`) and
+   *  wins once set; this only seeds first-time visitors. SEAM ONLY — no
+   *  admin UI writes it yet (`src/components/rooms/vantage.ts`'s
+   *  `ROOM_VANTAGE_SITE_DEFAULT` constant is the honest fallback until
+   *  something reads this field). Absent/undefined = "sanctuary".
+   */
+  classroomVantageDefault?: "sanctuary" | "lesson" | "circle";
 }
 
 /**
