@@ -6,7 +6,7 @@ import OverviewPanel from "@/components/console/OverviewPanel";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { CONSOLE_SITE, CONSOLE_CHROME, CONSOLE_ROOMS } from "@/lib/console";
 import { listTips, tipsConfigured, type TipLedger } from "@/lib/tips";
-import AdminWeekGrid from "@/components/console/AdminWeekGrid";
+import LovesDesk from "@/components/console/LovesDesk";
 import AttentionStrip from "@/components/console/AttentionStrip";
 import LiveDoorCard from "@/components/console/LiveDoorCard";
 import { getLiveState, roomForSlug, LIVE_SCHEDULE, LIVE_YOUTUBE } from "@/lib/live";
@@ -88,7 +88,7 @@ export default async function ConsoleOverviewPage() {
     // Home & Calendar (wireframe v2): the jars at a glance, then the week.
     return (
       <div>
-        <AdminWeekGrid />
+        <LovesDesk />
         {/* the day's actions live WITH the calendar (Admiral, 0018.05.15) —
             goods to ship + offers waiting; sessions close out in their popups */}
         <AttentionStrip />

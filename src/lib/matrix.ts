@@ -88,7 +88,7 @@ export function matrixConfigured(): boolean {
 }
 
 async function call(
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "PUT",
   path: string,
   body?: unknown,
 ): Promise<{ ok: true; data: unknown } | { ok: false; reason: string }> {
@@ -213,7 +213,7 @@ export function isMxid(v: string): boolean {
 export async function postToRoom(
   alias: string,
   body: string,
-): Promise<{ ok: true } | { ok: false; reason: string }> {
+): Promise<{ ok: true; eventId?: string } | { ok: false; reason: string }> {
   const id = await resolveRoom(alias);
   if (!id) return { ok: false, reason: "room not found on the homeserver" };
   const txn = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -221,5 +221,53 @@ export async function postToRoom(
     msgtype: "m.text",
     body,
   });
+  if (!res.ok) return { ok: false, reason: res.reason };
+  const eventId = (res.data as { event_id?: string }).event_id;
+  return { ok: true, eventId };
+}
+
+/**
+ * Pin (or clear) the room's single pinned-message state
+ * (`m.room.pinned_events`) — Love's Desk Day altitude's "pinned welcome"
+ * rail (room-pins.ts). The bot holds PL100 in Love's own rooms (room
+ * creator — see the file header), which is well above the default
+ * state_default of 50 that `m.room.pinned_events` requires, so this rides
+ * the same call() plumbing as postToRoom rather than needing a wider
+ * token. Always replaces the room's pin list with AT MOST one event id —
+ * Love's Desk never asks for a stack of pins.
+ */
+export async function setRoomPinnedEvent(
+  alias: string,
+  eventId: string | null,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const id = await resolveRoom(alias);
+  if (!id) return { ok: false, reason: "room not found on the homeserver" };
+  const res = await call("PUT", `/rooms/${encodeURIComponent(id)}/state/m.room.pinned_events`, {
+    pinned: eventId ? [eventId] : [],
+  });
   return res.ok ? { ok: true } : { ok: false, reason: res.reason };
+}
+
+/**
+ * The room's joined-member count + display names, read with the BOT's own
+ * session (it is already a member of every one of Love's rooms) — no
+ * per-visitor login round trip needed, which is why this is safe to call
+ * from an operator-only server route. `joined_members` hands back a
+ * display_name per user in the SAME call, so honest names ride along for
+ * free; there is no presence API wired anywhere in this house, so online
+ * dots are never invented here (Love's Desk's roster rail, room-pins.ts's
+ * sibling honesty rule).
+ */
+export async function roomRoster(
+  alias: string,
+): Promise<{ ok: true; count: number; names: string[] } | { ok: false; reason: string }> {
+  const id = await resolveRoom(alias);
+  if (!id) return { ok: false, reason: "room not found on the homeserver" };
+  const res = await call("GET", `/rooms/${encodeURIComponent(id)}/joined_members`);
+  if (!res.ok) return { ok: false, reason: res.reason };
+  const joined = (res.data as { joined?: Record<string, { display_name?: string }> }).joined ?? {};
+  const names = Object.entries(joined).map(
+    ([mxid, info]) => info.display_name || mxid.slice(1, mxid.indexOf(":")),
+  );
+  return { ok: true, count: names.length, names };
 }

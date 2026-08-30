@@ -114,6 +114,27 @@ export interface BookingConfig {
   /** the artist's external calendar (secret iCal address) — its events
    *  become busy windows subtracted from every slot board. Additive. */
   icalUrl?: string;
+  /** SITE-WIDE default for the a₿|AD calendar slider (Love's Desk / the
+   *  Classroom Four, loves-desk plan Lane CAL) — which date leads by
+   *  default across the site's calendars. Per-user choice always lives in
+   *  localStorage (`oc-cal-primary`) and wins once set; this only seeds
+   *  first-time visitors. SEAM ONLY in this lane: no admin UI writes it
+   *  yet (BookingConfig's existing readConfig/writeConfig plumbing is the
+   *  intended path once one exists) — `src/components/calendar`'s prefs
+   *  provider falls back to the honest constant default `"bft"` until
+   *  something reads this field. Absent/undefined = "bft".
+   */
+  calendarDefault?: "bft" | "civil";
+  /** SITE-WIDE default for the Classroom Four's member vantage switcher
+   *  (Sanctuary/Lesson Path/Circle — loves-desk-and-classroom-plan.md, Lane
+   *  ROOM), the exact same honest seam as `calendarDefault` just above: a
+   *  per-member choice always lives in localStorage (`oc-room-vantage`) and
+   *  wins once set; this only seeds first-time visitors. SEAM ONLY — no
+   *  admin UI writes it yet (`src/components/rooms/vantage.ts`'s
+   *  `ROOM_VANTAGE_SITE_DEFAULT` constant is the honest fallback until
+   *  something reads this field). Absent/undefined = "sanctuary".
+   */
+  classroomVantageDefault?: "sanctuary" | "lesson" | "circle";
 }
 
 /**

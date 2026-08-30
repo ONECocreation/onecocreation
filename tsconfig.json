@@ -11,6 +11,13 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    /* calendar-view.ts imports bft.ts with an explicit .ts extension so the
+       SAME file resolves under plain `node` (scripts/calendar-view.test.mjs,
+       no bundler) and under tsc/webpack alike — the house's math-lib test
+       pattern (square-payments.test.mjs already node-imports src/lib/*.ts
+       directly; this is the one file with a real cross-module runtime
+       import, so it needs the extension both ways). */
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [

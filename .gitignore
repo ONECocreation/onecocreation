@@ -95,4 +95,12 @@ next-env.d.ts
 
 # fren profile art (avatars/banners), dev driver (prod uses public Blob) — never tracked
 /public/fren-media/
+
+# classroom materials — private driver (dev files / prod KV), never tracked;
+# uploaded bytes' dev driver (prod uses public Blob under classroom/materials/)
+/data/classroom-materials/
+/public/classroom-uploads/
+
+# room pins — dual-driver doc, dev file half (prod uses KV/Blob)
+/data/room-pins.json
 .claude/worktrees/

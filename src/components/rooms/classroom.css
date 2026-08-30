@@ -1,0 +1,38 @@
+/* The Classroom Four (loves-desk-and-classroom-plan.md, Lane ROOM) — the
+   vantage-switcher bar, room tabs, and the two-column shell Sanctuary and
+   Lesson Path both share. */
+
+.cls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.cls-vantage {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cls-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.cls-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .cls-grid {
+    grid-template-columns: 1fr;
+  }
+}

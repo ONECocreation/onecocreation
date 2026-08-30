@@ -1,0 +1,59 @@
+/* ════════════════════════════════════════════════════════════════════
+   Love's Desk — the three altitudes (loves-desk-and-classroom-plan.md,
+   Lane DESK). House glass grammar + cartridge tokens only, riding the
+   same vocabulary as src/components/console/glass.tsx and the calendar
+   foundation's own calendar-view.css.
+   ════════════════════════════════════════════════════════════════════ */
+
+.desk{font-family:var(--sans);color:var(--ink)}
+
+.desk-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.desk-bar__spacer{flex:1}
+
+.desk-live-door{border-color:rgba(180,134,43,.5)}
+.desk-live-door--on{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink);border-color:transparent}
+
+.desk-month-head{display:flex;align-items:center;justify-content:center;gap:14px;margin:4px 0 12px;flex-wrap:wrap}
+.desk-month-head__title{text-align:center;min-width:220px}
+.desk-month-head__title p{margin:0;font-family:var(--font-h3);font-size:1.02rem;color:var(--ink-strong)}
+.desk-schedule-chip{margin-left:6px}
+
+.desk-breadcrumb{margin:10px 0;font-size:.82rem;color:var(--muted)}
+.desk-breadcrumb b{color:var(--ink-strong);font-weight:700}
+
+.desk-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+@media(max-width:900px){.desk-grid-3{grid-template-columns:1fr}}
+
+.desk-panel{background:var(--panel);border:1px solid var(--glass-edge);border-radius:16px;
+  padding:14px 16px;margin-bottom:14px}
+.desk-panel__head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.desk-panel__head h3{margin:0;font-family:var(--font-h3);font-weight:400;font-size:.95rem;color:var(--ink-strong)}
+.desk-panel__muted{color:var(--muted);font-size:.82rem;margin:4px 0}
+.desk-panel__note{color:var(--info);font-size:.78rem;margin:6px 0 0}
+.desk-panel__count{font-family:var(--font-mono);font-size:1.3rem;color:var(--ink-strong);margin:2px 0 6px}
+
+.desk-shelf__list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.desk-shelf__label{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  margin:10px 0 4px}
+.desk-shelf__row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 8px;border-radius:10px;
+  background:var(--glass);border:1px solid var(--glass-edge);font-size:.82rem}
+.desk-shelf__name{color:var(--ink-body);text-decoration:none;font-weight:600;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.desk-shelf__name:hover{text-decoration:underline}
+.desk-shelf--drag{outline:2px dashed var(--gold-deep);outline-offset:-2px}
+
+.desk-roster__name{font-size:.8rem;color:var(--ink-body);padding:2px 0}
+
+.desk-room-picker{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:.82rem;color:var(--muted)}
+.desk-room-picker select{border:1px solid rgba(139,118,196,.45);border-radius:10px;padding:6px 10px;
+  background:var(--field-bg,#fff);color:var(--field-ink,#4a4458);font-size:.85rem;font-family:inherit}
+
+.desk-schedule__row{display:block;width:100%;text-align:left;cursor:pointer;border-radius:10px;
+  padding:7px 10px;background:var(--glass);border:1px solid var(--glass-edge);font-size:.82rem;
+  color:inherit;font-family:inherit}
+.desk-schedule__row--working{border-color:var(--gold-deep);box-shadow:0 0 0 1px var(--gold-deep) inset}
+
+.desk-pin__text{font-size:.9rem;line-height:1.5;color:var(--ink-body);white-space:pre-wrap}
+
+.desk .btn-round{width:34px;height:34px;background:var(--glass);border:1px solid rgba(139,118,196,.45);
+  color:var(--info);font-size:1rem;border-radius:999px}
