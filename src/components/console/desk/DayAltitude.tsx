@@ -143,6 +143,8 @@ export default function DayAltitude({
         {liveHere && <Chip tone="gold">● LIVE now</Chip>}
       </div>
 
+      <div className="desk-day-grid">
+      <div>
       <PinEditor roomSlug={selectedRoomSlug} roomTitle={room?.title ?? null} />
 
       <MaterialsShelf
@@ -150,7 +152,9 @@ export default function DayAltitude({
         sessionKey={sessionKey}
         sessionLabel={featured ? featured.title : "this session"}
       />
+      </div>
 
+      <div>
       <RosterPanel roomSlug={selectedRoomSlug} roomTitle={room?.title ?? null} />
 
       <div className="desk-panel">
@@ -167,6 +171,8 @@ export default function DayAltitude({
             </p>
           )
           : <p className="desk-panel__muted">nothing else on the books</p>}
+      </div>
+      </div>
       </div>
     </div>
   );

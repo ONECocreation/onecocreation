@@ -14,7 +14,8 @@
 
 /* ── the month grid ───────────────────────────────────────────────── */
 .cal-month-grid{display:grid;grid-template-columns:repeat(7,minmax(84px,1fr));gap:6px;min-width:588px}
-.cal-week-ribbon{display:grid;grid-template-columns:repeat(7,minmax(96px,1fr));gap:6px;min-width:672px}
+.cal-week-ribbon{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cal-week-ribbon > *{min-width:0}
 
 /* ── the day cell ──────────────────────────────────────────────────── */
 .cal-cell{position:relative;display:flex;flex-direction:column;gap:4px;min-height:64px;
