@@ -57,3 +57,8 @@
 
 .desk .btn-round{width:34px;height:34px;background:var(--glass);border:1px solid rgba(139,118,196,.45);
   color:var(--info);font-size:1rem;border-radius:999px}
+
+/* DAY altitude — the mockup's two columns: welcome+shelf lead, roster+around ride the rail */
+.desk-day-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;align-items:start;margin-top:6px}
+.desk-day-grid > div{min-width:0}
+@media(max-width:900px){.desk-day-grid{grid-template-columns:1fr}}
