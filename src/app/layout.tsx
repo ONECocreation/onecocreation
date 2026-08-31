@@ -112,6 +112,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      /* the pre-paint scripts below stamp data-oc-theme (and the a₿ slider
+         state) on <html> before React hydrates — the attribute mismatch is
+         by design, so hydration must not warn on this element */
+      suppressHydrationWarning
       className={`${pressStart2P.variable} ${roboto.variable} ${openDyslexic.variable} ${barlow.variable} ${openSans.variable}`}
       /* S9 (0018.05.28 a₿): the cartridge selection surfaces as ONE
          attribute — and only off the default. With LOVE active the prop
