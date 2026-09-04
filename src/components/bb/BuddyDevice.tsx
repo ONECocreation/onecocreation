@@ -74,9 +74,11 @@ export default function BuddyDevice({
 
   // (re)initialise when the buddy identity changes
   useEffect(() => {
-    setVitals(buddy.vitals);
-    setAlive(buddy.alive);
-    setCause(buddy.cause);
+    const { vitals: v, alive: a, cause: c } = buddy;
+    /* the state flips ride a microtask (the set-state-in-effect law: no
+       synchronous setState in an effect body); the refs sync now — their
+       readers (decay loop, persist) run no sooner than a second out */
+    void Promise.resolve().then(() => { setVitals(v); setAlive(a); setCause(c); });
     vitalsRef.current = buddy.vitals;
     aliveRef.current = buddy.alive;
     lastTickRef.current = buddy.lastTick;

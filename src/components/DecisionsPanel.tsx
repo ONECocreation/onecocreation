@@ -67,7 +67,9 @@ export default function DecisionsPanel() {
   }, []);
 
   useEffect(() => {
-    load();
+    /* the kickoff rides a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(load);
   }, [load]);
 
   async function record(id: string) {

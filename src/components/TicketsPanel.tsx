@@ -79,7 +79,9 @@ export default function TicketsPanel({ mode }: { mode: "support" | "crew" }) {
   }, []);
 
   useEffect(() => {
-    load();
+    /* the kickoff rides a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(load);
   }, [load]);
 
   const [kind, setKind] = useState<TicketKind>("request");

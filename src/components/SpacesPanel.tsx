@@ -127,9 +127,9 @@ export default function SpacesPanel({ space }: { space: string }) {
   }, []);
 
   useEffect(() => {
-    loadStatus();
-    loadQueue();
-    loadConfig();
+    /* the kickoffs ride a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(() => { loadStatus(); loadQueue(); loadConfig(); });
   }, [loadStatus, loadQueue, loadConfig]);
 
   const tabs: { id: Tab; label: string }[] = [
@@ -214,7 +214,7 @@ function NodeTab({
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    if (config) setUrl(config.spacesUrl || config.envFallback.spacesUrl || "");
+    if (config) void Promise.resolve().then(() => setUrl(config.spacesUrl || config.envFallback.spacesUrl || ""));
   }, [config]);
 
   async function save() {

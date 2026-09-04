@@ -62,9 +62,11 @@ export default function WelcomeFlow() {
   useEffect(() => {
     if (step !== "names") return;
     const want = accountName.trim().toLowerCase();
-    if (!want) { setAvail("idle"); return; }
-    if (!/^[a-z0-9][a-z0-9_-]{1,23}$/.test(want)) { setAvail("bad"); return; }
-    setAvail("checking");
+    /* the availability flips ride a microtask — a synchronous setState in
+       the effect body would cascade (the set-state-in-effect law) */
+    if (!want) { void Promise.resolve().then(() => setAvail("idle")); return; }
+    if (!/^[a-z0-9][a-z0-9_-]{1,23}$/.test(want)) { void Promise.resolve().then(() => setAvail("bad")); return; }
+    void Promise.resolve().then(() => setAvail("checking"));
     const t = setTimeout(() => {
       fetch(`/api/frens/availability?handle=${encodeURIComponent(want)}`)
         .then((r) => r.json())

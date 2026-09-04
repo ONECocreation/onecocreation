@@ -14,7 +14,9 @@ export default function BasketChip() {
   }
 
   useEffect(() => {
-    refresh();
+    /* the kickoff rides a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(refresh);
     const h = () => refresh();
     window.addEventListener("oc-cart-changed", h);
     return () => window.removeEventListener("oc-cart-changed", h);

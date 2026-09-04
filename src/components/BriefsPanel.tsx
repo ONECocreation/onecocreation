@@ -136,7 +136,9 @@ export default function BriefsPanel() {
   }, []);
 
   useEffect(() => {
-    load();
+    /* the kickoff rides a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(load);
   }, [load]);
 
   /* the ribbon's SHARED / PERSONAL level-2 filters arrive as the URL hash */

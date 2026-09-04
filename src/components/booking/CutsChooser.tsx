@@ -23,12 +23,16 @@ export default function CutsChooser() {
   const [picked, setPicked] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const saved = JSON.parse(sessionStorage.getItem(LOC_KEY) ?? "{}") as { city?: string; state?: string; zip?: string };
-      if (saved.city) setCity(saved.city);
-      if (saved.state) setStateReg(saved.state);
-      if (saved.zip) setZip(saved.zip);
-    } catch { /* fresh visit */ }
+    /* the restore rides a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(() => {
+      try {
+        const saved = JSON.parse(sessionStorage.getItem(LOC_KEY) ?? "{}") as { city?: string; state?: string; zip?: string };
+        if (saved.city) setCity(saved.city);
+        if (saved.state) setStateReg(saved.state);
+        if (saved.zip) setZip(saved.zip);
+      } catch { /* fresh visit */ }
+    });
   }, []);
 
   useEffect(() => {

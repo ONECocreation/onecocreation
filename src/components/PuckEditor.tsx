@@ -85,11 +85,16 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1440px)");
     const apply = () => setWideChrome(mq.matches);
-    apply();
-    if (!mq.matches && localStorage.getItem(PANELS_LS) === null) {
-      /* narrow chrome, first visit: canvas first — open panels via their tabs */
-      setCollapsed((c) => ({ ...c, fields: true, cop: true }));
-    }
+    /* the initial apply + first-visit panel collapse ride a microtask — a
+       synchronous setState in the effect body would cascade a second render
+       (the set-state-in-effect law); the change listener is untouched */
+    void Promise.resolve().then(() => {
+      apply();
+      if (!mq.matches && localStorage.getItem(PANELS_LS) === null) {
+        /* narrow chrome, first visit: canvas first — open panels via their tabs */
+        setCollapsed((c) => ({ ...c, fields: true, cop: true }));
+      }
+    });
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, []);
@@ -116,11 +121,16 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
 
   useEffect(() => {
     refreshPages();
-    try {
-      const saved = JSON.parse(localStorage.getItem(PANELS_LS) ?? "");
-      if (saved && typeof saved === "object") setCollapsed((c) => ({ ...c, ...saved }));
-      if (localStorage.getItem("oc-studio-matrix") === "1") setMatrix(true);
-    } catch { /* first visit */ }
+    /* the saved-layout restore rides a microtask — a synchronous setState in
+       the effect body would cascade a second render (the set-state-in-effect
+       law) */
+    void Promise.resolve().then(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(PANELS_LS) ?? "");
+        if (saved && typeof saved === "object") setCollapsed((c) => ({ ...c, ...saved }));
+        if (localStorage.getItem("oc-studio-matrix") === "1") setMatrix(true);
+      } catch { /* first visit */ }
+    });
     /* presence: fail-soft — any error leaves the studio exactly as it was */
     let cancelled = false;
     let client: PresenceClient | null = null;

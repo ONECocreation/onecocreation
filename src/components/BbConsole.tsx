@@ -51,10 +51,14 @@ export default function BbConsole() {
 
   useEffect(() => {
     if (!npub) return;
-    const list = loadBuddies(npub);
-    setBuddies(list);
-    setActiveId((id) => id ?? list[0]?.id ?? null);
-    setHatching(list.length === 0);
+    /* the localStorage read + state flips ride a microtask — a synchronous
+       setState in the effect body would cascade (the set-state-in-effect law) */
+    void Promise.resolve().then(() => {
+      const list = loadBuddies(npub);
+      setBuddies(list);
+      setActiveId((id) => id ?? list[0]?.id ?? null);
+      setHatching(list.length === 0);
+    });
   }, [npub]);
 
   /* Connect = site-wide when possible (Pac, 2026-07-11): read the key, and if

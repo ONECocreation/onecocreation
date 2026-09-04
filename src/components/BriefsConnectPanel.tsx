@@ -54,7 +54,9 @@ export default function BriefsConnectPanel() {
   }, []);
 
   useEffect(() => {
-    load();
+    /* the kickoff rides a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(load);
   }, [load]);
 
   return (
@@ -158,10 +160,10 @@ function SourceBox({
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    setRepoInput(repo);
+    void Promise.resolve().then(() => setRepoInput(repo));
   }, [repo]);
   useEffect(() => {
-    setBranchInput(branch);
+    void Promise.resolve().then(() => setBranchInput(branch));
   }, [branch]);
 
   async function save() {

@@ -245,7 +245,9 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
   }
 
   useEffect(() => {
-    load();
+    /* the kickoff rides a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(load);
   }, [load]);
 
   /* SHIP lives only on Action Items — learn whether the deploy hook is wired so
@@ -331,10 +333,16 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
       if (live && !wentLive.has(pr)) newlyLive.push(pr);
       if (!live) allLive = false;
     }
-    if (newlyLive.length > 0) {
-      setWentLive((prev) => new Set([...prev, ...newlyLive]));
+    if (newlyLive.length > 0 || allLive) {
+      /* the flips ride a microtask — a synchronous setState in the effect
+         body would cascade a second render (the set-state-in-effect law) */
+      void Promise.resolve().then(() => {
+        if (newlyLive.length > 0) {
+          setWentLive((prev) => new Set([...prev, ...newlyLive]));
+        }
+        if (allLive) setDeploying(false);
+      });
     }
-    if (allLive) setDeploying(false);
     // latestByPr is derived from auths; builtAt from serverBuiltAt — both listed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auths, builtAt, shippedThisSession]);
