@@ -158,12 +158,12 @@ export default function RoomView({ alias, title, kind }: Props) {
     setSending(false);
   }
 
-  async function heart(id: string) {
+  async function heart(id: string, stamp: number) {
     const s = session.current;
     if (!s || myHearts.has(id)) return;
     setMyHearts((m) => new Set(m).add(id));
     setHearts((h) => ({ ...h, [id]: (h[id] ?? 0) + 1 }));
-    await api(`/rooms/${encodeURIComponent(s.roomId)}/send/m.reaction/oc${Date.now()}h${txn.current++}`, {
+    await api(`/rooms/${encodeURIComponent(s.roomId)}/send/m.reaction/oc${stamp}h${txn.current++}`, {
       method: "PUT",
       body: JSON.stringify({ "m.relates_to": { rel_type: "m.annotation", event_id: id, key: "❤️" } }),
     });
@@ -249,7 +249,7 @@ export default function RoomView({ alias, title, kind }: Props) {
                 </div>
                 {!m.encrypted && (
                   <button
-                    onClick={() => heart(m.id)}
+                    onClick={() => heart(m.id, Date.now())}
                     style={{
                       marginTop: 4, border: "none", background: "none", cursor: "pointer",
                       fontSize: ".76rem", color: myHearts.has(m.id) ? "var(--rose)" : "var(--muted)",

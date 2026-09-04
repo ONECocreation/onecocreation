@@ -34,6 +34,11 @@ export default function BuddyDevice({
   const [cause, setCause] = useState<string | undefined>(buddy.cause);
   const [speech, setSpeech] = useState("");
   const [cooldowns, setCooldowns] = useState<Partial<Record<BuddyCareAction, number>>>({}); // action → end-ts
+  /* "now" as state, never a render read (the purity law): seeded at mount,
+     refreshed by the 1 s decay loop while the buddy lives — moon phase is
+     day-granular and cooldown ends are deleted by their own timeout, so a
+     loop-fresh now is every bit as live as the old render read */
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const spriteRef = useRef<HTMLImageElement | null>(null);
@@ -127,6 +132,7 @@ export default function BuddyDevice({
     const id = setInterval(() => {
       if (!aliveRef.current) return;
       const now = Date.now();
+      setNowMs(now);
       const elapsed = (now - lastTickRef.current) / 1000;
       lastTickRef.current = now;
       const next = decayVitals(vitalsRef.current, elapsed);
@@ -246,7 +252,7 @@ export default function BuddyDevice({
   /* One source of truth for the sky: glyph + name + BFT day all come from
      moonPhase/bft — the old footer hardcoded a 🌙 crescent next to the real
      phase NAME, so mid-month it lied "🌙 Full" (fixed 0018.04.15 a₿). */
-  const moon = currentBlock != null ? moonPhase(currentBlock, Date.now()) : null; // the tip is NOW — the sky's own instant
+  const moon = currentBlock != null ? moonPhase(currentBlock, nowMs) : null; // the tip is NOW — the sky's own instant
   const bftDay = currentBlock != null ? bft(currentBlock).day : null;
 
   return (
@@ -313,7 +319,7 @@ export default function BuddyDevice({
       <style>{`@keyframes bbCooldown { from { height: 100%; } to { height: 0%; } }`}</style>
       <div className="mt-4 grid grid-cols-4 gap-2">
         {ACTIONS.map(({ a, icon, label }) => {
-          const cooling = alive && (cooldowns[a] ?? 0) > Date.now();
+          const cooling = alive && (cooldowns[a] ?? 0) > nowMs;
           return (
             <button key={a} onClick={() => doAction(a)} disabled={!alive || cooling}
               className="relative flex flex-col items-center gap-1.5 overflow-hidden rounded-xl border border-edge bg-gradient-to-b from-[#1c2a20] to-[#131b15] px-1.5 pb-3 pt-3 font-mono text-[11px] uppercase tracking-wider text-white transition enabled:hover:border-neon disabled:cursor-not-allowed disabled:text-white/40">

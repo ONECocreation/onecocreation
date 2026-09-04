@@ -21,6 +21,12 @@ import { ScarConsole, type ReaderContent } from "@/components/console/ReaderDraw
  */
 
 type Tone = "neon" | "cyan" | "pink" | "ghost";
+/* The gesture stamp — a fresh Date.now() read AT THE CLICK, never during
+   render. It sits at module scope because the click arrow reaches `sign`
+   through the `reader` content object built during render, and the purity
+   rule (rightly blind through that indirection) would otherwise read the
+   stamp as a render-time impurity. */
+const stampNow = () => Date.now();
 interface SignoffChange {
   kind: "add" | "del" | "note";
   text: string;
@@ -98,13 +104,14 @@ export default function SignoffsPanel() {
     setErr(null);
     setOk(null);
     setBusy(t.id);
+    const stamp = stampNow();
     let event;
     try {
       event = await window.nostr.signEvent({
         kind: 22242,
-        created_at: Math.floor(Date.now() / 1000),
+        created_at: Math.floor(stamp / 1000),
         tags: [],
-        content: `PACS-SIGNOFF-${t.id}-${Date.now()}-sign${comment ? `\n${comment}` : ""}`,
+        content: `PACS-SIGNOFF-${t.id}-${stamp}-sign${comment ? `\n${comment}` : ""}`,
       });
     } catch {
       setErr("signing was declined — nothing sent");
