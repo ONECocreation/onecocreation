@@ -60,6 +60,61 @@ pull-requests write) if the SCAR merge queue should execute merges. No
 database, no user accounts — see [`.env.example`](.env.example) for the
 full list.
 
+## Environment variables — the full truth
+
+[`.env.example`](.env.example) is the commented, grouped reference and is
+kept complete: every var below is real (each is read in `src/` or
+`packages/` — verified by census, cut 0018.06.10 a₿), nothing there is
+decorative. The groups:
+
+- **Space config** — `NEXT_PUBLIC_SPACE_NAME`, `NEXT_PUBLIC_NIP05_DOMAIN`
+- **Registry storage** — `BLOB_READ_WRITE_TOKEN` (file driver locally),
+  `REGISTRY_DRIVER`
+- **Sessions & the operator console** — `SEAT_SECRET`, `OPERATOR_NPUBS`,
+  `OPERATOR_EMAILS`
+- **Tenant namespacing** — `TENANT` (default `onecocreation`; one constant
+  behind the tenant-scoped KV keys — brand palette, media token, presence
+  room — so a second tenant gets its own keyspace; the puck page store has
+  its own `PUCK_STORE_NAMESPACE`)
+- **The studio copilot (Number One)** — `ANTHROPIC_API_KEY` (full
+  ~108-char `sk-ant-` key) or the sovereign local agent `OLLAMA_URL` +
+  `OLLAMA_MODEL` (default `llama3.1`). **Precedence: `OLLAMA_URL` wins when
+  both are set** — `generatePage` routes to the local agent first
+  (`src/lib/copilot.ts`), so a local run never spends Anthropic credits
+- **Presence (studio multiplayer)** — `PRESENCE_SECRET` (falls back to
+  `SEAT_SECRET`), `PRESENCE_RELAYS`
+- **Outbound mail** — `SMTP_HOST`, `SMTP_PORT`, per-persona
+  `SMTP_USER_*`/`SMTP_PASS_*`/`MAIL_FROM_*` (personas: `BOOKINGS`, `NEWS`),
+  `MAIL_HOURLY_CAP`, `CRON_SECRET`, `CONTACT_INBOX`, `OFFER_NOTIFY_EMAIL`
+- **The studio's page store** — `PUCK_STORE_DRIVER`, `PUCK_STORE_FS_DIR`,
+  `PUCK_STORE_NAMESPACE`
+- **The private KV / order vault** — `KV_REST_API_URL`,
+  `KV_REST_API_TOKEN` (Upstash REST), or `REDIS_URL` (socket driver)
+- **Media rail** — `GITHUB_ASSETS_REPO`, `GITHUB_ASSETS_BRANCH` (auth via
+  `GITHUB_TOKEN` or a studio-pasted token)
+- **Matrix bridge** — `MATRIX_HOMESERVER`, `MATRIX_BOT_TOKEN` (or
+  `MATRIX_OCC_ADMIN_TOKEN`), `MATRIX_OCC_JWT_SECRET`
+- **Node links** (stored `/a` console config wins; env is the bootstrap
+  fallback) — `SPACES_NODE_URL`/`SPACES_NODE_TOKEN`,
+  `MUD_NODE_URL`/`MUD_ADMIN_TOKEN`, `MEMPOOL_NODE_URL`, `CHAT_NODE_URL`,
+  `POKE_NODE_URL`/`NEXT_PUBLIC_POKE_NODE_URL`
+- **Briefs sync** — `BRIEFS_REPO`, `BRIEFS_BRANCH`, `BRIEFS_TOKEN`,
+  `SHARED_BRIEFS_REPO`, `SHARED_BRIEFS_BRANCH`
+- **Money rails** — BTCPay (`BTCPAY_URL`, `BTCPAY_STORE_ID`,
+  `BTCPAY_API_KEY`, `BTCPAY_WEBHOOK_SECRET`) and Square
+  (`SQUARE_ACCESS_TOKEN`, `SQUARE_LOCATION_ID`, `SQUARE_ENVIRONMENT`,
+  `SQUARE_WEBHOOK_SIGNATURE_KEY`, `SQUARE_WEBHOOK_URL`)
+- **Print/fulfilment** — `PRINTFUL_API_KEY`, `FOURTHWALL_API_TOKEN` (or
+  `FOURTHWALL_API_KEY`)
+- **Artist roster bootstrap** — `ARTIST_NPUBS`
+- **House chrome** — `NEXT_PUBLIC_CONSOLE_CHROME`, `NEXT_PUBLIC_NODE_NAME`,
+  `BOOKING_ORGANIZER_EMAIL`, `NEXT_PUBLIC_SITE_URL`
+- **The design bench (local only)** — `STUDIO_BENCH`,
+  `NEXT_PUBLIC_BENCH_CARTRIDGE`
+- **Platform-injected (never hand-set)** — `VERCEL`,
+  `VERCEL_PROJECT_PRODUCTION_URL`, `NEXT_PUBLIC_BUILD_AT` (stamped by
+  `next.config.ts` at build time)
+
 Two deploy lessons, learned the hard way: **env vars only apply to builds
 made after they exist** (set one → redeploy), and this project **deploys by
 CLI push** (`npx vercel deploy --prod`), not on git merge. Operators
