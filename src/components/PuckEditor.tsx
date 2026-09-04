@@ -54,7 +54,11 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
 }) {
   const [liveData, setLiveData] = useState<Data>(data);
   const liveRef = useRef<Data>(data);
-  liveRef.current = liveData;
+  /* the ref mirrors the state AFTER commit (the refs law: no ref writes
+     during render) — every reader (publish/save gestures, the copilot's
+     currentContent door, the mount lint) is post-commit, so an effect-sync
+     is the same freshness they always saw */
+  useEffect(() => { liveRef.current = liveData; });
 
   /* the change-log substrate (Phase 2 step 1): every edit becomes a patch
      record; undo/redo ride Puck's own history, the bridge restores OUR
@@ -138,7 +142,6 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
       })
       .catch(() => { /* relay/door down — studio unaffected */ });
     return () => { cancelled = true; client?.close(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   function setPanels(next: Record<PanelKey, boolean>) {
     setCollapsed(next);
@@ -494,7 +497,9 @@ function CopilotApplyBridge({ log, applyRef }: {
   applyRef: React.MutableRefObject<((next: Data, origin?: ChangeOrigin) => void) | null>;
 }) {
   const apply = useApplyData(log);
-  applyRef.current = apply;
+  /* hand the apply fn up AFTER commit (the refs law: no ref writes during
+     render) — its only reader is the copilot's onApply gesture, post-commit */
+  useEffect(() => { applyRef.current = apply; });
   return null;
 }
 
