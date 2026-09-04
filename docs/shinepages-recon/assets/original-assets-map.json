@@ -1,0 +1,1062 @@
+{
+  "_meta": {
+    "harvested": "2026-08-14",
+    "source": "love.shinepages.com builder preview (expired account rescue)",
+    "repo": "ONECocreation/onecocreation-assets",
+    "notes": [
+      "All thumbnails (thumbnails/640x480/...) were upgraded to full-size uploads/ originals.",
+      "Query strings were stripped from source URLs; all assets verified downloadable without them except IMG_0334-9413814.png (dead at origin, S3 AccessDenied).",
+      "shared/ holds assets appearing on 4+ pages (logo, membership card art, footer/CTA imagery); pages reference them via raw_url.",
+      "ShinePages builder-chrome logo (Add_a_heading_17-4860339.png, 140x40) was harvested on every page and excluded as platform chrome.",
+      "static.simvoly.com/images/video-holder.png is the platform video-widget placeholder, not committed."
+    ]
+  },
+  "pages": [
+    {
+      "page": "about",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/about/where_heaven_and_earth_meet-1394563.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "where_heaven_and_earth_meet-1394563.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/where_heaven_and_earth_meet-1394563.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/about/IMG_2874-1465149.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_2874-1465149.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Headshots/IMG_2874-1465149.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/about/IMG_3098-1465149.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_3098-1465149.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Headshots/IMG_3098-1465149.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/about/IMG_0254-0579165.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0254-0579165.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0254-0579165.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_2330-0939418.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_2330-0939418.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_2330-0939418.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/about/IMG_2537-1465149.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_2537-1465149.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Headshots/IMG_2537-1465149.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/about/IMG_3142-0518689.png",
+          "kind": "background",
+          "context": "grid-row stretched-mo",
+          "orig_name": "IMG_3142-0518689.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_3142-0518689.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/about/welcome-0086394.png",
+          "kind": "background",
+          "context": "grid-column grid-column-wi",
+          "orig_name": "welcome-0086394.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/welcome-0086394.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/about/photo6-4763642.jpg",
+          "kind": "background",
+          "context": "full-size video-thumb-bg cov",
+          "orig_name": "photo6-4763642.jpg",
+          "source_url": "https://content.app-sources.com/s/60957741985758236/uploads/Images/photo6-4763642.jpg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/about/New_Earth_Living-2073893.png",
+          "kind": "background",
+          "context": "grid-column grid-column-no-",
+          "orig_name": "New_Earth_Living-2073893.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/New_Earth_Living-2073893.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_2938-0939419.jpeg",
+          "kind": "background",
+          "context": "grid-row stretched-mo",
+          "orig_name": "IMG_2938-0939419.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_2938-0939419.jpeg",
+          "shared": true
+        }
+      ]
+    },
+    {
+      "page": "home",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0176-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0176-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0176-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0177-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0177-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0177-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0175-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0175-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0175-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/home/IMG_7315-0518689.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_7315-0518689.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_7315-0518689.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/home/IMG_0334-9138867.png",
+          "kind": "background",
+          "context": "grid-row bg-color-sec",
+          "orig_name": "IMG_0334-9138867.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0334-9138867.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/home/IMG_5104-0886956.jpeg",
+          "kind": "background",
+          "context": "plyr__poster",
+          "orig_name": "IMG_5104-0886956.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Videos/IMG_5104-0886956.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/about/IMG_3142-0518689.png",
+          "kind": "background",
+          "context": "grid-row grid-row-ful",
+          "orig_name": "IMG_3142-0518689.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_3142-0518689.png",
+          "shared": false
+        }
+      ],
+      "notes": [
+        "platform video placeholder (static.simvoly.com), not a Love asset \u2014 https://static.simvoly.com/images/video-holder.png"
+      ]
+    },
+    {
+      "page": "memberships",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/memberships/lion-ai-0088969.png",
+          "kind": "background",
+          "context": "grid-row tablet-hidde",
+          "orig_name": "lion-ai-0088969.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/lion-ai-0088969.png",
+          "shared": false
+        }
+      ]
+    },
+    {
+      "page": "consciouscuts-waxing",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/about/where_heaven_and_earth_meet-1394563.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "where_heaven_and_earth_meet-1394563.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/where_heaven_and_earth_meet-1394563.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/IMG_4524-8983940.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_4524-8983940.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Headshots/IMG_4524-8983940.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/IMG_0313-8971737.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0313-8971737.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Gypsystudio/IMG_0313-8971737.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/IMG_3230-0674274.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_3230-0674274.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Gypsystudio/IMG_3230-0674274.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/men-0159508.jpg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "men-0159508.jpg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/men-0159508.jpg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/lady3-0162182.jpg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "lady3-0162182.jpg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/lady3-0162182.jpg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/lady-0159615.jpg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "lady-0159615.jpg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/lady-0159615.jpg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/men2-0160356.jpg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "men2-0160356.jpg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/men2-0160356.jpg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0176-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0176-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0176-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0177-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0177-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0177-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0175-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0175-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0175-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/home/IMG_7315-0518689.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_7315-0518689.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_7315-0518689.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/IMG_0266-3095756.jpeg",
+          "kind": "background",
+          "context": "grid-row bg-color-sec",
+          "orig_name": "IMG_0266-3095756.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0266-3095756.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/IMG_0292-8983552.jpeg",
+          "kind": "background",
+          "context": "grid-row stretched-mo",
+          "orig_name": "IMG_0292-8983552.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Gypsystudio/IMG_0292-8983552.jpeg",
+          "shared": false
+        }
+      ]
+    },
+    {
+      "page": "contact",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/IMG_0266-3095756.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0266-3095756.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0266-3095756.jpeg",
+          "shared": false
+        }
+      ]
+    },
+    {
+      "page": "gallaria",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/gallaria/ac22e465-d346-4a53-9a68-ad4faf17b2a1-3030003.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "ac22e465-d346-4a53-9a68-ad4faf17b2a1-3030003.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/ac22e465-d346-4a53-9a68-ad4faf17b2a1-3030003.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/gallaria/IMG_5192-3031879.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_5192-3031879.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Art/IMG_5192-3031879.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/gallaria/IMG_5200-3031879.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_5200-3031879.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Art/IMG_5200-3031879.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/gallaria/IMG_5198-3031879.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_5198-3031879.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Art/IMG_5198-3031879.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/gallaria/IMG_7711-3031880.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_7711-3031880.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Art/IMG_7711-3031880.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0267-3097825.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0267-3097825.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0267-3097825.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0270-3098597.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0270-3098597.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0270-3098597.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0177-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0177-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0177-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0175-0521729.jpeg",
+          "kind": "background",
+          "context": "grid-row bg-color-sec",
+          "orig_name": "IMG_0175-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0175-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/IMG_0266-3095756.jpeg",
+          "kind": "background",
+          "context": "grid-row bg-color-pri",
+          "orig_name": "IMG_0266-3095756.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0266-3095756.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/gallaria/IMG_1348-3033912.jpeg",
+          "kind": "background",
+          "context": "grid-row stretched-mo",
+          "orig_name": "IMG_1348-3033912.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_1348-3033912.jpeg",
+          "shared": false
+        }
+      ]
+    },
+    {
+      "page": "thank-you-page",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/thank-you-page/IMG_0090-9067730.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0090-9067730.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0090-9067730.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0292-7424980.png",
+          "kind": "background",
+          "context": "grid-row bg-color-pri",
+          "orig_name": "IMG_0292-7424980.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0292-7424980.png",
+          "shared": true
+        }
+      ]
+    },
+    {
+      "page": "book-a-call",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        }
+      ]
+    },
+    {
+      "page": "weekly-intuitive",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0176-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0176-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0176-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0270-3098597.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0270-3098597.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0270-3098597.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0267-3097825.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0267-3097825.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0267-3097825.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0269-3098622.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0269-3098622.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0269-3098622.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/FB3-8196904.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "FB3-8196904.png",
+          "source_url": "https://content.app-sources.com/s/80016646001406113/uploads/Random_stock_images/FB3-8196904.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/stars-5654717.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "stars-5654717.png",
+          "source_url": "https://content.app-sources.com/s/24444282803329/uploads/A1/stars-5654717.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/FB2-8197146.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "FB2-8197146.png",
+          "source_url": "https://content.app-sources.com/s/80016646001406113/uploads/Random_stock_images/FB2-8197146.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_2938-0939419.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_2938-0939419.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_2938-0939419.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/IMG_0313-0939418.jpeg",
+          "kind": "background",
+          "context": "grid-column grid-column-wi",
+          "orig_name": "IMG_0313-0939418.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0313-0939418.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/13-7550415.jpg",
+          "kind": "background",
+          "context": "full-size video-thumb-bg cov",
+          "orig_name": "13-7550415.jpg",
+          "source_url": "https://content.app-sources.com/s/80016646001406113/uploads/PDF_Downloads_-_Canva_Templates_To_Share/13-7550415.jpg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_2330-0939418.jpeg",
+          "kind": "background",
+          "context": "grid-row bg-color-sec",
+          "orig_name": "IMG_2330-0939418.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_2330-0939418.jpeg",
+          "shared": true
+        }
+      ]
+    },
+    {
+      "page": "links",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/links/IMG_2282-2500869.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_2282-2500869.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_2282-2500869.jpeg",
+          "shared": false
+        }
+      ]
+    },
+    {
+      "page": "evening-star",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0175-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0175-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0175-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0270-3098597.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0270-3098597.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0270-3098597.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0267-3097825.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0267-3097825.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0267-3097825.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0269-3098622.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0269-3098622.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0269-3098622.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/FB3-8196904.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "FB3-8196904.png",
+          "source_url": "https://content.app-sources.com/s/80016646001406113/uploads/Random_stock_images/FB3-8196904.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/stars-5654717.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "stars-5654717.png",
+          "source_url": "https://content.app-sources.com/s/24444282803329/uploads/A1/stars-5654717.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/FB2-8197146.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "FB2-8197146.png",
+          "source_url": "https://content.app-sources.com/s/80016646001406113/uploads/Random_stock_images/FB2-8197146.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_2938-0939419.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_2938-0939419.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_2938-0939419.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/IMG_0313-0939418.jpeg",
+          "kind": "background",
+          "context": "grid-column grid-column-wi",
+          "orig_name": "IMG_0313-0939418.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0313-0939418.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/13-7550415.jpg",
+          "kind": "background",
+          "context": "full-size video-thumb-bg cov",
+          "orig_name": "13-7550415.jpg",
+          "source_url": "https://content.app-sources.com/s/80016646001406113/uploads/PDF_Downloads_-_Canva_Templates_To_Share/13-7550415.jpg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_2330-0939418.jpeg",
+          "kind": "background",
+          "context": "grid-row bg-color-sec",
+          "orig_name": "IMG_2330-0939418.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_2330-0939418.jpeg",
+          "shared": true
+        }
+      ]
+    },
+    {
+      "page": "leap-of-faith",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/about/where_heaven_and_earth_meet-1394563.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "where_heaven_and_earth_meet-1394563.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/where_heaven_and_earth_meet-1394563.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0176-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0176-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0176-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0177-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0177-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0177-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0175-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0175-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0175-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/lady-0159615.jpg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "lady-0159615.jpg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/lady-0159615.jpg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/IMG_3230-0674274.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_3230-0674274.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Gypsystudio/IMG_3230-0674274.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/men-0159508.jpg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "men-0159508.jpg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/men-0159508.jpg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/lady3-0162182.jpg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "lady3-0162182.jpg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/lady3-0162182.jpg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/consciouscuts-waxing/men2-0160356.jpg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "men2-0160356.jpg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/men2-0160356.jpg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/home/IMG_7315-0518689.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_7315-0518689.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_7315-0518689.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/home/IMG_0334-9138867.png",
+          "kind": "background",
+          "context": "grid-row bg-color-sec",
+          "orig_name": "IMG_0334-9138867.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0334-9138867.png",
+          "shared": false
+        }
+      ],
+      "notes": [
+        "UNRECOVERABLE: https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0334-9413814.png (S3 AccessDenied even in-browser; second crop of same source photo as IMG_0334-9138867.png which IS committed under home/)",
+        "platform video placeholder (static.simvoly.com), not a Love asset \u2014 https://static.simvoly.com/images/video-holder.png"
+      ]
+    },
+    {
+      "page": "thank-you-morning-meditation",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0270-3098597.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0270-3098597.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0270-3098597.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0292-7424980.png",
+          "kind": "background",
+          "context": "grid-row bg-color-pri",
+          "orig_name": "IMG_0292-7424980.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0292-7424980.png",
+          "shared": true
+        }
+      ]
+    },
+    {
+      "page": "thank-you-large-sums-of-money",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0267-3097825.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0267-3097825.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0267-3097825.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0292-7424980.png",
+          "kind": "background",
+          "context": "grid-row bg-color-pri",
+          "orig_name": "IMG_0292-7424980.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0292-7424980.png",
+          "shared": true
+        }
+      ]
+    },
+    {
+      "page": "thank-you-iam-worthy",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0269-3098622.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0269-3098622.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0269-3098622.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0292-7424980.png",
+          "kind": "background",
+          "context": "grid-row bg-color-pri",
+          "orig_name": "IMG_0292-7424980.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0292-7424980.png",
+          "shared": true
+        }
+      ]
+    },
+    {
+      "page": "observer",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/logo_one_cocreation-9157175.png",
+          "kind": "img",
+          "context": "One Cocreation",
+          "orig_name": "logo_one_cocreation-9157175.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/logo_one_cocreation-9157175.png",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/observer/IMG_0295-7431271.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0295-7431271.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0295-7431271.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0177-0521729.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0177-0521729.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0177-0521729.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0270-3098597.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0270-3098597.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0270-3098597.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0267-3097825.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0267-3097825.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0267-3097825.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_0269-3098622.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_0269-3098622.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0269-3098622.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/FB3-8196904.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "FB3-8196904.png",
+          "source_url": "https://content.app-sources.com/s/80016646001406113/uploads/Random_stock_images/FB3-8196904.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/stars-5654717.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "stars-5654717.png",
+          "source_url": "https://content.app-sources.com/s/24444282803329/uploads/A1/stars-5654717.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/FB2-8197146.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "FB2-8197146.png",
+          "source_url": "https://content.app-sources.com/s/80016646001406113/uploads/Random_stock_images/FB2-8197146.png",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_2938-0939419.jpeg",
+          "kind": "img",
+          "context": "",
+          "orig_name": "IMG_2938-0939419.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_2938-0939419.jpeg",
+          "shared": true
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/IMG_0313-0939418.jpeg",
+          "kind": "background",
+          "context": "grid-column grid-column-wi",
+          "orig_name": "IMG_0313-0939418.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_0313-0939418.jpeg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/weekly-intuitive/13-7550415.jpg",
+          "kind": "background",
+          "context": "full-size video-thumb-bg cov",
+          "orig_name": "13-7550415.jpg",
+          "source_url": "https://content.app-sources.com/s/80016646001406113/uploads/PDF_Downloads_-_Canva_Templates_To_Share/13-7550415.jpg",
+          "shared": false
+        },
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/shared/IMG_2330-0939418.jpeg",
+          "kind": "background",
+          "context": "grid-row bg-color-sec",
+          "orig_name": "IMG_2330-0939418.jpeg",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/IMG_2330-0939418.jpeg",
+          "shared": true
+        }
+      ]
+    },
+    {
+      "page": "popup-free-guide",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/popup-free-guide/unzip-9141826.png",
+          "kind": "img",
+          "context": "",
+          "orig_name": "unzip-9141826.png",
+          "source_url": "https://content.app-sources.com/s/395628217907238751/uploads/Images/unzip-9141826.png",
+          "shared": false
+        }
+      ]
+    },
+    {
+      "page": "popup-video-1",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/popup-video-1/photo14-5124816.jpg",
+          "kind": "background",
+          "context": "full-size video-thumb-bg cov",
+          "orig_name": "photo14-5124816.jpg",
+          "source_url": "https://content.app-sources.com/s/49763798345972195/uploads/Images/photo14-5124816.jpg",
+          "shared": false
+        }
+      ]
+    },
+    {
+      "page": "popup-video-2",
+      "assets": [
+        {
+          "raw_url": "https://raw.githubusercontent.com/ONECocreation/onecocreation-assets/main/originals/popup-video-1/photo14-5124816.jpg",
+          "kind": "background",
+          "context": "full-size video-thumb-bg cov",
+          "orig_name": "photo14-5124816.jpg",
+          "source_url": "https://content.app-sources.com/s/49763798345972195/uploads/Images/photo14-5124816.jpg",
+          "shared": false
+        }
+      ]
+    }
+  ]
+}
