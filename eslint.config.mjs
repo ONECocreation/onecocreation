@@ -15,6 +15,9 @@ const eslintConfig = defineConfig([
     // Transplant cargo (TASK-03 Part 3): kit files bound for frens.earth —
     // not app code, not built or linted here (tsconfig excludes it too).
     "transplant/**",
+    // Session worktrees parked inside the repo (.claude/worktrees/*) are other
+    // checkouts, not this tree's source — lint them from their own root.
+    ".claude/**",
   ]),
 ]);
 
