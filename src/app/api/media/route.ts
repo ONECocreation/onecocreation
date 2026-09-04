@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
+import { TENANT } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +30,10 @@ const OK_MIME: Record<string, string> = {
 /* Same bare Upstash-REST kv() helper as brand-palette.ts (house pattern:
    each lib/route carries its own). The token can be pasted straight into
    the studio (PUT below) — no Vercel dashboard trip needed; env var still
-   wins if the Admiral sets one. Never echoed back to any client. */
-const TOKEN_KEY = "media:github-token:onecocreation";
+   wins if the Admiral sets one. Never echoed back to any client.
+   TASK-97: the tenant tail rides the ONE constant (default keeps the key
+   byte-identical, so the already-saved token still resolves). */
+const TOKEN_KEY = `media:github-token:${TENANT}`;
 
 function restEnv(): { url: string; token: string } | null {
   const url = process.env.KV_REST_API_URL;

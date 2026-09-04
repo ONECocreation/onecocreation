@@ -1,6 +1,7 @@
 import { createHmac } from "crypto";
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
+import { TENANT } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -43,8 +44,11 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: true,
     relays: relays.length ? relays : DEFAULT_RELAYS,
-    roomId: hmacHex("onecocreation:presence:v1").slice(0, 32),
-    roomKey: hmacHex("onecocreation:presence:v1:key"),
+    /* TASK-97 (cut 0018.06.10 a₿): tenant-namespaced labels — the default
+       'onecocreation' derives byte-identical roomId/roomKey to before, so
+       the live room is undisturbed */
+    roomId: hmacHex(`${TENANT}:presence:v1`).slice(0, 32),
+    roomKey: hmacHex(`${TENANT}:presence:v1:key`),
     nameHint,
   });
 }

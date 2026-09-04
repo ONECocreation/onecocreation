@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import type { Data } from "@puckeditor/core";
 import OperatorGate from "@/components/OperatorGate";
-import PuckEditor from "@/components/PuckEditor";
+import StudioEditor from "@/components/studio/StudioEditor";
 import PaletteVars from "@/components/PaletteVars";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { getPuckDraft, getPuckPage } from "@/lib/puck-store";
@@ -23,6 +23,10 @@ import { SEEDS } from "@/lib/puck-seeds";
  *
  * /studio            → edits the "home" slug
  * /studio/pilot       → edits the "pilot" slug (catch-all optional segment)
+ *
+ * TASK-97 PROP-LIFT (cut 0018.06.10 a₿): the page renders StudioEditor,
+ * the client wiring bridge that feeds PuckEditor its puck-config, seeds,
+ * brand tokens and Copilot as props — the editor itself is brand-neutral.
  */
 export const metadata: Metadata = {
   title: "Studio — One Cocreation admin",
@@ -56,7 +60,7 @@ export default async function StudioPage({
   return (
     <>
       <PaletteVars />
-      <PuckEditor slug={slug} data={data} />
+      <StudioEditor slug={slug} data={data} />
     </>
   );
 }
