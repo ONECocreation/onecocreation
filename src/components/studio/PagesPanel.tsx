@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SEEDS } from "@/lib/puck-seeds";
 import { slugProblem } from "@/lib/puck-slugs";
+import { RECON_PAGES, RECON_GROUP_HEADING } from "@/lib/shinepages-recon";
 
 /**
  * PagesPanel (STUDIO P1 — "a built page is a real page"): the top bar's
@@ -215,6 +216,31 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
             </div>
           );
         })}
+      </div>
+
+      {/* TASK-105 (0018.06.12 a₿): the REFERENCE group — the ShinePages
+          capture, visually separated BELOW the site pages. Static rows from
+          the recon manifest, in the brief's own order: never from the
+          pages/KV props, never in the KV order, no rename/delete/reorder.
+          A plain <a target="_blank"> opens the viewer in a new tab so the
+          editor's unsaved state is never destroyed (judgment call, flagged
+          in the SUMMARY). Read-only law: nothing here writes. */}
+      <div style={{ marginTop: 12, borderTop: "2px solid var(--oc-structural-edge, rgba(139,118,196,.35))", paddingTop: 8 }}>
+        <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "var(--puck-color-text-muted)", marginBottom: 4 }}>
+          {RECON_GROUP_HEADING}
+        </div>
+        {RECON_PAGES.map((r) => (
+          <div key={r.slug} style={{ display: "flex", alignItems: "center", padding: "4px 2px",
+            borderTop: "1px solid rgba(139,118,196,.1)" }}>
+            <a href={`/studio/reference/${r.slug}`} target="_blank" rel="noopener noreferrer"
+              title="read-only ShinePages capture — opens the reference viewer in a new tab"
+              style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                fontFamily: MONO, fontSize: 12, color: "var(--puck-color-text-secondary)", textDecoration: "none" }}>
+              {r.title}
+            </a>
+            <span style={{ flex: "none", fontSize: 10.5, color: "var(--puck-color-text-muted)" }}>↗</span>
+          </div>
+        ))}
       </div>
     </div>
   );
