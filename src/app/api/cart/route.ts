@@ -212,7 +212,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, reason: "itemId or serviceId required" }, { status: 400 });
   }
 
-  let { id, anon } = cartIdFromRequest(request);
+  const cartIds = cartIdFromRequest(request);
+  let { id } = cartIds;
+  const { anon } = cartIds;
   let newAnon: string | undefined;
   if (!id) {
     id = crypto.randomUUID();

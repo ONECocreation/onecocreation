@@ -20,8 +20,8 @@ export default function PrivacyPage() {
           <p><b>What we collect.</b> Only what an order or letter needs: an email for receipts and sign-in codes; a name and address only when something ships; city/state/zip only for in-person visits; your nostr public key if you sign in with one. No ad trackers, no analytics beacons, no third-party cookies.</p>
           <p><b>What we forget.</b> Contact and shipping details on orders are automatically purged about 30 days after delivery — the returns window closes, and then we forget on purpose. Order records themselves (what was bought, for how much) remain for the books.</p>
           <p><b>Email.</b> The list is opt-in. Every newsletter carries a one-click unsubscribe. Sign-in codes expire in ten minutes.</p>
-          <p><b>Payments.</b> Bitcoin invoices are processed by One Cocreation's own payment server. We never see card numbers (there are none) and never custody your keys.</p>
-          <p><b>Your rights.</b> Ask and we'll show you what we hold about you, correct it, or delete what the law lets us delete. Write to the house at the addresses in the footer.</p>
+          <p><b>Payments.</b> Bitcoin invoices are processed by One Cocreation&apos;s own payment server. We never see card numbers (there are none) and never custody your keys.</p>
+          <p><b>Your rights.</b> Ask and we&apos;ll show you what we hold about you, correct it, or delete what the law lets us delete. Write to the house at the addresses in the footer.</p>
         </div>
       </section>
       <SiteFooter />

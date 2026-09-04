@@ -49,7 +49,7 @@ const avaOf = (sender: string) => {
   return AVA_GRADIENTS[h % AVA_GRADIENTS.length];
 };
 
-export default function RoomView({ slug, alias, title, kind }: Props) {
+export default function RoomView({ alias, title, kind }: Props) {
   const [state, setState] = useState<"loading" | "signedout" | "locked" | "open" | "error">("loading");
   const [reason, setReason] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);

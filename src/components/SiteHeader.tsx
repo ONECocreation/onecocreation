@@ -10,12 +10,12 @@ export default function SiteHeader() {
   return (
     <header className="site-header">
       <div className="bar">
-        <a href="/" className="logo">
+        <Link href="/" className="logo">
           {/* The full lockup Love uses on her live site — rendered at its own
               aspect (1235×533), never squeezed into a square. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="brandmark-lockup" src={cartridge.logo.lockup} alt={cartridge.name} width={174} height={72} />
-        </a>
+        </Link>
         <NavMenu />
         <div className="nav-tail">
           <ThemeLantern />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 
 /**
  * The Duty Roster, two doors from one panel:
@@ -143,7 +144,7 @@ export default function TicketsPanel({ mode }: { mode: "support" | "crew" }) {
           <p className="mb-2 font-pixel text-[10px] uppercase text-cyan">SIGN IN FIRST</p>
           <p>
             Tickets ride your <span className="text-pink">@frens</span> tag. Sign in with your key
-            (or <a href="/" className="text-cyan hover:glow-cyan underline">claim a tag</a>)
+            (or <Link href="/" className="text-cyan hover:glow-cyan underline">claim a tag</Link>)
             and this is where you&apos;ll raise and track them.
           </p>
         </div>

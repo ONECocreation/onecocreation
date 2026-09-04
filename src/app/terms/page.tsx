@@ -17,9 +17,9 @@ export default function TermsPage() {
           <p className="mgmt-blurb">Draft v1 — plain language; final wording with Love.</p>
         </header>
         <div className="space-y-4 text-sm text-neutral-300">
-          <p><b>What you're buying.</b> Digital offerings (meditations, affirmations, courses) unlock for the signed-in account that bought them. Memberships open their tier's rooms and content for the paid period. In-person sessions are booked for a specific time and place.</p>
-          <p><b>Payment.</b> Prices are shown in dollars and sats. Bitcoin payments (lightning or on-chain) settle to One Cocreation's own wallet — non-custodial, no third parties holding funds. A payment is complete when the invoice settles.</p>
-          <p><b>Rescheduling &amp; refunds.</b> Life happens — reach out and we'll work with you. Refunds of bitcoin payments are returned in sats to an address you provide. Pay-what-you-can offers are accepted or kindly declined by Love; declined offers are refunded in full.</p>
+          <p><b>What you&apos;re buying.</b> Digital offerings (meditations, affirmations, courses) unlock for the signed-in account that bought them. Memberships open their tier&apos;s rooms and content for the paid period. In-person sessions are booked for a specific time and place.</p>
+          <p><b>Payment.</b> Prices are shown in dollars and sats. Bitcoin payments (lightning or on-chain) settle to One Cocreation&apos;s own wallet — non-custodial, no third parties holding funds. A payment is complete when the invoice settles.</p>
+          <p><b>Rescheduling &amp; refunds.</b> Life happens — reach out and we&apos;ll work with you. Refunds of bitcoin payments are returned in sats to an address you provide. Pay-what-you-can offers are accepted or kindly declined by Love; declined offers are refunded in full.</p>
           <p><b>Sessions.</b> Booked times are held for you; unpaid holds release automatically. In-person visits depend on location — the mobile studio travels, and your city/state/zip at checkout tells us where.</p>
           <p><b>Not medical advice.</b> Sessions, meditations and classes are spiritual and wellness offerings, not medical or psychological treatment.</p>
           <p><b>Your account.</b> Keys are yours; we never hold them. Email sign-in codes are single-use and short-lived. Be kind in community rooms — Love may remove access for harm.</p>

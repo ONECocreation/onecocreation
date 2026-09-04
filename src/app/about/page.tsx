@@ -6,7 +6,6 @@ import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
-import StackedHero from "@/components/StackedHero";
 import { TIERS } from "@/lib/entitlement";
 import { cartridge } from "@/brand/cartridge";
 import { config } from "@/lib/puck-config";

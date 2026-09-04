@@ -590,7 +590,7 @@ export default function SlotPicker({
                       ))}
                     </optgroup>
                   )}
-                  <option value="Something else">Something else — I'll say below ✨</option>
+                  <option value="Something else">Something else — I&apos;ll say below ✨</option>
                 </select>
               </label>
             )}

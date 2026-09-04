@@ -3,7 +3,6 @@ import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
-import StackedHero from "@/components/StackedHero";
 import ContactForm from "@/components/ContactForm";
 import ContactDoors from "@/components/ContactDoors";
 import { cartridge } from "@/brand/cartridge";
