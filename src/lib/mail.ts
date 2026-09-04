@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import type Mail from "nodemailer/lib/mailer";
+import { siteBase } from "./subscribers";
 
 /**
  * The mail rail (spec: briefings/onecocreation-email-rail.md).
@@ -166,7 +167,7 @@ export function brandShell(bodyHtml: string, opts?: { unsubscribeUrl?: string })
   return `<!doctype html><html><body style="margin:0;padding:0;background:#faf7f2;">
 <div style="max-width:560px;margin:0 auto;padding:32px 24px;font-family:Arial,Helvetica,sans-serif;color:#2b2733;">
   <div style="text-align:center;padding-bottom:20px;border-bottom:1px solid #e8e2d8;">
-    <img src="https://onecocreation.com/brand/onecocreation-mark.svg" width="44" height="44" alt="" style="vertical-align:middle;margin-right:10px"/><span style="font-size:20px;letter-spacing:.12em;color:#2b2733;vertical-align:middle;">ONE <span style="color:#b4862b;">Cocreation</span></span>
+    <img src="${site()}/brand/onecocreation-mark.svg" width="44" height="44" alt="" style="vertical-align:middle;margin-right:10px"/><span style="font-size:20px;letter-spacing:.12em;color:#2b2733;vertical-align:middle;">ONE <span style="color:#b4862b;">Cocreation</span></span>
   </div>
   <div style="padding-top:24px;font-size:15px;line-height:1.65;">${bodyHtml}</div>
   <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e8e2d8;text-align:center;font-size:12px;color:#8a8494;">
@@ -197,8 +198,16 @@ export interface RichLetter {
   webUrl?: string;
 }
 
-const SITE = "https://onecocreation.com";
-const abs = (u: string) => (u.startsWith("http") ? u : `${SITE}${u}`);
+/* TASK-105 (0018.06.12 a₿), the point-to-new-site sweep: SITE was the
+   literal "https://onecocreation.com", but that DNS still resolves to the
+   OLD ShinePages host until Love's cutover — every mail link pointed at the
+   old site. All links now resolve through siteBase() (NEXT_PUBLIC_SITE_URL →
+   VERCEL_PROJECT_PRODUCTION_URL → localhost), read per call so the env wins
+   the moment it's set. The footer's display TEXT "onecocreation.com" is not
+   a URL and stays; NIP-05/matrix identity literals elsewhere are identity
+   and stay too. */
+const site = () => siteBase();
+const abs = (u: string) => (u.startsWith("http") ? u : `${site()}${u}`);
 
 /** The bulletproof pill: a real table cell with bgcolor — survives clients
  *  that strip <a> styling (the Admiral's "just words" report, 0018.05.18). */
@@ -244,21 +253,21 @@ export function richShell(letter: RichLetter): string {
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;font-family:Arial,Helvetica,sans-serif;">
   <tr><td style="background:#0e0c18;padding:14px 24px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td><a href="${SITE}"><img src="${SITE}/brand/onecocreation-lockup-email.png" height="42" alt="One Cocreation" style="display:block;height:42px;border:0;color:#ECE3C9;font-family:Arial,sans-serif;"/></a></td>
-      <td align="right"><a href="${SITE}/memberships" style="color:#ECE3C9;font-family:Arial,sans-serif;font-size:12px;letter-spacing:.06em;text-decoration:none;">MEMBERSHIPS</a></td>
+      <td><a href="${site()}"><img src="${site()}/brand/onecocreation-lockup-email.png" height="42" alt="One Cocreation" style="display:block;height:42px;border:0;color:#ECE3C9;font-family:Arial,sans-serif;"/></a></td>
+      <td align="right"><a href="${site()}/memberships" style="color:#ECE3C9;font-family:Arial,sans-serif;font-size:12px;letter-spacing:.06em;text-decoration:none;">MEMBERSHIPS</a></td>
     </tr></table>
   </td></tr>
-  ${letter.heroUrl ? `<tr><td style="background:#0e0c18;"><a href="${SITE}"><img src="${abs(letter.heroUrl)}" width="600" alt="" style="display:block;width:100%;"/></a></td></tr>` : ""}
+  ${letter.heroUrl ? `<tr><td style="background:#0e0c18;"><a href="${site()}"><img src="${abs(letter.heroUrl)}" width="600" alt="" style="display:block;width:100%;"/></a></td></tr>` : ""}
   <tr><td style="padding:30px 34px 8px;font-size:15px;line-height:1.75;color:#2b2733;">${letter.bodyHtml}</td></tr>
   ${cards ? `<tr><td style="padding:6px 34px 8px;"><p style="margin:14px 0 4px;font-size:24px;color:#2b2733;"><b>Check out</b></p><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cards}</table></td></tr>` : ""}
   ${letter.cta ? `<tr><td align="center" style="padding:26px 34px 34px;"><p style="margin:0 0 14px;font-size:22px;color:#2b2733;"><b>Want to read more?</b></p>${pill(letter.cta.href, letter.cta.label, "lg")}</td></tr>` : ""}
   <tr><td bgcolor="#efe9df" style="background:#efe9df;padding:22px 34px;">
-    <img src="${SITE}/brand/onecocreation-mark-email.png" width="40" height="40" alt="✦" style="display:block;margin-bottom:8px;border:0;"/>
+    <img src="${site()}/brand/onecocreation-mark-email.png" width="40" height="40" alt="✦" style="display:block;margin-bottom:8px;border:0;"/>
     <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#4a4458;">
       <b>One Cocreation</b> · Where Heaven and Earth Meet
     </p>
     <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#6b6478;">
-      <a href="${SITE}" style="color:#6b6478;">OneCocreation</a>
+      <a href="${site()}" style="color:#6b6478;">OneCocreation</a>
       ${letter.webUrl ? ` &nbsp;|&nbsp; <a href="${abs(letter.webUrl)}" style="color:#6b6478;">View on the site</a>` : ""}
     </p>
     ${letter.unsubscribeUrl ? `<p style="margin:14px 0 0;">${pill(letter.unsubscribeUrl, "Unsubscribe", "sm").replace("#b4862b", "#8a8494").replace("#b4862b", "#8a8494")}</p>` : ""}
