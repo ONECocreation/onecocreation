@@ -1,4 +1,5 @@
 import { ONECOCREATION } from "@/brand/tokens";
+import { TENANT } from "@/lib/tenant";
 
 /**
  * Brand palette — the promote-to-token rail (Phase 1 step 2, Admiral-gated).
@@ -31,8 +32,10 @@ async function kv(cmd: unknown[]): Promise<unknown> {
   return ((await res.json()) as { result: unknown }).result;
 }
 
-const KEY = "brand:palette:onecocreation";
-const DAWN_KEY = "brand:palette-dawn:onecocreation";
+/* TASK-97 (cut 0018.06.10 a₿): the tenant tail rides the ONE constant —
+   default 'onecocreation' keeps these keys byte-identical to the originals */
+const KEY = `brand:palette:${TENANT}`;
+const DAWN_KEY = `brand:palette-dawn:${TENANT}`;
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
 export type Palette = { p1: string; p2: string; p3: string; p4: string; p5: string };
