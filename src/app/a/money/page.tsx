@@ -75,11 +75,19 @@ export default function MoneyRoom() {
   const [kind, setKind] = useState<"all" | "sessions" | "goods" | "tips">("all");
   const [detail, setDetail] = useState<OrderRecord | null>(null);
   const [busy, setBusy] = useState(false);
+  /* "now" as state, never a render read (the purity law): seeded at mount,
+     refreshed whenever fresh books land — every consumer below is
+     day/week/moon-granular, so load-time now IS the honest now */
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   function loadOrders() {
     fetch("/api/admin/store/orders", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d?.ok && setOrders(d.orders ?? []))
+      .then((d) => {
+        if (!d?.ok) return;
+        setOrders(d.orders ?? []);
+        setNowMs(Date.now());
+      })
       .catch(() => {});
   }
 
@@ -105,7 +113,7 @@ export default function MoneyRoom() {
   /** per-jar: this-moon count + 7 spark buckets over the last moon, settled only */
   const jarPulse = useMemo(() => {
     const out: Record<string, { thisMoon: number; spark: number[] }> = {};
-    const now = Date.now();
+    const now = nowMs;
     for (const { key } of JARS) {
       const settled = (ledger?.tips ?? []).filter(
         (t) => t.jar === key && t.status === "settled" && t.createdMs >= now - MOON_MS,
@@ -118,9 +126,9 @@ export default function MoneyRoom() {
       out[key] = { thisMoon: settled.length, spark };
     }
     return out;
-  }, [ledger]);
+  }, [ledger, nowMs]);
 
-  const cutoff = window_ === "all" ? 0 : Date.now() - (window_ === "moon" ? MOON_MS : WEEK_MS);
+  const cutoff = window_ === "all" ? 0 : nowMs - (window_ === "moon" ? MOON_MS : WEEK_MS);
   const shown = orders.filter(
     (o) => o.createdAtMs >= cutoff && (kind === "all" || (kind !== "tips" && orderKind(o) === kind)),
   );

@@ -19,6 +19,9 @@ export default function MemberCalendar() {
   const [bookings, setBookings] = useState<MemberBooking[] | null>(null);
   const [contactEmail, setContactEmail] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  /* "now" as of the visit (initializer — the one render-adjacent place
+     Date.now() may run); only read once bookings land client-side */
+  const [nowMs] = useState(() => Date.now());
 
   useEffect(() => {
     fetch("/api/member/bookings")
@@ -72,12 +75,11 @@ export default function MemberCalendar() {
     );
   }
 
-  const now = Date.now();
   return (
     <ul style={{ listStyle: "none", padding: 0 }}>
       {bookings.map((b) => {
         const start = new Date(b.startUtc);
-        const past = start.getTime() < now;
+        const past = start.getTime() < nowMs;
         const hasLocation = !!(b.location && (b.location.address || b.location.geo || b.location.area));
         return (
           <li

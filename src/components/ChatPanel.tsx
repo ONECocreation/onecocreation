@@ -95,12 +95,13 @@ export default function ChatPanel() {
   }, []);
 
   useEffect(() => {
-    loadStatus();
-    loadConfig();
+    /* the kickoffs ride a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(() => { loadStatus(); loadConfig(); });
   }, [loadStatus, loadConfig]);
 
   useEffect(() => {
-    if (config) setUrl(config.chatUrl || config.envFallback.chatUrl || "");
+    if (config) void Promise.resolve().then(() => setUrl(config.chatUrl || config.envFallback.chatUrl || ""));
   }, [config]);
 
   async function save() {

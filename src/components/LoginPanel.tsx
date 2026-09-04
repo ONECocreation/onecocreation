@@ -26,16 +26,6 @@ const ACCENT_INK: Record<DoorAccent, string> = {
   neon: "var(--ok, #7fb98f)",
 };
 
-const pillInput: React.CSSProperties = {
-  flex: "1 1 200px",
-  padding: "12px 16px",
-  borderRadius: 999,
-  border: "1.5px solid rgba(180,134,43,.5)",
-  background: "transparent",
-  color: "inherit",
-  fontSize: ".95rem",
-};
-
 const tabBase: React.CSSProperties = {
   flex: 1,
   borderRadius: 999,

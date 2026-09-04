@@ -150,6 +150,10 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
   const [changes, setChanges] = useState<Record<number, PrFile[] | "loading">>({});
   const [drafts, setDrafts] = useState<Record<number, string>>({});
   const [noteBusy, setNoteBusy] = useState<number | null>(null);
+  /* "now" as of the visit (initializer — the one render-adjacent place
+     Date.now() may run); the only render consumer is the day-granular
+     key-expiry countdown, so a mount-time now is the honest now */
+  const [nowMs] = useState(() => Date.now());
 
   /* SHIP — the deploy stage, folded onto the merge card. `serverBuiltAt` is the
      build stamp the API reports per-request (it moves when the new deploy is
@@ -205,7 +209,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
   }
 
   const expiry = parseExpiry(expiresAt);
-  const daysLeft = expiry ? Math.max(0, Math.ceil((expiry.getTime() - Date.now()) / 86400000)) : null;
+  const daysLeft = expiry ? Math.max(0, Math.ceil((expiry.getTime() - nowMs) / 86400000)) : null;
 
   /** The renewal event, as a file — works in every calendar app on earth. */
   function downloadRenewalIcs() {
@@ -241,7 +245,9 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
   }
 
   useEffect(() => {
-    load();
+    /* the kickoff rides a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(load);
   }, [load]);
 
   /* SHIP lives only on Action Items — learn whether the deploy hook is wired so
@@ -327,10 +333,16 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
       if (live && !wentLive.has(pr)) newlyLive.push(pr);
       if (!live) allLive = false;
     }
-    if (newlyLive.length > 0) {
-      setWentLive((prev) => new Set([...prev, ...newlyLive]));
+    if (newlyLive.length > 0 || allLive) {
+      /* the flips ride a microtask — a synchronous setState in the effect
+         body would cascade a second render (the set-state-in-effect law) */
+      void Promise.resolve().then(() => {
+        if (newlyLive.length > 0) {
+          setWentLive((prev) => new Set([...prev, ...newlyLive]));
+        }
+        if (allLive) setDeploying(false);
+      });
     }
-    if (allLive) setDeploying(false);
     // latestByPr is derived from auths; builtAt from serverBuiltAt — both listed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auths, builtAt, shippedThisSession]);
@@ -412,7 +424,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
       signing logic. One ship deploys the current `main`, which carries EVERY
       merged-pending change; they all advance to Bug Testing when it goes live.
       Then the deploy watch polls the build stamp until MERGED → LIVE. */
-  async function shipAll() {
+  async function shipAll(stamp: number) {
     setErr(null);
     setNote(null);
     if (!window.nostr?.signEvent) {
@@ -424,9 +436,9 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
     try {
       event = await window.nostr.signEvent({
         kind: 22242,
-        created_at: Math.floor(Date.now() / 1000),
+        created_at: Math.floor(stamp / 1000),
         tags: [],
-        content: `PACS-DEPLOY-${Date.now()}`,
+        content: `PACS-DEPLOY-${stamp}`,
       });
     } catch {
       setErr("signing was declined — nothing shipped");
@@ -501,7 +513,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
   /** Sign the note's exact words with the operator key and hand it to the
       server: verified, recorded, and — token connected — posted onto the
       PR's GitHub conversation with the signature cited in the footer. */
-  async function signAndPostNote(pr: number) {
+  async function signAndPostNote(pr: number, stamp: number) {
     setErr(null);
     setNote(null);
     const text = (drafts[pr] ?? "").trim();
@@ -518,9 +530,9 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
     try {
       event = await window.nostr.signEvent({
         kind: 22242,
-        created_at: Math.floor(Date.now() / 1000),
+        created_at: Math.floor(stamp / 1000),
         tags: [],
-        content: `PACS-NOTE-${pr}-${Date.now()}\n${text}`,
+        content: `PACS-NOTE-${pr}-${stamp}\n${text}`,
       });
     } catch {
       setErr("signing was declined — nothing sent");
@@ -594,7 +606,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
           className="w-full rounded-lg border-2 border-edge bg-void px-3 py-2 font-mono text-xs text-white/85 placeholder:text-white/25 focus:border-pink focus:outline-none"
         />
         <button
-          onClick={() => signAndPostNote(pr)}
+          onClick={() => signAndPostNote(pr, Date.now())}
           disabled={noteBusy === pr}
           data-accent="pink"
           className="btn-pill mt-2"
@@ -632,7 +644,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
     }
     return (
       <button
-        onClick={shipAll}
+        onClick={() => shipAll(Date.now())}
         disabled={shipBusy}
         data-accent="neon"
         className="btn-pill btn-pill--solid ship-lit"
@@ -927,7 +939,7 @@ export default function MergeQueue({ mode }: { mode?: "approvals" | "testing" })
                           : "no GitHub key connected — the note records to the audit log"}
                       </p>
                       <button
-                        onClick={() => signAndPostNote(pr.number)}
+                        onClick={() => signAndPostNote(pr.number, Date.now())}
                         disabled={noteBusy === pr.number}
                         className="btn-pill"
                         data-accent="pink"

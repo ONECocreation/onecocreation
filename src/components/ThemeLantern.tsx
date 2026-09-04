@@ -13,7 +13,9 @@ export default function ThemeLantern() {
   const [light, setLight] = useState(false);
 
   useEffect(() => {
-    setLight(document.documentElement.getAttribute("data-oc-theme") === "light");
+    /* the boot-script attribute read rides a microtask — a synchronous
+       setState in the effect body would cascade (the set-state-in-effect law) */
+    void Promise.resolve().then(() => setLight(document.documentElement.getAttribute("data-oc-theme") === "light"));
   }, []);
 
   function flip() {

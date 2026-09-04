@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -138,7 +139,7 @@ export default async function ReferencePage({
             ShinePages global styling (capture 0018.06.12) → ours (cartridge.css night tokens, read live)
           </span>
           <span style={{ flex: 1 }} />
-          <a href="/studio" style={{ fontSize: 11, color: "var(--puck-color-text-secondary)" }}>← back to the studio</a>
+          <Link href="/studio" style={{ fontSize: 11, color: "var(--puck-color-text-secondary)" }}>← back to the studio</Link>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "0 28px", marginTop: 8 }}>
           <div>

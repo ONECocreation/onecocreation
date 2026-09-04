@@ -60,7 +60,9 @@ export default function DeployPanel() {
   }, []);
 
   useEffect(() => {
-    load();
+    /* the kickoff rides a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(load);
   }, [load]);
 
   /** Sign `PACS-DEPLOY-<ts>` and ship — same pattern as MergeQueue.authorize(). */

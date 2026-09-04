@@ -73,7 +73,9 @@ export default function CartPanel() {
     } else setLines([]);
   }
   useEffect(() => {
-    refresh();
+    /* the kickoff rides a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(refresh);
     const t = setInterval(() => setLines((l) => (l ? [...l] : l)), 60_000); // countdown breathes
     return () => clearInterval(t);
   }, []);

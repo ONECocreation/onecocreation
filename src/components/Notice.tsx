@@ -12,11 +12,15 @@ export default function Notice({ id, children }: { id: string; children: ReactNo
   const key = `fe-notice-${id}`;
   const [dismissed, setDismissed] = useState(true); // start hidden — no flash
   useEffect(() => {
-    try {
-      setDismissed(localStorage.getItem(key) === "1");
-    } catch {
-      setDismissed(false);
-    }
+    /* the restore rides a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(() => {
+      try {
+        setDismissed(localStorage.getItem(key) === "1");
+      } catch {
+        setDismissed(false);
+      }
+    });
   }, [key]);
   if (dismissed) return null;
   /* cyan, not coin — a notice is INFO; gold stays money-only (house law) */

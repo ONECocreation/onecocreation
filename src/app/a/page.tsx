@@ -4,7 +4,7 @@ import Link from "next/link";
 import OperatorGate from "@/components/OperatorGate";
 import OverviewPanel from "@/components/console/OverviewPanel";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
-import { CONSOLE_SITE, CONSOLE_CHROME, CONSOLE_ROOMS } from "@/lib/console";
+import { CONSOLE_SITE, CONSOLE_CHROME } from "@/lib/console";
 import { listTips, tipsConfigured, type TipLedger } from "@/lib/tips";
 import LovesDesk from "@/components/console/LovesDesk";
 import AttentionStrip from "@/components/console/AttentionStrip";

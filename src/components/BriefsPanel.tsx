@@ -136,7 +136,9 @@ export default function BriefsPanel() {
   }, []);
 
   useEffect(() => {
-    load();
+    /* the kickoff rides a microtask — a synchronous setState in the effect
+       body would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(load);
   }, [load]);
 
   /* the ribbon's SHARED / PERSONAL level-2 filters arrive as the URL hash */
@@ -183,7 +185,7 @@ export default function BriefsPanel() {
     }
   }
 
-  async function review(b: Brief, action: "signoff" | "sendback") {
+  async function review(b: Brief, action: "signoff" | "sendback", stamp: number) {
     const k = keyOf(b);
     const comment = (drafts[k] ?? "").trim();
     if (action === "sendback" && !comment) {
@@ -201,9 +203,9 @@ export default function BriefsPanel() {
     try {
       event = await window.nostr.signEvent({
         kind: 22242,
-        created_at: Math.floor(Date.now() / 1000),
+        created_at: Math.floor(stamp / 1000),
         tags: [],
-        content: `PACS-BRIEF-${b.tier}-${b.slug}-${Date.now()}-${action}${comment ? `\n${comment}` : ""}`,
+        content: `PACS-BRIEF-${b.tier}-${b.slug}-${stamp}-${action}${comment ? `\n${comment}` : ""}`,
       });
     } catch {
       setErr("signing was declined — nothing sent");
@@ -296,7 +298,7 @@ export default function BriefsPanel() {
                 </label>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <button
-                    onClick={() => review(b, "signoff")}
+                    onClick={() => review(b, "signoff", Date.now())}
                     disabled={busy === "signoff" || busy === "sendback"}
                     data-accent="neon"
                     className="btn-pill btn-pill--solid"
@@ -304,7 +306,7 @@ export default function BriefsPanel() {
                     {busy === "signoff" ? "SIGNING…" : "✍ SIGN OFF"}
                   </button>
                   <button
-                    onClick={() => review(b, "sendback")}
+                    onClick={() => review(b, "sendback", Date.now())}
                     disabled={busy === "signoff" || busy === "sendback" || !(drafts[k] ?? "").trim()}
                     data-accent="cyan"
                     className="btn-pill"

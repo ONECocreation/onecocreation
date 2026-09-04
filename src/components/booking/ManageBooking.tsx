@@ -22,8 +22,11 @@ export default function ManageBooking({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  /* the 24 h cutoff wants "now" as of the visit, not a per-render re-read —
+     an initializer is the one render-adjacent place Date.now() may run */
+  const [nowMs] = useState(() => Date.now());
 
-  const withinCutoff = Date.parse(startUtc) - Date.now() < 24 * 3600 * 1000;
+  const withinCutoff = Date.parse(startUtc) - nowMs < 24 * 3600 * 1000;
 
   async function cancel() {
     setBusy(true);

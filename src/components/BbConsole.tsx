@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { nip19 } from "nostr-tools";
 import { PixelAvatar } from "@pacsarcade/arcade-ui";
 import useFrenSession, { applyFrenSession } from "@/hooks/useFrenSession";
@@ -50,10 +51,14 @@ export default function BbConsole() {
 
   useEffect(() => {
     if (!npub) return;
-    const list = loadBuddies(npub);
-    setBuddies(list);
-    setActiveId((id) => id ?? list[0]?.id ?? null);
-    setHatching(list.length === 0);
+    /* the localStorage read + state flips ride a microtask — a synchronous
+       setState in the effect body would cascade (the set-state-in-effect law) */
+    void Promise.resolve().then(() => {
+      const list = loadBuddies(npub);
+      setBuddies(list);
+      setActiveId((id) => id ?? list[0]?.id ?? null);
+      setHatching(list.length === 0);
+    });
   }, [npub]);
 
   /* Connect = site-wide when possible (Pac, 2026-07-11): read the key, and if
@@ -131,8 +136,8 @@ export default function BbConsole() {
         </p>
         <button onClick={connect} className="button w-full sm:w-auto"> CONNECT YOUR KEY</button>
         {connectErr && <p className="font-mono text-xs text-ghost">{connectErr}</p>}
-        <a href="/" className="font-mono text-[11px] uppercase tracking-widest text-pink hover:underline">
-          Claim your @onecocreation tag </a>
+        <Link href="/" className="font-mono text-[11px] uppercase tracking-widest text-pink hover:underline">
+          Claim your @onecocreation tag </Link>
       </div>
     );
   }
@@ -163,8 +168,8 @@ export default function BbConsole() {
           {!fren && <p className="mt-0.5 font-mono text-[10px] text-cyan">{shortNpub(npub)}</p>}
         </div>
         {!fren && (
-          <a href="/" className="font-mono text-[10px] uppercase tracking-wider text-pink hover:underline">
-            Claim a tag </a>
+          <Link href="/" className="font-mono text-[10px] uppercase tracking-wider text-pink hover:underline">
+            Claim a tag </Link>
         )}
       </section>
 
@@ -191,8 +196,8 @@ export default function BbConsole() {
           >
             MY PROFILE </a>
         ) : (
-          <a href="/" className="font-pixel text-[8px] uppercase text-pink hover:underline">
-            CLAIM A TAG </a>
+          <Link href="/" className="font-pixel text-[8px] uppercase text-pink hover:underline">
+            CLAIM A TAG </Link>
         )}
       </aside>
 

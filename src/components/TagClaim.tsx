@@ -165,7 +165,9 @@ export default function TagClaim({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setHasNip07(typeof window !== "undefined" && !!window.nostr);
+    /* the one-shot environment read rides a microtask — a synchronous
+       setState in the effect body would cascade (the set-state-in-effect law) */
+    void Promise.resolve().then(() => setHasNip07(typeof window !== "undefined" && !!window.nostr));
   }, []);
   const spaceTag = `@${space}`;
 
@@ -184,16 +186,22 @@ export default function TagClaim({
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    setTakenNpub(null);
-    setOwnershipOpen(false);
-    setOwnershipValue("");
-    setOwnership("idle");
-    if (!handle) {
-      setAvailability("idle");
-      setReason(null);
-      return;
-    }
-    setAvailability("checking");
+    /* the reset + "checking" flip ride a microtask — a synchronous setState
+       in the effect body would cascade (the set-state-in-effect law); the
+       300 ms debounce below is untouched */
+    void Promise.resolve().then(() => {
+      setTakenNpub(null);
+      setOwnershipOpen(false);
+      setOwnershipValue("");
+      setOwnership("idle");
+      if (!handle) {
+        setAvailability("idle");
+        setReason(null);
+        return;
+      }
+      setAvailability("checking");
+    });
+    if (!handle) return;
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await fetch(
@@ -308,7 +316,7 @@ export default function TagClaim({
     } finally {
       setClaiming(false);
     }
-  }, [handle, npub, availability]);
+  }, [handle, npub, availability, space]);
 
   /* Freshly forged keys have a blank profile, so apps show a bare npub. This
      signs a starter kind-0 (name + verified NIP-05 address) IN THE BROWSER

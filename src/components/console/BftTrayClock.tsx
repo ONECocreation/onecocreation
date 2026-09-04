@@ -19,10 +19,11 @@ import { bftDatePlain, bftTime, currentBlockInfo, type BlockInfo } from "@/lib/b
  */
 export default function BftTrayClock({ variant }: { variant: "rail" | "bar" }) {
   const [info, setInfo] = useState<BlockInfo | null>(null);
-  /* a 1 s heartbeat re-renders the block-age seconds; it only ever reaches
-     the DOM after `info` lands client-side, so the SSR placeholder never
-     disagrees with hydration */
-  const [, setBeat] = useState(0);
+  /* a 1 s heartbeat holds the wall-clock second as STATE (the purity law:
+     Date.now() may be read in an initializer or an interval callback, never
+     during render); it only ever reaches the DOM after `info` lands
+     client-side, so the SSR placeholder never disagrees with hydration */
+  const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000));
 
   useEffect(() => {
     let alive = true;
@@ -32,7 +33,7 @@ export default function BftTrayClock({ variant }: { variant: "rail" | "bar" }) {
       });
     read();
     const heightId = setInterval(read, 30_000);
-    const secondId = setInterval(() => setBeat((b) => b + 1), 1_000);
+    const secondId = setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), 1_000);
     return () => {
       alive = false;
       clearInterval(heightId);
@@ -45,7 +46,7 @@ export default function BftTrayClock({ variant }: { variant: "rail" | "bar" }) {
      9:59 hold) — no chain stamp → dashes for the unknown */
   const seconds =
     info?.tipTimestamp != null
-      ? Math.min(599, Math.max(0, Math.floor(Date.now() / 1000 - info.tipTimestamp))) % 60
+      ? Math.min(599, Math.max(0, nowSec - info.tipTimestamp)) % 60
       : null;
   /* live height or nothing (fleet ruling 0018.05.26 a₿): no reading → the
      dash faces, never a modeled number */

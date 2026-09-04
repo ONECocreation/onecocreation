@@ -148,13 +148,6 @@ export interface BookingConfig {
  */
 export const DEFAULT_TZ = "America/Denver";
 
-const emptyConfig = (): BookingConfig => ({
-  schemaVersion: 1,
-  services: [],
-  rules: [],
-  overrides: [],
-});
-
 /* ── timezone arithmetic (no dependency; Intl does the work) ─────────────── */
 
 /**

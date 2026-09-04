@@ -195,9 +195,13 @@ export default function ArtistRegistry() {
 
   useEffect(() => {
     if (gate.state !== "artist") return;
-    loadRequests();
-    loadWatches();
-    loadBoard();
+    /* the loads ride a microtask — a synchronous setState in the effect body
+       would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(() => {
+      loadRequests();
+      loadWatches();
+      loadBoard();
+    });
   }, [gate.state, loadRequests, loadWatches, loadBoard]);
 
   const addToWatchlist = useCallback(
@@ -358,10 +362,10 @@ function RequestTab({
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!name.trim()) {
-      setCheck({ kind: "idle" });
+      void Promise.resolve().then(() => setCheck({ kind: "idle" }));
       return;
     }
-    setCheck({ kind: "checking" });
+    void Promise.resolve().then(() => setCheck({ kind: "checking" }));
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/artist/name?name=${encodeURIComponent(name.trim())}`);

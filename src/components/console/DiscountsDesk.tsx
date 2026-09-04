@@ -9,9 +9,12 @@ export default function DiscountsDesk() {
   const [draft, setDraft] = useState<Code>({ code: "", kind: "percent", value: 100, enabled: true });
   const [busy, setBusy] = useState(false);
   const [activeOnly, setActiveOnly] = useState(false);
+  /* expiry is day-granular; the mount-time now (initializer, never a render
+     read — the purity law) is fresh enough for a session at this desk */
+  const [nowMs] = useState(() => Date.now());
 
   const expired = (c: Code) =>
-    !!c.expiresAt && Date.now() > Date.parse(`${c.expiresAt}T23:59:59.999Z`);
+    !!c.expiresAt && nowMs > Date.parse(`${c.expiresAt}T23:59:59.999Z`);
   const active = (c: Code) => c.enabled && !expired(c);
 
   useEffect(() => {

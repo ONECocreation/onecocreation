@@ -54,7 +54,11 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
 }) {
   const [liveData, setLiveData] = useState<Data>(data);
   const liveRef = useRef<Data>(data);
-  liveRef.current = liveData;
+  /* the ref mirrors the state AFTER commit (the refs law: no ref writes
+     during render) — every reader (publish/save gestures, the copilot's
+     currentContent door, the mount lint) is post-commit, so an effect-sync
+     is the same freshness they always saw */
+  useEffect(() => { liveRef.current = liveData; });
 
   /* the change-log substrate (Phase 2 step 1): every edit becomes a patch
      record; undo/redo ride Puck's own history, the bridge restores OUR
@@ -81,11 +85,16 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1440px)");
     const apply = () => setWideChrome(mq.matches);
-    apply();
-    if (!mq.matches && localStorage.getItem(PANELS_LS) === null) {
-      /* narrow chrome, first visit: canvas first — open panels via their tabs */
-      setCollapsed((c) => ({ ...c, fields: true, cop: true }));
-    }
+    /* the initial apply + first-visit panel collapse ride a microtask — a
+       synchronous setState in the effect body would cascade a second render
+       (the set-state-in-effect law); the change listener is untouched */
+    void Promise.resolve().then(() => {
+      apply();
+      if (!mq.matches && localStorage.getItem(PANELS_LS) === null) {
+        /* narrow chrome, first visit: canvas first — open panels via their tabs */
+        setCollapsed((c) => ({ ...c, fields: true, cop: true }));
+      }
+    });
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, []);
@@ -112,11 +121,16 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
 
   useEffect(() => {
     refreshPages();
-    try {
-      const saved = JSON.parse(localStorage.getItem(PANELS_LS) ?? "");
-      if (saved && typeof saved === "object") setCollapsed((c) => ({ ...c, ...saved }));
-      if (localStorage.getItem("oc-studio-matrix") === "1") setMatrix(true);
-    } catch { /* first visit */ }
+    /* the saved-layout restore rides a microtask — a synchronous setState in
+       the effect body would cascade a second render (the set-state-in-effect
+       law) */
+    void Promise.resolve().then(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(PANELS_LS) ?? "");
+        if (saved && typeof saved === "object") setCollapsed((c) => ({ ...c, ...saved }));
+        if (localStorage.getItem("oc-studio-matrix") === "1") setMatrix(true);
+      } catch { /* first visit */ }
+    });
     /* presence: fail-soft — any error leaves the studio exactly as it was */
     let cancelled = false;
     let client: PresenceClient | null = null;
@@ -138,7 +152,6 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
       })
       .catch(() => { /* relay/door down — studio unaffected */ });
     return () => { cancelled = true; client?.close(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   function setPanels(next: Record<PanelKey, boolean>) {
     setCollapsed(next);
@@ -494,7 +507,9 @@ function CopilotApplyBridge({ log, applyRef }: {
   applyRef: React.MutableRefObject<((next: Data, origin?: ChangeOrigin) => void) | null>;
 }) {
   const apply = useApplyData(log);
-  applyRef.current = apply;
+  /* hand the apply fn up AFTER commit (the refs law: no ref writes during
+     render) — its only reader is the copilot's onApply gesture, post-commit */
+  useEffect(() => { applyRef.current = apply; });
   return null;
 }
 
