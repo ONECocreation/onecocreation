@@ -1,10 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { Puck, Render, Drawer, createUsePuck, useGetPuck, type Data } from "@puckeditor/core";
+import { createContext, useContext, useEffect, useRef, useState, type ComponentType } from "react";
+import { Puck, Render, Drawer, createUsePuck, useGetPuck, type Config, type Data } from "@puckeditor/core";
 import "@puckeditor/core/no-external.css";
-import { config } from "@/lib/puck-config";
-import Copilot from "@/components/Copilot";
+import type { BrandTokens } from "@pacsarcade/puck-config/tokens";
+import type { PuckPageData } from "@pacsarcade/page-store";
 import { lintPage, type Finding } from "@pacsarcade/plugin-rails";
 import { createChangelog, type ChangeOrigin, type Changelog } from "@pacsarcade/puck-changelog";
 import { ChangelogBridge, useApplyData } from "@pacsarcade/puck-changelog/react";
@@ -13,8 +13,6 @@ import { createPresence, type PresenceClient } from "@pacsarcade/presence";
 import { createNostrTransport } from "@pacsarcade/presence/nostr";
 import { loadIdentity, saveIdentity, colorFor, newSessionId } from "@pacsarcade/presence";
 import { usePresence, PresenceBridge, PresenceChips, PresenceHalos } from "@pacsarcade/presence/react";
-import { SEEDS } from "@/lib/puck-seeds";
-import { ONECOCREATION } from "@/brand/tokens";
 import PagesPanel from "@/components/studio/PagesPanel";
 import PopupsPanel from "@/components/studio/PopupsPanel";
 import type { PopupTrigger } from "@/lib/puck-store";
@@ -34,13 +32,26 @@ import type { PopupTrigger } from "@/lib/puck-store";
  * three — the site is the star. Panel state persists per browser.
  * All the rails stay: draft autosave, client lint chip + findings panel,
  * server-authoritative publish (422 opens findings), copilot rails-checked.
+ *
+ * TASK-97 PROP-LIFT (cut 0018.06.10 a₿): this component is brand-neutral —
+ * puck-config, the seed library, the brand tokens and the Copilot all
+ * arrive as PROPS, wired by the studio page's client bridge
+ * (src/components/studio/StudioEditor.tsx), so a second StudioPac tenant
+ * can feed it its own cartridge without forking the editor.
  */
 
 type LiveState = "idle" | "publishing" | "live" | "error";
 type PanelKey = "lib" | "fields" | "cop";
 const PANELS_LS = "oc-studio-panels";
 
-export default function PuckEditor({ slug, data }: { slug: string; data: Data }) {
+export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot }: {
+  slug: string;
+  data: Data;
+  config: Config;
+  seeds: Record<string, PuckPageData>;
+  tokens: BrandTokens;
+  Copilot: ComponentType<{ slug: string; currentContent: () => Data; onApply: (data: Data) => void }>;
+}) {
   const [liveData, setLiveData] = useState<Data>(data);
   const liveRef = useRef<Data>(data);
   liveRef.current = liveData;
@@ -150,14 +161,14 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
   /* the rails, running quietly as she edits (server is the authority at publish) */
   function runLint(next: Data) {
     try {
-      const pal = Object.fromEntries(ONECOCREATION.palette.map((p) => [p.key, p.value]));
+      const pal = Object.fromEntries(tokens.palette.map((p) => [p.key, p.value]));
       const dawn = Object.fromEntries(
-        ONECOCREATION.palette.flatMap((p) => {
+        tokens.palette.flatMap((p) => {
           const d = (p as { varianted?: Record<string, string> }).varianted?.dawn;
           return d ? [[p.key, d]] : [];
         }),
       );
-      setFindings(lintPage(next as never, { tokens: ONECOCREATION, lane, palette: pal, paletteDawn: dawn }));
+      setFindings(lintPage(next as never, { tokens, lane, palette: pal, paletteDawn: dawn }));
     } catch { /* lint must never break editing */ }
   }
   useEffect(() => { runLint(liveRef.current); /* eslint-disable-line react-hooks/exhaustive-deps */ }, []);
@@ -271,7 +282,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
      popup: slugs stay out of the switcher (gate ruling 0018.05.25 a₿ —
      popups belong to the ◱ popups panel only) EXCEPT the one being edited,
      so the control still names what you're on */
-  const switcherOptions = Array.from(new Set(["home", "practice", slug, ...Object.keys(SEEDS), ...pages]))
+  const switcherOptions = Array.from(new Set(["home", "practice", slug, ...Object.keys(seeds), ...pages]))
     .filter((p) => p !== "brand" && (!p.includes(":") || p === slug));
 
 
@@ -388,7 +399,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
                     borderRadius: 8, padding: "var(--oc-density-small-pad-y) var(--oc-space-5)", fontSize: 13, fontFamily: "var(--font-body)" }}
                 />
               </div>
-              {libQuery.trim() !== "" && <SearchDrawer query={libQuery} />}
+              {libQuery.trim() !== "" && <SearchDrawer query={libQuery} config={config} />}
               <div style={{ display: libQuery.trim() !== "" ? "none" : undefined }}>
                 <Puck.Components />
               </div>
@@ -399,7 +410,7 @@ export default function PuckEditor({ slug, data }: { slug: string; data: Data })
           <div style={{ flex: 1, minWidth: 0, overflow: "hidden", background: "var(--studio-mat)", display: "flex", flexDirection: "column" }}>
             {matrix && (
               <div style={{ flex: "none", padding: "var(--oc-space-5) var(--oc-space-6) var(--oc-space-0)" }}>
-                <ArtboardRail tokens={ONECOCREATION} height={320} log={changelog} />
+                <ArtboardRail tokens={tokens} height={320} log={changelog} />
               </div>
             )}
             <CanvasArea columnRef={canvasColRef} />
@@ -573,8 +584,9 @@ function CanvasArea({ columnRef }: { columnRef: React.RefObject<HTMLDivElement |
 
 /* ── SEARCH INSERT: a flat, draggable Drawer of every visible block whose
    key or label matches the query (case-insensitive). Must render inside
-   <Puck> — Drawer.Item rides the editor's drag context. */
-function SearchDrawer({ query }: { query: string }) {
+   <Puck> — Drawer.Item rides the editor's drag context. The config arrives
+   by prop (TASK-97 prop-lift) — no module-level brand import. */
+function SearchDrawer({ query, config }: { query: string; config: Config }) {
   const q = query.trim().toLowerCase();
   const cats = (config.categories ?? {}) as Record<
     string,
