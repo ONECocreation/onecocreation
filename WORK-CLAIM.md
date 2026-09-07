@@ -1,5 +1,7 @@
 # WORK-CLAIM — TASK-134 (the jars follow the switches; the pay-it-forward jar becomes GIFTS OF GRATITUDE with its own header)
 
+LANE: home (sonnet) — taken over from kimi 0018.06.17 a₿
+
 CLAIMED-BY: **kimi** (Kimi Code CLI, guest builder lane for Pac)
 CLAIMED-AT: 0018.06.17 a₿ (block 965,964)
 BRANCH: `feat/task-134-gifts-of-gratitude`

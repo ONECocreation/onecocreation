@@ -5,10 +5,11 @@ import SiteFooter from "@/components/SiteFooter";
 import TipJar from "@/components/TipJar";
 import WildDoors from "@/components/WildDoors";
 import StackedHero from "@/components/StackedHero";
+import { jarsOpen } from "@/lib/payments";
 
 export const metadata: Metadata = {
   title: "Support — One Cocreation",
-  description: "Tend the field — gifts land whole with Love, and Pay It Forward flows onward to the beings holding this Earth.",
+  description: "Tend the field — gifts land whole with Love, and Gifts of Gratitude flow onward to the beings holding this Earth.",
 };
 
 /**
