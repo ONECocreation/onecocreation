@@ -82,8 +82,48 @@ export async function removeSubscriber(email: string): Promise<void> {
   await kv(["SREM", INDEX, email.toLowerCase()]);
 }
 
-export async function listSubscribers(): Promise<string[]> {
-  return ((await kv(["SMEMBERS", INDEX])) as string[]) ?? [];
+/* TASK-131 (0018.06.16 a₿): segments are READ FROM THE RECORDS — no
+ * per-source index to backfill or drift; the record's `source` is the one
+ * source of truth and opted-out souls are already out of the index. */
+async function readRecords(emails: string[]): Promise<SubscriberRecord[]> {
+  const out: SubscriberRecord[] = [];
+  for (const email of emails) {
+    const raw = (await kv(["GET", recKey(email)])) as string | null;
+    if (!raw) continue;
+    try {
+      out.push(JSON.parse(raw) as SubscriberRecord);
+    } catch {
+      /* a corrupt record is skipped, never guessed */
+    }
+  }
+  return out;
+}
+
+export async function listSubscribers(filter: { source?: string } = {}): Promise<string[]> {
+  const emails = ((await kv(["SMEMBERS", INDEX])) as string[]) ?? [];
+  if (!filter.source) return emails;
+  return (await readRecords(emails)).filter((r) => r.source === filter.source).map((r) => r.email);
+}
+
+/** Every door with live souls behind it, with counts — DERIVED from the
+ *  records, never a hardcoded list. The send panel renders this verbatim. */
+export async function subscriberSegments(): Promise<{ source: string; count: number }[]> {
+  const emails = ((await kv(["SMEMBERS", INDEX])) as string[]) ?? [];
+  const bySource = new Map<string, number>();
+  for (const rec of await readRecords(emails)) {
+    bySource.set(rec.source, (bySource.get(rec.source) ?? 0) + 1);
+  }
+  return [...bySource.entries()]
+    .map(([source, count]) => ({ source, count }))
+    .sort((a, b) => b.count - a.count || a.source.localeCompare(b.source));
+}
+
+/** Send-time truth (the mail-queue's `subscribed` guard): a soul who left
+ *  while the letter waited in the queue never receives it. */
+export async function isSubscribed(email: string): Promise<boolean> {
+  const raw = (await kv(["GET", recKey(email)])) as string | null;
+  if (!raw) return false;
+  return !(JSON.parse(raw as string) as SubscriberRecord).optedOut;
 }
 
 export async function subscriberCount(): Promise<number> {
