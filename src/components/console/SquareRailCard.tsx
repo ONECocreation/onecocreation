@@ -1,106 +1,268 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Chip } from "@/components/console/glass";
+import { Chip, field } from "@/components/console/glass";
+import SquareCatalogDesk from "@/components/console/SquareCatalogDesk";
 
 /**
- * CARD RAIL — SQUARE (the Admiral's walk, replacing the dead "soon" chip:
- * "i'm in the money jars money rails... the square button says soon...
- * i have square. can we build that one in."). squareAdapter already ships
- * a working PaymentAdapter (src/lib/payments.ts) — this card is the admin
- * desk's honest read of it: configured or not, the exact env vars to set
- * when it isn't, and once it is, whether Pac's own Square location
- * reports bitcoin acceptance (payments.ts's squareBitcoinEnabled()).
+ * CARD — CARDS (SQUARE) (TASK-136, 0018.06.17 a₿ — the Admiral's picture:
+ * "GREEN = everything Square in ONE card"). Everything Square now lives
+ * here: the status chip, the paste-keys vault desk (mirrors StripeRailCard
+ * + api/admin/store/stripe/route.ts exactly — five fields, save-to-vault,
+ * never echoed back), the "test the connection" button, the bitcoin-on-
+ * this-location check, and the Square catalog display folded in as a
+ * section at the bottom (<SquareCatalogDesk/>, unchanged logic, lighter
+ * heading now that it's a subsection).
  *
- * Unlike Stripe's key drawer below, Square's five env vars are deploy-time
- * config (Vercel project → Settings → Environment Variables) — nothing is
- * pasted through this browser, so there's no vault form here, only status.
+ * ENV-THEN-VAULT: for each of the five values, an env var set on the
+ * deploy always wins and this desk says so ("set on the deploy — takes
+ * precedence"); otherwise the pasted vault value is used, live on the very
+ * next request — no redeploy. All five are write-only: this desk NEVER
+ * shows a saved value back, only "saved ✓ <date>" (same law as Stripe's
+ * drawer) — that includes SQUARE_ENVIRONMENT and SQUARE_WEBHOOK_URL, which
+ * aren't secret in the usual sense but the brief names all five as secrets
+ * to never echo, so the toggle and the URL field follow the same
+ * write-only shape as the two true credentials (documented in SUMMARY.md's
+ * Seams/decisions).
  */
 
-interface SquareBitcoinStatus {
-  checked: boolean;
-  enabled: boolean | null;
-  reason: string;
-}
+type FieldName = "access-token" | "location-id" | "environment" | "webhook-signature-key" | "webhook-url";
+interface FieldStatus { saved: boolean; at: string | null }
 
-interface SquareStatus {
+interface SquareDeskStatus {
   ok: boolean;
   configured: boolean;
-  squareBitcoin: SquareBitcoinStatus | null;
+  source: "env" | "vault" | "unset";
+  envSet: Record<string, boolean>;
+  vault: Record<string, FieldStatus>;
+  defaultWebhookUrl: string;
+  squareBitcoin: { checked: boolean; enabled: boolean | null; reason: string } | null;
 }
 
-const ENV_VARS = [
-  "SQUARE_ACCESS_TOKEN",
-  "SQUARE_LOCATION_ID",
-  "SQUARE_ENVIRONMENT",
-  "SQUARE_WEBHOOK_SIGNATURE_KEY",
-  "SQUARE_WEBHOOK_URL",
-];
+const FIELD_META: Record<FieldName, { envName: string; label: string; placeholder: string; kind: "text" | "toggle" }> = {
+  "access-token": { envName: "SQUARE_ACCESS_TOKEN", label: "Access token", placeholder: "EAAA…", kind: "text" },
+  "location-id": { envName: "SQUARE_LOCATION_ID", label: "Location ID", placeholder: "L…", kind: "text" },
+  environment: { envName: "SQUARE_ENVIRONMENT", label: "Environment", placeholder: "", kind: "toggle" },
+  "webhook-signature-key": {
+    envName: "SQUARE_WEBHOOK_SIGNATURE_KEY",
+    label: "Webhook signature key",
+    placeholder: "paste the signing key from the Square webhook subscription",
+    kind: "text",
+  },
+  "webhook-url": { envName: "SQUARE_WEBHOOK_URL", label: "Webhook URL", placeholder: "", kind: "text" },
+};
 
-export default function SquareRailCard() {
-  const [data, setData] = useState<SquareStatus | null>(null);
-  const [reason, setReason] = useState<string | null>(null);
+async function saveField(fieldName: FieldName, value: string): Promise<{ ok: boolean; reason?: string }> {
+  return fetch("/api/admin/store/square", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ field: fieldName, value }),
+  }).then((r) => r.json()).catch(() => ({ ok: false, reason: "the vault didn't answer — try again" }));
+}
+
+function KeyRow({
+  name, envSet, status, defaultValue, onSaved,
+}: {
+  name: FieldName;
+  envSet: boolean;
+  status: FieldStatus | null;
+  defaultValue?: string;
+  onSaved: () => void;
+}) {
+  const meta = FIELD_META[name];
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState("");
+  const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
-  function refresh(force = false) {
-    fetch(`/api/admin/store/square${force ? "?refresh=1" : ""}`, { cache: "no-store" })
+  const showForm = editing || !status?.saved;
+
+  async function save(v: string) {
+    if (!v.trim()) return;
+    setBusy(true);
+    setNote("");
+    const res = await saveField(name, v);
+    setBusy(false);
+    if (res?.ok) {
+      setValue("");
+      setEditing(false);
+      onSaved();
+    } else {
+      setNote(res?.reason ?? "the vault didn't answer — try again");
+    }
+  }
+
+  return (
+    <div style={{ margin: "10px 0" }}>
+      <label style={{ display: "block", fontSize: ".72rem", letterSpacing: ".06em", textTransform: "uppercase",
+        color: "var(--muted)", marginBottom: 4, fontFamily: "monospace" }}>{meta.envName}</label>
+
+      {envSet ? (
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <Chip tone="lavender">set on the deploy</Chip>
+          <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>takes precedence over the vault</span>
+        </div>
+      ) : meta.kind === "toggle" ? (
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <button className="btn btn-sm" disabled={busy} onClick={() => save("sandbox")}>Sandbox</button>
+          <button className="btn btn-sm" disabled={busy} onClick={() => save("production")}>Production</button>
+          {status?.saved && (
+            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>
+              saved <span style={{ color: "var(--gold-deep)" }}>✓</span>{" "}
+              {status.at ? new Date(status.at).toLocaleDateString() : ""}
+            </span>
+          )}
+        </div>
+      ) : showForm ? (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <input
+            type={name === "webhook-url" ? "text" : "password"}
+            autoComplete="off"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder={defaultValue || meta.placeholder}
+            style={{ ...field, flex: "1 1 260px", fontFamily: "monospace" }}
+          />
+          <button
+            className="btn btn-sm"
+            onClick={() => save(value.trim() || defaultValue || "")}
+            disabled={busy || !(value.trim() || defaultValue)}
+          >
+            {busy ? "Saving…" : "Save to the vault"}
+          </button>
+          {status?.saved && (
+            <button className="btn btn-ghost btn-sm" onClick={() => { setEditing(false); setValue(""); setNote(""); }}>
+              Keep the saved one
+            </button>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ fontFamily: "monospace", fontSize: ".9rem" }}>
+            •••• saved <span style={{ color: "var(--gold-deep)" }}>✓</span>{" "}
+            <span style={{ color: "var(--muted)", fontSize: ".78rem" }}>
+              {status?.at ? new Date(status.at).toLocaleDateString() : ""}
+            </span>
+          </span>
+          <button className="btn btn-ghost btn-sm" onClick={() => setEditing(true)}>Replace</button>
+        </div>
+      )}
+      {note && <p style={{ margin: "6px 0 0", fontSize: ".76rem", color: "var(--warn)" }}>{note}</p>}
+    </div>
+  );
+}
+
+export default function SquareRailCard() {
+  const [data, setData] = useState<SquareDeskStatus | null>(null);
+  const [reason, setReason] = useState<string | null>(null);
+  const [testBusy, setTestBusy] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const [bitcoinBusy, setBitcoinBusy] = useState(false);
+
+  function refresh(bitcoinForce = false) {
+    fetch(`/api/admin/store/square${bitcoinForce ? "?refresh=1" : ""}`, { cache: "no-store" })
       .then((r) => r.json())
-      .then((d) => (d?.ok ? setData(d) : setReason(d?.reason ?? "unreachable")))
+      .then((d) => {
+        if (d?.ok) {
+          setData(d);
+          setReason(null);
+        } else {
+          setReason(d?.reason ?? "unreachable");
+        }
+      })
       .catch(() => setReason("unreachable"));
   }
   useEffect(() => refresh(), []);
 
-  async function recheck() {
-    setBusy(true);
-    refresh(true);
-    setBusy(false);
+  async function testConnection() {
+    setTestBusy(true);
+    setTestResult(null);
+    const res = await fetch("/api/admin/store/square", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "test" }),
+    }).then((r) => r.json()).catch(() => null);
+    setTestBusy(false);
+    setTestResult(res?.ok ? { ok: true, text: res.message } : { ok: false, text: res?.reason ?? "the desk didn't answer — try again" });
   }
+
+  async function recheckBitcoin() {
+    setBitcoinBusy(true);
+    refresh(true);
+    setBitcoinBusy(false);
+  }
+
+  const statusLine = !data
+    ? ""
+    : data.source === "env"
+      ? "configured from env"
+      : data.source === "vault"
+        ? "configured from the vault"
+        : "not configured";
 
   return (
     <div style={{ background: "var(--glass)", border: "1px solid rgba(255,255,255,.9)", borderRadius: 18,
-      padding: "14px 16px", marginTop: 12, boxShadow: "0 18px 44px -28px rgba(120,100,160,.45)", maxWidth: 640 }}>
+      padding: "14px 16px", marginTop: 12, boxShadow: "0 18px 44px -28px rgba(120,100,160,.45)", maxWidth: 680 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-        <b style={{ fontSize: ".95rem" }}>Card rail — Square</b>
+        <b style={{ fontSize: ".95rem" }}>Cards (Square)</b>
         {data?.configured
           ? <Chip tone="green">live — hosted checkout</Chip>
           : <Chip tone="grey">not connected</Chip>}
+        {data && <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>{statusLine}</span>}
       </div>
+
+      <p style={{ margin: "6px 0 10px", fontSize: ".78rem", color: "var(--muted)" }}>
+        Paste your five Square values here and the house keeps them in the vault — never shown again,
+        never in an email. Env vars, if you set them on the deploy, take precedence. Saved keys go live
+        at once; no redeploy needed.
+      </p>
 
       {reason ? (
         <p style={{ fontSize: ".82rem", color: "var(--warn)" }}>the desk didn&apos;t answer: {reason}</p>
-      ) : !data ? null : !data.configured ? (
+      ) : !data ? null : (
         <>
-          <p style={{ margin: "6px 0 8px", fontSize: ".78rem", color: "var(--muted)" }}>
-            Square charges cards through its own hosted checkout page — this site never touches a
-            card number, and no bitcoin↔fiat rate is ever invented (sats-only items simply aren&apos;t
-            card-purchasable). Set these on the deploy (Vercel project → Settings → Environment
-            Variables), then redeploy — the button lights up on its own:
-          </p>
-          <ul style={{ margin: "0 0 4px", paddingLeft: 20, fontSize: ".8rem", fontFamily: "monospace" }}>
-            {ENV_VARS.map((v) => (
-              <li key={v} style={{ margin: "2px 0" }}>{v}</li>
-            ))}
-          </ul>
-          <p style={{ margin: "8px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>
-            the full walk (sandbox app, webhook subscription, test cards): docs/payments-square.md
-          </p>
-        </>
-      ) : (
-        <>
-          <p style={{ margin: "6px 0 8px", fontSize: ".78rem", color: "var(--muted)" }}>
-            Connected. A fiat-priced item now offers &ldquo;pay by card&rdquo; at checkout, hosted
-            entirely on Square&apos;s own page — try it from the shelf.
-          </p>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <b style={{ fontSize: ".82rem" }}>Bitcoin on this Square location</b>
-            {data.squareBitcoin?.enabled === true && <Chip tone="green">enabled</Chip>}
-            {data.squareBitcoin?.enabled === false && <Chip tone="grey">not enabled</Chip>}
-            {data.squareBitcoin?.enabled == null && <Chip tone="lavender">unverified</Chip>}
-            <button className="btn btn-ghost btn-sm" disabled={busy} onClick={recheck}>Recheck</button>
+          <KeyRow name="access-token" envSet={data.envSet["access-token"]} status={data.vault["access-token"] ?? null} onSaved={() => refresh()} />
+          <KeyRow name="location-id" envSet={data.envSet["location-id"]} status={data.vault["location-id"] ?? null} onSaved={() => refresh()} />
+          <KeyRow name="environment" envSet={data.envSet["environment"]} status={data.vault["environment"] ?? null} onSaved={() => refresh()} />
+          <KeyRow name="webhook-signature-key" envSet={data.envSet["webhook-signature-key"]} status={data.vault["webhook-signature-key"] ?? null} onSaved={() => refresh()} />
+          <KeyRow
+            name="webhook-url"
+            envSet={data.envSet["webhook-url"]}
+            status={data.vault["webhook-url"] ?? null}
+            defaultValue={data.defaultWebhookUrl}
+            onSaved={() => refresh()}
+          />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
+            <button className="btn btn-sm" disabled={testBusy || !data.configured} onClick={testConnection}>
+              {testBusy ? "Testing…" : "Test the connection"}
+            </button>
+            {!data.configured && (
+              <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>paste the access token + location ID first</span>
+            )}
           </div>
-          <p style={{ margin: "4px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>
-            {data.squareBitcoin?.reason ?? "checking…"}
-          </p>
+          {testResult && (
+            <p style={{ margin: "6px 0 0", fontSize: ".82rem", color: testResult.ok ? "var(--ok)" : "var(--warn)" }}>
+              {testResult.ok ? "✓ " : ""}{testResult.text}
+            </p>
+          )}
+
+          {data.configured && (
+            <div style={{ marginTop: 12, borderTop: "1px solid rgba(139,118,196,.18)", paddingTop: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <b style={{ fontSize: ".82rem" }}>Bitcoin on this Square location</b>
+                {data.squareBitcoin?.enabled === true && <Chip tone="green">enabled</Chip>}
+                {data.squareBitcoin?.enabled === false && <Chip tone="grey">not enabled</Chip>}
+                {data.squareBitcoin?.enabled == null && <Chip tone="lavender">unverified</Chip>}
+                <button className="btn btn-ghost btn-sm" disabled={bitcoinBusy} onClick={recheckBitcoin}>Recheck</button>
+              </div>
+              <p style={{ margin: "4px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>
+                {data.squareBitcoin?.reason ?? "checking…"}
+              </p>
+            </div>
+          )}
+
+          <SquareCatalogDesk />
         </>
       )}
     </div>

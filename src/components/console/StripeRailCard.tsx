@@ -112,7 +112,7 @@ export default function StripeRailCard() {
     <div style={{ background: "var(--glass)", border: "1px solid rgba(255,255,255,.9)", borderRadius: 18,
       padding: "14px 16px", marginTop: 12, boxShadow: "0 18px 44px -28px rgba(120,100,160,.45)", maxWidth: 640 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-        <b style={{ fontSize: ".95rem" }}>Card rail — Stripe</b>
+        <b style={{ fontSize: ".95rem" }}>Cards (Stripe)</b>
         {bothSaved
           ? <Chip tone="lavender">keys in the vault — rail ships next build</Chip>
           : <Chip tone="grey">two keys to paste</Chip>}
