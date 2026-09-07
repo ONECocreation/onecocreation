@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import OperatorGate from "@/components/OperatorGate";
 import MergeQueue from "@/components/MergeQueue";
 import DecisionsPanel from "@/components/DecisionsPanel";
 import SignoffsPanel from "@/components/SignoffsPanel";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
-import { CONSOLE_SITE } from "@/lib/console";
+import { CONSOLE_SITE, CONSOLE_CHROME } from "@/lib/console";
 
 /**
  * DUTY ROSTER — deck 02 of the SCAR Console v2 layout: the admiral's
@@ -28,6 +29,15 @@ export default async function AdminActionItemsPage() {
   const operator = operatorFromCookieHeader(cookie);
   if (!operator) {
     return <OperatorGate configured={operatorsConfigured()} />;
+  }
+  /* TASK-135 site-chrome guard: DUTY ROSTER is house furniture (houseOnly
+     in the registry) — an artist's own console never shows it, but the
+     rail's filter can't stop a direct URL hit. This room's page is the one
+     OWNS lists for the fix, so the guard lives here rather than in the
+     shared /a layout: under `site` chrome, bounce to the console front
+     page instead of rendering the arcade's duty desk. */
+  if (CONSOLE_CHROME === "site") {
+    redirect("/a");
   }
   return (
     <main className="min-h-screen">
