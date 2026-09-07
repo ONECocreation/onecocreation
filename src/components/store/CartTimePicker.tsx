@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Sheet from "@/components/Sheet";
 
 /**
@@ -9,6 +9,10 @@ import Sheet from "@/components/Sheet";
  * time (72h, the cart's own hold rail) and the plain line becomes a held
  * session line. Compact on purpose — the full month calendar lives on
  * /book/[id]; the basket just needs day → mirror time → held.
+ *
+ * TASK-122 (0018.06.16 a₿): the same law as the full picker — the visitor's
+ * own zone, detected from the browser (no switcher in this compact sheet),
+ * rides into generation and names the frame every label renders in.
  */
 
 interface Slot { startUtc: string; endUtc: string }
@@ -22,22 +26,25 @@ export default function CartTimePicker({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
+  // the visitor's own zone, detected — the board is materialized on HER clock
+  const viewerTz = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
+
   useEffect(() => {
     if (!open || slots !== null) return;
-    fetch(`/api/bookings/slots?service=${encodeURIComponent(serviceId)}`)
+    fetch(`/api/bookings/slots?service=${encodeURIComponent(serviceId)}&viewerTz=${encodeURIComponent(viewerTz)}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { slots?: Slot[] } | null) => setSlots(d?.slots ?? []))
       .catch(() => setSlots([]));
-  }, [open, slots, serviceId]);
+  }, [open, slots, serviceId, viewerTz]);
 
   const dayKey = (iso: string) =>
-    new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" })
+    new Intl.DateTimeFormat("en-CA", { timeZone: viewerTz, year: "numeric", month: "2-digit", day: "2-digit" })
       .format(new Date(iso));
   const dayLabel = (iso: string) =>
-    new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric" })
+    new Intl.DateTimeFormat(undefined, { timeZone: viewerTz, weekday: "short", month: "short", day: "numeric" })
       .format(new Date(iso));
   const timeLabel = (iso: string) =>
-    new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" })
+    new Intl.DateTimeFormat(undefined, { timeZone: viewerTz, hour: "numeric", minute: "2-digit" })
       .format(new Date(iso));
 
   const days = new Map<string, Slot[]>();
@@ -55,7 +62,7 @@ export default function CartTimePicker({
     const held = await fetch("/api/cart", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ serviceId, startUtc }),
+      body: JSON.stringify({ serviceId, startUtc, viewerTz }),
     }).then((r) => r.json()).catch(() => null);
     if (!held?.ok) {
       setNote(held?.reason ?? "that time slipped away — pick another");

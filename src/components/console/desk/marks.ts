@@ -20,8 +20,19 @@ import type { DeskFeed } from "./types";
  */
 const LIVE_WEEKDAYS = new Set([1, 3, 5]); // Mon, Wed, Fri — live.ts's LIVE_SCHEDULE
 
-const timeLabel = (iso: string): string =>
-  new Intl.DateTimeFormat("en-US", { timeZone: DEFAULT_TZ, hour: "numeric", minute: "2-digit", hour12: false }).format(
+/* TASK-122 (0018.06.16 a₿) — ONE SOURCE for the desk's clock. The Sept 1
+   call showed her desk in "Central" from her iPad: DEFAULT_TZ was hardcoded
+   here. A booking mark now takes the artist zone from the BOOKING's own
+   `artistTz` (stamped at booking time — the truth that survives the studio
+   moving zones), falling back to a caller-passed `artistTz`, then Denver.
+   The visitor's zone rides as `visitorTz` and is rendered on the mark when
+   present ("booked at 11:11 America/New_York"). Both fields arrive once the
+   /api/admin/calendar feed and BookingChip type carry them — that seam is
+   another lane's; until then the fallbacks keep today's rendering exact. */
+type MarkTz = { artistTz?: string; visitorTz?: string };
+
+const timeLabel = (iso: string, tz: string = DEFAULT_TZ): string =>
+  new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit", hour12: false }).format(
     new Date(iso),
   );
 
@@ -33,7 +44,7 @@ const civilKeyOf = (iso: string): string => new Date(iso).toISOString().slice(0,
 
 export function buildDeskMarks(
   feed: DeskFeed | null,
-  opts: { todayCivilKey: string; liveNowRoomSlug?: string | null },
+  opts: { todayCivilKey: string; liveNowRoomSlug?: string | null; artistTz?: string },
 ): CalendarDayMarksLookup {
   return (cell: CalendarDayCell): CalendarDayMarks | undefined => {
     if (!feed) return undefined;
@@ -51,7 +62,15 @@ export function buildDeskMarks(
     }
     for (const b of feed.bookings) {
       if (civilKeyOf(b.startUtc) !== cell.civilKey) continue;
-      pills.push({ id: b.bookingId, label: `${timeLabel(b.startUtc)} ${b.title}`, variant: "plain" });
+      const { artistTz: bArtistTz, visitorTz } = b as MarkTz;
+      const artistTz = bArtistTz ?? opts.artistTz ?? DEFAULT_TZ;
+      // the mark speaks her clock first, then the visitor's frame out loud —
+      // never color-only: the zone is NAMED in words
+      const label =
+        visitorTz && visitorTz !== artistTz
+          ? `${timeLabel(b.startUtc, artistTz)} ${b.title} · booked at ${timeLabel(b.startUtc, visitorTz)} ${visitorTz}`
+          : `${timeLabel(b.startUtc, artistTz)} ${b.title}`;
+      pills.push({ id: b.bookingId, label, variant: "plain" });
     }
 
     if (!blackout && !multiDay && pills.length === 0) return undefined;
