@@ -76,7 +76,7 @@ section{padding:76px 0;position:relative}
    (S33's gold lesson, still true in rose): --gold holds the popup pink in
    BOTH themes, so the plum --gold-ink keeps 5.66–6.75:1 on every stop;
    --gold-deep's dawn rung #AD5470 is a TEXT rung, too dark under the ink */
-.btn-rose{background:linear-gradient(135deg,#E7B2C3,#C56E8B);color:#fff}
+.btn-rose{background:linear-gradient(135deg,#E7B2C3,#C56E8B);color:var(--rose-btn-ink)} /* T-121 gate fix: deepest plum ink — 9.65 / 7.57 / 4.99:1 across the gradient stops (white measured 1.8–3.5:1; --gold-ink 2.93 at the dark end) */
 .btn-ghost{background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px var(--edge)}
 /* the small variant — same square law, compact for dense rooms */
 .btn-sm{padding:12px 24px;font-size:.9rem;letter-spacing:1.5px}

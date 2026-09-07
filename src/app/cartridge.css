@@ -60,6 +60,7 @@
      tells it); flagged to the Admiral, not swapped unilaterally */
   --nav-hover:var(--gold-2); /* the nav's hover — rides --gold-2, so the pink
      pass turns it the light rose #EFC6DA (always-night header: 12.2:1) */
+  --rose-btn-ink:#2E0E1D; /* T-121 gate fix: ink for the .btn-rose GRADIENT (light→#C56E8B); ≥4.99:1 on every stop, theme-independent like the gradient itself */
   --gold-ink:#6B2A44; /* T-121: ink on the rose fills — deep plum-rose, one
      family past --rose's dawn rung; 6.75:1 on the #EFC6DA end, 5.66:1 on
      #E7B2C3 (was #3a2a06 on gold) */
