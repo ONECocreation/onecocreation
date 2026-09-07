@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getVoucher, markRedeemed } from "@/lib/gift-vouchers";
-import { getService, readConfig, slotsFor } from "@/lib/booking";
+import { getService, readConfig, slotsFor, isValidTz } from "@/lib/booking";
 import { busyFeed, subtractBusy } from "@/lib/ical-busy";
 import { claimSlot, releaseSlot, createBooking, type BookingRecord } from "@/lib/booking-orders";
 import { getOrder } from "@/lib/store";
@@ -18,6 +18,9 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     voucherId?: string;
     startUtc?: string;
+    /** the recipient's zone (TASK-125) — the frame the chosen instant is a
+        sacred minute in; missing/invalid = legacy artist-clock validation */
+    viewerTz?: string;
     customer?: { name?: string; email?: string; note?: string; city?: string; state?: string; zip?: string };
   };
   if (!body.voucherId || !body.startUtc) {
@@ -39,10 +42,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, reason: "that session isn't offered right now — write to Love" }, { status: 409 });
   }
 
-  // the time must be one Love actually offers, busy-sync included
+  // the time must be one Love actually offers, busy-sync included — with a
+  // valid viewerTz (TASK-125) sacred in the RECIPIENT's frame
   const { rules, overrides, icalUrl } = await readConfig();
   const busy = await busyFeed(icalUrl);
-  const slot = subtractBusy(slotsFor(service, rules, overrides), busy.windows)
+  const viewerTz = body.viewerTz && isValidTz(body.viewerTz) ? body.viewerTz : undefined;
+  const slot = subtractBusy(slotsFor(service, rules, overrides, { viewerTz }), busy.windows)
     .find((s) => s.startUtc === body.startUtc);
   if (!slot) return NextResponse.json({ ok: false, reason: "that time isn't open — pick another" }, { status: 409 });
 
@@ -81,6 +86,7 @@ export async function POST(request: Request) {
     startUtc: slot.startUtc,
     endUtc: slot.endUtc,
     artistTz: service.artistTz,
+    ...(viewerTz ? { visitorTz: viewerTz } : {}),
     state: "confirmed",
     orderId: voucher.orderId,
     customer: {

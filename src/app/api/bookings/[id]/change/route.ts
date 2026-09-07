@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBooking, moveBooking, releaseBookingForOrder } from "@/lib/booking-orders";
-import { getService, readConfig, slotsFor } from "@/lib/booking";
+import { getService, readConfig, slotsFor, isValidTz } from "@/lib/booking";
 import { busyFeed, subtractBusy } from "@/lib/ical-busy";
 import { getOrder, attachCharge } from "@/lib/store";
 import { voucherForBooking, reopenVoucher } from "@/lib/gift-vouchers";
@@ -28,6 +28,9 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   const body = (await request.json().catch(() => ({}))) as {
     action?: "reschedule" | "cancel";
     startUtc?: string;
+    /** the visitor's zone (TASK-125) — the new instant must be sacred in
+        HER frame; missing/invalid = legacy artist-clock validation */
+    viewerTz?: string;
   };
 
   const booking = await getBooking(id);
@@ -52,11 +55,12 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     }
     const { rules, overrides, icalUrl } = await readConfig();
     const busy = await busyFeed(icalUrl);
-    const slot = subtractBusy(slotsFor(service, rules, overrides), busy.windows)
+    const viewerTz = body.viewerTz && isValidTz(body.viewerTz) ? body.viewerTz : undefined;
+    const slot = subtractBusy(slotsFor(service, rules, overrides, { viewerTz }), busy.windows)
       .find((s) => s.startUtc === body.startUtc);
     if (!slot) return NextResponse.json({ ok: false, reason: "that time isn't open — pick another" }, { status: 409 });
 
-    const moved = await moveBooking(id, slot);
+    const moved = await moveBooking(id, slot, { visitorTz: viewerTz });
     if (!moved.ok) return NextResponse.json(moved, { status: 409 });
 
     if (email) {

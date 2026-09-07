@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readConfig, slotsFor } from "@/lib/booking";
+import { readConfig, slotsFor, isValidTz } from "@/lib/booking";
 import { takenSlots, slotField } from "@/lib/booking-orders";
 import { busyFeed, subtractBusy } from "@/lib/ical-busy";
 
@@ -32,7 +32,14 @@ export async function GET(request: Request) {
   const daysParam = Number(searchParams.get("days"));
   const days = Number.isFinite(daysParam) && daysParam > 0 ? Math.min(daysParam, service.maxAdvanceDays) : undefined;
 
-  const offered = slotsFor(service, rules, overrides, { days });
+  /* TASK-125 (0018.06.16 a₿) — the visitor's zone rides INTO generation:
+     with a valid viewerTz the five sacred times materialize on HER wall
+     clock inside the artist's window; missing/invalid → the legacy
+     artist-clock path, unchanged (slotsFor holds the same guard). */
+  const viewerTzParam = searchParams.get("viewerTz");
+  const viewerTz = viewerTzParam && isValidTz(viewerTzParam) ? viewerTzParam : undefined;
+
+  const offered = slotsFor(service, rules, overrides, { days, viewerTz });
   const taken = await takenSlots();
   // the artist's own external calendar blocks time too (iCal busy sync)
   const busy = await busyFeed(icalUrl);
