@@ -3,7 +3,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import LettersRoom from "@/components/LettersRoom";
 import StackedHero from "@/components/StackedHero";
-import { EDITABLE_LETTERS, LETTER_DEFAULTS, audienceOf, getLetterOverride } from "@/lib/letters";
+import { listPublicLetters } from "@/lib/letters";
 
 export const metadata: Metadata = {
   title: "Your Letters — One Cocreation",
@@ -20,12 +20,8 @@ export const dynamic = "force-dynamic";
  */
 export default async function LettersPage() {
   const recent: { key: string; subject: string }[] = [];
-  for (const k of EDITABLE_LETTERS) {
-    const o = await getLetterOverride(k);
-    if (audienceOf(k, o) !== "public") continue;
-    const tpl = o ?? LETTER_DEFAULTS[k];
-    if (tpl) recent.push({ key: k, subject: tpl.subject });
-  }
+  // T-131 follow-through: seeded AND composed public letters, one shelf (listPublicLetters reads the registry)
+  for (const n of await listPublicLetters()) recent.push(n);
 
   return (
     <main>

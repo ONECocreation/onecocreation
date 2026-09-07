@@ -4,7 +4,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import StackedHero from "@/components/StackedHero";
 import BeInTheKnow from "@/components/BeInTheKnow";
-import { EDITABLE_LETTERS, LETTER_DEFAULTS, audienceOf, getLetterOverride } from "@/lib/letters";
+import { listPublicLetters } from "@/lib/letters";
 
 export const metadata: Metadata = {
   title: "News & Letters — One Cocreation",
@@ -18,12 +18,8 @@ export const dynamic = "force-dynamic";
  * Love publishes in the Letters room and the shelf updates the same moment. */
 export default async function NewsPage() {
   const notes = [];
-  for (const k of EDITABLE_LETTERS) {
-    const o = await getLetterOverride(k);
-    if (audienceOf(k, o) !== "public") continue;
-    const tpl = o ?? LETTER_DEFAULTS[k];
-    if (tpl) notes.push({ key: k, subject: tpl.subject });
-  }
+  // T-131 follow-through: seeded AND composed public letters, one shelf (listPublicLetters reads the registry)
+  for (const n of await listPublicLetters()) notes.push(n);
 
   return (
     <main>
