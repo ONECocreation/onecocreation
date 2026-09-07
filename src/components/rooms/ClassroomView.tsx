@@ -147,9 +147,9 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
       {vantage === "video" && (
         <VideoView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />
       )}
-      {vantage === "materials" && <MaterialsView slug={slug} alias={alias} title={title} live={thisRoomLive} />}
-      {vantage === "people" && <PeopleView slug={slug} alias={alias} title={title} live={thisRoomLive} />}
-      {vantage === "stage" && <StageView slug={slug} alias={alias} title={title} live={thisRoomLive} />}
+      {vantage === "materials" && <MaterialsView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />}
+      {vantage === "people" && <PeopleView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />}
+      {vantage === "stage" && <StageView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />}
     </div>
   );
 }

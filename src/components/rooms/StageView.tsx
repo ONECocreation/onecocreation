@@ -14,17 +14,19 @@ import RoomPresence from "./RoomPresence";
  * every layout — only the arrangement differs.
  */
 export default function StageView({
-  slug, alias, title, live,
-}: {
+  slug, alias, title, live, jitsiDomain, liveRoom}: {
   slug: string;
   alias: string;
   title: string;
   live: boolean;
+  /** T-146 follow-through: the live stage rides every vantage, not only Video */
+  jitsiDomain?: string;
+  liveRoom?: string;
 }) {
   return (
     <div className="cl-grid-stage">
       <div role="region" className="cl-region cl-area-video" data-region="video" aria-label="Video">
-        <RoomVideoSlot live={live} roomTitle={title} />
+        <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />
       </div>
       <div role="region" className="cl-region cl-area-materials" data-region="materials" aria-label="Materials">
         <RoomMaterialsShelf roomSlug={slug} />
