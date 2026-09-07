@@ -7,7 +7,10 @@ export const dynamic = "force-dynamic";
  * The tip jar (the Admiral's ask, 0018.05.10) — three jars, one rail:
  *   love        → a gift to Love herself
  *   onecocreation → keeps the lights on (site, rails, rooms)
- *   payforward  → funds a session or membership for someone who can't
+ *   payforward  → "Gifts of Gratitude" — funds a session or membership for
+ *                 someone who can't (KEY stays `payforward` for ledger
+ *                 continuity — TASK-134, 0018.06.17 a₿, renamed the LABEL
+ *                 only, everywhere it is shown)
  *
  * v1 is honest about custody: all three flow through the site's BTCPay
  * store, tagged by jar in the charge id (`tip-<jar>-…`), so the books can

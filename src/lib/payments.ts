@@ -581,3 +581,16 @@ export function liveAdapter(rail?: "btcpay" | "square"): PaymentAdapter | null {
   if (rail === "square") return switches.square && squareAdapter.configured() ? squareAdapter : null;
   return switches.btcpay && btcpayAdapter.configured() ? btcpayAdapter : null;
 }
+
+/**
+ * TASK-134 (0018.06.17 a₿) — THE JARS FOLLOW THE SWITCHES: the jars render
+ * only when Love's `jars` switch is ON **and** the bitcoin rail is actually
+ * live (btcpay switched on + env configured). ONE helper so /support and
+ * the home Donations() can never disagree. (The brief pins this helper in
+ * TipJar.tsx, but TipJar is a "use client" module — a server page cannot
+ * call a client-module export — so it lives beside liveAdapter, whose
+ * sync signature already reads the switches.)
+ */
+export function jarsOpen(): boolean {
+  return siteSwitchesSync().features.jars && liveAdapter() !== null;
+}

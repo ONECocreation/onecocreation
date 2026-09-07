@@ -27,7 +27,7 @@ interface Ledger {
 const JARS: { key: string; label: string }[] = [
   { key: "onecocreation", label: "🌟 One Cocreation" },
   { key: "love", label: "💛 Tips — Love" },
-  { key: "payforward", label: "🎁 Pay It Forward" },
+  { key: "payforward", label: "🎁 Gifts of Gratitude" },
 ];
 
 /** one synodic month — the site's native rhythm */

@@ -8,8 +8,15 @@ import { payInModal } from "@/lib/btcpay-modal";
  * or pay a session forward for someone who can't. Presets are angel numbers;
  * custom keeps it open. POST /api/tip mints the invoice; BTCPay's checkout
  * (lightning-first) takes it from there.
+ *
+ * TASK-134 (0018.06.17 a₿): the payforward jar is renamed GIFTS OF
+ * GRATITUDE everywhere (the KEY stays `payforward` — ledger continuity),
+ * and an optional `only` prop lets /support split the jars into "Tip the
+ * field" and "Gifts of Gratitude" sections. The switch gate (features.jars
+ * AND the live bitcoin rail) is jarsOpen() in @/lib/payments — the server
+ * pages ask it before rendering this at all.
  */
-const JARS = [
+export const JARS = [
   {
     key: "love",
     title: "Tip Love",
@@ -22,15 +29,18 @@ const JARS = [
   },
   {
     key: "payforward",
-    title: "Pay It Forward",
+    title: "Gifts of Gratitude",
     blurb: "Fund a session or membership for someone who can't right now.",
   },
 ] as const;
 
+export type JarKey = (typeof JARS)[number]["key"];
+
 const PRESETS = [2_100, 11_111, 111_111];
 
-export default function TipJar() {
-  const [jar, setJar] = useState<(typeof JARS)[number]["key"]>("love");
+export default function TipJar({ only }: { only?: readonly JarKey[] }) {
+  const jars = only ? JARS.filter((j) => only.includes(j.key)) : JARS;
+  const [jar, setJar] = useState<JarKey>(jars[0].key);
   const [sats, setSats] = useState<number>(11_111);
   const [custom, setCustom] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "error">("idle");
@@ -69,7 +79,7 @@ export default function TipJar() {
   return (
     <div style={{ marginTop: 26 }}>
       <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" }}>
-        {JARS.map((j) => (
+        {jars.map((j) => (
           <button
             key={j.key}
             type="button"

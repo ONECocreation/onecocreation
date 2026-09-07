@@ -6,6 +6,7 @@ import { ROOMS } from "@/lib/matrix";
 import { listServices } from "@/lib/booking";
 import { listItems } from "@/lib/store";
 import { getSiteConfig } from "@/lib/site-config";
+import { jarsOpen } from "@/lib/payments";
 import SubscribeForm from "./SubscribeForm";
 import TipJar from "./TipJar";
 import WildDoors from "./WildDoors";
@@ -302,9 +303,10 @@ export function Affirmations() {
 }
 
 export async function Donations() {
-  /* TASK-129 (0018.06.16 a₿) — THE SWITCHES, visibility only: the jars block
-     renders only when `jars` is on (Love's default keeps it on). */
-  const switches = await getSiteConfig();
+  /* TASK-134 (0018.06.17 a₿) — THE JARS FOLLOW THE SWITCHES: the jars block
+     renders only when jarsOpen() — features.jars ON *and* the bitcoin rail
+     actually live — so this section and /support can never disagree. */
+  const open = jarsOpen();
   return (
     <section id="support">
       <div className="wrap">
@@ -316,7 +318,7 @@ export async function Donations() {
             platform between, no cut taken. Give in bitcoin over lightning or simply in dollars;
             bitcoin is an option here, never a demand.
           </p>
-          {switches.features.jars && <TipJar />}
+          {open && <TipJar />}
 
           {/* ── the three doors (TASK-126, 0018.06.16 a₿ — same words as /support) ── */}
           <div style={{ marginTop: 34 }}>
