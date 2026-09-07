@@ -226,15 +226,30 @@ export default function SlotPicker({
   // a stale "BFT" from anywhere (saved state, a hand-rolled link) lands on
   // the detected zone instead — the lane itself is retired, see above
   const setViewerTz = (tz: string) => setViewerTzState(tz === "BFT" ? detected : tz);
+  // switching zones regenerates the board (the fetch effect rides viewerTz) —
+  // a time chosen in the old frame is not the same instant in the new one
+  const pickZone = (tz: string) => {
+    setViewerTz(tz);
+    setChosen(null);
+    setChosenDay(null);
+  };
   const [zipForTz, setZipForTz] = useState("");
   // less is more (Admiral): pick a DAY first, then that day's times
   const [chosenDay, setChosenDay] = useState<string | null>(null);
 
+  /* TASK-122 (0018.06.16 a₿) — the visitor's zone rides INTO generation:
+     the sacred times are materialized on HER wall clock, so switching zones
+     refetches and the board regenerates in the new frame. (The route reads
+     `viewerTz` once the API seam is switched — that file is another lane's;
+     until then the param rides along harmlessly and the artist-clock board
+     comes back, rendered in the visitor's zone as before.) */
   useEffect(() => {
     let live = true;
     (async () => {
       try {
-        const res = await fetch(`/api/bookings/slots?service=${encodeURIComponent(serviceId)}`);
+        const res = await fetch(
+          `/api/bookings/slots?service=${encodeURIComponent(serviceId)}&viewerTz=${encodeURIComponent(viewerTz)}`,
+        );
         const data = await res.json();
         if (!live) return;
         if (!data.ok) {
@@ -252,7 +267,7 @@ export default function SlotPicker({
     return () => {
       live = false;
     };
-  }, [serviceId]);
+  }, [serviceId, viewerTz]);
 
   const days = useMemo(() => {
     const grouped = new Map<string, Slot[]>();
@@ -277,7 +292,7 @@ export default function SlotPicker({
         const res = await fetch(`/api/bookings/${rescheduleBookingId}/change`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "reschedule", startUtc: chosen }),
+          body: JSON.stringify({ action: "reschedule", startUtc: chosen, viewerTz }),
         });
         const data = await res.json();
         if (!data.ok) {
@@ -301,6 +316,7 @@ export default function SlotPicker({
           body: JSON.stringify({
             voucherId,
             startUtc: chosen,
+            viewerTz,
             customer: inPerson ? { name, email, note: noteOut, city, state: stateReg, zip } : { name, email, note: noteOut },
           }),
         });
@@ -308,7 +324,7 @@ export default function SlotPicker({
         if (!data.ok) {
           setBookError(data.reason ?? "could not book that time");
           if (res.status === 409) {
-            const again = await fetch(`/api/bookings/slots?service=${encodeURIComponent(serviceId)}`);
+            const again = await fetch(`/api/bookings/slots?service=${encodeURIComponent(serviceId)}&viewerTz=${encodeURIComponent(viewerTz)}`);
             const fresh = await again.json();
             if (fresh.ok) { setSlots(fresh.slots ?? []); setChosen(null); }
           }
@@ -329,6 +345,10 @@ export default function SlotPicker({
         body: JSON.stringify({
           serviceId,
           startUtc: chosen,
+          /* TASK-122: the visitor's frame rides with the chosen instant, so
+             the validation side can recompute the same board once the API
+             seam is switched (the routes are another lane's — inert today) */
+          viewerTz,
           rail,
           amountSats: service?.pricingMode === "pwyc" ? Number(amountSats) : undefined,
           discountCode: discountCode.trim() || undefined,
@@ -342,7 +362,7 @@ export default function SlotPicker({
         setBookError(data.reason ?? "could not book that time");
         // 409 = someone else took it while this page was open; refresh the board
         if (res.status === 409) {
-          const again = await fetch(`/api/bookings/slots?service=${encodeURIComponent(serviceId)}`);
+          const again = await fetch(`/api/bookings/slots?service=${encodeURIComponent(serviceId)}&viewerTz=${encodeURIComponent(viewerTz)}`);
           const fresh = await again.json();
           if (fresh.ok) {
             setSlots(fresh.slots ?? []);
@@ -376,13 +396,13 @@ export default function SlotPicker({
       const res = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serviceId, startUtc: chosen }),
+        body: JSON.stringify({ serviceId, startUtc: chosen, viewerTz }),
       });
       const data = await res.json();
       if (!data.ok) {
         setBookError(data.reason ?? "could not hold that time");
         if (res.status === 409) {
-          const again = await fetch(`/api/bookings/slots?service=${encodeURIComponent(serviceId)}`);
+          const again = await fetch(`/api/bookings/slots?service=${encodeURIComponent(serviceId)}&viewerTz=${encodeURIComponent(viewerTz)}`);
           const fresh = await again.json();
           if (fresh.ok) {
             setSlots(fresh.slots ?? []);
@@ -417,7 +437,7 @@ export default function SlotPicker({
           times shown in{" "}
           <select
             value={viewerTz}
-            onChange={(e) => setViewerTz(e.target.value)}
+            onChange={(e) => pickZone(e.target.value)}
             style={glassField}
           >
             {[...new Map<string, string>([
@@ -439,7 +459,7 @@ export default function SlotPicker({
               setZipForTz(v);
               if (v.length >= 3) {
                 const tz = zipToTz(v);
-                if (tz) setViewerTz(tz);
+                if (tz) pickZone(tz);
               }
             }}
             inputMode="numeric"
@@ -510,6 +530,15 @@ export default function SlotPicker({
                             aria-pressed={isChosen}
                           >
                             {fmtTime(s.startUtc, viewerTz)}
+                            {/* THE TIMEZONE LAW on every chip — both clocks,
+                                spelled out: "11:11 your time · 9:11 Love's
+                                time". Inheriting the chip's own ink keeps the
+                                ≥4.5:1 contrast in both states, both themes. */}
+                            {zonesDiffer && (
+                              <span style={{ display: "block", fontSize: ".68rem" }}>
+                                {fmtTime(s.startUtc, artistTz)} Love&apos;s time
+                              </span>
+                            )}
                           </button>
                         </li>
                       );
