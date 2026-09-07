@@ -10,6 +10,15 @@ import SubscribeForm from "@/components/SubscribeForm";
 import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES, TIER_ADDONS, tierPageBySlug, type TierPage } from "@/lib/tiers-content";
 import { getSiteConfig, type SiteConfig } from "@/lib/site-config";
+import { getItem } from "@/lib/store";
+
+/** Admiral, 0018.06.17 a₿: nothing is offered or recommended whose store item is not live — a hidden
+ *  item is off everywhere, not just off the shelf. */
+async function itemLive(id: string | undefined): Promise<boolean> {
+  if (!id) return false;
+  const item = await getItem(id).catch(() => null);
+  return item?.status === "live";
+}
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -75,7 +84,17 @@ export default async function TierPage({
   const upgrade = page.upgradeSlug ? tierPageBySlug(page.upgradeSlug) : undefined;
   const switches = await getSiteConfig();
   const joined = sp?.joined === "1";
-  const mode = tierOfferMode(switches, joined);
+  const [mainLive, oneTimeLive, upgradeLive, related, addons] = await Promise.all([
+    itemLive(page.slug),
+    itemLive(page.oneTime?.itemId),
+    itemLive(upgrade?.slug),
+    Promise.all(TIER_PAGES.filter((p) => p.slug !== page.slug).map(async (p) => ((await itemLive(p.slug)) ? p : null))),
+    Promise.all(TIER_ADDONS.map(async (a) => ((await itemLive(a.itemId)) ? a : null))),
+  ]);
+  const relatedLive = related.filter((p): p is TierPage => p !== null);
+  const addonsLive = addons.filter((a): a is (typeof TIER_ADDONS)[number] => a !== null);
+  // a hidden membership item cannot be bought — the page falls back to the waitlist door
+  const mode = tierOfferMode(switches, joined) === "buy" && !mainLive ? "waitlist" : tierOfferMode(switches, joined);
 
   return (
     <>
@@ -158,7 +177,7 @@ export default async function TierPage({
                   />
                 )}
                 {/* T-138 follow-through (Number One): the one-time purchase gives way with the rails, same as the monthly YES */}
-                {mode !== "waitlist" && page.oneTime &&
+                {mode !== "waitlist" && oneTimeLive && page.oneTime &&
                   (page.oneTime.itemId ? (
                     <AddTierButton
                       ghost
@@ -170,7 +189,7 @@ export default async function TierPage({
                       YES! ${page.oneTime.usd} — {page.oneTime.label}
                     </Link>
                   ))}
-                {upgrade && (
+                {upgrade && upgradeLive && (
                   <Link className="btn btn-ghost" style={{ textAlign: "center" }} href={`/packages/${upgrade.slug}`}>
                     {TIERS[upgrade.tier].name} — Upgrade
                   </Link>
@@ -181,10 +200,11 @@ export default async function TierPage({
 
           {/* related packages as living cards, not bare pills — her
               weekly-intuitive page's "relevant items" gesture (0018.05.15) */}
+          {relatedLive.length > 0 && (
           <div style={{ marginTop: 48 }}>
             <p className="kicker center">Also in the Field</p>
             <div className="grid grid-2" style={{ maxWidth: 700, margin: "0 auto" }}>
-              {TIER_PAGES.filter((p) => p.slug !== page.slug).map((p, i) => {
+              {relatedLive.map((p, i) => {
                 const rt = TIERS[p.tier];
                 const img = { A: "/images/weekly-intuitive.webp", B: "/images/observer.webp", C: "/images/evening-star.webp" }[p.tier];
                 return (
@@ -201,16 +221,18 @@ export default async function TierPage({
               })}
             </div>
           </div>
+          )}
         </div>
 
-        {/* the add-ons strip — Love's single offerings, below the fold */}
+        {/* the add-ons strip — Love's single offerings, below the fold — only the items that are live */}
+        {addonsLive.length > 0 && (
         <section style={{ background: "rgba(243,220,227,.35)", padding: "44px 0 56px" }}>
           <div className="wrap" style={{ maxWidth: 1020 }}>
             <h2 className="center sec-h" style={{ fontSize: "1.5rem" }}>
               Or Purchase Single Affirmation Offerings
             </h2>
             <div className="grid grid-3" style={{ marginTop: 26 }}>
-              {TIER_ADDONS.map((a) => (
+              {addonsLive.map((a) => (
                 <div key={a.name} className="card">
                   <img className="thumb" src={a.img} alt={a.name} />
                   <div className="body" style={{ alignItems: "center", textAlign: "center" }}>
@@ -224,6 +246,7 @@ export default async function TierPage({
             </div>
           </div>
         </section>
+        )}
       </main>
       <SiteFooter />
     </>
