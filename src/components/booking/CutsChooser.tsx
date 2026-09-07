@@ -7,10 +7,12 @@ import SlotPicker from "@/components/booking/SlotPicker";
  * THE CUTS DOOR (Admiral, 0018.05.17): location first — where the mobile
  * studio drives — then the session, then the times. The location fields
  * persist to sessionStorage so checkout meets them pre-filled.
+ *
+ * TASK-126 (0018.06.16 a₿): Love no longer offers the silent cuts — those
+ * two choices are gone. The chooser keeps working with what remains;
+ * nothing here would render from an empty list.
  */
 const SESSIONS = [
-  { id: "silent-haircut-women", icon: "✂️", title: "Silent Haircut — Women" },
-  { id: "silent-haircut-men", icon: "✂️", title: "Silent Haircut — Men" },
   { id: "soul-conversation", icon: "💫", title: "Soul Conversation — the silent work, no cut" },
 ];
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { addSubscriber, validEmail, subscribersConfigured } from "@/lib/subscribers";
 import { mailConfigured } from "@/lib/mail";
-import { sendLeadMagnetLetter, enqueueDayTwoWelcome } from "@/lib/lead-magnet";
+import { sendLeadMagnetLetter, sendReadWithLoveLetter, enqueueDayTwoWelcome } from "@/lib/lead-magnet";
 
 export const dynamic = "force-dynamic";
 
@@ -34,22 +34,30 @@ export async function POST(request: Request) {
 
   const { added, already } = await addSubscriber(email, body.source ?? "site");
 
-  // A re-signup gets the meditation again — they asked for it, send it.
+  /* TASK-126 (0018.06.16 a₿): the Read with Love door pours its own letter —
+     the weekly live reading, not the meditation; its day-two welcome is
+     skipped (that note is about the meditation). Every other source is
+     unchanged. */
+  const rwl = (body.source ?? "") === "readwithlove";
+
+  // A re-signup gets the letter again — they asked for it, send it.
   if (added || already) {
     try {
-      await sendLeadMagnetLetter(email);
+      if (rwl) await sendReadWithLoveLetter(email);
+      else await sendLeadMagnetLetter(email);
     } catch (err) {
       console.error("lead magnet send failed:", err);
       return NextResponse.json(
-        { ok: true, joined: true, mailed: false, note: "joined — the meditation letter will retry" },
+        { ok: true, joined: true, mailed: false, note: `joined — the ${rwl ? "Read with Love" : "meditation"} letter will retry` },
         { status: 200 },
       );
     }
 
     // The day-two welcome (the Admiral's "kind extra special welcome") rides
-    // the drip queue — only for genuinely NEW joins, never on a re-signup.
+    // the drip queue — only for genuinely NEW joins, never on a re-signup,
+    // and never for Read with Love (it is about the meditation).
     // Copy is a placeholder shape awaiting Love's own voice (checklist item).
-    if (added) {
+    if (added && !rwl) {
       try {
         await enqueueDayTwoWelcome(email);
       } catch (err) {

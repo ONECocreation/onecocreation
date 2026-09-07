@@ -40,6 +40,41 @@ export async function sendLeadMagnetLetter(email: string): Promise<void> {
   });
 }
 
+/**
+ * READ WITH LOVE (TASK-126, 0018.06.16 a₿) — the welcome letter for the
+ * second square's email door: the weekly live book reading. The Zoom link
+ * is read from READ_WITH_LOVE_ZOOM_URL SERVER-SIDE ONLY (this module never
+ * reaches a client bundle); unset, the letter honestly says the link is
+ * coming — derive-or-dash, never a fake or placeholder URL, and the value
+ * itself is never echoed anywhere but the letter it's meant for. The
+ * day-two welcome is skipped for this source — it is about the meditation.
+ */
+export async function sendReadWithLoveLetter(email: string): Promise<void> {
+  const unsub = unsubscribeUrl(email);
+  const zoom = process.env.READ_WITH_LOVE_ZOOM_URL?.trim();
+  /* a URL pasted into env is trusted as the operator's own, but it rides an
+     href — escape the two characters that could break the attribute */
+  const zoomLine = zoom
+    ? `<p style="margin:22px 0;"><a href="${zoom.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}"
+          style="background:#b4862b;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;">
+          Join the reading on Zoom</a></p>`
+    : `<p>The Zoom link is coming — I&apos;ll send it before the first reading.</p>`;
+  await sendMail("news", {
+    to: email,
+    subject: "Read with Love — your seat",
+    html: brandShell(
+      `<p>Welcome, beautiful soul — your seat is saved.</p>
+       <p>Read with Love is a weekly live book reading: we gather, I read
+       aloud, and the field listens together. Bring the book if you have it;
+       bring yourself either way.</p>
+       ${zoomLine}
+       <p>With love,<br/>One Cocreation</p>`,
+      { unsubscribeUrl: unsub },
+    ),
+    unsubscribeUrl: unsub,
+  });
+}
+
 /** The day-two welcome — rides the drip queue, genuinely-new joins only.
  *  Copy is a placeholder shape awaiting Love's own voice (checklist item). */
 export async function enqueueDayTwoWelcome(email: string): Promise<void> {
