@@ -3,6 +3,7 @@ import { listEntitlements, tierSatisfies, type Tier } from "./entitlement";
 import { enqueue } from "./mail-queue";
 import { brandShell, pill } from "./mail";
 import { siteBase } from "./subscribers";
+import { SPACE_NAME } from "./identity-config";
 
 /**
  * THE LIVE FLAG (TASK-37/S40 lane 2) — one KV-backed truth for "Love is
@@ -40,6 +41,28 @@ const IDLE: LiveState = { live: false };
 export const slugOfRoom = (r: MatrixRoom): string => r.id.slice(1, r.id.indexOf(":"));
 export const roomForSlug = (slug: string): MatrixRoom | undefined =>
   ROOMS.find((r) => slugOfRoom(r) === slug);
+
+/**
+ * THE ONE JITSI ROOM-NAME DERIVATION (TASK-146, H60-A ruling). Rooms live
+ * on a SHARED Jitsi host (meet.<space's own domain>) alongside every other
+ * artist's spaces — a bare room slug ("lesson-path") could collide with
+ * another artist's room of the same name. Namespacing by the site's own
+ * space slug keeps every artist's rooms distinct with zero coordination.
+ *
+ * Pure — no I/O, no vault, no mail — so it is safe to call from anywhere
+ * this module's OTHER exports would be unsafe to import. In practice it is
+ * called from exactly two server call-sites (the room page and /live) and
+ * the derived string is threaded down as a prop from there — RoomVideoSlot
+ * itself (a "use client" leaf) never imports this file directly: live.ts
+ * pulls in the entitlement/mail-queue/vault chain for its OTHER exports,
+ * and matrix-rooms.ts's own docblock already records the Turbopack lesson
+ * of 0018.05.15 (a client card importing that chain broke the client
+ * bundle) — this keeps that lesson from repeating.
+ */
+export function liveRoomName(slug: string): string {
+  const space = SPACE_NAME.trim() || "onecocreation";
+  return `${space}-${slug}`;
+}
 
 /* ── the vault (the house's KV REST pattern, names only) ────────────────── */
 

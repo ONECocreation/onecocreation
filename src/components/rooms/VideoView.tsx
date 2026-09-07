@@ -14,17 +14,22 @@ import RoomPresence from "./RoomPresence";
  * arrangement differs.
  */
 export default function VideoView({
-  slug, alias, title, live,
+  slug, alias, title, live, jitsiDomain, liveRoom, displayName,
 }: {
   slug: string;
   alias: string;
   title: string;
   live: boolean;
+  /** TASK-146: pass-through only, from the room page's own switches read
+   *  down through ClassroomView — see RoomVideoSlot's docblock. */
+  jitsiDomain?: string;
+  liveRoom?: string;
+  displayName?: string;
 }) {
   return (
     <div className="cl-grid-video">
       <div role="region" className="cl-region cl-area-video" data-region="video" aria-label="Video">
-        <RoomVideoSlot live={live} roomTitle={title} />
+        <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} displayName={displayName} />
       </div>
       <div role="region" className="cl-region cl-area-materials" data-region="materials" aria-label="Materials">
         <RoomMaterialsShelf roomSlug={slug} />

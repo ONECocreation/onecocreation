@@ -21,10 +21,15 @@ export default function JitsiRoom({
   domain,
   room,
   displayName,
+  height = "72vh",
 }: {
   domain: string;
   room: string;
   displayName?: string;
+  /** TASK-146: optional, defaults to /meet's original literal so /meet
+   *  renders byte-identical without passing it — the classroom slot and
+   *  /live pass their own to fit a smaller embed frame. */
+  height?: string;
 }) {
   const holder = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"loading" | "live" | "ended" | "failed">("loading");
@@ -89,7 +94,7 @@ export default function JitsiRoom({
   return (
     <div>
       {state === "loading" && <p style={{ color: "var(--muted)" }}>opening the room…</p>}
-      <div ref={holder} style={{ height: "72vh", borderRadius: 18, overflow: "hidden", border: "1.5px solid rgba(139,118,196,.35)" }} />
+      <div ref={holder} style={{ height, borderRadius: 18, overflow: "hidden", border: "1.5px solid rgba(139,118,196,.35)" }} />
     </div>
   );
 }

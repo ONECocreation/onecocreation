@@ -6,6 +6,8 @@ import SiteFooter from "@/components/SiteFooter";
 import ClassroomView from "@/components/rooms/ClassroomView";
 import { ROOMS } from "@/lib/matrix-rooms";
 import { getPin } from "@/lib/room-pins";
+import { getSiteConfig } from "@/lib/site-config";
+import { liveRoomName } from "@/lib/live";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +30,13 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
   if (!room) notFound();
 
   const pin = await getPin(slug);
+  /* TASK-146 minimal-forced-edit: the Video vantage's live embed needs the
+   * site's own Jitsi domain and this room's namespaced room name — both
+   * derive server-side (the switches read is server-only; live.ts's ONE
+   * liveRoomName() helper is server-only too, see its docblock) and are
+   * handed down as plain props. Without this the toggle in RoomVideoSlot
+   * would be cosmetic — there would be nothing to embed. */
+  const switches = await getSiteConfig();
 
   return (
     <main className="mgmt-ground">
@@ -45,6 +54,8 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           title={room.title}
           kind={room.kind}
           pin={pin}
+          jitsiDomain={switches.meeting.jitsiDomain}
+          liveRoom={liveRoomName(slug)}
         />
       </section>
       <SiteFooter />

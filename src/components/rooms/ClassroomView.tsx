@@ -55,6 +55,12 @@ interface Props {
   title: string;
   kind: "class" | "community";
   pin: RoomPin | null;
+  /** TASK-146: pass-through only — the room page's own site-switches read,
+   *  handed to the Video vantage so it can mount the live embed. See
+   *  RoomVideoSlot's docblock for why this client tree never imports
+   *  live.ts's liveRoomName() directly. */
+  jitsiDomain?: string;
+  liveRoom?: string;
 }
 
 function RoomTabs({ feed, activeSlug }: { feed: RoomsFeed | null; activeSlug: string }) {
@@ -94,7 +100,7 @@ function RoomTabs({ feed, activeSlug }: { feed: RoomsFeed | null; activeSlug: st
   );
 }
 
-export default function ClassroomView({ slug, alias, title, kind, pin }: Props) {
+export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom }: Props) {
   const [vantage] = useRoomVantage();
   const [feed, setFeed] = useState<RoomsFeed | null>(null);
   const [live, setLive] = useState<LiveFeed | null>(null);
@@ -138,7 +144,9 @@ export default function ClassroomView({ slug, alias, title, kind, pin }: Props) 
 
       {/* TASK-123: the four restored classroom layouts — video slot,
           materials list, people rail; only the arrangement differs. */}
-      {vantage === "video" && <VideoView slug={slug} alias={alias} title={title} live={thisRoomLive} />}
+      {vantage === "video" && (
+        <VideoView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />
+      )}
       {vantage === "materials" && <MaterialsView slug={slug} alias={alias} title={title} live={thisRoomLive} />}
       {vantage === "people" && <PeopleView slug={slug} alias={alias} title={title} live={thisRoomLive} />}
       {vantage === "stage" && <StageView slug={slug} alias={alias} title={title} live={thisRoomLive} />}
