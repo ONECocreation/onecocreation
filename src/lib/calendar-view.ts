@@ -31,7 +31,7 @@
  * height, block, or "at block N" fact — only a day label.
  */
 
-import { fromHeight, estimateHeightAt, type BftKnown } from "./bb/bft.ts";
+import { fromHeight, estimateHeightAt, type BftKnown } from "./bb/bft";
 
 export const BFT_DAYS_PER_MONTH = 28;
 export const BFT_MONTHS_PER_YEAR = 13;
@@ -84,6 +84,10 @@ export interface CalendarViewOptions {
   /** reference "now" instant, ms since epoch — defaults to Date.now(). Tests pin this to get
    *  a deterministic grid; production leaves it out. */
   nowMs?: number;
+  /** the LIVE chain tip height when the surface already has one (fetch it `cache: "no-store"`
+   *  at the page, pass it down) — it wins over the anchored estimate for deciding which BFT
+   *  day "today" is. Leave unset and the chain-anchored estimate answers, as always. */
+  height?: number | null;
 }
 
 function bftDayIndex(year: number, month: number, day: number): number {
@@ -91,11 +95,13 @@ function bftDayIndex(year: number, month: number, day: number): number {
 }
 
 /** Today's BFT reading, anchored to the chain (see file header) — the ONE height read this
- *  module performs, never rendered, only decomposed into a day index. */
-export function bftToday(nowMs: number = Date.now()): BftKnown {
-  const todayMidnightMs = Math.floor(nowMs / MS_PER_DAY) * MS_PER_DAY;
-  const height = estimateHeightAt(todayMidnightMs);
-  const reading = fromHeight(height);
+ *  module performs, never rendered, only decomposed into a day index. Read at the LIVE
+ *  instant (TASK-124, 0018.06.16 a₿): a BFT day is 144 blocks and never aligns with civil
+ *  midnight, so snapping to a Gregorian UTC midnight before estimating read YESTERDAY for
+ *  every hour after the last 144-block boundary. `height` (a live tip the surface already
+ *  holds) wins over the estimate when given. */
+export function bftToday(nowMs: number = Date.now(), height?: number | null): BftKnown {
+  const reading = fromHeight(height ?? estimateHeightAt(nowMs));
   if (reading.known) return reading;
   // estimateHeightAt only returns a negative height for dates before the
   // chain's own genesis instant — not a reachable "today". Fall back to
@@ -144,8 +150,8 @@ export function bftMonthGrid(
     throw new RangeError(`bftMonthGrid: month out of range 1..${BFT_MONTHS_PER_YEAR}: ${bftMonth}`);
   }
   const nowMs = opts.nowMs ?? Date.now();
-  const todayMidnightMs = Math.floor(nowMs / MS_PER_DAY) * MS_PER_DAY;
-  const today = bftToday(nowMs);
+  const todayMidnightMs = Math.floor(nowMs / MS_PER_DAY) * MS_PER_DAY; // civil-projection anchor only — the "which day is today" read below never snaps
+  const today = bftToday(nowMs, opts.height);
   const todayIdx = bftDayIndex(today.year, today.month, today.day);
 
   const cells: CalendarDayCell[] = [];
@@ -186,10 +192,11 @@ export function bftWeekContaining(
   return bftWeek(bftYear, bftMonth, weekOfMonth, opts);
 }
 
-/** True when `cell` is "today" per the same reference instant. Pass the same `nowMs` you
- *  built the grid with (or leave both at the live default) so a cell and its "is this
- *  today" check never disagree. */
-export function isTodayCell(cell: CalendarDayCell, nowMs: number = Date.now()): boolean {
-  const today = bftToday(nowMs);
+/** True when `cell` is "today" per the same reference instant. The compare is pure BFT
+ *  (year, month, day) — never a Gregorian date. Pass the same `nowMs` (and `height`, the
+ *  live-tip override, when the surface has one) you built the grid with (or leave both at
+ *  the live default) so a cell and its "is this today" check never disagree. */
+export function isTodayCell(cell: CalendarDayCell, nowMs: number = Date.now(), height?: number | null): boolean {
+  const today = bftToday(nowMs, height);
   return cell.bftYear === today.year && cell.bftMonth === today.month && cell.bftDay === today.day;
 }
