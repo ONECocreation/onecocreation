@@ -42,6 +42,10 @@ export interface BookingRecord {
   endUtc: string;
   /** the artist's zone at time of booking, so a receipt can say both clocks */
   artistTz: string;
+  /** the VISITOR's zone at time of booking (TASK-125, 0018.06.16 a₿) — the
+      frame the sacred minute was chosen in, so the desk can say "booked at
+      11:11 America/New_York". Absent on legacy artist-clock bookings. */
+  visitorTz?: string;
   state: "held" | "confirmed" | "released" | "canceled";
   orderId: string;
   customer: { name?: string; email?: string; note?: string; npub?: string; city?: string; state?: string; zip?: string };
@@ -371,6 +375,7 @@ export async function confirmBookingForOrder(
 export async function moveBooking(
   bookingId: string,
   slot: { startUtc: string; endUtc: string },
+  opts?: { visitorTz?: string },
 ): Promise<{ ok: true; booking: BookingRecord } | { ok: false; reason: string }> {
   const rec = await getBooking(bookingId);
   if (!rec) return { ok: false, reason: "no such booking" };
@@ -383,6 +388,9 @@ export async function moveBooking(
   const oldStart = rec.startUtc;
   rec.startUtc = slot.startUtc;
   rec.endUtc = slot.endUtc;
+  // the frame the NEW time was chosen in follows it (absent = legacy artist clock)
+  if (opts?.visitorTz) rec.visitorTz = opts.visitorTz;
+  else delete rec.visitorTz;
   await writeBooking(rec);
   await releaseSlot(rec.serviceId, oldStart);
   return { ok: true, booking: rec };

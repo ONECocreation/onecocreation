@@ -34,6 +34,11 @@ export async function GET(request: Request) {
     notes?: string;
     startUtc: string;
     endUtc: string;
+    /** both clocks (TASK-125): her zone stamped at booking time, and the
+        visitor's when the slot was chosen in her frame — the desk mark can
+        say "booked at 11:11 America/New_York" */
+    artistTz: string;
+    visitorTz?: string;
     state: string;
     orderState: string;
     needsFulfil: boolean;
@@ -66,6 +71,8 @@ export async function GET(request: Request) {
           notes: b.adminNotes,
           startUtc: b.startUtc,
           endUtc: b.endUtc,
+          artistTz: b.artistTz,
+          visitorTz: b.visitorTz,
           state: b.state,
           orderState: o.state,
           needsFulfil: o.state === "settled",

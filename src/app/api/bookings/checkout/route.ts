@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getService, slotsFor, readConfig } from "@/lib/booking";
+import { getService, slotsFor, readConfig, isValidTz } from "@/lib/booking";
 import { busyFeed, subtractBusy } from "@/lib/ical-busy";
 import {
   claimSlot,
@@ -53,6 +53,9 @@ export async function POST(request: Request) {
   let body: {
     serviceId?: string;
     startUtc?: string;
+    /** the visitor's zone (TASK-125) — the frame the chosen instant is a
+        sacred minute in; missing/invalid = legacy artist-clock validation */
+    viewerTz?: string;
     rail?: "lightning" | "onchain";
     amountSats?: number; // pwyc only — the customer names it
     discountCode?: string;
@@ -72,9 +75,12 @@ export async function POST(request: Request) {
   // ── 1. the slot must be one the artist actually offers ──────────────────
   // Recomputing from the rules is the gate. A client could otherwise post any
   // instant it liked — 3am, a blocked day, a slot outside the lead window.
+  // TASK-125: with a valid viewerTz the gate is the VISITOR's board — the
+  // instant must be a sacred minute in HER zone within the artist's window.
+  const viewerTz = body.viewerTz && isValidTz(body.viewerTz) ? body.viewerTz : undefined;
   const { rules, overrides, icalUrl } = await readConfig();
   const busy = await busyFeed(icalUrl);
-  const offered = subtractBusy(slotsFor(service, rules, overrides), busy.windows);
+  const offered = subtractBusy(slotsFor(service, rules, overrides, { viewerTz }), busy.windows);
   const slot = offered.find((s) => s.startUtc === body.startUtc);
   if (!slot) {
     return NextResponse.json({ ok: false, reason: "that time isn't open" }, { status: 409 });
@@ -139,6 +145,7 @@ export async function POST(request: Request) {
       startUtc: slot.startUtc,
       endUtc: slot.endUtc,
       artistTz: service.artistTz,
+      ...(viewerTz ? { visitorTz: viewerTz } : {}),
       state: "held",
       orderId,
       customer: {

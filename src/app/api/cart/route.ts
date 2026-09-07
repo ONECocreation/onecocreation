@@ -9,7 +9,7 @@ import {
   type CartLine,
 } from "@/lib/cart";
 import { getItem, stripPrivateMedia } from "@/lib/store";
-import { getService, readConfig, slotsFor } from "@/lib/booking";
+import { getService, readConfig, slotsFor, isValidTz } from "@/lib/booking";
 import { claimSlot, releaseSlot, getClaim, newBookingId } from "@/lib/booking-orders";
 import { busyFeed, subtractBusy } from "@/lib/ical-busy";
 import { enqueue } from "@/lib/mail-queue";
@@ -203,6 +203,9 @@ export async function POST(request: Request) {
     /** session add: the service + the chosen slot */
     serviceId?: string;
     startUtc?: string;
+    /** the visitor's zone (TASK-125) — the frame the chosen instant is a
+        sacred minute in; missing/invalid = legacy artist-clock validation */
+    viewerTz?: string;
     /** pay-what-you-can: set/clear the line's offer (sats, whole line) */
     offerSats?: number | null;
     /** gift: set/clear who this line is for (email or @tag) */
@@ -230,10 +233,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, reason: "no such session" }, { status: 404 });
     }
     // recompute from the artist's own rules — never trust a client instant;
-    // the external calendar's busy windows count as closed too
+    // the external calendar's busy windows count as closed too.
+    // TASK-125: with a valid viewerTz the board is materialized on the
+    // VISITOR's clock — the instant must be sacred in her frame.
     const { rules, overrides, icalUrl } = await readConfig();
     const busy = await busyFeed(icalUrl);
-    const slot = subtractBusy(slotsFor(service, rules, overrides), busy.windows)
+    const viewerTz = body.viewerTz && isValidTz(body.viewerTz) ? body.viewerTz : undefined;
+    const slot = subtractBusy(slotsFor(service, rules, overrides, { viewerTz }), busy.windows)
       .find((s) => s.startUtc === body.startUtc);
     if (!slot) return NextResponse.json({ ok: false, reason: "that time isn't open" }, { status: 409 });
 

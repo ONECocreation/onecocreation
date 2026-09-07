@@ -16,6 +16,11 @@ export interface BookingChip {
   notes?: string;
   startUtc: string;
   endUtc?: string;
+  /** both clocks (TASK-125): the artist's zone stamped at booking time, and
+      the visitor's when the slot was chosen in her frame — marks.ts reads
+      these to say "booked at 11:11 America/New_York" */
+  artistTz?: string;
+  visitorTz?: string;
   state: string;
   needsFulfil: boolean;
 }
