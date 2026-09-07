@@ -3,48 +3,102 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import type { SiteConfig } from "@/lib/site-config";
 
 /**
  * The consolidated nav (Admiral, 0018.05.13): main doors with sub-menus, so
  * the bar never crowds — and a hamburger below 920px.
  * The tail (basket + name) renders beside this and never wraps.
  *
- * TASK-119 (Love's Sept 1 list, 0018.06.16 a₿) [AMBER on Store/Sessions]:
- * the Sessions and Store doors are gone entirely (payments hidden); the free
- * meditation moved under Community so it stays reachable.
+ * TASK-129 (0018.06.16 a₿): the MENU is built from THE SWITCHES
+ * (site-config.ts) — Sessions only when `sessions`, Store only when `store`,
+ * Community only when `community` (Classes & rooms sub only when `classes`,
+ * News & letters only when `news`), About · Memberships · Support always.
+ * The free meditation stays reachable either way: under Community when the
+ * community door is open, under Support when it isn't (same for News &
+ * letters). SiteHeader can't pass the doc down (it's client-reachable via
+ * FrenProfile/OperatorGate, so no server import may enter its graph), so the
+ * switches ride the public half of /api/admin/site — same fetch idiom as
+ * FrenBadge. Until the answer lands only the doors every config carries
+ * render, so a hidden feature never flashes on.
  */
-const MENU: { label: string; href: string; subs?: { label: string; href: string }[] }[] = [
-  { label: "About", href: "/about" },
-  {
-    label: "Memberships",
-    href: "/memberships",
-    subs: [
-      { label: "Heart Field", href: "/memberships" },
-      { label: "Three packages", href: "/packages" },
-    ],
-  },
-  {
-    label: "Community",
-    href: "/classes",
-    subs: [
-      { label: "Classes & rooms", href: "/classes" },
-      { label: "News & letters", href: "/news" },
-      { label: "11:11 Live with Love", href: "/contact" },
-      { label: "Free meditation", href: "/meditation" },
-    ],
-  },
-  { label: "Support", href: "/support" },
-];
+
+export interface MenuItem {
+  label: string;
+  href: string;
+  subs?: { label: string; href: string }[];
+}
+
+/** MENU from the switches — pure, so tests/site-config.test.ts pins it.
+    `null` = the pre-fetch paint: only the doors every config carries. */
+export function buildMenu(s: SiteConfig | null): MenuItem[] {
+  const menu: MenuItem[] = [
+    { label: "About", href: "/about" },
+    {
+      label: "Memberships",
+      href: "/memberships",
+      subs: [
+        { label: "Heart Field", href: "/memberships" },
+        { label: "Three packages", href: "/packages" },
+      ],
+    },
+  ];
+  if (s?.features.sessions) {
+    menu.push({
+      label: "Sessions",
+      href: "/book",
+      subs: [
+        { label: "Book a time", href: "/book" },
+        ...(s.features.cuts ? [{ label: "ConsciousCuts & Waxing", href: "/services" }] : []),
+      ],
+    });
+  }
+  if (s?.features.store) {
+    menu.push({
+      label: "Store",
+      href: "/store",
+      subs: [{ label: "All offerings", href: "/store" }],
+    });
+  }
+  if (s?.features.community) {
+    menu.push({
+      label: "Community",
+      href: "/classes",
+      subs: [
+        ...(s.features.classes ? [{ label: "Classes & rooms", href: "/classes" }] : []),
+        ...(s.features.news ? [{ label: "News & letters", href: "/news" }] : []),
+        { label: "11:11 Live with Love", href: "/contact" },
+        { label: "Free meditation", href: "/meditation" },
+      ],
+    });
+  }
+  const supportSubs = [
+    ...(s && s.features.news && !s.features.community ? [{ label: "News & letters", href: "/news" }] : []),
+    ...(s && !s.features.community ? [{ label: "Free meditation", href: "/meditation" }] : []),
+  ];
+  menu.push({ label: "Support", href: "/support", ...(supportSubs.length ? { subs: supportSubs } : {}) });
+  return menu;
+}
 
 export default function NavMenu() {
   const [open, setOpen] = useState(false); // hamburger
+  const [switches, setSwitches] = useState<SiteConfig | null>(null);
   const ref = useRef<HTMLElement>(null);
   const pathname = usePathname() ?? "";
+
+  useEffect(() => {
+    fetch("/api/admin/site", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.ok && d.config && setSwitches(d.config))
+      .catch(() => {});
+  }, []);
+
+  const menu = buildMenu(switches);
 
   /* mockup C, blessed (Admiral, 0018.05.15): where-you-are wears the dawn —
      a parent lights for its own page AND any of its children's */
   const here = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
-  const tabHere = (m: (typeof MENU)[number]) => here(m.href) || (m.subs ?? []).some((s) => here(s.href));
+  const tabHere = (m: MenuItem) => here(m.href) || (m.subs ?? []).some((s) => here(s.href));
 
   useEffect(() => {
     const close = (e: MouseEvent) => {
@@ -69,7 +123,7 @@ export default function NavMenu() {
         ☰
       </button>
       <div className={`nav-items${open ? " is-open" : ""}`}>
-        {MENU.map((m) => (
+        {menu.map((m) => (
           <div key={m.label} className={`nav-item${m.subs ? " has-sub" : ""}`}>
             <Link className={`nav-link${tabHere(m) ? " is-here" : ""}`} href={m.href}
               aria-current={tabHere(m) ? "page" : undefined} onClick={() => setOpen(false)}>
