@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CONSOLE_ROOMS, CONSOLE_OVERVIEW, roomForPath } from "@/lib/console";
+import { CONSOLE_ROOMS, CONSOLE_OVERVIEW, roomForPath, siteChromeTitle } from "@/lib/console";
 import { SiteChromeHeader, SiteChromeFooter } from "./site-chrome";
 
 /**
@@ -30,14 +30,15 @@ import { SiteChromeHeader, SiteChromeFooter } from "./site-chrome";
  * dashboard, so the site chrome renames the few labels that carry house
  * branding. The registry is untouched; only the presentation changes.
  */
-const SITE_LABELS: Record<string, string> = {
-  overview: "Home & Calendar",
+export const SITE_LABELS: Record<string, string> = {
+  overview: "Home",
   store: "Items",
   booking: "Services",
   letters: "Letters",
   people: "People",
-  money: "Money Jars",
+  money: "Money",
   brand: "Brand",
+  site: "Site",
 };
 
 /** Same treatment for blurbs — "where a first captain begins" is the house
@@ -82,8 +83,11 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
         <div className="mgmt-stage">
           <header className="mgmt-head">
             <p className="mgmt-eyebrow">Manage</p>
-            <h1 className="mgmt-title">{label(current.key, current.label)}</h1>
-            {blurb(current.key, current.blurb) && (
+            {/* TASK-135: siteChromeTitle is the one choke point that keeps a
+                houseOnly room's real name (DUTY ROSTER, BRIDGE, …) off this
+                chrome, whichever path resolved to it (Admiral's catch). */}
+            <h1 className="mgmt-title">{siteChromeTitle(current, label(current.key, current.label))}</h1>
+            {!current.houseOnly && blurb(current.key, current.blurb) && (
               <p className="mgmt-blurb">{blurb(current.key, current.blurb)}</p>
             )}
           </header>

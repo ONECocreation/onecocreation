@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import FrenProfile from "@/components/FrenProfile";
 import GameOverTag from "@/components/GameOverTag";
 import { getEntry, validateHandle } from "@/lib/registry";
 import { getPokeProfile } from "@/lib/poke";
 import { spaceForHost, domainForSpace, KNOWN_SPACES } from "@/lib/identity-config";
+import { TENANT } from "@/lib/tenant";
 
 /* Where "press start" leads: frens.earth's root IS its registration page;
    everywhere else the route decides the space. */
@@ -55,6 +56,13 @@ export default async function FrenProfileRoute({
 }: {
   params: Promise<{ handle: string }>;
 }) {
+  /* TASK-135: the pacsarcade claim-a-tag network profile isn't a ONE
+     Cocreation feature — this tenant's real profile surface is /me.
+     Registry/FrenProfile machinery stays (template heritage); only this
+     tenant's door is gated. */
+  if (TENANT === "onecocreation") {
+    redirect("/me");
+  }
   const { handle: raw } = await params;
   const host = (await headers()).get("host") ?? "";
   const { handle, space, nip05Domain } = parseTarget(raw, host);

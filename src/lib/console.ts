@@ -300,7 +300,25 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/brand",
     label: "DRESSING ROOM",
     short: "BRAND",
-    blurb: "the dressing room — the cert foundry and the brand kit",
+    /* TASK-135: the room's own page dropped the cert foundry and the old
+       multi-theme tester for BrandDesk (a real colour desk for the p1-p5
+       palette) — the blurb follows, in both chromes. */
+    blurb: "the five colours your pages draw from, with a live example",
+    tone: "cyan",
+  },
+  {
+    /* TASK-135: the switches (TASK-129) reached only by a bare URL — no
+       registry entry meant roomForPath() fell through every match all the
+       way to its final fallback, which used to be the (houseOnly) DUTY
+       ROSTER room. Under site chrome that fallback's real label leaked
+       straight onto the page title — the Admiral's "DUTY ROSTER reappeared"
+       catch. Registering the room fixes THIS path; the fallback itself is
+       hardened below so no future unmapped path can leak a house room. */
+    key: "site",
+    href: "/a/site",
+    label: "SITE",
+    short: "SITE",
+    blurb: "what shows, what's paid, how sessions open",
     tone: "cyan",
   },
 ];
@@ -327,5 +345,20 @@ export function roomForPath(pathname: string): ConsoleRoom {
   const byPrefix = CONSOLE_ROOMS.filter(
     (r) => r.href !== "/a" && pathname.startsWith(`${r.href}/`)
   ).sort((a, b) => b.href.length - a.href.length)[0];
-  return byPrefix ?? CONSOLE_ROOMS.find((r) => r.key === "duty") ?? CONSOLE_ROOMS[0];
+  /* TASK-135: the old fallback (`CONSOLE_ROOMS.find(r => r.key === "duty")`)
+     silently handed ANY unmapped path the houseOnly DUTY ROSTER room — the
+     leak the Admiral caught. An unmapped path is honestly the console's
+     front page's business, never a house room's. */
+  return byPrefix ?? CONSOLE_OVERVIEW;
+}
+
+/**
+ * Site chrome's single choke point for a room's displayed name: a houseOnly
+ * room's real label must never reach the artist-facing chrome, no matter
+ * which path resolved to it (a registered houseOnly href hit directly, or a
+ * future unmapped path). Non-houseOnly rooms pass their (possibly
+ * site-renamed) label straight through.
+ */
+export function siteChromeTitle(room: ConsoleRoom, label: string): string {
+  return room.houseOnly ? "Console" : label;
 }

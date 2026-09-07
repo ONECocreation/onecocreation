@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import ArtistRegistry from "@/components/ArtistRegistry";
+import { TENANT } from "@/lib/tenant";
 
 /**
  * The artist door — gated behind the artist-training entitlement; inside:
@@ -17,6 +19,13 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default function ArtistPage() {
+  /* TASK-135: the pacsarcade Artist Registry / claim-a-tag flow isn't a
+     ONE Cocreation feature — this tenant's real profile surface is /me.
+     The component stays (template heritage, other clones may run it);
+     only this tenant's door is gated. */
+  if (TENANT === "onecocreation") {
+    redirect("/me");
+  }
   return (
     <main className="mgmt-ground">
       <SiteHeader />
