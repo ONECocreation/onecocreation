@@ -32,8 +32,8 @@ export const TIERS: Record<Tier, { name: string; priceUsd: number; priceSats: nu
      mirror-digits Evening Star, instead of 177,777. */
   /* Names without "The" — the Admiral's call 0018.05.15. */
   A: { name: "Weekly Intuitive", priceUsd: 33, priceSats: 55_555 },
-  B: { name: "Observer", priceUsd: 55.55, priceSats: 88_888 },
-  C: { name: "Evening Star", priceUsd: 111.11, priceSats: 177_777 },
+  B: { name: "Observer", priceUsd: 55, priceSats: 88_888 },
+  C: { name: "Evening Star", priceUsd: 111, priceSats: 177_777 },
 };
 
 const RANK: Record<Tier, number> = { A: 1, B: 2, C: 3 };

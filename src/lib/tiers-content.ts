@@ -61,7 +61,7 @@ export const TIER_PAGES: TierPage[] = [
     img: "/images/observer.webp",
     heading: "The Weekly Reading",
     tagline: "Everything weekly — plus the reading that finds you.",
-    oneTime: { label: "one week — one-time purchase", usd: 22.22, itemId: "observer-one-week" },
+    oneTime: { label: "one week — one-time purchase", usd: 22, itemId: "observer-one-week" },
     cadence: "Weekly recording + weekly live meetup",
     paragraphs: [
       "For the one who watches and wants more to work with: a recorded reading and affirmations arrive every week, and a second live meetup deepens the practice — movement, meditation, navigation.",
@@ -112,7 +112,7 @@ export const TIER_PAGES: TierPage[] = [
         ],
       },
       {
-        title: "Everything in Observer — included ($55.55/mo value)",
+        title: "Everything in Observer — included ($55/mo value)",
         items: [
           "Weekly recorded reading + affirmations",
           "Weekly live meetup in Love's room",

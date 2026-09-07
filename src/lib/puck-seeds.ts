@@ -234,7 +234,7 @@ const homeContent: Block[] = [
       [hm.panel([
         hm.img(cartridge.tierArt.B, "Observer", 300, "soft", "center"),
         hm.heading("Observer", "h3", "center"),
-        hm.text("$55.55/mo — ⚡ ≈ 88,888 sats / month", "center"),
+        hm.text("$55/mo — ⚡ ≈ 88,888 sats / month", "center"),
         hm.list([
           "Everything in Weekly Intuitive",
           "Weekly recorded reading + affirmations",
@@ -246,7 +246,7 @@ const homeContent: Block[] = [
       [hm.panel([
         hm.img(cartridge.tierArt.C, "Evening Star", 300, "soft", "center"),
         hm.heading("Evening Star", "h3", "center"),
-        hm.text("$111.11/mo — ⚡ ≈ 177,777 sats / month", "center"),
+        hm.text("$111/mo — ⚡ ≈ 177,777 sats / month", "center"),
         hm.list([
           "Everything in Weekly Intuitive & Observer",
           "Monthly 1–1½ hr focused meeting",
@@ -915,7 +915,7 @@ const linksOldContent: Block[] = [
   ]),
 ];
 
-/* ── evening-star-old — the $111.11 sales page ──────────────────────────── */
+/* ── evening-star-old — the $111 sales page ──────────────────────────── */
 const eso = kit("eso");
 const eveningStarOldContent: Block[] = [
   eso.band("nebula", "night", [
@@ -928,7 +928,7 @@ const eveningStarOldContent: Block[] = [
       [
         eso.heading("Monthly Focus", "h2"),
         eso.text("The Evening Star Includes:"),
-        eso.text("$111.11/Month"),
+        eso.text("$111/Month"),
         eso.list([
           "-The Weekly Intuitive",
           "-The Observer",
@@ -1054,7 +1054,7 @@ const observerOldContent: Block[] = [
       [
         obo.stacked("Weekly", "Chronicles of Wonderland", "h2", "left"),
         obo.text("The Observer Includes:"),
-        obo.text("$55.55/Month"),
+        obo.text("$55/Month"),
         obo.list([
           "-The Weekly Intuitive",
           "-Recorded Affirmations Included",
