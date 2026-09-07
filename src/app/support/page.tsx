@@ -7,6 +7,17 @@ import WildDoors from "@/components/WildDoors";
 import StackedHero from "@/components/StackedHero";
 import { jarsOpen } from "@/lib/payments";
 
+/**
+ * TASK-134 (0018.06.17 a₿) — jarsOpen() gates the whole jars block: when
+ * features.jars is off, or it's on but the bitcoin rail isn't actually
+ * live, the block is gone entirely (no header, no empty box — the Admiral's
+ * report was that a bitcoin-off state still showed the Gifts of Gratitude
+ * jar). The remaining jars split into two named sections: "Tip the field"
+ * (Tip Love · Tip One Cocreation) and its own "Gifts of Gratitude" section
+ * with a two-line explainer and a derive-or-dash line for the not-yet-built
+ * claim/feedback loop.
+ */
+
 export const metadata: Metadata = {
   title: "Support — One Cocreation",
   description: "Tend the field — gifts land whole with Love, and Gifts of Gratitude flow onward to the beings holding this Earth.",
@@ -43,25 +54,39 @@ export default function SupportPage() {
           </div>
         </section>
 
-        {/* ── the jars ── */}
-        <section style={{ padding: "10px 0 30px" }}>
-          <div className="wrap reveal">
-            <div style={{ background: "var(--warm-panel)",
-              border: "1px solid var(--warm-edge)", borderRadius: 30, padding: "34px 38px", boxShadow: "var(--soft)" }}>
-              {/* TASK-119 (0018.06.16 a₿) [AMBER]: The Three Jars → Gifts of Gratitude; jar titles unchanged */}
-              <h2 style={{ fontWeight: 400, fontSize: "1.5rem", margin: 0 }}>Gifts of Gratitude</h2>
-              <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: ".95rem" }}>
-                pick a jar, pick an amount — lightning opens, and it&apos;s done in a breath.
-              </p>
-              <TipJar />
-              <p style={{ fontSize: ".82rem", color: "var(--muted)", marginTop: 18 }}>
-                Bitcoin gifts travel the Lightning Network straight to Love&apos;s own wallet — nothing
-                held, nothing routed by anyone else. Dollars are always welcome too: bitcoin is an
-                option here, never a demand.
-              </p>
+        {/* ── the jars (TASK-134: gone entirely when jarsOpen() is false) ── */}
+        {jarsOpen() && (
+          <section style={{ padding: "10px 0 30px" }}>
+            <div className="wrap reveal">
+              <div style={{ background: "var(--warm-panel)",
+                border: "1px solid var(--warm-edge)", borderRadius: 30, padding: "34px 38px", boxShadow: "var(--soft)" }}>
+                {/* ── Tip the field ── */}
+                <h2 style={{ fontWeight: 400, fontSize: "1.5rem", margin: 0 }}>Tip the Field</h2>
+                <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: ".95rem" }}>
+                  pick a jar, pick an amount — lightning opens, and it&apos;s done in a breath.
+                </p>
+                <TipJar only={["love", "onecocreation"]} />
+                <p style={{ fontSize: ".82rem", color: "var(--muted)", marginTop: 18 }}>
+                  Bitcoin gifts travel the Lightning Network straight to Love&apos;s own wallet — nothing
+                  held, nothing routed by anyone else. Dollars are always welcome too: bitcoin is an
+                  option here, never a demand.
+                </p>
+
+                {/* ── Gifts of Gratitude, its own header ── */}
+                <div style={{ marginTop: 38, paddingTop: 30, borderTop: "1px solid var(--warm-edge)" }}>
+                  <h2 style={{ fontWeight: 400, fontSize: "1.5rem", margin: 0 }}>Gifts of Gratitude</h2>
+                  <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: ".95rem" }}>
+                    A gift bought forward for someone who needs it, held until they can claim it.
+                  </p>
+                  <p style={{ color: "var(--muted)", margin: "2px 0 0", fontSize: ".95rem" }}>
+                    — how gifts were received will show here.
+                  </p>
+                  <TipJar only={["payforward"]} />
+                </div>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* ── the wild doors ── */}
         <section style={{ padding: "20px 0 34px" }}>

@@ -132,7 +132,7 @@ These doors stay open seven days; after that (or any time), the offers desk on /
 
 {{lines}}
 
-It's a yes — everything stands exactly as if you'd paid the listed price. The Pay-It-Forward jar carries the difference; that is what it's for. When you can, pay it forward.
+It's a yes — everything stands exactly as if you'd paid the listed price. The Gifts of Gratitude jar carries the difference; that is what it's for. When you can, pay it forward.
 
 With love,
 One Cocreation`,
