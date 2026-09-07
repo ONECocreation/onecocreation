@@ -66,11 +66,10 @@ export default function SupportPage() {
         <section style={{ padding: "20px 0 34px" }}>
           <div className="wrap">
             <div className="center reveal" style={{ marginBottom: 10 }}>
-              <p className="kicker">Where Pay It Forward Flows 🎁</p>
-              <h2 className="sec-h" style={{ fontSize: "1.7rem" }}>It Doesn&apos;t Stop Here</h2>
+              {/* TASK-126 (0018.06.16 a₿): the squares' heading — same words as the home section */}
+              <h2 className="sec-h" style={{ fontSize: "1.7rem", margin: 0 }}>Three Doors</h2>
               <p style={{ color: "var(--muted)", maxWidth: 560, margin: "6px auto 0", fontSize: ".95rem" }}>
-                The Pay-It-Forward jar funds sessions for those who can&apos;t right now — and Love
-                passes it onward to the beings holding this Earth together.
+                Give forward, follow along, read with me.
               </p>
             </div>
             <div className="reveal" style={{ transitionDelay: ".12s" }}><WildDoors /></div>

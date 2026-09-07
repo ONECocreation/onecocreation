@@ -610,7 +610,6 @@ export default function SlotPicker({
                 >
                   <option value="">choose, or just come as you are…</option>
                   <option value="A conscious conversation">A conscious conversation 💬</option>
-                  <option value="A silent haircut — ConsciousCuts">A silent haircut — ConsciousCuts ✂️</option>
                   <option value="A retreat">A retreat 🏜️</option>
                   {shelfTitles.length > 0 && (
                     <optgroup label="— from the shelves —">

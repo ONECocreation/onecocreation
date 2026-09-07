@@ -300,12 +300,11 @@ export function Donations() {
           </p>
           <TipJar />
 
-          {/* ── where Pay It Forward flows (Love's word, 0018.05.15) ───── */}
+          {/* ── the three doors (TASK-126, 0018.06.16 a₿ — same words as /support) ── */}
           <div style={{ marginTop: 34 }}>
-            <p className="kicker" style={{ marginBottom: 6 }}>Where Pay It Forward Flows 🎁</p>
+            <h3 style={{ fontWeight: 400, margin: "0 0 6px" }}>Three Doors</h3>
             <p style={{ color: "var(--ink-body)", maxWidth: 640, fontSize: ".95rem", margin: "0 0 10px" }}>
-              The Pay-It-Forward jar doesn&apos;t stop here — Love passes it onward to the beings
-              holding this Earth together.
+              Give forward, follow along, read with me.
             </p>
             <WildDoors />
           </div>
