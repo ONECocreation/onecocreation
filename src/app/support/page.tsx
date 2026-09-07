@@ -19,7 +19,7 @@ export const metadata: Metadata = {
  */
 
 const MORE_DOORS = [
-  { icon: "🕊️", title: "Book a session", words: "a discovery call, a soul conversation, a silent cut", href: "/services" },
+  { icon: "🕊️", title: "Book a session", words: "a discovery call or a soul conversation", href: "/services" },
   { icon: "⭐", title: "Join a package", words: "the classrooms, the circle, the weekly rhythm", href: "/packages" },
   { icon: "🎁", title: "Gift a session", words: "any session in the store can be given to another", href: "/store#sessions" },
   { icon: "🌙", title: "Share the free meditation", words: "sometimes the greatest gift is a friend's ear", href: "/meditation" },

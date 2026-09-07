@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
@@ -81,21 +80,8 @@ export default function ContactPage() {
                 </p>
               </div>
             </details>
-            <details style={{ ...glass, padding: "16px 20px" }}>
-              <summary style={{ cursor: "pointer", fontFamily: "var(--font-h3)", fontSize: "1.05rem", color: "var(--ink-strong)" }}>
-                How do I get a Silent Hair Cut?
-              </summary>
-              <div style={{ marginTop: 10, fontSize: ".9rem", color: "var(--ink-body)", lineHeight: 1.8 }}>
-                <p style={{ margin: "0 0 10px" }}>
-                  <b>Create an account</b> → visit the <b>ConsciousCuts</b> page → from there you&apos;ll
-                  receive an email confirming your account and access to the booking calendar.
-                </p>
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <Link className="btn btn-sm" href="/welcome">Create an account</Link>
-                  <Link className="btn btn-ghost btn-sm" href="/services">ConsciousCuts ✂️</Link>
-                </div>
-              </div>
-            </details>
+            {/* TASK-128 (0018.06.16 a₿): the "How do I get a Silent Hair Cut?"
+                FAQ retired with the service — it was only hair. */}
           </div>
         </section>
       </main>
