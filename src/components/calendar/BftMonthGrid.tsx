@@ -1,6 +1,6 @@
 "use client";
 
-import { bftMonthGrid, isTodayCell, type CalendarDayCell } from "@/lib/calendar-view";
+import { bftMonthGrid, isTodayCell, type CalendarDayCell, type CalendarViewOptions } from "@/lib/calendar-view";
 import { useCalendarPrefs, type CalendarPrimary } from "./CalendarPrefs";
 import DayCell, { type CalendarDayMarksLookup } from "./DayCell";
 import "./calendar-view.css";
@@ -22,6 +22,10 @@ export interface BftMonthGridProps {
   onSelectDay?: (cell: CalendarDayCell) => void;
   /** reference "now" — tests/stories only; production leaves this to Date.now() */
   nowMs?: number;
+  /** the LIVE chain tip height when the surface already has one (fetched `cache: "no-store"`
+   *  at the page) — wins over the anchored estimate for the today highlight. The grid renders,
+   *  it never fetches; leave unset and the estimate answers, as always. */
+  todayHeight?: number | null;
   /** the "28 days, always" legend row — default true */
   legend?: boolean;
   className?: string;
@@ -38,13 +42,16 @@ export interface BftMonthGridProps {
  */
 export default function BftMonthGrid({
   bftYear, bftMonth, primary: primaryProp, counts: countsProp,
-  marks, selectedBftKey, onSelectDay, nowMs, legend = true, className,
+  marks, selectedBftKey, onSelectDay, nowMs, todayHeight, legend = true, className,
 }: BftMonthGridProps) {
   const prefs = useCalendarPrefs();
   const primary = primaryProp ?? prefs.primary;
   const counts = countsProp ?? prefs.counts;
 
-  const { cells } = bftMonthGrid(bftYear, bftMonth, nowMs != null ? { nowMs } : {});
+  const opts: CalendarViewOptions = {};
+  if (nowMs != null) opts.nowMs = nowMs;
+  if (todayHeight != null) opts.height = todayHeight;
+  const { cells } = bftMonthGrid(bftYear, bftMonth, opts);
 
   const wrapperClass = ["cal-scroll", className].filter(Boolean).join(" ");
   const gridClass = ["cal-month-grid", primary === "civil" && "civil-primary"].filter(Boolean).join(" ");
@@ -63,7 +70,7 @@ export default function BftMonthGrid({
             primary={primary}
             counts={counts}
             showWeekOfYear={i % 7 === 0}
-            isToday={isTodayCell(cell, nowMs)}
+            isToday={isTodayCell(cell, nowMs, todayHeight)}
             isSelected={selectedBftKey === cell.bftKey}
             marks={marks?.(cell)}
             onSelect={onSelectDay}
