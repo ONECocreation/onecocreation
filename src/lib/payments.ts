@@ -318,7 +318,23 @@ export async function loadSquareVaultEnv(): Promise<void> {
   }
 }
 
+/** Number One's T-136 follow-through — COLD INSTANCES: the public checkout,
+ *  tip, booking and webhook routes never pass through the Money desk, so on a
+ *  fresh serverless instance the vault cache is null and a vault-only setup
+ *  would read as "not configured". Every async money route awaits this once;
+ *  it loads the vault only when the env doesn't already carry the values and
+ *  nothing has been loaded yet. Env still wins. */
+let squareVaultWarm: Promise<void> | null = null;
+export function ensureSquareVault(): Promise<void> {
+  const envComplete = !!(process.env.SQUARE_ACCESS_TOKEN && process.env.SQUARE_LOCATION_ID &&
+    process.env.SQUARE_WEBHOOK_SIGNATURE_KEY && process.env.SQUARE_WEBHOOK_URL);
+  if (envComplete || squareVaultCache) return Promise.resolve();
+  if (!squareVaultWarm) squareVaultWarm = loadSquareVaultEnv().finally(() => { squareVaultWarm = null; });
+  return squareVaultWarm;
+}
+
 export function squareEnv(): SquareEnv | null {
+  if (!squareVaultCache && !(process.env.SQUARE_ACCESS_TOKEN && process.env.SQUARE_LOCATION_ID)) void ensureSquareVault(); // render paths: warm for the next read
   const accessToken = process.env.SQUARE_ACCESS_TOKEN || squareVaultCache?.accessToken;
   const locationId = process.env.SQUARE_LOCATION_ID || squareVaultCache?.locationId;
   if (!accessToken || !locationId) return null;

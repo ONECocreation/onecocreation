@@ -9,7 +9,7 @@ import {
   type OrderRecord,
   type PriceSnapshot,
 } from "@/lib/store";
-import { liveAdapter, getAdapter } from "@/lib/payments";
+import { liveAdapter, getAdapter, ensureSquareVault } from "@/lib/payments";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 import { frenFromRequest } from "@/lib/fren-auth";
@@ -54,6 +54,7 @@ export async function POST(request: Request) {
   }
 
   const wantsCard = body.rail === "card";
+  await ensureSquareVault();
   const adapter = liveAdapter(wantsCard ? "square" : undefined);
   if (!adapter) {
     return NextResponse.json(

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { liveAdapter } from "@/lib/payments";
+import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +24,7 @@ const MIN_SATS = 210;
 const MAX_SATS = 10_000_000;
 
 export async function POST(request: Request) {
+  await ensureSquareVault();
   const adapter = liveAdapter();
   if (!adapter) {
     return NextResponse.json(

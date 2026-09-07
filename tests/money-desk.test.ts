@@ -249,3 +249,26 @@ describe("verifyWebhook — reads the vault's signature key + URL when env is ab
     expect(event).toEqual({ type: "settled", chargeId: "sqo_vault_1" });
   });
 });
+
+// Number One's follow-through (0018.06.17 a₿): cold instances warm the vault
+// once before the money routes read it — env complete ⇒ no vault call at all.
+describe("ensureSquareVault (cold instance)", () => {
+  it("resolves without touching KV when the env carries all five values", async () => {
+    const saved = { ...process.env };
+    process.env.SQUARE_ACCESS_TOKEN = "EAAAtest-fixture-token-0000";
+    process.env.SQUARE_LOCATION_ID = "L_FIXTURE_TEST";
+    process.env.SQUARE_WEBHOOK_SIGNATURE_KEY = "fixture-sig";
+    process.env.SQUARE_WEBHOOK_URL = "https://example.test/api/store/webhook/square";
+    const calls: unknown[] = [];
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = (async (...a: unknown[]) => { calls.push(a); throw new Error("must not be called"); }) as typeof fetch;
+    try {
+      const { ensureSquareVault } = await import("@/lib/payments");
+      await expect(ensureSquareVault()).resolves.toBeUndefined();
+      expect(calls).toHaveLength(0);
+    } finally {
+      globalThis.fetch = realFetch;
+      process.env = saved;
+    }
+  });
+});

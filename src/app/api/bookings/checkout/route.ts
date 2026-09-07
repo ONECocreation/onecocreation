@@ -10,7 +10,7 @@ import {
   type BookingRecord,
 } from "@/lib/booking-orders";
 import { createOrder, attachCharge, newOrderId, ordersConfigured, type OrderRecord, type PriceSnapshot } from "@/lib/store";
-import { liveAdapter } from "@/lib/payments";
+import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 import { frenFromRequest } from "@/lib/fren-auth";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleBookingFromOrder } from "@/lib/booking-fulfil";
@@ -39,6 +39,7 @@ export const dynamic = "force-dynamic";
 const HOLD_MS = { lightning: 15 * 60_000, onchain: 90 * 60_000 } as const;
 
 export async function POST(request: Request) {
+  await ensureSquareVault();
   const adapter = liveAdapter();
   if (!adapter) {
     return NextResponse.json(
