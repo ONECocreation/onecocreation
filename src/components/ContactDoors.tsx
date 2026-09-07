@@ -5,7 +5,10 @@ import Link from "next/link";
  * 11:11 lives, and ConsciousCuts — ONE component for the homepage and
  * /contact both. The pages drifted apart once; they don't get to again.
  */
-export default function ContactDoors() {
+import { getSiteConfig } from "@/lib/site-config";
+
+export default async function ContactDoors() {
+  const switches = await getSiteConfig();
   return (
     <div style={{ display: "grid", gap: 16, maxWidth: 900, margin: "0 auto",
       gridTemplateColumns: "repeat(auto-fit, minmax(min(250px, 100%), 1fr))" }}>
@@ -32,6 +35,7 @@ export default function ContactDoors() {
             letterSpacing: ".06em", color: "var(--gold-deep)" }}>@Onecocreation</span>
         </div>
       </a>
+      {switches.features.cuts && (
       <Link className="card reveal" href="/services" style={{ textDecoration: "none", transitionDelay: ".2s" }}>
         <div className="body center">
           <div style={{ fontSize: "1.7rem" }}>✂️</div>
@@ -43,6 +47,7 @@ export default function ContactDoors() {
             letterSpacing: ".06em", color: "var(--gold-deep)" }}>the way of the heart</span>
         </div>
       </Link>
+      )}
     </div>
   );
 }

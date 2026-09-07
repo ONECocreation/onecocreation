@@ -166,6 +166,10 @@ export function Jewelry() {
 }
 
 export async function Services() {
+  // T-129 follow-through (Number One): the whole shelf sits behind the switches — sessions OFF and cuts OFF
+  // means "hide what isn't done" (Love, 0018.06.16). The cuts heading alone follows `cuts`.
+  const switches = await getSiteConfig();
+  if (!switches.features.sessions && !switches.features.cuts) return null;
   // The REAL shelf — same services the booking rail sells, in Love's order.
   const services = await listServices();
   const shelfIds = new Set((await listItems()).map((i) => i.id));
@@ -183,7 +187,7 @@ export async function Services() {
       <CosmicSky shooting={false} />
       <div className="wrap" style={{ position: "relative", zIndex: 2, padding: "70px 22px 76px" }}>
         <div className="center reveal">
-          <h2 className="sec-h" style={{ color: "var(--ink-strong)" }}>ConsciousCuts &amp; Waxing 🦋</h2>
+          <h2 className="sec-h" style={{ color: "var(--ink-strong)" }}>{switches.features.cuts ? <>ConsciousCuts &amp; Waxing 🦋</> : <>Sessions with Love</>}</h2>
           <p className="lead" style={{ color: "var(--muted)", marginBottom: 34 }}>
             The Way of the Heart, one-on-one.<br />
             Sessions where you don&apos;t have to keep up conversation.<br />
