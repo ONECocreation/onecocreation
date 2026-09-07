@@ -7,6 +7,10 @@ import { useRoomVantage } from "./vantage";
 import SanctuaryView from "./SanctuaryView";
 import LessonPathView from "./LessonPathView";
 import CircleView from "./CircleView";
+import VideoView from "./VideoView";
+import MaterialsView from "./MaterialsView";
+import PeopleView from "./PeopleView";
+import StageView from "./StageView";
 import { TIER_SLUG } from "./tier-slug";
 import type { RoomPin } from "@/lib/room-pins";
 import "./classroom.css";
@@ -131,6 +135,13 @@ export default function ClassroomView({ slug, alias, title, kind, pin }: Props) 
       )}
       {vantage === "lesson" && <LessonPathView slug={slug} alias={alias} title={title} kind={kind} />}
       {vantage === "circle" && <CircleView feed={feed} live={live} activeSlug={slug} />}
+
+      {/* TASK-123: the four restored classroom layouts — video slot,
+          materials list, people rail; only the arrangement differs. */}
+      {vantage === "video" && <VideoView slug={slug} alias={alias} title={title} live={thisRoomLive} />}
+      {vantage === "materials" && <MaterialsView slug={slug} alias={alias} title={title} live={thisRoomLive} />}
+      {vantage === "people" && <PeopleView slug={slug} alias={alias} title={title} live={thisRoomLive} />}
+      {vantage === "stage" && <StageView slug={slug} alias={alias} title={title} live={thisRoomLive} />}
     </div>
   );
 }
