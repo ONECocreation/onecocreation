@@ -21,15 +21,15 @@ export default function MaterialsView({
 }) {
   return (
     <div className="cl-grid-materials">
-      <section className="cl-region cl-area-materials" data-region="materials" aria-label="Materials">
+      <div role="region" className="cl-region cl-area-materials" data-region="materials" aria-label="Materials">
         <RoomMaterialsShelf roomSlug={slug} />
-      </section>
-      <section className="cl-region cl-area-video" data-region="video" aria-label="Video">
+      </div>
+      <div role="region" className="cl-region cl-area-video" data-region="video" aria-label="Video">
         <RoomVideoSlot live={live} roomTitle={title} />
-      </section>
-      <section className="cl-region cl-area-people" data-region="people" aria-label="People">
+      </div>
+      <div role="region" className="cl-region cl-area-people" data-region="people" aria-label="People">
         <RoomPresence alias={alias} />
-      </section>
+      </div>
     </div>
   );
 }
