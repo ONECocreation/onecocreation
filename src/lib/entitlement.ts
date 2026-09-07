@@ -207,7 +207,7 @@ export async function listEntitlements(): Promise<Entitlement[]> {
  * already paid for more — an Evening Star who buys a Weekly Intuitive as a
  * gift for themselves must not lose the Evening Star.
  *
- * `opts.expiresAtMs` is the taster door (the $11/$22.22 one-week passes):
+ * `opts.expiresAtMs` is the taster door (the $11/$22 one-week passes):
  * present = this grant closes on its own at that instant, no revoke needed.
  * The expiry only ever rides the WINNING tier of this call — a taster never
  * downgrades a standing permanent membership at the same or higher tier,

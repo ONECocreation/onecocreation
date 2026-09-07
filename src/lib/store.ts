@@ -88,7 +88,7 @@ export interface StoreItem {
   partner?: "printful" | "fourthwall";
   status: ItemStatus;
   entitlementTier?: string;
-  /** a TASTER package (the $11/$22.22 one-week passes) — the grant closes
+  /** a TASTER package (the $11/$22 one-week passes) — the grant closes
    *  itself this many days after purchase instead of standing open-ended.
    *  Absent = the ordinary monthly membership. */
   entitlementDays?: number;

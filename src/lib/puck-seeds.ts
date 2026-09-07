@@ -1065,7 +1065,7 @@ const observerOldContent: Block[] = [
           "-What are you navigating",
           "-More",
         ], "none"),
-        obo.text("Or $22.22 one time purchase"),
+        obo.text("Or $22 one time purchase"),
         obo.text("-1 Weekly Live, Recorded Reading and Meet Up"),
         obo.heading("Listen to my voice", "h3"),
         obo.note("── voice-sample section continues — cut off in capture ──"),
