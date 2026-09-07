@@ -16,7 +16,7 @@ import {
   bookingsConfigured,
   type BookingRecord,
 } from "@/lib/booking-orders";
-import { liveAdapter } from "@/lib/payments";
+import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 import { frenFromRequest } from "@/lib/fren-auth";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
@@ -36,6 +36,7 @@ export const dynamic = "force-dynamic";
  * member (ruling #3).
  */
 export async function POST(request: Request) {
+  await ensureSquareVault();
   const adapter = liveAdapter();
   if (!adapter) return NextResponse.json({ ok: false, reason: "payment rail not connected" }, { status: 503 });
   if (!ordersConfigured()) return NextResponse.json({ ok: false, reason: "order store not configured" }, { status: 503 });

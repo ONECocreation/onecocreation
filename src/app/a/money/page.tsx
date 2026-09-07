@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import DiscountsDesk from "@/components/console/DiscountsDesk";
 import PwycDesk from "@/components/console/PwycDesk";
-import SquareCatalogDesk from "@/components/console/SquareCatalogDesk";
 import SquareRailCard from "@/components/console/SquareRailCard";
 import StripeRailCard from "@/components/console/StripeRailCard";
 import { Chip, SectionHead, field, overlay, sheet } from "@/components/console/glass";
@@ -34,13 +33,22 @@ const JARS: { key: string; label: string }[] = [
 const MOON_MS = 29.530588853 * 24 * 3600 * 1000;
 const WEEK_MS = 7 * 24 * 3600 * 1000;
 
-const railCard: React.CSSProperties = {
+/** TASK-136 (0018.06.17 a₿) — ONE glass-card grammar for all three rail
+ *  cards (Bitcoin/Square/Stripe), so the Bitcoin card built inline here
+ *  matches SquareRailCard/StripeRailCard's own inline style exactly. No
+ *  floating chip row above the cards any more — every chip lives in its
+ *  own card header (the Admiral's picture). */
+const bigCard: React.CSSProperties = {
   background: "var(--glass)",
-  border: "1px solid rgba(139,118,196,.25)",
-  borderRadius: 14,
-  padding: "12px 16px",
-  fontSize: ".85rem",
+  border: "1px solid rgba(255,255,255,.9)",
+  borderRadius: 18,
+  padding: "14px 16px",
+  marginTop: 12,
+  boxShadow: "0 18px 44px -28px rgba(120,100,160,.45)",
+  maxWidth: 680,
 };
+
+const BTCPAY_ENV_VARS = ["BTCPAY_URL", "BTCPAY_STORE_ID", "BTCPAY_API_KEY"];
 
 function ymd(ms: number): string {
   const d = new Date(ms);
@@ -69,7 +77,6 @@ export default function MoneyRoom() {
   const [ledger, setLedger] = useState<Ledger | null>(null);
   const [denied, setDenied] = useState(false);
   const [railBtcpay, setRailBtcpay] = useState<boolean | null>(null);
-  const [railSquare, setRailSquare] = useState<boolean | null>(null);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [window_, setWindow_] = useState<"moon" | "week" | "all">("moon");
   const [kind, setKind] = useState<"all" | "sessions" | "goods" | "tips">("all");
@@ -104,7 +111,6 @@ export default function MoneyRoom() {
       .then((d) => {
         if (!d?.ok) return;
         setRailBtcpay(Boolean(d.rails?.btcpay));
-        setRailSquare(Boolean(d.rails?.square));
       })
       .catch(() => {});
     loadOrders();
@@ -205,26 +211,36 @@ export default function MoneyRoom() {
         Tips break out per artist once trainers land — every jar keeps its own line in the books.
       </p>
 
-      <SectionHead label="Money Rails" />
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <span style={railCard}>
-          <b>BTCPay</b>{" "}
+      <SectionHead label="Money rails" />
+
+      {/* TASK-136 (0018.06.17 a₿) — ONE card per rail, in the Admiral's
+          order: Bitcoin, Cards (Square), Cards (Stripe). No floating chip
+          row above the cards any more — every chip lives in its own
+          card's header now. */}
+      <div style={bigCard}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+          <b style={{ fontSize: ".95rem" }}>Bitcoin (BTCPay)</b>
           {railBtcpay == null ? null : railBtcpay ? <Chip tone="green">live</Chip> : <Chip tone="grey">not connected</Chip>}
-          <span style={{ color: "var(--muted)" }}> · {railBtcpay ? "sats straight to Love" : "set BTCPAY_* env and redeploy"}</span>
-        </span>
-        <span style={railCard}>
-          <b>Square</b>{" "}
-          {railSquare == null ? null : railSquare ? <Chip tone="green">live</Chip> : <Chip tone="grey">not connected</Chip>}
-          <span style={{ color: "var(--muted)" }}> · {railSquare ? "cards via Square's hosted checkout" : "set SQUARE_* env and redeploy"}</span>
-        </span>
-        <span style={{ ...railCard, opacity: 0.7 }}><b>Stripe</b> <Chip tone="grey">keys desk below</Chip></span>
+        </div>
+        <p style={{ margin: "6px 0 8px", fontSize: ".78rem", color: "var(--muted)" }}>
+          {railBtcpay
+            ? "Connected — sats settle straight to Love's own BTCPay Server, on-chain or lightning."
+            : "Love runs her own BTCPay Server — there's no vault paste here, just these three env names on the deploy:"}
+        </p>
+        {!railBtcpay && (
+          <ul style={{ margin: "0 0 4px", paddingLeft: 20, fontSize: ".8rem", fontFamily: "monospace" }}>
+            {BTCPAY_ENV_VARS.map((v) => (
+              <li key={v} style={{ margin: "2px 0" }}>{v}</li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* the real Square desk (Admiral's walk — replaced the dead "soon"
-          chip): configured status, the exact env vars when it isn't, the
-          bitcoin-enablement check once it is */}
+          chip): status chip, the five-value vault drawer, "test the
+          connection", the bitcoin-enablement check, and the catalog
+          display folded in as a section of this same card */}
       <SquareRailCard />
-      <SquareCatalogDesk />
 
       {/* Love's own key drawer + RTFM — storage and instructions only; the
           card rail that spends these keys ships next build (0018.05.23) */}
@@ -233,7 +249,7 @@ export default function MoneyRoom() {
       <PwycDesk />
       <DiscountsDesk />
 
-      <SectionHead label="The Order Book" />
+      <SectionHead label="The order book" />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 10 }}>
         <select value={kind} onChange={(e) => setKind(e.target.value as typeof kind)} style={field}>
           <option value="all">everything</option>

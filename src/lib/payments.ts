@@ -254,11 +254,93 @@ interface SquareEnv {
   environment: "sandbox" | "production";
 }
 
+// ---------------------------------------------------------------------------
+// TASK-136 (0018.06.17 a₿) — ENV-THEN-VAULT: the Money desk's paste-keys
+// drawer (src/app/api/admin/store/square/route.ts, mirror of the Stripe
+// vault) saves Love's five Square values to KV (oc:square:*), never to an
+// env var it can't set. squareEnv() reads env first — an env var, if the
+// deploy sets one, always wins and the desk says so in words — then falls
+// back to this warm, in-memory cache of the vault's values. The cache is
+// populated by loadSquareVaultEnv(), called by the vault route on every GET
+// (so the desk's own view is always fresh) and right after every POST save
+// (so "saved keys go live at once" is literally true on that warm
+// instance). Same honest edge as site-config.ts's siteSwitchesSync(): a
+// COLD instance that has never served the vault route yet still reads
+// env-only, until its first real read warms it — never a guessed value.
+// ---------------------------------------------------------------------------
+
+interface SquareVaultEnv {
+  accessToken?: string;
+  locationId?: string;
+  environment?: "sandbox" | "production";
+  webhookSecret?: string;
+  webhookUrl?: string;
+}
+
+let squareVaultCache: SquareVaultEnv | null = null;
+
+async function squareVaultKv(cmd: unknown[]): Promise<unknown> {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  if (!url || !token) throw new Error("vault not configured");
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(cmd),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`square vault: KV ${res.status}`);
+  return ((await res.json()) as { result: unknown }).result;
+}
+
+/** Reads the five oc:square:* vault keys into the warm cache. Never throws —
+ *  an unreachable vault leaves the previous cache (possibly still null) in
+ *  place, so squareEnv() simply falls back to "not configured", the same
+ *  honest shape as every other unreachable-vault path in this codebase. */
+export async function loadSquareVaultEnv(): Promise<void> {
+  try {
+    const [accessToken, locationId, environment, webhookSecret, webhookUrl] = await Promise.all([
+      squareVaultKv(["GET", "oc:square:access-token"]),
+      squareVaultKv(["GET", "oc:square:location-id"]),
+      squareVaultKv(["GET", "oc:square:environment"]),
+      squareVaultKv(["GET", "oc:square:webhook-signature-key"]),
+      squareVaultKv(["GET", "oc:square:webhook-url"]),
+    ]);
+    squareVaultCache = {
+      accessToken: typeof accessToken === "string" && accessToken ? accessToken : undefined,
+      locationId: typeof locationId === "string" && locationId ? locationId : undefined,
+      environment: environment === "production" ? "production" : environment === "sandbox" ? "sandbox" : undefined,
+      webhookSecret: typeof webhookSecret === "string" && webhookSecret ? webhookSecret : undefined,
+      webhookUrl: typeof webhookUrl === "string" && webhookUrl ? webhookUrl : undefined,
+    };
+  } catch {
+    /* vault unreachable — leave the existing cache as-is */
+  }
+}
+
+/** Number One's T-136 follow-through — COLD INSTANCES: the public checkout,
+ *  tip, booking and webhook routes never pass through the Money desk, so on a
+ *  fresh serverless instance the vault cache is null and a vault-only setup
+ *  would read as "not configured". Every async money route awaits this once;
+ *  it loads the vault only when the env doesn't already carry the values and
+ *  nothing has been loaded yet. Env still wins. */
+let squareVaultWarm: Promise<void> | null = null;
+export function ensureSquareVault(): Promise<void> {
+  const envComplete = !!(process.env.SQUARE_ACCESS_TOKEN && process.env.SQUARE_LOCATION_ID &&
+    process.env.SQUARE_WEBHOOK_SIGNATURE_KEY && process.env.SQUARE_WEBHOOK_URL);
+  if (envComplete || squareVaultCache) return Promise.resolve();
+  if (!squareVaultWarm) squareVaultWarm = loadSquareVaultEnv().finally(() => { squareVaultWarm = null; });
+  return squareVaultWarm;
+}
+
 export function squareEnv(): SquareEnv | null {
-  const accessToken = process.env.SQUARE_ACCESS_TOKEN;
-  const locationId = process.env.SQUARE_LOCATION_ID;
+  if (!squareVaultCache && !(process.env.SQUARE_ACCESS_TOKEN && process.env.SQUARE_LOCATION_ID)) void ensureSquareVault(); // render paths: warm for the next read
+  const accessToken = process.env.SQUARE_ACCESS_TOKEN || squareVaultCache?.accessToken;
+  const locationId = process.env.SQUARE_LOCATION_ID || squareVaultCache?.locationId;
   if (!accessToken || !locationId) return null;
-  const environment = process.env.SQUARE_ENVIRONMENT === "production" ? "production" : "sandbox";
+  const envVar = process.env.SQUARE_ENVIRONMENT;
+  const environment: "sandbox" | "production" =
+    envVar === "production" ? "production" : envVar === "sandbox" ? "sandbox" : (squareVaultCache?.environment ?? "sandbox");
   return { accessToken, locationId, environment };
 }
 
@@ -421,11 +503,14 @@ export const squareAdapter: PaymentAdapter = {
   },
 
   async verifyWebhook(rawBody, headers) {
-    const key = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
+    // env-then-vault (TASK-136) — an env var, if the deploy sets one,
+    // always wins; else the vault's saved value (warmed by the Money
+    // desk's vault route) lets the webhook verify with no redeploy
+    const key = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY || squareVaultCache?.webhookSecret;
     // the exact webhook subscription URL configured in the Square
     // dashboard — not a secret, but required INPUT to the signature (see
     // the file-header note); wrong value = every event fails to verify
-    const url = process.env.SQUARE_WEBHOOK_URL;
+    const url = process.env.SQUARE_WEBHOOK_URL || squareVaultCache?.webhookUrl;
     const sig = headers.get("x-square-hmacsha256-signature");
     if (!key || !url || !sig) return null;
     const expected = createHmac("sha256", key).update(url + rawBody).digest("base64");

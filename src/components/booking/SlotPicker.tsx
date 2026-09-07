@@ -529,14 +529,23 @@ export default function SlotPicker({
                             onClick={() => setChosen(s.startUtc)}
                             aria-pressed={isChosen}
                           >
-                            {fmtTime(s.startUtc, viewerTz)}
+                            {/* TASK-138 step 6 (0018.06.17 a₿, the Admiral's
+                                catch): each clock gets its own row — a
+                                two-row flex column with its own line-height
+                                (chip-grid .chip-select in house.css) so the
+                                second line never collides with the first at
+                                narrow widths. Both clocks stay in words. */}
+                            <span className="chip-time">{fmtTime(s.startUtc, viewerTz)}</span>
                             {/* THE TIMEZONE LAW on every chip — both clocks,
                                 spelled out: "11:11 your time · 9:11 Love's
                                 time". Inheriting the chip's own ink keeps the
-                                ≥4.5:1 contrast in both states, both themes. */}
+                                ≥4.5:1 contrast in both states, both themes.
+                                Truncates with an ellipsis rather than
+                                overlap — it never had room to wrap onto a
+                                third line in a fixed-height chip. */}
                             {zonesDiffer && (
-                              <span style={{ display: "block", fontSize: ".68rem" }}>
-                                {fmtTime(s.startUtc, artistTz)} Love&apos;s time
+                              <span className="chip-tz">
+                                {`${fmtTime(s.startUtc, artistTz)} Love's time`}
                               </span>
                             )}
                           </button>

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { squareAdapter, squareOrderMetadata } from "@/lib/payments";
+import { squareAdapter, squareOrderMetadata, ensureSquareVault } from "@/lib/payments";
 import { recordChargeEvent } from "@/lib/store";
 import { settleBookingFromOrder } from "@/lib/booking-fulfil";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
@@ -23,6 +23,7 @@ export const dynamic = "force-dynamic";
  * different Square payload shapes for the same fact.
  */
 export async function POST(request: Request) {
+  await ensureSquareVault(); // cold instance: vault keys before verifying
   const rawBody = await request.text();
   const event = await squareAdapter.verifyWebhook(rawBody, request.headers);
   if (!event) return NextResponse.json({ ok: true });
