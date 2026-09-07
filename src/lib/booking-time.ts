@@ -204,6 +204,20 @@ export function wallClockToUtc(
   return new Date(ts);
 }
 
+/** Minutes past midnight as `tz` sees a given instant (wall-clock minutes). */
+function zonedWallMinutes(instant: Date, tz: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(instant);
+  const at: Record<string, string> = {};
+  for (const p of parts) at[p.type] = p.value;
+  // midnight can render as "24" — fold it back, same as zoneOffsetMs
+  return (Number(at.hour) % 24) * 60 + Number(at.minute);
+}
+
 /** "YYYY-MM-DD" and weekday as `tz` sees a given instant. */
 export function zonedDateParts(instant: Date, tz: string): { date: string; weekday: number } {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -265,7 +279,7 @@ export function slotsFor(
   service: Service,
   rules: AvailabilityRule[],
   overrides: DateOverride[],
-  opts?: { nowMs?: number; days?: number },
+  opts?: { nowMs?: number; days?: number; viewerTz?: string },
 ): Slot[] {
   const now = opts?.nowMs ?? Date.now();
   const tz = service.artistTz;
@@ -275,55 +289,117 @@ export function slotsFor(
 
   const mine = (ids: string[]) => ids.length === 0 || ids.includes(service.id);
 
-  // Walk the artist's calendar day by day, not the visitor's — the rules are
-  // written in the artist's wall clock and that is the frame they live in.
-  for (let dayOffset = 0; dayOffset <= horizonDays; dayOffset++) {
-    const probe = new Date(now + dayOffset * 86_400_000);
-    const { date, weekday } = zonedDateParts(probe, tz);
+  /* THE FIVE SACRED TIMES (Love's word on the call, 0018.05.15):
+     sessions begin at 10:10 · 11:11 · 12:12 · 2:22 · 3:33 — no other
+     minute exists. Windows still rule: a time outside the working
+     hours stays closed.
 
-    const dayOverrides = overrides.filter((o) => o.date === date);
-    // A whole-day block ends the day before any window is considered.
-    if (dayOverrides.some((o) => o.kind === "blocked" && !o.start)) continue;
+     TASK-122 (0018.06.16 a₿) — WHOSE wall clock the sacred numbers land
+     on is now a knob. Love: "it's the customer's perception, not you."
+     With `viewerTz` the five materialize on the VISITOR's clock (a New
+     York visitor sees 11:11) and the artist's availability window —
+     converted into the same instants — still gates. Without it the
+     legacy artist-clock path below runs byte-for-byte as before, so
+     existing callers and tests hold until they are switched. */
+  const SACRED = [10 * 60 + 10, 11 * 60 + 11, 12 * 60 + 12, 14 * 60 + 22, 15 * 60 + 33];
+  const viewerTz = opts?.viewerTz && isValidTz(opts.viewerTz) ? opts.viewerTz : null;
 
-    const windows: { start: string; end: string }[] = [];
-    for (const r of rules) {
-      if (r.weekday === weekday && mine(r.serviceIds)) windows.push({ start: r.start, end: r.end });
-    }
-    for (const o of dayOverrides) {
-      if (o.kind === "extra" && o.start && o.end) windows.push({ start: o.start, end: o.end });
-    }
-    if (windows.length === 0) continue;
+  if (viewerTz) {
+    // Walk the VISITOR's calendar day by day — the sacred numbers live in
+    // the visitor's frame now; the artist's rules gate each instant.
+    for (let dayOffset = 0; dayOffset <= horizonDays; dayOffset++) {
+      const probe = new Date(now + dayOffset * 86_400_000);
+      const { date } = zonedDateParts(probe, viewerTz);
+      const [yy, mm, dd] = date.split("-").map(Number);
 
-    const partialBlocks = dayOverrides
-      .filter((o) => o.kind === "blocked" && o.start && o.end)
-      .map((o) => ({ from: toMinutes(o.start!), to: toMinutes(o.end!) }));
-
-    const [yy, mm, dd] = date.split("-").map(Number);
-
-    for (const w of windows) {
-      const from = toMinutes(w.start);
-      const to = toMinutes(w.end);
-      if (from < 0 || to < 0 || to <= from) continue;
-
-      /* THE FIVE SACRED TIMES (Love's word on the call, 0018.05.15):
-         sessions begin at 10:10 · 11:11 · 12:12 · 2:22 · 3:33 on HER
-         mountain clock — no other minute exists. Windows still rule:
-         a time outside the working hours stays closed. */
-      const SACRED = [10 * 60 + 10, 11 * 60 + 11, 12 * 60 + 12, 14 * 60 + 22, 15 * 60 + 33];
       for (const m of SACRED) {
-        if (m < from || m + service.durationMin > to) continue;
-        // a partial block kills any slot it touches at all
-        const clashes = partialBlocks.some((b) => m < b.to && m + service.durationMin > b.from);
-        if (clashes) continue;
-
-        const startUtc = wallClockToUtc(yy, mm, dd, Math.floor(m / 60), m % 60, tz);
+        const startUtc = wallClockToUtc(yy, mm, dd, Math.floor(m / 60), m % 60, viewerTz);
         if (startUtc.getTime() < earliest) continue;
+
+        // The gate, in the ARTIST's frame: which of her dates/weekdays this
+        // instant lands on, and her wall-clock minute then.
+        const artist = zonedDateParts(startUtc, tz);
+        const dayOverrides = overrides.filter((o) => o.date === artist.date);
+        // A whole-day block ends the day before any window is considered.
+        if (dayOverrides.some((o) => o.kind === "blocked" && !o.start)) continue;
+
+        const windows: { start: string; end: string }[] = [];
+        for (const r of rules) {
+          if (r.weekday === artist.weekday && mine(r.serviceIds)) windows.push({ start: r.start, end: r.end });
+        }
+        for (const o of dayOverrides) {
+          if (o.kind === "extra" && o.start && o.end) windows.push({ start: o.start, end: o.end });
+        }
+        if (windows.length === 0) continue;
+
+        const partialBlocks = dayOverrides
+          .filter((o) => o.kind === "blocked" && o.start && o.end)
+          .map((o) => ({ from: toMinutes(o.start!), to: toMinutes(o.end!) }));
+
+        const startMin = zonedWallMinutes(startUtc, tz);
+        const endMin = startMin + service.durationMin;
+        // the whole session must fit inside ONE of her windows…
+        if (!windows.some((w) => {
+          const from = toMinutes(w.start);
+          const to = toMinutes(w.end);
+          return from >= 0 && to > from && startMin >= from && endMin <= to;
+        })) continue;
+        // …and a partial block kills any slot it touches at all
+        if (partialBlocks.some((b) => startMin < b.to && endMin > b.from)) continue;
 
         slots.push({
           startUtc: startUtc.toISOString(),
           endUtc: new Date(startUtc.getTime() + service.durationMin * 60_000).toISOString(),
           serviceId: service.id,
         });
+      }
+    }
+  } else {
+    // Walk the artist's calendar day by day, not the visitor's — the rules are
+    // written in the artist's wall clock and that is the frame they live in.
+    for (let dayOffset = 0; dayOffset <= horizonDays; dayOffset++) {
+      const probe = new Date(now + dayOffset * 86_400_000);
+      const { date, weekday } = zonedDateParts(probe, tz);
+
+      const dayOverrides = overrides.filter((o) => o.date === date);
+      // A whole-day block ends the day before any window is considered.
+      if (dayOverrides.some((o) => o.kind === "blocked" && !o.start)) continue;
+
+      const windows: { start: string; end: string }[] = [];
+      for (const r of rules) {
+        if (r.weekday === weekday && mine(r.serviceIds)) windows.push({ start: r.start, end: r.end });
+      }
+      for (const o of dayOverrides) {
+        if (o.kind === "extra" && o.start && o.end) windows.push({ start: o.start, end: o.end });
+      }
+      if (windows.length === 0) continue;
+
+      const partialBlocks = dayOverrides
+        .filter((o) => o.kind === "blocked" && o.start && o.end)
+        .map((o) => ({ from: toMinutes(o.start!), to: toMinutes(o.end!) }));
+
+      const [yy, mm, dd] = date.split("-").map(Number);
+
+      for (const w of windows) {
+        const from = toMinutes(w.start);
+        const to = toMinutes(w.end);
+        if (from < 0 || to < 0 || to <= from) continue;
+
+        for (const m of SACRED) {
+          if (m < from || m + service.durationMin > to) continue;
+          // a partial block kills any slot it touches at all
+          const clashes = partialBlocks.some((b) => m < b.to && m + service.durationMin > b.from);
+          if (clashes) continue;
+
+          const startUtc = wallClockToUtc(yy, mm, dd, Math.floor(m / 60), m % 60, tz);
+          if (startUtc.getTime() < earliest) continue;
+
+          slots.push({
+            startUtc: startUtc.toISOString(),
+            endUtc: new Date(startUtc.getTime() + service.durationMin * 60_000).toISOString(),
+            serviceId: service.id,
+          });
+        }
       }
     }
   }
