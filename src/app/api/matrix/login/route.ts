@@ -1,7 +1,19 @@
 import { NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { frenFromRequest } from "@/lib/fren-auth";
-import { mxidForSubject, roomsForMember, ensureInvited, matrixConfigured } from "@/lib/matrix";
+import {
+  mxidForSubject,
+  mxidForKeyedMember,
+  mxidForHashedSubject,
+  localpartOf,
+  botUserId,
+  ensureDisplayName,
+  roomsForMember,
+  ensureInvited,
+  matrixConfigured,
+} from "@/lib/matrix";
+import { getEntry } from "@/lib/registry";
+import { normalizeNpub } from "@/lib/entitlement";
 import { tierForSubject } from "@/lib/member-tier";
 
 export const dynamic = "force-dynamic";
@@ -40,8 +52,24 @@ export async function POST(request: Request) {
   if (!secret) return NextResponse.json({ ok: false, reason: "matrix login not configured" }, { status: 503 });
 
   const subject = `${fren.handle}@${fren.space}`;
-  const mxid = mxidForSubject(subject);
-  const localpart = mxid.slice(1, mxid.indexOf(":"));
+  let mxid = mxidForSubject(subject);
+
+  /* ONE HUMAN = ONE MXID (T-133, 0018.06.17 a₿): the bot seat is the bot's
+     alone. A member whose handle collides with it (the Admiral's adminpacman
+     — his post came out wearing "Love") gets their OWN account, derived from
+     their registry key when the board knows it, from a subject hash when it
+     doesn't. Love's account is Love's; nothing here ever derives to it. */
+  const bot = matrixConfigured() ? await botUserId() : null;
+  if (bot && localpartOf(mxid) === localpartOf(bot)) {
+    let hex: string | null = null;
+    if (fren.space !== "email") {
+      try {
+        hex = normalizeNpub((await getEntry(fren.handle, fren.space))?.npub);
+      } catch { /* registry unreadable — the hash door below still holds */ }
+    }
+    mxid = hex ? mxidForKeyedMember(hex) : mxidForHashedSubject(subject);
+  }
+  const localpart = localpartOf(mxid);
 
   const res = await fetch(`${HOMESERVER}/_matrix/client/v3/login`, {
     method: "POST",
@@ -62,6 +90,13 @@ export async function POST(request: Request) {
       { status: 502 },
     );
   }
+
+  // the name on the door: the member's own handle, set ONCE and only when
+  // the account carries no name yet — a name the member set themselves is
+  // never overwritten (T-133). A courtesy like the joins, never a blocker.
+  try {
+    await ensureDisplayName(HOMESERVER, data.access_token, mxid, fren.handle);
+  } catch { /* the room still opens; the localpart stands in */ }
 
   // walk through every door open to this soul: `all` rooms for ANY member
   // (the free Community Circle), tier rooms for package holders. The bot
