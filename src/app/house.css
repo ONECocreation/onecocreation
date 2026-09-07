@@ -60,8 +60,9 @@ section{padding:76px 0;position:relative}
    Sans 700, 24px, letter-spacing 2px, ALL CAPS, WHITE fill, SQUARE corners
    (border-radius 0), ink #3E3E3E, padding 20px 40px. The original has NO
    rounded or pill buttons anywhere — square is the brand law for buttons.
-   Gold leaves the generic-primary seat: .btn-gold below is the MONEY door
-   only (sats / checkout / donations), curated, never the default. ══ */
+   .btn-gold below is the curated fill door (sats / checkout / donations),
+   never the default — and since T-121's PINK PASS its gradient pours the
+   rose family (the gold tokens carry rose values now), plum ink on top. ══ */
 .btn{display:inline-block;padding:20px 40px;border-radius:0;
   font-family:var(--font-open-sans),'Open Sans',-apple-system,'Segoe UI',sans-serif;
   font-weight:700;letter-spacing:2px;font-size:1.5rem;line-height:1.25;
@@ -71,11 +72,11 @@ section{padding:76px 0;position:relative}
 .btn:hover{transform:translateY(-3px)}
 .btn-gold{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink);
   text-shadow:0 1px 1px color-mix(in oklab, var(--gold-ink) 40%, transparent),0 0 8px color-mix(in oklab, var(--gold-ink) 35%, transparent)}
-/* S33 family 6: the money gradient's deep end reads --gold (was
-   --gold-deep) — night is byte-value-identical (#D9B24E either way); at
-   dawn the designed deep gold #B4862B left the gold ink a hair under the
-   bar (4.22), so the gradient runs light-end → the metal itself */
-.btn-rose{background:linear-gradient(135deg,#E7B2C3,#C56E8B);color:#fff}
+/* the fill's deep end rides --gold, never the dawn-flipped --gold-deep
+   (S33's gold lesson, still true in rose): --gold holds the popup pink in
+   BOTH themes, so the plum --gold-ink keeps 5.66–6.75:1 on every stop;
+   --gold-deep's dawn rung #AD5470 is a TEXT rung, too dark under the ink */
+.btn-rose{background:linear-gradient(135deg,#E7B2C3,#C56E8B);color:var(--rose-btn-ink)} /* T-121 gate fix: deepest plum ink — 9.65 / 7.57 / 4.99:1 across the gradient stops (white measured 1.8–3.5:1; --gold-ink 2.93 at the dark end) */
 .btn-ghost{background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px var(--edge)}
 /* the small variant — same square law, compact for dense rooms */
 .btn-sm{padding:12px 24px;font-size:.9rem;letter-spacing:1.5px}
@@ -144,7 +145,7 @@ section{padding:76px 0;position:relative}
 .cat-pills{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:18px 0 0}
 .cat-pills a{border-radius:999px;padding:7px 16px;font-size:.72rem;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:var(--ghost-ink);background:var(--ghost-bg);box-shadow:inset 0 0 0 1.5px var(--edge)}
-.cat-pills a:hover{color:var(--gold-deep);box-shadow:inset 0 0 0 1.5px rgba(180,134,43,.5)}
+.cat-pills a:hover{color:var(--gold-deep);box-shadow:inset 0 0 0 1.5px rgba(197,110,139,.5)} /* T-121: the outline follows the ink into the rose family */
 .card{background:var(--panel);border:1px solid var(--glass-edge);border-radius:24px;overflow:hidden;box-shadow:var(--soft);display:flex;flex-direction:column;backdrop-filter:blur(8px)}
 .card .thumb{aspect-ratio:4/3;width:100%;object-fit:cover}
 .card .body{padding:24px;display:flex;flex-direction:column;flex:1}
@@ -260,10 +261,12 @@ section{padding:76px 0;position:relative}
 .svc .meta p{margin:2px 0 0;font-size:.85rem;color:var(--muted)}
 .svc .pr{font-family:var(--serif);color:var(--gold-deep);font-weight:700}
 .roomrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,118,196,.3);color:var(--ink-body)}
-.lockpill{margin-left:auto;font-size:.66rem;text-transform:uppercase;color:var(--gold-wash-ink);background:rgba(217,178,78,.16);border-radius:999px;padding:3px 11px;font-weight:700}
+/* T-121: the wash is ROSE now (rgba of #C56E8B), the ink rides
+   --gold-wash-ink — the pink pass's rose-on-wash pair, ≥4.5:1 both themes */
+.lockpill{margin-left:auto;font-size:.66rem;text-transform:uppercase;color:var(--gold-wash-ink);background:rgba(197,110,139,.18);border-radius:999px;padding:3px 11px;font-weight:700}
 .note{max-width:780px;margin:30px auto 0;text-align:center;font-size:.9rem;color:var(--ink-body);background:var(--glass);border:1px solid var(--glass-edge);border-radius:18px;padding:18px 22px}
 .note b{color:var(--gold-deep)}
-.stub{display:inline-block;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-deep);border:1px dashed rgba(180,134,43,.5);border-radius:999px;padding:5px 12px}
+.stub{display:inline-block;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-deep);border:1px dashed rgba(173,84,112,.5);border-radius:999px;padding:5px 12px}
 
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 
@@ -295,12 +298,13 @@ section{padding:76px 0;position:relative}
 @keyframes aur2{to{transform:translate(-14%,18%) scale(1.15)}}
 @keyframes aur3{to{transform:translate(10%,-16%) scale(1.3)}}
 /* shimmer — a slow light pass, PRIMARY doors only (Admiral, 0018.05.15);
-   lavender-tinted so it reads on the restored white CTA as well as on gold */
+   T-121: the pass tint goes rose (was lavender) so it reads as one family
+   on the white CTA and the rose fills alike */
 .btn-shimmer{position:relative;overflow:hidden}
 .btn-shimmer::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(115deg,transparent 32%,rgba(139,118,196,.4) 50%,transparent 68%);
-  transform:translateX(-140%);animation:gold-shimmer 5.2s ease-in-out infinite}
-@keyframes gold-shimmer{0%,55%{transform:translateX(-140%)}85%,100%{transform:translateX(140%)}}
+  background:linear-gradient(115deg,transparent 32%,rgba(231,178,195,.4) 50%,transparent 68%);
+  transform:translateX(-140%);animation:rose-shimmer 5.2s ease-in-out infinite}
+@keyframes rose-shimmer{0%,55%{transform:translateX(-140%)}85%,100%{transform:translateX(140%)}}
 /* shine-border — a light runs the card's rim on hover (≈ MagicUI border-beam) */
 @property --shine-ang{syntax:"<angle>";initial-value:0deg;inherits:false}
 .shine-hover{position:relative}
@@ -325,12 +329,13 @@ section{padding:76px 0;position:relative}
 .theme-sun:hover{transform:rotate(20deg);border-color:rgba(235,203,119,.8)}
 html[data-oc-theme="light"] .theme-sun{color:#B4862B;border-color:rgba(180,134,43,.5)}
 
-/* tier pills — each plan wears its name; the door to its own page */
+/* tier pills — each plan wears its name; the door to its own page.
+   T-121: the outline rides the rose ramp with the --gold-deep ink */
 .tier-pills{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:18px 0 30px}
-.tier-pill{border:1.5px solid rgba(180,134,43,.5);color:var(--gold-deep);border-radius:999px;
+.tier-pill{border:1.5px solid rgba(173,84,112,.5);color:var(--gold-deep);border-radius:999px;
   padding:11px 22px;font-weight:700;font-size:.86rem;letter-spacing:.05em;text-transform:uppercase;
   transition:background .18s,border-color .18s}
-.tier-pill:hover{background:rgba(217,178,78,.14);border-color:var(--gold-deep)}
+.tier-pill:hover{background:rgba(197,110,139,.14);border-color:var(--gold-deep)}
 
 /* tier detail: two columns fold to one on phones */
 @media(max-width:760px){.tier-cols{grid-template-columns:1fr !important}}
@@ -360,23 +365,20 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
 .mgmt-body [class*="text-pink"]{color:var(--magenta)!important}
 .mgmt-body .button{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink);border:none;border-radius:999px;font-family:var(--sans);letter-spacing:.05em}
 
-/* per-package accents — the name pill up top matches its Learn More below */
-.tier-pill--a,.tier-btn--a{border:1.5px solid var(--lavender);color:var(--info)}
-.tier-btn--a:hover,.tier-pill--a:hover{background:rgba(139,118,196,.14)}
-.tier-pill--b,.tier-btn--b{border:1.5px solid var(--rose);color:var(--err)}
-.tier-btn--b:hover,.tier-pill--b:hover{background:rgba(197,110,139,.12)}
-.tier-pill--c,.tier-btn--c{border:0;background:linear-gradient(135deg,var(--gold-2),var(--gold-deep));color:var(--gold-ink)}
+/* T-121 THE PINK PASS: the three tier doors all wear the popup's rose now —
+   one family, no per-package accent split (Love: "all buttons like that
+   popup"). Stops ride the swapped gold tokens (light rose #EFC6DA → the
+   popup pink #E7B2C3, both themes); the plum --gold-ink reads 5.66–6.75:1
+   on every stop — white on the pink measured 1.82–3.52, under Love's bar.
+   The name pill up top still matches its Learn More below. */
+.tier-pill--a,.tier-btn--a,.tier-pill--b,.tier-btn--b,.tier-pill--c,.tier-btn--c{
+  border:0;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink)}
+.tier-btn--a:hover,.tier-pill--a:hover,.tier-btn--b:hover,.tier-pill--b:hover,
 .tier-btn--c:hover,.tier-pill--c:hover{filter:brightness(1.06)}
 .tier-name-pill{display:inline-block;border-radius:999px;padding:8px 18px;font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
 
 /* the sign-in button sheds its arcade drop-shadow inside site pages */
 .mgmt-body .button{box-shadow:var(--soft)!important;border:none!important}
-
-/* Weekly Intuitive + Observer pills fill in like Evening Star's gold */
-.tier-pill--a,.tier-btn--a{border:0;background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:#fff}
-.tier-btn--a:hover,.tier-pill--a:hover{filter:brightness(1.06);background:linear-gradient(135deg,var(--lavender-soft),var(--lavender))}
-.tier-pill--b,.tier-btn--b{border:0;background:linear-gradient(135deg,var(--rose-soft),var(--rose));color:#fff}
-.tier-btn--b:hover,.tier-pill--b:hover{filter:brightness(1.06);background:linear-gradient(135deg,var(--rose-soft),var(--rose))}
 
 /* the nav's right tail (member name + Support) never wraps under the menu —
    the Admiral's persistent catch; it lives OUTSIDE the wrapping nav now */
@@ -500,7 +502,7 @@ html,body{overflow-x:clip}
   padding:12px 18px;border-radius:16px;text-decoration:none;
   background:var(--glass);border:1px solid var(--glass-edge);box-shadow:var(--soft-sm);
   transition:border-color .25s ease,transform .25s ease}
-.voice-chip:hover{border-color:rgba(217,178,78,.55);transform:translateY(-2px)}
+.voice-chip:hover{border-color:rgba(197,110,139,.55);transform:translateY(-2px)} /* T-121: rose rim with the rose .voice-who */
 .voice-quote{font-family:var(--serif);font-size:.92rem;line-height:1.5;color:var(--ink-strong)}
 .voice-who{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-deep)}
 @keyframes voice-drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}

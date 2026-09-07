@@ -1,6 +1,9 @@
 /* ════════════════════════════════════════════════════════════════════
    THE BRAND CARTRIDGE — One Cocreation (celestial + luminous).
-   GOLD is money only (sats/bitcoin).
+   TASK-121 THE PINK PASS (0018.06.16 a₿): the gold family pours ROSE
+   values now — Love: "all buttons and pages like that popup." The
+   arcade law "gold = money only" never applied to Love's cartridge
+   (spec note); the token NAMES stay, the values are the popup's pink.
 
    Split from onecocreation.css (cartridge walk step 8, Admiral's walk,
    0018.05.15). THIS file is the brand: tokens (dark-first + the light
@@ -32,23 +35,37 @@
   --glass-night:rgba(22,17,40,.66); --glass-night-edge:rgba(139,118,196,.35);
   --field-bg:rgba(255,255,255,.94); --field-ink:#4a4458; --sheet-bg:rgba(28,22,50,.98);
   --soft-sm:0 18px 44px -28px rgba(5,3,16,.6);
-  /* --warn is deep orange, NOT gold: gold means money (Pac's ruling A, 0018.05.28).
-     It was byte-identical to --gold-2 (#EBCB77), so a caution painted exact money-gold
-     and passed review because the token was named --warn. Delta-E 28.5 from --gold-2 now. */
+  /* --warn is deep orange, NOT in the rose family: after T-121's pink pass
+     the old gold tokens pour rose, and a caution must never read as brand
+     pink. It was once byte-identical to --gold-2 (#EBCB77) and passed review
+     because the token was named --warn; the identity harness now GUARDS the
+     byte-distinctness from every rose value in both themes (spec step 1). */
   --ok:#7fb98f; --warn:#E9954C; --err:#E7899E; --info:#9d86d9;
   --teal-bright:#8FD0D8;
-  --gold:#D9B24E; --gold-2:#EBCB77; --gold-deep:#D9B24E;
-  /* ink on gold WASHES (S33 family 6): gold-deep melts into its own
-     10–16% washes on paper grounds (1.28–4.21 across 15 rows). Night
-     keeps the money metal itself; the paper-side rung pours per theme —
-     #7A5A12, the house's own deep-gold rung AttentionStrip already wore */
+  /* T-121 THE PINK PASS — the gold family wears the popup's rose (token
+     names kept; 98+ consumers ride along). --gold/--gold-deep = the popup
+     pink --rose #E7B2C3; --gold-2 = the lighter rose derived from
+     --rose-soft #efc6da. Fills keep --gold (not the dawn-flipped
+     --gold-deep) so the plum --gold-ink clears 4.5:1 in both themes. */
+  --gold:#E7B2C3; --gold-2:#EFC6DA; --gold-deep:#E7B2C3;
+  /* ink on rose WASHES (was S33 family 6 on gold washes): night keeps the
+     popup pink itself; the paper-side rung pours per theme — #8E3A53, the
+     rose ramp deepened until it clears 4.5:1 on the dawn wash (5.65
+     measured; #AD5470 read 4.25 — a hair under) */
   --gold-wash-ink:var(--gold-deep);
   /* money & brand metal (S2 token walk, 0018.05.25 a₿) */
   --bitcoin:#f7931a; /* the block-break pulse — bitcoin orange */
-  --nav-gold:#FAC51C; /* Love's original nav gold — the dawn note below tells it */
-  --nav-hover:var(--gold-2); /* the nav's hover — its own token so the dawn can take it off gold */
-  --gold-ink:#3a2a06; /* ink on gold fills */
-  --gold-ground:#2b1f05; /* dark gold wash */
+  --nav-gold:#FAC51C; /* Love's original nav gold — KEPT gold through the
+     pink pass: an earned brand accent by prior ruling (the dawn note below
+     tells it); flagged to the Admiral, not swapped unilaterally */
+  --nav-hover:var(--gold-2); /* the nav's hover — rides --gold-2, so the pink
+     pass turns it the light rose #EFC6DA (always-night header: 12.2:1) */
+  --rose-btn-ink:#2E0E1D; /* T-121 gate fix: ink for the .btn-rose GRADIENT (light→#C56E8B); ≥4.99:1 on every stop, theme-independent like the gradient itself */
+  --gold-ink:#6B2A44; /* T-121: ink on the rose fills — deep plum-rose, one
+     family past --rose's dawn rung; 6.75:1 on the #EFC6DA end, 5.66:1 on
+     #E7B2C3 (was #3a2a06 on gold) */
+  --gold-ground:#2b1f05; /* dark gold wash — no live readers found at
+     T-121; left gold and flagged rather than silently repurposed */
   --btn-ink:#3E3E3E; /* the CTA ink — Love's button law */
   --teal:#4EA0AF; --teal-deep:#23636E;
   --purple:#9B26D6; --lavender:#8B76C4; --rose:#E7B2C3; --copper:#C77B4A;
@@ -240,11 +257,13 @@ html[data-oc-theme="light"],.oc-pv-light{  --panel:rgba(255,255,255,.6); --edge:
   /* dawn follows night's hue family so the token means one thing at any hour */
   --ok:#3c6b49; --warn:#8C4A12; --err:#a34e6c; --info:#5f4b96;
   --teal-bright:#23636E;
-  --gold-deep:#B4862B; --rose:#AD5470;
+  --gold-deep:#AD5470; --rose:#AD5470;
   /* S33: --rose deepened one rung along its own ramp (#C56E8B → #AD5470,
      toward the dawn err) — the old rung read 3.30 on the cream; and the
-     paper-side pours for the gold-wash ink + the crew violet (family 6/7) */
-  --gold-wash-ink:#7A5A12; --crew-violet:#5F4B96;
+     paper-side pours for the gold-wash ink + the crew violet (family 6/7).
+     T-121: --gold-deep JOINS the rose rung (4.60:1 on the cream) — the pink
+     pass makes the gold family and the rose family one ramp */
+  --gold-wash-ink:#8E3A53; --crew-violet:#5F4B96;
   --soft:0 24px 60px -30px rgba(120,100,160,.55);
   /* the effect tokens at dawn (TASK-42/S45) — the same three families
      walked to their dawn rungs, faint on the cream (the dawn muted is
@@ -344,7 +363,10 @@ html[data-oc-theme="light"] #classes .lead{color:var(--muted)}
    glass, ink stays ink, and the note bar earns its own light */
 #classes .card{background:rgba(252,247,240,.94);backdrop-filter:blur(6px)}
 #classes .roomrow{color:var(--field-ink);border-bottom-color:rgba(139,118,196,.28)}
-#classes .lockpill{background:rgba(217,178,78,.26);color:#8a6410}
+/* T-121: the lockpill's gold wash + ink go rose — the cards are cream in
+   BOTH themes, so the deep rose ink #8E3A53 holds 5.3:1 on the 24% wash
+   either way (measured on the cream composite) */
+#classes .lockpill{background:rgba(197,110,139,.24);color:#8E3A53}
 #classes .note{background:rgba(252,247,240,.92);color:#544e64;border-color:rgba(255,255,255,.7)}
 #classes .note b{color:var(--gold-deep)}
 #offers{background:linear-gradient(180deg,var(--band-5) 0%,var(--band-9) 100%)}
@@ -362,9 +384,10 @@ html[data-oc-theme="light"] #classes .lead{color:var(--muted)}
 .sky-warm{background:linear-gradient(180deg,#241c15 0%,#241722 100%)!important}
 /* keep-dark sections hold the NIGHT tokens in both themes — text and
    glass inside them never flip out from under their dark backgrounds
-   (cartridge walk, 0018.05.15) */
+   (cartridge walk, 0018.05.15). T-121: the --gold-deep pin pours the NEW
+   night value — the popup pink #E7B2C3 (was the money metal #D9B24E) */
 main .keep-dark{--ink-strong:#F4ECFF;--ink-body:#D9D2E4;--muted:#9a8fae;
-  --rose:#E7B2C3;--gold-deep:#D9B24E;--teal-bright:#8FD0D8;
+  --rose:#E7B2C3;--gold-deep:#E7B2C3;--teal-bright:#8FD0D8;
   --glass:var(--glass-night);--glass-edge:var(--glass-night-edge)}
 /* light mode repaints the swept dark bands; image layers and keep-dark
    sections hold the night */

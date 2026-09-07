@@ -33,7 +33,10 @@ const quote = (t: string, align = "center", style = st()) => blk("PullQuote", { 
 const img = (src: string, alt = "", width = 320, radius = "soft", align = "center") => blk("Image", { src, alt, width, radius, align });
 const gallery = (images: { src: string; alt: string }[], tilt = "yes") => blk("Gallery", { images, tilt });
 const video = (youtube: string, ratio = "9/16") => blk("Video", { youtube, ratio });
-const button = (label: string, href: string, variant = "gold", align = "left") => blk("Button", { label, href, variant, align, style: st() });
+/* T-121 THE PINK PASS: the default button variant is "rose" (the popup's
+   soft pink) — "gold" still renders, but through the swapped tokens it too
+   pours rose; no seed keeps a gold door by default anymore */
+const button = (label: string, href: string, variant = "rose", align = "left") => blk("Button", { label, href, variant, align, style: st() });
 const buttons = (list: { label: string; href: string; variant: string }[], align = "center") => blk("Buttons", { align, buttons: list });
 const panel = (content: Block[]) => blk("Panel", { content });
 const twocol = (left: Block[], right: Block[], gap = 26, valign = "top") => blk("TwoColumns", { gap, valign, left, right });
@@ -141,7 +144,7 @@ const aboutContent: Block[] = [
     rich("We can BE the Now and create a more collaborative future for us and all — as IAM, WE ARE. The shifts are already here: a breaking down and a synchronistic leveling up, occurring now with Gaia. <b>The New Earth and the New Human, as Onecocreation.</b>", "center"),
     text("Ready to get started?", "center", st({ color: "ink", size: 19, font: "display", spaceAbove: 20, spaceBelow: 16 })),
     buttons([
-      { label: "Create your account ✨", href: "/welcome", variant: "gold" },
+      { label: "Create your account ✨", href: "/welcome", variant: "rose" },
       { label: "ConsciousCuts & Waxing ✂️", href: "/services", variant: "teal" },
     ], "center"),
   ]),
@@ -169,7 +172,7 @@ const kit = (prefix: string) => {
     faq: (items: { q: string; a: string }[]) => mk("Faq", { items }),
     img: (src: string, alt: string, width = 320, radius = "soft", align = "center") => mk("Image", { src, alt, width, radius, align }),
     list: (items: string[], marker = "check", align = "left") => mk("List", { marker, align, items: items.map((text) => ({ text })) }),
-    button: (label: string, href: string, variant = "gold", align = "left") => mk("Button", { label, href, variant, align, style: st() }),
+    button: (label: string, href: string, variant = "rose", align = "left") => mk("Button", { label, href, variant, align, style: st() }), /* T-121: default variant rose (the pink pass) */
     buttons: (list: { label: string; href: string; variant: string }[], align = "center") => mk("Buttons", { align, buttons: list }),
     panel: (content: Block[]) => mk("Panel", { content }),
     twocol: (left: Block[], right: Block[], gap = 26, valign = "top") => mk("TwoColumns", { gap, valign, left, right }),
@@ -190,7 +193,7 @@ const homeContent: Block[] = [
   // 1 - the hero (the living sky + light-drawn glyph stay code-side)
   hm.hero("5 Days", "Leap of Faith", "A Fresh Step Into a New Mindset"),
   hm.buttons([
-    { label: "Begin the Journey", href: "/packages", variant: "gold" },
+    { label: "Begin the Journey", href: "/packages", variant: "rose" },
     { label: "Receive the Free Meditation", href: "/#free", variant: "quiet" },
   ], "center"),
 
