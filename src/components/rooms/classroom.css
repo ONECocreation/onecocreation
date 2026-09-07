@@ -36,3 +36,102 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── TASK-123 (0018.06.16 a₿): the four restored classroom layouts ──────
+   Video / Materials / People / Stage — the same three regions (video slot,
+   materials list, people rail) in four arrangements. Every region wears a
+   rose top-edge via the --rose TOKEN NAME only (T-121 owns the values in a
+   parallel lane) — an accent, never the meaning: the regions are labeled
+   and placed, color is decoration. */
+
+.cl-region {
+  border-top: 2px solid var(--rose);
+  padding-top: 12px;
+  min-width: 0;
+}
+
+.cl-area-video { grid-area: video; }
+.cl-area-materials { grid-area: materials; }
+.cl-area-people { grid-area: people; }
+
+.cl-video-slot {
+  padding: 14px 18px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.cl-video-title {
+  font-family: var(--font-h3);
+  font-weight: 400;
+  font-size: .98rem;
+  margin: 0 0 10px;
+  color: var(--rose);
+}
+
+/* the embed slot's stage frame — 16:9, dashed edge, centered voice */
+.cl-video-stage {
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 14px;
+  border: 1.5px dashed var(--glass-edge);
+  border-radius: 14px;
+  background: var(--glass);
+}
+
+/* VIDEO — the stage leads full-width; shelf + people side by side below */
+.cl-grid-video {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(240px, 2fr);
+  grid-template-areas:
+    "video video"
+    "materials people";
+  gap: 20px;
+  align-items: start;
+}
+
+/* MATERIALS — the shelf owns the tall main column; video + people stack right */
+.cl-grid-materials {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(240px, 2fr);
+  grid-template-areas:
+    "materials video"
+    "materials people";
+  gap: 20px;
+  align-items: start;
+}
+
+/* PEOPLE — who's here owns the tall main column; video + materials stack right */
+.cl-grid-people {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(240px, 2fr);
+  grid-template-areas:
+    "people video"
+    "people materials";
+  gap: 20px;
+  align-items: start;
+}
+
+/* STAGE — spotlight: video center stage, materials + people as two wings */
+.cl-grid-stage {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr) minmax(180px, 1fr);
+  grid-template-areas: "materials video people";
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .cl-grid-video,
+  .cl-grid-materials,
+  .cl-grid-people,
+  .cl-grid-stage {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "video"
+      "materials"
+      "people";
+  }
+}

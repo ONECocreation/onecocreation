@@ -5,8 +5,11 @@ import { useSyncExternalStore } from "react";
 /**
  * THE VANTAGE SWITCHER'S SHARED STATE (loves-desk-and-classroom-plan.md,
  * Lane ROOM, "the no-picking ruling extends to members"): which of the
- * Classroom Four's member layouts — Sanctuary / Lesson Path / Circle —
- * a member sees, per-user, persisted the same way CAL's a₿|AD slider is
+ * member layouts — Sanctuary / Lesson Path / Circle, plus TASK-123's four
+ * restored classroom styles (Video / Materials / People / Stage, each
+ * showing the video slot, the materials list, and the people rail in a
+ * different arrangement) — a member sees, per-user, persisted the same way
+ * CAL's a₿|AD slider is
  * (`src/components/calendar/CalendarPrefs.tsx`): `useSyncExternalStore`
  * over `localStorage`, not `useState`+`useEffect` (the same purity-rule
  * reason CalendarPrefs.tsx and LovesDesk.tsx's own altitude store cite).
@@ -17,7 +20,7 @@ import { useSyncExternalStore } from "react";
  * and localStorage alone is the honest minimum for one control.
  */
 
-export type RoomVantage = "sanctuary" | "lesson" | "circle";
+export type RoomVantage = "sanctuary" | "lesson" | "circle" | "video" | "materials" | "people" | "stage";
 
 const VANTAGE_KEY = "oc-room-vantage";
 
@@ -29,7 +32,8 @@ const VANTAGE_KEY = "oc-room-vantage";
 export const ROOM_VANTAGE_SITE_DEFAULT: RoomVantage = "sanctuary";
 
 function isVantage(v: string | null): v is RoomVantage {
-  return v === "sanctuary" || v === "lesson" || v === "circle";
+  return v === "sanctuary" || v === "lesson" || v === "circle"
+    || v === "video" || v === "materials" || v === "people" || v === "stage";
 }
 
 const listeners = new Set<() => void>();
