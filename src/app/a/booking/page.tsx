@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import RetreatsDesk from "@/components/console/RetreatsDesk";
 import { Chip, SectionHead, field } from "@/components/console/glass";
 import type { Service, AvailabilityRule, DateOverride, BookingConfig } from "@/lib/booking";
+import type { SiteConfig } from "@/lib/site-config";
 
 /**
  * /a/booking — the artist describes their week (spec: docs/booking-flow.md,
@@ -34,7 +35,7 @@ const textBtn = (color: string): React.CSSProperties => ({
   fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color,
 });
 
-const blankService = (tz: string): Service => ({
+const blankService = (tz: string, meeting?: SiteConfig["meeting"]): Service => ({
   id: "",
   schemaVersion: 1,
   title: "",
@@ -45,7 +46,15 @@ const blankService = (tz: string): Service => ({
   pricingMode: "fixed",
   minLeadHours: 24,
   maxAdvanceDays: 60,
-  meetingRail: { kind: "static", url: "" },
+  /* TASK-129 (0018.06.16 a₿): a new service's rail follows THE SWITCHES'
+     meeting rail (jitsi with the doc's domain / vdo / static only when
+     allowStaticLinks) — the /a/site meeting card is the knob. */
+  meetingRail:
+    meeting?.rail === "jitsi"
+      ? { kind: "jitsi", domain: meeting.jitsiDomain }
+      : meeting?.rail === "vdo"
+        ? { kind: "vdo", room: "" }
+        : { kind: "static", url: "" },
   artistTz: tz,
   status: "hidden",
 });
@@ -57,6 +66,10 @@ export default function BookingRoom() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [denied, setDenied] = useState(false);
+  /* TASK-129: THE SWITCHES' meeting card — new-service rail defaults + the
+     jitsi default domain ride the doc; "Zoom / any link" hides unless
+     allowStaticLinks. Undefined until read = yesterday's behavior. */
+  const [siteMeeting, setSiteMeeting] = useState<SiteConfig["meeting"] | undefined>(undefined);
 
   useEffect(() => {
     (async () => {
@@ -67,6 +80,10 @@ export default function BookingRoom() {
         setConfig(data);
         setDefaultTz(data.defaultTz);
       }
+      const site = await fetch("/api/admin/site", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
+      if (site?.ok && site.config?.meeting) setSiteMeeting(site.config.meeting);
     })();
   }, []);
 
@@ -195,11 +212,13 @@ export default function BookingRoom() {
         />
       </Field>
       {/* the meeting rail, quick-select (Admiral's ask): a knob, never
-          hardcoded — link / jitsi / matrix / the RV studio in person */}
+          hardcoded — link / jitsi / matrix / the RV studio in person.
+          TASK-129: "Zoom / any link" hides unless the switches allow static
+          links; the jitsi default domain rides the switches' meeting card. */}
       <Field label="how you meet" wide>
         <div className="flex flex-wrap gap-2">
           {([
-            ["static", "Zoom / any link"],
+            ...(siteMeeting?.allowStaticLinks ? [["static", "Zoom / any link"] as const] : []),
             ["jitsi", "Jitsi"],
             ["matrix", "Matrix room"],
             ["inPerson", "In person — the studio"],
@@ -212,7 +231,7 @@ export default function BookingRoom() {
                   ...draft,
                   meetingRail:
                     kind === "static" ? { kind, url: draft.meetingRail.kind === "static" ? draft.meetingRail.url : "" }
-                    : kind === "jitsi" ? { kind, domain: draft.meetingRail.kind === "jitsi" ? draft.meetingRail.domain : "meet.jit.si" }
+                    : kind === "jitsi" ? { kind, domain: draft.meetingRail.kind === "jitsi" ? draft.meetingRail.domain : siteMeeting?.jitsiDomain ?? "meet.jit.si" }
                     : kind === "matrix" ? { kind, roomId: draft.meetingRail.kind === "matrix" ? draft.meetingRail.roomId : "" }
                     : { kind,
                         address: draft.meetingRail.kind === "inPerson" ? draft.meetingRail.address : "",
@@ -242,7 +261,7 @@ export default function BookingRoom() {
             value={draft.meetingRail.domain}
             onChange={(e) => setDraft({ ...draft, meetingRail: { kind: "jitsi", domain: e.target.value } })}
             style={{ ...field, width: "100%" }}
-            placeholder="meet.jit.si"
+            placeholder={siteMeeting?.jitsiDomain ?? "meet.jit.si"}
           />
         </Field>
       )}
@@ -317,7 +336,7 @@ export default function BookingRoom() {
       {/* ── services ─────────────────────────────────────────────────── */}
       <SectionHead label="Sessions" />
       <div style={{ margin: "0 0 10px" }}>
-        <button type="button" onClick={() => setDraft(blankService(defaultTz))} className="btn btn-sm">
+        <button type="button" onClick={() => setDraft(blankService(defaultTz, siteMeeting))} className="btn btn-sm">
           + New session
         </button>
       </div>

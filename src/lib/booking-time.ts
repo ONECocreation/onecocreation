@@ -26,6 +26,11 @@ export type MeetingRail =
   | { kind: "jitsi"; domain: string }
   | { kind: "matrix"; roomId: string }
   | { kind: "orbee" }
+  /* VDO.Ninja (TASK-129, 0018.06.16 a₿) — the alternative personal discovery
+     room: /meet/<bookingId> renders an on-site panel with the guest link
+     (?room=<booking id slug>) and, for the operator only, the director link
+     (?director=<booking id slug>). Additive — no other rail touched. */
+  | { kind: "vdo"; room: string }
   /* Love's mobile (RV) studio and every visiting artist: the meeting is a
      PLACE, not a link — checkout collects city/state/zip instead. The artist
      may pin the studio's current address/geotag; members copy it from /me. */

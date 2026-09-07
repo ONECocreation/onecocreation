@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
 import type { StoreItem } from "@/lib/store";
+import SubscribeForm from "@/components/SubscribeForm";
 
 /**
  * The buy moment, in glass (walk facelift 0018.05.15) — honest to the
@@ -101,10 +102,19 @@ export default function BuyPanel({
   }
 
   if (!anyRailLive) {
+    /* TASK-129 (0018.06.16 a₿) — THE SWITCHES: no live rail (switch OFF or
+       env dark) → the waitlist form, never a pay button — same doctrine as
+       the Packages cards. */
     return (
-      <p style={{ marginTop: 24, fontSize: ".85rem", color: "var(--muted, #897f97)" }}>
-the shelf opens for checkout very soon — browse with love ✨
-      </p>
+      <div style={{ marginTop: 24 }}>
+        <p style={{ margin: "0 0 10px", fontSize: ".85rem", color: "var(--muted, #897f97)" }}>
+          the shelf opens for checkout very soon — browse with love ✨
+        </p>
+        <SubscribeForm
+          source={`waitlist-store-${item.id}`}
+          cta="I'm interested — add me to the list. Checkout coming soon."
+        />
+      </div>
     );
   }
 

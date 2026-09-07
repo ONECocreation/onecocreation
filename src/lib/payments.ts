@@ -1,5 +1,9 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import type { ChargeEventType } from "./store";
+/* explicit .ts extension: scripts/square-payments.test.mjs loads THIS file
+   through Node's own ESM resolver (no bundler, no resolver hook), which
+   doesn't resolve extensionless relative imports */
+import { siteSwitchesSync } from "./site-config.ts";
 
 /**
  * The payments adapter — ONE interface, many rails (spec module 2).
@@ -564,8 +568,16 @@ export function getAdapter(id: string): PaymentAdapter | null {
  * order never reaches it. This is the one hook a "pay by card" surface
  * needs; today only the single-item checkout's minimal seam uses it (see
  * the `rail: "card"` field on POST /api/store/checkout).
+ *
+ * TASK-129 (0018.06.16 a₿) — THE SWITCHES: a rail is LIVE only when its
+ * /a/site switch is ON **and** its env is configured — the switch OFF means
+ * null even when the env could charge. The signature stays SYNC (the
+ * square-payments harness pins it), so the switches come from
+ * siteSwitchesSync()'s warm cache — see site-config.ts for the cold-instance
+ * honesty note.
  */
 export function liveAdapter(rail?: "btcpay" | "square"): PaymentAdapter | null {
-  if (rail === "square") return squareAdapter.configured() ? squareAdapter : null;
-  return btcpayAdapter.configured() ? btcpayAdapter : null;
+  const switches = siteSwitchesSync().payments;
+  if (rail === "square") return switches.square && squareAdapter.configured() ? squareAdapter : null;
+  return switches.btcpay && btcpayAdapter.configured() ? btcpayAdapter : null;
 }

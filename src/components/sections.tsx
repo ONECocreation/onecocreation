@@ -5,6 +5,7 @@ import { TIER_PAGES } from "@/lib/tiers-content";
 import { ROOMS } from "@/lib/matrix";
 import { listServices } from "@/lib/booking";
 import { listItems } from "@/lib/store";
+import { getSiteConfig } from "@/lib/site-config";
 import SubscribeForm from "./SubscribeForm";
 import TipJar from "./TipJar";
 import WildDoors from "./WildDoors";
@@ -216,7 +217,13 @@ export async function Services() {
   );
 }
 
-export function Classes() {
+export async function Classes() {
+  /* TASK-129 (0018.06.16 a₿) — THE SWITCHES, visibility only (no copy): the
+     section stands when `community` or `classes` is on; each card reads its
+     own switch. Both off (Love's streamlined default) → the section doesn't
+     render at all. */
+  const switches = await getSiteConfig();
+  if (!switches.features.community && !switches.features.classes) return null;
   const classes = ROOMS.filter((r) => r.kind === "class");
   const community = ROOMS.filter((r) => r.kind === "community");
   const label = (min: string) => (min === "all" ? "All members" : `Package ${min}`);
@@ -228,24 +235,28 @@ export function Classes() {
         <h2 className="center sec-h">Classes &amp; Community</h2>
         <p className="lead center">Your own luminous rooms — powered by Matrix — an open protocol; your rooms, your keys. Tier-gated: your package opens the doors.</p>
         <div className="grid grid-2" style={{ maxWidth: 860, margin: "0 auto" }}>
-          <div className="card reveal"><div className="body">
-            <h3 style={{ fontWeight: 400 }}>📚 Classes</h3>
-            {classes.map((r) => (
-              <div className="roomrow" key={r.id}>
-                <span aria-hidden>✦</span> {r.title}
-                <span className="lockpill">{label(r.minTier as string)}</span>
-              </div>
-            ))}
-          </div></div>
-          <div className="card reveal" style={{ transitionDelay: ".12s" }}><div className="body">
-            <h3 style={{ fontWeight: 400 }}>💗 Community</h3>
-            {community.map((r) => (
-              <div className="roomrow" key={r.id}>
-                <span aria-hidden>♡</span> {r.title}
-                <span className="lockpill">{label(r.minTier as string)}</span>
-              </div>
-            ))}
-          </div></div>
+          {switches.features.classes && (
+            <div className="card reveal"><div className="body">
+              <h3 style={{ fontWeight: 400 }}>📚 Classes</h3>
+              {classes.map((r) => (
+                <div className="roomrow" key={r.id}>
+                  <span aria-hidden>✦</span> {r.title}
+                  <span className="lockpill">{label(r.minTier as string)}</span>
+                </div>
+              ))}
+            </div></div>
+          )}
+          {switches.features.community && (
+            <div className="card reveal" style={{ transitionDelay: ".12s" }}><div className="body">
+              <h3 style={{ fontWeight: 400 }}>💗 Community</h3>
+              {community.map((r) => (
+                <div className="roomrow" key={r.id}>
+                  <span aria-hidden>♡</span> {r.title}
+                  <span className="lockpill">{label(r.minTier as string)}</span>
+                </div>
+              ))}
+            </div></div>
+          )}
         </div>
         <div className="center reveal" style={{ marginTop: 24 }}>
           <Link className="btn" href="/classes">Enter your rooms</Link>
@@ -286,7 +297,10 @@ export function Affirmations() {
   );
 }
 
-export function Donations() {
+export async function Donations() {
+  /* TASK-129 (0018.06.16 a₿) — THE SWITCHES, visibility only: the jars block
+     renders only when `jars` is on (Love's default keeps it on). */
+  const switches = await getSiteConfig();
   return (
     <section id="support">
       <div className="wrap">
@@ -298,7 +312,7 @@ export function Donations() {
             platform between, no cut taken. Give in bitcoin over lightning or simply in dollars;
             bitcoin is an option here, never a demand.
           </p>
-          <TipJar />
+          {switches.features.jars && <TipJar />}
 
           {/* ── the three doors (TASK-126, 0018.06.16 a₿ — same words as /support) ── */}
           <div style={{ marginTop: 34 }}>
@@ -340,7 +354,18 @@ export function FreeMeditation() {
   );
 }
 
-export function Contact() {
+export async function Contact() {
+  /* TASK-129 (0018.06.16 a₿) — THE SWITCHES: the home-side door hide now
+     READS the switches instead of the hardcoded pair (T-119's style block).
+     The cuts/services door hides unless `cuts`, the discovery-call door
+     unless `sessions`, the 11:11 Live with Love door unless `community`.
+     Hidden at this call site (this lane owns sections.tsx, not the shared
+     ContactDoors.tsx), so /contact keeps the full three-door set unchanged. */
+  const switches = await getSiteConfig();
+  const hidden: string[] = [];
+  if (!switches.features.sessions) hidden.push(`a[href="/book/discovery-call"]`);
+  if (!switches.features.cuts) hidden.push(`a[href="/services"]`);
+  if (!switches.features.community) hidden.push(`a[href^="https://www.youtube.com/"]`);
   return (
     <section id="contact">
       <div className="wrap">
@@ -348,13 +373,9 @@ export function Contact() {
         <h2 className="center sec-h" style={{ marginBottom: "1em" }}>Connect</h2>
         {/* every card IS its door (Admiral, 0018.05.17); the doors themselves
             are shared with /contact (0018.05.15 — the Admiral prefers that set) */}
-        {/* TASK-119 (0018.06.16 a₿): on the HOME the two doors that flank the
-            free meditation — Book a Discovery Call (/book/discovery-call) and
-            ConsciousCuts & Waxing (/services) — are HIDDEN, not deleted, while
-            sessions/payments stay off the home. Hidden at this call site (this
-            lane owns sections.tsx, not the shared ContactDoors.tsx), so
-            /contact keeps the full three-door set unchanged. */}
-        <style>{`.home-contact-doors a[href="/services"],.home-contact-doors a[href="/book/discovery-call"]{display:none}`}</style>
+        {hidden.length > 0 && (
+          <style>{`.home-contact-doors ${hidden.join(",.home-contact-doors ")}{display:none}`}</style>
+        )}
         <div className="home-contact-doors">
           <ContactDoors />
         </div>

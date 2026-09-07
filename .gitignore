@@ -54,6 +54,9 @@ next-env.d.ts
 # operator node-link config (holds tokens!) — never tracked; prod uses Blob
 /data/nodes.json
 
+# THE SWITCHES (TASK-129) — site-config dev driver; prod uses KV/Blob
+/data/site-config.json
+
 # decisions board — recorded rulings only (the seeds are committed); prod uses Blob
 /data/decisions.json
 

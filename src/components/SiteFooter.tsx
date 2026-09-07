@@ -1,7 +1,28 @@
-import Link from "next/link";
-import { cartridge } from "@/brand/cartridge";
+"use client";
 
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { cartridge } from "@/brand/cartridge";
+import type { SiteConfig } from "@/lib/site-config";
+
+/**
+ * TASK-129 (0018.06.16 a₿): the footer doors read THE SWITCHES like the nav
+ * — Sessions only when `sessions`, Community only when `community`; Home ·
+ * About · Memberships · Support stand in every config. Same public-switches
+ * fetch as NavMenu (the footer is client-reachable via FrenProfile/
+ * OperatorGate, so the doc can't be passed down from a server parent); until
+ * the answer lands only the always-on doors render.
+ */
 export default function SiteFooter() {
+  const [switches, setSwitches] = useState<SiteConfig | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/site", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.ok && d.config && setSwitches(d.config))
+      .catch(() => {});
+  }, []);
+
   return (
     <footer className="site-footer">
       <div className="wrap">
@@ -14,8 +35,8 @@ export default function SiteFooter() {
           <Link href="/">Home</Link>
           <Link href="/about">About</Link>
           <Link href="/memberships">Memberships</Link>
-          <Link href="/book">Sessions</Link>
-          <Link href="/classes">Community</Link>
+          {switches?.features.sessions && <Link href="/book">Sessions</Link>}
+          {switches?.features.community && <Link href="/classes">Community</Link>}
           <Link href="/support">⚡ Support</Link>
         </nav>
         <p className="legal">Copyright © 2026 One Cocreation · <Link href="/terms" style={{ color: "inherit" }}>Terms &amp; Conditions</Link> · <Link href="/privacy" style={{ color: "inherit" }}>Privacy Policy</Link></p>
