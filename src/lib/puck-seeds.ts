@@ -224,7 +224,7 @@ const homeContent: Block[] = [
         hm.heading("Weekly Intuitive", "h3", "center"),
         hm.text("$33/mo — ⚡ ≈ 55,555 sats / month", "center"),
         hm.list([
-          "Live weekly Zoom — 4× a month",
+          "Live weekly meetup in Love's room — 4× a month",
           "Explore your Clair Senses through breath",
           "Meditations, toning, light language",
           "A held energetic field, in community",
@@ -238,7 +238,7 @@ const homeContent: Block[] = [
         hm.list([
           "Everything in Weekly Intuitive",
           "Weekly recorded reading + affirmations",
-          "Weekly live Zoom meetup group",
+          "Weekly live meetup in Love's room",
           "Movement, meditation & navigation",
         ]),
         hm.button("YES! →", "/packages/observer", "gold", "center"),
@@ -719,7 +719,7 @@ const consciousCutsOldContent: Block[] = [
       "--YOUR DISCOVERY CALL- 15-20 MIN CALL or just book the appointment.",
       "--YOUR SERVICES",
     ], "none"),
-    cco.text("Let’s get to know each other. Know what you want? Simply book your appointment. Or respond to the email for a ZOOM call."),
+    cco.text("Let’s get to know each other. Know what you want? Simply book your appointment. Or respond to the email for a live call."),
     cco.text("We collaborate over a call. I am great with photos. Email me pics of perspective looks and I’ll send you photos of styles that will compliment your face shape, hair type and maintenance level. You get to tell me what you’re looking for. We’ll discuss any waxing needs and the Question behind if a Silent Hair Session is for you and what it can unlock within you."),
     cco.button("GET STARTED TODAY", "/welcome", "gold", "center"),
   ]),
@@ -883,11 +883,11 @@ const weeklyIntuitiveOldContent: Block[] = [
     wio.note("── original: soft blue gradient ground ──"),
     wio.twocol(
       [
-        wio.heading("Weekly Live Zooms", "h2"),
+        wio.heading("Weekly Live Meetups", "h2"),
         wio.text("$33/Month or"),
         wio.text("$11 week (one time purchase)"),
         wio.heading("Meets 4 times a month", "h3"),
-        wio.text("Live on Zoom Once a week session. We will explore our Claire Senses through Breath, Explore tools You already have, to dive deeper into WHO YOU ARE."),
+        wio.text("Live in Love's room, once a week session. We will explore our Claire Senses through Breath, Explore tools You already have, to dive deeper into WHO YOU ARE."),
         wio.text("We will be tuning into recordings of material you already have access to. We will [continues — cut off in capture]"),
       ],
       [
@@ -1059,7 +1059,7 @@ const observerOldContent: Block[] = [
           "-The Weekly Intuitive",
           "-Recorded Affirmations Included",
           "-Weekly Recorded Reading",
-          "-Weekly Live Zoom Meetup Group",
+          "-Weekly Live Meetup in Love's Room",
           "-Movement or Meditation",
           "-Insights from the recorded readings",
           "-What are you navigating",
