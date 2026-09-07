@@ -85,8 +85,11 @@ const KIND_WORD: Record<StoreItem["kind"], string> = {
 };
 
 function priceWords(item: StoreItem): string {
-  if (item.price.sats != null) return `${item.price.sats.toLocaleString("en-US")} sats`;
-  if (item.price.fiat) return `${(item.price.fiat.amount / 100).toFixed(2)} ${item.price.fiat.currency}`;
+  const sats = item.price.sats != null ? `${item.price.sats.toLocaleString("en-US")} sats` : null;
+  const fiat = item.price.fiat ? `$${(item.price.fiat.amount / 100).toFixed(2)} ${item.price.fiat.currency}` : null;
+  if (sats && fiat) return `${sats} · ${fiat}`;
+  if (sats) return sats;
+  if (fiat) return fiat;
   return "no price";
 }
 
@@ -553,6 +556,17 @@ export default function StoreRoom() {
                       <input type="number" value={draft.price.sats ?? ""} placeholder="111111"
                         onChange={(e) =>
                           setDraft({ ...draft, price: { ...draft.price, sats: e.target.value ? Number(e.target.value) : undefined } })}
+                        style={{ ...field, width: "100%" }} />
+                    </span>
+                    <span style={{ flex: 1, minWidth: 120 }}>
+                      <label style={{ ...fieldLabel, marginTop: 0 }}>price in USD</label>
+                      {/* Admiral, 0018.06.17: the shelf showed 55.55 with no way to change it — the
+                          model always carried price.fiat (integer minor units); the form never did. */}
+                      <input type="number" step="0.01" min="0" inputMode="decimal"
+                        value={draft.price.fiat ? (draft.price.fiat.amount / 100).toString() : ""} placeholder="55"
+                        onChange={(e) =>
+                          setDraft({ ...draft, price: { ...draft.price,
+                            fiat: e.target.value === "" ? undefined : { amount: Math.round(Number(e.target.value) * 100), currency: "USD" } } })}
                         style={{ ...field, width: "100%" }} />
                     </span>
                     <span style={{ flex: 1, minWidth: 120 }}>

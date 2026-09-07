@@ -196,7 +196,7 @@ export default async function StorePage() {
                         )}
                         {effective.sats != null && effective.fiat && (
                           <span style={{ marginLeft: 8, fontSize: ".78rem", color: "var(--muted)" }}>
-                            ~{fiatLabel(effective.fiat)}
+                            {fiatLabel(effective.fiat)}
                           </span>
                         )}
                       </div>
