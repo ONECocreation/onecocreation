@@ -9,6 +9,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * client API with the member's own token from /api/matrix/login. Love's
  * messages wear the gold wash; the room always knows its teacher.
  *
+ * Every message wears its SENDER's own name (T-133, 0018.06.17 a₿): the
+ * homeserver's display name, the localpart as fallback — never a guessed
+ * label. The old TEACHERS lookup printed any house account as "Love ✦",
+ * which is how the Admiral's own words came out under her name.
+ *
  * Messages from encrypted apps render as an honest lock — the fork the
  * Admiral holds: re-mint the rooms plaintext (invite-only on her own
  * non-federated server IS the privacy) or ship wasm crypto later.
@@ -30,6 +35,8 @@ interface Props {
   kind: "class" | "community";
 }
 
+/* House accounts (Love herself, the bot seat) keep the gold wash — styling
+   keyed on the real sender mxid, never a stand-in name on the label. */
 const TEACHERS = new Set(["adminpacman", "love", "onecocreation"]);
 
 const AVA_GRADIENTS = [
@@ -56,6 +63,7 @@ export default function RoomView({ alias, title, kind }: Props) {
   const [hearts, setHearts] = useState<Record<string, number>>({});
   const [myHearts, setMyHearts] = useState<Set<string>>(new Set());
   const [who, setWho] = useState(0);
+  const [names, setNames] = useState<Record<string, string>>({});
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -75,6 +83,20 @@ export default function RoomView({ alias, title, kind }: Props) {
   const readTimeline = useCallback(async () => {
     const s = session.current;
     if (!s) return;
+    /* the roster rides every poll: sender display names come from
+       joined_members (the messages feed doesn't carry them), so a name set
+       or changed on the homeserver shows up without a reload */
+    const members = await api(`/rooms/${encodeURIComponent(s.roomId)}/joined_members`);
+    if (members.status === 403) { setState("locked"); return; }
+    if (members.ok) {
+      const joined = (members.data.joined ?? {}) as Record<string, { display_name?: string }>;
+      setWho(Object.keys(joined).length);
+      const next: Record<string, string> = {};
+      for (const [mxid, info] of Object.entries(joined)) {
+        if (typeof info.display_name === "string" && info.display_name.trim()) next[mxid] = info.display_name;
+      }
+      setNames(next);
+    }
     const r = await api(`/rooms/${encodeURIComponent(s.roomId)}/messages?dir=b&limit=60`);
     if (!r.ok) {
       if (r.status === 403) setState("locked");
@@ -131,9 +153,6 @@ export default function RoomView({ alias, title, kind }: Props) {
       const roomId = dir.data.room_id as string | undefined;
       if (!roomId) { if (live) { setState("error"); setReason("this room isn't on the server yet"); } return; }
       session.current.roomId = roomId;
-      const members = await api(`/rooms/${encodeURIComponent(roomId)}/joined_members`);
-      if (members.status === 403) { if (live) setState("locked"); return; }
-      if (live) setWho(Object.keys((members.data.joined as object) ?? {}).length);
       await readTimeline();
       timer = setInterval(readTimeline, 6000);
     })();
@@ -213,11 +232,12 @@ export default function RoomView({ alias, title, kind }: Props) {
           </p>
         )}
         {msgs.map((m) => {
-          const teacher = TEACHERS.has(m.name);
+          const teacher = TEACHERS.has(localOf(m.sender));
+          const label = names[m.sender] || m.name;
           return (
             <div key={m.id} style={{ display: "flex", gap: 12, maxWidth: 680 }}>
               <div style={{ width: 38, height: 38, borderRadius: "50%", flex: "none", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--serif)", background: avaOf(m.sender) }}>
-                {(teacher ? "L" : m.name[0] ?? "?").toUpperCase()}
+                {(label[0] ?? "?").toUpperCase()}
               </div>
               <div>
                 <div
@@ -239,9 +259,10 @@ export default function RoomView({ alias, title, kind }: Props) {
                   ) : (
                     <span style={{ whiteSpace: "pre-line" }}>{m.body}</span>
                   )}
-                  {/* the "from" line lives at the FOOT of the card (Admiral, comments-1) */}
+                  {/* the "from" line lives at the FOOT of the card (Admiral, comments-1) —
+                      and it is always the SENDER's own name (T-133) */}
                   <div style={{ fontSize: ".68rem", fontWeight: 700, color: teacher ? "var(--gold-deep)" : "var(--muted)", marginTop: 6 }}>
-                    {teacher ? "Love ✦" : m.name}
+                    {label}
                     <span style={{ color: "var(--muted)", fontWeight: 400, fontSize: ".64rem", marginLeft: 8 }}>
                       {new Date(m.ts).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                     </span>

@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { tierSatisfies, type Tier } from "./entitlement";
 import { ROOMS, type MatrixRoom } from "./matrix-rooms";
 export { ROOMS, type MatrixRoom } from "./matrix-rooms";
@@ -72,15 +73,93 @@ function config(): { base: string; token: string } | null {
 /** The member's matrix id, derived — never asked for. Email members read as
  *  pac.at.pacsarcade.org; key members keep their handle. */
 export function mxidForSubject(subject: string): string {
-  const server = (process.env.MATRIX_HOMESERVER ?? "https://matrix.onecocreation.com")
-    .replace(/^https?:\/\/matrix\./, "").replace(/^https?:\/\//, "").replace(/\/$/, "");
   const [handle, space] = subject.includes("@")
     ? [subject.slice(0, subject.lastIndexOf("@")), subject.slice(subject.lastIndexOf("@") + 1)]
     : [subject, ""];
   const local = (space === "email" ? handle.replace(/@/g, ".at.") : handle)
     .toLowerCase()
     .replace(/[^a-z0-9._=\/-]/g, "-");
-  return `@${local}:${server}`;
+  return `@${local}:${matrixServerName()}`;
+}
+
+/** The homeserver's own name as the mxids carry it (matrix. prefix and
+ *  scheme stripped — the derivation mxidForSubject has always used). */
+export function matrixServerName(): string {
+  return (process.env.MATRIX_HOMESERVER ?? "https://matrix.onecocreation.com")
+    .replace(/^https?:\/\/matrix\./, "").replace(/^https?:\/\//, "").replace(/\/$/, "");
+}
+
+/** `@ada:onecocreation.com` → `ada`. */
+export function localpartOf(mxid: string): string {
+  return mxid.slice(1, mxid.indexOf(":"));
+}
+
+/**
+ * The bot seat's own user id on the homeserver, asked once (whoami, bot
+ * token) and cached for the process. This is the one account no member
+ * session may ever land on — the T-133 collision (0018.06.17 a₿): a fren
+ * handle equal to the bot's localpart minted a JWT straight INTO the bot
+ * account, and the room read the Admiral's words as the house's voice.
+ */
+let botId: string | null | undefined;
+export async function botUserId(): Promise<string | null> {
+  if (botId !== undefined) return botId;
+  const res = await call("GET", "/account/whoami");
+  const id = res.ok ? (res.data as { user_id?: string }).user_id : null;
+  botId = typeof id === "string" && isMxid(id) ? id : null;
+  return botId;
+}
+
+/**
+ * A member's OWN mxid when the plain derivation would land on the bot seat.
+ * Key members derive from their npub hex — stable, and theirs alone; Love's
+ * account serves Love alone, and the bot account stays the bot.
+ */
+export function mxidForKeyedMember(npubHex: string): string {
+  const hex = npubHex.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return `@key-${hex.slice(0, 32)}:${matrixServerName()}`;
+}
+
+/** The same escape hatch for a keyless collision (the colliding handles are
+ *  RESERVED, so this "should never happen" — but derive-or-dash: a hash of
+ *  the full subject, never the bot's name). */
+export function mxidForHashedSubject(subject: string): string {
+  const digest = createHash("sha256").update(subject).digest("hex");
+  return `@member-${digest.slice(0, 24)}:${matrixServerName()}`;
+}
+
+/**
+ * Set the homeserver display name from the member's handle — ONCE, only
+ * when the account carries none. A name the member set themselves is never
+ * overwritten. Rides the MEMBER's own access token: their account, their
+ * name, no bot privilege in the path.
+ */
+export async function ensureDisplayName(
+  homeserver: string,
+  accessToken: string,
+  mxid: string,
+  name: string,
+): Promise<{ ok: true; set: boolean } | { ok: false; reason: string }> {
+  const base = homeserver.replace(/\/$/, "");
+  const url = `${base}/_matrix/client/v3/profile/${encodeURIComponent(mxid)}/displayname`;
+  try {
+    const cur = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" });
+    if (cur.ok) {
+      const data = (await cur.json().catch(() => ({}))) as { displayname?: unknown };
+      if (typeof data.displayname === "string" && data.displayname.trim()) {
+        return { ok: true, set: false };
+      }
+    }
+    const put = await fetch(url, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ displayname: name }),
+      cache: "no-store",
+    });
+    return put.ok ? { ok: true, set: true } : { ok: false, reason: `http ${put.status}` };
+  } catch (err) {
+    return { ok: false, reason: err instanceof Error ? err.message : "network error" };
+  }
 }
 
 export function matrixConfigured(): boolean {
