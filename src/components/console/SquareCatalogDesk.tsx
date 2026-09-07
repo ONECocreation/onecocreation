@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Chip, SectionHead } from "@/components/console/glass";
+import { Chip } from "@/components/console/glass";
 import type { SquareCatalogDisplayItem, SquareCatalogSettings } from "@/lib/square-catalog";
 
 /**
@@ -11,6 +11,11 @@ import type { SquareCatalogDisplayItem, SquareCatalogSettings } from "@/lib/squa
  * only — nothing here writes a Square item into this store's own catalog
  * or back into Square (see square-catalog.ts's file header for the full
  * one-way rule and why it's one-way, not synced).
+ *
+ * TASK-136 (0018.06.17 a₿) — folded into the Square card as a section
+ * (the Admiral's picture: everything Square lives in ONE card) rather than
+ * its own page-level section, so a plain bold subhead replaces the gold
+ * SectionHead pill it used to open with.
  */
 
 function money(amount: number, currency: string): string {
@@ -69,16 +74,16 @@ export default function SquareCatalogDesk() {
   if (!settings) return null;
 
   return (
-    <div>
-      <SectionHead label="Square Catalog Display" />
-      <p style={{ margin: "0 0 8px", fontSize: ".78rem", color: "var(--muted)" }}>
+    <div style={{ marginTop: 14, borderTop: "1px solid rgba(139,118,196,.18)", paddingTop: 12 }}>
+      <b style={{ fontSize: ".88rem" }}>Square catalog display</b>
+      <p style={{ margin: "4px 0 8px", fontSize: ".78rem", color: "var(--muted)" }}>
         Read-only: shows Pac&apos;s existing Square catalog here, admin-side, for a unified view — never
         written back to Square, never duplicated into this store&apos;s own catalog.
       </p>
       {!configured ? (
         <p style={{ fontSize: ".82rem", color: "var(--warn)" }}>
-          Square isn&apos;t connected yet — set the SQUARE_* env vars (see the card above / docs/payments-square.md)
-          before turning this on.
+          Square isn&apos;t connected yet — paste the five values above (or set the SQUARE_* env vars on the
+          deploy) before turning this on.
         </p>
       ) : (
         <>
