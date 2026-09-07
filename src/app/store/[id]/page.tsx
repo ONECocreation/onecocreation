@@ -13,7 +13,9 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const item = await getItem(id);
-  return { title: item ? `${item.title} — One Cocreation store` : "Store — One Cocreation" };
+  // hidden is hidden everywhere public (TASK-120) — the tab title and share
+  // card are renders too, so a hidden item's title never rides the metadata
+  return { title: item && item.status !== "hidden" ? `${item.title} — One Cocreation store` : "Store — One Cocreation" };
 }
 
 export default async function ItemPage({ params }: { params: Promise<{ id: string }> }) {

@@ -10,8 +10,12 @@ import { useState } from "react";
  * The button label is the consuming surface's voice (Pac's FREE ruling,
  * 0018.05.26): the default keeps the site's existing wording so nothing
  * regresses; a surface that shouldn't shout FREE passes its own `cta`.
+ *
+ * `note` (TASK-120, 0018.06.16 a₿): an optional line of small text under
+ * the field, for doors that owe the joiner one more honest word up front
+ * (Read with Love's "the Zoom link arrives by letter" — never a fake link).
  */
-export default function SubscribeForm({ source = "site", cta = "Send My Free Meditation" }: { source?: string; cta?: string }) {
+export default function SubscribeForm({ source = "site", cta = "Send My Free Meditation", note: underNote }: { source?: string; cta?: string; note?: string }) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
   const [note, setNote] = useState("");
@@ -70,6 +74,11 @@ export default function SubscribeForm({ source = "site", cta = "Send My Free Med
       <button className="btn btn-rose" type="submit" disabled={state === "busy"}>
         {state === "busy" ? "Sending…" : cta}
       </button>
+      {/* the door's own small word under the field — ink inherits from the
+          consuming surface, so each door keeps its own contrast law */}
+      {underNote && state !== "error" && (
+        <p style={{ width: "100%", fontSize: ".82rem", margin: 0, color: "inherit" }}>{underNote}</p>
+      )}
       {state === "error" && <p style={{ width: "100%", color: "var(--muted)", fontSize: ".85rem" }}>{note}</p>}
     </form>
   );
