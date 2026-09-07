@@ -36,19 +36,19 @@ export const TIER_PAGES: TierPage[] = [
     slug: "weekly-intuitive",
     tier: "A",
     img: "/images/weekly-intuitive.webp",
-    heading: "Weekly Live Zooms",
+    heading: "Weekly Live Meetups",
     tagline: "The weekly rhythm — live, held, together.",
     oneTime: { label: "one week — one-time purchase", usd: 11, itemId: "weekly-one-week" },
     cadence: "Meets 4 times a month",
     paragraphs: [
-      "Live on Zoom, once-a-week sessions. We will explore our Clair Senses through Breath — explore tools you already have, to dive deeper into WHO YOU ARE.",
+      "Live in Love's room, once-a-week sessions. We will explore our Clair Senses through Breath — explore tools you already have, to dive deeper into WHO YOU ARE.",
       "We will be tuning into recordings of material you already have access to. We will participate in videos of meditations, toning, light language, movement and quantum information.",
       "I, Love, will tune into the space, prepare, and hold the energetic field, contributing in the energetic background during these sessions. We explore questions that come up, share experiences and sometimes stories pertaining to the topic that day, supporting one another.",
       "When we come together as a group the energies are amplified. The ability to hear what calls to us is strengthened; the connection that is not always chosen is heard; the thoughts that may not be supportive are silenced. This is a place to say YES to you.",
     ],
     caption: "There are New Energies here to support us all. A New Human is coming online. It's time!",
     feats: [
-      "Live weekly Zoom — 4× a month",
+      "Live weekly meetup in Love's room — 4× a month",
       "Explore your Clair Senses through breath",
       "Meditations, toning, light language",
       "A held energetic field, in community",
@@ -69,14 +69,14 @@ export const TIER_PAGES: TierPage[] = [
     ],
     feats: [
       "Weekly recorded reading + affirmations",
-      "Weekly live Zoom meetup group",
+      "Weekly live meetup in Love's room",
       "Movement, meditation & navigation",
     ],
     included: [
       {
         title: "Everything in Weekly Intuitive — included ($33/mo value)",
         items: [
-          "Live weekly Zoom — 4× a month",
+          "Live weekly meetup in Love's room — 4× a month",
           "Explore your Clair Senses through breath",
           "Meditations, toning, light language",
           "A held energetic field, in community",
@@ -105,7 +105,7 @@ export const TIER_PAGES: TierPage[] = [
       {
         title: "Everything in Weekly Intuitive — included ($33/mo value)",
         items: [
-          "Live weekly Zoom — 4× a month",
+          "Live weekly meetup in Love's room — 4× a month",
           "Explore your Clair Senses through breath",
           "Meditations, toning, light language",
           "A held energetic field, in community",
@@ -115,7 +115,7 @@ export const TIER_PAGES: TierPage[] = [
         title: "Everything in Observer — included ($55.55/mo value)",
         items: [
           "Weekly recorded reading + affirmations",
-          "Weekly live Zoom meetup group",
+          "Weekly live meetup in Love's room",
           "Movement, meditation & navigation",
         ],
       },

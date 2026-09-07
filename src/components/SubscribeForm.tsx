@@ -13,7 +13,7 @@ import { useState } from "react";
  *
  * `note` (TASK-120, 0018.06.16 a₿): an optional line of small text under
  * the field, for doors that owe the joiner one more honest word up front
- * (Read with Love's "the Zoom link arrives by letter" — never a fake link).
+ * (Read with Love's "the room link arrives by letter" — never a fake link).
  */
 export default function SubscribeForm({ source = "site", cta = "Send My Free Meditation", note: underNote }: { source?: string; cta?: string; note?: string }) {
   const [email, setEmail] = useState("");

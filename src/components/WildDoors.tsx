@@ -7,7 +7,7 @@ import ReadWithLove from "./ReadWithLove";
  * the earth") and the two long-standing placeholder doors finally open:
  * Instagram (the fleet's @onecocreation, a real link out) and Read with
  * Love (the weekly live book reading — its own component, an email door,
- * the Zoom link riding the welcome letter server-side, never this markup).
+ * the room link riding the welcome letter server-side, never this markup).
  * Each card is still a habitat; hover and the being grows out of its cell.
  */
 
