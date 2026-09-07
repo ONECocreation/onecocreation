@@ -27,7 +27,20 @@ export const EDITABLE_LETTERS = [
   "pwyc-accept",
   "pwyc-decline",
 ] as const;
+/** The SEEDED set — stays exactly these six (TASK-131). Letters Love composes
+ *  herself live in the vault registry below; every reader that wants "all
+ *  letters" goes through listLetterKeys(), never this constant alone. */
 export type LetterKey = (typeof EDITABLE_LETTERS)[number];
+
+/** TASK-131 (0018.06.16 a₿): a letter Love composes in the Letters room.
+ *  `audience` at creation is "public" (the open /news shelf) or "list"
+ *  (the mailing list — stored as the house's existing "members" vocabulary,
+ *  so audienceOf and every reader keep one meaning). */
+export interface ComposedLetterMeta {
+  key: string;
+  title: string;
+  createdAtMs: number;
+}
 
 export const DEFAULT_AUDIENCE: Record<LetterKey, LetterAudience> = {
   "lead-magnet": "members",
@@ -39,8 +52,8 @@ export const DEFAULT_AUDIENCE: Record<LetterKey, LetterAudience> = {
   "pwyc-decline": "members",
 };
 
-export function audienceOf(k: LetterKey, override: LetterOverride | null): LetterAudience {
-  return override?.audience ?? DEFAULT_AUDIENCE[k] ?? "members";
+export function audienceOf(k: string, override: LetterOverride | null): LetterAudience {
+  return override?.audience ?? DEFAULT_AUDIENCE[k as LetterKey] ?? "members";
 }
 
 /** Built-in words for letters with no override yet — the news sample keeps
@@ -160,7 +173,7 @@ async function kv(cmd: unknown[]): Promise<unknown> {
 
 const key = (k: string) => `letters:tpl:${k}`;
 
-export async function getLetterOverride(k: LetterKey): Promise<LetterOverride | null> {
+export async function getLetterOverride(k: string): Promise<LetterOverride | null> {
   try {
     const raw = (await kv(["GET", key(k)])) as string | null;
     return raw ? (JSON.parse(raw) as LetterOverride) : null;
@@ -169,9 +182,93 @@ export async function getLetterOverride(k: LetterKey): Promise<LetterOverride | 
   }
 }
 
-export async function saveLetterOverride(k: LetterKey, v: LetterOverride | null): Promise<void> {
+export async function saveLetterOverride(k: string, v: LetterOverride | null): Promise<void> {
   if (v === null) await kv(["DEL", key(k)]);
   else await kv(["SET", key(k), JSON.stringify(v)]);
+}
+
+/* ── TASK-131: letters Love composes herself ───────────────────────────────
+ * The registry is a JSON list of keys (creation order) at letters:composed;
+ * each letter's words ride the SAME override vault as the seeded six
+ * (letters:tpl:<key>), its meta (title, birthday) beside it. */
+
+const COMPOSED = "letters:composed";
+const metaKey = (k: string) => `letters:meta:${k}`;
+
+export async function composedLetterKeys(): Promise<string[]> {
+  try {
+    const raw = (await kv(["GET", COMPOSED])) as string | null;
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getLetterMeta(k: string): Promise<ComposedLetterMeta | null> {
+  try {
+    const raw = (await kv(["GET", metaKey(k)])) as string | null;
+    return raw ? (JSON.parse(raw) as ComposedLetterMeta) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Every letter key: the seeded six first, then Love's own in creation order. */
+export async function listLetterKeys(): Promise<string[]> {
+  return [...EDITABLE_LETTERS, ...(await composedLetterKeys())];
+}
+
+export async function isLetterKey(k: string): Promise<boolean> {
+  return (EDITABLE_LETTERS as readonly string[]).includes(k) || (await composedLetterKeys()).includes(k);
+}
+
+const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
+export function slugify(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+}
+
+/** Create a NEW letter. Returns the key, or throws with an operator-readable
+ *  reason. The letter is born with its title as subject and an empty body —
+ *  the send route refuses to publish a bodyless letter. */
+export async function createLetter(opts: {
+  key?: string;
+  title: string;
+  audience: "public" | "list";
+}): Promise<{ key: string }> {
+  const title = opts.title.trim();
+  if (!title) throw new Error("a letter needs a title");
+  const k = (opts.key ?? slugify(title)).trim();
+  if (!SLUG_RE.test(k)) throw new Error("the key must be a slug — lowercase letters, digits, dashes");
+  if (await isLetterKey(k)) throw new Error("a letter with that key already exists");
+  const meta: ComposedLetterMeta = { key: k, title, createdAtMs: Date.now() };
+  await kv(["SET", metaKey(k), JSON.stringify(meta)]);
+  await saveLetterOverride(k, {
+    subject: title,
+    body: "",
+    audience: opts.audience === "public" ? "public" : "members",
+  });
+  const keys = await composedLetterKeys();
+  await kv(["SET", COMPOSED, JSON.stringify([...keys, k])]);
+  return { key: k };
+}
+
+/** What the open shelf shows: every letter (seeded or composed) whose
+ *  audience is public, as { key, subject }. /news + the guest feed should
+ *  read THIS — see SUMMARY.md (the seam sits outside this lane's OWNS). */
+export async function listPublicLetters(): Promise<{ key: string; subject: string }[]> {
+  const out: { key: string; subject: string }[] = [];
+  for (const k of await listLetterKeys()) {
+    const o = await getLetterOverride(k);
+    if (audienceOf(k, o) !== "public") continue;
+    const tpl = o ?? LETTER_DEFAULTS[k as LetterKey];
+    if (tpl) out.push({ key: k, subject: tpl.subject });
+  }
+  return out;
 }
 
 /** letter-markdown → shell-ready html: escape first, then **bold**,

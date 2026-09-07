@@ -1,5 +1,5 @@
 import { sendMail, capRemaining } from "./mail";
-import { unsubscribeUrl } from "./subscribers";
+import { unsubscribeUrl, isSubscribed } from "./subscribers";
 
 /**
  * The drip queue (the Admiral's ask): blasts never fire at once. Publish
@@ -24,8 +24,10 @@ export interface QueuedMail {
   notBefore?: number;
   /** send-time condition — a cart-hold reminder only goes out while the
    *  hold still lives in that basket (checked out / lapsed = silently
-   *  dropped, never a ghost letter) */
-  guard?: { kind: "cart-hold"; cartId: string; holdId: string };
+   *  dropped, never a ghost letter). "subscribed" (TASK-131): a list letter
+   *  only goes out while the soul is still on the list — an unsubscribe
+   *  that lands while the letter waits in the queue kills that copy. */
+  guard?: { kind: "cart-hold"; cartId: string; holdId: string } | { kind: "subscribed" };
 }
 
 function restEnv(): { url: string; token: string } | null {
@@ -93,10 +95,14 @@ export async function tick(): Promise<TickResult> {
       continue;
     }
     if (item.guard?.kind === "cart-hold") {
+      const hold = item.guard;
       const { getCart } = await import("./cart");
-      const cart = await getCart(item.guard.cartId);
-      const line = cart.lines.find((l) => l.slot?.holdId === item.guard?.holdId);
+      const cart = await getCart(hold.cartId);
+      const line = cart.lines.find((l) => l.slot?.holdId === hold.holdId);
       if (!line || (line.slot?.holdUntilMs ?? 0) <= Date.now()) continue; // moment passed — drop in silence
+    }
+    if (item.guard?.kind === "subscribed" && !(await isSubscribed(item.to))) {
+      continue; // left the list while the letter waited — drop in silence
     }
     try {
       const unsub = unsubscribeUrl(item.to);
