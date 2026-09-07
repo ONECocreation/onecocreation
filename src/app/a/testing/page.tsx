@@ -1,3 +1,5 @@
+import { CONSOLE_CHROME } from "@/lib/console";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import OperatorGate from "@/components/OperatorGate";
@@ -24,6 +26,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminTestingPage() {
+  if (CONSOLE_CHROME === "site") redirect("/a"); // T-135 follow-through: house rooms never render under the site chrome
   const cookie = (await headers()).get("cookie");
   const operator = operatorFromCookieHeader(cookie);
   if (!operator) {
