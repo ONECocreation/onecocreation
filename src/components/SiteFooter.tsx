@@ -15,15 +15,12 @@ export default function SiteFooter() {
           <Link href="/about">About</Link>
           <Link href="/memberships">Memberships</Link>
           <Link href="/book">Sessions</Link>
-          <Link href="/store">Store</Link>
           <Link href="/classes">Community</Link>
           <Link href="/support">⚡ Support</Link>
         </nav>
         <p className="legal">Copyright © 2026 One Cocreation · <Link href="/terms" style={{ color: "inherit" }}>Terms &amp; Conditions</Link> · <Link href="/privacy" style={{ color: "inherit" }}>Privacy Policy</Link></p>
-        <p className="rebuild">
-          Built on the Pac&apos;s Arcade brand kit — a free, bitcoin-native home migrated off ShinePages. Bitcoin
-          surfaces are non-custodial to One Cocreation&apos;s own node.
-        </p>
+        {/* TASK-119 (0018.06.16 a₿): Store link removed; the "migrated off
+            ShinePages" rebuild line deleted (Love's Sept 1 list). */}
       </div>
     </footer>
   );

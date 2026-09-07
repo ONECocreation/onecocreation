@@ -27,11 +27,13 @@ export function Hero() {
         {/* Love's channeled Love Light Language glyph — DRAWN IN LIGHT on
             arrival (the bench-artifact animation Love loved; LightCode.tsx). */}
         <LightCode />
-        <div className="days">5 Days</div>
-        <h1>Leap of Faith</h1>
-        <div className="sub">A Fresh Step Into a New Mindset</div>
+        {/* TASK-119 (Love's Sept 1 list, 0018.06.16 a₿): the 5 Days / Leap of
+            Faith hero gives way to the Heart Field welcome — white h1, the
+            rose line beneath (.sub already wears var(--rose)); "Begin the
+            Journey" dropped while payments are hidden. [AMBER: the two lines] */}
+        <h1 style={{ color: "#fff" }}>Welcome to the Heart Field</h1>
+        <div className="sub">Where Heaven and Earth Meet</div>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link className="btn btn-shimmer" href="/packages">Begin the Journey</Link>
           <Link className="btn btn-ghost" href="/#free">Receive the Free Meditation</Link>
         </div>
       </div>
@@ -52,6 +54,8 @@ export function About() {
             <p style={{ color: "var(--rose)", fontFamily: "var(--serif)", fontSize: "1.3rem", lineHeight: 1.5 }}>
               &ldquo;To those drawn by the energy of the soul, Welcome Home. You Are the Bridge, Where Heaven and Earth Meet.&rdquo;
             </p>
+            {/* TASK-119 [AMBER] — Love's Sept 1 list: one more rose line by the pull-quote */}
+            <p style={{ color: "var(--rose)" }}>It will all be right here.</p>
             {/* the short version lives here; the whole journey has its own room */}
             <Link className="btn btn-ghost btn-sm" href="/about" style={{ marginTop: 6, display: "inline-block" }}>
               Read my full story
@@ -93,8 +97,15 @@ export function Packages() {
                   <div className="price">${t.priceUsd}<small>/mo</small></div>
                   <div className="sats">⚡ ≈ {t.priceSats.toLocaleString()} sats / month</div>
                   <ul className="feat">{c.feats.map((f) => <li key={f}>{f}</li>)}</ul>
-                  <div className="push" style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-                    <Link className={`btn tier-btn--${c.accent}`} href={`/packages/${TIER_PAGES.find((p) => p.tier === c.tier)?.slug}`}>YES!</Link>
+                  {/* TASK-119 (0018.06.16 a₿): buy/pay buttons hidden while
+                      payments are off — each tier offers the waitlist instead
+                      ("no payment buttons"; "add me to the list"). Tier names
+                      and prices stay visible. */}
+                  <div className="push" style={{ width: "100%" }}>
+                    <SubscribeForm
+                      source={`waitlist-${c.tier.toLowerCase()}`}
+                      cta="I'm interested — add me to the list. Pre-order coming soon."
+                    />
                   </div>
                 </div>
               </div>
@@ -300,8 +311,9 @@ export function Donations() {
           </div>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", margin: "26px 0 4px" }}>
-            <Link className="btn btn-ghost" href="/book">Book a Session</Link>
-            <Link className="btn btn-ghost" href="/store">Visit the Store</Link>
+            {/* TASK-119 (0018.06.16 a₿): "Book a Session" and "Visit the
+                Store" links removed — sessions/store off the home while
+                payments are hidden. The Full Support Room stays. */}
             <Link className="btn btn-ghost" href="/support">The Full Support Room</Link>
           </div>
         </div>
@@ -334,10 +346,19 @@ export function Contact() {
     <section id="contact">
       <div className="wrap">
         <p className="kicker center">E.T. Phone Home</p>
-        <h2 className="center sec-h" style={{ marginBottom: "1em" }}>Connect &amp; Book</h2>
+        <h2 className="center sec-h" style={{ marginBottom: "1em" }}>Connect</h2>
         {/* every card IS its door (Admiral, 0018.05.17); the doors themselves
             are shared with /contact (0018.05.15 — the Admiral prefers that set) */}
-        <ContactDoors />
+        {/* TASK-119 (0018.06.16 a₿): on the HOME the two doors that flank the
+            free meditation — Book a Discovery Call (/book/discovery-call) and
+            ConsciousCuts & Waxing (/services) — are HIDDEN, not deleted, while
+            sessions/payments stay off the home. Hidden at this call site (this
+            lane owns sections.tsx, not the shared ContactDoors.tsx), so
+            /contact keeps the full three-door set unchanged. */}
+        <style>{`.home-contact-doors a[href="/services"],.home-contact-doors a[href="/book/discovery-call"]{display:none}`}</style>
+        <div className="home-contact-doors">
+          <ContactDoors />
+        </div>
       </div>
     </section>
   );

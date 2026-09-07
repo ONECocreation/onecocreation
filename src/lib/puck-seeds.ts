@@ -412,7 +412,7 @@ const supportContent: Block[] = [
   ]),
   su.band("plain", "theme", [
     su.panel([
-      su.heading("The Three Jars", "h2"),
+      su.heading("Gifts of Gratitude", "h2"),
       su.text("pick a jar, pick an amount — lightning opens, and it’s done in a breath."),
       su.note("── live tip jars stay code-side ──"),
       su.text("Bitcoin gifts travel the Lightning Network straight to Love’s own wallet — nothing held, nothing routed by anyone else. Dollars are always welcome too: bitcoin is an option here, never a demand.", "left", st({ size: 15 })),
