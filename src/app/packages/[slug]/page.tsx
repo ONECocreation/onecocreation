@@ -6,8 +6,10 @@ import SiteFooter from "@/components/SiteFooter";
 import ScrollTop from "@/components/ScrollTop";
 import AddTierButton from "@/components/store/AddTierButton";
 import AddonActions from "@/components/store/AddonActions";
+import SubscribeForm from "@/components/SubscribeForm";
 import { TIERS } from "@/lib/entitlement";
-import { TIER_PAGES, TIER_ADDONS, tierPageBySlug } from "@/lib/tiers-content";
+import { TIER_PAGES, TIER_ADDONS, tierPageBySlug, type TierPage } from "@/lib/tiers-content";
+import { getSiteConfig, type SiteConfig } from "@/lib/site-config";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -16,7 +18,32 @@ import { TIER_PAGES, TIER_ADDONS, tierPageBySlug } from "@/lib/tiers-content";
  * Admiral's compare shot): her words on the left; the image card with the
  * stacked YES pills on the right; the single-offering add-ons strip below.
  * Words from tiers-content.ts, money from entitlement.ts — one source each.
+ *
+ * TASK-138 (0018.06.17 a₿): the live-buy YES button gives way to the same
+ * waitlist door the home cards use, source/tag intact, while the rails are
+ * off — `features.store` is the switch already wired for this (the same
+ * one NavMenu.tsx reads to hide the whole Store surface; Love's streamlined
+ * default keeps it off). Flip it back on and the buy button returns — no
+ * further code change, per the brief.
  */
+export function tierRailsOn(switches: Pick<SiteConfig, "features">): boolean {
+  return switches.features.store;
+}
+
+/** The banner's exact words when `?joined=1` lands after a waitlist join. */
+export function tierJoinedBanner(page: Pick<TierPage, "tier">): string {
+  return `You're on the list for ${TIERS[page.tier].name}.`;
+}
+
+/** Which door the image card shows — pure, so the switch-gating is pinned
+ *  without rendering the whole page (SiteHeader/NavMenu ride hooks that
+ *  need a real app-router context). Rails ON always wins, even with a
+ *  stale `?joined=1` left over from before the switch flipped. */
+export type TierOfferMode = "buy" | "banner" | "waitlist";
+export function tierOfferMode(switches: Pick<SiteConfig, "features">, joined: boolean): TierOfferMode {
+  if (tierRailsOn(switches)) return "buy";
+  return joined ? "banner" : "waitlist";
+}
 
 export function generateStaticParams() {
   return TIER_PAGES.map((t) => ({ slug: t.slug }));
@@ -33,12 +60,22 @@ export async function generateMetadata({
   return { title: `${name} — One Cocreation` };
 }
 
-export default async function TierPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function TierPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const { slug } = await params;
+  const sp = await searchParams;
   const page = tierPageBySlug(slug);
   if (!page) notFound();
   const t = TIERS[page.tier];
   const upgrade = page.upgradeSlug ? tierPageBySlug(page.upgradeSlug) : undefined;
+  const switches = await getSiteConfig();
+  const joined = sp?.joined === "1";
+  const mode = tierOfferMode(switches, joined);
 
   return (
     <>
@@ -106,7 +143,20 @@ export default async function TierPage({ params }: { params: Promise<{ slug: str
                 </p>
               )}
               <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
-                <AddTierButton itemId={page.slug} label={`${t.name} — YES! $${t.priceUsd}`} />
+                {mode === "buy" ? (
+                  <AddTierButton itemId={page.slug} label={`${t.name} — YES! $${t.priceUsd}`} />
+                ) : mode === "banner" ? (
+                  <p style={{ color: "var(--rose)", fontWeight: 600, textAlign: "center", margin: 0 }}>
+                    {tierJoinedBanner(page)}
+                  </p>
+                ) : (
+                  <SubscribeForm
+                    source={`waitlist-${page.tier.toLowerCase()}`}
+                    label="I'm interested"
+                    note="Add me to the pre-list — pre-order coming soon."
+                    next={`/packages/${page.slug}`}
+                  />
+                )}
                 {page.oneTime &&
                   (page.oneTime.itemId ? (
                     <AddTierButton

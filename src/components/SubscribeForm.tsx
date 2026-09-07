@@ -14,8 +14,28 @@ import { useState } from "react";
  * `note` (TASK-120, 0018.06.16 a₿): an optional line of small text under
  * the field, for doors that owe the joiner one more honest word up front
  * (Read with Love's "the room link arrives by letter" — never a fake link).
+ *
+ * `label` + `next` (TASK-138, 0018.06.17 a₿): a compact door for surfaces
+ * that already say their own sentence in copy around the form (the package
+ * cards' "Add me to the pre-list" note) — passing `label` swaps the button
+ * for the SHORT word (never the giant full-sentence `cta`) and rides the
+ * `.btn-sm` compact variant; `cta`'s default behaviour is untouched for
+ * every door that doesn't pass `label` (form-doors.tsx, JoinSurfaceView.tsx
+ * still hand their own `cta` sentence and get the big button, unchanged).
+ * `next` takes the joiner straight to a page on success — `nextUrl()` is
+ * exported so its `?joined=1` shape is tested without rendering.
  */
-export default function SubscribeForm({ source = "site", cta = "Send My Free Meditation", note: underNote }: { source?: string; cta?: string; note?: string }) {
+export function nextUrl(next: string): string {
+  return next.includes("?") ? `${next}&joined=1` : `${next}?joined=1`;
+}
+
+export default function SubscribeForm({
+  source = "site",
+  cta = "Send My Free Meditation",
+  label,
+  note: underNote,
+  next,
+}: { source?: string; cta?: string; label?: string; note?: string; next?: string }) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
   const [note, setNote] = useState("");
@@ -32,6 +52,10 @@ export default function SubscribeForm({ source = "site", cta = "Send My Free Med
       });
       const data = (await res.json()) as { ok: boolean; reason?: string; mailed?: boolean };
       if (data.ok) {
+        if (next) {
+          window.location.assign(nextUrl(next));
+          return;
+        }
         setState("done");
         setNote(
           data.mailed === false
@@ -71,8 +95,8 @@ export default function SubscribeForm({ source = "site", cta = "Send My Free Med
           fontSize: ".95rem",
         }}
       />
-      <button className="btn btn-rose" type="submit" disabled={state === "busy"}>
-        {state === "busy" ? "Sending…" : cta}
+      <button className={`btn btn-rose${label ? " btn-sm" : ""}`} type="submit" disabled={state === "busy"}>
+        {state === "busy" ? "Sending…" : (label ?? cta)}
       </button>
       {/* the door's own small word under the field — ink inherits from the
           consuming surface, so each door keeps its own contrast law */}

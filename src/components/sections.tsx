@@ -69,6 +69,21 @@ export function About() {
   );
 }
 
+/** TASK-138 (0018.06.17 a₿): the per-tier waitlist door's props, pure —
+ *  so the tag/label/note/next contract is pinned by a test without
+ *  rendering (the source that segments the list, the compact "I'm
+ *  interested" word, the honest pre-list note, and the walk to that
+ *  tier's own page on success). Exported for tests/package-waitlist.test.ts;
+ *  Packages() below is its only real caller. */
+export function packageWaitlistProps(tier: "A" | "B" | "C", slug: string | undefined) {
+  return {
+    source: `waitlist-${tier.toLowerCase()}`,
+    label: "I'm interested",
+    note: "Add me to the pre-list — pre-order coming soon.",
+    next: slug ? `/packages/${slug}` : undefined,
+  };
+}
+
 export function Packages() {
   const cards = [
     { tier: "A" as const, accent: "a", img: cartridge.tierArt.A, feats: ["Live weekly meetup in Love's room — 4× a month", "Explore your Clair Senses through breath", "Meditations, toning, light language", "A held energetic field, in community"] },
@@ -91,23 +106,27 @@ export function Packages() {
         <div className="grid grid-3">
           {cards.map((c) => {
             const t = TIERS[c.tier];
+            const slug = TIER_PAGES.find((p) => p.tier === c.tier)?.slug;
             return (
               <div className="card shine-hover" key={c.tier}>
                 <img className="thumb" src={c.img} alt={t.name} />
                 <div className="body">
-                  <Link href={`/packages/${TIER_PAGES.find((p) => p.tier === c.tier)?.slug}`} className={`tier-name-pill tier-pill--${c.accent}`} style={{ textDecoration: "none" }}>{t.name}</Link>
+                  <Link href={`/packages/${slug}`} className={`tier-name-pill tier-pill--${c.accent}`} style={{ textDecoration: "none" }}>{t.name}</Link>
                   <div className="price">${t.priceUsd}<small>/mo</small></div>
                   <div className="sats">⚡ ≈ {t.priceSats.toLocaleString()} sats / month</div>
                   <ul className="feat">{c.feats.map((f) => <li key={f}>{f}</li>)}</ul>
                   {/* TASK-119 (0018.06.16 a₿): buy/pay buttons hidden while
                       payments are off — each tier offers the waitlist instead
                       ("no payment buttons"; "add me to the list"). Tier names
-                      and prices stay visible. */}
+                      and prices stay visible.
+                      TASK-138 (0018.06.17 a₿, the Admiral's picture): the
+                      button is the SHORT word, "I'm interested" — compact
+                      .btn-sm, never the giant full-sentence button — with
+                      the "add me to the pre-list" honesty as its own small
+                      note underneath, and the click walks to the tier's own
+                      page (view more) where the same door waits again. */}
                   <div className="push" style={{ width: "100%" }}>
-                    <SubscribeForm
-                      source={`waitlist-${c.tier.toLowerCase()}`}
-                      cta="I'm interested — add me to the list. Pre-order coming soon."
-                    />
+                    <SubscribeForm {...packageWaitlistProps(c.tier, slug)} />
                   </div>
                 </div>
               </div>
