@@ -7,6 +7,7 @@ import BuyPanel from "@/components/store/BuyPanel";
 import ImageLightbox from "@/components/store/ImageLightbox";
 import { getItem, stripPrivateMedia } from "@/lib/store";
 import { liveAdapter } from "@/lib/payments";
+import { dollars } from "@/lib/money-words";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +63,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
             {effective.sats != null
               ? `${effective.sats.toLocaleString("en-US")} sats`
               : effective.fiat
-                ? `${(effective.fiat.amount / 100).toFixed(2)} ${effective.fiat.currency}`
+                ? dollars(effective.fiat.amount, effective.fiat.currency)
                 : ""}
             {item.sale && (
               <span style={{ marginLeft: 10, fontSize: ".72rem", fontWeight: 700, textTransform: "uppercase",

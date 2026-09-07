@@ -8,6 +8,7 @@ import StripeRailCard from "@/components/console/StripeRailCard";
 import { Chip, SectionHead, field, overlay, sheet } from "@/components/console/glass";
 import { bftDateTime, estimateHeightAt } from "@/lib/bb/bft";
 import type { OrderRecord } from "@/lib/store";
+import { dollars } from "@/lib/money-words";
 
 /**
  * MONEY JARS — the whole ledger, one calm page (the blessed mockup,
@@ -65,7 +66,7 @@ function stateTone(state: string): "green" | "gold" | "rose" | "grey" {
 function orderSats(o: OrderRecord): string {
   return o.priceSnapshot.currency === "SATS"
     ? `${o.priceSnapshot.amount.toLocaleString("en-US")}`
-    : `${(o.priceSnapshot.amount / 100).toFixed(2)} ${o.priceSnapshot.currency}`;
+    : dollars(o.priceSnapshot.amount, o.priceSnapshot.currency);
 }
 
 /** a session order carries a booking or a voucher; everything else is goods */

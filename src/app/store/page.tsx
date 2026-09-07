@@ -7,6 +7,7 @@ import StackedHero from "@/components/StackedHero";
 import { listItems, stripPrivateMedia, type StoreItem } from "@/lib/store";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { cartridge } from "@/brand/cartridge";
+import { dollars } from "@/lib/money-words";
 
 export const metadata: Metadata = {
   title: "Store — One Cocreation",
@@ -82,7 +83,7 @@ function satsLabel(n: number): string {
 }
 
 function fiatLabel(f: { amount: number; currency: string }): string {
-  return `${(f.amount / 100).toFixed(2)} ${f.currency}`;
+  return dollars(f.amount, f.currency);
 }
 
 /** One entry per kind — the disconnect Pac flagged: every card now has one

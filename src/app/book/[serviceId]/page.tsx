@@ -5,6 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SlotPicker from "@/components/booking/SlotPicker";
 import { getService } from "@/lib/booking";
+import { dollars } from "@/lib/money-words";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ function priceLabel(service: NonNullable<Awaited<ReturnType<typeof getService>>>
   const { sats, fiat } = service.price;
   const bits: string[] = [];
   if (sats != null) bits.push(`${sats.toLocaleString("en-US")} sats`);
-  if (fiat) bits.push(`~${(fiat.amount / 100).toFixed(2)} ${fiat.currency}`);
+  if (fiat) bits.push(dollars(fiat.amount, fiat.currency));
   return bits.join(" · ") || "price on request";
 }
 

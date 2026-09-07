@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
 import { cartridge } from "@/brand/cartridge";
+import { dollars } from "@/lib/money-words";
 
 /** The moment after the sats land: Love herself says thank you — a living
  *  portrait (muted loop; a still for reduced-motion) over her line. */
@@ -164,7 +165,7 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
         <p style={{ margin: "6px 0 0", fontFamily: "var(--serif, sans-serif)", fontSize: "1.3rem", color: "var(--gold-deep, #b4862b)" }}>
           {order.priceSnapshot.currency === "SATS"
             ? `${order.priceSnapshot.amount.toLocaleString("en-US")} sats`
-            : `${(order.priceSnapshot.amount / 100).toFixed(2)} ${order.priceSnapshot.currency}`}
+            : dollars(order.priceSnapshot.amount, order.priceSnapshot.currency)}
         </p>
         {order.entitlementSubject && (
           <p style={{ margin: "4px 0 0", fontSize: ".8rem", color: "var(--info, #5f4b96)" }}>unlocks for {prettySubject(order.entitlementSubject)}</p>

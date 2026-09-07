@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Chip, SectionHead, field, overlay, sheet } from "@/components/console/glass";
 import { upload as blobDirectUpload } from "@vercel/blob/client";
 import type { StoreItem } from "@/lib/store";
+import { dollars } from "@/lib/money-words";
 
 // entitlement.ts is server-only (fs/redis) — a "use client" screen must never
 // import it directly, so the tier names ride the /api/admin/store response
@@ -86,7 +87,7 @@ const KIND_WORD: Record<StoreItem["kind"], string> = {
 
 function priceWords(item: StoreItem): string {
   const sats = item.price.sats != null ? `${item.price.sats.toLocaleString("en-US")} sats` : null;
-  const fiat = item.price.fiat ? `$${(item.price.fiat.amount / 100).toFixed(2)} ${item.price.fiat.currency}` : null;
+  const fiat = item.price.fiat ? dollars(item.price.fiat.amount, item.price.fiat.currency) : null;
   if (sats && fiat) return `${sats} · ${fiat}`;
   if (sats) return sats;
   if (fiat) return fiat;

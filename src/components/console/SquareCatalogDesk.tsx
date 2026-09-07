@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Chip } from "@/components/console/glass";
 import type { SquareCatalogDisplayItem, SquareCatalogSettings } from "@/lib/square-catalog";
+import { dollars } from "@/lib/money-words";
 
 /**
  * SQUARE CATALOG DISPLAY — one-way (Admiral's walk). OUR catalog stays
@@ -19,7 +20,7 @@ import type { SquareCatalogDisplayItem, SquareCatalogSettings } from "@/lib/squa
  */
 
 function money(amount: number, currency: string): string {
-  return `${(amount / 100).toFixed(2)} ${currency}`;
+  return dollars(amount, currency);
 }
 
 export default function SquareCatalogDesk() {
