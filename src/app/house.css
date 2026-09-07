@@ -104,7 +104,17 @@ section{padding:76px 0;position:relative}
    its chips on this grid — equal widths, aligned rows, no ragged wrap */
 .chip-grid{list-style:none;padding:0;margin:0;display:grid;gap:8px;
   grid-template-columns:repeat(auto-fill,minmax(var(--chip-min,104px),1fr))}
-.chip-grid .chip-select{width:100%;text-align:center;white-space:nowrap;padding:9px 8px}
+/* TASK-138 step 6 (0018.06.17 a₿): two rows, each with its own line-height,
+   never overlapping — the min-height holds the box open for BOTH clocks
+   even before the second one is known to exist (zonesDiffer chips and
+   same-zone chips stay the same height, no layout jump). The second line
+   (Love's time) truncates with an ellipsis rather than colliding with the
+   first at narrow widths; it stays in words, just shortened if it must. */
+.chip-grid .chip-select{width:100%;text-align:center;padding:9px 8px;min-height:52px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.chip-grid .chip-select .chip-time{white-space:nowrap;line-height:1.25}
+.chip-grid .chip-select .chip-tz{display:block;width:100%;font-size:.68rem;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .brandmark{width:44px;height:44px}
 .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
