@@ -5,9 +5,13 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 /**
- * The consolidated nav (Admiral, 0018.05.13): five main doors with
- * sub-menus, so the bar never crowds — and a hamburger below 920px.
+ * The consolidated nav (Admiral, 0018.05.13): main doors with sub-menus, so
+ * the bar never crowds — and a hamburger below 920px.
  * The tail (basket + name) renders beside this and never wraps.
+ *
+ * TASK-119 (Love's Sept 1 list, 0018.06.16 a₿) [AMBER on Store/Sessions]:
+ * the Sessions and Store doors are gone entirely (payments hidden); the free
+ * meditation moved under Community so it stays reachable.
  */
 const MENU: { label: string; href: string; subs?: { label: string; href: string }[] }[] = [
   { label: "About", href: "/about" },
@@ -20,30 +24,13 @@ const MENU: { label: string; href: string; subs?: { label: string; href: string 
     ],
   },
   {
-    label: "Sessions",
-    href: "/book",
-    subs: [
-      { label: "Book a time", href: "/book" },
-      { label: "ConsciousCuts & Waxing", href: "/services" },
-    ],
-  },
-  {
-    label: "Store",
-    href: "/store",
-    subs: [
-      { label: "All offerings", href: "/store" },
-      // Adornments paused (Admiral, 0018.05.14) — /jewelry stays live but
-      // unlisted until Love's product photos arrive.
-      { label: "Free meditation", href: "/meditation" },
-    ],
-  },
-  {
     label: "Community",
     href: "/classes",
     subs: [
       { label: "Classes & rooms", href: "/classes" },
       { label: "News & letters", href: "/news" },
       { label: "11:11 Live with Love", href: "/contact" },
+      { label: "Free meditation", href: "/meditation" },
     ],
   },
   { label: "Support", href: "/support" },
@@ -68,8 +55,8 @@ export default function NavMenu() {
   }, []);
 
   /* A parent with subs is a real door (Admiral, 0018.05.15): CLICK sails
-     straight to its home — Memberships→Heart Field, Sessions→Book a time,
-     Store→All offerings — while HOVER breathes the submenu open (pure CSS,
+     straight to its home — Memberships→Heart Field, Community→Classes &
+     rooms — while HOVER breathes the submenu open (pure CSS,
      .has-sub). In the phone sheet the subs simply sit under their parent. */
   return (
     <nav ref={ref} className="site-nav nav-menu">

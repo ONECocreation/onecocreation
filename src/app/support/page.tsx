@@ -47,7 +47,8 @@ export default function SupportPage() {
           <div className="wrap reveal">
             <div style={{ background: "var(--warm-panel)",
               border: "1px solid var(--warm-edge)", borderRadius: 30, padding: "34px 38px", boxShadow: "var(--soft)" }}>
-              <h2 style={{ fontWeight: 400, fontSize: "1.5rem", margin: 0 }}>The Three Jars</h2>
+              {/* TASK-119 (0018.06.16 a₿) [AMBER]: The Three Jars → Gifts of Gratitude; jar titles unchanged */}
+              <h2 style={{ fontWeight: 400, fontSize: "1.5rem", margin: 0 }}>Gifts of Gratitude</h2>
               <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: ".95rem" }}>
                 pick a jar, pick an amount — lightning opens, and it&apos;s done in a breath.
               </p>
