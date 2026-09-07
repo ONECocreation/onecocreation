@@ -12,10 +12,15 @@ import type { BrandTokens } from "@pacsarcade/puck-config/tokens";
  * Values are lifted verbatim from the shipping cartridge.css (dark-first;
  * dawn = the html[data-oc-theme="light"] overrides). Contrast grades are
  * measured with the WCAG formula against each theme's ground -- notably:
- *   - muted / gold / rose grade "large" on dawn (headings & labels only);
- *   - goldBright and white FAIL as text on dawn (night-ground colours that
- *     the light theme does not override) -- the inspector should hint this
+ *   - muted grades "large" on dawn (headings & labels only);
+ *   - goldBright FAILS as text on dawn (a fill/highlight value that the
+ *     light theme does not override) -- the inspector should hint this
  *     and lint rule `contrast-min` enforces it.
+ *   - T-121 THE PINK PASS (0018.06.16 a₿): the gold family pours the
+ *     rose family -- gold = the popup pink #E7B2C3 (dawn rung #AD5470),
+ *     goldBright = the light rose #EFC6DA. Both gold entries grade "aa"
+ *     on their text rungs now; only the decorative bright end still fails
+ *     on dawn, exactly as its gold predecessor did (1.48 -> 1.43).
  *
  * LOVE'S LAW lives here as data, not as a special case: her font tokens
  * simply contain no serif, so serifs are unofferable on this brand. Other
@@ -50,17 +55,17 @@ export const ONECOCREATION: BrandTokens = {
     },
     gold: {
       css: "var(--gold-deep)",
-      night: "#D9B24E",
-      dawn: "#B4862B",
+      night: "#E7B2C3",
+      dawn: "#AD5470",
       label: "Gold",
-      grade: { night: "aa", dawn: "large" }, // 9.26:1 / 3.09:1
+      grade: { night: "aa", dawn: "aa" }, // 10.26:1 / 4.60:1 — T-121: pours rose
     },
     goldBright: {
       css: "var(--gold-2)",
-      night: "#EBCB77",
-      dawn: "#EBCB77", // light theme does not override --gold-2
+      night: "#EFC6DA",
+      dawn: "#EFC6DA", // light theme does not override --gold-2
       label: "Gold bright",
-      grade: { night: "aa", dawn: "fails" }, // 11.85:1 / 1.48:1
+      grade: { night: "aa", dawn: "fails" }, // 12.22:1 / 1.43:1
     },
     teal: {
       css: "var(--teal-bright)",
@@ -72,9 +77,9 @@ export const ONECOCREATION: BrandTokens = {
     rose: {
       css: "var(--rose)",
       night: "#E7B2C3",
-      dawn: "#C56E8B",
+      dawn: "#AD5470",
       label: "Rose",
-      grade: { night: "aa", dawn: "large" }, // 10.26:1 / 3.30:1
+      grade: { night: "aa", dawn: "aa" }, // 10.26:1 / 4.60:1 (the S33 deepened dawn rung)
     },
     purple: {
       css: "var(--lavender)",
@@ -104,10 +109,11 @@ export const ONECOCREATION: BrandTokens = {
       key: "p1",
       label: "Lead",
       hint: "the brand's loudest note -- CTAs, key accents",
-      value: "#EBCB77",
-      /* varianted token (step 5): bright gold FAILS on dawn cream (1.48:1,
-         measured) -- the lead slot deepens to the measured dawn gold there */
-      varianted: { dawn: "#B4862B" },
+      value: "#E7B2C3",
+      /* T-121 THE PINK PASS: the lead slot is the popup's soft pink (was the
+         bright gold #EBCB77, which FAILED on dawn cream at 1.48:1) -- the
+         varianted dawn rung is the measured deep rose, 4.60:1 on the cream */
+      varianted: { dawn: "#AD5470" },
     },
     {
       key: "p2",

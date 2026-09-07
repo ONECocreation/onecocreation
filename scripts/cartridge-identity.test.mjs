@@ -295,6 +295,73 @@ reset();
   t("doubled voices block → honest drift error", w.ok === false && w.status === 500 && /matched 2 times/.test(w.ok ? "" : w.reason));
 }
 
+/* ── TASK-121 THE PINK PASS — every rose-on-wash text pair ≥ 4.5:1, BOTH
+   themes (spec step 5), plus the --warn byte-identity guard (spec step 1's
+   cartridge.css:36-37 note). Reads the REAL token values out of
+   cartridge.css and the REAL wash literals out of house.css — no re-typed
+   copies to drift. WCAG relative luminance throughout. ── */
+{
+  const css = readFileSync(path.join(root, "src", "app", "cartridge.css"), "utf8");
+  const house = readFileSync(path.join(root, "src", "app", "house.css"), "utf8");
+  const darkBlock = css.match(/:root,\.oc-pv-dark\{([\s\S]*?)\n\}/)?.[1] ?? "";
+  const dawnBlock = css.match(/html\[data-oc-theme="light"\],\.oc-pv-light\{([\s\S]*?)\n\}/)?.[1] ?? "";
+  t("the harness found both theme blocks", darkBlock.length > 100 && dawnBlock.length > 100);
+
+  const rawTok = (block, name) => block.match(new RegExp(`--${name}\\s*:\\s*([^;]+);`))?.[1].trim();
+  /* dawn falls back to the night value when it doesn't override a token */
+  const tok = (name, theme, depth = 0) => {
+    const v = (theme === "dawn" ? rawTok(dawnBlock, name) : undefined) ?? rawTok(darkBlock, name);
+    const ref = v?.match(/^var\(--([\w-]+)\)$/)?.[1];
+    return ref && depth < 4 ? tok(ref, theme, depth + 1) : v;
+  };
+  const lum = (hex) => {
+    const c = hex.replace("#", "").toLowerCase();
+    const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(parseInt(c.slice(0, 2), 16)) + 0.7152 * f(parseInt(c.slice(2, 4), 16)) + 0.0722 * f(parseInt(c.slice(4, 6), 16));
+  };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  const over = (rgba, bg) => { /* rgba(r,g,b,a) composited on #rrggbb */
+    const m = rgba.match(/rgba?\(([\d.]+),([\d.]+),([\d.]+)(?:,([\d.]+))?\)/);
+    const a = m[4] === undefined ? 1 : parseFloat(m[4]);
+    const ch = (i) => Math.round(parseFloat(m[i]) * a + parseInt(bg.replace("#", "").slice((i - 1) * 2, i * 2), 16) * (1 - a));
+    return "#" + [ch(1), ch(2), ch(3)].map((v) => v.toString(16).padStart(2, "0")).join("");
+  };
+  const pair = (name, fg, bg) => {
+    const r = ratio(fg, bg);
+    t(`rose pair ≥4.5:1 — ${name} (${r.toFixed(2)}:1)`, r >= 4.5, `${fg} on ${bg}`);
+  };
+
+  const GROUND = { dark: tok("ground", "dark"), dawn: tok("ground", "dawn") };
+  const lockRule = house.match(/\.lockpill\{([^}]*)\}/)?.[1] ?? "";
+  const lockWash = lockRule.match(/background:\s*(rgba?\([^)]*\))/)?.[1];
+  const lockInkTok = lockRule.match(/color:\s*var\(--([\w-]+)\)/)?.[1];
+  const clsRule = css.match(/#classes \.lockpill\{([^}]*)\}/)?.[1] ?? "";
+  const clsWash = clsRule.match(/background:\s*(rgba?\([^)]*\))/)?.[1];
+  const clsInk = clsRule.match(/color:\s*(#[0-9a-fA-F]{6})/)?.[1];
+  t("the harness read both lockpill washes + inks", !!(lockWash && lockInkTok && clsWash && clsInk),
+    `${lockWash} / ${lockInkTok} / ${clsWash} / ${clsInk}`);
+
+  for (const theme of ["dark", "dawn"]) {
+    /* the fills: plum --gold-ink on BOTH rose gradient stops */
+    pair(`${theme}: --gold-ink on the light fill end (--gold-2)`, tok("gold-ink", theme), tok("gold-2", theme));
+    pair(`${theme}: --gold-ink on the deep fill end (--gold)`, tok("gold-ink", theme), tok("gold", theme));
+    /* the text rung on the theme ground */
+    pair(`${theme}: --gold-deep text on the ground`, tok("gold-deep", theme), GROUND[theme]);
+    /* rose-on-wash: the shared lockpill + the classes card's own wash —
+       dark composites on the night ground, dawn on the cream card */
+    const cardGround = theme === "dark" ? GROUND.dark : "#FCF7F0";
+    pair(`${theme}: .lockpill --gold-wash-ink on its rose wash`, tok(lockInkTok, theme), over(lockWash, cardGround));
+    pair(`${theme}: #classes .lockpill ink on its rose wash (cream card both themes)`, clsInk, over(clsWash, "#FCF7F0"));
+    /* spec step 1's note: --warn must never land byte-identical to a rose */
+    const roses = ["gold", "gold-2", "gold-deep", "rose", "rose-soft"].map((n) => tok(n, theme)?.toLowerCase());
+    t(`${theme}: --warn is byte-distinct from every rose value`, !roses.includes(tok("warn", theme)?.toLowerCase()),
+      `--warn=${tok("warn", theme)} roses=${roses.join(",")}`);
+  }
+  /* the merge itself, said out loud: gold IS rose now, per theme */
+  t("dark: --gold pours --rose exactly", tok("gold", "dark")?.toLowerCase() === tok("rose", "dark")?.toLowerCase());
+  t("dawn: --gold-deep pours the dawn --rose exactly", tok("gold-deep", "dawn")?.toLowerCase() === tok("rose", "dawn")?.toLowerCase());
+}
+
 rmSync(work, { recursive: true, force: true });
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);
