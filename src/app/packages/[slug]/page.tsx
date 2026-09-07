@@ -157,7 +157,8 @@ export default async function TierPage({
                     next={`/packages/${page.slug}`}
                   />
                 )}
-                {page.oneTime &&
+                {/* T-138 follow-through (Number One): the one-time purchase gives way with the rails, same as the monthly YES */}
+                {mode !== "waitlist" && page.oneTime &&
                   (page.oneTime.itemId ? (
                     <AddTierButton
                       ghost

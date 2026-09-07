@@ -103,7 +103,7 @@ section{padding:76px 0;position:relative}
 /* uniform pill sheets (Admiral, 0018.05.15): every calendar selection lays
    its chips on this grid — equal widths, aligned rows, no ragged wrap */
 .chip-grid{list-style:none;padding:0;margin:0;display:grid;gap:8px;
-  grid-template-columns:repeat(auto-fill,minmax(var(--chip-min,104px),1fr))}
+  grid-template-columns:repeat(auto-fill,minmax(var(--chip-min,136px),1fr))}
 /* TASK-138 step 6 (0018.06.17 a₿): two rows, each with its own line-height,
    never overlapping — the min-height holds the box open for BOTH clocks
    even before the second one is known to exist (zonesDiffer chips and
