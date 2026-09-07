@@ -170,11 +170,8 @@ export default async function AboutPage() {
               <p className="pull-quote reveal" style={{ color: "var(--teal-bright)" }}>
                 Where I go, IAM Home.
               </p>
-              <p style={story}>
-                I offer Silent Hair Sessions in my mobile studio as I travel — heart-connective
-                awareness. I prepare and create the space for One&apos;s epiphanies to arise and make
-                themselves known.
-              </p>
+              {/* TASK-128 (0018.06.16 a₿): the Silent Hair Sessions paragraph left
+                  with the service itself — the traveler story keeps the rest. */}
             </div>
           </div>
         </section>
@@ -294,7 +291,8 @@ export default async function AboutPage() {
               </p>
               <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
                 <Link className="btn" href="/welcome">Create your account ✨</Link>
-                <Link className="btn btn-teal" href="/services">ConsciousCuts &amp; Waxing ✂️</Link>
+                {/* TASK-128 (0018.06.16 a₿): the ConsciousCuts & Waxing door is
+                    retired with the service — the account door stays. */}
               </div>
             </div>
           </div>

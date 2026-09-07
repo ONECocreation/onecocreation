@@ -102,11 +102,9 @@ export async function writeConfig(doc: BookingConfig): Promise<void> {
 }
 
 /** The shelf order Love wants spoken everywhere (Admiral, 0018.05.14):
- *  discovery first, then soul conversations, then the cuts — women before
- *  men, keeping their order among themselves. Any OTHER (non-ConsciousCuts)
- *  service defaults to rank 50 and sorts ahead of the whole group —
- *  ConsciousCuts goes LAST, everywhere sessions list (Love's meeting,
- *  0018.05.11). */
+ *  discovery first, then soul conversations. The two silent-haircut ranks
+ *  stay only so the ids below keep their historical place if they are ever
+ *  listed — they are RETIRED (see below) and no listing returns them. */
 const SERVICE_RANK: Record<string, number> = {
   "discovery-call": 101,
   "soul-conversation": 102,
@@ -116,6 +114,33 @@ const SERVICE_RANK: Record<string, number> = {
   "silent-haircut-men": 106,
 };
 
+/**
+ * TASK-128 (0018.06.16 a₿, block 965,942): Love no longer offers haircuts
+ * (Sept 1). The `silent-haircut-*` services are RETIRED — never deleted,
+ * because existing bookings and receipts reference the ids. A retired
+ * service never appears in any picker, chooser, sitemap or public listing:
+ * `listServices` drops them in BOTH modes (hidden included), while
+ * `getService` still resolves them — flagged `retired: true` — so an old
+ * booking keeps rendering its receipt. The entries themselves live in the
+ * stored config (KV / blob / data file), untouched by this lane.
+ */
+declare module "./booking-time" {
+  interface Service {
+    /** retired = off every listing, still resolvable by id (TASK-128) */
+    retired?: boolean;
+  }
+}
+
+const RETIRED_SERVICE_IDS = new Set(["silent-haircut-women", "silent-haircut-men"]);
+
+export function isRetiredService(id: string): boolean {
+  return RETIRED_SERVICE_IDS.has(id);
+}
+
+/** Stamp the retired flag on read — the stored entries are never rewritten. */
+const markRetired = <T extends Service>(s: T): T =>
+  isRetiredService(s.id) ? { ...s, retired: true } : s;
+
 export function sortServices<T extends { id: string }>(services: T[]): T[] {
   return services
     .slice()
@@ -124,12 +149,14 @@ export function sortServices<T extends { id: string }>(services: T[]): T[] {
 
 export async function listServices(opts?: { includeHidden?: boolean }): Promise<Service[]> {
   const { services } = await readConfig();
-  return sortServices(opts?.includeHidden ? services : services.filter((s) => s.status === "live"));
+  const offered = services.filter((s) => !isRetiredService(s.id));
+  return sortServices(opts?.includeHidden ? offered : offered.filter((s) => s.status === "live"));
 }
 
 export async function getService(id: string): Promise<Service | null> {
   const { services } = await readConfig();
-  return services.find((s) => s.id === id) ?? null;
+  const found = services.find((s) => s.id === id);
+  return found ? markRetired(found) : null;
 }
 
 export function slugify(title: string): string {
