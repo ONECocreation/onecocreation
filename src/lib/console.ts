@@ -300,7 +300,10 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/brand",
     label: "DRESSING ROOM",
     short: "BRAND",
-    blurb: "the dressing room — the cert foundry and the brand kit",
+    /* TASK-135: the room's own page dropped the cert foundry and the old
+       multi-theme tester for BrandDesk (a real colour desk for the p1-p5
+       palette) — the blurb follows, in both chromes. */
+    blurb: "the five colours your pages draw from, with a live example",
     tone: "cyan",
   },
   {
