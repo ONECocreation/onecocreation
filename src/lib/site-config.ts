@@ -199,15 +199,15 @@ let cache: SiteConfig | null = null;
 /**
  * The switches, synchronously — the ONLY consumer is payments.ts's
  * liveAdapter, whose sync signature scripts/square-payments.test.mjs pins.
- * Warmed by every getSiteConfig()/saveSiteConfig(); a cold process reads the
- * dev file synchronously (fs driver) or serves the DEFAULTS (KV/blob can't
- * answer synchronously — a cold prod instance assumes Love's streamlined
- * defaults until the first real read warms it; the /a/site save warms the
- * instance that took it). Honest edge, never a guessed ON for a rail whose
- * switch actually says OFF anywhere a read already happened.
+ * Under the fs driver (dev) every call re-reads the file, so a flipped
+ * switch is honored the very next render no matter which module graph asks
+ * (dev runs route handlers and page renders in separate graphs — a warm
+ * cache in one never lies to the other). Under KV/blob a synchronous read
+ * is impossible: saveSiteConfig()/getSiteConfig() warm the cache, and a
+ * cold instance serves the DEFAULTS until its first real read — the honest
+ * edge, documented, never a guessed-ON presented as truth.
  */
 export function siteSwitchesSync(): SiteConfig {
-  if (cache) return cache;
   if (!kvEnv() && !blobStoreEnabled()) {
     try {
       cache = sanitize(JSON.parse(readFileSync(filePath(), "utf8")));
@@ -215,8 +215,9 @@ export function siteSwitchesSync(): SiteConfig {
     } catch {
       /* no dev file yet — defaults */
     }
+    return defaultSiteConfig();
   }
-  return defaultSiteConfig();
+  return cache ?? defaultSiteConfig();
 }
 
 /** The live switches: stored doc sanitized over Love's defaults. */
