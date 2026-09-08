@@ -4,6 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
 import { cartridge } from "@/brand/cartridge";
 import { dollars } from "@/lib/money-words";
+import { bftDateTime, estimateHeightAt } from "@/lib/bb/bft";
+
+/** TASK-173 — a recorded moment wears a stamp, never a dash: the BFT stamp
+ *  when the chain tip answers (a calendar projection off the anchored model,
+ *  never a rendered block height — the honesty stance of calendar-view.ts),
+ *  the civil date otherwise. */
+function stampFor(ms: number, tipOk: boolean): string {
+  if (tipOk) return bftDateTime(estimateHeightAt(ms));
+  return new Date(ms).toISOString().slice(0, 10);
+}
 
 /** The moment after the sats land: Love herself says thank you — a living
  *  portrait (muted loop; a still for reduced-motion) over her line. */
@@ -75,17 +85,32 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
   const [order, setOrder] = useState<OrderView | null>(null);
   const [missing, setMissing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [tipOk, setTipOk] = useState(false);
+  const [keyMail, setKeyMail] = useState<"idle" | "sending" | "sent" | "failed">("idle");
   const orderRef = useRef<OrderView | null>(null);
+  /* TASK-173 — the receipt letter's signed key rides the page URL
+     (?key=…); every status poll carries it, and the orders route pours the
+     buyer's email session when it verifies (same cookie as the code door). */
+  const keyRef = useRef<string | null>(null);
 
   useEffect(() => {
     orderRef.current = order;
   }, [order]);
 
   useEffect(() => {
+    keyRef.current = new URLSearchParams(window.location.search).get("key");
     let alive = true;
+    /* the tip, once: does the chain clock answer? (BFT stamp vs civil date) */
+    fetch("/api/chain/tip", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (alive && d?.ok && Number.isFinite(d.height)) setTipOk(true);
+      })
+      .catch(() => {});
     async function tick() {
       try {
-        const res = await fetch(`/api/store/orders/${orderId}`, { cache: "no-store" });
+        const k = keyRef.current;
+        const res = await fetch(`/api/store/orders/${orderId}${k ? `?key=${encodeURIComponent(k)}` : ""}`, { cache: "no-store" });
         if (!alive) return;
         if (res.status === 404) {
           setMissing(true);
@@ -107,6 +132,27 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
       clearInterval(t);
     };
   }, [orderId]);
+
+  /* TASK-173 — the locked state's one extra door: mail the order's email a
+     sign-in code via the existing email door (a fresh key also rides every
+     receipt letter). */
+  const buyerEmail = order?.entitlementSubject?.endsWith("@email")
+    ? order.entitlementSubject.slice(0, -"@email".length)
+    : null;
+  async function emailMyKey() {
+    if (!buyerEmail || keyMail === "sending") return;
+    setKeyMail("sending");
+    try {
+      const res = await fetch("/api/auth/email/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: buyerEmail }),
+      });
+      setKeyMail(res.ok ? "sent" : "failed");
+    } catch {
+      setKeyMail("failed");
+    }
+  }
 
   async function recharge() {
     setBusy(true);
@@ -171,15 +217,16 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
           <p style={{ margin: "4px 0 0", fontSize: ".8rem", color: "var(--info, #5f4b96)" }}>unlocks for {prettySubject(order.entitlementSubject)}</p>
         )}
         <p style={{ margin: "10px 0 0", fontSize: ".76rem", color: "var(--muted, #897f97)" }}>
-          {/* fleet ruling 0018.05.26 a₿ — dashes over estimates: an order
-              records no block height, so the stamps wear honest dashes,
-              never a ~guess from the wall clock */}
+          {/* TASK-173 — never dashes when the record carries a time: the BFT
+              stamp when the tip answers, the civil date otherwise */}
           placed{" "}
-          <span style={{ whiteSpace: "nowrap" }}>—</span>
+          <span style={{ whiteSpace: "nowrap" }}>
+            {order.createdAtMs ? stampFor(order.createdAtMs, tipOk) : "—"}
+          </span>
           {order.settledAtMs && (
             <>
               {" "}· paid{" "}
-              <span style={{ whiteSpace: "nowrap" }}>—</span>
+              <span style={{ whiteSpace: "nowrap" }}>{stampFor(order.settledAtMs, tipOk)}</span>
             </>
           )}
         </p>
@@ -191,11 +238,34 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
       {order.deliverable && settledFine && (
         <div style={{ marginTop: 18 }}>
           {order.deliverable.locked ? (
-            <p style={{ margin: "0 auto", maxWidth: 440, fontSize: ".88rem", color: "var(--muted, #897f97)" }}>
-              🔒 unlocks for <b style={{ color: "var(--info, #5f4b96)" }}>{prettySubject(order.entitlementSubject!)}</b> —{" "}
-              <a href="/login" style={{ color: "var(--gold-deep, #b4862b)", textDecoration: "underline" }}>sign in</a>{" "}
-              with that key to download
-            </p>
+            <div style={{ margin: "0 auto", maxWidth: 440, fontSize: ".88rem", color: "var(--muted, #897f97)" }}>
+              <p style={{ margin: 0 }}>
+                🔒 unlocks for <b style={{ color: "var(--info, #5f4b96)" }}>{prettySubject(order.entitlementSubject!)}</b> —{" "}
+                <a href="/login" style={{ color: "var(--gold-deep, #b4862b)", textDecoration: "underline" }}>sign in</a>{" "}
+                with that key to download
+              </p>
+              {/* TASK-173 — the one extra door: the receipt letter's key by
+                  mail, via the existing email sign-in start (never a new
+                  auth path). Words, not color: the button SAYS what it does. */}
+              {buyerEmail && (
+                <p style={{ margin: "10px 0 0" }}>
+                  {keyMail === "sent" ? (
+                    <>on its way — check your inbox, the letter brings your key ✉️</>
+                  ) : keyMail === "failed" ? (
+                    <>the letter didn&apos;t send — try again in a moment</>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={emailMyKey}
+                      disabled={keyMail === "sending"}
+                      className="btn btn-gold btn-sm"
+                    >
+                      {keyMail === "sending" ? "sending…" : "email me my key ✉️"}
+                    </button>
+                  )}
+                </p>
+              )}
+            </div>
           ) : (
             <>
               <div style={{ display: "flex", justifyContent: "center" }}>

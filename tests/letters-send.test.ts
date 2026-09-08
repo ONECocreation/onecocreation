@@ -169,9 +169,10 @@ describe("compose (TASK-131)", () => {
     expect(composed.audience).toBe("members"); // "list" rides the house's members vocabulary
 
     const { EDITABLE_LETTERS } = await import("@/lib/letters");
-    /* the seeded set grew to seven exactly once, by spec: TASK-156 added the
-       `welcome` first-sign-in key — a compose must not grow it further */
-    expect(EDITABLE_LETTERS).toHaveLength(7);
+    /* the seeded set grows only by spec: TASK-156 added the `welcome`
+       first-sign-in key, TASK-173 the `order-receipt` key — a compose must
+       not grow it further */
+    expect(EDITABLE_LETTERS).toHaveLength(8);
   });
 
   it("rejects a clashing key and a non-slug key", async () => {

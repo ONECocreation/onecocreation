@@ -196,7 +196,8 @@ export default function BuyPanel({
       )}
       {gated && (
         <p style={{ margin: "8px 0 0", fontSize: ".8rem", color: "var(--info)" }}>
-          unlocks for your account — sign in, or your email below becomes your account, and it’s yours the moment payment settles.
+          {/* TASK-173 — the honest promise: no second sign-in ceremony */}
+          your download opens on the receipt page, and a receipt letter brings the door too — sign in, or your email below becomes your account, and it’s yours the moment payment settles.
         </p>
       )}
       {shownPrice && (
