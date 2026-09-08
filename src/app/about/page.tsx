@@ -10,6 +10,13 @@ import { TIERS } from "@/lib/entitlement";
 import { cartridge } from "@/brand/cartridge";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
+import {
+  ABOUT_BRIDGE_LINE,
+  ABOUT_JOIN_LINES,
+  ABOUT_PINK_DOOR,
+  ABOUT_VIDEOS,
+  ABOUT_VIDEOS_EMPTY,
+} from "@/lib/about-content";
 import PaletteVars from "@/components/PaletteVars";
 import PopupHost from "@/components/PopupHost";
 
@@ -28,12 +35,12 @@ export const metadata: Metadata = {
  * doors here.
  */
 
-const glass: React.CSSProperties = {
-  background: "var(--glass)", backdropFilter: "blur(7px)",
-  borderRadius: 28, border: "1px solid var(--glass-edge)",
-};
-
 const story: React.CSSProperties = { color: "var(--ink-body)", fontSize: ".98rem", lineHeight: 1.85 };
+
+/* TASK-154 (0018.06.17 a₿ · block 966,019) — Love's About pass: the copy
+   contract (join-us heading, the pink door pair, the Bridge line, the
+   video playlist) is single-sourced in @/lib/about-content so this page,
+   the Puck seed and the test pins never drift. */
 
 export default async function AboutPage() {
   // P4: once Love publishes the Puck rebuild (/studio/about -> Publish), the
@@ -59,8 +66,11 @@ export default async function AboutPage() {
       <SiteHeader />
       <main>
         {/* ══ 1 · Smiles Love — the faces, under a living dawn ══ */}
-        <section className="keep-dark sky-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
-          <CosmicSky />
+        {/* TASK-154 item 1: the home hero's own darker galaxy ground
+            (.about-story-sky, house.css) with TWINKLING stars only — the
+            shooting stars leave (CosmicSky shooting={false}). */}
+        <section className="keep-dark about-story-sky" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
+          <CosmicSky shooting={false} />
           <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "64px 22px 70px" }}>
             <p className="kicker" style={{ color: "var(--rose)" }}>
               Smiles, Love
@@ -70,12 +80,14 @@ export default async function AboutPage() {
               <span className="sh-teal" style={{ color: "var(--teal-bright)" }}>STORY</span>
             </h1>
             <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
-            <div style={{ display: "flex", justifyContent: "center", gap: 18, flexWrap: "wrap", marginTop: 34 }}>
-              {["love-1", "love-2", "love-3"].map((n, i) => (
-                <img key={n} src={`/images/about/${n}.webp`} alt="Love"
-                  style={{ width: 190, height: 240, objectFit: "cover", borderRadius: 22,
-                    border: "1px solid rgba(255,255,255,.55)", boxShadow: "0 26px 60px -20px rgba(10,8,30,.6)",
-                    transform: `rotate(${(i - 1) * 4}deg) translateY(${i === 1 ? -10 : 6}px)` }} />
+            {/* TASK-154 item 2: her pictures LEVEL, not fanned — framed
+                like the session cards: full square, the faint purple
+                rounded thin bar around the outside (.about-faces,
+                house.css). The middle slot keeps today's picture until
+                Love's new one lands (see SUMMARY ## Seams). */}
+            <div className="about-faces" style={{ display: "flex", justifyContent: "center", gap: 18, flexWrap: "wrap", marginTop: 34 }}>
+              {["love-1", "love-2", "love-3"].map((n) => (
+                <img key={n} src={`/images/about/${n}.webp`} alt="Love" />
               ))}
             </div>
           </div>
@@ -179,11 +191,14 @@ export default async function AboutPage() {
         {/* ══ 5 · the Bridge — her welcome, large ══ */}
         <section className="sky-warm" style={{ padding: "70px 0" }}>
           <div className="wrap center reveal" style={{ maxWidth: 680 }}>
-            <img src={cartridge.hero.heavenEarth} alt="Where Heaven and Earth Meet"
+            {/* TASK-154 item 3: a white 1px outline around the script
+                graphic (.about-script, house.css). Item 6: the line below
+                wears the pull-quote's own face (var(--serif)) and drops
+                the period. */}
+            <img className="about-script" src={cartridge.hero.heavenEarth} alt="Where Heaven and Earth Meet"
               style={{ width: "min(580px, 96%)", margin: "0 auto 26px", display: "block" }} />
             <p style={{ fontFamily: "var(--serif)", fontSize: "1.35rem", color: "var(--rose)", lineHeight: 1.6, margin: 0 }}>
-              &ldquo;To those drawn by the energy of the soul — Welcome Home to you. You Are the
-              Bridge, Where Heaven and Earth Meet.&rdquo;
+              {ABOUT_BRIDGE_LINE}
             </p>
             <p style={{ ...story, marginTop: 22 }}>
               The ability to stretch and expand against all odds — all the while yearning for Home.
@@ -205,19 +220,24 @@ export default async function AboutPage() {
           </div>
         </section>
 
-        {/* ══ 6 · the Weekly Intuitive story + her video ══ */}
-        <section className="sky-warm" style={{ padding: "70px 0" }}>
+        {/* ══ 6 · the Weekly Intuitive story + her videos ══ */}
+        {/* TASK-154 item 4: the brown band goes (sky-warm → sky-glass);
+            item 7: the join-us heading reads "Breathe with us". */}
+        <section className="sky-glass" style={{ padding: "70px 0" }}>
           <div className="wrap">
             <div className="center reveal" style={{ marginBottom: 26 }}>
               <p className="kicker">Join Us — In This Grand Adventure!</p>
               <h2 className="stack-hero">
-                <span className="sh-ink">THE WEEKLY</span>
-                <span className="sh-teal">INTUITIVE</span>
+                <span className="sh-ink">{ABOUT_JOIN_LINES.ink}</span>
+                <span className="sh-teal">{ABOUT_JOIN_LINES.teal}</span>
               </h2>
             </div>
             <div className="reveal" style={{ display: "grid", gap: 26, alignItems: "start", maxWidth: 960, margin: "0 auto",
               gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))" }}>
-              <div style={{ ...glass, padding: "24px 22px", fontSize: ".93rem", color: "var(--ink-body)", lineHeight: 1.8 }}>
+              {/* TASK-154 item 5: the left glass box is gone — her words
+                  stand on the band itself (the thin outline she likes is
+                  the session-card bar, carried to her faces above). */}
+              <div style={{ padding: "8px 2px", fontSize: ".93rem", color: "var(--ink-body)", lineHeight: 1.8 }}>
                 <p style={{ marginTop: 0 }}>
                   — For years, when I couldn&apos;t sleep through the night, I knew that was the body
                   speaking to me: things were out of balance. I had been trying to change another, or
@@ -237,25 +257,42 @@ export default async function AboutPage() {
                 </p>
               </div>
               <div>
-                {/* her most-loved short — "What Breath in discomfort?" (top of
-                    the channel by views, 0018.05.15) — breath, exactly the work */}
-                <div style={{ position: "relative", width: "min(300px, 88%)", aspectRatio: "9/16",
-                  margin: "0 auto", borderRadius: 22, overflow: "hidden",
-                  boxShadow: "0 26px 60px -24px rgba(35,26,60,.55)" }}>
-                  <iframe
-                    src="https://www.youtube-nocookie.com/embed/2LrWVQDnLd0"
-                    title="Love — What Breath in discomfort?"
-                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
-                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
+                {/* TASK-154 item 8: a PLAYLIST, not one video — the ids live
+                    in ABOUT_VIDEOS above; each entry unfolds its own embed
+                    (native details, no JS); an empty list tells the truth. */}
+                {ABOUT_VIDEOS.length === 0 ? (
+                  <p style={{ fontSize: ".9rem", color: "var(--muted)", textAlign: "center" }}>
+                    {ABOUT_VIDEOS_EMPTY}{" "}
+                    <a href="https://www.youtube.com/@Onecocreation" target="_blank" rel="noreferrer">
+                      Love&apos;s channel
+                    </a>
+                  </p>
+                ) : (
+                  <div className="about-playlist">
+                    {ABOUT_VIDEOS.map((v, i) => (
+                      <details key={v.id} className="about-video" open={i === 0}>
+                        <summary>{v.title}</summary>
+                        <div style={{ position: "relative", aspectRatio: v.ratio }}>
+                          <iframe
+                            loading="lazy"
+                            src={`https://www.youtube-nocookie.com/embed/${v.id}`}
+                            title={`Love — ${v.title}`}
+                            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
+                            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      </details>
+                    ))}
+                  </div>
+                )}
                 <div className="center" style={{ marginTop: 18 }}>
                   <p style={{ fontSize: ".85rem", color: "var(--muted)", margin: "0 0 10px" }}>
                     ${t.priceUsd}/mo · ⚡ ≈ {t.priceSats.toLocaleString()} sats — readings, breath,
                     toning, light language, a held field
                   </p>
-                  <Link className="btn" href="/packages/weekly-intuitive">YES!</Link>
+                  {/* item 4: the YES! door pours pink, not white */}
+                  <Link className={ABOUT_PINK_DOOR} href="/packages/weekly-intuitive">YES!</Link>
                 </div>
               </div>
             </div>
@@ -290,7 +327,8 @@ export default async function AboutPage() {
                 Ready to get started?
               </p>
               <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
-                <Link className="btn" href="/welcome">Create your account ✨</Link>
+                {/* TASK-154 item 7: the account door pours pink too */}
+                <Link className={ABOUT_PINK_DOOR} href="/welcome">Create your account ✨</Link>
                 {/* TASK-128 (0018.06.16 a₿): the ConsciousCuts & Waxing door is
                     retired with the service — the account door stays. */}
               </div>

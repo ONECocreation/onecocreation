@@ -1,4 +1,9 @@
 import type { PuckPageData } from "./puck-store";
+import {
+  ABOUT_BRIDGE_LINE,
+  ABOUT_JOIN_LINES,
+  ABOUT_VIDEOS,
+} from "@/lib/about-content";
 import { renderCartridgeId, cartridge } from "@/brand/cartridge";
 
 /**
@@ -38,7 +43,6 @@ const video = (youtube: string, ratio = "9/16") => blk("Video", { youtube, ratio
    pours rose; no seed keeps a gold door by default anymore */
 const button = (label: string, href: string, variant = "rose", align = "left") => blk("Button", { label, href, variant, align, style: st() });
 const buttons = (list: { label: string; href: string; variant: string }[], align = "center") => blk("Buttons", { align, buttons: list });
-const panel = (content: Block[]) => blk("Panel", { content });
 const twocol = (left: Block[], right: Block[], gap = 26, valign = "top") => blk("TwoColumns", { gap, valign, left, right });
 const band = (background: string, hold: string, content: Block[]) => blk("Band", { background, hold, content });
 
@@ -63,7 +67,15 @@ const skyHold: string = renderCartridgeId === "earthside" ? "theme" : "night";
 
 const aboutContent: Block[] = [
   // 1 - Smiles Love: the faces, under a living dawn
-  band("sky-veil", skyHold, [
+  /* TASK-154 (0018.06.17 a₿ · block 966,019): item 1 — the band takes the
+     darkest sky in the block vocabulary (sky-glass; the hand-built page
+     wears the home hero's galaxy ground verbatim + twinkle-only stars —
+     the Band block carries no star field, so there is nothing to mute
+     here). Item 2 — the faces stand LEVEL (tilt "no"); the square purple
+     session-card frame lives in house.css's about rules, beyond the
+     Gallery block's vocabulary. The middle slot keeps today's picture
+     until Love's new one lands (Seams). */
+  band("sky-glass", skyHold, [
     eyebrow("Smiles, Love", "center"),
     stacked("MY", "STORY", "h1", "center"),
     text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
@@ -71,7 +83,7 @@ const aboutContent: Block[] = [
       { src: "/images/about/love-1.webp", alt: "Love" },
       { src: "/images/about/love-2.webp", alt: "Love" },
       { src: "/images/about/love-3.webp", alt: "Love" },
-    ], "yes"),
+    ], "no"),
   ]),
 
   // 2 - the hero's journey, her words whole
@@ -106,30 +118,40 @@ const aboutContent: Block[] = [
 
   // 5 - the Bridge, her welcome
   band("sky-warm", "theme", [
+    /* TASK-154 item 3: the white 1px outline around the script graphic is
+       a house.css about rule — the Image block has no border vocabulary. */
     img(cartridge.hero.heavenEarth, "Where Heaven and Earth Meet", 560, "none", "center"),
-    text("“To those drawn by the energy of the soul — Welcome Home to you. You Are the Bridge, Where Heaven and Earth Meet.”", "center", st({ color: "rose", size: 24, font: "display", spaceAbove: 10 })),
+    /* TASK-154 item 6: the period leaves; "display" is the house Barlow —
+       the same face the PullQuote below speaks. The line itself is
+       single-sourced in @/lib/about-content. */
+    text(ABOUT_BRIDGE_LINE, "center", st({ color: "rose", size: 24, font: "display", spaceAbove: 10 })),
     text("The ability to stretch and expand against all odds — all the while yearning for Home. All the while always possessing the choice, the power, to go home. To BE home. For home is not a destination:", "center"),
     quote("Home IS where the Heart IS."),
     text("In presence. In Now. It is within the Heartmind Coherence that the You and the Divine as One bring all to balanced form. A Cocreation where Heaven meets Earth — whether it’s Heaven on earth, or a paradise in the making.", "center"),
     text("This is what you came for. To be this Bridge for the New Earth. You are the Anointed, the Chosen, the One that is Answering the Call.", "center", st({ color: "ink", size: 18 })),
   ]),
 
-  // 6 - the Weekly Intuitive story + her video
-  band("sky-warm", "theme", [
+  // 6 - the Weekly Intuitive story + her videos
+  /* TASK-154: item 4 — the brown band goes (sky-warm → sky-glass) and the
+     YES! door pours pink ("rose", not "gold"); item 5 — the left glass
+     box is gone, her words stand bare; item 7 — the join-us heading reads
+     "Breathe with us"; item 8 — a playlist of several real videos from
+     her channel (ids confirmed over oEmbed), not one. */
+  band("sky-glass", "theme", [
     eyebrow("Join Us — In This Grand Adventure!", "center"),
-    stacked("THE WEEKLY", "INTUITIVE", "h2", "center"),
+    stacked(ABOUT_JOIN_LINES.ink, ABOUT_JOIN_LINES.teal, "h2", "center"),
     twocol(
       [
-        panel([
-          text("— For years, when I couldn’t sleep through the night, I knew that was the body speaking to me: things were out of balance. I had been trying to change another, or change the outside circumstances, to bring peace. That’s when I knew…"),
-          rich("…the only way for me to be happy again was to work with my body. To hear. To pay attention to my emotions, my reactions, my beliefs — and ask, <i>is there another way?</i> <b>I became the Observer of my inner world, and my outer world transformed before my eyes.</b>"),
-          text("— Fast forward to today… IAM bringing you back to the way of the heart. Group conversations, connecting to the intelligence of earth, the intelligence of the body, and the Divine You Are. Channeled messages through breath, through heart, through community. You have all the answers — I prepare the energetic space."),
-        ]),
+        text("— For years, when I couldn’t sleep through the night, I knew that was the body speaking to me: things were out of balance. I had been trying to change another, or change the outside circumstances, to bring peace. That’s when I knew…"),
+        rich("…the only way for me to be happy again was to work with my body. To hear. To pay attention to my emotions, my reactions, my beliefs — and ask, <i>is there another way?</i> <b>I became the Observer of my inner world, and my outer world transformed before my eyes.</b>"),
+        text("— Fast forward to today… IAM bringing you back to the way of the heart. Group conversations, connecting to the intelligence of earth, the intelligence of the body, and the Divine You Are. Channeled messages through breath, through heart, through community. You have all the answers — I prepare the energetic space."),
       ],
       [
-        video("2LrWVQDnLd0", "9/16"),
+        /* the playlist is single-sourced in @/lib/about-content — the same
+           ids and ratios the hand-built page embeds */
+        ...ABOUT_VIDEOS.map((v) => video(v.id, v.ratio)),
         text("Readings, breath, toning, light language, a held field — the Weekly Intuitive.", "center", st({ color: "body", size: 15, spaceAbove: 14 })),
-        button("YES!", "/packages/weekly-intuitive", "gold", "center"),
+        button("YES!", "/packages/weekly-intuitive", "rose", "center"),
       ],
       26,
       "top",
