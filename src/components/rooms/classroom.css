@@ -114,24 +114,46 @@
   align-items: start;
 }
 
-/* STAGE — spotlight: video center stage, materials + people as two wings */
+/* STAGE (TASK-149 minimal-forced-edit, 0018.06.17 a₿ — justification:
+   classroom.css owns the layouts' grid arrangements and the Stage's new
+   arrangement — embed on top, chat directly under, who's-here the right
+   rail — can only be declared here): the main column carries video then
+   chat; the rail carries who's-here then the materials shelf. On 390 the
+   stack reads video → chat → people → materials. */
 .cl-grid-stage {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr) minmax(180px, 1fr);
-  grid-template-areas: "materials video people";
+  grid-template-columns: minmax(0, 3fr) minmax(240px, 1fr);
+  grid-template-areas: "main rail";
   gap: 20px;
   align-items: start;
 }
 
+.cl-stage-main,
+.cl-stage-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.cl-stage-main { grid-area: main; }
+.cl-stage-rail { grid-area: rail; }
+
 @media (max-width: 760px) {
   .cl-grid-video,
   .cl-grid-materials,
-  .cl-grid-people,
-  .cl-grid-stage {
+  .cl-grid-people {
     grid-template-columns: 1fr;
     grid-template-areas:
       "video"
       "materials"
       "people";
+  }
+
+  .cl-grid-stage {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "main"
+      "rail";
   }
 }

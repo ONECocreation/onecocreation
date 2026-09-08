@@ -9,14 +9,17 @@ import { useRoomVantage, type RoomVantage } from "./vantage";
  * near the room header — not a hero. Drives `useRoomVantage`'s shared,
  * per-user persisted state.
  */
+/* TASK-149 minimal-forced-edit (justification: the tab ORDER lives in this
+ * OPTIONS array, not in ClassroomView — the spec's "Stage becomes the FIRST
+ * tab" can only land here): Stage leads, the rest keep their shipped order. */
 const OPTIONS: { id: RoomVantage; label: string }[] = [
+  { id: "stage", label: "Stage" },
   { id: "sanctuary", label: "Sanctuary" },
   { id: "lesson", label: "Lesson Path" },
   { id: "circle", label: "The Circle" },
   { id: "video", label: "Video" },
   { id: "materials", label: "Materials" },
   { id: "people", label: "People" },
-  { id: "stage", label: "Stage" },
 ];
 
 export default function VantageSwitcher() {

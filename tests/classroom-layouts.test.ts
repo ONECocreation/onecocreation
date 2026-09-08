@@ -18,6 +18,10 @@ interface LayoutProps {
   slug: string;
   alias: string;
   title: string;
+  /* TASK-149 minimal-forced-edit (justification: StageView's props grew
+   * `kind` for the StageChat→RoomView wiring; this shared fixture must
+   * carry it or tsc fails on the Stage import below) */
+  kind: "class" | "community";
   live: boolean;
 }
 
@@ -25,6 +29,7 @@ const PROPS: LayoutProps = {
   slug: "heart-field",
   alias: "#heart-field:onecocreation.local",
   title: "Heart Field",
+  kind: "community",
   live: false,
 };
 

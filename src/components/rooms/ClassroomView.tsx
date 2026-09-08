@@ -143,13 +143,15 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
       {vantage === "circle" && <CircleView feed={feed} live={live} activeSlug={slug} />}
 
       {/* TASK-123: the four restored classroom layouts — video slot,
-          materials list, people rail; only the arrangement differs. */}
+          materials list, people rail; only the arrangement differs.
+          TASK-149: the Stage leads (first tab + default) and adds the
+          room's own chat under the embed — StageChat reuses RoomView. */}
       {vantage === "video" && (
         <VideoView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />
       )}
       {vantage === "materials" && <MaterialsView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />}
       {vantage === "people" && <PeopleView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />}
-      {vantage === "stage" && <StageView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />}
+      {vantage === "stage" && <StageView slug={slug} alias={alias} title={title} kind={kind} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />}
     </div>
   );
 }
