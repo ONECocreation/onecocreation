@@ -229,6 +229,9 @@ describe("SupportPage — publish to live actually takes", () => {
 
 describe("BookIndexPage — publish to live actually takes", () => {
   it("with nothing published: the hand-built night-shelf page (book-hero-veil), no Render", async () => {
+    // T-160 gate: the route follows the `sessions` switch; open it for this fixture (isolated cwd)
+    const { saveSiteConfig } = await import("@/lib/site-config");
+    await saveSiteConfig({ features: { sessions: true } });
     const BookIndexPage = (await import("@/app/book/page")).default;
     const el = await BookIndexPage();
 
@@ -243,6 +246,9 @@ describe("BookIndexPage — publish to live actually takes", () => {
   it("after Publish to live in /studio: the SAME request renders the published Puck doc", async () => {
     const doc = await publish("book", "Fixture publish — book live");
 
+    // T-160 gate: the route follows the `sessions` switch; open it for this fixture (isolated cwd)
+    const { saveSiteConfig } = await import("@/lib/site-config");
+    await saveSiteConfig({ features: { sessions: true } });
     const BookIndexPage = (await import("@/app/book/page")).default;
     const el = await BookIndexPage();
 
@@ -259,6 +265,9 @@ describe("BookIndexPage — publish to live actually takes", () => {
 
 describe("ClassesPage — publish to live actually takes", () => {
   it("with nothing published: the hand-built commons hero (The Heartfield Commons), no Render", async () => {
+    // T-160 gate: the route opens with `community` or `classes` ON; open it for this fixture (isolated cwd)
+    const { saveSiteConfig } = await import("@/lib/site-config");
+    await saveSiteConfig({ features: { classes: true } });
     const ClassesPage = (await import("@/app/classes/page")).default;
     const el = await ClassesPage();
 
@@ -272,6 +281,9 @@ describe("ClassesPage — publish to live actually takes", () => {
   it("after Publish to live in /studio: the SAME request renders the published Puck doc", async () => {
     const doc = await publish("classes", "Fixture publish — classes live");
 
+    // T-160 gate: the route opens with `community` or `classes` ON; open it for this fixture (isolated cwd)
+    const { saveSiteConfig } = await import("@/lib/site-config");
+    await saveSiteConfig({ features: { classes: true } });
     const ClassesPage = (await import("@/app/classes/page")).default;
     const el = await ClassesPage();
 
