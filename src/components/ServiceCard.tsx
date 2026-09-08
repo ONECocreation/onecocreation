@@ -110,7 +110,10 @@ export default function ServiceCard({ svc, delay = 0 }: { svc: ServiceCardData; 
         </div>
 
         {/* ══ BACK — the full story on dark glass, scrolls if long ══ */}
-        <div className="card flip-back" style={glass} aria-hidden={!flipped} inert={!flipped}>
+        {/* the back turns back the same way the store cards do (T-148 contract): a click
+            anywhere on the face flips it; the doors below stop the click (Admiral, 0018.06.17) */}
+        <div className="card flip-back" style={{ ...glass, cursor: "pointer" }} onClick={flip}
+          aria-hidden={!flipped} inert={!flipped}>
           <div className="body" style={{ padding: "20px 22px 20px" }}>
             <h3 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: "1.3rem",
               color: "var(--ink-strong)", margin: 0, textAlign: "center", textWrap: "balance" }}>
@@ -127,7 +130,8 @@ export default function ServiceCard({ svc, delay = 0 }: { svc: ServiceCardData; 
                 {svc.blurb || "Full description coming — Love is writing it."}
               </p>
             </div>
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 14 }}
+              onClick={(e) => e.stopPropagation()}>
               <Link className="btn btn-sm btn-rose" href={`/book/${svc.id}`}>Book ⚡</Link>
               {svc.inStore && (
                 <button className="btn-quiet btn-quiet--accent" onClick={addToBasket} disabled={busy}>
