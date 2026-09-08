@@ -13,11 +13,18 @@ import type { RoomPackage } from "@/lib/matrix-rooms";
  * CircleView's grid under the class calendar, so the door-shape never
  * drifts between the two shelves. `compact` matches The Circle's denser
  * cards.
+ *
+ * TASK-162 (0018.06.17 a₿ · block 966,080): a room line the homeserver
+ * SAYS isn't there yet (live === false in the feed) wears "— opens soon"
+ * in words. live === null (the server won't say) paints nothing —
+ * derive-or-dash, never an invented marker.
  */
 export interface PackageRoomLine {
   slug: string;
   title: string;
   open: boolean;
+  /** from the feed's directory answers; absent/false-y unknown paints nothing */
+  live?: boolean | null;
 }
 
 export default function PackageRoomsCard({
@@ -102,6 +109,11 @@ export default function PackageRoomsCard({
               </Link>
             ) : (
               <span style={{ color: "var(--muted)" }}>{r.title}</span>
+            )}
+            {/* TASK-162: the homeserver SAYS this room isn't there yet —
+                words, not a guess; a server that won't answer adds nothing */}
+            {r.live === false && (
+              <span style={{ color: "var(--muted)", fontSize: ".72rem" }}> — opens soon</span>
             )}
           </li>
         ))}

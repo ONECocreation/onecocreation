@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Chip, SectionHead, field } from "@/components/console/glass";
 import NavEditor from "@/components/console/NavEditor";
+import CommunityDoorCard from "@/components/console/CommunityDoorCard";
 import type { SiteConfig } from "@/lib/site-config";
 import { ABOUT_VIDEOS, type AboutVideo } from "@/lib/about-content";
 import { parseYoutubeInput } from "@/lib/youtube-id";
@@ -26,6 +27,12 @@ import { parseYoutubeInput } from "@/lib/youtube-id";
  * house keeps only the 11-char id, and /about shows HER list instead of the
  * hard-coded seed. Self-contained like NavEditor (own fetch/save through
  * /api/admin/site with `{ about }`).
+ *
+ * TASK-162 (0018.06.17 a₿ · block 966,080): the "Community door" card beside
+ * the switches — the five community-readiness probes (lib/community-
+ * readiness.ts, read through /api/admin/community-readiness) in plain words,
+ * and the community switch itself with the flip rule AS WORDS: "flip when
+ * every row is ok", never a hard block.
  */
 
 type RailStatus = Record<"btcpay" | "square" | "stripe", { configured: boolean; env: string[] }>;
@@ -150,6 +157,13 @@ export default function SiteRoom() {
           </div>
         );
       })}
+
+      {/* ── the community door (TASK-162, 0018.06.17 a₿ · block 966,080) ──
+          Beside the switches by design: the five readiness probes in plain
+          words + the community switch itself with the rule as words — never
+          a hard block, her call. */}
+      <SectionHead label="Community door — what it needs before it opens" />
+      <CommunityDoorCard />
 
       {/* ── the payment rails ── */}
       <SectionHead label="Payments — which rails can take money" />
