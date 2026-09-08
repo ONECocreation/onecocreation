@@ -26,8 +26,18 @@ const IMG: [RegExp, string][] = [
 const imgFor = (id: string) => IMG.find(([re]) => re.test(id))?.[1] ?? cartridge.hero.nebula;
 
 /**
- * /book — the same living 2×2 the services shelf wears (Admiral,
- * 0018.05.15): photo cards on the night, big serif names, one gold door.
+ * /book — the SESSIONS page (the nav's SESSIONS door opens here). The same
+ * living 2×2 the services shelf wears (Admiral, 0018.05.15): photo cards on
+ * the night, one rose door.
+ *
+ * TASK-152 (0018.06.17 a₿, block 966,019 — Love's meeting): "the home page
+ * is correct — /sessions has the incorrect font and coloring"; "make the
+ * /session page dark"; "move background dark on top, add galaxy pinkish to
+ * the bottom behind the discovery call and soul conversation". The page now
+ * holds the night in BOTH themes (keep-dark on hero + shelf, the /services
+ * precedent), every word rides the house heading/body classes (no
+ * page-local font-family, no page-local hex), and the Book doors wear the
+ * popup's rose (.btn-rose, the T-121 pair already proved ≥4.5:1).
  */
 export default async function BookIndexPage() {
   const services = await listServices();
@@ -36,29 +46,33 @@ export default async function BookIndexPage() {
   return (
     <main>
       <SiteHeader />
-      {/* ══ the hero — night sky settling into the page ══ */}
-      <section className="keep-dark sky-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
+      {/* ══ the hero — night sky settling into the page; the veil holds the
+          top DARK (Love: "move background dark on top") — house.css
+          .book-hero-veil, the T-155 .login-galaxy precedent ══ */}
+      <section className="keep-dark sky-veil book-hero-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
         <CosmicSky />
         <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "64px 22px 56px" }}>
-          <p className="kicker" style={{ color: "var(--rose)" }}>One-on-One with Love</p>
+          <p className="kicker">One-on-One with Love</p>
           <h1 className="stack-hero">
-            <span className="sh-ink" style={{ color: "var(--ink-strong)" }}>BOOK</span>
-            <span className="sh-teal" style={{ color: "var(--teal-bright)" }}>A SESSION</span>
+            <span className="sh-ink">BOOK</span>
+            <span className="sh-teal">A SESSION</span>
           </h1>
           <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
-          <p style={{ fontFamily: "var(--serif)", color: "var(--ink-body)", fontSize: "1.05rem",
-            maxWidth: 460, margin: "18px auto 0" }}>
-            {/* S2: gold law — decorative gold, held for a ruling */}
-            Pick a session, choose a real open time — <b style={{ color: "#EBCB77" }}>you&apos;re held.</b>
+          {/* the house lede (.lead, the home shelf's own class) — the accent
+              rides --gold-2, which since T-121's pink pass IS the light rose:
+              one family with the rose Book doors below */}
+          <p className="lead" style={{ fontSize: "1.05rem", maxWidth: 460, margin: "18px auto 0" }}>
+            Pick a session, choose a real open time — <b style={{ color: "var(--gold-2)" }}>you&apos;re held.</b>
           </p>
         </div>
       </section>
 
-      {/* ══ the sessions — the living 2×2 ══ */}
-      <section style={{ padding: "56px 0 70px" }}>
+      {/* ══ the sessions — the living 2×2, on its own night with the galaxy
+          pinkish rising behind the cards (Love's note; .book-shelf-veil) ══ */}
+      <section className="keep-dark book-shelf-veil" style={{ padding: "56px 0 70px" }}>
         <div className="wrap" style={{ maxWidth: 880 }}>
           {services.length === 0 ? (
-            <p className="center" style={{ color: "var(--muted)" }}>No sessions open yet — check back soon ✨</p>
+            <p className="center" style={{ color: "var(--ink-body)" }}>No sessions open yet — check back soon ✨</p>
           ) : (
             <div className="grid grid-2">
               {services.map((s, i) => (
@@ -80,7 +94,10 @@ export default async function BookIndexPage() {
               ))}
             </div>
           )}
-          <p className="center reveal" style={{ marginTop: 34, fontSize: ".88rem", color: "var(--muted)" }}>
+          {/* ink-body, not muted: the shelf veil's rose wash runs strongest
+              right here at the bottom — muted measured 3.5:1 on it, ink-body
+              holds 7.2:1 (contrast law ≥ 4.5:1) */}
+          <p className="center reveal" style={{ marginTop: 34, fontSize: ".88rem", color: "var(--ink-body)" }}>
             not sure where to begin?{" "}
             <Link href="/book/discovery-call" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>
               the discovery call — credited toward your first session
