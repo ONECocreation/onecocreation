@@ -54,7 +54,7 @@ export interface ConnectionVerdict {
 
 export interface WebhookMarkers {
   verified: { at?: string; eventType?: string } | null;
-  rejected: { at?: string; reason?: string } | null;
+  rejected: { at?: string; reason?: string; detail?: string } | null;
 }
 
 export interface SquareDeskStatus {
@@ -154,7 +154,7 @@ export function deriveSquareRows(
         const rAt = r?.at ? Date.parse(r.at) : -1;
         if (rAt >= 0 && rAt > vAt) {
           mark = "error";
-          note = r?.reason ?? WEBHOOK_REJECT_SENTENCE;
+          note = (r?.reason ?? WEBHOOK_REJECT_SENTENCE) + (r?.detail ? ` — ${r.detail}` : "");
         } else if (vAt >= 0) {
           mark = "check";
           note = `verified ${day(v?.at)} — last event ${v?.eventType ?? "—"}`;

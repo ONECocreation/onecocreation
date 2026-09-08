@@ -64,7 +64,16 @@ export async function POST(request: Request) {
     // desk shows in red — unsigned/missing-config POSTs and verified-but-
     // unactionable events leave no mark
     if ((await squareWebhookSignatureOk(rawBody, request.headers)) === false) {
-      await writeMarker(KV_REJECTED, { at: new Date().toISOString(), reason: SQUARE_WEBHOOK_REJECT_REASON });
+      /* the mismatch explains itself (Admiral's test events, 0018.06.17 a₿):
+         the URL the site signed over vs the door Square actually knocked on,
+         and whether a key was present — never the key itself */
+      const signedUrl = process.env.SQUARE_WEBHOOK_URL || "(vault)";
+      const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "?";
+      const knocked = `https://${host}${new URL(request.url).pathname}`;
+      const keyLen = (process.env.SQUARE_WEBHOOK_SIGNATURE_KEY ?? "").length;
+      const detail = `the site signed over ${signedUrl} · Square knocked on ${knocked} · signature key ${keyLen ? `${keyLen} chars on Vercel` : "not on Vercel (vault?)"}`;
+      console.warn("square webhook: signature mismatch —", detail);
+      await writeMarker(KV_REJECTED, { at: new Date().toISOString(), reason: SQUARE_WEBHOOK_REJECT_REASON, detail });
     }
     return NextResponse.json({ ok: true });
   }
