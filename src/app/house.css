@@ -558,3 +558,36 @@ html,body{overflow-x:clip}
   .voice-track a[aria-hidden="true"]{display:none}
   .voice-ticker{-webkit-mask-image:none;mask-image:none}
 }
+
+/* ── TASK-154 (0018.06.17 a₿ · block 966,019) — ABOUT RULES ONLY: Love's
+   pass on the About page. ── */
+
+/* item 1 — "My Story" rides the home hero's own darker galaxy ground (the
+   .hero background verbatim); the twinkle-only sky is CosmicSky
+   shooting={false} at the call site. keep-dark holds the night in both
+   themes, exactly like the hero. */
+main .about-story-sky{background:radial-gradient(760px 460px at 50% 14%, rgba(120,86,180,.5), transparent 62%),linear-gradient(180deg,var(--hero-grad-0),var(--hero-grad-1) 55%,var(--band-2))}
+
+/* item 2 — her faces LEVEL, framed like the session cards: full square,
+   the faint purple rounded thin bar around the outside (ServiceCard's own
+   1px rgba(139,118,196,.35)); the fan tilt is gone. */
+.about-faces img{width:190px;aspect-ratio:1/1;height:auto;object-fit:cover;
+  border-radius:22px;border:1px solid rgba(139,118,196,.35);
+  box-shadow:0 26px 60px -20px rgba(10,8,30,.6)}
+
+/* item 3 — a white 1px outline around the "Where Heaven and Earth Meet"
+   script graphic (a transparent-alpha webp; the band behind follows the
+   theme, the outline is decoration — never meaning). */
+.about-script{border:1px solid #fff}
+
+/* item 8 — the video playlist: each entry unfolds its own embed (native
+   details, no JS); the faint purple bar matches the faces' frame. The
+   title carries the meaning; the ▸ marker is decoration, never the only
+   signal. */
+.about-playlist{display:flex;flex-direction:column;gap:12px;width:min(300px,88%);margin:0 auto}
+.about-video{border:1px solid rgba(139,118,196,.35);border-radius:16px;overflow:hidden}
+.about-video summary{cursor:pointer;list-style:none;padding:11px 14px;
+  font-size:.82rem;font-weight:700;color:var(--ink-strong)}
+.about-video summary::-webkit-details-marker{display:none}
+.about-video summary::before{content:"▸ ";color:var(--rose)}
+.about-video[open] summary::before{content:"▾ "}

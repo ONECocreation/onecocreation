@@ -34,7 +34,12 @@ export function Hero() {
             rose line beneath (.sub already wears var(--rose)); "Begin the
             Journey" dropped while payments are hidden. [AMBER: the two lines] */}
         <h1 style={{ color: "#fff" }}>Welcome to the Heart Field</h1>
-        <div className="sub">Where Heaven and Earth Meet</div>
+        {/* TASK-154 item 6 (0018.06.17 a₿ · block 966,019) — DECLARED
+            forced edit (Hero is outside this lane's OWNS): Love asked the
+            "Where Heaven and Earth Meet" line to wear the same face as
+            "Home IS where the Heart IS" — the pull-quote's var(--serif),
+            plain: the uppercase + wide tracking leave, the face stays. */}
+        <div className="sub" style={{ textTransform: "none", letterSpacing: ".02em", fontSize: "1.25rem" }}>Where Heaven and Earth Meet</div>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <Link className="btn btn-ghost" href="/#free">Receive the Free Meditation</Link>
         </div>
@@ -54,7 +59,8 @@ export function About() {
           <div>
             <p>I have been a solo adventurer for a while now — like most, on the hero&apos;s journey. Over time I found none of us are here to shrink, but to standout. Not here to separate, but to gather together — to bring kindness to the world, to be unapologetically US.</p>
             <p style={{ color: "var(--rose)", fontFamily: "var(--serif)", fontSize: "1.3rem", lineHeight: 1.5 }}>
-              &ldquo;To those drawn by the energy of the soul, Welcome Home. You Are the Bridge, Where Heaven and Earth Meet.&rdquo;
+              {/* TASK-154 item 6 (0018.06.17 a₿ · block 966,019): the period leaves */}
+              &ldquo;To those drawn by the energy of the soul, Welcome Home. You Are the Bridge, Where Heaven and Earth Meet&rdquo;
             </p>
             {/* TASK-119 [AMBER] — Love's Sept 1 list: one more rose line by the pull-quote */}
             <p style={{ color: "var(--rose)" }}>It will all be right here.</p>
