@@ -75,6 +75,13 @@ export interface StoreItem {
   images: string[];
   /** artist-entered item number */
   sku?: string;
+  /** free-text grouping (TASK-145, 0018.06.17 a₿ — the ShinePages shape):
+   *  "meditation" / "membership" / "ware" / "session" — the Categories tab
+   *  is derived from these; renaming a category rewrites it on its items */
+  category?: string;
+  /** stock count — absent = unlimited; counts down by qty on each settled
+   *  (paid) order, and 0 flips the item to soldout (TASK-145) */
+  inventory?: number;
   /** size/variant labels (S/M/L/XL or custom) — presence makes size required at checkout */
   sizes?: string[];
   media?: ItemMedia;
@@ -270,17 +277,39 @@ export async function getItem(id: string): Promise<StoreItem | null> {
   return items.find((i) => i.id === id) ?? null;
 }
 
+/** One price shape, checked once — item.price and item.sale share the law. */
+function priceProblem(price: Price, noun: string): string | null {
+  if (price.sats != null && (!Number.isInteger(price.sats) || price.sats <= 0)) {
+    return `${noun} sats as a positive integer`;
+  }
+  if (price.fiat && (!Number.isInteger(price.fiat.amount) || price.fiat.amount < 0 || !/^[A-Z]{3}$/.test(price.fiat.currency))) {
+    return `${noun} fiat as integer minor units + ISO-4217 code`;
+  }
+  return null;
+}
+
 /** An item needs at least one denomination to go live (spec validity rule). */
 export function validateItem(item: StoreItem): { ok: true } | { ok: false; reason: string } {
   if (!item.title?.trim()) return { ok: false, reason: "a title" };
   if (item.status === "live" && item.price.sats == null && item.price.fiat == null) {
     return { ok: false, reason: "at least one price (sats or fiat) before going live" };
   }
-  if (item.price.sats != null && (!Number.isInteger(item.price.sats) || item.price.sats <= 0)) {
-    return { ok: false, reason: "sats as a positive integer" };
+  const priceBad = priceProblem(item.price, "");
+  if (priceBad) return { ok: false, reason: priceBad.trim() };
+  // TASK-145 (0018.06.17 a₿): the sale price is a price — same law, and a
+  // sale must carry at least one denomination (an empty sale is no sale)
+  if (item.sale != null) {
+    if (item.sale.sats == null && item.sale.fiat == null) {
+      return { ok: false, reason: "a sale price (sats or USD) — or no sale at all" };
+    }
+    const saleBad = priceProblem(item.sale, "sale");
+    if (saleBad) return { ok: false, reason: saleBad };
   }
-  if (item.price.fiat && (!Number.isInteger(item.price.fiat.amount) || !/^[A-Z]{3}$/.test(item.price.fiat.currency))) {
-    return { ok: false, reason: "fiat as integer minor units + ISO-4217 code" };
+  if (item.category != null && (typeof item.category !== "string" || item.category.length > 64)) {
+    return { ok: false, reason: "a category as short text (max 64 chars)" };
+  }
+  if (item.inventory != null && (!Number.isInteger(item.inventory) || item.inventory < 0)) {
+    return { ok: false, reason: "inventory as a whole number (0 or more), or blank for unlimited" };
   }
   if (item.sku != null && (typeof item.sku !== "string" || item.sku.length > 64)) {
     return { ok: false, reason: "sku as short text (max 64 chars)" };
@@ -345,6 +374,23 @@ export async function removeItem(id: string): Promise<boolean> {
   if (doc.items.length === before) return false;
   await writeCatalog(doc);
   return true;
+}
+
+/**
+ * TASK-145 (0018.06.17 a₿) — the Categories view is DERIVED, never stored:
+ * the shelf's chips are the distinct category words on the items, each with
+ * its headcount, alphabetized. Renaming a category is a rename on its
+ * items — there is no second document to drift.
+ */
+export function listCategories(items: StoreItem[]): { name: string; count: number }[] {
+  const tally = new Map<string, number>();
+  for (const i of items) {
+    const c = i.category?.trim();
+    if (c) tally.set(c, (tally.get(c) ?? 0) + 1);
+  }
+  return [...tally.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 // ---------------------------------------------------------------------------
@@ -541,10 +587,33 @@ export async function recordChargeEvent(
   const downgrade = SETTLED_FAMILY.includes(order.state) && !["refunded", "disputed"].includes(ev.type);
   if (already || downgrade || order.state === next) return order;
   order.state = next;
-  if (next === "settled") order.settledAtMs = Date.now();
+  if (next === "settled") {
+    order.settledAtMs = Date.now();
+    /* TASK-145 (0018.06.17 a₿) — a PAID order spends stock: each line
+       counts its item's inventory down by qty (blank = unlimited, untouched),
+       and 0 flips the item to soldout. Guarded by the no-op rule above, so
+       a retried settle never double-spends the shelf. */
+    await spendInventory(order);
+  }
   order.events.push({ type: ev.type, chargeId: ev.chargeId, atMs: Date.now() });
   await writeOrder(order);
   return order;
+}
+
+/** The settle hook's stock spend — additive, no fulfilment beyond the count. */
+async function spendInventory(order: OrderRecord): Promise<void> {
+  const counted = order.lineItems.filter((l) => Number.isInteger(l.qty) && l.qty > 0);
+  if (counted.length === 0) return;
+  const doc = await readCatalog();
+  let changed = false;
+  for (const line of counted) {
+    const item = doc.items.find((i) => i.id === line.itemId);
+    if (!item || item.inventory == null) continue; // unlimited stays unlimited
+    item.inventory = Math.max(0, item.inventory - line.qty);
+    if (item.inventory === 0 && item.status === "live") item.status = "soldout";
+    changed = true;
+  }
+  if (changed) await writeCatalog(doc);
 }
 
 /** The artist's flip: settled → fulfilled (shipment sent / access granted). */

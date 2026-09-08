@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Chip, SectionHead, field, overlay, sheet } from "@/components/console/glass";
 import { upload as blobDirectUpload } from "@vercel/blob/client";
-import type { StoreItem } from "@/lib/store";
+import type { Price, StoreItem } from "@/lib/store";
 import { dollars } from "@/lib/money-words";
 
 // entitlement.ts is server-only (fs/redis) — a "use client" screen must never
@@ -76,12 +76,15 @@ async function fetchShelf(): Promise<ShelfData | null> {
   }
 }
 
+/** TASK-145 (0018.06.17 a₿) — the ShinePages type words, mapped onto the
+    existing ItemKind (nothing invented: ware→self/fourthwall,
+    meditation→digital, membership→package, session→service). */
 const KIND_WORD: Record<StoreItem["kind"], string> = {
-  self: "merch",
-  fourthwall: "merch",
-  digital: "digital",
-  package: "package",
-  service: "service",
+  self: "ware",
+  fourthwall: "ware",
+  digital: "meditation",
+  package: "membership",
+  service: "session",
   retreat: "retreat seat",
 };
 
@@ -92,6 +95,34 @@ function priceWords(item: StoreItem): string {
   if (sats) return sats;
   if (fiat) return fiat;
   return "no price";
+}
+
+/** A sale price speaks in both denominations it carries (derive-or-dash). */
+function saleWords(sale: NonNullable<StoreItem["sale"]>): string {
+  const sats = sale.sats != null ? `${sale.sats.toLocaleString("en-US")} sats` : null;
+  const fiat = sale.fiat ? dollars(sale.fiat.amount, sale.fiat.currency) : null;
+  return [sats, fiat].filter(Boolean).join(" · ");
+}
+
+/** Folding the sale fields: empty in BOTH denominations = no sale at all. */
+function saleWith(sale: Price | undefined): Price | undefined {
+  if (!sale || (sale.sats == null && sale.fiat == null)) return undefined;
+  return sale;
+}
+
+/* TASK-145 — the Categories tab is derived from the items, same law as
+   store.ts's listCategories(); the copy lives here because store.ts is a
+   server module (fs/blob) and a "use client" screen must never import it
+   (the entitlement.ts rule at the top of this file). */
+function categoriesOf(items: StoreItem[]): { name: string; count: number }[] {
+  const tally = new Map<string, number>();
+  for (const i of items) {
+    const c = i.category?.trim();
+    if (c) tally.set(c, (tally.get(c) ?? 0) + 1);
+  }
+  return [...tally.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function FulfilledBy({ item }: { item: StoreItem }) {
@@ -133,6 +164,10 @@ const fieldLabel: React.CSSProperties = {
   color: "var(--muted)", margin: "10px 0 3px",
 };
 
+/* TASK-145 — Love's shop is the customer: every field carries its words
+   next to it, and validation speaks in sentences, never color alone. */
+const fieldHint: React.CSSProperties = { margin: "3px 0 0", fontSize: ".7rem", color: "var(--muted)" };
+
 export default function StoreRoom() {
   const [items, setItems] = useState<StoreItem[] | null>(null);
   const [partners, setPartners] = useState<Partners>({ printful: false, fourthwall: false });
@@ -148,6 +183,10 @@ export default function StoreRoom() {
   const [dNote, setDNote] = useState<string | null>(null);
   const [dReplace, setDReplace] = useState(false);
   const [tiers, setTiers] = useState<TierNames | null>(null);
+  const [tab, setTab] = useState<"items" | "categories">("items");
+  const [catFilter, setCatFilter] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const [renameText, setRenameText] = useState("");
 
   const apply = useCallback((d: ShelfData | null) => {
     if (!d) return;
@@ -196,7 +235,34 @@ export default function StoreRoom() {
   async function saveDraft() {
     if (!draft) return;
     const sizes = sizesText.split(",").map((s) => s.trim()).filter(Boolean);
-    await save({ ...draft, sizes: sizes.length ? sizes : undefined });
+    await save({
+      ...draft,
+      sizes: sizes.length ? sizes : undefined,
+      category: draft.category?.trim() || undefined,
+    });
+  }
+
+  /** A category is just a word on its items — renaming it rewrites the word
+      on every item that carries it (no second document to drift). */
+  async function renameCategory(oldName: string, nextName: string) {
+    const next = nextName.trim();
+    setRenaming(null);
+    if (!items || !next || next === oldName) return;
+    for (const it of items.filter((i) => i.category?.trim() === oldName)) {
+      const res = await fetch("/api/admin/store", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...it, category: next }),
+      });
+      const data = await res.json().catch(() => ({ ok: false }));
+      if (!data.ok) {
+        setNote(data.reason ?? `rename stopped at "${it.title}" — check the shelf and try again`);
+        load();
+        return;
+      }
+    }
+    setCatFilter((c) => (c === oldName ? next : c));
+    load();
   }
 
   function openEditor(item: StoreItem) {
@@ -328,104 +394,194 @@ export default function StoreRoom() {
   if (!items) return <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>reading the shelf…</p>;
 
   const q = search.trim().toLowerCase();
-  const shown = q
-    ? items.filter((i) =>
-        [i.title, i.sku ?? "", i.id, KIND_WORD[i.kind]].some((s) => s.toLowerCase().includes(q)))
-    : items;
+  const cats = categoriesOf(items);
+  const shown = items.filter((i) => {
+    if (catFilter && i.category?.trim() !== catFilter) return false;
+    if (!q) return true;
+    return [i.title, i.sku ?? "", i.id, KIND_WORD[i.kind], i.category ?? ""]
+      .some((s) => s.toLowerCase().includes(q));
+  });
 
   const anyPartner = partners.printful || partners.fourthwall;
 
   return (
     <div className="p-2 text-sm">
       <SectionHead label={`${items.length} ${items.length === 1 ? "item" : "items"} on the shelf`} />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", margin: "0 0 12px" }}>
-        <input
-          placeholder="🔍 search the shelf…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ ...field, borderRadius: 999, padding: "9px 18px", flex: 1, minWidth: 170 }}
-        />
-        <a className="btn btn-ghost btn-sm" href="/store" target="_blank" rel="noreferrer">
-          Preview store
-        </a>
-        <button className="btn btn-sm" onClick={() => openEditor(BLANK)}>
-          + Add item
+      {/* TASK-145 — the ShinePages tabs: Items · Categories (derived, never stored) */}
+      <div style={{ display: "flex", gap: 8, margin: "0 0 12px" }}>
+        <button type="button" className="chip-select" aria-pressed={tab === "items"} onClick={() => setTab("items")}>
+          Items
+        </button>
+        <button type="button" className="chip-select" aria-pressed={tab === "categories"} onClick={() => setTab("categories")}>
+          Categories
         </button>
       </div>
 
-      {shown.length === 0 && (
-        <p style={{ color: "var(--muted)" }}>
-          {items.length === 0 ? "nothing on the shelf yet — add the first item ✨" : "nothing matches that search"}
-        </p>
-      )}
-      {shown.length > 0 && (
-        <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 8px", fontSize: ".86rem" }}>
-          <thead>
-            <tr>
-              {["", "Item", "Price", "Status", "Fulfilled by", ""].map((h, i) => (
-                <th key={i} style={{ fontSize: ".62rem", letterSpacing: ".1em", textTransform: "uppercase",
-                  color: "var(--muted)", textAlign: "left", padding: "0 10px 2px", fontWeight: 600 }}>{h}</th>
+      {tab === "items" && (
+        <>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", margin: "0 0 12px" }}>
+            <input
+              placeholder="🔍 search the shelf…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ ...field, borderRadius: 999, padding: "9px 18px", flex: 1, minWidth: 170 }}
+            />
+            <a className="btn btn-ghost btn-sm" href="/store" target="_blank" rel="noreferrer">
+              Preview store
+            </a>
+            <button className="btn btn-sm" onClick={() => openEditor(BLANK)}>
+              + Add item
+            </button>
+          </div>
+
+          {cats.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", margin: "0 0 12px" }}>
+              <span style={{ fontSize: ".68rem", color: "var(--muted)" }}>shelf by:</span>
+              {cats.map((c) => (
+                <button key={c.name} type="button" className="chip-select" aria-pressed={catFilter === c.name}
+                  onClick={() => setCatFilter(catFilter === c.name ? null : c.name)}>
+                  {c.name} · {c.count}
+                </button>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {shown.map((item) => {
-              const face = item.media?.images[0] ?? item.images[0];
-              const td: React.CSSProperties = {
-                background: "var(--glass)", padding: "10px 10px", verticalAlign: "middle",
-                borderTop: "1px solid rgba(255,255,255,.9)", borderBottom: "1px solid rgba(139,118,196,.18)",
-              };
-              return (
-                <tr key={item.id}>
-                  <td style={{ ...td, borderRadius: "14px 0 0 14px", borderLeft: "1px solid rgba(139,118,196,.18)", width: 54 }}>
-                    {face ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={face} alt="" style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover" }} />
-                    ) : (
-                      <span style={{ width: 44, height: 44, borderRadius: 10, display: "grid", placeItems: "center",
-                        background: "var(--lavender-soft)", color: "var(--field-ink)", fontSize: "1.1rem" }}>✦</span>
-                    )}
-                  </td>
-                  <td style={td}>
-                    <b style={{ display: "block", fontSize: ".92rem", color: "var(--ink-strong)" }}>{item.title}</b>
-                    <span style={{ fontSize: ".72rem", color: "var(--muted)" }}>
-                      {KIND_WORD[item.kind]}
-                      {item.sku && ` · №${item.sku}`}
-                      {item.sizes && item.sizes.length > 0 && ` · ${item.sizes.join(" ")}`}
-                      {item.media?.deliverable &&
-                        ` · +${item.media.deliverable.kind}${item.media.deliverable.blobPath ? " ✓" : " (no file)"}`}
-                    </span>
-                  </td>
-                  <td style={{ ...td, whiteSpace: "nowrap" }}>
-                    <span style={{ fontFamily: "var(--serif)", color: "var(--gold-deep)" }}>{priceWords(item)}</span>
-                    {item.sale?.sats != null && (
-                      <span style={{ display: "block", fontSize: ".68rem", color: "var(--err)" }}>
-                        sale {item.sale.sats.toLocaleString("en-US")} sats
-                      </span>
-                    )}
-                  </td>
-                  <td style={td}><StatusChip status={item.status} /></td>
-                  <td style={td}><FulfilledBy item={item} /></td>
-                  <td style={{ ...td, borderRadius: "0 14px 14px 0", borderRight: "1px solid rgba(139,118,196,.18)",
-                    whiteSpace: "nowrap", textAlign: "right" }}>
-                    <button onClick={() => openEditor(item)}
-                      style={{ background: "none", border: 0, cursor: "pointer", padding: "6px 4px", fontFamily: "inherit",
-                        fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em",
-                        color: "var(--info)" }}>
-                      edit
-                    </button>
-                    <button onClick={() => toggle(item, item.status === "live" ? "hidden" : "live")}
-                      style={{ background: "none", border: 0, cursor: "pointer", padding: "6px 4px", marginLeft: 6, fontFamily: "inherit",
-                        fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em",
-                        color: item.status === "live" ? "var(--muted)" : "var(--ok)" }}>
-                      {item.status === "live" ? "hide" : "go live"}
-                    </button>
-                  </td>
+            </div>
+          )}
+
+          {shown.length === 0 && (
+            <p style={{ color: "var(--muted)" }}>
+              {items.length === 0
+                ? "nothing on the shelf yet — add the first item ✨"
+                : catFilter
+                  ? `nothing in "${catFilter}"${q ? " matches that search" : ""}`
+                  : "nothing matches that search"}
+            </p>
+          )}
+          {shown.length > 0 && (
+            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 8px", fontSize: ".86rem" }}>
+              <thead>
+                <tr>
+                  {["", "Item", "Price", "Inventory", "Status", "Fulfilled by", ""].map((h, i) => (
+                    <th key={i} style={{ fontSize: ".62rem", letterSpacing: ".1em", textTransform: "uppercase",
+                      color: "var(--muted)", textAlign: "left", padding: "0 10px 2px", fontWeight: 600 }}>{h}</th>
+                  ))}
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {shown.map((item) => {
+                  const face = item.media?.images[0] ?? item.images[0];
+                  const td: React.CSSProperties = {
+                    background: "var(--glass)", padding: "10px 10px", verticalAlign: "middle",
+                    borderTop: "1px solid rgba(255,255,255,.9)", borderBottom: "1px solid rgba(139,118,196,.18)",
+                  };
+                  return (
+                    <tr key={item.id}>
+                      <td style={{ ...td, borderRadius: "14px 0 0 14px", borderLeft: "1px solid rgba(139,118,196,.18)", width: 54 }}>
+                        {face ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={face} alt="" style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover" }} />
+                        ) : (
+                          <span style={{ width: 44, height: 44, borderRadius: 10, display: "grid", placeItems: "center",
+                            background: "var(--lavender-soft)", color: "var(--field-ink)", fontSize: "1.1rem" }}>✦</span>
+                        )}
+                      </td>
+                      <td style={td}>
+                        <b style={{ display: "block", fontSize: ".92rem", color: "var(--ink-strong)" }}>{item.title}</b>
+                        <span style={{ fontSize: ".72rem", color: "var(--muted)" }}>
+                          {KIND_WORD[item.kind]}
+                          {item.category && ` · ${item.category}`}
+                          {item.sku && ` · №${item.sku}`}
+                          {item.sizes && item.sizes.length > 0 && ` · ${item.sizes.join(" ")}`}
+                          {item.media?.deliverable &&
+                            ` · +${item.media.deliverable.kind}${item.media.deliverable.blobPath ? " ✓" : " (no file)"}`}
+                        </span>
+                      </td>
+                      <td style={{ ...td, whiteSpace: "nowrap" }}>
+                        <span style={{ fontFamily: "var(--serif)", color: "var(--gold-deep)" }}>{priceWords(item)}</span>
+                        {item.sale && (
+                          <span style={{ display: "block", fontSize: ".68rem", color: "var(--err)" }}>
+                            sale {saleWords(item.sale)}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ ...td, whiteSpace: "nowrap" }}>
+                        {item.inventory != null ? (
+                          <span>
+                            {item.inventory} left
+                            {item.inventory === 0 && (
+                              <span style={{ display: "block", fontSize: ".68rem", color: "var(--err)" }}>sold out at 0</span>
+                            )}
+                          </span>
+                        ) : (
+                          <span style={{ color: "var(--muted)" }} title="unlimited">—</span>
+                        )}
+                      </td>
+                      <td style={td}><StatusChip status={item.status} /></td>
+                      <td style={td}><FulfilledBy item={item} /></td>
+                      <td style={{ ...td, borderRadius: "0 14px 14px 0", borderRight: "1px solid rgba(139,118,196,.18)",
+                        whiteSpace: "nowrap", textAlign: "right" }}>
+                        <button onClick={() => openEditor(item)}
+                          style={{ background: "none", border: 0, cursor: "pointer", padding: "6px 4px", fontFamily: "inherit",
+                            fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em",
+                            color: "var(--info)" }}>
+                          edit
+                        </button>
+                        <button onClick={() => toggle(item, item.status === "live" ? "hidden" : "live")}
+                          style={{ background: "none", border: 0, cursor: "pointer", padding: "6px 4px", marginLeft: 6, fontFamily: "inherit",
+                            fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em",
+                            color: item.status === "live" ? "var(--muted)" : "var(--ok)" }}>
+                          {item.status === "live" ? "hide" : "go live"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </>
+      )}
+
+      {tab === "categories" && (
+        cats.length === 0 ? (
+          <p style={{ color: "var(--muted)" }}>
+            no categories yet — give an item a category word (meditation, membership, ware, session…) and it appears here
+          </p>
+        ) : (
+          <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))" }}>
+            {cats.map((c) => (
+              <div key={c.name} style={editorCard}>
+                {renaming === c.name ? (
+                  <>
+                    <label style={{ ...fieldLabel, marginTop: 0 }}>rename “{c.name}” to</label>
+                    <input value={renameText} autoFocus
+                      onChange={(e) => setRenameText(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") void renameCategory(c.name, renameText); }}
+                      style={{ ...field, width: "100%" }} />
+                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                      <button className="btn btn-sm" onClick={() => void renameCategory(c.name, renameText)}>
+                        Rename
+                      </button>
+                      <button className="btn btn-ghost btn-sm" onClick={() => setRenaming(null)}>Cancel</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>{c.name}</b>{" "}
+                    <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>
+                      · {c.count} {c.count === 1 ? "item" : "items"}
+                    </span>
+                    <button onClick={() => { setRenaming(c.name); setRenameText(c.name); }}
+                      style={{ background: "none", border: 0, cursor: "pointer", padding: "6px 4px", marginLeft: 8,
+                        fontFamily: "inherit", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase",
+                        letterSpacing: ".05em", color: "var(--info)" }}>
+                      rename
+                    </button>
+                  </>
+                )}
+                <p style={fieldHint}>a category is a word on its items — renaming rewrites the word on each of them</p>
+              </div>
+            ))}
+          </div>
+        )
       )}
       {note && !draft && <p style={{ color: "var(--err)", fontSize: ".82rem" }}>{note}</p>}
 
@@ -485,6 +641,17 @@ export default function StoreRoom() {
                   <textarea value={draft.blurb} placeholder="a line or two in Love's voice"
                     onChange={(e) => setDraft({ ...draft, blurb: e.target.value })}
                     style={{ ...field, width: "100%", minHeight: 64, resize: "vertical" }} />
+                  <label style={fieldLabel}>category (optional)</label>
+                  <input value={draft.category ?? ""} list="oc-shelf-categories"
+                    placeholder="meditation, membership, ware, session…"
+                    onChange={(e) => setDraft({ ...draft, category: e.target.value || undefined })}
+                    style={{ ...field, width: "100%" }} />
+                  <datalist id="oc-shelf-categories">
+                    {cats.map((c) => <option key={c.name} value={c.name} />)}
+                  </datalist>
+                  <p style={fieldHint}>
+                    one word the shelf groups by — the Categories tab and the shelf chips are built from these
+                  </p>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ flex: 1, minWidth: 120 }}>
                       <label style={fieldLabel}>item № (optional)</label>
@@ -558,6 +725,7 @@ export default function StoreRoom() {
                         onChange={(e) =>
                           setDraft({ ...draft, price: { ...draft.price, sats: e.target.value ? Number(e.target.value) : undefined } })}
                         style={{ ...field, width: "100%" }} />
+                      <p style={fieldHint}>sats as a whole number</p>
                     </span>
                     <span style={{ flex: 1, minWidth: 120 }}>
                       <label style={{ ...fieldLabel, marginTop: 0 }}>price in USD</label>
@@ -569,13 +737,41 @@ export default function StoreRoom() {
                           setDraft({ ...draft, price: { ...draft.price,
                             fiat: e.target.value === "" ? undefined : { amount: Math.round(Number(e.target.value) * 100), currency: "USD" } } })}
                         style={{ ...field, width: "100%" }} />
+                      <p style={fieldHint}>USD as dollars and cents — 33.33 means $33.33</p>
+                    </span>
+                  </div>
+                  <p style={fieldHint}>
+                    one price is enough to go live — sats or USD. Both are your own numbers; neither is ever guessed from the other.
+                  </p>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ flex: 1, minWidth: 120 }}>
+                      <label style={fieldLabel}>sale in USD (optional)</label>
+                      <input type="number" step="0.01" min="0" inputMode="decimal"
+                        value={draft.sale?.fiat ? (draft.sale.fiat.amount / 100).toString() : ""} placeholder="—"
+                        onChange={(e) =>
+                          setDraft({ ...draft, sale: saleWith({ ...draft.sale,
+                            fiat: e.target.value === "" ? undefined : { amount: Math.round(Number(e.target.value) * 100), currency: "USD" } }) })}
+                        style={{ ...field, width: "100%" }} />
+                      <p style={fieldHint}>USD as dollars and cents</p>
                     </span>
                     <span style={{ flex: 1, minWidth: 120 }}>
-                      <label style={{ ...fieldLabel, marginTop: 0 }}>sale sats (optional)</label>
+                      <label style={fieldLabel}>sale sats (optional)</label>
                       <input type="number" value={draft.sale?.sats ?? ""} placeholder="—"
                         onChange={(e) =>
-                          setDraft({ ...draft, sale: e.target.value ? { sats: Number(e.target.value) } : undefined })}
+                          setDraft({ ...draft, sale: saleWith({ ...draft.sale,
+                            sats: e.target.value ? Number(e.target.value) : undefined }) })}
                         style={{ ...field, width: "100%" }} />
+                      <p style={fieldHint}>sats as a whole number</p>
+                    </span>
+                    <span style={{ flex: 1, minWidth: 120 }}>
+                      <label style={fieldLabel}>inventory (optional)</label>
+                      <input type="number" min="0" step="1" value={draft.inventory ?? ""} placeholder="blank = unlimited"
+                        onChange={(e) =>
+                          setDraft({ ...draft, inventory: e.target.value === "" ? undefined : Number(e.target.value) })}
+                        style={{ ...field, width: "100%" }} />
+                      <p style={fieldHint}>
+                        how many are on the shelf — each paid order counts it down and 0 marks it sold out; blank = unlimited
+                      </p>
                     </span>
                   </div>
                   <label style={fieldLabel}>status</label>
@@ -590,17 +786,22 @@ export default function StoreRoom() {
 
                 <div style={editorCard}>
                   <h4 style={cardHead}>Who fulfills it</h4>
+                  <label style={{ ...fieldLabel, marginTop: 0 }}>type — what it is</label>
                   <select
                     value={draft.kind}
                     onChange={(e) =>
                       setDraft({ ...draft, kind: e.target.value as StoreItem["kind"], fulfillment: e.target.value as StoreItem["kind"] })}
                     style={{ ...field, width: "100%" }}
                   >
-                    <option value="self">merch — Love packs &amp; ships it</option>
-                    <option value="digital">digital — instant download</option>
-                    <option value="package">package — membership tier</option>
-                    <option value="service">service — a booked session</option>
+                    <option value="self">ware — merch Love packs &amp; ships</option>
+                    <option value="digital">meditation / digital — instant download</option>
+                    <option value="package">membership — a tier that opens doors</option>
+                    <option value="service">session — a booked service</option>
+                    <option value="retreat">retreat seat — a place held</option>
                   </select>
+                  <p style={fieldHint}>
+                    the ShinePages words mapped onto the house kinds — the type decides how a paid order is filled
+                  </p>
                   {anyPartner && (
                     <>
                       <label style={fieldLabel}>drop-ship partner</label>
