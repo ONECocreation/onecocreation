@@ -67,6 +67,7 @@ export async function POST(request: Request) {
     itemId?: string;
     orderId?: string;
     size?: string;
+    qty?: number;
     discountCode?: string;
     contact?: { email?: string };
     shipping?: { name?: string; address?: string };
@@ -172,10 +173,16 @@ export async function POST(request: Request) {
       { status: 409 }
     );
   }
+  /* TASK-177 — the wares' quantity stepper (BuyPanel): the SAME clamp law as
+     the basket (/api/cart, 1..21); the snapshot is the LINE TOTAL (unit ×
+     qty), repriced before any discount, and the line carries qty so the
+     inventory countdown (recordChargeEvent) counts it down as it already
+     knows how */
+  const qty = Math.max(1, Math.min(21, Math.floor(body.qty ?? 1)));
   let snapshot: PriceSnapshot =
     !wantsCard && effective.sats != null
-      ? { amount: effective.sats, currency: "SATS", at: new Date().toISOString() }
-      : { amount: effective.fiat!.amount, currency: effective.fiat!.currency, at: new Date().toISOString() };
+      ? { amount: effective.sats * qty, currency: "SATS", at: new Date().toISOString() }
+      : { amount: effective.fiat!.amount * qty, currency: effective.fiat!.currency, at: new Date().toISOString() };
 
   // ── the discount, if offered (store-level; reprices BEFORE any invoice) ──
   let discountApplied: { code: string; originalAmount: number } | undefined;
@@ -192,7 +199,7 @@ export async function POST(request: Request) {
     id: newOrderId(),
     schemaVersion: 2,
     state: "created",
-    lineItems: [{ itemId: item.id, title: item.title, qty: 1, size: item.sizes?.length ? size : undefined }],
+    lineItems: [{ itemId: item.id, title: item.title, qty, size: item.sizes?.length ? size : undefined }],
     priceSnapshot: snapshot,
     adapterId: adapter.id,
     chargeIds: [],

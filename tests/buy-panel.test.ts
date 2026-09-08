@@ -40,6 +40,20 @@ const CATALOG = {
       fulfillment: "digital",
       status: "live",
     },
+    {
+      // TASK-177 — a ware with sizes, for the quantity stepper's checkout pin
+      id: "sacred-tee",
+      schemaVersion: 2,
+      title: "Sacred Geometry Tee",
+      blurb: "soft, made to order",
+      images: [],
+      media: { images: [] },
+      kind: "self",
+      sizes: ["S", "M", "L"],
+      price: { sats: 21000, fiat: { amount: 2200, currency: "USD" } },
+      fulfillment: "self",
+      status: "live",
+    },
   ],
 };
 
@@ -235,6 +249,50 @@ describe("POST /api/store/checkout — the rail's own sentence, never a silent 5
     expect(await card.json()).toEqual({ ok: false, reason: "card rail not connected" });
     // restore the live truth (btcpay OFF, square ON) for anything that runs after
     await saveSiteConfig({ payments: { btcpay: false, square: true } });
+  });
+});
+
+describe("TASK-177 — the wares' quantity stepper reaches the checkout (unit × qty, the basket's clamp law)", () => {
+  it("qty 3 on the card rail reprices the line total and the line carries the count", async () => {
+    squareRefuses = false;
+    const res = await checkout(
+      { itemId: "sacred-tee", size: "M", qty: 3, rail: "card" },
+      await frenCookie(),
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.ok).toBe(true);
+    const { getOrder } = await import("@/lib/store");
+    const order = await getOrder(data.orderId);
+    // the snapshot is the LINE TOTAL — 3 × $22, never the unit price
+    expect(order?.priceSnapshot.amount).toBe(6600);
+    expect(order?.priceSnapshot.currency).toBe("USD");
+    expect(order?.lineItems[0]).toMatchObject({ itemId: "sacred-tee", qty: 3, size: "M" });
+  });
+
+  it("qty is clamped to the basket's 1..21 law — 99 rides as 21", async () => {
+    squareRefuses = false;
+    const res = await checkout(
+      { itemId: "sacred-tee", size: "L", qty: 99, rail: "card" },
+      await frenCookie(),
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    const { getOrder } = await import("@/lib/store");
+    const order = await getOrder(data.orderId);
+    expect(order?.lineItems[0]?.qty).toBe(21);
+    expect(order?.priceSnapshot.amount).toBe(2200 * 21);
+  });
+
+  it("no qty field at all → the single-item shape is unchanged (backward-compatible)", async () => {
+    squareRefuses = false;
+    const res = await checkout({ itemId: "sacred-tee", size: "S", rail: "card" }, await frenCookie());
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    const { getOrder } = await import("@/lib/store");
+    const order = await getOrder(data.orderId);
+    expect(order?.lineItems[0]?.qty).toBe(1);
+    expect(order?.priceSnapshot.amount).toBe(2200);
   });
 });
 
