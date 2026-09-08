@@ -210,12 +210,13 @@ describe("TASK-162 — the door + the card's words", () => {
     expect(card).toContain('label: "ok"');
   });
 
-  it("the card rides /a/site beside the switches (source pin)", async () => {
-    const page = await read("src/app/a/site/page.tsx");
+  it("the card rides its own sub-room under the Site accordion (source pin)", async () => {
+    // TASK-188 (0018.06.18 a₿): the card moved from beside the switches to
+    // its own view at /a/site/community-door when the Site room became an
+    // accordion — same card, same words, new berth.
+    const page = await read("src/app/a/site/community-door/page.tsx");
     expect(page).toContain("<CommunityDoorCard />");
     expect(page.indexOf("Community door — what it needs before it opens")).toBeGreaterThan(-1);
-    // beside the switches: after the features list, before the payment rails
-    expect(page.indexOf("CommunityDoorCard")).toBeLessThan(page.indexOf("the payment rails ──"));
   });
 
   it("the invariants stay: the T-160 /classes gate and the T-137 header Community link (source pin)", async () => {
