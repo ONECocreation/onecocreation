@@ -19,7 +19,7 @@ export default function LoginPage() {
     <>
       <SiteHeader />
       <main>
-        <section className="keep-dark sky-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
+        <section className="keep-dark sky-veil login-galaxy" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
           <CosmicSky />
           <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "56px 22px 40px" }}>
             <p className="kicker" style={{ color: "var(--rose)" }}>Members</p>

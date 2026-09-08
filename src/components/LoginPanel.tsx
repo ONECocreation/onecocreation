@@ -372,7 +372,14 @@ export default function LoginPanel() {
               </div>
             </>
           ) : (
-            <EmailDoor bare />
+            <EmailDoor
+              bare
+              onSwitchToKey={() => {
+                doorChosen.current = true;
+                setDoor("key");
+                setError(null);
+              }}
+            />
           )}
         </div>
       )}
