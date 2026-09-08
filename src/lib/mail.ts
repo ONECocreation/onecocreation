@@ -186,6 +186,8 @@ export interface LetterSection {
   image?: string;
   href: string;
   blurb: string;
+  /** the card's door word — default "Open"; the house's old "Read More" retired (Admiral, 0018.06.17) */
+  door?: string;
 }
 
 export interface RichLetter {
@@ -233,7 +235,7 @@ export function richShell(letter: RichLetter): string {
       <td valign="top">
         <p style="margin:0 0 6px;font-size:17px;color:#2b2733;"><b>${c.title}</b></p>
         <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#6b6478;">${c.blurb}</p>
-        ${pill(c.href, "Read More")}
+        ${pill(c.href, c.door ?? "Open")}
       </td>
     </tr></table>
   </td></tr>`
@@ -259,8 +261,8 @@ export function richShell(letter: RichLetter): string {
   </td></tr>
   ${letter.heroUrl ? `<tr><td style="background:#0e0c18;"><a href="${site()}"><img src="${abs(letter.heroUrl)}" width="600" alt="" style="display:block;width:100%;"/></a></td></tr>` : ""}
   <tr><td style="padding:30px 34px 8px;font-size:15px;line-height:1.75;color:#2b2733;">${letter.bodyHtml}</td></tr>
-  ${cards ? `<tr><td style="padding:6px 34px 8px;"><p style="margin:14px 0 4px;font-size:24px;color:#2b2733;"><b>Check out</b></p><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cards}</table></td></tr>` : ""}
-  ${letter.cta ? `<tr><td align="center" style="padding:26px 34px 34px;"><p style="margin:0 0 14px;font-size:22px;color:#2b2733;"><b>Want to read more?</b></p>${pill(letter.cta.href, letter.cta.label, "lg")}</td></tr>` : ""}
+  ${cards ? `<tr><td style="padding:6px 34px 8px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cards}</table></td></tr>` : ""}
+  ${letter.cta ? `<tr><td align="center" style="padding:26px 34px 34px;">${pill(letter.cta.href, letter.cta.label, "lg")}</td></tr>` : ""}
   <tr><td bgcolor="#efe9df" style="background:#efe9df;padding:22px 34px;">
     <img src="${site()}/brand/onecocreation-mark-email.png" width="40" height="40" alt="✦" style="display:block;margin-bottom:8px;border:0;"/>
     <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#4a4458;">

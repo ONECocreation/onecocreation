@@ -77,7 +77,7 @@ describe("letterHtml() renders exactly the cards the words name — no shell-add
   it("`welcome`: one !section card (the free meditation) + one !cta (the Commons), nothing else", async () => {
     const { LETTER_DEFAULTS, letterHtml } = await letters();
     const html = letterHtml(LETTER_DEFAULTS.welcome!.body);
-    expect((html.match(/Read More/g) ?? []).length).toBe(1); // exactly one section card
+    expect((html.match(/>Open</g) ?? []).length).toBe(1); // exactly one section card
     expect(html).toContain('href="http://localhost:3000/meditation"');
     expect(html).toContain("Step into the Commons");
     expect(html).toContain('href="http://localhost:3000/classes"');
@@ -91,8 +91,8 @@ describe("letterHtml() renders exactly the cards the words name — no shell-add
   it("`welcome-day-two`: zero section cards, one !cta (memberships) — no 'little map of the field'", async () => {
     const { LETTER_DEFAULTS, letterHtml } = await letters();
     const html = letterHtml(LETTER_DEFAULTS["welcome-day-two"]!.body);
-    expect((html.match(/Read More/g) ?? []).length).toBe(0); // no section cards at all
-    expect(html).not.toContain("Check out"); // richShell's card-block heading never rides in
+    expect((html.match(/>Open</g) ?? []).length).toBe(0); // no section cards at all
+    expect(html).not.toContain("Check out"); expect(html).not.toContain("Want to read more"); // richShell's card-block heading never rides in
     expect(html).toContain("Step into the field");
     expect(html).toContain('href="http://localhost:3000/memberships"');
     // the two filler items the Admiral saw are gone
