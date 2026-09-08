@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { verifyCode, emailAuthConfigured } from "@/lib/email-auth";
+import { verifyCode, emailAuthConfigured, claimFirstSignIn } from "@/lib/email-auth";
 import { validEmail, addSubscriber } from "@/lib/subscribers";
-import { sendLeadMagnetLetter, enqueueDayTwoWelcome } from "@/lib/lead-magnet";
+import { sendLeadMagnetLetter, enqueueWelcomeLetter, enqueueDayTwoWelcome } from "@/lib/lead-magnet";
 import {
   makeFrenToken,
   sessionsFromRequest,
@@ -17,6 +17,15 @@ export const dynamic = "force-dynamic";
  * cookie, space "email"), so every signed-in check on the site just works.
  * The member also lands on the list (doctrine: members are opted in, the
  * off switch lives in their profile).
+ *
+ * TASK-156 (0018.06.17 a₿, Love's meeting: "if they login they get the
+ * newsletter, and a welcome, free meditation"): the FIRST sign-in pours the
+ * welcome — list source `welcome`, the `welcome` letter queued, and the
+ * free meditation ("Unzip Into the New You" — the house's one free item;
+ * no store entry is marked free, so the gift rides the lead-magnet letter
+ * that already delivers it). `claimFirstSignIn`'s SET NX marker answers
+ * once per email, so a repeat sign-in — or a raced double submit — never
+ * re-pours. Idempotent by construction.
  */
 export async function POST(request: Request) {
   if (!emailAuthConfigured()) {
@@ -34,16 +43,23 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { added } = await addSubscriber(email, "login");
-    // the JOIN door gives the same gift as the newsletter door (Love's walk
-    // found the gap, 0018.05.15): a genuinely-new soul gets the meditation
-    // letter now and the day-two welcome tomorrow
-    if (added) {
-      sendLeadMagnetLetter(email).catch((err) => console.error("join lead magnet failed:", err));
-      enqueueDayTwoWelcome(email).catch((err) => console.error("join day-two enqueue failed:", err));
-    }
+    /* the list write stands on every sign-in (members are opted in); the
+       record keeps the FIRST door's source, so a footer join stays "footer"
+       and a soul whose first door is sign-in reads "welcome" (TASK-156) */
+    await addSubscriber(email, "welcome");
   } catch {
     /* the session matters more than the list write */
+  }
+
+  try {
+    if (await claimFirstSignIn(email)) {
+      // FIRST sign-in only — the welcome, never on repeat (Love's meeting)
+      sendLeadMagnetLetter(email).catch((err) => console.error("first-sign-in meditation failed:", err));
+      enqueueWelcomeLetter(email).catch((err) => console.error("first-sign-in welcome failed:", err));
+      enqueueDayTwoWelcome(email).catch((err) => console.error("first-sign-in day-two failed:", err));
+    }
+  } catch {
+    /* a marker-vault hiccup never costs the session */
   }
 
   const prior = sessionsFromRequest(request)

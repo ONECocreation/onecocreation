@@ -22,14 +22,17 @@ export interface LetterOverride {
 export const EDITABLE_LETTERS = [
   "lead-magnet",
   "welcome-day-two",
+  "welcome",
   "news-sample",
   "offer-love-notify",
   "pwyc-accept",
   "pwyc-decline",
 ] as const;
-/** The SEEDED set — stays exactly these six (TASK-131). Letters Love composes
- *  herself live in the vault registry below; every reader that wants "all
- *  letters" goes through listLetterKeys(), never this constant alone. */
+/** The SEEDED set — six until TASK-156 (0018.06.17 a₿) added `welcome` (the
+ *  FIRST-sign-in letter Love edits in /a/letters); Love's own composed
+ *  letters still never touch this constant — they live in the vault registry
+ *  below, and every reader that wants "all letters" goes through
+ *  listLetterKeys(), never this constant alone. */
 export type LetterKey = (typeof EDITABLE_LETTERS)[number];
 
 /** TASK-131 (0018.06.16 a₿): a letter Love composes in the Letters room.
@@ -45,6 +48,8 @@ export interface ComposedLetterMeta {
 export const DEFAULT_AUDIENCE: Record<LetterKey, LetterAudience> = {
   "lead-magnet": "members",
   "welcome-day-two": "members",
+  // the first-sign-in welcome is one soul's mail — never the open feed
+  welcome: "members",
   "news-sample": "public",
   // the offer letters are one-soul mail — never the open feed
   "offer-love-notify": "members",
@@ -86,6 +91,22 @@ Yesterday you received your meditation; today is just a hello. This field is a g
 When you're ready: the memberships open the weekly rhythm, and the free meditation is yours forever either way.
 
 (PLACEHOLDER VOICE — awaiting Love's own words.)
+
+With love,
+One Cocreation`,
+  },
+  /* TASK-156 (0018.06.17 a₿): the FIRST-sign-in welcome — queued the moment
+   * a new member's first code matches. PLACEHOLDER VOICE: plain honest words
+   * until Love writes her own in /a/letters (her copy stays hers). */
+  welcome: {
+    subject: "Welcome home — One Cocreation",
+    body: `Welcome, beautiful soul.
+
+You're in — truly. Your free meditation, "Unzip Into the New You", is on its way to your inbox, and the reading room and the commons are open whenever you are.
+
+Come as you are. There is nothing to prove here, only a field to rest in.
+
+(PLACEHOLDER VOICE — awaiting Love's own words. Edit me in /a/letters.)
 
 With love,
 One Cocreation`,

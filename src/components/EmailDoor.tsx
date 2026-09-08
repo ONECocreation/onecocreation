@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { nextPathFromLocation } from "@/lib/next-path";
 
 /**
  * The email door (the Admiral's ask): sign in with just an inbox — a code
@@ -81,7 +82,11 @@ export default function EmailDoor({
       if (data.ok) {
         setStep("done");
         setNote("You're in — welcome home.");
-        setTimeout(() => window.location.assign("/me"), 900);
+        /* TASK-156 (0018.06.17 a₿): a `?next=` on the page (the free-reading
+           door's ?next=/rooms/weekly-reading) wins the landing — validated
+           same-origin only; none → /me, as ever (the bare /welcome usage
+           carries no next, so its walk is unchanged) */
+        setTimeout(() => window.location.assign(nextPathFromLocation() ?? "/me"), 900);
       } else {
         setNote(data.reason ?? "That code didn't match — try again.");
       }

@@ -28,10 +28,13 @@ export default function ClassesPage() {
         <section className="keep-dark sky-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
           <CosmicSky />
           <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "64px 22px 56px" }}>
-            <p className="kicker" style={{ color: "var(--rose)" }}>The Heartfield Commons</p>
+            {/* TASK-156 (0018.06.17 a₿, Love's meeting): the words "Heart Field
+                Commons" wear TEAL, "classes & community" wears PINK (the house
+                pink is --rose) — two token swaps, no new tokens. */}
+            <p className="kicker" style={{ color: "var(--teal-bright)" }}>The Heartfield Commons</p>
             <h1 className="stack-hero">
-              <span className="sh-ink" style={{ color: "var(--ink-strong)" }}>CLASSES &amp;</span>
-              <span className="sh-teal" style={{ color: "var(--teal-bright)" }}>COMMUNITY</span>
+              <span className="sh-ink" style={{ color: "var(--rose)" }}>CLASSES &amp;</span>
+              <span className="sh-teal" style={{ color: "var(--rose)" }}>COMMUNITY</span>
             </h1>
             <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
             <p style={{ color: "var(--ink-body)", fontSize: ".95rem", maxWidth: 520, margin: "18px auto 0" }}>
