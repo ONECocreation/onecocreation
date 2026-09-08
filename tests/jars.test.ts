@@ -1,6 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { promises as fs } from "fs";
 import path from "path";
+import { isolateCwd } from "./helpers/isolate-cwd";
+
+/**
+ * TASK-158 (0018.06.17 a₿) — this file's own throwaway cwd (see
+ * tests/helpers/isolate-cwd.ts) so `FILE` below — and every call the fs
+ * site-config driver makes off `process.cwd()` — never collides with
+ * site-config.test.ts or package-waitlist.test.ts running in the same
+ * file-parallel pass. Must run before `FILE` is computed.
+ */
+const { cleanup: cleanupCwd } = isolateCwd("oc-jars-");
 
 /**
  * TASK-134 (0018.06.17 a₿) — THE JARS FOLLOW THE SWITCHES. Pins:
@@ -49,6 +59,7 @@ afterEach(async () => {
 
 afterAll(async () => {
   await fs.rm(FILE, { force: true });
+  cleanupCwd();
 });
 
 function configureBtcpay() {
