@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import FrenBadge from "./FrenBadge";
+import DoorButton from "./door/DoorButton";
 import ThemeLantern from "./ThemeLantern";
 import NavMenu from "./NavMenu";
 import BasketChip from "./BasketChip";
@@ -32,7 +32,11 @@ export default function SiteHeader() {
         <div className="nav-tail">
           <ThemeLantern />
           {!underConsole && <BasketChip />}
-          <FrenBadge />
+          {/* TASK-185 Phase A prototype — the door chip: Log in opens the
+              small sheet under the button; signed in, the name opens the
+              member menu. FrenBadge stays in the tree, unreferenced (its
+              retirement is a Phase B ruling — unowned file, untouched). */}
+          <DoorButton />
         </div>
       </div>
     </header>
