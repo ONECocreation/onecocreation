@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { promises as fs } from "fs";
 import path from "path";
-import nextConfig from "../next.config";
 
 /**
  * TASK-175 (0018.06.17 a₿ · block 966094) — THE PAGE DESIGNER IS STYLE.
@@ -12,7 +11,7 @@ import nextConfig from "../next.config";
  *
  *  · (the Admiral, 0018.06.17: NO /studio redirect — there were no bookmarks; the old path simply 404s)
  *    /style/:path* — bookmarks and old letters keep working (behavioral:
- *    the config module is imported and its redirects() awaited);
+ *    (no config import needed any more);
  *  · the route folders really moved: src/app/style/** stands (catch-all,
  *    brand board, reference viewer), src/app/studio is gone, and the
  *    component folder is src/components/style with StyleEditor (the
@@ -33,7 +32,7 @@ import nextConfig from "../next.config";
  * The pages are async server components — never rendered in the node test
  * env — so the gate and word contracts are pinned off the SOURCE (the
  * house's read-the-source pattern, route-gates.test.ts /
- * sessions-style.test.ts). The redirect is pinned BEHAVIORALLY off the
+ * sessions-style.test.ts). The gate is pinned by reading the
  * real config module.
  */
 
