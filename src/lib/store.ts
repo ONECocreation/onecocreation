@@ -2,14 +2,18 @@ import { promises as fs } from "fs";
 import path from "path";
 import { put, get } from "@vercel/blob";
 import { blobStoreEnabled } from "./registry";
+import { createWithCatalog } from "./catalog-lock";
 
 /**
  * The store — catalog + orders (spec: docs/storefront-framework.md, S1).
  *
  * Storage:
  * - CATALOG: public by nature → the house dual-driver single-doc pattern
- *   (data/store-catalog.json in dev, store/catalog.json blob in prod;
- *   last-write-wins is an accepted, documented trade for a single operator).
+ *   (data/store-catalog.json in dev, store/catalog.json blob in prod).
+ *   Every MUTATION funnels through withCatalog() (catalog-lock.ts,
+ *   TASK-163, 0018.06.17 a₿) — a short KV lock in prod, a process-local
+ *   promise chain on the dev paths — so a settle beside an editor save
+ *   never loses a write.
  * - ORDERS: PII — the private-driver mandate applies. One record per order,
  *   create-if-not-exists (the registry.ts atomicity pattern), never in a
  *   public blob: files under data/store-orders/ in dev, KV (Upstash REST)
@@ -267,6 +271,20 @@ async function writeCatalog(doc: CatalogDoc): Promise<void> {
   await fs.rename(tmp, catalogFile());
 }
 
+/**
+ * TASK-163 (0018.06.17 a₿ · block 966080) — every catalog MUTATION rides
+ * this: withCatalog takes the write lock (KV `store:catalog:lock` in prod,
+ * the process-local chain on the dev paths), reads, mutates, writes,
+ * releases. No caller keeps its own read+write pair. (kv/vaultConfigured
+ * are function declarations below — hoisted, called only at runtime.)
+ */
+const withCatalog = createWithCatalog<CatalogDoc>({
+  read: readCatalog,
+  write: writeCatalog,
+  kv,
+  vaultConfigured,
+});
+
 export async function listItems(opts?: { includeHidden?: boolean }): Promise<StoreItem[]> {
   const { items } = await readCatalog();
   return opts?.includeHidden ? items : items.filter((i) => i.status !== "hidden");
@@ -359,21 +377,24 @@ export function validateItem(item: StoreItem): { ok: true } | { ok: false; reaso
 
 export async function upsertItem(item: StoreItem): Promise<StoreItem> {
   const normalized = migrateItem(item); // keeps the legacy images mirror in sync
-  const doc = await readCatalog();
-  const i = doc.items.findIndex((x) => x.id === normalized.id);
-  if (i >= 0) doc.items[i] = normalized;
-  else doc.items.push(normalized);
-  await writeCatalog(doc);
+  await withCatalog((doc) => {
+    const i = doc.items.findIndex((x) => x.id === normalized.id);
+    if (i >= 0) doc.items[i] = normalized;
+    else doc.items.push(normalized);
+    return doc;
+  });
   return normalized;
 }
 
 export async function removeItem(id: string): Promise<boolean> {
-  const doc = await readCatalog();
-  const before = doc.items.length;
-  doc.items = doc.items.filter((x) => x.id !== id);
-  if (doc.items.length === before) return false;
-  await writeCatalog(doc);
-  return true;
+  let removed = false;
+  await withCatalog((doc) => {
+    const before = doc.items.length;
+    doc.items = doc.items.filter((x) => x.id !== id);
+    removed = doc.items.length !== before;
+    return doc;
+  });
+  return removed;
 }
 
 /**
@@ -600,20 +621,21 @@ export async function recordChargeEvent(
   return order;
 }
 
-/** The settle hook's stock spend — additive, no fulfilment beyond the count. */
+/** The settle hook's stock spend — additive, no fulfilment beyond the count.
+ *  Rides withCatalog (TASK-163): two settles in the same instant serialize,
+ *  so a decrement is never lost to a concurrent write. */
 async function spendInventory(order: OrderRecord): Promise<void> {
   const counted = order.lineItems.filter((l) => Number.isInteger(l.qty) && l.qty > 0);
   if (counted.length === 0) return;
-  const doc = await readCatalog();
-  let changed = false;
-  for (const line of counted) {
-    const item = doc.items.find((i) => i.id === line.itemId);
-    if (!item || item.inventory == null) continue; // unlimited stays unlimited
-    item.inventory = Math.max(0, item.inventory - line.qty);
-    if (item.inventory === 0 && item.status === "live") item.status = "soldout";
-    changed = true;
-  }
-  if (changed) await writeCatalog(doc);
+  await withCatalog((doc) => {
+    for (const line of counted) {
+      const item = doc.items.find((i) => i.id === line.itemId);
+      if (!item || item.inventory == null) continue; // unlimited stays unlimited
+      item.inventory = Math.max(0, item.inventory - line.qty);
+      if (item.inventory === 0 && item.status === "live") item.status = "soldout";
+    }
+    return doc;
+  });
 }
 
 /** The artist's flip: settled → fulfilled (shipment sent / access granted). */
