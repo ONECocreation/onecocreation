@@ -12,9 +12,10 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
-    // T-147 seam 3 (Number One): three suites share data/site-config.json through process.cwd() and race
-    // under parallel workers (~1 in 2 full runs red). Serial files until the suites isolate their cwd (mkdtemp).
-    fileParallelism: false,
+    // T-147 seam 3 / TASK-158 (0018.06.17 a₿): the three suites that share
+    // data/site-config.json now isolate their own cwd (tests/helpers/
+    // isolate-cwd.ts) instead of racing over process.cwd() — fileParallelism
+    // rides the default again. Green ×10, see TASK-158's SUMMARY.md.
   },
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
