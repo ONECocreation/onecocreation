@@ -13,14 +13,24 @@ import path from "path";
  *    /style/:path* — bookmarks and old letters keep working (behavioral:
  *    (no config import needed any more);
  *  · the route folders really moved: src/app/style/** stands (catch-all,
- *    brand board, reference viewer), src/app/studio is gone, and the
- *    component folder is src/components/style with StyleEditor (the
- *    StudioEditor identifier is retired);
+ *    brand board, reference viewer), the designer's src/app/studio
+ *    catch-all is gone, and the component folder is src/components/style
+ *    with StyleEditor (the StudioEditor identifier is retired);
  *  · THE GATE FOLLOWS THE ROUTE: /style, /style/brand and
  *    /style/reference/[slug] each check operatorFromCookieHeader and
  *    render OperatorGate when no operator cookie — exactly the old
- *    /studio gate; the /a/studio console stub still gates, then hands
- *    off to /style;
+ *    /studio gate;
+ *
+ * RE-PIN (TASK-191, 0018.06.18 a₿ · block 966119 — the Admiral's GROUND
+ * ruling in the T-191 brief): the /a/studio word is reclaimed for the
+ * broadcast studio — T-175's thin redirect stub (src/app/a/studio/
+ * [[...slug]]/page.tsx) is DELETED (Next.js refuses a page beside the
+ * optional catch-all), so the two stub pins (its gate row, the hands-off-
+ * to-/style test) drop away. /style itself is untouched and stays pinned
+ * below; the new /a/studio room's own gate is pinned in
+ * tests/studio-overlay.test.ts. The "src/app/studio is gone" pin narrows
+ * to the DESIGNER's catch-all — T-191's overlay route legitimately lives
+ * at src/app/studio/overlay now.
  *  · THE WORD LAW: no Love-facing "Studio" word remains where it means
  *    the page designer — the editor badge reads STYLE, the Brand desk
  *    door reads "Edit the page · Style" and links /style, and no code
@@ -42,14 +52,15 @@ const exists = (rel: string) =>
   fs.stat(path.join(ROOT, rel)).then(() => true, () => false);
 
 /* every file that must carry no quoted /studio path any more (OWNS list:
-   the route folders, the designer components, the Brand desk, the /a
-   stub) */
+   the route folders, the designer components, the Brand desk). The /a
+   stub left this list with its deletion (T-191 re-pin above) — the new
+   /a/studio room is the broadcast studio and lawfully SPEAKS /studio
+   overlay paths. */
 const DESIGNER_FILES = [
   "src/app/style/[[...slug]]/page.tsx",
   "src/app/style/brand/page.tsx",
   "src/app/style/reference/[slug]/page.tsx",
   "src/app/style/layout.tsx",
-  "src/app/a/studio/[[...slug]]/page.tsx",
   "src/components/PuckEditor.tsx",
   "src/components/style/StyleEditor.tsx",
   "src/components/style/PagesPanel.tsx",
@@ -65,12 +76,15 @@ const DESIGNER_FILES = [
 const STUDIO_PATH = /["'`(]\/studio(\/|"|'|`|\?|$)/;
 
 describe("TASK-175 — the route folders moved", () => {
-  it("src/app/style stands with catch-all, brand board and reference viewer; src/app/studio is gone", async () => {
+  it("src/app/style stands with catch-all, brand board and reference viewer; the designer's src/app/studio catch-all is gone", async () => {
     expect(await exists("src/app/style/[[...slug]]/page.tsx")).toBe(true);
     expect(await exists("src/app/style/brand/page.tsx")).toBe(true);
     expect(await exists("src/app/style/reference/[slug]/page.tsx")).toBe(true);
     expect(await exists("src/app/style/layout.tsx")).toBe(true);
-    expect(await exists("src/app/studio")).toBe(false);
+    /* T-191 re-pin: the DESIGNER's old route shape stays gone — the
+       broadcast studio's overlay (src/app/studio/overlay) is not it */
+    expect(await exists("src/app/studio/[[...slug]]")).toBe(false);
+    expect(await exists("src/app/studio/page.tsx")).toBe(false);
   });
 
   it("src/components/style stands with StyleEditor; the studio folder and StudioEditor identifier are gone", async () => {
@@ -100,19 +114,12 @@ describe("TASK-175 — the operator gate protects /style identically", () => {
     "src/app/style/[[...slug]]/page.tsx",
     "src/app/style/brand/page.tsx",
     "src/app/style/reference/[slug]/page.tsx",
-    "src/app/a/studio/[[...slug]]/page.tsx",
   ])("%s: no operator cookie → OperatorGate, same as every /a room", async (rel) => {
     const src = await read(rel);
     expect(src).toContain("operatorFromCookieHeader");
     expect(src).toContain('from "@/lib/operator-auth"');
     expect(src).toContain("if (!operator)");
     expect(src).toContain("<OperatorGate configured={operatorsConfigured()} />");
-  });
-
-  it("the /a/studio console stub hands off to /style, preserving the slug", async () => {
-    const src = await read("src/app/a/studio/[[...slug]]/page.tsx");
-    expect(src).toContain("redirect(`/style${suffix}`)");
-    expect(src).not.toContain("redirect(`/studio");
   });
 });
 
