@@ -121,7 +121,7 @@ export default function CommunityDoorCard() {
           <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>
             {" "}— {communityOn ? "showing: the Community door, the home section and the rooms are open" : "hidden: the Community door stays closed"}.
             The rule: flip ON when every row above reads ok — {okCount} of {rows.length}{" "}
-            {okCount === 1 ? "reads" : "read"} ok right now.
+            {okCount === 1 ? "reads" : "read"}{" "}ok right now.
             Your call, always; this card only says what&apos;s missing.
           </span>
         </div>
