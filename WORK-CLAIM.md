@@ -1,43 +1,71 @@
-# WORK-CLAIM — TASK-163 (the catalog write never loses a race — the write lock)
+# WORK-CLAIM — TASK-162 (the Community door — what it needs before it opens, and the flip)
 
 CLAIMED-BY: **kimi** (Kimi Code CLI, guest builder lane for Pac)
 CLAIMED-AT: 0018.06.17 a₿ · block 966,080
-BRANCH: `feat/task-163-catalog-lock`
-WORKTREE: `~/dev/worktrees/task-163`
-BASE: main tip `45d1d59` (T-145 merged — spendInventory lives in store.ts).
-ROOM: `src/lib/store.ts`'s readCatalog()/writeCatalog() is a whole-document
-read-modify-write on KV key `store:catalog`. Two settles in the same
-instant (T-145's spendInventory) or an editor save beside a settle each
-read the same doc and the last writer wins — a lost inventory decrement or
-a lost edit. BUILD: NEW `src/lib/catalog-lock.ts` with `withCatalog(mutate)`
-— a short lock (KV `SET store:catalog:lock <token> NX PX 4000`, retry with
-jitter up to ~2 s, give up in words), read-mutate-write, release only if
-the token matches; on the file/blob dev paths a process-local promise
-chain is the lock. EVERY catalog mutation in store.ts (upsert, delete,
-status flips, spendInventory, the category rename path — which rides
-upsertItem per item) goes through it; no caller keeps its own read+write
-pair. No behaviour change otherwise.
-Does NOT touch `.env.local`, any port (no dev server needed), the
-operator's live processes, the live site/vault, the main checkout, any
-other lane's worktree, or any deployment.
+BRANCH: `feat/task-162-community-door`
+WORKTREE: `~/dev/worktrees/task-162`
+BASE: main tip `c861319` (T-161 seam 1 landed — the /a/site page carries the
+Videos on About card; this lane's card sits in the same neighbourhood).
+ROOM: `features.community` is OFF (H58) and nobody can say from the site
+what is still missing before Love flips the switch. BUILD: (1) NEW
+`src/lib/community-readiness.ts` — five probes, each live-or-dash, never
+invented, GET only, no secrets echoed: the Matrix homeserver answers
+(`/_matrix/client/versions`) · the house's Matrix identity on Love's
+homeserver resolves (whoami on the bot seat — the T-133 identity) · ≥1
+room in `rooms` is live (resolves on the homeserver's directory) · the
+meeting rail domain answers · the first-sign-in welcome letter (T-156)
+exists. Rows {name, state: ok|missing|unknown, words}. (2) A "Community
+door" card on /a/site beside the switches: the rows in plain words + the
+community switch itself with the rule "flip when every row is ok" AS WORDS
+— never a hard block, her call. (3) Switch-ON verification: with a fixture
+doc the Commons page renders the real rooms list, no NotOpenYet, and a
+room the homeserver says doesn't exist wears "opens soon" on its card
+(derive-or-dash: an unanswered probe says nothing, never invents).
+The header Community link (T-137 invariant) and the T-160 gate stay.
+Does NOT touch `.env.local`, the operator's live processes/ports, the
+live site/vault, the live homeserver (GET probes only — no Matrix writes),
+the main checkout, the concurrent task-167 worktree (a/money Cards card —
+disjoint files), or any deployment. Dev server on :3158 only, killed by
+recorded listener PID (`ss -tlnp`).
 LAW: LANE-CLAIM before building (K5 ruling 1). Commit at gates with BFT
 stamps. Never merge to main, never push, never archive. Never `git stash`
 (shared across worktrees). ENGLISH-PIN. No new dependencies. BFT dating in
-comments. Derive-or-dash — never a fake link, number or name.
+comments. Love design laws: no serif faces (house tokens only), contrast
+≥ 4.5:1, no color-only meaning. Derive-or-dash — never a fake link, number
+or name.
 
-Files this lane touches (the spec's OWNS list, nothing else):
+Files this lane touches (the spec's OWNS list, plus the forced additions
+flagged below):
 - `WORK-CLAIM.md` (this claim)
-- `src/lib/catalog-lock.ts` (NEW) — the withCatalog write lock
-- `src/lib/store.ts` — route the mutations through withCatalog only
-- `tests/catalog-lock.test.ts` (NEW) — the vitest pins with a fake kv
+- `src/lib/community-readiness.ts` (NEW) — the five probes
+- `src/components/console/CommunityDoorCard.tsx` (NEW) — the card
+- `src/app/a/site/page.tsx` — ONE card dropped beside the switches
+- `tests/community-readiness.test.ts` (NEW) — the vitest pins
+- FORCED ADDITIONS (OWNS exit 2, one-line justifications in SUMMARY.md):
+  NEW `src/app/api/admin/community-readiness/route.ts` (the card is a
+  client component — the probes are server-side; without an operator-gated
+  GET door the card's rows could only be invented) and, for the spec's
+  part (3) "a non-live room's card says opens soon",
+  `src/app/api/matrix/rooms/route.ts` (the feed gains a per-room live
+  marker from the homeserver's directory answers) +
+  `src/components/rooms/PackageRoomsCard.tsx` (a room the server says is
+  NOT there wears "— opens soon"; an unanswered probe adds nothing).
+  `src/app/classes/page.tsx` is NOT touched unless the ON path itself
+  proves broken (the T-160 gate already opens on either switch).
+  SPEC DISCREPANCY flagged in SUMMARY.md: the brief's "(the /a/site meet
+  probe already exists — reuse it)" — no meet probe exists anywhere in the
+  tree (searched); the meeting-domain probe is written fresh here on the
+  mempool-status idiom (operator-gated, honest fetch, bounded timeout).
 
-Brief: `~/dev/kimi/inbox/TASK-163-oc-catalog-write-lock.md`
+Brief: `~/dev/kimi/inbox/TASK-162-oc-community-door-readiness.md`
 (cut 0018.06.17 a₿ · block 966073)
-Gates: `npx vitest run` (base 281, must grow — two concurrent spends on
-inventory 3 × qty 2 end at 0 + soldout, never 1; an editor save during a
-settle keeps both changes; a lock timeout returns the honest error) ·
-`npm run lint` = 0/0 · `npx tsc --noEmit` · `npx next build` ·
-`node scripts/*.test.mjs` (calendar 70, cartridge 183, square-payments 36)
-· shots: NONE (no rendered surface — said so in SUMMARY.md) · SUMMARY.md
-in `~/dev/kimi/outbox/task-163/`, ending LANE-DONE + full sha.
+Gates: `npx vitest run` (base 304 at c861319, must grow — the readiness
+rows from fixture probes: all-ok / one-missing / unreachable→unknown, the
+card's words) · `npm run lint` = 0/0 · `npx tsc --noEmit` ·
+`npx next build` · `node scripts/*.test.mjs` (calendar 70, cartridge 183,
+square-payments 36) · shots: the card with rows in three states
+(fixtures), /classes with the switch ON, both themes, 1440 + 390 (harness
+per the task-148 outbox idiom — shoot.cjs + run-shots.sh, puppeteer by
+require-path, never a dependency) → `~/dev/kimi/outbox/task-162/shots/` ·
+SUMMARY.md in `~/dev/kimi/outbox/task-162/`, ending LANE-DONE + full sha.
 Questions → Number One.
