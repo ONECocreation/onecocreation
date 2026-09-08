@@ -3,6 +3,16 @@ import { promises as fs } from "fs";
 import path from "path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { isolateCwd } from "./helpers/isolate-cwd";
+
+/**
+ * TASK-158 (0018.06.17 a₿) — this file's own throwaway cwd (see
+ * tests/helpers/isolate-cwd.ts) so `SITE_CONFIG_FILE` below — and every
+ * call the fs site-config driver makes off `process.cwd()` — never
+ * collides with site-config.test.ts or jars.test.ts running in the same
+ * file-parallel pass. Must run before `SITE_CONFIG_FILE` is computed.
+ */
+const { cleanup: cleanupCwd } = isolateCwd("oc-package-waitlist-");
 
 /**
  * TASK-138 (0018.06.17 a₿) — the package buttons: "I'M INTERESTED", tagged
@@ -40,6 +50,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await fs.rm(SITE_CONFIG_FILE, { force: true });
+  cleanupCwd();
 });
 
 describe("SubscribeForm — the compact `label` door", () => {
