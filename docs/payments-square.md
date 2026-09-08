@@ -133,16 +133,52 @@ Offline, everything that doesn't need a real Square server is covered by
 
 `/a/money`'s Money Rails row used to show Square permanently stuck on a
 dead "soon" chip while an unwired Stripe key drawer sat live below it.
-That's fixed: `SquareRailCard.tsx` reads `squareAdapter.configured()` and
-shows either the exact `SQUARE_*` env vars to set, or (once configured) a
-bitcoin-enablement check against the merchant's own Square location
-(`squareBitcoinEnabled()` below). `SquareCatalogDesk.tsx` is the one-way
-Square-catalog-display admin surface — `src/lib/square-catalog.ts` reads
-Square's Catalog API (GET-only, never upserted into this store's own
-catalog, never synced back) and lets the operator pick which fetched
-items to keep an eye on here. Both are admin-desk-only; nothing here adds
-a Square item to the public storefront shelf — that's a bigger product
-call left for later.
+That's fixed by folding both into one card: `src/components/console/
+CardsRailCard.tsx` renders a single **Cards** card, the same width and
+frame as the Bitcoin card, with a Square section and a Stripe section
+underneath it (TASK-167, 0018.06.17 a₿ — the Admiral's walk of the Money
+desk).
+
+**Square section.** The **Test the connection** button comes first, above
+the checklist (`GET`/`POST /api/admin/store/square`), never below it. Under
+it, `deriveSquareRows()` renders the five `SQUARE_*` values as a per-row
+checklist, each row showing one of four marks — a check (set + verified),
+an empty box (not set), a dashed box (set but not provable yet), or a red
+mark with the error sentence beside it (set but failing) — and, in words
+beside the mark, where the value lives: "on Vercel", "in the vault", or
+"not set". Verification is honest per row:
+- the **access token** and **location ID** are proven together by the
+  desk's cached connection test (Square's own Locations call, the
+  location name it answers with);
+- the **environment** row is proven by which Square host answered
+  (`connect.squareup.com` = production, the sandbox host otherwise);
+- the **webhook signature key** and **webhook URL** rows cannot be proven
+  by a connection test at all — they read "waiting for Square's first
+  event…" until the webhook route itself has heard from Square. That
+  route (`src/app/api/store/webhook/square/route.ts`) stamps two KV
+  markers as the only source of truth for those two rows:
+  `square:webhook:last-verified` (a signature that matched) and
+  `square:webhook:last-rejected` (one that didn't, carrying the reason
+  sentence) — `deriveSquareRows()` reads whichever marker is newest.
+
+Every row that is not set (and a *failing vault* row, which needs a way to
+be fixed) folds open a "Set it here instead" paste-in — write-only, saved
+straight to the vault, live at once with no redeploy; a row already set on
+Vercel shows no input, since Vercel is the only place to fix it. The
+"Bitcoin on this Square location" check and the Square-catalog-display
+block from the card's earlier shape are gone — Square has no bitcoin
+purchase feature for a merchant's customers (the site's bitcoin rail is
+BTCPay, not Square), so that check could never verify anything true, and
+a Square-catalog admin surface is a Pac's Arcade feature, out of scope
+here (separation law).
+
+**Stripe section.** The same two-key vault drawer as before (a restricted
+API key, a webhook signing secret — write-only, shown back only as "saved
+✓" plus the date, never the value itself), folded under the Square
+section in the same card, with one honest line on top: the Stripe card
+rail is **not built yet** (`payments.stripe` is dark), so keys saved here
+simply wait in the vault until it ships — never "next build", always "not
+built yet".
 
 ## What's next (not in this port's scope)
 

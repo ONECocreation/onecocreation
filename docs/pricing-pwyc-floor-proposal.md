@@ -264,9 +264,9 @@ time, not for her materials.
    `src/app/terms/page.tsx:21` — points at the same BTCPay checkout.
    `getAdapter()` returns BTCPay or nothing (`src/lib/payments.ts:192-193`);
    Square and Stripe are interface shapes and comments (:6-7,:35). The
-   StripeRailCard at the money desk stores Love's keys in the vault, and
-   its own header says the adapter that spends them "ships next build"
-   (`src/components/console/StripeRailCard.tsx:10-12`). Until then,
+   Cards card's Stripe section at the money desk stores Love's keys in the
+   vault, and its own copy says the rail that spends them is "not built
+   yet" (`src/components/console/CardsRailCard.tsx:571-574`). Until then,
    "or dollars" means "BTCPay will convert for the buyer," not "we take
    cards."
 
