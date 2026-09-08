@@ -1,26 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 /**
- * WHO'S HERE — ONLINE ONLY (TASK-149, 0018.06.17 a₿, from Love's meeting:
- * the joined-roster list "looks like trash" — raw mxids and souls who left
- * days ago). The room's own `joined_members` still comes first (the exact
- * two-call shape RoomView.tsx proves: `/api/matrix/login` → resolve the
- * alias → `joined_members`), then each joined soul's presence is read from
- * the homeserver's own `/presence/{userId}/status` with the MEMBER'S OWN
- * token — the server answers because they share the room. Only souls the
- * server reports online, or last-seen within the last 5 minutes, wear a
- * chip. A server that won't say (presence disabled, lookup refused) simply
- * shows no chip for that soul — never an invented dot, never a joined
- * count dressed up as "here now". Derive-or-dash: an empty truth reads
- * "— nobody here yet".
+ * WHO'S HERE — ONLINE ONLY, ONE READ PER OPEN (TASK-184, 0018.06.18 a₿ ·
+ * the 429 hunt; born TASK-149 as the online-only roster). The roster +
+ * presence payload now arrives as a PROP: the room page reads it ONCE per
+ * open, server-side, with the bot's own seat (matrix.ts's roomRoster,
+ * per-request cached via rosterForRequest) — never again a per-mount
+ * browser burst of member-token logins + directory + joined_members + 24
+ * presence GETs, the fan-out the homeserver's rate limit answered 429 on.
+ * The online FILTER is unchanged and shared with Love's Desk
+ * (soulsOnline/isOnline below — the desk's RosterPanel runs the same pure
+ * helpers over its own route's payload).
  *
- * Every chip wears the soul's DISPLAY NAME (T-133's identity work keeps
- * those honest on the homeserver); a keyed member with no display name
- * shows their handle — the mxid's localpart — never the raw `@key-…:…`
- * string. Chips are keyed by mxid (the T-133 duplicate-key fix: two souls
- * may share a display name; mxids can't collide).
+ * THE 429 RULE (the ruling): a homeserver "too many requests" renders
+ * honest words — "the room is busy — try again in a moment" — never a
+ * blank room, never an invented roster. A gated visitor (the page skips
+ * the read, roster === null) sees the soft door line, as before.
+ * Derive-or-dash: an empty truth reads "— nobody here yet".
  */
 
 const ONLINE_WINDOW_MS = 5 * 60 * 1000;
@@ -40,6 +36,19 @@ export interface Soul {
   name: string;
 }
 
+/** The roster payload the room page hands down — the exact shape
+ *  matrix.ts's roomRoster returns (typed locally: matrix.ts is server-only,
+ *  and this leaf must stay client-importable). */
+export type RosterResult =
+  | {
+      ok: true;
+      count: number;
+      names: string[];
+      joined: Record<string, MemberInfo>;
+      presence: Record<string, PresenceInfo | null>;
+    }
+  | { ok: false; reason: string };
+
 /** `@ada:onecocreation.com` → `ada` — the handle a keyed member wears when
  *  no display name is set (never the raw mxid). */
 export function handleOf(mxid: string): string {
@@ -57,7 +66,7 @@ export function isOnline(p: PresenceInfo | null | undefined): boolean {
 }
 
 /** joined roster × presence answers → the chips, display-name first,
- *  alphabetical. Pure so tests/classroom-stage.test.ts pins it. */
+ *  alphabetical. Pure so tests pin it (classroom-stage / route-gates). */
 export function soulsOnline(
   joined: Record<string, MemberInfo>,
   presence: Record<string, PresenceInfo | null>,
@@ -71,82 +80,49 @@ export function soulsOnline(
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-type Status = "loading" | "signedout" | "locked" | "open" | "error";
-
-interface State {
-  status: Status;
-  souls: Soul[];
+/** The homeserver's rate-limit answer, whichever way it words it:
+ *  Synapse's errcode (M_LIMIT_EXCEEDED, status 429) or a bare "http 429"
+ *  from matrix.ts's call(). Pure — the fixture-429 test pins it. */
+export function isLimitReason(reason: string | undefined): boolean {
+  return !!reason && (/M_LIMIT_EXCEEDED/i.test(reason) || /\b429\b/.test(reason));
 }
 
-/** Presence is asked for at most this many souls per poll — a big room
- *  costs one bounded batch, never an unbounded fan-out. */
-const PRESENCE_CAP = 24;
+/** The 429 words, said once — the ruling's own sentence. */
+export const ROOM_BUSY_LINE = "the room is busy — try again in a moment";
 
-export default function RoomPresence({ alias }: { alias: string }) {
-  const [state, setState] = useState<State>({ status: "loading", souls: [] });
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const login = await fetch("/api/matrix/login", { method: "POST" }).catch(() => null);
-      if (!login) { if (alive) setState({ status: "error", souls: [] }); return; }
-      if (login.status === 401) { if (alive) setState({ status: "signedout", souls: [] }); return; }
-      const auth = (await login.json().catch(() => null)) as
-        | { ok?: boolean; homeserver?: string; accessToken?: string }
-        | null;
-      if (!auth?.ok || !auth.accessToken || !auth.homeserver) { if (alive) setState({ status: "error", souls: [] }); return; }
-      const headers = { Authorization: `Bearer ${auth.accessToken}` };
-      const dir = await fetch(`${auth.homeserver}/_matrix/client/v3/directory/room/${encodeURIComponent(alias)}`, { headers })
-        .then((r) => r.json()).catch(() => null) as { room_id?: string } | null;
-      const roomId = dir?.room_id;
-      if (!roomId) { if (alive) setState({ status: "error", souls: [] }); return; }
-      const res = await fetch(`${auth.homeserver}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/joined_members`, { headers });
-      if (res.status === 403) { if (alive) setState({ status: "locked", souls: [] }); return; }
-      if (!res.ok) { if (alive) setState({ status: "error", souls: [] }); return; }
-      const data = (await res.json().catch(() => ({}))) as { joined?: Record<string, MemberInfo> };
-      const joined = data.joined ?? {};
-      /* one bounded presence batch over the joined list: the homeserver
-         answers for souls who share a room with the asking member; a soul
-         the server won't speak for simply wears no chip */
-      const batch = Object.keys(joined).slice(0, PRESENCE_CAP);
-      const answers = await Promise.all(
-        batch.map(async (mxid) => {
-          const p = await fetch(
-            `${auth.homeserver}/_matrix/client/v3/presence/${encodeURIComponent(mxid)}/status`,
-            { headers },
-          ).then((r) => (r.ok ? r.json() : null)).catch(() => null) as PresenceInfo | null;
-          return [mxid, p] as const;
-        }),
-      );
-      if (!alive) return;
-      setState({ status: "open", souls: soulsOnline(joined, Object.fromEntries(answers)) });
-    })();
-    return () => { alive = false; };
-  }, [alias]);
+export default function RoomPresence({ roster }: { roster: RosterResult | null }) {
+  const souls = roster?.ok ? soulsOnline(roster.joined, roster.presence) : [];
 
   return (
     <div className="card" style={{ padding: "14px 18px" }}>
       <h3 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: ".98rem", margin: "0 0 10px", color: "var(--ink-strong)" }}>
         Who&apos;s here
       </h3>
-      {state.status === "loading" && <p style={{ color: "var(--muted)", fontSize: ".82rem", margin: 0 }}>counting souls…</p>}
-      {(state.status === "signedout" || state.status === "locked" || state.status === "error") && (
+      {/* the gate closed (no read taken) — the soft door line, as before */}
+      {roster === null && (
         <p style={{ color: "var(--muted)", fontSize: ".82rem", margin: 0 }}>opens once this room does, for you</p>
       )}
-      {state.status === "open" && (
+      {/* the homeserver's 429 — honest words, never a blank room */}
+      {roster !== null && !roster.ok && isLimitReason(roster.reason) && (
+        <p style={{ color: "var(--muted)", fontSize: ".82rem", margin: 0 }}>{ROOM_BUSY_LINE}</p>
+      )}
+      {roster !== null && !roster.ok && !isLimitReason(roster.reason) && (
+        <p style={{ color: "var(--muted)", fontSize: ".82rem", margin: 0 }}>who&apos;s here didn&apos;t answer — try again in a moment</p>
+      )}
+      {roster?.ok && (
         <>
-          {state.souls.length === 0 ? (
+          {souls.length === 0 ? (
             <p style={{ margin: 0, fontSize: ".82rem", color: "var(--muted)" }}>— nobody here yet</p>
           ) : (
             <>
               <p style={{ margin: "0 0 8px", fontSize: ".82rem", color: "var(--ink-body)" }}>
-                {state.souls.length} here now
+                {souls.length} here now
               </p>
               {/* aligned equal-height chips: the row stretches, the chip
                   centers its name; long names ellipsize rather than break
                   the row's height */}
               <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "stretch" }}>
-                {state.souls.map((s) => (
+                {souls.map((s) => (
                   <li
                     key={s.mxid}
                     title={s.name}

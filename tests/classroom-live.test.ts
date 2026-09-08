@@ -11,13 +11,12 @@ import { renderToStaticMarkup } from "react-dom/server";
  *    site's own space so a shared Jitsi host never collides two artists'
  *    rooms of the same slug.
  *  · RoomVideoSlot mounts the embed ONLY when live AND both jitsiDomain
- *    and liveRoom are supplied — the three unowned layouts (Materials/
- *    People/Stage) that don't thread these through yet keep rendering the
- *    original text-only door (tests/classroom-layouts.test.ts's existing
- *    "Join Live Session" pin stays true), and the dark (not-live) branch
- *    is byte-identical to before this lane touched the file.
- *  · VideoView passes jitsiDomain/liveRoom straight through to the slot
- *    (pass-through only, per this lane's OWNS).
+ *    and liveRoom are supplied — a caller that doesn't thread them keeps
+ *    rendering the original text-only door, and the dark (not-live) branch
+ *    is byte-identical to before the T-146 lane touched the file.
+ *  · StageView passes jitsiDomain/liveRoom straight through to the slot
+ *    (TASK-184: the Video layout won — the Stage is the slot's one mount;
+ *    the T-123 four-layout contract retired with its vantages).
  *  · Source-level pins: /live/page.tsx and the room page both call the
  *    ONE liveRoomName() helper (never invent a second `${space}-${slug}`
  *    join); RoomVideoSlot.tsx never imports "@/lib/live" directly (that
@@ -76,25 +75,28 @@ describe("RoomVideoSlot — the embed mounts only when fully addressable", () =>
   });
 });
 
-describe("VideoView — pass-through only", () => {
+describe("StageView — pass-through only (TASK-184: the Video layout won; the Stage mounts the slot)", () => {
   it("forwards jitsiDomain/liveRoom down to the slot", async () => {
-    const VideoView = (await import("@/components/rooms/VideoView")).default;
+    const StageView = (await import("@/components/rooms/StageView")).default;
     const dark = renderToStaticMarkup(
-      createElement(VideoView, { slug: "heart-field", alias: "#heart-field:onecocreation.com", title: "Heart Field", live: false }),
+      createElement(StageView, { slug: "heart-field", alias: "#heart-field:onecocreation.com", title: "Heart Field", kind: "community", live: false }),
     );
-    expect(dark).not.toContain("opening the room");
+    /* JitsiRoom's SSR holder marker — RoomView's chat says "opening the
+       room…" too, so the embed is told by its 18px holder, never by words */
+    expect(dark).not.toContain("border-radius:18px");
 
     const lit = renderToStaticMarkup(
-      createElement(VideoView, {
+      createElement(StageView, {
         slug: "heart-field",
         alias: "#heart-field:onecocreation.com",
         title: "Heart Field",
+        kind: "community",
         live: true,
         jitsiDomain: "meet.onecocreation.com",
         liveRoom: "onecocreation-heart-field",
       }),
     );
-    expect(lit).toContain("opening the room");
+    expect(lit).toContain("border-radius:18px"); // the Jitsi holder mounted
   });
 });
 
