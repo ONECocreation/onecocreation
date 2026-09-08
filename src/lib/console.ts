@@ -307,6 +307,17 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     tone: "cyan",
   },
   {
+    /* the STUDIO room (TASK-191) — the broadcast studio's desk: scenes, names,
+       the overlay URLs and the VDO links. Registered as Mr. Kim's seam 1
+       follow-through so /a/studio stops falling to the Overview fallback. */
+    key: "studio",
+    href: "/a/studio",
+    label: "STUDIO",
+    short: "STUDIO",
+    blurb: "the broadcast desk — scenes, names, the overlay and VDO links",
+    tone: "pink",
+  },
+  {
     /* TASK-135: the switches (TASK-129) reached only by a bare URL — no
        registry entry meant roomForPath() fell through every match all the
        way to its final fallback, which used to be the (houseOnly) DUTY

@@ -39,6 +39,7 @@ export const SITE_LABELS: Record<string, string> = {
   people: "People",
   money: "Money",
   brand: "Brand",
+  studio: "Studio",
   site: "Site",
 };
 
