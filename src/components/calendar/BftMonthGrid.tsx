@@ -28,6 +28,15 @@ export interface BftMonthGridProps {
   todayHeight?: number | null;
   /** the "28 days, always" legend row — default true */
   legend?: boolean;
+  /** TASK-189 (0018.06.18 a₿, cut from the T-184 review): a member never
+   *  sees blackout (the Circle's own marks already paint a blocked day as
+   *  plain — no wash, no mark — CircleView.tsx's buildPublicMarks), so the
+   *  legend must not NAME it for a member either — a legend swatch reading
+   *  "blackout" would tell a member a mechanism exists that nothing on
+   *  their screen ever shows. Default true: Love's own /a calendars
+   *  (console/LovesDesk.tsx) keep the blackout swatch unchanged — they
+   *  pass no prop here at all. Only the Circle passes false. */
+  legendBlackout?: boolean;
   className?: string;
 }
 
@@ -42,7 +51,7 @@ export interface BftMonthGridProps {
  */
 export default function BftMonthGrid({
   bftYear, bftMonth, primary: primaryProp, counts: countsProp,
-  marks, selectedBftKey, onSelectDay, nowMs, todayHeight, legend = true, className,
+  marks, selectedBftKey, onSelectDay, nowMs, todayHeight, legend = true, legendBlackout = true, className,
 }: BftMonthGridProps) {
   const prefs = useCalendarPrefs();
   const primary = primaryProp ?? prefs.primary;
@@ -79,7 +88,9 @@ export default function BftMonthGrid({
       </div>
       {legend && (
         <p className="cal-legend">
-          <span><span className="cal-legend__swatch cal-legend__swatch--blackout" />blackout</span>
+          {legendBlackout && (
+            <span><span className="cal-legend__swatch cal-legend__swatch--blackout" />blackout</span>
+          )}
           <span><span className="cal-legend__swatch cal-legend__swatch--multiday" />multi-day</span>
           <span><span className="cal-legend__swatch cal-legend__swatch--today" />today</span>
           <span>28 days, always — a₿ months never grow a day 29</span>

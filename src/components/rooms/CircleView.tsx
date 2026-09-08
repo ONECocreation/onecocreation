@@ -28,8 +28,13 @@ import PackageRoomsCard from "./PackageRoomsCard";
  *    classroom.css, so Love's own /a calendars keep their alignment.
  *  · MEMBERS NEVER SEE BLACKOUT TIME — a blocked day renders as a plain
  *    day here (no rose wash, no "blackout" mark, and no ~11:11 projection
- *    onto it — a live pill on a dark day would leak it). Love's own
- *    calendar on /a keeps the blackout (console/desk/marks.ts, untouched).
+ *    onto it — a live pill on a dark day would leak it). TASK-189
+ *    (0018.06.18 a₿): the legend follows — a member never sees the word
+ *    "blackout" named in the legend row either (BftMonthGrid's
+ *    legendBlackout={false} here); a member never sees blackout means the
+ *    legend never names it, not just the marks. Love's own calendar on /a
+ *    keeps both the blackout marks (console/desk/marks.ts, untouched) and
+ *    the legend swatch (LovesDesk.tsx passes no prop, default true).
  *    Retreats stay lavender — they were always member-visible.
  *  · THE GATE RIDES THE EVENTS (T-174's roomGate, threaded from the page):
  *    signed out → the sign-in door with the room's name; under-tier → the
@@ -194,7 +199,11 @@ export default function CircleView({
             <button type="button" className="btn-round" aria-label="next month" onClick={() => stepMonth(1)}>›</button>
             <CalendarOptions />
           </div>
-          <BftMonthGrid bftYear={bftYear} bftMonth={bftMonth} marks={marks} />
+          {/* TASK-189: a member never sees blackout — the marks already
+              paint a blocked day plain (buildPublicMarks above), and now
+              the legend doesn't NAME it either. Love's own /a calendar
+              (console/LovesDesk.tsx) passes no prop here and keeps it. */}
+          <BftMonthGrid bftYear={bftYear} bftMonth={bftMonth} marks={marks} legendBlackout={false} />
         </div>
       )}
 
