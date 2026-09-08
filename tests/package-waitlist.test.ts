@@ -123,8 +123,12 @@ describe("packageWaitlistProps — the home card's door, tagged by tier (TASK-13
 
 describe("Packages() home cards render — three compact doors, never the old giant sentence", () => {
   it("three 'I'm interested' buttons, three pre-list notes, none of the old cta sentence", async () => {
+    // TASK-187: Packages() is async now (it reads the memberships switch),
+    // so we await it to a plain element first — renderToStaticMarkup itself
+    // still never sees a promise, same "leaf components only" law as before.
     const { Packages } = await import("@/components/sections");
-    const html = renderToStaticMarkup(createElement(Packages));
+    const element = await Packages();
+    const html = renderToStaticMarkup(element);
     expect((html.match(/I&#x27;m interested/g) ?? []).length).toBe(3);
     expect((html.match(/Add me to the pre-list — pre-order coming soon\./g) ?? []).length).toBe(3);
     expect(html).not.toContain("add me to the list. Pre-order coming soon.");

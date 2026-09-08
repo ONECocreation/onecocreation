@@ -128,7 +128,14 @@ export function packageWaitlistProps(tier: "A" | "B" | "C", slug: string | undef
   };
 }
 
-export function Packages() {
+export async function Packages() {
+  /* TASK-187 GATE (0018.06.18 a₿ · block 966,104) — the home hero's package
+     doors follow the memberships switch, same visibility-only idiom as
+     Services()/Classes()/Affirmations() above: default ON, so this section
+     keeps rendering exactly as before until the switch flips OFF. */
+  const switches = await getSiteConfig();
+  if (!switches.features.memberships) return null;
+  /* end TASK-187 GATE */
   const cards = [
     { tier: "A" as const, accent: "a", img: cartridge.tierArt.A, feats: ["Live weekly meetup in Love's room — 4× a month", "Explore your Clair Senses through breath", "Meditations, toning, light language", "A held energetic field, in community"] },
     { tier: "B" as const, accent: "b", img: cartridge.tierArt.B, feats: ["Everything in Weekly Intuitive", "Weekly recorded reading + affirmations", "Weekly live meetup in Love's room", "Movement, meditation & navigation"] },

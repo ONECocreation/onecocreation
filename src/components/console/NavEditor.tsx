@@ -32,17 +32,26 @@ const FEATURE_LABELS: Record<keyof SiteConfig["features"], string> = {
   cuts: "ConsciousCuts",
   jars: "Tip jars",
   news: "News & letters",
+  // TASK-187 (minimal forced edit — load-bearing: PAGE_CATALOG now carries
+  // a `memberships` row and this file's own Record type would fail to
+  // compile without it): the label the "hidden by the X switch" note wears.
+  memberships: "Memberships",
 };
 
-function featureFor(href: string | undefined): keyof SiteConfig["features"] | undefined {
-  return PAGE_CATALOG.find((p) => p.href === href)?.feature;
+/** TASK-187: a route may need more than one switch ON now (PAGE_CATALOG's
+    `feature` can be one or several); this editor only reads the list, same
+    as buildMenu's own featuresForHref. */
+function featuresFor(href: string | undefined): (keyof SiteConfig["features"])[] {
+  const f = PAGE_CATALOG.find((p) => p.href === href)?.feature;
+  if (!f) return [];
+  return Array.isArray(f) ? f : [f];
 }
 
 /** hidden-by note, or null when the page is on (or switch-free) */
 function hiddenNote(features: SiteConfig["features"], href: string | undefined): string | null {
-  const f = featureFor(href);
-  if (!f) return null;
-  return features[f] ? null : `hidden by the ${FEATURE_LABELS[f]} switch`;
+  const off = featuresFor(href).filter((f) => !features[f]);
+  if (off.length === 0) return null;
+  return `hidden by the ${off.map((f) => FEATURE_LABELS[f]).join(" + ")} switch${off.length > 1 ? "es" : ""}`;
 }
 
 /** A row's own "is this actually hidden on the live site" note — mirrors
