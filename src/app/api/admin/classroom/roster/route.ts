@@ -9,9 +9,10 @@ export const dynamic = "force-dynamic";
  * Love's Desk roster rail (Week "who's here" / Day "roster tonight") —
  * honest joined-member count + display names, read with the bot's OWN
  * session (matrix.ts's roomRoster; the bot is already a member of every
- * one of Love's rooms). There is no presence API wired anywhere in this
- * house, so this is the whole honest truth: who has joined the room, not
- * who is online right now — no invented dots, per the recon's own rule.
+ * one of Love's rooms). TASK-160 (0018.06.17 a₿ · block 966,055): the
+ * single-room answer now also carries the joined map + the bot-token
+ * presence batch, so the desk's RosterPanel can run T-149's soulsOnline
+ * filter itself — who is HERE NOW, never an invented dot.
  */
 export async function GET(request: Request) {
   const operator = operatorFromCookieHeader(request.headers.get("cookie"));
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
   if (room) {
     const res = await roomRoster(room.id);
     return res.ok
-      ? NextResponse.json({ ok: true, room: roomSlug, count: res.count, names: res.names })
+      ? NextResponse.json({ ok: true, room: roomSlug, count: res.count, names: res.names, joined: res.joined, presence: res.presence })
       : NextResponse.json({ ok: false, reason: res.reason }, { status: 502 });
   }
 

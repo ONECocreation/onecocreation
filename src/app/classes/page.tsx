@@ -5,6 +5,8 @@ import CosmicSky from "@/components/CosmicSky";
 import RoomsShelf from "@/components/rooms/RoomsShelf";
 import CommunitySpotlight from "@/components/CommunitySpotlight";
 import PopupHost from "@/components/PopupHost";
+import NotOpenYet from "@/components/NotOpenYet";
+import { getSiteConfig } from "@/lib/site-config";
 import { cartridge } from "@/brand/cartridge";
 
 export const metadata: Metadata = {
@@ -19,7 +21,28 @@ export const dynamic = "force-dynamic";
  * sky (Admiral, 0018.05.15) — the mgmt wireframe robe retired, and the
  * "Chronicles of Wonderland" eyebrow with it (a Degen Wonderland remnant;
  * this house is the Heartfield). */
-export default function ClassesPage() {
+export default async function ClassesPage() {
+  /* ── TASK-160 GATE (0018.06.17 a₿ · block 966,055) — the route itself
+     follows the switches now, not just the nav: with `community` AND
+     `classes` both OFF (Love's streamlined default), a direct /classes URL
+     renders the shared NotOpenYet quiet panel (T-137) inside the site
+     chrome, never the rooms. Either switch ON opens the page. This branch
+     stays FIRST — the T-159 lane's Puck-first read lands right after it
+     (order: 1 gate → 2 Puck → 3 hand-built). ── */
+  const switches = await getSiteConfig();
+  if (!switches.features.community && !switches.features.classes) {
+    return (
+      <main>
+        <SiteHeader />
+        <NotOpenYet
+          title="The rooms aren't open yet"
+          body="Love's classes and community rooms are still being prepared — come back soon."
+        />
+        <SiteFooter />
+      </main>
+    );
+  }
+  /* ── end TASK-160 GATE ── */
   return (
     <>
       <SiteHeader />
