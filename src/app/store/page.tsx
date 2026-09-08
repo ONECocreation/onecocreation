@@ -8,6 +8,7 @@ import { listItems, stripPrivateMedia, type StoreItem } from "@/lib/store";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { cartridge } from "@/brand/cartridge";
 import { getSiteConfig } from "@/lib/site-config";
+import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 
 export const metadata: Metadata = {
   title: "Store — One Cocreation",
@@ -102,6 +103,9 @@ export default async function StorePage() {
   // panel only — T-148's card rewiring below is untouched. Panel pattern
   // ported from the home lane's stalled attempt, worktree task-137.)
   const switches = await getSiteConfig();
+  // T-157 seam (Number One): the shelf judges the rails the same way the item page does — warm, then judge
+  await ensureSquareVault();
+  const rails = { btc: liveAdapter() !== null, card: liveAdapter("square") !== null };
   if (!switches.features.store) {
     return (
       <main>
@@ -171,6 +175,7 @@ export default async function StorePage() {
                 <StoreItemCard
                   key={item.id}
                   item={item}
+                  rails={rails}
                   icon={group.icon}
                   href={doorFor(item)}
                   delay={(idx % 3) * 0.12}

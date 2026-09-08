@@ -87,6 +87,7 @@ export default function StoreItemCard({
   icon,
   href,
   delay = 0,
+  rails,
 }: {
   item: StoreItem;
   /** placeholder face when the item has no product shot */
@@ -94,10 +95,12 @@ export default function StoreItemCard({
   /** the full-view door — the item's own page, on both faces */
   href: string;
   delay?: number;
+  /** the live rails (T-157): the shelf judges them server-side and passes them down; absent = both live */
+  rails?: PriceRails;
 }) {
   const [flipped, setFlipped] = useState(false);
   const flip = () => setFlipped((f) => !f);
-  const m = storeCardModel(item);
+  const m = storeCardModel(item, rails);
 
   return (
     /* reveal rides its OWN wrapper (the session card's hard-won note): the
