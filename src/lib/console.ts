@@ -307,6 +307,17 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     tone: "cyan",
   },
   {
+    /* the GO-LIVE room (TASK-192) — one door on Love's desk, four ways in.
+       Registered as Mr. Kim's seam 1 follow-through, the same play as the
+       studio berth. */
+    key: "live",
+    href: "/a/live",
+    label: "GO LIVE",
+    short: "LIVE",
+    blurb: "the go-live door — the rooms, YouTube, today's calls, a guest",
+    tone: "pink",
+  },
+  {
     /* the STUDIO room (TASK-191) — the broadcast studio's desk: scenes, names,
        the overlay URLs and the VDO links. Registered as Mr. Kim's seam 1
        follow-through so /a/studio stops falling to the Overview fallback. */

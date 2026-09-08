@@ -24,11 +24,11 @@ describe("the site rail — one word each", () => {
     for (const r of rail) expect(r.houseOnly).toBeFalsy();
   });
 
-  it("carries the nine one-word labels, in order, ending with Site", async () => {
+  it("carries the ten one-word labels, in order, ending with Site", async () => {
     const { SITE_LABELS } = await import("@/components/console/SiteConsoleShell");
     const rail = [CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly);
     const labels = rail.map((r) => SITE_LABELS[r.key] ?? r.label);
-    expect(labels).toEqual(["Home", "Items", "Services", "Letters", "People", "Money", "Brand", "Studio", "Site"]);
+    expect(labels).toEqual(["Home", "Items", "Services", "Letters", "People", "Money", "Brand", "Live", "Studio", "Site"]);
   });
 
   it("registers /a/site, reachable and not house furniture", () => {
