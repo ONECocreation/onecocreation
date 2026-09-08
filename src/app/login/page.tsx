@@ -2,18 +2,20 @@ import type { Metadata } from "next";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
-import LoginPanel from "@/components/LoginPanel";
+import DoorSheet from "@/components/door/DoorSheet";
 import { cartridge } from "@/brand/cartridge";
 
 export const metadata: Metadata = {
   title: "Sign in — One Cocreation",
   description:
-    "Sign in with your key or your email — no passwords, nothing stored. New here? The welcome path is open.",
+    "Sign in with your email or your key — no passwords, nothing stored. New here? The door turns to meet you.",
 };
 
-/* The front door dressed in the house sky (Admiral, 0018.05.15) — the mgmt
- * wireframe robe retired; same celestial hero grammar as /welcome and the
- * commons. */
+/* The front door dressed in the house sky (Admiral, 0018.05.15).
+ * TASK-185 Phase B (ruled): the SAME door component the header's sheet
+ * mounts, shown full-page for the deep-link cases (`?next=`, the reading
+ * room's doors, the middleware's signed-out redirect) — one walk, two
+ * mounts, they never disagree. LoginPanel is retired (ruling 2). */
 export default function LoginPage() {
   return (
     <>
@@ -31,8 +33,8 @@ export default function LoginPage() {
           </div>
         </section>
         <section className="sky-night" style={{ padding: "40px 0 70px" }}>
-          <div className="wrap" style={{ maxWidth: 560 }}>
-            <LoginPanel />
+          <div className="wrap" style={{ maxWidth: 440 }}>
+            <DoorSheet mount="page" />
           </div>
         </section>
       </main>

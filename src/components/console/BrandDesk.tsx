@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import LoginPanel from "@/components/LoginPanel";
+import DoorSheet from "@/components/door/DoorSheet";
 import { SectionHead } from "@/components/console/glass";
 import { useBrandPalette } from "@/lib/use-brand-palette";
 import { BrandPaletteDesk } from "@/components/style/BrandBoard";
@@ -90,8 +90,10 @@ export default function BrandDesk() {
 
       {/* ── the real front door ── */}
       <SectionHead label="The real front door" />
-      <div style={{ border: "1px solid var(--glass-edge)", borderRadius: 16, overflow: "hidden" }}>
-        <LoginPanel />
+      <div style={{ border: "1px solid var(--glass-edge)", borderRadius: 16, overflow: "hidden", maxWidth: 440 }}>
+        {/* TASK-185 Phase B: LoginPanel is retired — the one door is the
+            sheet, mounted here exactly as /login mounts it */}
+        <DoorSheet mount="page" />
       </div>
 
       <p style={{ fontSize: ".78rem", color: "var(--muted)", marginTop: 18 }}>

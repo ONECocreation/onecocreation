@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import FrenBadge from "./FrenBadge";
+import DoorButton from "./door/DoorButton";
 import ThemeLantern from "./ThemeLantern";
 import NavMenu from "./NavMenu";
 import BasketChip from "./BasketChip";
@@ -32,7 +32,11 @@ export default function SiteHeader() {
         <div className="nav-tail">
           <ThemeLantern />
           {!underConsole && <BasketChip />}
-          <FrenBadge />
+          {/* TASK-185 Phase B — the door chip: Log in opens the small sheet
+              under the button; signed in, the name opens the member menu.
+              FrenBadge is retired (the Admiral's ruling 2), its known-by
+              rule carried into DoorButton. */}
+          <DoorButton />
         </div>
       </div>
     </header>

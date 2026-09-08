@@ -5,17 +5,18 @@ import CosmicSky from "@/components/CosmicSky";
 import WelcomeFlow from "@/components/welcome/WelcomeFlow";
 
 export const metadata: Metadata = {
-  title: "Join the Field — One Cocreation",
-  description: "Free membership in one breath — a discovery call credited toward your first session, the booking calendar, and Heartfield Commons.",
+  title: "Welcome home — One Cocreation",
+  description: "What's yours now — your discovery call, the free circle, the store. The post-sign-in page, one short walk from the door.",
 };
 
 export const dynamic = "force-dynamic";
 
 /**
- * /welcome — the two-breath front door (the Admiral's answers, 0018.05.15,
- * replacing the five-step wizard): join with an email, choose your names,
- * and you're in. The old wizard's remaining steps live on /me as the
- * constellation. Key folk take the quiet 🔑 door to /login.
+ * /welcome — the post-sign-in "what's yours now" page (TASK-185 Phase B,
+ * the Admiral's ruling 1, 0018.06.18 a₿): the URL keeps its place, linked
+ * from the member menu. The two-breath walk (join / code / names) is
+ * retired — the door sheet owns sign-up; a signed-out visitor is pointed
+ * at /login, never asked the same email twice.
  */
 export default function WelcomePage() {
   return (

@@ -1,4 +1,4 @@
-import LoginPanel from "@/components/LoginPanel";
+import DoorSheet from "@/components/door/DoorSheet";
 import SiteFooter from "@/components/SiteFooter";
 import { cartridge } from "@/brand/cartridge";
 
@@ -73,15 +73,16 @@ export default function BrandTester() {
         </div>
       </div>
 
-      {/* the real sign-in, wearing the cartridge — the same LoginPanel the
-          front door renders, reading the same cartridge.signIn */}
+      {/* the real sign-in, wearing the cartridge — the same DoorSheet the
+          front door renders (TASK-185 Phase B: LoginPanel is retired, the
+          one door lives in src/components/door/) */}
       <div className="border-t-2 border-edge p-6">
         <div className="mx-auto max-w-md">
           <p className="mb-5 text-center font-pixel text-[10px] uppercase tracking-widest text-white/40">
             ◆ THE FRONT DOOR, LIVE FROM THE CARTRIDGE
           </p>
+          <DoorSheet mount="page" />
         </div>
-        <LoginPanel />
       </div>
 
       <SiteFooter />
