@@ -15,11 +15,12 @@ import { effectivePalette, contrastRatio } from "@pacsarcade/puck-config/tokens"
 import { ONECOCREATION } from "@/brand/tokens";
 
 /**
- * BrandBoard — the brand's dressing room (/studio/brand, BRAND BOARD batch
- * 2026-08-14). One page where Love sees the WHOLE brand in both skins at
- * once and tunes the palette against real blocks:
+ * BrandBoard — the brand's dressing room (/style/brand, BRAND BOARD batch
+ * 2026-08-14; route renamed /studio/brand → /style/brand by TASK-175,
+ * 0018.06.17 a₿). One page where Love sees the WHOLE brand in both skins
+ * at once and tunes the palette against real blocks:
  *
- *   control rail (roll · save · reset · back to studio)
+ *   control rail (roll · save · reset · back to Style)
  *   ┌───────────── night pane ─────────────┬───────────── dawn pane ─────┐
  *   │ palette strip (click = eyedrop night)│ strip (click = dawn override)│
  *   │ <Render BOARD_SAMPLE/> (real blocks) │ same, in the light skin      │
@@ -27,7 +28,7 @@ import { ONECOCREATION } from "@/brand/tokens";
  *   └──────────────────────────────────────┴──────────────────────────────┘
  *
  * The panes are the SAME dual-theme mechanism as Preview & publish
- * (.oc-pv-dark / .oc-pv-light from studio/preview.css); the live-preview
+ * (.oc-pv-dark / .oc-pv-light from app/style/preview.css); the live-preview
  * <style> the useBrandPalette hook injects targets those scopes, so every
  * tweak lands in both panes instantly. Below the panes sits THE DRESSING
  * ROOM (S8, cartridge hardening; finished S9): the cartridge's non-CSS
@@ -740,10 +741,10 @@ export default function BrandBoard() {
   const { pal, dawn, dirty, busy, roll, clearDawn, eyedrop, save, reset } = useBrandPalette();
   const [shuffleN, setShuffleN] = useState(0);
 
-  function backToStudio() {
+  function backToStyle() {
     let slug = "";
     try { slug = sessionStorage.getItem("oc-last-slug") ?? ""; } catch { /* private mode */ }
-    window.location.assign(slug && slug !== "home" ? `/studio/${slug}` : "/studio");
+    window.location.assign(slug && slug !== "home" ? `/style/${slug}` : "/style");
   }
 
   const overrides = pal
@@ -785,9 +786,9 @@ export default function BrandBoard() {
           reset
         </button>
         <span style={{ flex: 1 }} />
-        <button onClick={backToStudio} title="back to the page you were editing"
+        <button onClick={backToStyle} title="back to the page you were editing"
           style={{ ...pill, background: "rgba(139,118,196,.22)", color: "var(--ink-strong)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */ }}>
-          ← back to studio
+          ← back to Style
         </button>
       </div>
 

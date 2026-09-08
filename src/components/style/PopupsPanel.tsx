@@ -68,7 +68,7 @@ export default function PopupsPanel({ pages, popups, storeReady, refresh, onClos
     const problem = popupNameProblem(name) ?? (names.includes(name) ? `'${name}' already exists` : null);
     if (problem) { setError(problem); return; }
     if (await act({ action: "popup-create", name })) {
-      window.location.assign(`/studio/${popupSlug(name)}`);
+      window.location.assign(`/style/${popupSlug(name)}`);
     }
   }
 
@@ -182,7 +182,7 @@ export default function PopupsPanel({ pages, popups, storeReady, refresh, onClos
           return (
             <div key={n} style={{ display: "flex", gap: 4, alignItems: "center", padding: "5px 2px",
               borderTop: "1px solid rgba(139,118,196,.15)" }}>
-              <a href={`/studio/${popupSlug(n)}`} title={`edit ${popupSlug(n)} in the canvas`}
+              <a href={`/style/${popupSlug(n)}`} title={`edit ${popupSlug(n)} in the canvas`}
                 style={{ flex: "none", fontFamily: MONO, fontSize: 12, color: "var(--puck-color-text-secondary)", textDecoration: "none" }}>{n}</a>
               <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 fontSize: 10.5, color: t.enabled ? "var(--oc-ok-text, var(--ok-soft))" /* S22 B4 — --ok-soft never flips; the cartridge's dawn ok does */ : "var(--puck-color-text-muted)" }}

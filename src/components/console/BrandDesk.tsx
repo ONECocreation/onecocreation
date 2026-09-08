@@ -14,7 +14,7 @@ import { contrastRatio } from "@pacsarcade/puck-config/tokens";
  * console: a cert foundry (a Pac's Arcade collectible system) and a
  * multi-theme tester (retired with the sign-in kit, S8 hardening,
  * 0018.05.26 — this brand has ONE cartridge). What's left, and what an
- * artist actually needs here: the five colours her Studio-built pages draw
+ * artist actually needs here: the five colours her Style-built pages draw
  * from (brand-palette.ts's p1-p5, the "promote-to-token" rail), a live
  * example so a hex isn't read blind, and the door to the full editor.
  *
@@ -27,12 +27,12 @@ import { contrastRatio } from "@pacsarcade/puck-config/tokens";
  * The header above this page and the sign-in panel below are the site's
  * OWN chrome — they wear the cartridge (space/cream/ink/rose/…), a
  * separate, fixed set from these five KV slots (one brand, one cartridge;
- * only Studio-built pages read p1-p5 today, via PaletteVars). Rendering
+ * only Style-built pages read p1-p5 today, via PaletteVars). Rendering
  * them here is the same honesty BrandTester always gave: "the actual
  * front door, wearing the cartridge" — not a claim that these slots
  * recolour it.
  *
- * Save/reset ride the SAME machinery the Studio's brand board uses
+ * Save/reset ride the SAME machinery the Style editor's brand board uses
  * (useBrandPalette → POST/GET /api/brand) — no new save path, no schema
  * change to brand-palette.ts, per this task's OWNS.
  */
@@ -68,7 +68,7 @@ export default function BrandDesk() {
     <div className="p-6" style={{ maxWidth: 900 }}>
       <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>Brand</h1>
       <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
-        The five colours your Studio-built pages draw from — edit a swatch and the example below
+        The five colours your Style-built pages draw from — edit a swatch and the example below
         moves with it.
       </p>
 
@@ -104,7 +104,7 @@ export default function BrandDesk() {
 
       <p style={{ fontSize: ".72rem", color: "var(--muted)", margin: "8px 0 0", maxWidth: 640 }}>
         The header above this desk and the sign-in below are the site&apos;s own — they wear the
-        cartridge, not these five slots (one brand, one cartridge; only Studio-built pages draw
+        cartridge, not these five slots (one brand, one cartridge; only Style-built pages draw
         from p1&ndash;p5).
       </p>
 
@@ -163,9 +163,9 @@ export default function BrandDesk() {
       </div>
 
       <p style={{ fontSize: ".78rem", color: "var(--muted)", marginTop: 18 }}>
-        For the full edit, open the Studio →{" "}
-        <Link href="/studio" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>
-          /studio
+        For the full edit:{" "}
+        <Link href="/style" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>
+          Edit the page · Style
         </Link>
         .
       </p>

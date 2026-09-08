@@ -41,7 +41,7 @@ community room where the attendees matter more than the content.
 ## Stage — the spotlight — `layout-stage-dark.png`
 
 The fourth of the restored four (named per git archaeology: "circle" is the
-shipped calendar vantage and "gallery" is the studio's image block, so the
+shipped calendar vantage and "gallery" is the Style editor.s image block, so the
 spotlight arrangement takes "stage"). The video owns the wide center stage
 and the materials and people rails flank it as two equal wings — the
 live-night arrangement, everything orbiting the screen.
