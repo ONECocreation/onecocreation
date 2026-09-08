@@ -10,7 +10,7 @@ import nextConfig from "../next.config";
  * Puck editor route /studio collided with "the studio" and moved to
  * /style. Pins:
  *
- *  · next.config.ts carries ONE PERMANENT redirect /studio/:path* →
+ *  · (the Admiral, 0018.06.17: NO /studio redirect — there were no bookmarks; the old path simply 404s)
  *    /style/:path* — bookmarks and old letters keep working (behavioral:
  *    the config module is imported and its redirects() awaited);
  *  · the route folders really moved: src/app/style/** stands (catch-all,
@@ -64,18 +64,6 @@ const DESIGNER_FILES = [
    href/assign/redirect call — prose mentions in rename comments don't
    match this */
 const STUDIO_PATH = /["'`(]\/studio(\/|"|'|`|\?|$)/;
-
-describe("TASK-175 — the redirect: /studio/* → /style/*, permanent", () => {
-  it("next.config carries exactly one redirect entry: /studio/:path* → /style/:path*, permanent", async () => {
-    expect(typeof nextConfig.redirects).toBe("function");
-    const redirects = await nextConfig.redirects!();
-    const hit = redirects.filter(
-      (r) => r.source === "/studio/:path*" && r.destination === "/style/:path*",
-    );
-    expect(hit).toHaveLength(1);
-    expect(hit[0].permanent).toBe(true);
-  });
-});
 
 describe("TASK-175 — the route folders moved", () => {
   it("src/app/style stands with catch-all, brand board and reference viewer; src/app/studio is gone", async () => {
