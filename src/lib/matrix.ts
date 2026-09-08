@@ -333,13 +333,37 @@ export async function setRoomPinnedEvent(
  * per-visitor login round trip needed, which is why this is safe to call
  * from an operator-only server route. `joined_members` hands back a
  * display_name per user in the SAME call, so honest names ride along for
- * free; there is no presence API wired anywhere in this house, so online
- * dots are never invented here (Love's Desk's roster rail, room-pins.ts's
- * sibling honesty rule).
+ * free. TASK-160 (0018.06.17 a₿ · block 966,055): presence is now read too
+ * — the homeserver's own `/presence/{userId}/status` with the bot's token,
+ * one bounded batch (the bot shares every room with every joined soul, so
+ * the server answers — the exact endpoint T-149's RoomPresence reads with a
+ * member's token). A soul the server won't speak for (presence disabled,
+ * lookup refused) carries `null` — never an invented dot. The online
+ * FILTER stays client-side (RoomPresence's exported soulsOnline/isOnline)
+ * so the desk and the room share one honest rule.
  */
+export interface RoomPresenceInfo {
+  presence?: string;
+  last_active_ago?: number;
+}
+
+/** Presence is asked for at most this many souls per call — a big room
+ *  costs one bounded batch, never an unbounded fan-out (RoomPresence's
+ *  PRESENCE_CAP, same bound). */
+const ROSTER_PRESENCE_CAP = 24;
+
 export async function roomRoster(
   alias: string,
-): Promise<{ ok: true; count: number; names: string[] } | { ok: false; reason: string }> {
+): Promise<
+  | {
+      ok: true;
+      count: number;
+      names: string[];
+      joined: Record<string, { display_name?: string }>;
+      presence: Record<string, RoomPresenceInfo | null>;
+    }
+  | { ok: false; reason: string }
+> {
   const id = await resolveRoom(alias);
   if (!id) return { ok: false, reason: "room not found on the homeserver" };
   const res = await call("GET", `/rooms/${encodeURIComponent(id)}/joined_members`);
@@ -348,5 +372,14 @@ export async function roomRoster(
   const names = Object.entries(joined).map(
     ([mxid, info]) => info.display_name || mxid.slice(1, mxid.indexOf(":")),
   );
-  return { ok: true, count: names.length, names };
+  /* one bounded presence batch over the joined list; a refused lookup is
+     null, and souls past the cap simply carry no presence (the desk reads
+     that as "the server won't say", never as offline-or-online) */
+  const answers = await Promise.all(
+    Object.keys(joined).slice(0, ROSTER_PRESENCE_CAP).map(async (mxid) => {
+      const p = await call("GET", `/presence/${encodeURIComponent(mxid)}/status`);
+      return [mxid, p.ok ? (p.data as RoomPresenceInfo) : null] as const;
+    }),
+  );
+  return { ok: true, count: names.length, names, joined, presence: Object.fromEntries(answers) };
 }

@@ -4,8 +4,10 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
 import ServiceCard from "@/components/ServiceCard";
+import NotOpenYet from "@/components/NotOpenYet";
 import { listServices } from "@/lib/booking";
 import { listItems } from "@/lib/store";
+import { getSiteConfig } from "@/lib/site-config";
 import { cartridge } from "@/brand/cartridge";
 
 export const metadata: Metadata = {
@@ -40,6 +42,26 @@ const imgFor = (id: string) => IMG.find(([re]) => re.test(id))?.[1] ?? cartridge
  * popup's rose (.btn-rose, the T-121 pair already proved ≥4.5:1).
  */
 export default async function BookIndexPage() {
+  /* ── TASK-160 GATE (0018.06.17 a₿ · block 966,055) — the route itself
+     follows the `sessions` switch now, not just the nav: sessions OFF (Love's
+     streamlined default) means a direct /book URL renders the shared
+     NotOpenYet quiet panel (T-137) inside the site chrome, never the shelf.
+     This branch stays FIRST — the T-159 lane's Puck-first read lands right
+     after it (order: 1 gate → 2 Puck → 3 hand-built). ── */
+  const switches = await getSiteConfig();
+  if (!switches.features.sessions) {
+    return (
+      <main>
+        <SiteHeader />
+        <NotOpenYet
+          title="Booking isn't open yet"
+          body="Love's session calendar is still being set up — check back soon, or write in from the contact page."
+        />
+        <SiteFooter />
+      </main>
+    );
+  }
+  /* ── end TASK-160 GATE ── */
   const services = await listServices();
   const shelfIds = new Set((await listItems()).map((i) => i.id));
 
