@@ -6,6 +6,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import ClassroomView from "@/components/rooms/ClassroomView";
 import { ROOMS } from "@/lib/matrix-rooms";
+import { rosterForRequest } from "@/lib/matrix";
 import { getPin } from "@/lib/room-pins";
 import { getSiteConfig } from "@/lib/site-config";
 import { liveRoomName } from "@/lib/live";
@@ -24,18 +25,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: `${room?.title ?? "Room"} — One Cocreation` };
 }
 
-/* C4: the Classroom Four — one room, three member vantages (Sanctuary /
- * Lesson Path / Circle, loves-desk-and-classroom-plan.md Lane ROOM) over
- * the same shipped chat rail (RoomView, unmodified). The pinned welcome is
- * read here — a server component, the cheapest honest path — and handed
- * down as a prop rather than an extra client round trip. */
+/* TASK-184 (0018.06.18 a₿): a classroom is THREE rooms — the Stage (the
+ * Video layout wins), the Lesson Path (recordings + Materials merged in),
+ * the Circle (the weekly view over the month). The Sanctuary and the
+ * separate Video/Materials/People vantages retired; vantage.ts resolves
+ * their stale picks to the Stage. The pinned welcome is read here — a
+ * server component, the cheapest honest path — and handed down as a prop
+ * rather than an extra client round trip. */
 export default async function RoomPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const room = bySlug(slug);
   if (!room) notFound();
 
   const pin = await getPin(slug);
-  /* TASK-146 minimal-forced-edit: the Video vantage's live embed needs the
+  /* TASK-146 minimal-forced-edit: the Stage's live embed needs the
    * site's own Jitsi domain and this room's namespaced room name — both
    * derive server-side (the switches read is server-only; live.ts's ONE
    * liveRoomName() helper is server-only too, see its docblock) and are
@@ -54,6 +57,17 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
   const visitorTier = session ? await tierForSubject(`${session.handle}@${session.space}`) : null;
   const door = roomGate(room.minTier, { signedIn: !!session, tier: visitorTier });
   const doorPackage = room.minTier === "all" ? null : TIERS[room.minTier].name;
+
+  /* TASK-184 · the 429 hunt: ONE roster/presence read per open, taken
+   * SERVER-SIDE with the bot's own seat (matrix.ts's roomRoster via
+   * rosterForRequest — React cache(), deduped per request) and threaded
+   * down as a plain prop. Before this, every vantage mount fired its own
+   * member-token burst (login → directory → joined_members → up to 24
+   * presence GETs) — the fan-out the homeserver's rate limit answered 429
+   * on at the Clair Senses Sanctuary. The gate rides first: a visitor the
+   * room is closed to costs the homeserver NOTHING (no read, roster null).
+   * A 429 answer renders honest words in RoomPresence, never a blank room. */
+  const roster = door === "open" ? await rosterForRequest(room.id) : null;
 
   return (
     <main className="mgmt-ground">
@@ -75,6 +89,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           liveRoom={liveRoomName(slug)}
           door={door}
           doorPackage={doorPackage}
+          roster={roster}
         />
       </section>
       <SiteFooter />

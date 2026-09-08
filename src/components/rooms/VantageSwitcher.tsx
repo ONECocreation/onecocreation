@@ -3,23 +3,18 @@
 import { useRoomVantage, type RoomVantage } from "./vantage";
 
 /**
- * The member-facing vantage control (loves-desk-and-classroom-plan.md,
- * "The Classroom Four"): Sanctuary · Lesson Path · The Circle, plus
- * TASK-123's restored four — Video · Materials · People · Stage — quiet,
- * near the room header — not a hero. Drives `useRoomVantage`'s shared,
- * per-user persisted state.
+ * The member-facing vantage control — ONE tab row, the three rooms the
+ * Admiral ruled (TASK-184, 0018.06.18 a₿): **Stage · Lesson Path · The
+ * Circle**, in this order, quiet near the room header — not a hero. The
+ * retired four (Sanctuary / Video / Materials / People) no longer list;
+ * a member's stale stored pick resolves to the Stage in vantage.ts
+ * (`resolveVantage`), never to a dead tab. Drives `useRoomVantage`'s
+ * shared, per-user persisted state.
  */
-/* TASK-149 minimal-forced-edit (justification: the tab ORDER lives in this
- * OPTIONS array, not in ClassroomView — the spec's "Stage becomes the FIRST
- * tab" can only land here): Stage leads, the rest keep their shipped order. */
 const OPTIONS: { id: RoomVantage; label: string }[] = [
   { id: "stage", label: "Stage" },
-  { id: "sanctuary", label: "Sanctuary" },
   { id: "lesson", label: "Lesson Path" },
   { id: "circle", label: "The Circle" },
-  { id: "video", label: "Video" },
-  { id: "materials", label: "Materials" },
-  { id: "people", label: "People" },
 ];
 
 export default function VantageSwitcher() {
