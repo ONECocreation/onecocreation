@@ -55,6 +55,8 @@ export const PAGE_CATALOG: { href: string; label: string; feature?: keyof SiteCo
   { href: "/memberships", label: "Memberships" },
   { href: "/packages", label: "Packages" },
   { href: "/store", label: "Store", feature: "store" },
+  { href: "/store/meditations", label: "Meditations shelf", feature: "store" },
+  { href: "/store/memberships", label: "Memberships shelf", feature: "store" },
   { href: "/book", label: "Book", feature: "sessions" },
   { href: "/services", label: "Services", feature: "cuts" },
   { href: "/classes", label: "Classes", feature: "classes" },
@@ -115,10 +117,17 @@ export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
          two buttons — Meditations and Memberships. The header itself stays
          the click-through door to the whole shelf (/store); store OFF still
          hides the header and its buttons with it. Plain routes (not #anchors)
-         so a seeded nav survives sanitize()'s KNOWN_NAV_HREFS round-trip. */
+         so a seeded nav survives sanitize()'s KNOWN_NAV_HREFS round-trip.
+         TASK-176 (0018.06.18 a₿): the buttons open the shelf's own filtered
+         routes now — Meditations → /store/meditations (the free meditation
+         rides there as a card), Memberships → /store/memberships. The old
+         /meditation button sent visitors to the gift page and they never
+         saw the paid shelf; saved navs that still say /meditation under the
+         Store header migrate on read in site-config.ts. The Community
+         header's "Free meditation" child keeps /meditation — it IS the gift. */
       subs: [
-        { label: "Meditations", href: "/meditation" },
-        { label: "Memberships", href: "/memberships" },
+        { label: "Meditations", href: "/store/meditations" },
+        { label: "Memberships", href: "/store/memberships" },
       ],
     });
   }
@@ -166,6 +175,23 @@ export function buildMenu(s: SiteConfig | null): MenuItem[] {
   return menu;
 }
 
+/** WHERE-YOU-ARE (Admiral, 0018.06.18 a₿ — TASK-176's pin): a header tab
+    is underlined ONLY when the page IS that tab — pathname === its own
+    href, never for a child. Before this, tabHere lit a parent for any of
+    its children too (mockup C's rule), so /memberships wore a constant
+    underline on the Store tab just because Memberships rides its submenu.
+    The child button keeps its own current mark (navChildHere below). Pure
+    and exported so tests pin the ruling without a DOM. */
+export function navTabHere(pathname: string, m: MenuItem): boolean {
+  return pathname === m.href;
+}
+
+/** A child's own current mark: its exact page, or one of its own sub-paths
+    (/book/xyz still marks a Book child). */
+export function navChildHere(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export default function NavMenu() {
   const [open, setOpen] = useState(false); // hamburger
   const [switches, setSwitches] = useState<SiteConfig | null>(null);
@@ -181,10 +207,10 @@ export default function NavMenu() {
 
   const menu = buildMenu(switches);
 
-  /* mockup C, blessed (Admiral, 0018.05.15): where-you-are wears the dawn —
-     a parent lights for its own page AND any of its children's */
-  const here = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
-  const tabHere = (m: MenuItem) => here(m.href) || (m.subs ?? []).some((s) => here(s.href));
+  /* where-you-are wears the dawn — the TASK-176 ruling: the TAB lights only
+     for its own page (never a child's); a CHILD keeps its own mark */
+  const here = (href: string) => navChildHere(pathname, href);
+  const tabHere = (m: MenuItem) => navTabHere(pathname, m);
 
   useEffect(() => {
     const close = (e: MouseEvent) => {

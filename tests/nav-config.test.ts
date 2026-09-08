@@ -43,6 +43,8 @@ let saveSiteConfig: (typeof import("@/lib/site-config"))["saveSiteConfig"];
 let defaultSiteConfig: (typeof import("@/lib/site-config"))["defaultSiteConfig"];
 let buildMenu: (typeof import("@/components/NavMenu"))["buildMenu"];
 let PAGE_CATALOG: (typeof import("@/components/NavMenu"))["PAGE_CATALOG"];
+let navTabHere: (typeof import("@/components/NavMenu"))["navTabHere"];
+let navChildHere: (typeof import("@/components/NavMenu"))["navChildHere"];
 let Affirmations: (typeof import("@/components/sections"))["Affirmations"];
 let resolveStaticMeetingUrl: (typeof import("@/app/meet/[bookingId]/page"))["resolveStaticMeetingUrl"];
 
@@ -69,7 +71,7 @@ beforeAll(async () => {
   delete process.env.REGISTRY_DRIVER;
   vi.stubGlobal("fetch", fakeFetch);
   ({ getSiteConfig, saveSiteConfig, defaultSiteConfig } = await import("@/lib/site-config"));
-  ({ buildMenu, PAGE_CATALOG } = await import("@/components/NavMenu"));
+  ({ buildMenu, PAGE_CATALOG, navTabHere, navChildHere } = await import("@/components/NavMenu"));
   ({ Affirmations } = await import("@/components/sections"));
   ({ resolveStaticMeetingUrl } = await import("@/app/meet/[bookingId]/page"));
 });
@@ -110,12 +112,18 @@ describe("buildMenu's default — Community is a header, not a switch", () => {
   it("store ON: the Store header carries Love's two buttons — Meditations and Memberships", () => {
     // Love's meeting (0018.06.17 a₿, RESUME NOTE): under the Store header,
     // two buttons; the header itself stays the click-through door to /store.
+    // TASK-176 (0018.06.18 a₿): the buttons open the shelf's own filtered
+    // routes — Meditations → /store/meditations, Memberships →
+    // /store/memberships. The free gift keeps /meditation under Community.
     const c = defaultSiteConfig();
     c.features.store = true;
     const store = buildMenu(c).find((m) => m.label === "Store");
     expect(store?.href).toBe("/store");
     expect(store?.subs?.map((s) => s.label)).toEqual(["Meditations", "Memberships"]);
-    expect(store?.subs?.map((s) => s.href)).toEqual(["/meditation", "/memberships"]);
+    expect(store?.subs?.map((s) => s.href)).toEqual(["/store/meditations", "/store/memberships"]);
+    // the Community header's Free meditation child keeps /meditation — it IS the gift
+    const community = buildMenu(c).find((m) => m.label === "Community");
+    expect(community?.subs?.find((s) => s.label === "Free meditation")?.href).toBe("/meditation");
     // store OFF hides the whole header, buttons with it
     expect(buildMenu(defaultSiteConfig()).map((m) => m.label)).not.toContain("Store");
   });
@@ -258,5 +266,73 @@ describe("resolveStaticMeetingUrl — the static rail's fallback", () => {
   it("neither set → null, never a fabricated link", () => {
     expect(resolveStaticMeetingUrl(undefined, "")).toBeNull();
     expect(resolveStaticMeetingUrl("", "  ")).toBeNull();
+  });
+});
+
+/* TASK-176 (0018.06.18 a₿ · block 966098) — the two pins below. */
+
+describe("TASK-176 — the Store header's read-migration", () => {
+  it("a saved nav whose Store header still says /meditation migrates on read to /store/meditations", async () => {
+    await getSiteConfig(); // establish lastKey before hand-writing the old-shape doc under it
+    kvStore.set(lastKey!, JSON.stringify({
+      features: { store: true },
+      nav: {
+        items: [
+          {
+            id: "/store", label: "Store", href: "/store",
+            children: [
+              { id: "/meditation", label: "Meditations", href: "/meditation" }, // the pre-T-176 default
+              { id: "/memberships", label: "Memberships", href: "/memberships" },
+            ],
+          },
+          {
+            id: "/classes", label: "Community", href: "/classes",
+            children: [{ id: "/meditation", label: "Free meditation", href: "/meditation" }],
+          },
+        ],
+      },
+    }));
+    const c = await getSiteConfig();
+    const store = c.nav?.items.find((i) => i.href === "/store");
+    // the Store header's Meditations child migrated…
+    expect(store?.children?.map((ch) => ch.href)).toEqual(["/store/meditations", "/memberships"]);
+    // …label and id are Love's, untouched
+    expect(store?.children?.[0].label).toBe("Meditations");
+    // the Community header's Free meditation child keeps /meditation — it IS the gift
+    const community = c.nav?.items.find((i) => i.label === "Community");
+    expect(community?.children?.[0].href).toBe("/meditation");
+    // and the migrated menu renders the shelf route through buildMenu
+    const menu = buildMenu(c);
+    expect(menu.find((m) => m.label === "Store")?.subs?.[0].href).toBe("/store/meditations");
+  });
+});
+
+describe("TASK-176 — the nav underline ruling (Admiral, 0018.06.17)", () => {
+  const storeTab = {
+    label: "Store",
+    href: "/store",
+    subs: [
+      { label: "Meditations", href: "/store/meditations" },
+      { label: "Memberships", href: "/store/memberships" },
+    ],
+  };
+
+  it("a header tab is underlined ONLY when the page IS that tab — never for a child", () => {
+    expect(navTabHere("/store", storeTab)).toBe(true);
+    // the Admiral's case: /memberships must NOT light the Store tab
+    expect(navTabHere("/memberships", storeTab)).toBe(false);
+    // nor do the shelf's own filtered routes or an item page
+    expect(navTabHere("/store/meditations", storeTab)).toBe(false);
+    expect(navTabHere("/store/memberships", storeTab)).toBe(false);
+    expect(navTabHere("/store/some-item", storeTab)).toBe(false);
+    expect(navTabHere("/", storeTab)).toBe(false);
+  });
+
+  it("the child button keeps its own current mark (exact page or its own sub-path)", () => {
+    expect(navChildHere("/store/meditations", "/store/meditations")).toBe(true);
+    expect(navChildHere("/memberships", "/memberships")).toBe(true);
+    expect(navChildHere("/book/xyz", "/book")).toBe(true); // a child's own sub-path still marks it
+    expect(navChildHere("/store", "/store/meditations")).toBe(false);
+    expect(navChildHere("/memberships", "/store/memberships")).toBe(false);
   });
 });
