@@ -46,9 +46,11 @@ const { cleanup: cleanupCwd } = isolateCwd("oc-route-gates-");
 const read = (rel: string) => fs.readFile(path.join(ROOT, rel), "utf8");
 
 /** The clearly-delimited gate branch (the T-159 contract marker). */
-function gateBlock(src: string): string {
-  const start = src.indexOf("TASK-160 GATE");
-  const end = src.indexOf("end TASK-160 GATE");
+/** TASK-187: parameterized so a later lane's own marker (e.g. "TASK-187
+    GATE") reuses this helper instead of forking a near-identical copy. */
+function gateBlock(src: string, marker: string = "TASK-160 GATE"): string {
+  const start = src.indexOf(marker);
+  const end = src.indexOf(`end ${marker}`);
   expect(start, "gate marker missing").toBeGreaterThan(-1);
   expect(end, "gate end marker missing").toBeGreaterThan(start);
   return src.slice(start, end);
@@ -142,6 +144,26 @@ describe("TASK-160 — the switches the gates read (behavioral, isolated cwd)", 
     expect(!next.features.community && !next.features.classes).toBe(false);
     await fs.rm(FILE, { force: true });
   });
+
+  // TASK-187 (0018.06.18 a₿ · block 966,104): memberships is the odd one
+  // out among the gated switches above — it defaults ON, not OFF, so
+  // /memberships and /packages/[slug] stand open out of the box.
+  it("no stored doc → memberships is ON out of the box (unlike the streamlined-OFF switches above)", async () => {
+    const s = await getSiteConfig();
+    expect(s.features.memberships).toBe(true);
+  });
+
+  it("a stored doc flipping memberships OFF closes the gate condition; back ON reopens it", async () => {
+    const s = await getSiteConfig();
+    await fs.writeFile(FILE, JSON.stringify({ ...s, features: { ...s.features, memberships: false } }), "utf8");
+    const off = await getSiteConfig();
+    expect(off.features.memberships).toBe(false);
+    expect(!off.features.memberships).toBe(true); // the /memberships and /packages gate condition, closed
+    await fs.writeFile(FILE, JSON.stringify({ ...off, features: { ...off.features, memberships: true } }), "utf8");
+    const on = await getSiteConfig();
+    expect(!on.features.memberships).toBe(false); // reopened
+    await fs.rm(FILE, { force: true });
+  });
 });
 
 describe("TASK-160 — Love's Desk roster shows who is here NOW", () => {
@@ -186,5 +208,73 @@ describe("TASK-160 — Love's Desk roster shows who is here NOW", () => {
     const src = await read("src/app/api/admin/classroom/roster/route.ts");
     expect(src).toContain("joined: res.joined");
     expect(src).toContain("presence: res.presence");
+  });
+});
+
+/**
+ * TASK-187 (0018.06.18 a₿ · block 966,104) — THE MEMBERSHIPS SWITCH.
+ * "I didn't see a way to turn on and off the memberships" (the Admiral).
+ * Pins, same house idiom as the TASK-160 block above:
+ *
+ *  · /memberships and /packages/[slug] each gate on `!switches.features.
+ *    memberships`, FIRST branch, to the shared NotOpenYet panel inside the
+ *    site chrome — /memberships ahead of its own Puck-first read (T-159
+ *    order: 1 gate → 2 Puck → 3 hand-built), /packages/[slug] ahead of its
+ *    slug lookup (this route carries no Puck branch: 1 gate → 2 hand-built);
+ *  · the switch defaults ON (Love's own offer, the streamlined site's
+ *    centerpiece) — unlike community/classes/sessions/store, a stored doc
+ *    is not needed to see the surface;
+ *  · flipping it OFF in a stored doc closes both gates; back ON reopens them.
+ */
+describe("TASK-187 — the memberships switch gates its two routes", () => {
+  it("/memberships: the gate reads the switch and returns the shared panel", async () => {
+    const gate = gateBlock(await read("src/app/memberships/page.tsx"), "TASK-187 GATE");
+    expect(gate).toContain("getSiteConfig");
+    expect(gate).toContain("!switches.features.memberships");
+    expect(gate).toContain("NotOpenYet");
+    expect(gate).toContain("<SiteHeader />");
+    expect(gate).toContain("<SiteFooter />");
+  });
+
+  it("/memberships: the gate is the page's FIRST branch — ahead of the Puck-first read", async () => {
+    const src = await read("src/app/memberships/page.tsx");
+    expect(src).toContain("export default async function MembershipsPage()");
+    expect(src.indexOf("TASK-187 GATE")).toBeLessThan(src.indexOf('await getPuckPage("memberships")'));
+  });
+
+  it("/packages/[slug]: memberships OFF → NotOpenYet inside the site chrome, ahead of the slug lookup", async () => {
+    const src = await read("src/app/packages/[slug]/page.tsx");
+    const gate = gateBlock(src, "TASK-187 GATE");
+    expect(gate).toContain("getSiteConfig");
+    expect(gate).toContain("!switches.features.memberships");
+    expect(gate).toContain("NotOpenYet");
+    expect(gate).toContain("<SiteHeader />");
+    expect(gate).toContain("<SiteFooter />");
+    // scoped to the default export — generateMetadata above it also awaits
+    // params, so a bare global indexOf would find the wrong occurrence
+    const fnStart = src.indexOf("export default async function TierPage");
+    expect(fnStart).toBeGreaterThan(-1);
+    const body = src.slice(fnStart);
+    expect(body.indexOf("TASK-187 GATE")).toBeLessThan(body.indexOf("await params"));
+    expect(body.indexOf("TASK-187 GATE")).toBeLessThan(body.indexOf("tierPageBySlug(slug)"));
+  });
+
+  it("both gated routes import and return the SHARED NotOpenYet — one component, one voice", async () => {
+    for (const rel of ["src/app/memberships/page.tsx", "src/app/packages/[slug]/page.tsx"]) {
+      expect(await read(rel), rel).toContain('from "@/components/NotOpenYet"');
+    }
+  });
+});
+
+
+import { readFileSync as _rf } from "node:fs";
+describe("T-187 follow-through — the footer and the Related row follow the Memberships switch", () => {
+  it("the footer's Memberships link is gated on features.memberships", () => {
+    const src = _rf("src/components/SiteFooter.tsx", "utf8");
+    expect(src).toContain('switches?.features.memberships !== false && <Link href="/memberships">');
+  });
+  it("the item page's catalog drops package items when memberships is OFF", () => {
+    const src = _rf("src/app/store/[id]/page.tsx", "utf8");
+    expect(src).toContain('switches.features.memberships !== false || i.kind !== "package"');
   });
 });

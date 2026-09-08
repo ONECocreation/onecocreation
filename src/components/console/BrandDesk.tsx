@@ -3,26 +3,25 @@
 import Link from "next/link";
 import LoginPanel from "@/components/LoginPanel";
 import { SectionHead } from "@/components/console/glass";
-import { useBrandPalette, PALETTE_KEYS, SLOT_LABELS, type PaletteKey } from "@/lib/use-brand-palette";
-import { ONECOCREATION } from "@/brand/tokens";
+import { useBrandPalette } from "@/lib/use-brand-palette";
+import { BrandPaletteDesk } from "@/components/style/BrandBoard";
 import { cartridge } from "@/brand/cartridge";
-import { contrastRatio } from "@pacsarcade/puck-config/tokens";
 
 /**
- * BrandDesk (TASK-135) — the /a/brand room, replacing the old DRESSING
- * ROOM. That page mixed two things that don't belong on an artist's own
- * console: a cert foundry (a Pac's Arcade collectible system) and a
- * multi-theme tester (retired with the sign-in kit, S8 hardening,
- * 0018.05.26 — this brand has ONE cartridge). What's left, and what an
- * artist actually needs here: the five colours her Style-built pages draw
- * from (brand-palette.ts's p1-p5, the "promote-to-token" rail), a live
- * example so a hex isn't read blind, and the door to the full editor.
+ * BrandDesk (TASK-135; TASK-182, 0018.06.18 a₿) — the /a/brand room. What
+ * an artist actually needs here: the five colours her Style-built pages
+ * draw from (brand-palette.ts's p1-p5, the "promote-to-token" rail), the
+ * site's top faces (display / heading / body), a live example so a hex
+ * isn't read blind, and the door to the full editor.
  *
- * Each slot's "where it's used" words are ONECOCREATION.palette's own
- * `hint` field (src/brand/tokens.ts) — not invented here. The example
- * below composes a hero band / card / button in that same documented
- * role (p1 = CTAs, p2 = edges/fills, p3 = kickers, p4 = contrast, p5 =
- * band grounds) so editing a swatch visibly moves the piece it names.
+ * TASK-182: the pickers WORK. The swatch-and-face rows are the top half of
+ * /style/brand's board, exported as BrandPaletteDesk and ridden here — a
+ * native colour picker AND a hex field per slot (the contrast words stay),
+ * a font picker per face off the house's own shelf (no new webfonts; a face
+ * off the shelf is refused in words, server-side). Save writes through the
+ * SAME brand-palette machinery the board rides (useBrandPalette →
+ * POST/GET /api/brand; the faces ride brand-palette.ts's own KV key on the
+ * same route) — one truth, no second store.
  *
  * The header above this page and the sign-in panel below are the site's
  * OWN chrome — they wear the cartridge (space/cream/ink/rose/…), a
@@ -31,34 +30,11 @@ import { contrastRatio } from "@pacsarcade/puck-config/tokens";
  * them here is the same honesty BrandTester always gave: "the actual
  * front door, wearing the cartridge" — not a claim that these slots
  * recolour it.
- *
- * Save/reset ride the SAME machinery the Style editor's brand board uses
- * (useBrandPalette → POST/GET /api/brand) — no new save path, no schema
- * change to brand-palette.ts, per this task's OWNS.
  */
 
-const SLOT_HINTS: Record<PaletteKey, string> = Object.fromEntries(
-  ONECOCREATION.palette.map((s) => [s.key, s.hint]),
-) as Record<PaletteKey, string>;
-
-/* the real night/dawn grounds this brand renders on — cartridge.palette,
-   not invented hexes (BrandTester's SWATCH_NOTES names these the same way:
-   "page night" / "dawn paper") */
-const NIGHT_GROUND = cartridge.palette.space;
-const DAWN_GROUND = cartridge.palette.cream;
-
-function contrastWords(hex: string): { label: string; ratio: number; ok: boolean }[] {
-  return [
-    { label: "on night", ground: NIGHT_GROUND },
-    { label: "on dawn", ground: DAWN_GROUND },
-  ].map(({ label, ground }) => {
-    const ratio = contrastRatio(hex, ground);
-    return { label, ratio, ok: ratio >= 4.5 };
-  });
-}
-
 export default function BrandDesk() {
-  const { pal, dirty, busy, setSlot, save, reset } = useBrandPalette();
+  const bp = useBrandPalette();
+  const { pal } = bp;
 
   if (!pal) {
     return <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>reading the palette…</p>;
@@ -68,8 +44,8 @@ export default function BrandDesk() {
     <div className="p-6" style={{ maxWidth: 900 }}>
       <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>Brand</h1>
       <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
-        The five colours your Style-built pages draw from — edit a swatch and the example below
-        moves with it.
+        The five colours your Style-built pages draw from, and the site&apos;s top faces — edit a
+        swatch or pick a face and the example below moves with it.
       </p>
 
       {/* ── the example ── */}
@@ -108,53 +84,9 @@ export default function BrandDesk() {
         from p1&ndash;p5).
       </p>
 
-      {/* ── the swatches ── */}
-      <SectionHead label="Swatches — the five slots" />
-      {PALETTE_KEYS.map((k) => {
-        const grades = contrastWords(pal[k]);
-        return (
-          <div
-            key={k}
-            style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", border: "1px solid var(--glass-edge)", borderRadius: 12, padding: "10px 14px", marginBottom: 8 }}
-          >
-            <input
-              type="color"
-              value={pal[k]}
-              onChange={(e) => setSlot(k, e.target.value, "night")}
-              aria-label={`${SLOT_LABELS[k]} colour (${k})`}
-              style={{ width: 38, height: 38, border: "none", borderRadius: 8, padding: 0, background: "none" }}
-            />
-            <div style={{ flex: 1, minWidth: 220 }}>
-              <b style={{ fontSize: ".9rem", textTransform: "capitalize" }}>{SLOT_LABELS[k]}</b>
-              <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> ({k}) — {SLOT_HINTS[k]}</span>
-              <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 3 }}>
-                {grades.map((g) => (
-                  <span key={g.label} style={{ marginRight: 16, color: g.ok ? "var(--ok)" : "var(--err)" }}>
-                    {g.label}: {g.ratio.toFixed(2)}:1{g.ok ? "" : " — too light"}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <code style={{ fontSize: ".76rem" }}>{pal[k]}</code>
-          </div>
-        );
-      })}
-
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
-        <button
-          type="button"
-          className="btn btn-gold btn-sm"
-          disabled={busy || !dirty}
-          onClick={save}
-          style={busy || !dirty ? { opacity: 0.5 } : undefined}
-        >
-          {busy ? "Saving…" : "Save"}
-        </button>
-        <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={reset}>
-          Reset to cartridge default
-        </button>
-        {dirty && !busy && <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>unsaved changes</span>}
-      </div>
+      {/* ── the swatches + faces — the board's top half, working pickers ── */}
+      <SectionHead label="Swatches and faces — the five slots, the top faces" />
+      <BrandPaletteDesk bp={bp} />
 
       {/* ── the real front door ── */}
       <SectionHead label="The real front door" />

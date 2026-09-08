@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import { cache } from "react";
 import { tierSatisfies, type Tier } from "./entitlement";
 import { ROOMS, type MatrixRoom } from "./matrix-rooms";
 export { ROOMS, type MatrixRoom } from "./matrix-rooms";
@@ -383,3 +384,13 @@ export async function roomRoster(
   );
   return { ok: true, count: names.length, names, joined, presence: Object.fromEntries(answers) };
 }
+
+/* ── TASK-184 (0018.06.18 a₿ · the 429 hunt) — the ONLY change this lane ──
+   makes to matrix.ts, additive per the OWNS: a per-request cached roster
+   read. The three-room page asks for the roster ONCE per open
+   (rooms/[slug]/page.tsx) and React's cache() dedupes any second ask inside
+   the same request — before this, every vantage mount fired its OWN
+   member-token burst (login → directory → joined_members → up to 24
+   presence GETs), which is what the homeserver's per-IP/per-token rate
+   limit answered with 429 on the Clair Senses Sanctuary. */
+export const rosterForRequest = cache(roomRoster);

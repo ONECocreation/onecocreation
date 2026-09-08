@@ -45,6 +45,7 @@ const FEATURE_ROWS: { key: keyof SiteConfig["features"]; label: string; about: s
   { key: "cuts", label: "ConsciousCuts", about: "the ConsciousCuts & Waxing door on the home's Connect row" },
   { key: "jars", label: "Tip jars", about: "the tip jars in the Support section" },
   { key: "news", label: "News & letters", about: "the News & letters door in the nav" },
+  { key: "memberships", label: "Memberships", about: "the Memberships door in the nav, the Store header's Memberships button, the home hero's package doors, and /memberships + /packages themselves — each package's own door is its item in Items" },
 ];
 
 const RAIL_ROWS: { key: keyof SiteConfig["payments"]; label: string; about: string }[] = [

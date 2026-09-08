@@ -4,7 +4,7 @@ import Link from "next/link";
 import StoreItemCard, { type PriceRails } from "@/components/store/StoreItemCard";
 import FreeMeditationCard from "@/components/store/FreeMeditationCard";
 import type { StoreItem } from "@/lib/store";
-import { TIER_PAGES } from "@/lib/tiers-content";
+import { STORE_SECTIONS, doorForItem, type StoreSection } from "@/lib/store-sections";
 import { cartridge } from "@/brand/cartridge";
 
 /**
@@ -21,51 +21,17 @@ import { cartridge } from "@/brand/cartridge";
  * placeholder). It is not a catalog item and never touches checkout.
  */
 
-export interface ShelfGroup {
-  anchor: string;
-  title: string;
-  pill: string;
-  blurb: string;
-  kinds: StoreItem["kind"][];
-  icon: string;
-}
+/** TASK-189: the shelf's own shape is now the ONE map's shape — kept as a
+ *  named export (`ShelfGroup`) since this module is the shelf's public
+ *  surface other files import from. */
+export type ShelfGroup = StoreSection;
 
-/* ConsciousCuts goes LAST (Love's meeting, 0018.05.11) — the "sessions"
-   group sits at the end of the shelf now; the others keep their order. */
-export const SHELF_GROUPS: ShelfGroup[] = [
-  {
-    anchor: "meditations",
-    title: "Meditations & Journeys",
-    pill: "Meditations",
-    blurb: "Recorded affirmations and journeys — yours the moment payment settles.",
-    kinds: ["digital"],
-    icon: "🌙",
-  },
-  {
-    anchor: "memberships",
-    title: "Memberships",
-    pill: "Memberships",
-    blurb: "The packages — classroom doors, community circle, and Love's weekly rhythm.",
-    kinds: ["package"],
-    icon: "⭐",
-  },
-  {
-    anchor: "wares",
-    title: "Wares from the Studio",
-    pill: "Wares",
-    blurb: "Made or chosen by hand, shipped with love.",
-    kinds: ["self", "fourthwall"],
-    icon: "🎁",
-  },
-  {
-    anchor: "sessions",
-    title: "ConsciousCuts & Soul Sessions",
-    pill: "Sessions",
-    blurb: "One-on-one time on Love's real calendar — pick a session, choose an open time, you're held.",
-    kinds: ["service"],
-    icon: "✂️",
-  },
-];
+/* TASK-189 (0018.06.18 a₿): SHELF_GROUPS now just names the one map
+ * (src/lib/store-sections.ts) — the shelf, the item page's breadcrumb, and
+ * RelatedItems' door all read the same list instead of hand-keeping three
+ * copies in lockstep. ConsciousCuts stays LAST (Love's meeting,
+ * 0018.05.11) — that order lives in the map itself now. */
+export const SHELF_GROUPS: ShelfGroup[] = STORE_SECTIONS;
 
 /** the cosmic walk — each shelf carries its own tone (0018.05.15) */
 export const SHELF_BANDS: Record<string, { bg: string; dark?: boolean }> = {
@@ -78,16 +44,10 @@ export const SHELF_BANDS: Record<string, { bg: string; dark?: boolean }> = {
   wares: { bg: "linear-gradient(180deg,var(--band-5) 0%,var(--band-9) 100%)" },
 };
 
-/** The card's one door: the item's OWN page (Admiral, 0018.05.15 — a
-    package door goes STRAIGHT to its package page; TASK-148: the buy/basket
-    doors live there, the shelf card carries only this full-view door). */
-export function shelfDoorFor(item: StoreItem): string {
-  if (item.kind === "package") {
-    const page = TIER_PAGES.find((p) => p.tier === item.entitlementTier);
-    return page ? `/packages/${page.slug}` : "/packages";
-  }
-  return `/store/${item.id}`;
-}
+/** The card's one door — TASK-189: now the ONE doorForItem (store-sections.ts),
+ *  the same function RelatedItems' door reads. Kept as a named export
+ *  (`shelfDoorFor`) since this module is the shelf's public surface. */
+export const shelfDoorFor = doorForItem;
 
 /** ascending price — the tiers climb left to right (Admiral, 0018.05.15) */
 function effectiveAmount(item: StoreItem): number {

@@ -6,15 +6,15 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 /**
  * TASK-149 (0018.06.17 a₿, from Love's meeting) — THE CLASSROOM OPENS ON
- * THE STAGE. Pins:
- *  · the vantage tabs lead with Stage (Stage · Sanctuary · Lesson Path ·
- *    The Circle · Video · Materials · People) and the site default IS
- *    Stage — a first-time visitor (no stored pick) lands on the stage;
- *    a member's stored vantage still wins (localStorage is read first, so
- *    every saved vantage keeps working).
- *  · the Stage layout: the video region on top, the room's chat DIRECTLY
- *    under it (StageChat renders the same RoomView SanctuaryView renders —
- *    never a second chat), who's-here present as the rail.
+ * THE STAGE; TASK-184 (0018.06.18 a₿ · the Admiral's three-rooms ruling) —
+ * A CLASSROOM IS THREE ROOMS. Pins:
+ *  · the vantage tabs are exactly Stage · Lesson Path · The Circle, in the
+ *    ruling's order — the retired four (Sanctuary / Video / Materials /
+ *    People) no longer list, and the site default IS Stage.
+ *  · the Stage layout — the VIDEO layout's shape won: the video region
+ *    leads full-width, the room's chat sits beside who's-here beneath it
+ *    (People folded in as the roster), and NO materials region rides the
+ *    Stage any more (Materials merged into the Lesson Path).
  *  · who's-here = ONLINE only: soulsOnline() keeps a chip only when the
  *    homeserver's presence says online or last-seen ≤ 5 min; chips wear
  *    display names, a keyed member with no display name wears the handle
@@ -22,46 +22,76 @@ import { renderToStaticMarkup } from "react-dom/server";
  *    T-133 duplicate-key fix).
  */
 
-describe("vantage — Stage first and default", () => {
+describe("vantage — three rooms, Stage first and default", () => {
   it("the site-wide default vantage is the Stage", async () => {
     const { ROOM_VANTAGE_SITE_DEFAULT } = await import("@/components/rooms/vantage");
     expect(ROOM_VANTAGE_SITE_DEFAULT).toBe("stage");
   });
 
-  it("the switcher's tabs lead with Stage, and Stage wears the default's pressed state", async () => {
+  it("the switcher's tabs are exactly Stage · Lesson Path · The Circle, in the ruling's order", async () => {
     const VantageSwitcher = (await import("@/components/rooms/VantageSwitcher")).default;
     const html = renderToStaticMarkup(createElement(VantageSwitcher));
-    const order = ["Stage", "Sanctuary", "Lesson Path", "The Circle", "Video", "Materials", "People"];
+    const order = ["Stage", "Lesson Path", "The Circle"];
     const at = order.map((label) => html.indexOf(`>${label}<`));
     for (const [i, label] of order.entries()) {
       expect(at[i], `${label} tab is missing`).toBeGreaterThan(-1);
       if (i > 0) expect(at[i], `${label} is out of order`).toBeGreaterThan(at[i - 1]);
+    }
+    /* the retired four no longer list */
+    for (const retired of ["Sanctuary", "Video", "Materials", "People"]) {
+      expect(html, `${retired} should have retired`).not.toContain(`>${retired}<`);
     }
     /* the server snapshot is the site default — Stage arrives pressed */
     expect(html).toMatch(/aria-pressed="true"[^>]*>Stage</);
   });
 });
 
-describe("the Stage layout — embed on top, chat directly under, who's-here the rail", () => {
+describe("the Stage layout — the Video layout's shape won", () => {
   const PROPS = {
     slug: "heart-field",
     alias: "#heart-field:onecocreation.com",
     title: "Heart Field",
     kind: "community" as const,
     live: false,
+    roster: null,
   };
 
-  it("renders video, chat, and people regions — chat directly after the video", async () => {
+  it("renders video, chat, and people regions — the embed full-width on top, chat and roster beneath", async () => {
     const StageView = (await import("@/components/rooms/StageView")).default;
     const html = renderToStaticMarkup(createElement(StageView, PROPS));
-    for (const region of ["video", "chat", "people", "materials"]) {
+    for (const region of ["video", "chat", "people"]) {
       expect(html, `Stage is missing the ${region} region`).toContain(`data-region="${region}"`);
     }
+    /* Materials merged into the Lesson Path — no materials region here */
+    expect(html).not.toContain('data-region="materials"');
     const video = html.indexOf('data-region="video"');
     const chat = html.indexOf('data-region="chat"');
     const people = html.indexOf('data-region="people"');
     expect(chat, "the chat does not follow the video").toBeGreaterThan(video);
     expect(people, "who's-here does not follow the chat").toBeGreaterThan(chat);
+  });
+
+  it("the grid declares the Video layout's shape: video full-width, chat beside people beneath", async () => {
+    const css = await fs.readFile(path.join(process.cwd(), "src/components/rooms/classroom.css"), "utf8");
+    const stage = css.match(/\.cl-grid-stage\s*\{[\s\S]*?\}/);
+    expect(stage, "the stage grid is missing").not.toBeNull();
+    expect(stage![0]).toContain('"video video"');
+    expect(stage![0]).toContain('"chat people"');
+    /* the retired layouts' grids are gone with them */
+    expect(css).not.toContain(".cl-grid-video");
+    expect(css).not.toContain(".cl-grid-materials");
+    expect(css).not.toContain(".cl-grid-people{");
+  });
+
+  it("the retired Sanctuary's pinned welcome folds in atop the stage", async () => {
+    const StageView = (await import("@/components/rooms/StageView")).default;
+    const html = renderToStaticMarkup(
+      createElement(StageView, { ...PROPS, pin: { text: "Welcome, sweet souls", updatedAtMs: 1 } }),
+    );
+    expect(html).toContain("from Love");
+    expect(html).toContain("Welcome, sweet souls");
+    /* the pin rides ABOVE the video region */
+    expect(html.indexOf("from Love")).toBeLessThan(html.indexOf('data-region="video"'));
   });
 
   it("the dark stage keeps the honest dark-stage voice above the chat", async () => {
@@ -80,12 +110,14 @@ describe("the Stage layout — embed on top, chat directly under, who's-here the
         liveRoom: "onecocreation-heart-field",
       }),
     );
-    expect(html).toContain("opening the room"); // JitsiRoom's first-paint state
+    /* JitsiRoom's SSR holder (the chat ALSO says "opening the room…" — the
+       18px holder is the embed's unambiguous marker) */
+    expect(html).toContain("border-radius:18px");
   });
 });
 
 describe("StageChat — the room's OWN chat, never a second one", () => {
-  it("renders the same RoomView SanctuaryView renders (its first paint is RoomView's own)", async () => {
+  it("renders RoomView (its first paint is RoomView's own)", async () => {
     const StageChat = (await import("@/components/rooms/StageChat")).default;
     const html = renderToStaticMarkup(
       createElement(StageChat, {
@@ -105,9 +137,14 @@ describe("StageChat — the room's OWN chat, never a second one", () => {
     expect(src).not.toContain("fetch(");
   });
 
-  it("source pin: SanctuaryView still renders the same RoomView", async () => {
-    const src = await fs.readFile(path.join(process.cwd(), "src/components/rooms/SanctuaryView.tsx"), "utf8");
-    expect(src).toContain('from "./RoomView"');
+  it("the Sanctuary retired — its file is gone and nothing imports it", async () => {
+    await expect(
+      fs.access(path.join(process.cwd(), "src/components/rooms/SanctuaryView.tsx")),
+    ).rejects.toThrow();
+    const src = await fs.readFile(path.join(process.cwd(), "src/components/rooms/ClassroomView.tsx"), "utf8");
+    for (const retired of ["SanctuaryView", "VideoView", "MaterialsView", "PeopleView"]) {
+      expect(src, `ClassroomView still imports ${retired}`).not.toContain(retired);
+    }
   });
 });
 

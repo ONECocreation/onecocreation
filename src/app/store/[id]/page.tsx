@@ -12,6 +12,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { priceWords, defaultPreferOf, type MoneyPrefer, type MoneyRails } from "@/lib/money-words";
 import { preferFromCookieHeader } from "@/lib/money-preference";
 import { cookies } from "next/headers";
+import { sectionForKind } from "@/lib/store-sections";
 
 export const dynamic = "force-dynamic";
 
@@ -55,17 +56,6 @@ export function struckLine(
   return item.sale ? priceLine({ ...item, sale: undefined }, rails, prefer).primary : null;
 }
 
-/** the breadcrumb's third crumb — the shelf section this kind lives in,
- *  mirrored from store/page.tsx's GROUPS (hand-kept; derive-or-dash: a kind
- *  with no shelf section — retreat — gets no third crumb, never an invented one) */
-const SECTION_BY_KIND: Partial<Record<StoreItem["kind"], { anchor: string; pill: string }>> = {
-  digital: { anchor: "meditations", pill: "Meditations" },
-  package: { anchor: "memberships", pill: "Memberships" },
-  self: { anchor: "wares", pill: "Wares" },
-  fourthwall: { anchor: "wares", pill: "Wares" },
-  service: { anchor: "sessions", pill: "Sessions" },
-};
-
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const item = await getItem(id);
@@ -88,7 +78,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
      door could render against Love's OFF switch while the card door vanished
      per serverless instance (Love's meeting: "we tried bitcoin and square",
      "cash payment doesn't show up"). Await both truths, THEN judge the rails. */
-  await getSiteConfig();
+  const switches = await getSiteConfig();
   await ensureSquareVault();
 
   // TASK-157: same rail truth BuyPanel judges by, a few lines down.
@@ -101,7 +91,11 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   const { primary: priceLead, secondary: priceEcho } = priceLine(item, rails, prefer);
   const struckWords = struckLine(item, rails, prefer);
   const shots = item.media?.images.length ? item.media.images : item.images;
-  const section = SECTION_BY_KIND[item.kind];
+  // TASK-189: the breadcrumb's third crumb — the ONE kind→section map
+  // (src/lib/store-sections.ts), the same one the shelf and Related read.
+  // derive-or-dash still stands: a kind with no shelf section (retreat)
+  // gets no third crumb, never an invented one.
+  const section = sectionForKind(item.kind);
 
   /* TASK-177 (0018.06.18 a₿) — the ShinePages product layout Love chose
      (recon 03/04): TWO columns at ≥900px (.product-cols, house.css) — the
@@ -110,7 +104,10 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
      the phone, picture first. The night ground holds in both themes
      (keep-dark + .item-veil, the T-152/T-155 page-scoped veil precedent).
      "Related" below: up to three live items of the same kind. */
-  const catalog = (await listItems()).map(stripPrivateMedia);
+  /* T-187 seam: with the Memberships switch OFF a package never rides another item's
+     Related row — its door would open onto NotOpenYet */
+  const catalog = (await listItems()).map(stripPrivateMedia)
+    .filter((i) => switches.features.memberships !== false || i.kind !== "package");
 
   return (
     <main>

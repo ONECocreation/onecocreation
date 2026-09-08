@@ -70,15 +70,29 @@ describe("the ShinePages product layout — the two-column wrapper and the night
 });
 
 describe("the breadcrumb — Home / Store / <section>", () => {
-  it("the page carries the crumb trail with the section derived from the item's kind", async () => {
+  it("the page carries the crumb trail markup, section derived server-side", async () => {
     const src = await read("src/app/store/[id]/page.tsx");
     expect(src.includes('aria-label="breadcrumb"')).toBe(true);
     expect(src.includes('href="/"')).toBe(true);
     expect(src.includes('href="/store"')).toBe(true);
-    // every shelf-section kind maps to its crumb (store/page.tsx's GROUPS)
-    for (const kind of ["digital", "package", "self", "fourthwall", "service"]) {
-      expect(src.includes(`${kind}:`), `breadcrumb lost the ${kind} section`).toBe(true);
-    }
+  });
+
+  /* TASK-189: the breadcrumb's section now comes from the ONE kind→section
+   * map (src/lib/store-sections.ts) — the same map the shelf reads. Pin the
+   * map itself rather than page.tsx's source text: every shelf-section kind
+   * still resolves, a kind with no shelf home (retreat) still gets none. */
+  it("every shelf-section kind still resolves to its crumb, via the ONE map", async () => {
+    const { sectionForKind } = await import("@/lib/store-sections");
+    expect(sectionForKind("digital")).toEqual(expect.objectContaining({ anchor: "meditations", pill: "Meditations" }));
+    expect(sectionForKind("package")).toEqual(expect.objectContaining({ anchor: "memberships", pill: "Memberships" }));
+    expect(sectionForKind("self")).toEqual(expect.objectContaining({ anchor: "wares", pill: "Wares" }));
+    expect(sectionForKind("fourthwall")).toEqual(expect.objectContaining({ anchor: "wares", pill: "Wares" }));
+    expect(sectionForKind("service")).toEqual(expect.objectContaining({ anchor: "sessions", pill: "Sessions" }));
+  });
+
+  it("a kind with no shelf home (retreat) gets no crumb — derive-or-dash, never an invented one", async () => {
+    const { sectionForKind } = await import("@/lib/store-sections");
+    expect(sectionForKind("retreat")).toBeUndefined();
   });
 });
 
