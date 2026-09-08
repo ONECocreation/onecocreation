@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PopupHost from "@/components/PopupHost";
+import PaletteVars from "@/components/PaletteVars";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
 
 export const metadata: Metadata = {
   title: "Memberships — One Cocreation",
@@ -15,14 +21,50 @@ export const metadata: Metadata = {
  * her live site — and GET STARTED TODAY carries you to the three packages.
  * In time for the 8/8 Lions Gate portal. Copy transcribed from
  * onecocreation.com/memberships; confirm wording with Love (checklist).
+ *
+ * TASK-153 finding: this route never wired PUCK P4 ("Admiral-approved
+ * 2026-08-11" — see src/lib/puck-seeds.ts's top comment). /about is the
+ * only rebuilt page that checks getPuckPage() before falling back to its
+ * hand-built JSX; /memberships, /support, /book, /classes and /store never
+ * got the same wiring, so pressing "Publish to live" in /studio for any of
+ * those slugs writes KV correctly (traced: setPuckDraft -> publishDraft
+ * copies puck:draft:<slug> to puck:page:<slug> in one call, no cache in the
+ * way) but the visitor-facing route just never reads it back — the
+ * mismatch is a missing read, not a stale write. Fixed here for
+ * /memberships only (this lane's OWNS); the same gap on the other four
+ * routes is flagged under ## Seams in the SUMMARY for a follow-through.
  */
-export default function MembershipsPage() {
+export default async function MembershipsPage() {
+  // PUCK P4, mirroring /about/page.tsx byte-for-byte: once Love publishes
+  // the Puck rebuild (/studio/memberships -> Publish to live), the live
+  // /memberships serves it. Until then, the hand-built page below is
+  // untouched — nothing changes for visitors until she chooses it.
+  const puck = await getPuckPage("memberships");
+  if (puck) {
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main><Render config={config} data={puck as Data} /></main>
+        <SiteFooter />
+        {/* STUDIO P2: popup host rides both branches of this page */}
+        <PopupHost />
+      </>
+    );
+  }
+
   return (
     <>
       <SiteHeader />
       <main className="lions-gate-dark">
         <div className="wrap" style={{ maxWidth: 720, padding: "64px 22px 80px" }}>
-          <p className="kicker">Memberships</p>
+          {/* TASK-153 (A): .kicker{color:var(--rose)} (house.css) loses to
+              the higher-specificity .lions-gate-dark p{color:#D9D2E4}
+              (cartridge.css) — same class of bug the "You…" <p> below was
+              already patched for (Admiral's sighting, 0018.05.24). The
+              literal here is that same fix, applied to the kicker: force
+              the rose token inline so it out-specifies the blanket p rule. */}
+          <p className="kicker" style={{ color: "var(--rose)" }}>Memberships</p>
           <h1 className="sec-h">
             Welcome to The Heart Field — where &ldquo;Heaven and Earth Meet&rdquo;
           </h1>
