@@ -36,7 +36,7 @@ export default function SiteFooter() {
           <Link href="/about">About</Link>
           <Link href="/memberships">Memberships</Link>
           {switches?.features.sessions && <Link href="/book">Sessions</Link>}
-          {switches?.features.community && <Link href="/classes">Community</Link>}
+          <Link href="/classes">Community</Link>{/* T-137 seam: the header always shows Community now; the footer follows */}
           <Link href="/support">⚡ Support</Link>
         </nav>
         <p className="legal">Copyright © 2026 One Cocreation · <Link href="/terms" style={{ color: "inherit" }}>Terms &amp; Conditions</Link> · <Link href="/privacy" style={{ color: "inherit" }}>Privacy Policy</Link></p>
