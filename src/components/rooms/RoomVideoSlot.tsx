@@ -73,25 +73,29 @@ export default function RoomVideoSlot({
       {live && gate === "signin" ? (
         /* the sign-in door — the SAME words the chat's door says */
         <div className="cl-video-stage">
-          <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem", maxWidth: 380 }}>
-            {signInDoorLine(roomTitle)}
-          </p>
-          <Link href={signInDoorHref(slug)} className="btn btn-sm">
-            Sign in · join free
-          </Link>
+          <div>
+            <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem", maxWidth: 380 }}>
+              {signInDoorLine(roomTitle)}
+            </p>
+            <Link href={signInDoorHref(slug)} className="btn btn-sm">
+              Sign in · join free
+            </Link>
+          </div>
         </div>
       ) : live && gate === "package" ? (
         /* the lower-tier door — "opens with the <package>" in words */
         <div className="cl-video-stage">
-          <p style={{ margin: "0 0 6px", color: "var(--ink-body)", fontSize: ".9rem", maxWidth: 380 }}>
-            🔒 {packageDoorLine(doorPackage ?? null)}
-          </p>
-          <p style={{ margin: "0 0 12px", color: "var(--muted)", fontSize: ".86rem", maxWidth: 380 }}>
-            The lock is an invitation — everything inside stays waiting for you.
-          </p>
-          <Link href="/memberships" className="btn btn-sm">
-            See the memberships
-          </Link>
+          <div>
+            <p style={{ margin: "0 0 6px", color: "var(--ink-body)", fontSize: ".9rem", maxWidth: 380 }}>
+              🔒 {packageDoorLine(doorPackage ?? null)}
+            </p>
+            <p style={{ margin: "0 0 12px", color: "var(--muted)", fontSize: ".86rem", maxWidth: 380 }}>
+              The lock is an invitation — everything inside stays waiting for you.
+            </p>
+            <Link href="/memberships" className="btn btn-sm">
+              See the memberships
+            </Link>
+          </div>
         </div>
       ) : canEmbed ? (
         <div>
