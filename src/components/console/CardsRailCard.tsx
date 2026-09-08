@@ -38,6 +38,16 @@ import { Chip, field } from "@/components/console/glass";
  * from fixture states (the T-148 storeCardModel idiom), the component only
  * renders what they say. Derive-or-dash throughout: no fake checks, no
  * guessed stamps.
+ *
+ * TASK-169 (0018.06.18 a₿ · block 966,101): the card's sections are
+ * semantic <section>s, so globals.css's page rhythm (`section { padding:
+ * 5rem 0 }`) painted ~80px of dead space under the "Cards" header and after
+ * each folded "How to set this up" — both sections now zero that padding
+ * inline (a folded walk takes no room). The Square chip line and the Test
+ * button share one flex-wrap row (one line on 1440, stacked on 390). And
+ * the card carries the Square rail's on/off switch itself — the same PUT
+ * /api/admin/site the /a/site page saves through (RailSwitch below); one
+ * truth, no second store.
  */
 
 // ── the desk routes' shapes (mirrored, never the values themselves) ───────
@@ -382,27 +392,33 @@ function SquareSection() {
   const step: React.CSSProperties = { margin: "0 0 10px", fontSize: ".85rem", lineHeight: 1.65 };
 
   return (
-    <section aria-label="Square" style={{ marginTop: 10 }}>
+    // TASK-169: globals.css's page-section rule (`section { padding: 5rem 0 }`)
+    // would paint ~80px of dead space above and below this section's content —
+    // zeroed inline; a folded walk takes no room
+    <section aria-label="Square" style={{ marginTop: 10, padding: 0, borderBottom: "none" }}>
+      {/* TASK-169: the chip line and the Test button share ONE flex-wrap row —
+          one line on 1440, stacked cleanly on 390 (the Admiral's T-167 order
+          holds: the button still comes before the checklist) */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
         <b style={{ fontSize: ".88rem" }}>Square</b>
         {chip && <Chip tone={chip.tone}>{chip.words}</Chip>}
         {sourceLine && <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>{sourceLine}</span>}
-      </div>
-
-      {reason ? (
-        <p style={{ fontSize: ".82rem", color: "var(--warn)" }}>the desk didn&apos;t answer: {reason}</p>
-      ) : !data ? null : (
-        <>
-          {/* the Admiral: "the vercel items underneath the test button" —
-              the button comes FIRST, the checklist under it */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
+        {data && !reason && (
+          <>
             <button className="btn btn-sm" disabled={testBusy || !data.configured} onClick={testConnection}>
               {testBusy ? "Testing…" : "Test the connection"}
             </button>
             {!data.configured && (
               <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>set the access token + location ID first</span>
             )}
-          </div>
+          </>
+        )}
+      </div>
+
+      {reason ? (
+        <p style={{ fontSize: ".82rem", color: "var(--warn)" }}>the desk didn&apos;t answer: {reason}</p>
+      ) : !data ? null : (
+        <>
           {testResult && (
             <p style={{ margin: "6px 0 0", fontSize: ".82rem", color: testResult.ok ? "var(--ok)" : "var(--warn)" }}>
               {testResult.ok ? "✓ " : ""}{testResult.text}
@@ -563,7 +579,9 @@ function StripeSection() {
   const step: React.CSSProperties = { margin: "0 0 10px", fontSize: ".85rem", lineHeight: 1.65 };
 
   return (
-    <section aria-label="Stripe" style={{ marginTop: 14, borderTop: "1px solid rgba(139,118,196,.18)", paddingTop: 12 }}>
+    // TASK-169: same page-section padding zeroed as the Square section's
+    <section aria-label="Stripe" style={{ marginTop: 14, borderTop: "1px solid rgba(139,118,196,.18)",
+      padding: "12px 0 0", borderBottom: "none" }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
         <b style={{ fontSize: ".88rem" }}>Stripe</b>
         {chip && <Chip tone={chip.tone}>{chip.words}</Chip>}
@@ -616,11 +634,126 @@ function StripeSection() {
   );
 }
 
+// ── the rail's own switch (TASK-169, 0018.06.18 a₿ · block 966,101) ─────
+// The Admiral: "/a/money seems to have lost the ability to turn off the
+// bitcoin payment item." The switches live on /a/site (Payments); the rail
+// cards here carry the SAME switch — the same PUT /api/admin/site the site
+// page saves through (saveSiteConfig merges payments per key, so a one-key
+// patch is the same truth, never a second store). The words ride beside it
+// per the legibility doctrine: state IN WORDS, never color alone.
+
+export type RailKey = "btcpay" | "square" | "stripe";
+
+const RAIL_LABEL: Record<RailKey, string> = {
+  btcpay: "Bitcoin (BTCPay)",
+  square: "Card (Square)",
+  stripe: "Card (Stripe)",
+};
+
+/** the flip's PUT body — one key, the exact route + merge the /a/site page
+ *  uses (its save sends the whole doc; the route merges per group, so this
+ *  one-key patch is the same write, not a side door) */
+export function railFlipPatch(key: RailKey, on: boolean): { payments: Partial<Record<RailKey, boolean>> } {
+  return { payments: { [key]: !on } };
+}
+
+/** the switch's words — pinned verbatim. The not-configured rule is the
+ *  site page's own: a switch can hide a configured rail, never conjure an
+ *  unconfigured one, so the toggle stays dark until the env names are set. */
+export function railSwitchWords(on: boolean, configured: boolean | null): string {
+  if (configured === false) return "not configured — the switch stays dark until the rail's env names are set";
+  return `this rail is ${on ? "ON" : "OFF"} for visitors`;
+}
+
+/** the switch row, presentational — the tests render this statically */
+export function RailSwitchView({
+  railKey, on, configured, busy, note, onFlip,
+}: {
+  railKey: RailKey;
+  on: boolean;
+  configured: boolean | null;
+  busy: boolean;
+  note: string;
+  onFlip: () => void;
+}) {
+  const dark = configured === false;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+      <button
+        type="button"
+        aria-pressed={on}
+        aria-label={`${RAIL_LABEL[railKey]} rail — currently ${on ? "on" : "off"} for visitors`}
+        disabled={busy || dark}
+        onClick={onFlip}
+        className={`btn btn-sm ${on ? "btn-on" : "btn-ghost"}`}
+        style={dark ? { opacity: 0.45, cursor: "not-allowed" } : undefined}
+      >
+        {busy ? "…" : on ? "ON" : "OFF"}
+      </button>
+      <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>
+        {railSwitchWords(on, configured)}
+        {" · "}
+        <a href="/a/site" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>also on /a/site</a>
+      </span>
+      {note && <span style={{ fontSize: ".76rem", color: "var(--warn)" }}>{note}</span>}
+    </span>
+  );
+}
+
+/** the switch itself: reads /api/admin/site once, flips through its PUT.
+ *  Nothing renders until the read lands — no guessed ON presented as truth. */
+export function RailSwitch({ railKey }: { railKey: RailKey }) {
+  const [on, setOn] = useState<boolean | null>(null);
+  const [configured, setConfigured] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin/site", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d?.ok || d.config?.payments?.[railKey] === undefined) return;
+        setOn(Boolean(d.config.payments[railKey]));
+        // the env status rides the operator half of the GET; without it the
+        // "stays dark" rule can't be derived, so it stays unknown, not guessed
+        if (d.rails) setConfigured(Boolean(d.rails[railKey]?.configured));
+      })
+      .catch(() => {});
+  }, [railKey]);
+
+  async function flip() {
+    if (on == null) return;
+    setBusy(true);
+    setNote("");
+    const res = await fetch("/api/admin/site", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(railFlipPatch(railKey, on)),
+    }).then((r) => r.json()).catch(() => null);
+    setBusy(false);
+    if (res?.ok) {
+      // repaint from the route's own answer — the doc as it now stands
+      setOn(Boolean(res.config?.payments?.[railKey]));
+      if (res.rails) setConfigured(Boolean(res.rails[railKey]?.configured));
+    } else {
+      setNote(res?.reason ?? "the switch didn't take — try again");
+    }
+  }
+
+  if (on == null) return null;
+  return <RailSwitchView railKey={railKey} on={on} configured={configured} busy={busy} note={note} onFlip={flip} />;
+}
+
 export default function CardsRailCard() {
   return (
     <div style={{ background: "var(--glass)", border: "1px solid rgba(255,255,255,.9)", borderRadius: 18,
       padding: "14px 16px", marginTop: 12, boxShadow: "0 18px 44px -28px rgba(120,100,160,.45)", maxWidth: 680 }}>
-      <b style={{ fontSize: ".95rem" }}>Cards</b>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <b style={{ fontSize: ".95rem" }}>Cards</b>
+        {/* TASK-169: the Square rail's on/off switch rides this card — the
+            same PUT /a/site saves through; the words say where else it lives */}
+        <RailSwitch railKey="square" />
+      </div>
       <SquareSection />
       <StripeSection />
     </div>

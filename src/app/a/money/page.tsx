@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import CardsRailCard from "@/components/console/CardsRailCard";
+import CardsRailCard, { RailSwitch } from "@/components/console/CardsRailCard";
 import DiscountsDesk from "@/components/console/DiscountsDesk";
 import PwycDesk from "@/components/console/PwycDesk";
 import { Chip, SectionHead, field, overlay, sheet } from "@/components/console/glass";
@@ -218,9 +218,14 @@ export default function MoneyRoom() {
           row above the cards any more — every chip lives in its own
           card's header now. */}
       <div style={bigCard}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <b style={{ fontSize: ".95rem" }}>Bitcoin (BTCPay)</b>
           {railBtcpay == null ? null : railBtcpay ? <Chip tone="green">live</Chip> : <Chip tone="grey">not connected</Chip>}
+          {/* TASK-169 (0018.06.18 a₿) — the Admiral: "/a/money seems to have
+              lost the ability to turn off the bitcoin payment item". The
+              switch itself rides the card now — the same PUT /a/site saves
+              through (RailSwitch, one truth, no second store) */}
+          <RailSwitch railKey="btcpay" />
         </div>
         <p style={{ margin: "6px 0 8px", fontSize: ".78rem", color: "var(--muted)" }}>
           {railBtcpay
