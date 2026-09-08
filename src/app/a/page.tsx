@@ -8,7 +8,6 @@ import { CONSOLE_SITE, CONSOLE_CHROME } from "@/lib/console";
 import { listTips, tipsConfigured, type TipLedger } from "@/lib/tips";
 import LovesDesk from "@/components/console/LovesDesk";
 import AttentionStrip from "@/components/console/AttentionStrip";
-import LiveDoorCard from "@/components/console/LiveDoorCard";
 import { getLiveState, roomForSlug, LIVE_SCHEDULE, LIVE_YOUTUBE } from "@/lib/live";
 
 const JAR_LABELS: Record<string, string> = {
@@ -92,9 +91,15 @@ export default async function ConsoleOverviewPage() {
         {/* the day's actions live WITH the calendar (Admiral, 0018.05.15) —
             goods to ship + offers waiting; sessions close out in their popups */}
         <AttentionStrip />
-        {/* S40 lane 1 — the class door's first home: open the room, the bot
-            carries the word, the banner lights */}
-        <LiveDoorCard />
+        {/* TASK-192 — the class door folded into the Go-Live room (one door
+            on Love's desk, four ways in); this pointer is all that stays here */}
+        <div className="mt-6 border border-neutral-800 p-4 text-sm">
+          <h2 className="text-sm text-neutral-100">● Go live</h2>
+          <p className="mt-2 text-xs text-neutral-300">
+            The class door moved — <Link className="underline" href="/a/live">the Go-Live room</Link> holds
+            the strip and the four ways in: the rooms, YouTube, today&apos;s calls, a guest.
+          </p>
+        </div>
         {/* THE WEEKLY RHYTHM (Admiral, 0018.05.18): where Love checks, when */}
         <div className="mt-6 border border-neutral-800 p-4 text-sm">
           <h2 className="text-sm text-neutral-100">Love&apos;s week — where to check</h2>

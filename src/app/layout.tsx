@@ -5,7 +5,6 @@ import { EASY_MODE_BOOT_SCRIPT } from "@pacsarcade/arcade-ui";
 import { renderCartridgeId, cartridge } from "@/brand/cartridge";
 import ScrollFix from "@/components/ScrollFix";
 import AliveEffects from "@/components/AliveEffects";
-import LiveBanner from "@/components/LiveBanner";
 import CartridgeVars from "@/components/CartridgeVars";
 import CartridgePreview from "@/components/CartridgePreview";
 import "./globals.css";
@@ -157,11 +156,10 @@ export default function RootLayout({
             cartridge.css :root, verbatim, so nothing rendered shifts */}
         <ScrollFix />
         <AliveEffects />
-        {/* S40 lane 2 — the live banner: renders NOTHING while the flag is
-            dark (initial state null, so the served bytes carry no trace);
-            when /api/live says Love is live, the strip lights within ~30s
-            of the door opening. */}
-        <LiveBanner />
+        {/* TASK-192 — the S40 live banner's mount is RETIRED: the member-
+            header LiveStrip (SiteHeader) now carries the one "Love is live"
+            line from the same /api/live flag; two strips would double-speak.
+            LiveBanner.tsx itself stays, unmounted, for the orchestrator. */}
         {children}
       </body>
     </html>
