@@ -1,7 +1,7 @@
 /**
  * The ONE tenant constant (TASK-97, cut 0018.06.10 a₿) — a single
  * env-driven name behind every tenant-scoped KV key and HMAC label, so a
- * second StudioPac tenant sharing infrastructure gets its own keyspace
+ * second StylePac tenant sharing infrastructure gets its own keyspace
  * instead of colliding with One Cocreation's.
  *
  * Default 'onecocreation' is load-bearing: under the default every key is

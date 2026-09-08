@@ -36,7 +36,7 @@ import type { PopupTrigger } from "@/lib/puck-store";
  * TASK-97 PROP-LIFT (cut 0018.06.10 a₿): this component is brand-neutral —
  * puck-config, the seed library, the brand tokens and the Copilot all
  * arrive as PROPS, wired by the studio page's client bridge
- * (src/components/studio/StudioEditor.tsx), so a second StudioPac tenant
+ * (src/components/studio/StudioEditor.tsx), so a second StylePac tenant
  * can feed it its own cartridge without forking the editor.
  */
 

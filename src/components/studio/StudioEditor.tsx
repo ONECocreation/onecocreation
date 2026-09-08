@@ -14,7 +14,7 @@ import PuckEditor from "@/components/PuckEditor";
  * HERE, at the first client boundary under the server page, because the
  * RSC serializer can't carry config's render functions across the
  * server→client seam — and passing the seed library from the server would
- * inline it into every studio flight payload. A second StudioPac tenant
+ * inline it into every studio flight payload. A second StylePac tenant
  * forks this one file (its own config/seeds/tokens/Copilot), never the
  * editor. The prop contract toward the page is the one PuckEditor always
  * had: { slug, data }.
