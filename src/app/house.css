@@ -598,3 +598,20 @@ main .about-story-sky{background:radial-gradient(760px 460px at 50% 14%, rgba(12
    1-weight white stroke so it stands off the darker grounds (four 1px drop-shadows =
    an outline on a transparent raster; the asset itself is untouched) */
 .about-script{filter:drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)}
+
+/* ── TASK-183 (0018.06.18 a₿ · block 966,098) — THE ROOM CARD CONTRACT ──
+   Admiral's law (0018.06.17): the doors HUG THE BOTTOM — "the buttons are
+   not even, this looks like slop". The /classes room cards stand ONE height
+   in a row: the shelf's grid stretches its items, the card fills its cell,
+   the body flexes, and the doors ride one bottom column — stacked
+   top-to-bottom, the same width, the same order on every card, never
+   floating, never uneven. (`.card` is already display:flex/column; this
+   block only adds the fill + the bottom column — additive, nothing else
+   rests on it.) */
+.room-card{height:100%}
+.room-card-doors{margin-top:auto;display:grid;gap:8px}
+.room-card-doors .btn{display:block;width:100%;text-align:center}
+/* the signed-in soul's name rides the top of the door column — quiet ink,
+   the handle itself strong */
+.room-card-name{margin:0;font-size:.78rem;color:var(--muted);text-align:center}
+.room-card-name b{color:var(--ink-strong);font-weight:600}

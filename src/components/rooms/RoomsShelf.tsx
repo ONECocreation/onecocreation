@@ -60,7 +60,11 @@ export default function RoomsShelf() {
         }}
       >
         {packages.map((p) => (
-          <PackageRoomsCard key={p.tier} pkg={p} signedIn={feed.signedIn} />
+          /* TASK-183: the signed-in soul's name rides each card's door
+             column — "you're in as <name>" (the feed's handle, derived
+             server-side; a feed that won't say passes null and the line
+             stays unpainted — derive-or-dash) */
+          <PackageRoomsCard key={p.tier} pkg={p} signedIn={feed.signedIn} name={feed.handle} />
         ))}
       </div>
       <p className="note" style={{ marginTop: 26 }}>
