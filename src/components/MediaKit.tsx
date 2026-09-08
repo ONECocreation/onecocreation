@@ -168,6 +168,46 @@ function SwatchButton({ name, hex, role }: { name: string; hex: string; role: st
   );
 }
 
+/** One downloadable brand file — the href is the served path, the label says
+    honestly what the file is (the email PNGs are rasters sized for mail). */
+export type BrandDownload = { href: string; file: string; label: string };
+
+/** A live brand mark the kit shows and serves. */
+export type BrandMark = {
+  title: string;
+  img: string;
+  alt: string;
+  note: string;
+  downloads: BrandDownload[];
+};
+
+/** The LIVE marks — derive-or-dash: the brand cards render from this list and
+    the tests pin it. The July plain-gold ring set (coin-gold / mark-gold)
+    retired to docs/brand-archive/ in TASK-179 (0018.06.18 a₿) and is never
+    served again. */
+export const BRAND_MARKS: BrandMark[] = [
+  {
+    title: "The mark",
+    img: "/brand/onecocreation-mark.svg",
+    alt: "One Cocreation mark — the ring with the purple half",
+    note: "The ring with the purple half — where heaven and earth meet.",
+    downloads: [
+      { href: "/brand/onecocreation-mark.svg", file: "onecocreation-mark.svg", label: "DOWNLOAD SVG" },
+      { href: "/brand/onecocreation-mark-email.png", file: "onecocreation-mark-email.png", label: "DOWNLOAD EMAIL PNG" },
+    ],
+  },
+  {
+    title: "The lockup",
+    img: "/brand/onecocreation-lockup-raylit.svg",
+    alt: "One Cocreation lockup — the raylit ring and wordmark together",
+    note: "The raylit lockup — mark and wordmark together, lit from above.",
+    downloads: [
+      { href: "/brand/onecocreation-lockup-raylit.svg", file: "onecocreation-lockup-raylit.svg", label: "DOWNLOAD SVG" },
+      { href: "/brand/onecocreation-lockup-email.png", file: "onecocreation-lockup-email.png", label: "DOWNLOAD EMAIL PNG" },
+    ],
+  },
+];
+
 const t = oneCocreationTheme.tokens;
 const SWATCHES: ReadonlyArray<{ name: string; hex: string; role: string }> = [
   { name: "space", hex: t.space, role: "surface" },
@@ -275,45 +315,36 @@ export default function MediaKit() {
         <div className="mx-auto max-w-5xl">
           <h2 className="font-pixel text-sm text-cyan">Brand assets</h2>
           <p className="mt-2 font-body text-sm text-white/60">
-            The mark, the wordmark, and the celestial palette.
+            The mark, the lockup, the wordmark, and the celestial palette.
           </p>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            {/* The mark */}
-            <div className="border-2 border-edge bg-panel p-6">
-              <div className="flex items-center gap-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/brand/onecocreation-coin-gold.svg"
-                  alt="One Cocreation mark — the gold coin holding a star"
-                  width={64}
-                  height={64}
-                  className="h-16 w-16 shrink-0"
-                />
-                <div>
-                  <p className="font-pixel text-xs text-white">The mark</p>
-                  <p className="mt-1 font-body text-xs leading-snug text-white/60">
-                    The gold coin holding a star — where heaven and earth meet.
-                  </p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            {/* The live marks — shown and served from BRAND_MARKS; the retired
+                July gold set lives in docs/brand-archive/, never here. */}
+            {BRAND_MARKS.map((m) => (
+              <div key={m.title} className="flex flex-col justify-between border-2 border-edge bg-panel p-6">
+                <div className="flex items-center gap-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={m.img} alt={m.alt} className="h-16 w-auto max-w-[45%] shrink-0" />
+                  <div>
+                    <p className="font-pixel text-xs text-white">{m.title}</p>
+                    <p className="mt-1 font-body text-xs leading-snug text-white/60">{m.note}</p>
+                  </div>
+                </div>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {m.downloads.map((d) => (
+                    <a
+                      key={d.href}
+                      href={d.href}
+                      download={d.file}
+                      className="border-2 border-edge px-3 py-2 font-pixel text-[10px] uppercase tracking-widest text-white/70 transition-colors hover:border-cyan hover:text-cyan motion-reduce:transition-none"
+                    >
+                      {d.label}
+                    </a>
+                  ))}
                 </div>
               </div>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <a
-                  href="/brand/onecocreation-coin-gold.svg"
-                  download="onecocreation-coin-gold.svg"
-                  className="border-2 border-edge px-3 py-2 font-pixel text-[10px] uppercase tracking-widest text-white/70 transition-colors hover:border-cyan hover:text-cyan motion-reduce:transition-none"
-                >
-                  DOWNLOAD SVG
-                </a>
-                <a
-                  href="/brand/onecocreation-mark-gold.svg"
-                  download="onecocreation-mark-gold.svg"
-                  className="border-2 border-edge px-3 py-2 font-pixel text-[10px] uppercase tracking-widest text-white/70 transition-colors hover:border-cyan hover:text-cyan motion-reduce:transition-none"
-                >
-                  DOWNLOAD FULL LOCKUP
-                </a>
-              </div>
-            </div>
+            ))}
 
             {/* The wordmark */}
             <div className="flex flex-col justify-between border-2 border-edge bg-panel p-6">
