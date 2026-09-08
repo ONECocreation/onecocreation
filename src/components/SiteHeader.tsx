@@ -6,6 +6,7 @@ import DoorButton from "./door/DoorButton";
 import ThemeLantern from "./ThemeLantern";
 import NavMenu from "./NavMenu";
 import BasketChip from "./BasketChip";
+import LiveStrip from "./LiveStrip";
 import { cartridge } from "@/brand/cartridge";
 
 /** Dark celestial header, true to One Cocreation's brand mark.
@@ -20,25 +21,31 @@ export default function SiteHeader() {
   const pathname = usePathname() ?? "";
   const underConsole = pathname === "/a" || pathname.startsWith("/a/");
   return (
-    <header className="site-header">
-      <div className="bar">
-        <Link href="/" className="logo">
-          {/* The full lockup Love uses on her live site — rendered at its own
-              aspect (1235×533), never squeezed into a square. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="brandmark-lockup" src={cartridge.logo.lockup} alt={cartridge.name} width={174} height={72} />
-        </Link>
-        <NavMenu />
-        <div className="nav-tail">
-          <ThemeLantern />
-          {!underConsole && <BasketChip />}
-          {/* TASK-185 Phase B — the door chip: Log in opens the small sheet
-              under the button; signed in, the name opens the member menu.
-              FrenBadge is retired (the Admiral's ruling 2), its known-by
-              rule carried into DoorButton. */}
-          <DoorButton />
+    <>
+      <header className="site-header">
+        <div className="bar">
+          <Link href="/" className="logo">
+            {/* The full lockup Love uses on her live site — rendered at its own
+                aspect (1235×533), never squeezed into a square. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="brandmark-lockup" src={cartridge.logo.lockup} alt={cartridge.name} width={174} height={72} />
+          </Link>
+          <NavMenu />
+          <div className="nav-tail">
+            <ThemeLantern />
+            {!underConsole && <BasketChip />}
+            {/* TASK-185 Phase B — the door chip: Log in opens the small sheet
+                under the button; signed in, the name opens the member menu.
+                FrenBadge is retired (the Admiral's ruling 2), its known-by
+                rule carried into DoorButton. */}
+            <DoorButton />
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+      {/* TASK-192 — the member-header live strip, one line: "Love is live ·
+          <room> · Join" from the same /api/live flag; dark when nothing is
+          live, silent under /a. */}
+      <LiveStrip />
+    </>
   );
 }

@@ -60,8 +60,67 @@ export const roomForSlug = (slug: string): MatrixRoom | undefined =>
  * bundle) — this keeps that lesson from repeating.
  */
 export function liveRoomName(slug: string): string {
+  return `${liveRoomPrefix()}${slug}`;
+}
+
+/** TASK-192 (additive read): the namespace half of liveRoomName(), so a
+ *  surface that only knows the guest-TYPED half of a room name (the
+ *  Go-Live room's co-create door) derives the SAME prefix instead of
+ *  re-inventing it. Pure, like liveRoomName. */
+export function liveRoomPrefix(): string {
   const space = SPACE_NAME.trim() || "onecocreation";
-  return `${space}-${slug}`;
+  return `${space}-`;
+}
+
+/** TASK-192 (additive read): T-191's studio VDO derivation, one word
+ *  further — the same `${prefix}-studio` room the /a/studio desk derives
+ *  inline, shared so the Go-Live room's YouTube door can never drift from
+ *  the director's desk. Pure: in, links out. */
+export function studioVdoLinks(roomPrefix: string): { room: string; push: string; guest: string } {
+  const room = `${roomPrefix}-studio`;
+  return {
+    room,
+    push: `https://vdo.ninja/?room=${encodeURIComponent(room)}&push=host`,
+    guest: `https://vdo.ninja/?room=${encodeURIComponent(room)}`,
+  };
+}
+
+/** TASK-192 (additive read): one confirmed call, shaped for the Go-Live
+ *  room's Discovery-call door. */
+export interface TodaySession {
+  bookingId: string;
+  title: string;
+  customer: string;
+  startUtc: string;
+  endUtc: string;
+}
+
+/** TASK-192 (additive read): today's CONFIRMED bookings from the booking
+ *  store, UTC-day honest (the slot's own frame — the words say UTC, never
+ *  a guessed local midnight), earliest first. Held, released and canceled
+ *  never list; an empty day reads as an empty list (derive-or-dash). Pure. */
+export function confirmedToday(
+  bookings: {
+    id: string;
+    serviceTitle: string;
+    startUtc: string;
+    endUtc: string;
+    state: string;
+    customer: { name?: string; email?: string; npub?: string };
+  }[],
+  nowMs: number = Date.now(),
+): TodaySession[] {
+  const day = new Date(nowMs).toISOString().slice(0, 10);
+  return bookings
+    .filter((b) => b.state === "confirmed" && typeof b.startUtc === "string" && b.startUtc.slice(0, 10) === day)
+    .sort((a, b) => a.startUtc.localeCompare(b.startUtc))
+    .map((b) => ({
+      bookingId: b.id,
+      title: b.serviceTitle,
+      customer: b.customer.name || b.customer.email || b.customer.npub || "someone",
+      startUtc: b.startUtc,
+      endUtc: b.endUtc,
+    }));
 }
 
 /* ── the vault (the house's KV REST pattern, names only) ────────────────── */
