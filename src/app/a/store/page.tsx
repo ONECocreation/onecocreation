@@ -487,7 +487,8 @@ export default function StoreRoom() {
                         <b style={{ display: "block", fontSize: ".92rem", color: "var(--ink-strong)" }}>{item.title}</b>
                         <span style={{ fontSize: ".72rem", color: "var(--muted)" }}>
                           {KIND_WORD[item.kind]}
-                          {item.category && ` · ${item.category}`}
+                          {item.category && item.category.trim().toLowerCase() !== KIND_WORD[item.kind] &&
+                            ` · ${item.category}`}
                           {item.sku && ` · №${item.sku}`}
                           {item.sizes && item.sizes.length > 0 && ` · ${item.sizes.join(" ")}`}
                           {item.media?.deliverable &&
