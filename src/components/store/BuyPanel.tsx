@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
-import type { StoreItem } from "@/lib/store";
+import type { Price, StoreItem } from "@/lib/store";
 import { dollars } from "@/lib/money-words";
+import { readSession } from "@/lib/session-read";
 import SubscribeForm from "@/components/SubscribeForm";
 
 /**
@@ -31,6 +32,30 @@ export function buyDoorLabel(
   return price.sats != null
     ? `GET IT ⚡ ${price.sats.toLocaleString("en-US")} sats`
     : `GET IT ⚡ ${price.fiat ? dollars(price.fiat.amount, price.fiat.currency) : "—"}`;
+}
+
+/**
+ * TASK-177 (0018.06.18 a₿) — the gated line KNOWS the visitor. Signed in
+ * (the same /api/frens/session read the header's FrenBadge makes, wrapped
+ * in lib/session-read.ts): no email field, no second ceremony — the line
+ * says whose account. A guest keeps TASK-173's basket-rule words VERBATIM.
+ * Pure + exported for tests/item-page.test.ts.
+ */
+export function gatedLine(memberName: string | null): string {
+  return memberName
+    ? `yours on this account · ${memberName} · the moment payment settles`
+    : "your download opens on the receipt page, and a receipt letter brings the door too — sign in, or your email below becomes your account, and it’s yours the moment payment settles.";
+}
+
+/** the quantity stepper's honest door: the button carries the LINE total
+ *  (unit × qty) so the words match the charge — never a unit price on a
+ *  qty>1 door */
+export function scalePrice(price: Price, qty: number): Price {
+  if (qty <= 1) return price;
+  return {
+    sats: price.sats != null ? price.sats * qty : undefined,
+    fiat: price.fiat ? { amount: price.fiat.amount * qty, currency: price.fiat.currency } : undefined,
+  };
 }
 
 const glassField: React.CSSProperties = {
@@ -64,8 +89,22 @@ export default function BuyPanel({
   const [busy, setBusy] = useState(false);
   const [basketNote, setBasketNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // TASK-177 — the panel knows you are signed in (the header's own session
+  // read): no email field for a member, the gated line names the account
+  const [memberName, setMemberName] = useState<string | null>(null);
+  const [qty, setQty] = useState(1);
+  useEffect(() => {
+    let live = true;
+    readSession()
+      .then((s) => { if (live && s) setMemberName(s.name); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, []);
 
   const needsShipping = item.fulfillment === "self";
+  // TASK-177 — the ShinePages template's quantity stepper rides the WARES
+  // (the shippable goods); digital/package/service keep their own doors
+  const showQty = item.kind === "self" || item.kind === "fourthwall";
   const gated = item.kind === "digital" || item.kind === "package" || item.kind === "retreat";
   const sizes = item.sizes ?? [];
   const needsSize = sizes.length > 0;
@@ -106,6 +145,7 @@ export default function BuyPanel({
         body: JSON.stringify({
           itemId: item.id,
           size: size ?? undefined,
+          qty: showQty && qty > 1 ? qty : undefined,
           discountCode: discountCode.trim() || undefined,
           contact: email ? { email } : undefined,
           shipping: needsShipping ? { name: shipName, address: shipAddr } : undefined,
@@ -196,14 +236,16 @@ export default function BuyPanel({
       )}
       {gated && (
         <p style={{ margin: "8px 0 0", fontSize: ".8rem", color: "var(--info)" }}>
-          {/* TASK-173 — the honest promise: no second sign-in ceremony */}
-          your download opens on the receipt page, and a receipt letter brings the door too — sign in, or your email below becomes your account, and it’s yours the moment payment settles.
+          {/* TASK-173's guest words, verbatim — TASK-177: signed in, the
+              panel names the account instead (gatedLine) */}
+          {gatedLine(memberName)}
         </p>
       )}
       {shownPrice && (
         <p style={{ margin: "12px 0 0", fontSize: "1.05rem", color: "var(--ink-strong, #2d2440)" }}>
           {struckPrice && <s style={{ marginRight: 8, color: "var(--muted, #897f97)" }}>{struckPrice}</s>}
           {shownPrice}
+          {showQty && qty > 1 && <span style={{ fontSize: ".78rem", color: "var(--muted, #897f97)" }}> each</span>}
           {item.sale && <span style={{ fontSize: ".78rem", color: "var(--rose, #b64f6b)" }}> · on sale</span>}
         </p>
       )}
@@ -232,11 +274,15 @@ export default function BuyPanel({
       )}
       <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
         {/* 1rem fields = 16px, so iOS doesn't zoom-jump on focus */}
-        <label style={fieldLabel}>
-          email for your receipt {gated ? "(it becomes your account if you are not signed in)" : "(optional)"}
-          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email"
-            style={{ ...glassField, marginTop: 3 }} />
-        </label>
+        {/* TASK-177 — signed in, the account is already known: no email
+            field at all (the receipt letter finds the member's own door) */}
+        {!memberName && (
+          <label style={fieldLabel}>
+            email for your receipt {gated ? "(it becomes your account if you are not signed in)" : "(optional)"}
+            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email"
+              style={{ ...glassField, marginTop: 3 }} />
+          </label>
+        )}
         <label style={fieldLabel}>
           discount code (optional)
           <input value={discountCode} onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
@@ -260,6 +306,20 @@ export default function BuyPanel({
           </>
         )}
       </div>
+      {/* TASK-177 — the template's quantity stepper for the wares, beside
+          the doors; the 1..21 clamp is the basket's own law (/api/cart) */}
+      {showQty && (
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 16 }}>
+          <span style={{ ...fieldLabel, margin: 0 }}>quantity</span>
+          <button type="button" className="chip-select" aria-label="one less"
+            onClick={() => setQty((q) => Math.max(1, q - 1))}
+            style={{ fontSize: ".95rem", padding: "4px 14px" }}>−</button>
+          <span aria-live="polite" style={{ minWidth: 22, textAlign: "center", fontSize: "1rem" }}>{qty}</span>
+          <button type="button" className="chip-select" aria-label="one more"
+            onClick={() => setQty((q) => Math.min(21, q + 1))}
+            style={{ fontSize: ".95rem", padding: "4px 14px" }}>+</button>
+        </div>
+      )}
       {/* the doors — bottom center, evenly spaced */}
       <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginTop: 18 }}>
         <button
@@ -268,7 +328,7 @@ export default function BuyPanel({
           className="btn btn-gold btn-sm"
           style={{ opacity: busy || (needsShipping && (!shipName || !shipAddr)) || (needsSize && !size) ? 0.5 : 1 }}
         >
-          {busy ? "Opening checkout…" : needsSize && !size ? "Pick a size first" : buyDoorLabel(rail, effective)}
+          {busy ? "Opening checkout…" : needsSize && !size ? "Pick a size first" : buyDoorLabel(rail, showQty ? scalePrice(effective, qty) : effective)}
         </button>
         <button
           onClick={async () => {
@@ -276,7 +336,7 @@ export default function BuyPanel({
             const res = await fetch("/api/cart", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ itemId: item.id, size: size ?? undefined }),
+              body: JSON.stringify({ itemId: item.id, size: size ?? undefined, qty: showQty ? qty : undefined }),
             });
             if ((await res.json().catch(() => ({ ok: false }))).ok) {
               setBasketNote("in the basket 🧺");

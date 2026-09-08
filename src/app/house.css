@@ -429,6 +429,22 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
              linear-gradient(180deg,rgba(10,6,20,.72) 0%,rgba(10,6,20,.45) 55%,rgba(10,6,20,.18) 100%)}
 .book-shelf-veil>.wrap{position:relative;z-index:1}
 
+/* ── TASK-177 (0018.06.18 a₿, block 966,098) — the item page wears the
+   ShinePages product template (recon 03-product-page-template-top.jpg): TWO
+   columns at ≥900px — the picture left (~45%), the buy column right — one
+   column on the phone (the picture, then the buy column). The page holds
+   the night in BOTH themes (T-152's keep-dark law): .item-veil is the
+   page-scoped ground, the .login-galaxy / .book-shelf-veil precedent — the
+   same literal purple-over-night family (88,52,150 over 10,6,20), every
+   word riding the keep-dark night inks, the cards their own night glass. ── */
+.product-cols{display:grid;gap:36px;align-items:start}
+@media(min-width:900px){.product-cols{grid-template-columns:minmax(0,9fr) minmax(0,11fr)}}
+.item-veil{position:relative;overflow:hidden}
+.item-veil::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(900px 520px at 50% 0%,rgba(88,52,150,.42),transparent 65%),
+             linear-gradient(180deg,rgba(10,6,20,.78) 0%,rgba(10,6,20,.5) 60%,rgba(10,6,20,.25) 100%)}
+.item-veil>.wrap{position:relative;z-index:1}
+
 /* the nav's right tail (member name + Support) never wraps under the menu —
    the Admiral's persistent catch; it lives OUTSIDE the wrapping nav now */
 .site-header .bar{flex-wrap:wrap}
