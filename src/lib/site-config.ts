@@ -118,7 +118,8 @@ export type SiteConfigPatch = {
     hand-edited doc can never grow a door (or an external link) the house
     didn't build. */
 export const KNOWN_NAV_HREFS: readonly string[] = [
-  "/about", "/memberships", "/packages", "/store", "/book", "/services",
+  "/about", "/memberships", "/packages", "/store", "/store/meditations",
+  "/store/memberships", "/book", "/services",
   "/classes", "/news", "/letters", "/meditation", "/support", "/contact", "/me",
 ];
 
@@ -262,7 +263,15 @@ function sanitizeNavChild(raw: unknown): NavChild | null {
 
 /** One top-level row: a leaf (href) or a header (children), one level of
     nesting only. A row that ends up with neither a valid href nor any
-    surviving children is a dead header and is dropped. */
+    surviving children is a dead header and is dropped.
+
+    TASK-176 (0018.06.18 a₿) READ-MIGRATION: a saved nav that still points
+    the STORE header's Meditations child at /meditation (the gift page — the
+    seeded default before this lane) is rewritten on read to
+    /store/meditations, the shelf the button was always meant to open. The
+    migration keys on the header's own href ("/store") — the Community
+    header's "Free meditation" child keeps /meditation, because there it IS
+    the gift. Labels and ids are Love's and ride along untouched. */
 function sanitizeNavItem(raw: unknown): NavItem | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
@@ -274,11 +283,14 @@ function sanitizeNavItem(raw: unknown): NavItem | null {
   const hrefRaw = typeof o.href === "string" ? o.href : undefined;
   const href = hrefRaw && KNOWN_NAV_HREFS.includes(hrefRaw) ? hrefRaw : undefined;
   if (!href && children.length === 0) return null;
+  const migrated = href === "/store"
+    ? children.map((c) => (c.href === "/meditation" ? { ...c, href: "/store/meditations" } : c))
+    : children;
   const fallbackLabel = href ?? children[0]?.label ?? "Untitled";
   const label = typeof o.label === "string" && o.label.trim() ? o.label.trim().slice(0, 60) : fallbackLabel;
   const fallbackId = href ?? `header-${children[0]?.id ?? "x"}`;
   const id = typeof o.id === "string" && o.id.trim() ? o.id.trim().slice(0, 60) : fallbackId;
-  return { id, label, ...(href ? { href } : {}), ...(children.length ? { children } : {}) };
+  return { id, label, ...(href ? { href } : {}), ...(migrated.length ? { children: migrated } : {}) };
 }
 
 /** The whole nav doc → known-good rows, or `undefined` when there's nothing
