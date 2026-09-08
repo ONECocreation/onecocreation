@@ -4,18 +4,20 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import useFrenSession from "@/hooks/useFrenSession";
 import DoorSheet from "./DoorSheet";
-import { MEMBER_MENU } from "./door-machine";
+import { MEMBER_MENU, proofFor } from "./door-machine";
 
 /**
- * TASK-185 Phase A prototype — the header's door chip. Signed out: a
- * "Log in" button that opens the small sheet right under it (Love's idea —
- * the page behind does not change). Signed in: the member's name in the
- * brand's gold, opening the member menu — my library, my sessions, the
+ * TASK-185 Phase B — the header's door chip. Signed out: a "Log in" button
+ * that opens the small sheet right under it (Love's idea — the page behind
+ * does not change). Signed in: the member's name in the brand's gold,
+ * opening the member menu — what's yours now, my library, my sessions, the
  * reading room, sign out. That is the whole menu.
  *
- * Replaces FrenBadge in SiteHeader (this lane's OWNS: the button + the
- * sheet mount + the member menu). FrenBadge itself is unowned and stays
- * in the tree, unreferenced — its retirement is a Phase B ruling.
+ * Ruling 3 (the Admiral, 0018.06.18 a₿): the chip stays "Log in" until the
+ * walk completes — NEVER a placeholder name mid-walk (the email verifies
+ * before the name is claimed; the mailbox's local part is not a name).
+ * Replaces FrenBadge in SiteHeader; FrenBadge itself is retired (ruling 2),
+ * its known-by-name rule carried over below.
  */
 /* the known-by name survives a client-side nav: the session store (unowned
    hook) carries only handle+space, so the claimed name is kept at module
@@ -63,8 +65,14 @@ export default function DoorButton() {
   /* the first session answer hasn't landed — render nothing judgmental */
   if (!checked) return null;
 
-  const name = session ? knownBy ?? (session.space === "email" ? session.handle.split("@")[0] : session.handle) : null;
+  /* Ruling 3: while a walk owns the sheet the chip stays "Log in" — the
+     session can flip mid-walk (the email verifies before the name is
+     claimed) and a placeholder name must never show. */
+  const walking = open === "sheet";
+  const name = !walking && session ? knownBy ?? (session.space === "email" ? session.handle.split("@")[0] : session.handle) : null;
   const short = name && name.length > 14 ? `${name.slice(0, 13)}…` : name;
+  /* K7 — real or bot: how this soul proved themselves, listed in the menu */
+  const proof = session ? proofFor(session.space) : null;
 
   /* the one nav-dropdown recipe — poured from the --pop-* jug, same as
      .nav-sub; the sheet and the menu drink from it alike */
@@ -83,11 +91,15 @@ export default function DoorButton() {
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
       {!name ? (
         <button
-          onClick={() => setOpen((o) => (o === "sheet" ? null : "sheet"))}
-          aria-expanded={open === "sheet"}
+          onClick={() => {
+            /* inert while a walk owns the sheet (ruling 3) — the chip only
+               ever opens the walk, it never interrupts one */
+            if (!walking) setOpen("sheet");
+          }}
+          aria-expanded={walking}
           aria-haspopup="dialog"
           style={{
-            background: "none", border: "none", cursor: "pointer", color: "inherit",
+            background: "none", border: "none", cursor: walking ? "default" : "pointer", color: "inherit",
             font: "inherit", letterSpacing: ".05em", textTransform: "uppercase",
             fontSize: ".78rem", whiteSpace: "nowrap",
           }}
@@ -126,6 +138,18 @@ export default function DoorButton() {
 
       {open === "menu" && name && (
         <div role="menu" style={{ ...pop, minWidth: 190, padding: "10px 0" }}>
+          {/* the soul, listed — with K7's one honest badge: how they proved
+              themselves (an inbox answered a code / a signer signed) */}
+          <p style={{ margin: 0, padding: "2px 18px 10px", borderBottom: "1px solid rgba(217,178,78,.25)" }}>
+            <span style={{ display: "block", color: "#ECE3C9", fontSize: ".8rem", fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase" }}>
+              {name}
+            </span>
+            {proof && (
+              <span style={{ fontSize: ".64rem", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--muted)" }}>
+                {proof}
+              </span>
+            )}
+          </p>
           {MEMBER_MENU.map((i) => (
             <Link
               key={i.label}

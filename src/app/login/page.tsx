@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 };
 
 /* The front door dressed in the house sky (Admiral, 0018.05.15).
- * TASK-185 Phase A prototype: the SAME door component the header's sheet
+ * TASK-185 Phase B (ruled): the SAME door component the header's sheet
  * mounts, shown full-page for the deep-link cases (`?next=`, the reading
- * room's doors) — one walk, two mounts, they never disagree. LoginPanel
- * (owned) stays in the tree, unreferenced, until the ruling. */
+ * room's doors, the middleware's signed-out redirect) — one walk, two
+ * mounts, they never disagree. LoginPanel is retired (ruling 2). */
 export default function LoginPage() {
   return (
     <>

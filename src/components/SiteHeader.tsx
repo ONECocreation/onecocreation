@@ -32,10 +32,10 @@ export default function SiteHeader() {
         <div className="nav-tail">
           <ThemeLantern />
           {!underConsole && <BasketChip />}
-          {/* TASK-185 Phase A prototype — the door chip: Log in opens the
-              small sheet under the button; signed in, the name opens the
-              member menu. FrenBadge stays in the tree, unreferenced (its
-              retirement is a Phase B ruling — unowned file, untouched). */}
+          {/* TASK-185 Phase B — the door chip: Log in opens the small sheet
+              under the button; signed in, the name opens the member menu.
+              FrenBadge is retired (the Admiral's ruling 2), its known-by
+              rule carried into DoorButton. */}
           <DoorButton />
         </div>
       </div>

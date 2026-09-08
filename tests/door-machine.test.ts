@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   DOOR_COPY,
@@ -10,15 +10,18 @@ import {
   MEMBER_MENU,
   isUnnamedKeyReason,
   landingFor,
+  proofFor,
   reduce,
 } from "@/components/door/door-machine";
 
 /**
- * TASK-185 Phase A (prototype) — the door's contract, pinned at the model:
- * the state machine, the counted walks, the landing rule, the member menu,
- * and the no-arcade-voice law on every word the door renders. (This repo's
- * tests run in node with no DOM — pin the model, not the render, the same
- * pattern login-card.test.ts uses for EmailDoor.)
+ * TASK-185 — the door's contract, pinned at the model: the state machine,
+ * the counted walks, the landing rule, the member menu, the proof badge,
+ * and the no-arcade-voice law on every word the door renders. Phase B adds
+ * the ruling pins: /welcome is the what's-yours-now page (no second walk),
+ * the arcade pieces are retired, the chip never shows a placeholder name
+ * mid-walk. (This repo's tests run in node with no DOM — pin the model,
+ * not the render, the same pattern login-card.test.ts uses for EmailDoor.)
  */
 describe("the door's state machine (TASK-185)", () => {
   it("opens from closed into sign-in, and only from closed", () => {
@@ -94,8 +97,9 @@ describe("the new-key test — the server's own words", () => {
 });
 
 describe("the member menu — the whole of it", () => {
-  it("my library, my sessions, the reading room — sign out renders beside them in DoorButton", () => {
-    expect(MEMBER_MENU.map((i) => i.label)).toEqual(["My library", "My sessions", "The reading room"]);
+  it("what's yours now (ruling 1: /welcome linked), my library, my sessions, the reading room — sign out renders beside them in DoorButton", () => {
+    expect(MEMBER_MENU.map((i) => i.label)).toEqual(["What's yours now", "My library", "My sessions", "The reading room"]);
+    expect(MEMBER_MENU[0]!.href).toBe("/welcome");
     for (const i of MEMBER_MENU) expect(i.href.startsWith("/")).toBe(true);
   });
 });
@@ -136,5 +140,103 @@ describe("the door speaks as Love does — no arcade voice (source pin)", () => 
     expect(DOOR_COPY["sign-in"].title).toBe("Welcome home");
     expect(DOOR_COPY.in.title).toBe("You're in");
     expect(DOOR_COPY["new-name"].title).toBe("Your name in the field");
+  });
+});
+
+/* ── Phase B: the Admiral's four rulings + K7, pinned ─────────────────── */
+
+const SRC = join(__dirname, "..", "src");
+const readSrc = (...p: string[]) => readFileSync(join(SRC, ...p), "utf8");
+/* retirement pins scan what COMPILES — comments may honestly name the
+   retired pieces (they say why they're gone) */
+const stripComments = (s: string) =>
+  s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+describe("ruling 1 — /welcome is the what's-yours-now page, never a second walk", () => {
+  const flow = () => readSrc("components", "welcome", "WelcomeFlow.tsx");
+
+  it("the join / code / names steps are retired — the page calls no auth or claim route", () => {
+    const src = flow();
+    expect(src).not.toContain("/api/auth/email/start");
+    expect(src).not.toContain("/api/auth/email/verify");
+    expect(src).not.toContain("/api/frens/availability");
+    expect(src).not.toContain("/api/frens/claim");
+    expect(src).not.toMatch(/step === "(join|code|names)"/);
+  });
+
+  it("the three what's-yours doors survive as the whole page", () => {
+    const src = flow();
+    expect(src).toContain("Book your discovery call");
+    expect(src).toContain("Step into Heartfield Commons");
+    expect(src).toContain("Wander the store");
+  });
+
+  it("a signed-out visitor is pointed at the one door (/login), never re-asked an email", () => {
+    const src = flow();
+    expect(src).toContain('href="/login"');
+    expect(src).not.toContain('type="email"');
+  });
+
+  it("the URL keeps its place (the page still mounts the flow)", () => {
+    const page = readSrc("app", "welcome", "page.tsx");
+    expect(page).toContain('from "@/components/welcome/WelcomeFlow"');
+  });
+});
+
+describe("ruling 2 — the arcade pieces are retired; EmailDoor's callers ride the sheet", () => {
+  it("LoginPanel, TagClaim, FrenBadge are gone from the tree", () => {
+    expect(existsSync(join(SRC, "components", "LoginPanel.tsx"))).toBe(false);
+    expect(existsSync(join(SRC, "components", "TagClaim.tsx"))).toBe(false);
+    expect(existsSync(join(SRC, "components", "FrenBadge.tsx"))).toBe(false);
+  });
+
+  it("the /welcome arcade-font scoping retired with TagClaim", () => {
+    expect(existsSync(join(SRC, "app", "welcome", "layout.tsx"))).toBe(false);
+  });
+
+  it("the puck join blocks ride the one door (/login) — no TagClaim, no embedded EmailDoor", () => {
+    const view = stripComments(readSrc("lib", "puck-blocks", "JoinSurfaceView.tsx"));
+    expect(view).not.toContain("TagClaim");
+    expect(view).not.toContain("EmailDoor");
+    expect(view).not.toContain("SignerDoors");
+    expect(view).toContain('href="/login"');
+  });
+
+  it("the console's door previews render the real door, not the retired panel", () => {
+    for (const f of [
+      ["components", "BrandTester.tsx"],
+      ["components", "console", "BrandDesk.tsx"],
+    ] as const) {
+      const src = stripComments(readSrc(...f));
+      expect(src, f.join("/")).not.toContain("LoginPanel");
+      expect(src, f.join("/")).toContain("DoorSheet");
+    }
+  });
+});
+
+describe("ruling 3 — the chip stays \"Log in\" until the walk completes", () => {
+  it("a walk in progress forces the signed-out chip (source pin)", () => {
+    const src = readSrc("components", "door", "DoorButton.tsx");
+    /* the name renders only when no walk owns the sheet */
+    expect(src).toContain('const walking = open === "sheet"');
+    expect(src).toMatch(/const name = !walking && session/);
+    /* and the Log in chip is inert mid-walk */
+    expect(src).toContain("if (!walking) setOpen(");
+  });
+});
+
+describe("K7 — the proof badge: by email / by key, one honest word", () => {
+  it("an inbox soul proves by email, a key soul by signer, the unknown is a dash", () => {
+    expect(proofFor("email")).toBe("by email");
+    expect(proofFor("onecocreation")).toBe("by key");
+    expect(proofFor(null)).toBeNull();
+    expect(proofFor(undefined)).toBeNull();
+    expect(proofFor("")).toBeNull();
+  });
+
+  it("the badge is listed where the soul is listed — the member menu (source pin)", () => {
+    const src = readSrc("components", "door", "DoorButton.tsx");
+    expect(src).toContain("proofFor(session.space)");
+    expect(src).toContain("{proof}");
   });
 });

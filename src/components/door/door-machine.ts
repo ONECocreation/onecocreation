@@ -1,6 +1,6 @@
 /**
- * TASK-185 Phase A — THE DOOR's state machine (prototype; throwaway if the
- * Admiral's ruling changes the shape).
+ * TASK-185 Phase B — THE DOOR's state machine, as ruled (the Admiral,
+ * 0018.06.18 a₿: the design stands).
  *
  * One walk, one identity: a soul is a NAME under @onecocreation, reached by
  * EMAIL (a six-digit code) or by a NOSTR KEY — two ways to the same name,
@@ -75,12 +75,26 @@ export function landingFor(opts: { next: string | null; isNew: boolean; mount: "
   return opts.mount === "page" ? "/me" : null; // null = close the sheet, stay put
 }
 
-/** The member menu — the whole of it (Number One, from the Admiral's words). */
+/** The member menu — the whole of it (Number One, from the Admiral's words).
+ *  Ruling 1 (0018.06.18 a₿): /welcome keeps its URL as the post-sign-in
+ *  "what's yours now" page, linked from this menu. */
 export const MEMBER_MENU = [
+  { label: "What's yours now", href: "/welcome" }, // ruling 1 — the `in` step became this page
   { label: "My library", href: "/me" }, // T-173's purchases live on /me
   { label: "My sessions", href: "/me/calendar" },
   { label: "The reading room", href: "/rooms/weekly-reading" },
 ] as const;
+
+/** K7 (0018.06.17 a₿) — real or bot: ONE honest badge wherever a soul is
+ *  listed. email = an inbox answered a code; key = a signer signed. The
+ *  session's own space is the truth — "email" for the inbox door, the
+ *  Spaces community name for a claimed key — and anything the site doesn't
+ *  know is a dash, never a guess (derive-or-dash). */
+export type DoorProof = "by email" | "by key";
+export function proofFor(space: string | null | undefined): DoorProof | null {
+  if (!space) return null;
+  return space === "email" ? "by email" : "by key";
+}
 
 /** The door speaks as Love does. Every rendered word in the door derives
  *  from this table — the arcade-voice pin tests THIS, once. */

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { mintCode, emailAuthConfigured } from "@/lib/email-auth";
 import { validEmail } from "@/lib/subscribers";
 import { sendMail, mailConfigured, brandShell } from "@/lib/mail";
+import { countSend, sendVerdict, CODE_DOOR_HELD } from "../code-door-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,13 @@ export async function POST(request: Request) {
   const email = (body.email ?? "").trim();
   if (!validEmail(email)) {
     return NextResponse.json({ ok: false, reason: "that email doesn't look right" }, { status: 400 });
+  }
+
+  /* K7 — the code door's meter (TASK-185 Phase B): three codes per email
+     per ten-minute window, then the door holds with an honest 429 — no
+     captcha, no flooded inbox. */
+  if (sendVerdict(await countSend(email)) === "hold") {
+    return NextResponse.json({ ok: false, reason: CODE_DOOR_HELD }, { status: 429 });
   }
 
   const code = await mintCode(email);

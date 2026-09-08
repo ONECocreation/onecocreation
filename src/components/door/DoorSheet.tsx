@@ -18,7 +18,7 @@ import {
 } from "./door-machine";
 
 /**
- * TASK-185 Phase A prototype — THE DOOR. One component, two mounts: a small
+ * TASK-185 Phase B (ruled) — THE DOOR. One component, two mounts: a small
  * sheet under the header's Log in (the page behind does not change), and
  * the full page /login shows (deep links, `?next=`). They never disagree —
  * both render this card.
@@ -27,7 +27,7 @@ import {
  * code verifies into no member profile, or a good key that owns no name
  * yet, parks on the new-name step — never an error, never a second door.
  *
- * FIXTURE AUTH: every call below is the REAL route (`/api/auth/email/*`,
+ * Every call below is a REAL route (`/api/auth/email/*`,
  * `/api/frens/session`, `/api/frens/claim`, `/api/member/profile`,
  * `/api/frens/availability`) — against the dev vault in dev, never the
  * live site. Nothing here mocks a route shape the server doesn't answer.
