@@ -1,15 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ROOMS } from "@/lib/matrix-rooms";
 
 /**
  * THE CLASS DOOR CARD (TASK-37/S40 lane 1) — the button's first home, on
- * the /a console front page. A room picker (CLASS rooms only — community
- * live is a later ruling), an optional opening message (blank = the house
- * words), Open / Close, and the class-starting letter as an explicit
- * option, DEFAULT OFF (the mail rail is reputation armor). Talks only to
- * /api/admin/live, which is operator-gated server-side like every /a
- * surface — this card never holds a credential.
+ * the /a console front page. A room picker, an optional opening message
+ * (blank = the house words), Open / Close, and the class-starting letter
+ * as an explicit option, DEFAULT OFF (the mail rail is reputation armor).
+ * Talks only to /api/admin/live, which is operator-gated server-side like
+ * every /a surface — this card never holds a credential.
+ *
+ * TASK-174 (0018.06.17 a₿ · block 966094): the picker lists EVERY room in
+ * ROOMS — class AND community — grouped, the Heart Field Commons (the free
+ * room, minTier "all") first. The old class-only filter meant the Commons
+ * could only be opened live by a raw POST; now the desk's doors match the
+ * house's rooms.
  */
 interface DoorFeed {
   ok: boolean;
@@ -17,6 +23,35 @@ interface DoorFeed {
   rooms: { slug: string; title: string; kind: string }[];
   matrixConfigured: boolean;
   vaultConfigured: boolean;
+}
+
+export interface DoorRoom {
+  slug: string;
+  title: string;
+  kind: string;
+}
+export interface DoorRoomGroup {
+  label: string;
+  rooms: DoorRoom[];
+}
+
+/** A feed room's minTier, joined from the rooms registry (pure data,
+ *  client-safe). Unknown slug → null (derive-or-dash). */
+const minTierOf = (slug: string) =>
+  ROOMS.find((r) => r.id.slice(1, r.id.indexOf(":")) === slug)?.minTier ?? null;
+
+/** The picker's groups: the free room (minTier "all" — the Commons) first,
+ *  then the classes, then the other community rooms. Exported for tests
+ *  (the house pins the model, not the render). */
+export function doorRoomGroups(rooms: DoorRoom[]): DoorRoomGroup[] {
+  const free = rooms.filter((r) => minTierOf(r.slug) === "all");
+  const classes = rooms.filter((r) => r.kind === "class" && !free.includes(r));
+  const community = rooms.filter((r) => r.kind === "community" && !free.includes(r));
+  const out: DoorRoomGroup[] = [];
+  if (free.length) out.push({ label: "The Commons — free for every member", rooms: free });
+  if (classes.length) out.push({ label: "Classes", rooms: classes });
+  if (community.length) out.push({ label: "Community rooms", rooms: community });
+  return out;
 }
 
 export default function LiveDoorCard() {
@@ -37,7 +72,8 @@ export default function LiveDoorCard() {
       .then((d) => {
         if (!d?.ok) return;
         setFeed(d);
-        setRoom((cur) => cur || d.rooms.find((r: { kind: string }) => r.kind === "class")?.slug || "");
+        /* the Commons leads the picker, so it leads the default too */
+        setRoom((cur) => cur || doorRoomGroups(d.rooms)[0]?.rooms[0]?.slug || "");
       })
       .catch(() => {});
   }, []);
@@ -76,7 +112,7 @@ export default function LiveDoorCard() {
 
   if (denied || !feed) return null;
 
-  const classRooms = feed.rooms.filter((r) => r.kind === "class");
+  const groups = doorRoomGroups(feed.rooms);
   const liveTitle = feed.state.live ? feed.rooms.find((r) => r.slug === feed.state.room)?.title : null;
   const railsDark = !feed.matrixConfigured || !feed.vaultConfigured;
 
@@ -107,10 +143,14 @@ export default function LiveDoorCard() {
               value={room}
               onChange={(e) => setRoom(e.target.value)}
             >
-              {classRooms.map((r) => (
-                <option key={r.slug} value={r.slug}>
-                  {r.title}
-                </option>
+              {groups.map((g) => (
+                <optgroup key={g.label} label={g.label}>
+                  {g.rooms.map((r) => (
+                    <option key={r.slug} value={r.slug}>
+                      {r.title}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
             <button className="btn btn-sm" onClick={() => act("open")} disabled={busy || !room || railsDark}>

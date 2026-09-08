@@ -14,11 +14,15 @@ import { ROOMS } from "@/lib/matrix-rooms";
  * like its WildDoors siblings.
  */
 
-/** The reading room's slug, DERIVED from the rooms registry (the room whose
- *  title says "Reading" — today "Chronicles: Weekly Reading"). Derive-or-
- *  dash: no reading room in the registry → null, and the card shows its
- *  words with NO door rather than a fake link. */
-const readingRoom = ROOMS.find((r) => /reading/i.test(r.title));
+/** The reading room's slug, DERIVED from the rooms registry. TASK-174
+ *  (0018.06.17 a₿ · block 966094): the free path leads to the FREE room —
+ *  the one whose door is open to every member (minTier "all"), the Heart
+ *  Field Commons — so the card's own words ("free for every member") stay
+ *  true. Before this lane it derived the room whose title says "Reading"
+ *  ("Chronicles: Weekly Reading", a tier-B room) while saying "free".
+ *  Derive-or-dash: no free room in the registry → null, and the card shows
+ *  its words with NO door rather than a fake link. */
+const readingRoom = ROOMS.find((r) => r.minTier === "all");
 export const READING_ROOM_SLUG: string | null = readingRoom
   ? readingRoom.id.slice(1, readingRoom.id.indexOf(":"))
   : null;
@@ -60,7 +64,7 @@ export default function ReadWithLove() {
       </div>
     </>
   );
-  /* derive-or-dash: with no reading room in the registry the card keeps its
+  /* derive-or-dash: with no free room in the registry the card keeps its
      words but carries no door (never a fake link) */
   if (!href) return <div className="wild-card">{body}</div>;
   return (

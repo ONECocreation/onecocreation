@@ -5,9 +5,10 @@ import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
  * first-sign-in welcome. Pins, not renders (node env, no DOM — the house's
  * "pin the model" idiom):
  *
- *   1. THE DOOR — Read with Love's card derives the reading room from the
- *      rooms registry (never a hardcoded fake), and leads a guest to the
- *      sign-in card with `?next=` carried, a member straight into the room.
+ *   1. THE DOOR — Read with Love's card derives the FREE room from the
+ *      rooms registry (minTier "all", the Heart Field Commons — TASK-174;
+ *      never a hardcoded fake), and leads a guest to the sign-in card with
+ *      `?next=` carried, a member straight into the room.
  *   2. THE `next` RULE — only same-origin absolute paths survive
  *      (src/lib/next-path.ts).
  *   3. THE SIGN-IN SUCCESS HOOK — /api/auth/email/verify: source `welcome`
@@ -90,12 +91,16 @@ function verifyReq(email = "reader@example.com", code = "123456") {
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
 describe("the free-reading door (TASK-156)", () => {
-  it("derives the reading room from the rooms registry — the room whose title says Reading", async () => {
+  it("derives the reading room from the rooms registry — the FREE room (minTier \"all\"), the Commons", async () => {
+    /* TASK-174: the free path leads to the Heart Field Commons, the room
+       whose door is open to every member — not the tier-B weekly-reading
+       room the T-156 derivation found by title. */
     const { READING_ROOM_SLUG, READING_ROOM_PATH } = await import("@/components/ReadWithLove");
     const { ROOMS } = await import("@/lib/matrix-rooms");
-    const room = ROOMS.find((r) => /reading/i.test(r.title));
-    expect(room).toBeTruthy(); // derive-or-dash: the reading room EXISTS
+    const room = ROOMS.find((r) => r.minTier === "all");
+    expect(room).toBeTruthy(); // derive-or-dash: the free room EXISTS
     expect(READING_ROOM_SLUG).toBe(room!.id.slice(1, room!.id.indexOf(":")));
+    expect(READING_ROOM_SLUG).toBe("heart-field"); // the Commons, never a tiered room
     expect(READING_ROOM_PATH).toBe(`/rooms/${READING_ROOM_SLUG}`);
   });
 
