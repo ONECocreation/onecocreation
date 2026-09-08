@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
 import type { StoreItem } from "@/lib/store";
+import { dollars } from "@/lib/money-words";
 import SubscribeForm from "@/components/SubscribeForm";
 
 /**
@@ -11,6 +13,25 @@ import SubscribeForm from "@/components/SubscribeForm";
  * invoice appears. Centered card, fields evenly spaced, the doors at the
  * bottom center (the Admiral's law).
  */
+
+/**
+ * TASK-147 (0018.06.17 a₿) — THE HONEST DOOR WORDS: the button says WHICH
+ * rail and WHAT price in words, never a bare "Buy now ⚡" that could be
+ * either rail (the bolt on a card charge was a lie of omission). The word
+ * is CARD, never "cash" (Love's law). Derive-or-dash: no price → "—".
+ * Pure + exported for tests/buy-panel.test.ts.
+ */
+export function buyDoorLabel(
+  rail: "btcpay" | "square",
+  price: { sats?: number; fiat?: { amount: number; currency: string } },
+): string {
+  if (rail === "square") {
+    return `PAY BY CARD ${price.fiat ? dollars(price.fiat.amount, price.fiat.currency) : "—"}`;
+  }
+  return price.sats != null
+    ? `GET IT ⚡ ${price.sats.toLocaleString("en-US")} sats`
+    : `GET IT ⚡ ${price.fiat ? dollars(price.fiat.amount, price.fiat.currency) : "—"}`;
+}
 
 const glassField: React.CSSProperties = {
   border: "1px solid rgba(139,118,196,.45)", borderRadius: 10, padding: "9px 12px",
@@ -104,11 +125,13 @@ export default function BuyPanel({
   if (!anyRailLive) {
     /* TASK-129 (0018.06.16 a₿) — THE SWITCHES: no live rail (switch OFF or
        env dark) → the waitlist form, never a pay button — same doctrine as
-       the Packages cards. */
+       the Packages cards. TASK-147: the words say it plainly first — "not
+       open yet — ask Love" — and the form is a real door, never a dead one. */
     return (
       <div style={{ marginTop: 24 }}>
         <p style={{ margin: "0 0 10px", fontSize: ".85rem", color: "var(--muted, #897f97)" }}>
-          the shelf opens for checkout very soon — browse with love ✨
+          not open yet — <Link href="/support" style={{ color: "inherit", textDecoration: "underline" }}>ask Love</Link>.
+          Leave your email and the door finds you the moment the shelf opens:
         </p>
         <SubscribeForm
           source={`waitlist-store-${item.id}`}
@@ -158,7 +181,7 @@ export default function BuyPanel({
       )}
       {gated && (
         <p style={{ margin: "8px 0 0", fontSize: ".8rem", color: "var(--info)" }}>
-          unlocks for your account — your email at checkout becomes it, or sign in first.
+          unlocks for your account — sign in first so the door knows you, then it’s yours the moment payment settles.
         </p>
       )}
       {needsSize && (
@@ -187,7 +210,7 @@ export default function BuyPanel({
       <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
         {/* 1rem fields = 16px, so iOS doesn't zoom-jump on focus */}
         <label style={fieldLabel}>
-          email for your receipt {gated ? "(becomes your account)" : "(optional)"}
+          email for your receipt {gated ? "(optional — the unlock rides your sign-in)" : "(optional)"}
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email"
             style={{ ...glassField, marginTop: 3 }} />
         </label>
@@ -222,7 +245,7 @@ export default function BuyPanel({
           className="btn btn-gold btn-sm"
           style={{ opacity: busy || (needsShipping && (!shipName || !shipAddr)) || (needsSize && !size) ? 0.5 : 1 }}
         >
-          {busy ? "Opening invoice…" : needsSize && !size ? "Pick a size first" : "Buy now ⚡"}
+          {busy ? "Opening checkout…" : needsSize && !size ? "Pick a size first" : buyDoorLabel(rail, effective)}
         </button>
         <button
           onClick={async () => {

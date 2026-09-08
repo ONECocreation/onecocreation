@@ -9,12 +9,35 @@ import {
   type OrderRecord,
   type PriceSnapshot,
 } from "@/lib/store";
-import { liveAdapter, getAdapter, ensureSquareVault } from "@/lib/payments";
+import { liveAdapter, getAdapter, ensureSquareVault, type CreatedCharge, type PaymentAdapter, type ChargeRequest } from "@/lib/payments";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 import { frenFromRequest } from "@/lib/fren-auth";
 
 export const dynamic = "force-dynamic";
+
+/** TASK-147 (0018.06.17 a₿) — THE RAIL'S OWN SENTENCE, IN WORDS: a throwing
+ *  adapter (Square 401, BTCPay unreachable, …) used to escape this route as
+ *  a bare 500 — an HTML error page the BuyPanel's res.json() choked on, so
+ *  the buyer saw "checkout unreachable", a lie: the rail WAS reached and
+ *  refused. Answer JSON with the adapter's message verbatim; the panel
+ *  prints it under the button. 502: the failure is upstream's, not ours. */
+async function tryCharge(
+  adapter: PaymentAdapter,
+  req: ChargeRequest,
+  idempotencyKey: string,
+): Promise<CreatedCharge | { error: NextResponse }> {
+  try {
+    return await adapter.createCharge(req, idempotencyKey);
+  } catch (err) {
+    return {
+      error: NextResponse.json(
+        { ok: false, reason: err instanceof Error ? err.message : "the rail refused the charge" },
+        { status: 502 },
+      ),
+    };
+  }
+}
 
 /**
  * Single-item checkout (no cart — v1 scope, said out loud). Two shapes:
@@ -79,16 +102,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, reason: `order is ${order.state}` }, { status: 409 });
     }
     const chargeAdapter = getAdapter(order.adapterId) ?? adapter;
-    const charge = await chargeAdapter.createCharge(
-      {
-        orderId: order.id,
-        amount: order.priceSnapshot.amount,
-        currency: order.priceSnapshot.currency,
-        buyerEmail: order.contact?.email,
-        redirectUrl: `${origin}/store/order/${order.id}`,
-      },
-      `${order.id}:${order.chargeIds.length}`
-    );
+    const charge = await tryCharge(chargeAdapter, {
+      orderId: order.id,
+      amount: order.priceSnapshot.amount,
+      currency: order.priceSnapshot.currency,
+      buyerEmail: order.contact?.email,
+      redirectUrl: `${origin}/store/order/${order.id}`,
+    }, `${order.id}:${order.chargeIds.length}`);
+    if ("error" in charge) return charge.error;
     await attachCharge(order.id, charge.chargeId);
     return NextResponse.json({ ok: true, orderId: order.id, payUrl: charge.payUrl, extras: charge.extras });
   }
@@ -173,16 +194,14 @@ export async function POST(request: Request) {
   }
   await createOrder(order);
 
-  const charge = await adapter.createCharge(
-    {
-      orderId: order.id,
-      amount: snapshot.amount,
-      currency: snapshot.currency,
-      buyerEmail: body.contact?.email,
-      redirectUrl: `${origin}/store/order/${order.id}`,
-    },
-    `${order.id}:0`
-  );
+  const charge = await tryCharge(adapter, {
+    orderId: order.id,
+    amount: snapshot.amount,
+    currency: snapshot.currency,
+    buyerEmail: body.contact?.email,
+    redirectUrl: `${origin}/store/order/${order.id}`,
+  }, `${order.id}:0`);
+  if ("error" in charge) return charge.error;
   await attachCharge(order.id, charge.chargeId);
 
   return NextResponse.json({ ok: true, orderId: order.id, payUrl: charge.payUrl, extras: charge.extras });

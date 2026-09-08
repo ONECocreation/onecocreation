@@ -11,6 +11,8 @@ import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES, TIER_ADDONS, tierPageBySlug, type TierPage } from "@/lib/tiers-content";
 import { getSiteConfig, type SiteConfig } from "@/lib/site-config";
 import { getItem } from "@/lib/store";
+import { liveAdapter, ensureSquareVault } from "@/lib/payments";
+import { dollars } from "@/lib/money-words";
 
 /** Admiral, 0018.06.17 a₿: nothing is offered or recommended whose store item is not live — a hidden
  *  item is off everywhere, not just off the shelf. */
@@ -83,16 +85,33 @@ export default async function TierPage({
   const t = TIERS[page.tier];
   const upgrade = page.upgradeSlug ? tierPageBySlug(page.upgradeSlug) : undefined;
   const switches = await getSiteConfig();
+  /* TASK-147 (0018.06.17 a₿): the add-on strip's doors need the rail TRUTH —
+     warm the square vault (cold instance) and judge both rails ONCE here,
+     then hand the truth down as props (AddonActions is a client component). */
+  await ensureSquareVault();
+  const rails = { btcpayLive: liveAdapter() !== null, squareLive: liveAdapter("square") !== null };
   const joined = sp?.joined === "1";
   const [mainLive, oneTimeLive, upgradeLive, related, addons] = await Promise.all([
     itemLive(page.slug),
     itemLive(page.oneTime?.itemId),
     itemLive(upgrade?.slug),
     Promise.all(TIER_PAGES.filter((p) => p.slug !== page.slug).map(async (p) => ((await itemLive(p.slug)) ? p : null))),
-    Promise.all(TIER_ADDONS.map(async (a) => ((await itemLive(a.itemId)) ? a : null))),
+    Promise.all(TIER_ADDONS.map(async (a) => {
+      const item = await getItem(a.itemId).catch(() => null);
+      if (item?.status !== "live") return null;
+      const eff = item.sale ?? item.price;
+      return {
+        ...a,
+        doors: {
+          ...rails,
+          satsLabel: eff.sats != null ? `${eff.sats.toLocaleString("en-US")} sats` : null,
+          fiatLabel: eff.fiat ? dollars(eff.fiat.amount, eff.fiat.currency) : null,
+        },
+      };
+    })),
   ]);
   const relatedLive = related.filter((p): p is TierPage => p !== null);
-  const addonsLive = addons.filter((a): a is (typeof TIER_ADDONS)[number] => a !== null);
+  const addonsLive = addons.filter((a): a is NonNullable<(typeof addons)[number]> => a !== null);
   // a hidden membership item cannot be bought — the page falls back to the waitlist door
   const mode = tierOfferMode(switches, joined) === "buy" && !mainLive ? "waitlist" : tierOfferMode(switches, joined);
 
@@ -238,8 +257,9 @@ export default async function TierPage({
                   <div className="body" style={{ alignItems: "center", textAlign: "center" }}>
                     <h3 className="card-title" style={{ fontWeight: 400, fontSize: "1.05rem" }}>{a.name}</h3>
                     <p className="card-sub" style={{ color: "var(--muted)", fontSize: ".85rem" }}>{a.sub}</p>
-                    {/* three doors (Admiral 0018.05.17): info · basket · buy */}
-                    <AddonActions itemId={a.itemId} />
+                    {/* the doors, honest about the rails (TASK-147): bitcoin /
+                        card / both / "not open yet — ask Love", never silent */}
+                    <AddonActions itemId={a.itemId} doors={a.doors} />
                   </div>
                 </div>
               ))}

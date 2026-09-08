@@ -6,7 +6,8 @@ import SiteFooter from "@/components/SiteFooter";
 import BuyPanel from "@/components/store/BuyPanel";
 import ImageLightbox from "@/components/store/ImageLightbox";
 import { getItem, stripPrivateMedia } from "@/lib/store";
-import { liveAdapter } from "@/lib/payments";
+import { liveAdapter, ensureSquareVault } from "@/lib/payments";
+import { getSiteConfig } from "@/lib/site-config";
 import { dollars } from "@/lib/money-words";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,15 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   // THE LEAK RULE (store.ts): the item feeds a client component's props —
   // strip the deliverable's private blobPath before anything serializes
   const item = stripPrivateMedia(raw);
+
+  /* TASK-147 (0018.06.17 a₿) — WARM BEFORE YOU JUDGE. On a cold instance
+     siteSwitchesSync() serves the DEFAULTS (btcpay:true — see site-config.ts's
+     cold-instance note) and the square vault cache is empty, so the bitcoin
+     door could render against Love's OFF switch while the card door vanished
+     per serverless instance (Love's meeting: "we tried bitcoin and square",
+     "cash payment doesn't show up"). Await both truths, THEN judge the rails. */
+  await getSiteConfig();
+  await ensureSquareVault();
 
   const effective = item.sale ?? item.price;
   const shots = item.media?.images.length ? item.media.images : item.images;
