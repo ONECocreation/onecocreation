@@ -126,6 +126,7 @@ export default function CircleView({
   const weekOfMonth = Math.ceil(today.day / 7);
 
   useEffect(() => {
+    if (gated) return; // the gate closed — the events never load
     if (!firstCell || !lastCell) return;
     const start = firstCell.civilDate;
     const days = Math.round((lastCell.civilDate.getTime() - firstCell.civilDate.getTime()) / 86_400_000) + 1;
@@ -135,7 +136,7 @@ export default function CircleView({
       .then((d) => { if (alive && d?.ok) setMarksFeed(d); })
       .catch(() => {});
     return () => { alive = false; };
-  }, [firstCell, lastCell]);
+  }, [firstCell, lastCell, gated]);
 
   function stepMonth(dir: -1 | 1) {
     let m = bftMonth + dir;
