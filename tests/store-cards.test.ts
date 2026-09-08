@@ -40,10 +40,10 @@ describe("storeCardModel — the shelf card's derived face", () => {
     expect(m.fiatSecondary).toBeNull();
   });
 
-  it("sats + fiat carries the fiat echo as the secondary line", () => {
+  it("sats + fiat leads with dollars by default (T-186: fiat first when the card rail is live), the sats echo second", () => {
     const m = storeCardModel(item({ price: { sats: 11111, fiat: { amount: 1100, currency: "USD" } } }));
-    expect(m.priceLabel).toBe("11,111 sats");
-    expect(m.fiatSecondary).toBe("$11");
+    expect(m.priceLabel).toBe("$11");
+    expect(m.fiatSecondary).toBe("or 11,111 sats");
   });
 
   it("a fiat-only price speaks in dollars — whole dollars, no cents (the flat-dollars law)", () => {

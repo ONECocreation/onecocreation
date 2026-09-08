@@ -185,19 +185,28 @@ describe("struckLine — the sale strikes the regular price through, in words", 
   const BOTH = { btc: true, card: true };
 
   it("a sale stands → the REGULAR price's words, ready to strike", () => {
-    expect(struckLine(item({ price: { fiat: { amount: 2500, currency: "USD" } }, sale: { fiat: { amount: 2000, currency: "USD" } } }), BOTH))
+    expect(struckLine(item({ price: { fiat: { amount: 2500, currency: "USD" } }, sale: { fiat: { amount: 2000, currency: "USD" } } }), BOTH, "fiat"))
       .toBe("$25");
   });
 
   it("no sale → null — nothing strikes (derive-or-dash)", () => {
-    expect(struckLine(item({}), BOTH)).toBeNull();
+    expect(struckLine(item({}), BOTH, "fiat")).toBeNull();
   });
 
   it("the struck words follow the live rails too (bitcoin off → dollars)", () => {
     expect(struckLine(
       item({ price: { sats: 21000, fiat: { amount: 2500, currency: "USD" } }, sale: { sats: 11111 } }),
       { btc: false, card: true },
+      "sats",
     )).toBe("$25");
+  });
+
+  it("TASK-186 — the struck words follow the visitor's preference too (sats word → sats struck)", () => {
+    expect(struckLine(
+      item({ price: { sats: 21000, fiat: { amount: 2500, currency: "USD" } }, sale: { sats: 11111 } }),
+      BOTH,
+      "sats",
+    )).toBe("21,000 sats");
   });
 });
 

@@ -9,7 +9,9 @@ import RelatedItems from "@/components/store/RelatedItems";
 import { getItem, listItems, stripPrivateMedia, type StoreItem } from "@/lib/store";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 import { getSiteConfig } from "@/lib/site-config";
-import { dollars } from "@/lib/money-words";
+import { priceWords, defaultPreferOf, type MoneyPrefer, type MoneyRails } from "@/lib/money-words";
+import { preferFromCookieHeader } from "@/lib/money-preference";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -17,30 +19,25 @@ export const dynamic = "force-dynamic";
  * TASK-157 (0018.06.17 a₿, cut from the T-147 review): the price line
  * follows THE SWITCHES (T-129) — the same rail truth BuyPanel's
  * buyDoorLabel() judges by (railLive/squareLive off liveAdapter()), now
- * judging the price LINE instead of the button. Bitcoin off → dollars
- * lead (dash if card's off too). Both live → sats first, the dollar echo
- * second. Only bitcoin → sats alone, no fiat echo, even when the item
- * carries a fiat price — that rail isn't open. Neither live → a dash
- * (derive-or-dash). The shelf card carries the identical rule as its own
- * copy (StoreItemCard.tsx's priceLine) — a "use client" module's exports
- * can't be called from this server component (RSC boundary — confirmed by
- * `next dev`, not merely assumed), so the two are hand-kept in lockstep;
- * tests/price-line.test.ts pins both, word for word.
+ * judging the price LINE instead of the button. Neither live → a dash
+ * (derive-or-dash).
+ *
+ * TASK-186 (0018.06.18 a₿): THE ONE DISPLAY LAW — priceWords() in
+ * money-words.ts. The visitor's PREFERRED denomination first (the `oc-money`
+ * cookie the checkout toggle writes — a server component can't import the
+ * shelf card's "use client" module, but money-words/money-preference are
+ * plain dual-world libs), the other as "or …", only when both exist and
+ * both rails are live; a single-denomination price shows alone; never "≈".
+ * This wrapper and the shelf card's (StoreItemCard.tsx) are thin shims over
+ * priceWords — one law, two faces, no drift. tests/price-line.test.ts pins
+ * both, word for word.
  */
 export function priceLine(
   item: StoreItem,
-  rails: { btc: boolean; card: boolean },
+  rails: MoneyRails,
+  prefer: MoneyPrefer,
 ): { primary: string; secondary: string | null } {
-  const effective = item.sale ?? item.price;
-  const sats = rails.btc && effective.sats != null
-    ? `${effective.sats.toLocaleString("en-US")} sats`
-    : null;
-  const fiat = rails.card && effective.fiat != null
-    ? dollars(effective.fiat.amount, effective.fiat.currency)
-    : null;
-  if (sats) return { primary: sats, secondary: fiat };
-  if (fiat) return { primary: fiat, secondary: null };
-  return { primary: "—", secondary: null };
+  return priceWords(item.sale ?? item.price, rails, prefer);
 }
 
 /**
@@ -52,9 +49,10 @@ export function priceLine(
  */
 export function struckLine(
   item: StoreItem,
-  rails: { btc: boolean; card: boolean },
+  rails: MoneyRails,
+  prefer: MoneyPrefer,
 ): string | null {
-  return item.sale ? priceLine({ ...item, sale: undefined }, rails).primary : null;
+  return item.sale ? priceLine({ ...item, sale: undefined }, rails, prefer).primary : null;
 }
 
 /** the breadcrumb's third crumb — the shelf section this kind lives in,
@@ -95,8 +93,13 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
 
   // TASK-157: same rail truth BuyPanel judges by, a few lines down.
   const rails = { btc: liveAdapter() !== null, card: liveAdapter("square") !== null };
-  const { primary: priceWords, secondary: priceEcho } = priceLine(item, rails);
-  const struckWords = struckLine(item, rails);
+  /* TASK-186 — the visitor's denomination word off the `oc-money` cookie
+     (the checkout toggle writes it), the rail-judged default otherwise:
+     fiat when the card rail is live, else sats */
+  const prefer: MoneyPrefer =
+    preferFromCookieHeader((await cookies()).toString()) ?? defaultPreferOf(rails);
+  const { primary: priceLead, secondary: priceEcho } = priceLine(item, rails, prefer);
+  const struckWords = struckLine(item, rails, prefer);
   const shots = item.media?.images.length ? item.media.images : item.images;
   const section = SECTION_BY_KIND[item.kind];
 
@@ -140,7 +143,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
                     {struckWords}
                   </s>
                 )}
-                {priceWords}
+                {priceLead}
                 {priceEcho && (
                   <span style={{ marginLeft: 8, fontSize: ".78rem", fontWeight: 400, color: "var(--muted)" }}>
                     {priceEcho}

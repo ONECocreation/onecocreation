@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
 import type { Price, StoreItem } from "@/lib/store";
-import { dollars } from "@/lib/money-words";
+import { dollars, priceWords, type MoneyPrefer } from "@/lib/money-words";
+import { readMemberPrefer, saveMemberPrefer, useMoneyPrefer } from "@/lib/money-preference";
 import { readSession } from "@/lib/session-read";
 import SubscribeForm from "@/components/SubscribeForm";
 
@@ -58,6 +59,22 @@ export function scalePrice(price: Price, qty: number): Price {
   };
 }
 
+/**
+ * TASK-186 (0018.06.18 a₿) — THE RAIL FOLLOWS THE CHOICE: the "$ · sats"
+ * toggle picks the words AND the default pay door (fiat → card, sats →
+ * bitcoin), while both doors stay reachable (the rail chips never leave).
+ * A denomination whose rail can't sell it keeps the OTHER door — the toggle
+ * never strands the buyer on a dead rail. Pure + pinned in
+ * tests/money-preference.test.ts.
+ */
+export function railForPrefer(
+  prefer: MoneyPrefer,
+  avail: { btcpay: boolean; square: boolean },
+): "btcpay" | "square" {
+  if (prefer === "fiat") return avail.square ? "square" : "btcpay";
+  return avail.btcpay ? "btcpay" : "square";
+}
+
 const glassField: React.CSSProperties = {
   border: "1px solid rgba(139,118,196,.45)", borderRadius: 10, padding: "9px 12px",
   background: "rgba(255,255,255,.92)", fontSize: "1rem", color: "var(--field-ink)",
@@ -93,13 +110,6 @@ export default function BuyPanel({
   // read): no email field for a member, the gated line names the account
   const [memberName, setMemberName] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
-  useEffect(() => {
-    let live = true;
-    readSession()
-      .then((s) => { if (live && s) setMemberName(s.name); })
-      .catch(() => {});
-    return () => { live = false; };
-  }, []);
 
   const needsShipping = item.fulfillment === "self";
   // TASK-177 — the ShinePages template's quantity stepper rides the WARES
@@ -120,20 +130,53 @@ export default function BuyPanel({
   const [rail, setRail] = useState<"btcpay" | "square">(railLive ? "btcpay" : "square");
   const anyRailLive = railLive || cardAvailable;
 
+  /* TASK-186 — the visitor's denomination word. The "$ · sats" toggle below
+     flips every price on the page (MONEY_EVENT) and remembers it; a signed-in
+     member's saved word wins over the cookie and is written back on flip. */
+  const [prefer, setPrefer] = useMoneyPrefer({ btc: railLive, card: squareLive });
+  const [memberPrefKnown, setMemberPrefKnown] = useState(false);
+  useEffect(() => {
+    let live = true;
+    readSession()
+      .then((s) => { if (live && s) setMemberName(s.name); })
+      .catch(() => {});
+    readMemberPrefer()
+      .then((m) => {
+        if (!live || !m.signedIn) return;
+        setMemberPrefKnown(true);
+        if (m.prefer) setPrefer(m.prefer); // signed in wins — and the browser learns the word
+      })
+      .catch(() => {});
+    return () => { live = false; };
+    // setPrefer's identity is stable enough here — it only closes over setState
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** the toggle's one tap: remember it (browser + the member's profile when
+   *  signed in), and let the pay door's default rail follow the choice */
+  function choosePrefer(p: MoneyPrefer) {
+    setPrefer(p);
+    setRail(railForPrefer(p, { btcpay: railLive, square: cardAvailable }));
+    if (memberPrefKnown) void saveMemberPrefer(p);
+  }
+
   /* TASK-145 (0018.06.17 a₿) — the price in words above the doors, DISPLAY
      ONLY: USD is shown whenever the item carries it AND the card rail could
      actually charge it (T-157's law: no fiat echo on a dark rail). A sale
      strikes the regular price through, in words ("· on sale", never color
-     alone). Nothing here opens, closes, or reprices a rail. */
-  const displayWords = (p: StoreItem["price"]): string | null => {
-    const sats = p.sats != null ? `${p.sats.toLocaleString("en-US")} sats` : null;
-    const fiat = p.fiat ? dollars(p.fiat.amount, p.fiat.currency) : null;
-    if (bothAvailable) return [sats, fiat].filter(Boolean).join(" · ") || null;
-    if (cardAvailable) return fiat;
-    return sats ?? fiat; // bitcoin-only: the rail can still take a fiat-denominated invoice
+     alone). Nothing here opens, closes, or reprices a rail.
+     TASK-186: the words ride THE ONE DISPLAY LAW (priceWords) under the
+     visitor's preferred denomination. One honest exception stays: bitcoin
+     only + a fiat-priced item shows the fiat alone — that rail can still
+     take a fiat-denominated invoice (never an "or", the card rail is dark). */
+  const displayWords = (p: StoreItem["price"]): { primary: string; secondary: string | null } | null => {
+    const w = priceWords(p, { btc: railLive, card: cardAvailable }, prefer);
+    if (w.primary !== "—") return w;
+    if (railLive && p.fiat) return { primary: dollars(p.fiat.amount, p.fiat.currency), secondary: null };
+    return null;
   };
-  const shownPrice = displayWords(effective);
-  const struckPrice = item.sale ? displayWords(item.price) : null;
+  const shown = displayWords(effective);
+  const struck = item.sale ? displayWords(item.price) : null;
 
   async function buy() {
     setBusy(true);
@@ -241,13 +284,46 @@ export default function BuyPanel({
           {gatedLine(memberName)}
         </p>
       )}
-      {shownPrice && (
-        <p style={{ margin: "12px 0 0", fontSize: "1.05rem", color: "var(--ink-strong, #2d2440)" }}>
-          {struckPrice && <s style={{ marginRight: 8, color: "var(--muted, #897f97)" }}>{struckPrice}</s>}
-          {shownPrice}
-          {showQty && qty > 1 && <span style={{ fontSize: ".78rem", color: "var(--muted, #897f97)" }}> each</span>}
-          {item.sale && <span style={{ fontSize: ".78rem", color: "var(--rose, #b64f6b)" }}> · on sale</span>}
-        </p>
+      {shown && (
+        <div style={{ margin: "12px 0 0" }}>
+          <p style={{ margin: 0, fontSize: "1.05rem", color: "var(--ink-strong, #2d2440)" }}>
+            {struck && <s style={{ marginRight: 8, color: "var(--muted, #897f97)" }}>{struck.primary}</s>}
+            {shown.primary}
+            {shown.secondary && (
+              <span style={{ marginLeft: 8, fontSize: ".78rem", color: "var(--muted, #897f97)" }}>
+                {shown.secondary}
+              </span>
+            )}
+            {showQty && qty > 1 && <span style={{ fontSize: ".78rem", color: "var(--muted, #897f97)" }}> each</span>}
+            {item.sale && <span style={{ fontSize: ".78rem", color: "var(--rose, #b64f6b)" }}> · on sale</span>}
+          </p>
+          {/* TASK-186 — the customer's choice at checkout: "$ · sats", one tap
+              flips every price on the page and the pay door's words + default
+              rail follow (both doors stay reachable below) */}
+          {bothAvailable && effective.sats != null && effective.fiat != null && (
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 8 }}
+              role="group" aria-label="show prices in">
+              <button
+                type="button"
+                className="chip-select"
+                aria-pressed={prefer === "fiat"}
+                onClick={() => choosePrefer("fiat")}
+                style={{ fontSize: ".82rem" }}
+              >
+                $
+              </button>
+              <button
+                type="button"
+                className="chip-select"
+                aria-pressed={prefer === "sats"}
+                onClick={() => choosePrefer("sats")}
+                style={{ fontSize: ".82rem" }}
+              >
+                ⚡ sats
+              </button>
+            </div>
+          )}
+        </div>
       )}
       {needsSize && (
         <fieldset style={{ border: 0, padding: 0, margin: "16px 0 0" }}>

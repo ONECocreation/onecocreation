@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { StoreItem } from "@/lib/store";
-import { dollars } from "@/lib/money-words";
+import { priceWords, defaultPreferOf, type MoneyPrefer, type MoneyRails } from "@/lib/money-words";
+import { useMoneyPrefer } from "@/lib/money-preference";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -30,39 +31,35 @@ import { dollars } from "@/lib/money-words";
  * follows THE SWITCHES (T-129), the same rail truth BuyPanel's
  * buyDoorLabel() judges by (railLive/squareLive off liveAdapter()) — a
  * rail that isn't live shows no price in its currency, never an invented
- * one. Bitcoin off → dollars lead (or dash if card's off too). Both live →
- * sats first, the dollar echo second. Only bitcoin → sats alone, no fiat
- * echo, even when the item carries a fiat price — that rail isn't open.
- * Neither live → a dash (derive-or-dash), same law as no price at all.
- * One helper, two faces: the shelf card below (storeCardModel) and the
- * item page (src/app/store/[id]/page.tsx) call this word for word —
- * pinned by tests/price-line.test.ts.
+ * one. Neither live → a dash (derive-or-dash), same law as no price at all.
+ *
+ * TASK-186 (0018.06.18 a₿): the line now reads through THE ONE DISPLAY LAW —
+ * priceWords() in money-words.ts. The PREFERRED denomination first, the
+ * other as "or …", only when both exist and both rails are live; a
+ * single-denomination price shows alone; never "≈". This wrapper and the
+ * item page's (src/app/store/[id]/page.tsx) are thin shims over priceWords —
+ * the law lives in exactly one place now, so the two faces cannot drift
+ * (the old hand-kept copies are gone). Pinned by tests/price-line.test.ts.
  */
-export type PriceRails = { btc: boolean; card: boolean };
+export type PriceRails = MoneyRails;
 
 export function priceLine(
   item: StoreItem,
   rails: PriceRails,
+  prefer: MoneyPrefer,
 ): { primary: string; secondary: string | null } {
-  const effective = item.sale ?? item.price;
-  const sats = rails.btc && effective.sats != null
-    ? `${effective.sats.toLocaleString("en-US")} sats`
-    : null;
-  const fiat = rails.card && effective.fiat != null
-    ? dollars(effective.fiat.amount, effective.fiat.currency)
-    : null;
-  if (sats) return { primary: sats, secondary: fiat };
-  if (fiat) return { primary: fiat, secondary: null };
-  return { primary: "—", secondary: null };
+  return priceWords(item.sale ?? item.price, rails, prefer);
 }
 
 /** everything the card shows, derived from the item — derive-or-dash.
  *  `rails` defaults to both live — the shelf (store/page.tsx) doesn't yet
  *  fetch the switches (see SUMMARY.md ## Seams); callers that do know the
- *  live rails should pass them through. */
+ *  live rails should pass them through. `prefer` defaults to the house
+ *  default for those rails (fiat when the card rail is live, else sats). */
 export function storeCardModel(
   item: StoreItem,
   rails: PriceRails = { btc: true, card: true },
+  prefer: MoneyPrefer = defaultPreferOf(rails),
 ): {
   priceLabel: string;
   fiatSecondary: string | null;
@@ -71,7 +68,7 @@ export function storeCardModel(
   deliverableLabel: string | null;
   img: string | null;
 } {
-  const { primary, secondary } = priceLine(item, rails);
+  const { primary, secondary } = priceLine(item, rails, prefer);
   return {
     priceLabel: primary,
     fiatSecondary: secondary,
@@ -100,7 +97,13 @@ export default function StoreItemCard({
 }) {
   const [flipped, setFlipped] = useState(false);
   const flip = () => setFlipped((f) => !f);
-  const m = storeCardModel(item, rails);
+  /* TASK-186 — the card speaks the visitor's chosen denomination (the
+     `oc-money` word; the checkout toggle's knock flips every card live).
+     First paint rides the rail-judged default, deterministic both sides of
+     hydration; the remembered choice pours in the effect. */
+  const liveRails = rails ?? { btc: true, card: true };
+  const [prefer] = useMoneyPrefer(liveRails);
+  const m = storeCardModel(item, liveRails, prefer);
 
   return (
     /* reveal rides its OWN wrapper (the session card's hard-won note): the
