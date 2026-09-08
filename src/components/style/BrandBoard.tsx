@@ -8,11 +8,14 @@ import {
   useBrandPalette,
   PALETTE_KEYS,
   SLOT_LABELS,
+  type BrandPaletteApi,
   type PaletteKey,
 } from "@/lib/use-brand-palette";
+import type { Faces } from "@/lib/brand-palette"; /* type-only — the module itself is server-side (KV) and never enters this bundle; the shelf itself rides down from /api/brand */
 import type { IdentityField, VoiceRow } from "@/lib/cartridge-identity"; /* type-only — the module itself is server-side (fs) and never enters this bundle */
 import { effectivePalette, contrastRatio } from "@pacsarcade/puck-config/tokens";
 import { ONECOCREATION } from "@/brand/tokens";
+import { cartridge } from "@/brand/cartridge";
 
 /**
  * BrandBoard — the brand's dressing room (/style/brand, BRAND BOARD batch
@@ -40,6 +43,21 @@ import { ONECOCREATION } from "@/brand/tokens";
  * one pinned voice row) at a time. LEGIBILITY DOCTRINE throughout:
  * labels sit on solid/text-safe grounds, override state is gold ring PLUS
  * a dot (never colour alone), all icon controls carry title + aria-label.
+ *
+ * TASK-182 (0018.06.18 a₿) — the desk's pickers WORK and the room reads
+ * BY PAGE. BrandPaletteDesk (exported; /a/brand's BrandDesk rides it) is
+ * the working half of the board's top: the five slots with native colour
+ * pickers AND hex fields (the contrast words stay) and the site's top
+ * faces (display / heading / body) with pickers off the house's own shelf
+ * — the shelf itself comes down from /api/brand (brand-palette.ts's
+ * FACE_CHOICES; a face outside it is refused in words, server-side). Save
+ * writes through the SAME machinery the board rides — POSTs to /api/brand,
+ * one KV store, no second rail. And the dressing room below is reorganised
+ * BY PAGE (PAGE_ASSET_MAP): Home · About · Memberships · Store · Book ·
+ * Classes · Letters, each card naming the assets that page actually wears,
+ * with a thumbnail, the field in plain words and Replace — derive-or-dash
+ * throughout: a slot whose file is not on disk (the route stats public/)
+ * shows "— not set" and the page's fallback in words.
  */
 
 const SANS = "'Helvetica Neue', Helvetica, Arial, sans-serif";
@@ -198,29 +216,382 @@ function ThemePane({ variant, hexes, dawnOverrides, onSwatch, onClearDawn, shuff
   );
 }
 
+/* ── the brand desk's working pickers (TASK-182) ────────────────────────
+   /a/brand carries the TOP of this board through this export: the five
+   colour slots with WORKING pickers (a native <input type=color> AND a hex
+   field — the eyedrop-only swatch did nothing in a browser without the
+   EyeDropper API) and the site's top faces (display / heading / body) with
+   pickers off the house's shelf. The palette state is the CALLER's
+   useBrandPalette instance (one hook per page, so the caller's own live
+   example follows the same pal); the faces state is local, read and saved
+   through the same /api/brand route — one truth, no second store. */
+
+const SLOT_HINTS: Record<PaletteKey, string> = Object.fromEntries(
+  ONECOCREATION.palette.map((s) => [s.key, s.hint]),
+) as Record<PaletteKey, string>;
+
+/* the real night/dawn grounds this brand renders on — cartridge.palette,
+   not invented hexes ("page night" / "dawn paper") */
+const NIGHT_GROUND = cartridge.palette.space;
+const DAWN_GROUND = cartridge.palette.cream;
+
+function slotContrastWords(hex: string): { label: string; ratio: number; ok: boolean }[] {
+  return [
+    { label: "on night", ground: NIGHT_GROUND },
+    { label: "on dawn", ground: DAWN_GROUND },
+  ].map(({ label, ground }) => {
+    const ratio = contrastRatio(hex, ground);
+    return { label, ratio, ok: ratio >= 4.5 };
+  });
+}
+
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+/** the hex field — free typing, but a slot only moves when the text is a
+ *  whole #rrggbb; on blur the field settles back to the slot's truth. The
+ *  parent keys it by the slot's value, so an external change (the colour
+ *  picker, a roll, a reset) remounts it with the truth — no effect. */
+function HexField({ value, onCommit, ariaLabel }: { value: string; onCommit: (hex: string) => void; ariaLabel: string }) {
+  const [text, setText] = useState(value);
+  return (
+    <input
+      value={text}
+      onChange={(e) => {
+        setText(e.target.value);
+        const v = e.target.value.trim();
+        if (HEX_RE.test(v)) onCommit(v);
+      }}
+      onBlur={() => setText(value)}
+      aria-label={ariaLabel}
+      spellCheck={false}
+      style={{ ...fieldInput, flex: "0 0 92px", width: 92 }}
+    />
+  );
+}
+
+/* the three top faces, in plain words — the SLOT is the house's type
+   ladder (cartridge.css's --font-h1 / --font-h2 / --font-body) */
+const FACE_ROWS: { key: keyof Faces; label: string; words: string }[] = [
+  { key: "display", label: "Display", words: "the biggest headlines" },
+  { key: "heading", label: "Heading", words: "section titles" },
+  { key: "body", label: "Body", words: "the reading face" },
+];
+
+type FaceChoice = { key: string; label: string; stack: string };
+
+export function BrandPaletteDesk({ bp }: { bp: BrandPaletteApi }) {
+  const { pal, dirty, busy, setSlot, save, reset } = bp;
+  const [faces, setFaces] = useState<Faces | null>(null);
+  const [draftFaces, setDraftFaces] = useState<Faces | null>(null);
+  const [faceChoices, setFaceChoices] = useState<FaceChoice[]>([]);
+  const [faceNote, setFaceNote] = useState<{ ok: boolean; text: string } | null>(null);
+  const [facesBusy, setFacesBusy] = useState(false);
+
+  async function readFaces(cancelled?: () => boolean) {
+    try {
+      const res = await fetch("/api/brand");
+      const d = await res.json();
+      if (cancelled?.()) return;
+      if (d.ok && d.faces) {
+        setFaces(d.faces);
+        setDraftFaces(d.faces);
+        setFaceChoices(Array.isArray(d.faceChoices) ? d.faceChoices : []);
+      } else {
+        setFaceNote({ ok: false, text: "the faces shelf opens with the operator key — sign in and it will be here" });
+      }
+    } catch {
+      if (!cancelled?.()) setFaceNote({ ok: false, text: "the faces shelf could not be reached just now — a breath, then reload" });
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/brand")
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        if (d.ok && d.faces) {
+          setFaces(d.faces);
+          setDraftFaces(d.faces);
+          setFaceChoices(Array.isArray(d.faceChoices) ? d.faceChoices : []);
+        } else {
+          setFaceNote({ ok: false, text: "the faces shelf opens with the operator key — sign in and it will be here" });
+        }
+      })
+      .catch(() => { if (!cancelled) setFaceNote({ ok: false, text: "the faces shelf could not be reached just now — a breath, then reload" }); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const facesDirty = Boolean(
+    faces && draftFaces && (Object.keys(draftFaces) as (keyof Faces)[]).some((k) => draftFaces[k] !== faces[k]),
+  );
+
+  async function saveAll() {
+    setFaceNote(null);
+    if (facesDirty && draftFaces) {
+      setFacesBusy(true);
+      try {
+        const res = await fetch("/api/brand", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ faces: draftFaces }),
+        });
+        const d = await res.json();
+        if (d.ok) {
+          setFaces(d.faces);
+          setDraftFaces(d.faces);
+          setFaceNote({ ok: true, text: "the faces are saved — the pages catch up on their next load" });
+        } else {
+          /* the API's honest refusal, verbatim (a face off the shelf) */
+          setFaceNote({ ok: false, text: d.reason ?? "the faces did not land" });
+        }
+      } catch {
+        setFaceNote({ ok: false, text: "the faces could not reach the server" });
+      } finally {
+        setFacesBusy(false);
+      }
+    }
+    if (dirty) await save();
+  }
+
+  async function resetAll() {
+    /* the route's reset returns BOTH rails to the cartridge — the faces
+       re-read so the pickers show the poured truth */
+    await reset();
+    await readFaces();
+  }
+
+  const anyDirty = dirty || facesDirty;
+  const anyBusy = busy || facesBusy;
+
+  return (
+    <div>
+      {/* ── the five colours ── */}
+      {pal ? (
+        PALETTE_KEYS.map((k) => {
+          const grades = slotContrastWords(pal[k]);
+          return (
+            <div
+              key={k}
+              style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+                border: "1px solid var(--glass-edge, var(--edge))", borderRadius: 12,
+                padding: "10px 14px", marginBottom: 8 }}
+            >
+              <input
+                type="color"
+                value={pal[k]}
+                onChange={(e) => setSlot(k, e.target.value, "night")}
+                aria-label={`${SLOT_LABELS[k]} colour (${k}) — pick`}
+                style={{ width: 38, height: 38, border: "none", borderRadius: 8, padding: 0, background: "none" }}
+              />
+              <HexField
+                key={pal[k] /* external change remounts with the truth — see the component's note */}
+                value={pal[k]}
+                onCommit={(hex) => setSlot(k, hex, "night")}
+                ariaLabel={`${SLOT_LABELS[k]} colour (${k}) — hex, exactly #rrggbb`}
+              />
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <b style={{ fontSize: ".9rem", textTransform: "capitalize" }}>{SLOT_LABELS[k]}</b>
+                <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> ({k}) — {SLOT_HINTS[k]}</span>
+                <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 3 }}>
+                  {grades.map((g) => (
+                    <span key={g.label} style={{ marginRight: 16, color: g.ok ? "var(--ok)" : "var(--err)" }}>
+                      {g.label}: {g.ratio.toFixed(2)}:1{g.ok ? "" : " — too light"}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })
+      ) : (
+        <p style={{ fontSize: ".82rem", color: "var(--muted)" }}>reading the palette…</p>
+      )}
+
+      {/* ── the top faces ── */}
+      <div style={{ marginTop: 18 }}>
+        <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+          textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
+          color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */ }}>
+          The top faces
+        </div>
+        <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS, color: "var(--muted)" }}>
+          {"the three faces the site's words wear — the shelf is the house's own (no new webfonts are ever fetched); a face off the shelf is refused in words"}
+        </p>
+        {FACE_ROWS.map(({ key, label, words }) => {
+          const chosen = draftFaces?.[key] ?? "";
+          const stack = faceChoices.find((c) => c.key === chosen)?.stack;
+          return (
+            <div
+              key={key}
+              style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+                border: "1px solid var(--glass-edge, var(--edge))", borderRadius: 12,
+                padding: "10px 14px", marginBottom: 8 }}
+            >
+              <div style={{ width: 190, flexShrink: 0 }}>
+                <b style={{ fontSize: ".9rem" }}>{label}</b>
+                <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — {words}</span>
+              </div>
+              {faces === null ? (
+                <span style={{ fontSize: ".82rem", color: "var(--muted)" }}>reading the faces…</span>
+              ) : (
+                <>
+                  <select
+                    value={chosen}
+                    onChange={(e) => setDraftFaces((f) => (f ? { ...f, [key]: e.target.value } : f))}
+                    aria-label={`${label} face — currently ${faceChoices.find((c) => c.key === chosen)?.label ?? chosen}`}
+                    style={{ ...fieldInput, flex: "0 1 220px", fontFamily: stack ?? undefined }}
+                  >
+                    {faceChoices.map((c) => (
+                      <option key={c.key} value={c.key} style={{ fontFamily: c.stack }}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span aria-hidden style={{ fontSize: "1.05rem", fontFamily: stack ?? undefined }}>
+                    Where Heaven and Earth Meet
+                  </span>
+                </>
+              )}
+            </div>
+          );
+        })}
+        {faceNote && (
+          <p role="status" style={{ margin: "6px 0 0", display: "inline-block",
+            padding: "5px 11px", borderRadius: 8, fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
+            background: faceNote.ok ? "var(--oc-ok-pill-bg, #16281c)" : "var(--oc-err-pill-bg, #331820)",
+            color: faceNote.ok ? "var(--oc-ok-text, #BFE6C9)" : "var(--oc-err-text, #F2C4CE)" }}>
+            {faceNote.text}
+          </p>
+        )}
+      </div>
+
+      {/* ── one save, one rail ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
+        <button
+          type="button"
+          className="btn btn-gold btn-sm"
+          disabled={anyBusy || !anyDirty}
+          onClick={saveAll}
+          title={anyDirty ? "save the colours and faces to the brand — the pages draw from them" : "no unsaved changes"}
+          style={anyBusy || !anyDirty ? { opacity: 0.5 } : undefined}
+        >
+          {anyBusy ? "Saving…" : "Save"}
+        </button>
+        <button type="button" className="btn btn-ghost btn-sm" disabled={anyBusy} onClick={resetAll}
+          title="back to the cartridge default — colours AND faces">
+          Reset to cartridge default
+        </button>
+        {anyDirty && !anyBusy && <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>unsaved changes</span>}
+      </div>
+    </div>
+  );
+}
+
 /* ── the dressing room (cartridge identity) ───────────────────────────── */
 type DressingRow = { field: IdentityField; label: string; hint?: string };
-const IDENTITY_GROUPS: { title: string; blurb: string; rows: DressingRow[] }[] = [
-  { title: "Logos", blurb: "the marks at the head of the house",
-    rows: [
-      { field: "logo.lockup", label: "lockup" },
-      { field: "logo.mark", label: "mark" },
-      { field: "logo.consciouscuts", label: "ConsciousCuts" },
+
+/* ── TASK-182: the room reads BY PAGE. The asset fields (pictures, the
+   script graphic, the lion, the thank-you loop) leave the old topic piles
+   and regroup under the page that actually wears them — the map below IS
+   the cartridge's asset map per page, and every slot names what the page
+   does with it plus the fallback in words (derive-or-dash). The words
+   (voice, sign-in, meta, the time door, the thank-you's sentences) are not
+   page art — they keep their own small groups below the page cards. */
+
+export type PageAssetSlot = {
+  field: IdentityField;
+  label: string;      /* the field name in plain words */
+  does: string;       /* what the page does with it */
+  fallback: string;   /* what the page shows when no file is set */
+};
+export type PageAssetCard = { page: string; href: string; blurb: string; slots: PageAssetSlot[] };
+
+export const PAGE_ASSET_MAP: PageAssetCard[] = [
+  { page: "Every page", href: "/",
+    blurb: "the site's own chrome — the header's wide mark and the footer's small one, on every visitor page",
+    slots: [
+      { field: "logo.lockup", label: "the lockup", does: "the wide mark at the top of every page",
+        fallback: "the header opens without its wide mark" },
+      { field: "logo.mark", label: "the mark", does: "the small round mark in the footer",
+        fallback: "the footer goes without the small mark" },
     ]},
-  { title: "Hero art", blurb: "the sky the pages open under",
-    rows: [
-      { field: "hero.moon", label: "moon" },
-      { field: "hero.nebula", label: "nebula" },
-      { field: "hero.meteors", label: "meteors" },
-      { field: "hero.heavenEarth", label: "heaven & earth" },
-      { field: "hero.loveSidelook", label: "love sidelook" },
-      { field: "hero.lionsGate", label: "lions gate" },
+  { page: "Home", href: "/",
+    blurb: "the front door — the hero sky is drawn in light (code, not a file); these are the portrait, the membership ladder's three pictures and the service cards' art",
+    slots: [
+      { field: "portraits.headshot", label: "Love's portrait", does: "the about section's portrait",
+        fallback: "the about section stands on its words alone" },
+      { field: "tierArt.A", label: "tier A picture", does: "the first membership card's art",
+        fallback: "the card shows its words without a picture" },
+      { field: "tierArt.B", label: "tier B picture", does: "the second membership card's art",
+        fallback: "the card shows its words without a picture" },
+      { field: "tierArt.C", label: "tier C picture", does: "the third membership card's art",
+        fallback: "the card shows its words without a picture" },
+      { field: "hero.loveSidelook", label: "the sidelook", does: "the discovery session card's picture",
+        fallback: "the session card shows its words without a picture" },
+      { field: "hero.moon", label: "the moon", does: "the soul session card's picture",
+        fallback: "the session card shows its words without a picture" },
+      { field: "portraits.cuts.women", label: "cut — women", does: "the women's cut card's picture",
+        fallback: "the session card shows its words without a picture" },
+      { field: "portraits.cuts.wax", label: "cut — wax", does: "the wax card's picture",
+        fallback: "the session card shows its words without a picture" },
+      { field: "portraits.cuts.men", label: "cut — men", does: "the men's cut card's picture",
+        fallback: "the session card shows its words without a picture" },
+      { field: "logo.consciouscuts", label: "the ConsciousCuts mark", does: "the service's own mark — no page wears it today; the media shelf serves the live marks",
+        fallback: "the service's surfaces go without the mark" },
     ]},
-  { title: "Doors", blurb: "where the house reaches out",
-    rows: [
-      { field: "doors.timeTipUrl", label: "time door",
-        hint: "an https:// address — or left empty, to sail on its own seam" },
+  { page: "About", href: "/about",
+    blurb: "the story page — two sky bands, and the script graphic between them",
+    slots: [
+      { field: "hero.nebula", label: "the nebula", does: "the opening band's sky",
+        fallback: "the band falls back to its plain night ground" },
+      { field: "hero.heavenEarth", label: "the script graphic", does: "the 'Where Heaven and Earth Meet' script",
+        fallback: "the script's place stands empty" },
+      { field: "hero.meteors", label: "the meteors", does: "the lower band's sky",
+        fallback: "the band falls back to its plain night ground" },
     ]},
+  { page: "Memberships", href: "/memberships",
+    blurb: "the ladder page — the lion gate art behind the tiers",
+    slots: [
+      { field: "hero.lionsGate", label: "the lion", does: "the page's band art",
+        fallback: "the band wears its plain ground" },
+    ]},
+  { page: "Store", href: "/store",
+    blurb: "the shop — the shelf's sky band, and the thank-you that plays after a paid order",
+    slots: [
+      { field: "hero.nebula", label: "the nebula", does: "the shelf band's sky",
+        fallback: "the band falls back to its plain night ground" },
+      { field: "thanks.video", label: "the thank-you loop", does: "the living portrait after a paid order",
+        fallback: "the thank-you speaks its words without the loop" },
+      { field: "thanks.poster", label: "the loop's poster", does: "the still frame the loop opens on",
+        fallback: "the loop opens without a poster frame" },
+    ]},
+  { page: "Book", href: "/book",
+    blurb: "the booking calendar — each session kind wears its own picture, the nebula when a kind has none",
+    slots: [
+      { field: "hero.loveSidelook", label: "the sidelook", does: "discovery sessions",
+        fallback: "the session shows its words without a picture" },
+      { field: "hero.moon", label: "the moon", does: "soul sessions",
+        fallback: "the session shows its words without a picture" },
+      { field: "portraits.cuts.women", label: "cut — women", does: "the women's cut sessions",
+        fallback: "the session shows its words without a picture" },
+      { field: "portraits.cuts.wax", label: "cut — wax", does: "the wax sessions",
+        fallback: "the session shows its words without a picture" },
+      { field: "portraits.cuts.men", label: "cut — men", does: "the men's cut sessions",
+        fallback: "the session shows its words without a picture" },
+      { field: "hero.nebula", label: "the nebula", does: "the picture when a session kind has none of its own",
+        fallback: "the session shows its words without a picture" },
+    ]},
+  { page: "Classes", href: "/classes",
+    blurb: "the classroom door",
+    slots: [] },
+  { page: "Letters", href: "/letters",
+    blurb: "the letters room",
+    slots: [] },
+];
+
+/* the words are not page art — they keep their own small groups */
+const WORD_GROUPS: { title: string; blurb: string; rows: DressingRow[] }[] = [
   { title: "Voice", blurb: "the short words the site speaks",
     rows: [
       { field: "copy.productName", label: "name" },
@@ -244,27 +615,41 @@ const IDENTITY_GROUPS: { title: string; blurb: string; rows: DressingRow[] }[] =
       { field: "meta.themeColor", label: "browser chrome",
         hint: "the tint the browser chrome wears — exactly #rrggbb" },
     ]},
-  { title: "Portraits", blurb: "Love, and the ConsciousCuts chair",
+  { title: "Doors", blurb: "where the house reaches out",
     rows: [
-      { field: "portraits.headshot", label: "headshot" },
-      { field: "portraits.cuts.women", label: "cut — women" },
-      { field: "portraits.cuts.wax", label: "cut — wax" },
-      { field: "portraits.cuts.men", label: "cut — men" },
+      { field: "doors.timeTipUrl", label: "time door",
+        hint: "an https:// address — or left empty, to sail on its own seam" },
     ]},
-  { title: "Tier art", blurb: "the membership ladder's pictures",
+  { title: "Thank-you", blurb: "the words after a paid order — the loop and its poster sit on the Store card above",
     rows: [
-      { field: "tierArt.A", label: "tier A" },
-      { field: "tierArt.B", label: "tier B" },
-      { field: "tierArt.C", label: "tier C" },
-    ]},
-  { title: "Thank-you", blurb: "the moment after a paid order",
-    rows: [
-      { field: "thanks.video", label: "video loop" },
-      { field: "thanks.poster", label: "poster" },
       { field: "thanks.heading", label: "heading" },
       { field: "thanks.message", label: "message" },
     ]},
 ];
+
+/* derive-or-dash: a slot whose value is empty — or whose file the server
+   could not find on disk — is NOT SET, and the card says so with the
+   page's own fallback in words, never a broken thumbnail */
+export type ResolvedAsset = PageAssetSlot & { value: string; set: boolean };
+export type ResolvedPageCard = Omit<PageAssetCard, "slots"> & { slots: ResolvedAsset[] };
+
+/** the per-page grouping, derived from the cartridge's asset map: the
+ *  identity values the server read (plus its on-disk truth, when handed
+ *  down) resolve every slot of every page card */
+export function assetsByPage(
+  identity: Partial<Record<IdentityField, string>>,
+  files?: Record<string, boolean>,
+  map: PageAssetCard[] = PAGE_ASSET_MAP,
+): ResolvedPageCard[] {
+  return map.map((card) => ({
+    ...card,
+    slots: card.slots.map((slot) => {
+      const value = identity[slot.field] ?? "";
+      const set = Boolean(value) && files?.[slot.field] !== false;
+      return { ...slot, value, set };
+    }),
+  }));
+}
 
 type Dressing = Partial<Record<IdentityField, string>>;
 type DressingMsg = { field: IdentityField; ok: boolean; text: string };
@@ -284,6 +669,9 @@ function IdentityRoom() {
   const [loadNote, setLoadNote] = useState<string | null>(null);
   const [busyField, setBusyField] = useState<IdentityField | null>(null);
   const [msg, setMsg] = useState<DressingMsg | null>(null);
+  /* the route's on-disk truth per asset field (TASK-182, derive-or-dash):
+     a slot whose file is missing renders "— not set", never a broken thumb */
+  const [files, setFiles] = useState<Record<string, boolean>>({});
   /* the registry's shelf — id, name and a four-token palette hint per
      direction — so the picker can show the choice it offers */
   const [choices, setChoices] = useState<{ id: string; name: string; swatches: string[] }[]>([]);
@@ -305,6 +693,7 @@ function IdentityRoom() {
           setValues(d.identity);
           setDraft(d.identity);
           setChoices(Array.isArray(d.cartridges) ? d.cartridges : []);
+          setFiles(d.assetFiles && typeof d.assetFiles === "object" ? d.assetFiles : {});
           const vs: VoiceRow[] = Array.isArray(d.voices) ? d.voices : [];
           setVoices(vs);
           setVoiceDraft(vs.map((v) => ({ ...v })));
@@ -426,6 +815,84 @@ function IdentityRoom() {
     );
   }
 
+  /* one asset row inside a page card (TASK-182): a thumbnail of the file
+     the slot points at (or the honest dash + the page's fallback in words),
+     the field name in plain words, what the page does with it, and Replace
+     — the same one-literal write rail the word rows ride */
+  function assetRow(slot: ResolvedAsset) {
+    const current = values?.[slot.field] ?? "";
+    const next = draft[slot.field] ?? "";
+    const dirtyRow = next !== current;
+    const busy = busyField === slot.field;
+    const isImage = /\.(svg|png|jpe?g|webp|gif|avif)$/i.test(slot.value);
+    const isVideo = /\.(mp4|webm|mov)$/i.test(slot.value);
+    return (
+      <div key={slot.field} style={{ marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          {slot.set && isImage && (
+            /* the dressing room's own thumbnails — small, admin-only, next/image's loader tax buys nothing here */
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={slot.value} alt="" width={64} height={48}
+              style={{ objectFit: "cover", borderRadius: 8, border: "1px solid var(--edge)", flexShrink: 0 }} />
+          )}
+          {slot.set && isVideo && (
+            <video src={slot.value} muted loop autoPlay playsInline width={64} height={48}
+              style={{ objectFit: "cover", borderRadius: 8, border: "1px solid var(--edge)", flexShrink: 0 }} />
+          )}
+          {slot.set && !isImage && !isVideo && (
+            <span style={{ width: 64, height: 48, borderRadius: 8, border: "1px solid var(--edge)",
+              display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              fontFamily: MONO, fontSize: 10.5, color: "var(--muted)" }}>
+              file
+            </span>
+          )}
+          {!slot.set && (
+            <span style={{ width: 64, height: 48, borderRadius: 8, border: "1px dashed var(--edge)",
+              display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              fontFamily: MONO, fontSize: 10.5, color: "var(--muted)", textAlign: "center" }}>
+              — not set
+            </span>
+          )}
+          <div style={{ width: 150, flexShrink: 0 }}>
+            <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700,
+              color: "var(--ink-strong)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */ }}>
+              {slot.label}
+            </div>
+            <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.4,
+              color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
+              {slot.does}
+            </div>
+          </div>
+          <input
+            value={next}
+            onChange={(e) => setDraft((d) => ({ ...d, [slot.field]: e.target.value }))}
+            aria-label={`${slot.label} — currently ${current || "empty"}`}
+            spellCheck={false}
+            style={fieldInput}
+          />
+          <button
+            onClick={() => saveField(slot.field, next)}
+            disabled={!dirtyRow || busyField !== null}
+            title={dirtyRow ? `replace ${slot.label} with this file` : "no unsaved change"}
+            aria-label={dirtyRow ? `replace ${slot.label}` : `${slot.label} saved`}
+            style={{ ...pill, padding: "6px 14px", fontSize: 12.5,
+              background: dirtyRow ? "linear-gradient(135deg,#EBCB77,#D9B24E)" /* S2: gold law — decorative, reported */ : "rgba(139,118,196,.15)",
+              color: dirtyRow ? "#3a2a06" /* S2: gold law — decorative, reported */ : "var(--muted)", /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */
+              cursor: dirtyRow && !busyField ? "pointer" : "default" }}>
+            {busy ? "Saving…" : dirtyRow ? "Replace" : "Saved"}
+          </button>
+        </div>
+        {!slot.set && (
+          <p style={{ margin: "4px 0 0 74px", fontSize: 12, fontFamily: SANS,
+            color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
+            — not set{slot.value ? ` (the file ${slot.value} is not on disk)` : ""} — {slot.fallback}
+          </p>
+        )}
+        {msg && msg.field === slot.field && <div style={{ marginLeft: 74 }}>{msgChip(msg)}</div>}
+      </div>
+    );
+  }
+
   /* S11 lane 2 — see it before you wear it. The other gesture: not a save,
      a LOOK. Sets the flag the site-wide strip (components/CartridgePreview)
      reads, then opens the real site in a new tab. sessionStorage, on
@@ -476,7 +943,7 @@ function IdentityRoom() {
         </div>
         <p style={{ margin: "8px 0 0 158px", fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
           color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
-          {"this chooses the site's DEFAULT cartridge for EVERYONE — a deployment choice written into the cartridge file, live only after a reload or a fresh deploy. It is not a per-visitor preview, and it is not the visitor's own night/dawn toggle (data-oc-theme); the dots are a hint of each direction's palette, nothing more."}
+          {"the site's DEFAULT cartridge for EVERYONE — a deployment choice, live after a reload or a fresh deploy; not a per-visitor preview. The dots are a hint of each direction's palette, nothing more."}
         </p>
         {/* the PREVIEW row (S11 lane 2) — deliberately NOT pills: bare
             underlined text buttons with an eye, so the hand never confuses
@@ -507,7 +974,7 @@ function IdentityRoom() {
         </div>
         <p style={{ margin: "8px 0 0 158px", fontSize: 12.5, lineHeight: 1.5, fontFamily: SANS,
           color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
-          {"preview is the operator's LOOK, not a save: the flag lives in THIS browser's session storage, set from this gated room alone — it is not a per-visitor theme switcher, it changes nothing for anyone else, and the default above does not move. What pours is the cartridge's SKIN (tokens, faces, bands, the hero's treatment); the dressing — logos, hero art, the words — is read from the saved cartridge and stays. While the flag lives, a strip at the foot of every page says PREVIEW and names the cartridge; its exit clears the flag and reloads. The visitor's night/dawn toggle still works inside a preview — the two compose, and neither lies about the other."}
+          {"preview is the operator's LOOK, not a save — the flag lives in THIS browser's session storage alone, the default does not move, and a strip at the foot of every page names the cartridge while it lives. It pours the cartridge's SKIN; the dressing above stays."}
         </p>
         {msg && msg.field === "cartridge.id" && <div style={{ marginLeft: 158 }}>{msgChip(msg)}</div>}
       </div>
@@ -659,7 +1126,7 @@ function IdentityRoom() {
 
   return (
     <section
-      aria-label="the dressing room — the cartridge selection, logos, hero art, doors, voice, sign-in, meta, portraits, tier art, thank-you and voices"
+      aria-label="the dressing room — the cartridge selection, the art page by page, the words, the nav accent and the voices"
       style={{ margin: "0 16px 24px", padding: "18px 20px 22px", borderRadius: 16,
         border: "1px solid var(--oc-structural-edge, rgba(139,118,196,.35))",
         background: "var(--puck-color-surface)" /* S2: pinned — the ruling landed (S22 A1): the literal WAS night --puck-color-surface — a solid ground under every word (doctrine) */ }}
@@ -670,7 +1137,7 @@ function IdentityRoom() {
       </div>
       <p style={{ margin: "0 0 18px", fontSize: 13, lineHeight: 1.55, fontFamily: SANS,
         color: "var(--ink-body)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-body */ }}>
-        {"the cartridge's non-CSS dressing — which cartridge the site wears, then its logos, hero art, the time door, the words the site speaks, the sign-in ceremony, the meta trio, portraits, tier art, the thank-you and the voices of the field. A save writes the cartridge file itself; the running server catches up on its next reload (dev does it alone) or a fresh deploy."}
+        {"the cartridge's non-CSS dressing — which cartridge the site wears, then the art PAGE BY PAGE (each card is one page and the assets it actually wears), then the words the site speaks and the voices of the field. A save writes the cartridge file itself; the running server catches up on its next reload (dev does it alone) or a fresh deploy."}
       </p>
 
       {values === null && !loadNote && (
@@ -688,8 +1155,9 @@ function IdentityRoom() {
       )}
 
       {values && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 40px", alignItems: "flex-start" }}>
-          <div style={{ flex: "1 1 100%" }}>
+        <div>
+          {/* the cartridge/theme selection stays at the top of the room, one line */}
+          <div style={{ marginBottom: 22 }}>
             <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
               textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
               color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>
@@ -701,34 +1169,83 @@ function IdentityRoom() {
             </p>
             {cartridgePicker()}
           </div>
-          {IDENTITY_GROUPS.map((g) => (
-            <div key={g.title} style={{ flex: "1 1 420px", minWidth: 0 }}>
+
+          {/* the art, page by page (TASK-182) */}
+          <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+            textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
+            color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */ }}>
+            The art, page by page
+          </div>
+          <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS,
+            color: "var(--muted)" /* S2: pinned — the ruling landed (S22) */ }}>
+            {"each card is one page and the assets that page actually wears — a thumbnail, the field in plain words, and Replace. A slot whose file is not on disk shows — not set, with what the page shows instead."}
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "stretch" }}>
+            {assetsByPage(values, files).map((card) => (
+              <div key={card.page}
+                style={{ flex: "1 1 380px", minWidth: 0, display: "flex", flexDirection: "column",
+                  border: "1px solid var(--oc-structural-edge, rgba(139,118,196,.35))",
+                  borderRadius: 14, padding: "14px 16px 16px" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 2 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+                    textTransform: "uppercase", fontWeight: 700,
+                    color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */ }}>
+                    {card.page}
+                  </span>
+                  <a href={card.href} target="_blank" rel="noreferrer"
+                    style={{ fontFamily: SANS, fontSize: 12, color: "var(--info)",
+                      textDecoration: "underline", textUnderlineOffset: 3 }}>
+                    {card.href}
+                  </a>
+                </div>
+                {/* the first line under the card: what the page does with them */}
+                <p style={{ margin: "0 0 12px", fontSize: 12, lineHeight: 1.5, fontFamily: SANS,
+                  color: "var(--muted)" /* S2: pinned — the ruling landed (S22) */ }}>
+                  {card.blurb}
+                </p>
+                {card.slots.length === 0 ? (
+                  <p style={{ margin: 0, fontSize: 13, fontFamily: SANS,
+                    color: "var(--ink-body)" /* S2: pinned — the ruling landed (S22) */ }}>
+                    {"— no cartridge art lives on this page; it wears the house's colours and faces alone"}
+                  </p>
+                ) : (
+                  card.slots.map(assetRow)
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* the words — not page art, their own small groups */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 40px", alignItems: "flex-start", marginTop: 22 }}>
+            {WORD_GROUPS.map((g) => (
+              <div key={g.title} style={{ flex: "1 1 420px", minWidth: 0 }}>
+                <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+                  textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
+                  color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>
+                  {g.title}
+                </div>
+                <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS,
+                  color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
+                  {g.blurb}
+                </p>
+                {g.rows.map(row)}
+              </div>
+            ))}
+            <div style={{ flex: "1 1 420px", minWidth: 0 }}>
               <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
                 textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
                 color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>
-                {g.title}
+                Nav accent
               </div>
               <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS,
                 color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
-                {g.blurb}
+                the colour the nav links wear
               </p>
-              {g.rows.map(row)}
+              {navAccent()}
             </div>
-          ))}
-          <div style={{ flex: "1 1 420px", minWidth: 0 }}>
-            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
-              textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
-              color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>
-              Nav accent
+            <div style={{ flex: "1 1 100%" }}>
+              {voicesRoom()}
             </div>
-            <p style={{ margin: "0 0 12px", fontSize: 12, fontFamily: SANS,
-              color: "var(--muted)" /* S2: pinned — the ruling landed (S22): the literal WAS night --muted */ }}>
-              the colour the nav links wear
-            </p>
-            {navAccent()}
-          </div>
-          <div style={{ flex: "1 1 100%" }}>
-            {voicesRoom()}
           </div>
         </div>
       )}
