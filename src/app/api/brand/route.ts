@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { access } from "fs/promises";
+import path from "path";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
-import { getPalette, setPalette, defaultPalette, isPalette, getPaletteDawn, setPaletteDawn, defaultPaletteDawn, isPaletteDawn } from "@/lib/brand-palette";
+import { getPalette, setPalette, defaultPalette, isPalette, getPaletteDawn, setPaletteDawn, defaultPaletteDawn, isPaletteDawn, getFaces, setFaces, defaultFaces, isFaces, faceChoiceList, FACE_CHOICES } from "@/lib/brand-palette";
 import { cartridge, cartridges, renderCartridgeId, type CartridgeId } from "@/brand/cartridge";
 import { IDENTITY_FIELDS, identitySnapshot, isIdentityField, isVoiceRow, writeIdentityField, writeVoiceRow } from "@/lib/cartridge-identity";
 
@@ -29,10 +31,29 @@ function gate(request: Request): NextResponse | null {
 export async function GET(request: Request) {
   const denied = gate(request);
   if (denied) return denied;
-  const [palette, dawn] = await Promise.all([getPalette(), getPaletteDawn()]);
+  const [palette, dawn, faces] = await Promise.all([getPalette(), getPaletteDawn(), getFaces()]);
+  const identity = identitySnapshot(cartridge, renderCartridgeId);
+  /* TASK-182 — derive-or-dash: the dressing room's per-page cards must say
+     "— not set" when a slot's file is not on disk (a template cartridge's
+     ASSET SLOTs point at paths nothing has filled). The server stats
+     public/ so the dash is the truth, never a broken thumbnail. */
+  const assetFiles: Record<string, boolean> = {};
+  await Promise.all(
+    Object.entries(identity).map(async ([field, value]) => {
+      if (!value.startsWith("/")) return;
+      try {
+        await access(path.join(process.cwd(), "public", value));
+        assetFiles[field] = true;
+      } catch {
+        assetFiles[field] = false;
+      }
+    }),
+  );
   return NextResponse.json({
     ok: true, palette, dawn, default: defaultPalette(), defaultDawn: defaultPaletteDawn(),
-    identity: identitySnapshot(cartridge, renderCartridgeId),
+    faces, faceChoices: faceChoiceList(),
+    identity,
+    assetFiles,
     cartridges: CARTRIDGE_IDS.map((id) => {
       const c = cartridges[id];
       return { id, name: c.name, swatches: [c.palette.space, c.palette.cream, c.palette.purple, c.palette.copper] };
@@ -43,7 +64,10 @@ export async function GET(request: Request) {
 }
 
 /** POST { palette } — save (promote-to-token); { reset: true } — back to the
- *  cartridge default; { identity: { field, value } } — dress ONE cartridge
+ *  cartridge default; { faces } — the site's top faces (display / heading /
+ *  body), each a key on the house's own shelf (brand-palette.ts's
+ *  FACE_CHOICES — a face outside the shelf is refused in words, nothing
+ *  written); { identity: { field, value } } — dress ONE cartridge
  *  identity field (cartridge.id included — the registry's ids ride along);
  *  { voice: { op, index, row } } — add, edit or remove ONE voice of the
  *  field (src/lib/cartridge-identity writes the file, one literal — or one
@@ -52,8 +76,23 @@ export async function POST(request: Request) {
   const denied = gate(request);
   if (denied) return denied;
   const body = (await request.json().catch(() => null)) as
-    | { palette?: unknown; dawn?: unknown; reset?: boolean; identity?: unknown; voice?: unknown }
+    | { palette?: unknown; dawn?: unknown; reset?: boolean; identity?: unknown; voice?: unknown; faces?: unknown }
     | null;
+  if (body?.faces !== undefined) {
+    if (!isFaces(body.faces)) {
+      /* the refusal names the shelf in words — never a silent coercion */
+      const shelf = Object.values(FACE_CHOICES).map((c) => c.label).join(", ");
+      const asked = Object.values((body.faces ?? {}) as Record<string, unknown>).find(
+        (v) => typeof v !== "string" || !Object.prototype.hasOwnProperty.call(FACE_CHOICES, v),
+      );
+      return NextResponse.json(
+        { ok: false, reason: `"${String(asked)}" is not a face the house carries — the shelf holds: ${shelf}. Nothing was saved.` },
+        { status: 400 },
+      );
+    }
+    await setFaces(body.faces);
+    return NextResponse.json({ ok: true, faces: body.faces });
+  }
   if (body?.voice !== undefined) {
     const v = body.voice as { op?: unknown; index?: unknown; row?: unknown } | null;
     const op = v?.op;
@@ -84,8 +123,8 @@ export async function POST(request: Request) {
     return NextResponse.json(result, { status: result.ok ? 200 : result.status });
   }
   if (body?.reset) {
-    await Promise.all([setPalette(defaultPalette()), setPaletteDawn(defaultPaletteDawn())]);
-    return NextResponse.json({ ok: true, palette: defaultPalette(), dawn: defaultPaletteDawn() });
+    await Promise.all([setPalette(defaultPalette()), setPaletteDawn(defaultPaletteDawn()), setFaces(defaultFaces())]);
+    return NextResponse.json({ ok: true, palette: defaultPalette(), dawn: defaultPaletteDawn(), faces: defaultFaces() });
   }
   if (!isPalette(body?.palette)) {
     return NextResponse.json(

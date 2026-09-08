@@ -1,5 +1,5 @@
 import { emitTokenVars } from "@pacsarcade/puck-config/tokens";
-import { getPalette, getPaletteDawn } from "@/lib/brand-palette";
+import { getPalette, getPaletteDawn, getFaces, FACE_KEYS, FACE_CHOICES, FACE_CSS_VAR } from "@/lib/brand-palette";
 import { ONECOCREATION } from "@/brand/tokens";
 
 /**
@@ -13,7 +13,7 @@ import { ONECOCREATION } from "@/brand/tokens";
  * Scope classes must match src/app/studio/preview.css (.oc-pv-light/-dark).
  */
 export default async function PaletteVars() {
-  const [p, dawn] = await Promise.all([getPalette(), getPaletteDawn()]);
+  const [p, dawn, faces] = await Promise.all([getPalette(), getPaletteDawn(), getFaces()]);
   const varianted: Record<string, Record<string, string>> = {};
   for (const [k, v] of Object.entries(dawn)) if (v) varianted[k] = { dawn: v };
   const css = emitTokenVars(ONECOCREATION, {
@@ -21,5 +21,12 @@ export default async function PaletteVars() {
     dawnScopes: [".oc-pv-light"],
     nightScopes: [".oc-pv-dark"],
   });
-  return <style data-oc-token-vars="" dangerouslySetInnerHTML={{ __html: css }} />;
+  /* TASK-182 (DECLARED forced edit — this file is outside the lane's OWNS):
+     the brand desk's saved FACES pour here, beside the palette they share a
+     rail with — one <style>, one truth. Poured on body (a direct assignment
+     beats the :root declarations' inheritance regardless of <head> order)
+     and scoped to the default cartridge — a selected twin pours its own
+     faces (cartridges.css) and the desk's choice must never fight it. */
+  const faceCss = `html:not([data-oc-cartridge]) body{${FACE_KEYS.map((k) => `${FACE_CSS_VAR[k]}:${FACE_CHOICES[faces[k]].stack}`).join(";")}}`;
+  return <style data-oc-token-vars="" dangerouslySetInnerHTML={{ __html: css + faceCss }} />;
 }
