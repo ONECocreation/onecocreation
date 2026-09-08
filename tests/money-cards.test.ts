@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { createHmac } from "crypto";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
 
 /**
@@ -29,6 +31,10 @@ import {
   deriveSquareRows,
   squareChip,
   stripeChip,
+  railFlipPatch,
+  railSwitchWords,
+  RailSwitchView,
+  default as CardsRailCard,
   WEBHOOK_REJECT_SENTENCE,
   type SquareDeskStatus,
 } from "@/components/console/CardsRailCard";
@@ -365,5 +371,74 @@ describe("the desk GET — per-row verification payload", () => {
     const body = await res.json();
     expect(body.ok).toBe(true);
     expect(body.connection).toBeNull();
+  });
+});
+
+// ── 5 · TASK-169 — the rail's own switch on the money cards ───────────────
+// The switch on the Bitcoin card and on the Cards card is the SAME switch
+// /a/site saves: one PUT route, one truth, no second store. These pins cover
+// the flip's PUT body, the words (state in words, never color alone), and
+// the rendered row (aria-pressed, the /a/site pointer, the dark-when-
+// unconfigured rule). renderToStaticMarkup, never a browser.
+
+describe("the rail switch — one PUT, one truth (TASK-169)", () => {
+  it("the flip's body is the same payments patch the /a/site page saves through", () => {
+    expect(railFlipPatch("btcpay", true)).toEqual({ payments: { btcpay: false } });
+    expect(railFlipPatch("square", false)).toEqual({ payments: { square: true } });
+    // only the one key — the route merges per group, so the other rails stand
+    expect(Object.keys(railFlipPatch("square", true).payments)).toEqual(["square"]);
+  });
+
+  it("the words say the state in plain English, plus the not-configured rule", () => {
+    expect(railSwitchWords(true, true)).toBe("this rail is ON for visitors");
+    expect(railSwitchWords(false, true)).toBe("this rail is OFF for visitors");
+    expect(railSwitchWords(true, false)).toBe("not configured — the switch stays dark until the rail's env names are set");
+    expect(railSwitchWords(false, false)).toBe("not configured — the switch stays dark until the rail's env names are set");
+  });
+
+  it("the rendered row: pressed state, the words, and the also-on-/a/site pointer", () => {
+    const html = renderToStaticMarkup(createElement(RailSwitchView, {
+      railKey: "btcpay", on: true, configured: true, busy: false, note: "", onFlip: () => {},
+    }));
+    expect(html).toContain('aria-pressed="true"');
+    expect(html).toContain("this rail is ON for visitors");
+    expect(html).toContain('href="/a/site"');
+    expect(html).toContain("also on /a/site");
+    expect(html).not.toContain("disabled");
+
+    const off = renderToStaticMarkup(createElement(RailSwitchView, {
+      railKey: "square", on: false, configured: true, busy: false, note: "", onFlip: () => {},
+    }));
+    expect(off).toContain('aria-pressed="false"');
+    expect(off).toContain("this rail is OFF for visitors");
+  });
+
+  it("an unconfigured rail keeps the toggle dark — disabled, with the rule in words", () => {
+    const html = renderToStaticMarkup(createElement(RailSwitchView, {
+      railKey: "btcpay", on: true, configured: false, busy: false, note: "", onFlip: () => {},
+    }));
+    expect(html).toContain("disabled");
+    expect(html).toContain("the switch stays dark");
+  });
+});
+
+// ── 6 · TASK-169 — the card's sections take no page-rhythm room ───────────
+// globals.css's `section { padding: 5rem 0 }` painted ~80px of dead space
+// under the "Cards" header and after each folded "How to set this up"; both
+// sections now zero it inline. Pinned so the gaps cannot quietly return.
+
+describe("the card's frame — no page-section padding (TASK-169)", () => {
+  it("the Square and Stripe sections wear padding:0 (a folded walk takes no room)", () => {
+    const html = renderToStaticMarkup(createElement(CardsRailCard));
+    expect(html).toContain('aria-label="Square" style="margin-top:10px;padding:0;border-bottom:none"');
+    expect(html).toMatch(/aria-label="Stripe" style="[^"]*padding:12px 0 0/);
+  });
+
+  it("the card header carries the rail switch's mount (the Square rail)", () => {
+    const html = renderToStaticMarkup(createElement(CardsRailCard));
+    // the stateful switch renders nothing before its read lands — never a
+    // guessed ON — so the static frame holds the header and no switch button
+    expect(html).toContain(">Cards</b>");
+    expect(html).not.toContain("aria-pressed");
   });
 });
