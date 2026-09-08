@@ -439,10 +439,15 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
    word riding the keep-dark night inks, the cards their own night glass. ── */
 .product-cols{display:grid;gap:36px;align-items:start}
 @media(min-width:900px){.product-cols{grid-template-columns:minmax(0,9fr) minmax(0,11fr)}}
-.item-veil{position:relative;overflow:hidden}
+.item-veil{position:relative;overflow:hidden;
+  /* the ground rides the ELEMENT itself (the .book-hero-veil lesson): an
+     alpha-only veil over the dawn body washes the keep-dark night inks out —
+     white words on light lavender. The night is solid; the ::before only
+     tints it (purple 88,52,150, the sky-veil family). T-177's shot-caught fix,
+     lost to the archive race, applied by Number One (K8 §4). */
+  background:linear-gradient(180deg,#16111f 0%,#1a1428 60%,#241a33 100%)}
 .item-veil::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-  background:radial-gradient(900px 520px at 50% 0%,rgba(88,52,150,.42),transparent 65%),
-             linear-gradient(180deg,rgba(10,6,20,.78) 0%,rgba(10,6,20,.5) 60%,rgba(10,6,20,.25) 100%)}
+  background:radial-gradient(900px 520px at 50% 0%,rgba(88,52,150,.42),transparent 65%)}
 .item-veil>.wrap{position:relative;z-index:1}
 
 /* the nav's right tail (member name + Support) never wraps under the menu —
