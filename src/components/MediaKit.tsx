@@ -323,13 +323,11 @@ export default function MediaKit() {
                 July gold set lives in docs/brand-archive/, never here. */}
             {BRAND_MARKS.map((m) => (
               <div key={m.title} className="flex flex-col justify-between border-2 border-edge bg-panel p-6">
-                <div className="flex items-center gap-4">
+                <div>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={m.img} alt={m.alt} className="h-16 w-auto max-w-[45%] shrink-0" />
-                  <div>
-                    <p className="font-pixel text-xs text-white">{m.title}</p>
-                    <p className="mt-1 font-body text-xs leading-snug text-white/60">{m.note}</p>
-                  </div>
+                  <img src={m.img} alt={m.alt} className="h-16 w-auto max-w-full" />
+                  <p className="mt-4 font-pixel text-xs text-white">{m.title}</p>
+                  <p className="mt-1 font-body text-xs leading-snug text-white/60">{m.note}</p>
                 </div>
                 <div className="mt-5 flex flex-wrap gap-2">
                   {m.downloads.map((d) => (
