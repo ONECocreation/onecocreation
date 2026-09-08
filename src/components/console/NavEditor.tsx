@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Chip, field } from "@/components/console/glass";
 import { PAGE_CATALOG, buildDefaultMenu, type MenuItem } from "@/components/NavMenu";
 import type { NavChild, NavItem, SiteConfig } from "@/lib/site-config";
+import { moveRow, nestUnder as nestRowUnder, type RowRef } from "@/lib/nav-edit";
 
 /**
  * NAV EDITOR (TASK-137, cut 0018.06.17 a₿) — "We are missing the ability to
@@ -11,17 +12,23 @@ import type { NavChild, NavItem, SiteConfig } from "@/lib/site-config";
  * header. The user shouldn't need an AI to set this up — this is our gift
  * to the people. They don't need credits." (the Admiral)
  *
- * Rename a label inline, reorder with up/down buttons (no drag library),
- * add a real page from the picker (PAGE_CATALOG — the same table buildMenu
+ * Rename a label inline, reorder with the up/down buttons OR drag a row by
+ * its ⠿ handle (TASK-188 — the house's own HTML5 drag primitives; @dnd-kit
+ * is not importable at the top level and no new dependency is allowed), add
+ * a real page from the picker (PAGE_CATALOG — the same table buildMenu
  * uses to filter the public menu), nest a top-level leaf one level under a
- * header, remove a row, or Reset to the switch-driven default. Switches
+ * header, remove a row, or Reset to the switch-driven default. Every move
+ * — arrow or drag — runs through the pure helpers in lib/nav-edit.ts
+ * (moveRow / nestUnder), so the tests exercise the exact state changes.
+ * Switches
  * still win: a page whose feature is OFF renders greyed here with "hidden
  * by the <name> switch" and never renders public — buildMenu applies the
  * exact same filter on the live site, so this editor can never promise a
  * door the switches won't actually open.
  *
  * Self-contained (own fetch/save), the same pattern as RetreatsDesk inside
- * /a/booking — SiteRoom just drops <NavEditor /> into its "Menu" section.
+ * /a/booking — TASK-188 gave it its own sub-room at /a/site/menu under the
+ * Site accordion.
  */
 
 const FEATURE_LABELS: Record<keyof SiteConfig["features"], string> = {
@@ -93,6 +100,43 @@ const iconBtn: React.CSSProperties = {
   background: "none", border: "1px solid rgba(139,118,196,.35)", borderRadius: 6,
   width: 26, height: 26, cursor: "pointer", fontSize: ".8rem", lineHeight: 1, color: "var(--ink)",
 };
+
+/** the thin landing line between rows of one level (TASK-188 drag) —
+    module scope: a component born inside render remounts every paint */
+function DropLine({ show }: { show: boolean }) {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        height: 3, borderRadius: 2, margin: "2px 0",
+        background: show ? "var(--lavender, #8b76c4)" : "transparent",
+        transition: "background .08s",
+      }}
+    />
+  );
+}
+
+/** the ⠿ handle — the drag affordance; the arrows beside it stay for
+    keyboard accessibility */
+function DragHandle({ at, label, onStart, onEnd }: {
+  at: RowRef;
+  label: string;
+  onStart: (e: React.DragEvent, at: RowRef) => void;
+  onEnd: () => void;
+}) {
+  return (
+    <span
+      draggable
+      onDragStart={(e) => onStart(e, at)}
+      onDragEnd={onEnd}
+      title={`drag ${label} to move it`}
+      aria-hidden="true"
+      style={{ cursor: "grab", color: "var(--muted)", fontSize: ".9rem", userSelect: "none", touchAction: "none" }}
+    >
+      ⠿
+    </span>
+  );
+}
 
 export default function NavEditor() {
   const [features, setFeatures] = useState<SiteConfig["features"] | null>(null);
@@ -169,21 +213,92 @@ export default function NavEditor() {
   }
 
   /** nest one level: pull a top-level LEAF (no children of its own) out and
-      drop it as the last child of the chosen header row */
+      drop it as the last child of the chosen header row — the pure helper
+      (lib/nav-edit.ts) holds the law; the same helper the drag lands on */
   function nestUnder(i: number, targetIndex: number) {
     if (!rows) return;
-    const leaf = rows[i];
-    if (leaf.children?.length || !leaf.href) return; // only a leaf nests
-    const withoutLeaf = rows.filter((_, idx) => idx !== i);
-    const targetPos = withoutLeaf.indexOf(rows[targetIndex]);
-    if (targetPos < 0) return;
-    const next = withoutLeaf.slice();
-    const target = next[targetPos];
-    next[targetPos] = {
-      ...target,
-      children: [...(target.children ?? []), { id: leaf.href, label: leaf.label, href: leaf.href }],
-    };
-    setRows(next);
+    setRows(nestRowUnder(rows, i, targetIndex));
+  }
+
+  /* ── TASK-188 (0018.06.18 a₿ · block 966,112) — drag-and-drop ──
+     "Could be better with a drag-and-drop area" (the Admiral). The house's
+     own HTML5 drag primitives, no library (@dnd-kit is not importable at
+     the top level — puck nests it). Drag a row by its ⠿ handle: over a row
+     of the SAME level a drop line shows where it lands (moveRow); a
+     top-level LEAF held over the middle of a header row highlights it as
+     the nest target (nestUnder — one level, the existing law). The
+     keyboard arrows stay untouched for accessibility, Save is unchanged. */
+  const [dragging, setDragging] = useState<RowRef | null>(null);
+  const [dropLine, setDropLine] = useState<RowRef | null>(null); // lands BEFORE this row; index may be the level's length (after the last)
+  const [nestTarget, setNestTarget] = useState<number | null>(null); // header index lit as the nest landing
+
+  function clearDrag() {
+    setDragging(null);
+    setDropLine(null);
+    setNestTarget(null);
+  }
+
+  function onDragStartRow(e: React.DragEvent, at: RowRef) {
+    setDragging(at);
+    e.dataTransfer.effectAllowed = "move";
+    try {
+      e.dataTransfer.setData("text/plain", "nav row");
+    } catch {
+      /* some test drivers deny setData — the state above already knows */
+    }
+  }
+
+  function onRowDragOver(e: React.DragEvent, parent: number | null, index: number, isHeader: boolean) {
+    if (!dragging) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = rect.height > 0 ? (e.clientY - rect.top) / rect.height : 0.5;
+    // a top-level LEAF held over the middle band of a top-level row = "nest
+    // me here" (nestUnder itself refuses a header or an href-less row)
+    const dragged = dragging.parent === null ? rows?.[dragging.index] : undefined;
+    const draggedIsLeaf = !!dragged && !dragged.children?.length && !!dragged.href;
+    if (
+      isHeader && parent === null && draggedIsLeaf &&
+      dragging.index !== index && y > 0.25 && y < 0.75
+    ) {
+      setNestTarget(index);
+      setDropLine(null);
+      return;
+    }
+    setNestTarget(null);
+    // reorder only ever happens within the row's own level
+    if (dragging.parent !== parent) {
+      setDropLine(null);
+      return;
+    }
+    setDropLine({ parent, index: y < 0.5 ? index : index + 1 });
+  }
+
+  function onEndZoneDragOver(e: React.DragEvent, parent: number | null, length: number) {
+    if (!dragging || dragging.parent !== parent) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setNestTarget(null);
+    setDropLine({ parent, index: length });
+  }
+
+  function onRowDrop(e: React.DragEvent) {
+    e.preventDefault();
+    if (rows && dragging) {
+      if (nestTarget !== null) {
+        if (dragging.parent === null && dragging.index !== nestTarget) {
+          setRows(nestRowUnder(rows, dragging.index, nestTarget));
+        }
+      } else if (dropLine && dropLine.parent === dragging.parent) {
+        // the line's index counts the row being dragged; taking it out
+        // first shifts every later landing spot down by one
+        let to = dropLine.index;
+        if (dragging.index < to) to -= 1;
+        if (to !== dragging.index) setRows(moveRow(rows, dragging, to));
+      }
+    }
+    clearDrag();
   }
 
   async function save() {
@@ -216,16 +331,30 @@ export default function NavEditor() {
   return (
     <div style={{ marginBottom: 12 }}>
       <p style={{ fontSize: ".8rem", color: "var(--muted)", margin: "0 0 10px", maxWidth: 640 }}>
-        Rename a door, reorder with the arrows, add a real page from the list, or nest a page one level under a
-        header. A page whose switch is off still shows here (greyed) so you can arrange it ahead of time — it
-        never shows on the live site until its switch is on.
+        Rename a door, drag a row by its ⠿ handle — a line shows where it lands, and a page held over a header
+        nests under it (the arrows do the same for the keyboard) — add a real page from the list. A page whose
+        switch is off still shows here (greyed) so you can arrange it ahead of time — it never shows on the live
+        site until its switch is on.
       </p>
 
       {rows.map((item, i) => {
         const note1 = rowHidden(features, item);
         return (
           <div key={item.id + i} style={{ marginBottom: 4 }}>
-            <div style={{ ...rowStyle, opacity: note1 ? 0.6 : 1 }}>
+            {/* the landing line above this row (TASK-188 drag) */}
+            <DropLine show={dropLine?.parent === null && dropLine.index === i} />
+            <div
+              style={{
+                ...rowStyle, opacity: note1 ? 0.6 : 1,
+                /* lit while a dragged leaf hovers it as the nest landing */
+                ...(nestTarget === i
+                  ? { borderColor: "var(--lavender, #8b76c4)", boxShadow: "0 0 0 2px rgba(139,118,196,.35)" }
+                  : {}),
+              }}
+              onDragOver={(e) => onRowDragOver(e, null, i, true)}
+              onDrop={onRowDrop}
+            >
+              <DragHandle at={{ parent: null, index: i }} label={item.label} onStart={onDragStartRow} onEnd={clearDrag} />
               <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <button type="button" style={iconBtn} disabled={i === 0} onClick={() => setRows(move(rows, i, -1))} aria-label={`move ${item.label} up`}>▲</button>
                 <button type="button" style={iconBtn} disabled={i === rows.length - 1} onClick={() => setRows(move(rows, i, 1))} aria-label={`move ${item.label} down`}>▼</button>
@@ -269,36 +398,49 @@ export default function NavEditor() {
             {item.children?.map((child, j) => {
               const note2 = hiddenNote(features, child.href);
               return (
-                <div key={child.id + j} style={{ ...rowStyle, marginLeft: 30, opacity: note2 ? 0.6 : 1 }}>
-                  <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    <button type="button" style={iconBtn} disabled={j === 0} onClick={() => setRows((r) => (r ? (() => {
-                      const next = r.slice();
-                      next[i] = { ...next[i], children: move(next[i].children ?? [], j, -1) };
-                      return next;
-                    })() : r))} aria-label={`move ${child.label} up`}>▲</button>
-                    <button type="button" style={iconBtn} disabled={j === (item.children?.length ?? 1) - 1} onClick={() => setRows((r) => (r ? (() => {
-                      const next = r.slice();
-                      next[i] = { ...next[i], children: move(next[i].children ?? [], j, 1) };
-                      return next;
-                    })() : r))} aria-label={`move ${child.label} down`}>▼</button>
-                  </span>
-                  <input
-                    value={child.label}
-                    onChange={(e) => renameChild(i, j, e.target.value)}
-                    style={{ ...field, minWidth: 180 }}
-                    aria-label={`label for ${child.label}`}
-                  />
-                  <Chip tone="grey">{child.href}</Chip>
-                  {note2 && <Chip tone="grey">{note2}</Chip>}
-                  <button type="button" onClick={() => removeChild(i, j)} style={{ ...iconBtn, width: "auto", padding: "0 8px", color: "var(--err)" }}>
-                    remove
-                  </button>
+                <div key={child.id + j}>
+                  <DropLine show={dropLine?.parent === i && dropLine.index === j} />
+                  <div
+                    style={{ ...rowStyle, marginLeft: 30, opacity: note2 ? 0.6 : 1 }}
+                    onDragOver={(e) => onRowDragOver(e, i, j, false)}
+                    onDrop={onRowDrop}
+                  >
+                    <DragHandle at={{ parent: i, index: j }} label={child.label} onStart={onDragStartRow} onEnd={clearDrag} />
+                    <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <button type="button" style={iconBtn} disabled={j === 0} onClick={() => setRows((r) => (r ? (() => {
+                        const next = r.slice();
+                        next[i] = { ...next[i], children: move(next[i].children ?? [], j, -1) };
+                        return next;
+                      })() : r))} aria-label={`move ${child.label} up`}>▲</button>
+                      <button type="button" style={iconBtn} disabled={j === (item.children?.length ?? 1) - 1} onClick={() => setRows((r) => (r ? (() => {
+                        const next = r.slice();
+                        next[i] = { ...next[i], children: move(next[i].children ?? [], j, 1) };
+                        return next;
+                      })() : r))} aria-label={`move ${child.label} down`}>▼</button>
+                    </span>
+                    <input
+                      value={child.label}
+                      onChange={(e) => renameChild(i, j, e.target.value)}
+                      style={{ ...field, minWidth: 180 }}
+                      aria-label={`label for ${child.label}`}
+                    />
+                    <Chip tone="grey">{child.href}</Chip>
+                    {note2 && <Chip tone="grey">{note2}</Chip>}
+                    <button type="button" onClick={() => removeChild(i, j)} style={{ ...iconBtn, width: "auto", padding: "0 8px", color: "var(--err)" }}>
+                      remove
+                    </button>
+                  </div>
                 </div>
               );
             })}
 
             {item.children !== undefined && (
-              <div style={{ ...rowStyle, marginLeft: 30, background: "transparent", border: "1px dashed rgba(139,118,196,.3)" }}>
+              <div
+                style={{ ...rowStyle, marginLeft: 30, background: "transparent", border: "1px dashed rgba(139,118,196,.3)" }}
+                onDragOver={(e) => onEndZoneDragOver(e, i, item.children?.length ?? 0)}
+                onDrop={onRowDrop}
+              >
+                <DropLine show={dropLine?.parent === i && dropLine.index === (item.children?.length ?? 0)} />
                 <select
                   defaultValue=""
                   onChange={(e) => {
@@ -319,7 +461,14 @@ export default function NavEditor() {
         );
       })}
 
-      <div style={{ ...rowStyle, background: "transparent", border: "1px dashed rgba(139,118,196,.3)" }}>
+      {/* after the last top-level row — the end landing line + the add row
+          double as the drop zone for "move to the bottom" */}
+      <DropLine show={dropLine?.parent === null && dropLine.index === rows.length} />
+      <div
+        style={{ ...rowStyle, background: "transparent", border: "1px dashed rgba(139,118,196,.3)" }}
+        onDragOver={(e) => onEndZoneDragOver(e, null, rows.length)}
+        onDrop={onRowDrop}
+      >
         <select
           defaultValue=""
           onChange={(e) => {

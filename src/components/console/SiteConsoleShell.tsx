@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { CONSOLE_ROOMS, CONSOLE_OVERVIEW, roomForPath, siteChromeTitle } from "@/lib/console";
 import { SiteChromeHeader, SiteChromeFooter } from "./site-chrome";
@@ -50,6 +51,122 @@ const SITE_BLURBS: Record<string, string> = {
 const label = (key: string, fallback: string) => SITE_LABELS[key] ?? fallback;
 const blurb = (key: string, fallback?: string) => SITE_BLURBS[key] ?? fallback;
 
+/* ── TASK-188 (0018.06.18 a₿ · block 966,112) — the Site room breathes ──
+   "A collapsible item under the menu item Site — many sites have accordion
+   views" (the Admiral). Closed, Site is one row like every other; open, its
+   sub-rooms show as indented rows, each its own view under /a/site/<sub>.
+   The accordion remembers open/closed in localStorage and marks the current
+   sub-row. Only the Site row changes — every other console item renders
+   exactly as before. "Community & rooms" is omitted on purpose: no such
+   card exists on /a/site (the spec's own condition). */
+
+export const SITE_SUBS = [
+  { key: "switches", href: "/a/site", label: "Switches" },
+  { key: "menu", href: "/a/site/menu", label: "Menu" },
+  { key: "community-door", href: "/a/site/community-door", label: "Community door" },
+  { key: "about-videos", href: "/a/site/about-videos", label: "Videos on About" },
+] as const;
+
+export type SiteSubKey = (typeof SITE_SUBS)[number]["key"];
+
+/** Which sub-row a path marks current — /a/site itself is the Switches
+    room (the default), an unmapped deeper /a/site/* path marks Switches
+    too, and anything outside /a/site marks nothing. */
+export function siteSubForPath(pathname: string): SiteSubKey | null {
+  const exact = SITE_SUBS.find((s) => s.href === pathname);
+  if (exact) return exact.key;
+  if (pathname.startsWith("/a/site/")) {
+    const sub = SITE_SUBS.find((s) => s.href !== "/a/site" && pathname.startsWith(s.href));
+    return sub ? sub.key : "switches";
+  }
+  return null;
+}
+
+const SITE_ACCORDION_KEY = "oc-console-site-open";
+/* same-tab writes don't fire "storage" — this event is the accordion's own
+   change bell so useSyncExternalStore re-reads after a toggle */
+const SITE_ACCORDION_EVENT = "oc-console-site-open-change";
+
+function readSiteAccordionOpen(): boolean {
+  try {
+    return window.localStorage.getItem(SITE_ACCORDION_KEY) === "1";
+  } catch {
+    return false; // storage can be denied — closed is the honest default
+  }
+}
+
+/** open/closed, remembered in localStorage. useSyncExternalStore keeps the
+    server paint (closed) and the remembered state from forking hydration —
+    and no setState rides an effect. */
+function useSiteAccordionOpen(): [boolean, () => void] {
+  const open = useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener("storage", onChange);
+      window.addEventListener(SITE_ACCORDION_EVENT, onChange);
+      return () => {
+        window.removeEventListener("storage", onChange);
+        window.removeEventListener(SITE_ACCORDION_EVENT, onChange);
+      };
+    },
+    readSiteAccordionOpen,
+    () => false,
+  );
+  const toggle = useCallback(() => {
+    try {
+      window.localStorage.setItem(SITE_ACCORDION_KEY, readSiteAccordionOpen() ? "0" : "1");
+    } catch {
+      /* storage denied — nothing to remember; the row stays closed */
+    }
+    window.dispatchEvent(new Event(SITE_ACCORDION_EVENT));
+  }, []);
+  return [open, toggle];
+}
+
+function SiteRoomAccordion({ active, title, pathname }: { active: boolean; title: string; pathname: string }) {
+  const [open, toggle] = useSiteAccordionOpen();
+
+  const currentSub = siteSubForPath(pathname);
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={open}
+        aria-controls="mgmt-site-subs"
+        className={`mgmt-rail-tab${active ? " is-active" : ""}`}
+        style={{
+          width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+          /* a button's UA background would grey the tab; undefined lets the
+             class's own is-active background win */
+          background: active ? undefined : "none",
+        }}
+      >
+        {title}
+        <span aria-hidden="true" style={{ fontSize: ".68rem" }}>{open ? "▾" : "▸"}</span>
+      </button>
+      {open && (
+        <div id="mgmt-site-subs">
+          {SITE_SUBS.map((s) => {
+            const subActive = currentSub === s.key;
+            return (
+              <Link
+                key={s.key}
+                href={s.href}
+                className={`mgmt-rail-tab${subActive ? " is-active" : ""}`}
+                aria-current={subActive ? "page" : undefined}
+                style={{ paddingLeft: 28, fontSize: ".78rem" }}
+              >
+                {s.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SiteConsoleShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/a";
   const current = roomForPath(pathname);
@@ -67,6 +184,18 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
         <nav className="mgmt-rail" aria-label="Management sections">
           {rooms.map((r) => {
             const active = r.key === current.key;
+            /* TASK-188: the Site row is the accordion — every other console
+               item is the same flat link it always was. */
+            if (r.key === "site") {
+              return (
+                <SiteRoomAccordion
+                  key={r.key}
+                  active={active}
+                  title={label(r.key, r.label)}
+                  pathname={pathname}
+                />
+              );
+            }
             return (
               <Link
                 key={r.key}
