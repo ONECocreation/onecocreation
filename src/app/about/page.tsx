@@ -10,6 +10,7 @@ import { TIERS } from "@/lib/entitlement";
 import { cartridge } from "@/brand/cartridge";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
+import { applyPlaylistToPuck } from "@/lib/about-playlist-puck";
 import {
   ABOUT_BRIDGE_LINE,
   ABOUT_JOIN_LINES,
@@ -49,11 +50,16 @@ export default async function AboutPage() {
   // untouched -- so nothing changes for visitors until she chooses it.
   const puck = await getPuckPage("about");
   if (puck) {
+    /* T-161 seam 1 (Number One): the studio snapshot still shows Love's saved
+       playlist — her list replaces the page's Video blocks in place; no saved
+       list ⇒ the studio's own videos stand. */
+    const saved = (await getSiteConfig()).about?.videos;
+    const data = applyPlaylistToPuck(puck as Data, saved);
     return (
       <>
         <SiteHeader />
         <PaletteVars />
-        <main><Render config={config} data={puck as Data} /></main>
+        <main><Render config={config} data={data} /></main>
         <SiteFooter />
         {/* STUDIO P2: popup host rides both branches of this page */}
         <PopupHost />
