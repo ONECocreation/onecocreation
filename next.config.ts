@@ -11,6 +11,19 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_BUILD_AT: new Date().toISOString(),
   },
+  /* TASK-175 (naming ruling, Admiral 0018.06.17 a₿, block 966094): the page
+     designer is STYLE — the Puck editor route moved /studio → /style so
+     "the studio" names only StudioPac, the VDO.Ninja go-live fork. One
+     PERMANENT redirect keeps bookmarks and old letters working. */
+  async redirects() {
+    return [
+      {
+        source: "/studio/:path*",
+        destination: "/style/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     return {
       /* chat.frens.earth = the DOOR, and the door is GATED. The arcade

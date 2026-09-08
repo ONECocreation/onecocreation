@@ -2,18 +2,19 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import OperatorGate from "@/components/OperatorGate";
 import PaletteVars from "@/components/PaletteVars";
-import BrandBoard from "@/components/studio/BrandBoard";
+import BrandBoard from "@/components/style/BrandBoard";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 
 /**
- * BRAND BOARD — /studio/brand (BRAND BOARD batch, 2026-08-14). The brand's
+ * BRAND BOARD — /style/brand (BRAND BOARD batch, 2026-08-14; route renamed
+ * /studio/brand → /style/brand by TASK-175, 0018.06.17 a₿). The brand's
  * dressing room: both theme skins side by side, the real type ladder and
  * blocks rendered through the registry, the palette machinery (roll /
  * eyedrop / dawn overrides / save) lifted out of the old top-bar
  * PaletteDock, and a gradient try-out lab.
  *
- * Same gate + noindex pattern as the studio catch-all; a STATIC route, so
- * Next resolves it ahead of /studio/[[...slug]] — and PuckEditor reserves
+ * Same gate + noindex pattern as the style catch-all; a STATIC route, so
+ * Next resolves it ahead of /style/[[...slug]] — and PuckEditor reserves
  * the "brand" slug (filtered from the switcher, rejected in goToPage) so a
  * page can never shadow the board.
  */

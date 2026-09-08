@@ -16,7 +16,7 @@ OTHER (15): Donation · Social Media · Blog · Chart · Code · Countdown ·
 Embed · Map · Menu · Portfolio · Progress Bar · Search · Stat Counter ·
 Team Members · Member Login / Registration
 
-## Mapping notes for /studio (Puck)
+## Mapping notes for /style (Puck)
 Already have equivalents: Heading/Text/Button/Container/Image/Video(YT)/
 Spacer/Separator ≈ existing Puck components. NEW to plan: Store+Checkout+
 Pricing family (the store round), Booking (rides /book), Gallery/Autorotator,

@@ -20,7 +20,7 @@ import { RECON_PAGES, RECON_GROUP_HEADING } from "@/lib/shinepages-recon";
 const SANS = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 const MONO = "var(--font-mono)";
 
-const studioPath = (s: string) => (s === "home" ? "/studio" : `/studio/${s}`);
+const stylePath = (s: string) => (s === "home" ? "/style" : `/style/${s}`);
 
 export default function PagesPanel({ slug, pages, order, storeReady, refresh, flushDraft, onClose }: {
   slug: string;
@@ -77,7 +77,7 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
     const problem = slugProblem(name) ?? (known.has(name) ? `'${name}' already exists` : null);
     if (problem) { setError(problem); return; }
     if (await act({ action: "create", slug: name })) {
-      window.location.assign(studioPath(name));
+      window.location.assign(stylePath(name));
     }
   }
 
@@ -97,7 +97,7 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
     if (!ok) return;
     setNaming(null);
     if (naming.mode === "rename" && naming.from === slug) {
-      window.location.assign(studioPath(to));
+      window.location.assign(stylePath(to));
       return;
     }
     refresh();
@@ -107,7 +107,7 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
     if (!window.confirm(`Delete '${target}'? Its draft and live copies both go — this can't be undone.`)) return;
     if (target === slug) await flushDraft();
     if (!(await act({ action: "delete", from: target }))) return;
-    if (target === slug) window.location.assign("/studio");
+    if (target === slug) window.location.assign("/style");
     else refresh();
   }
 
@@ -193,7 +193,7 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
               <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis",
                 fontFamily: MONO, fontSize: 12, whiteSpace: "nowrap",
                 color: isCurrent ? "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */ : "var(--puck-color-text-secondary)" }}
-                title={isCurrent ? "the page you're editing" : studioPath(p)}>
+                title={isCurrent ? "the page you're editing" : stylePath(p)}>
                 {isCurrent ? "● " : ""}{p}
               </span>
               {isSeed && (
@@ -232,7 +232,7 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
         {RECON_PAGES.map((r) => (
           <div key={r.slug} style={{ display: "flex", alignItems: "center", padding: "4px 2px",
             borderTop: "1px solid rgba(139,118,196,.1)" }}>
-            <a href={`/studio/reference/${r.slug}`} target="_blank" rel="noopener noreferrer"
+            <a href={`/style/reference/${r.slug}`} target="_blank" rel="noopener noreferrer"
               title="read-only ShinePages capture — opens the reference viewer in a new tab"
               style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 fontFamily: MONO, fontSize: 12, color: "var(--puck-color-text-secondary)", textDecoration: "none" }}>

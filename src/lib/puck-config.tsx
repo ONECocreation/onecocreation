@@ -1,7 +1,7 @@
 import { createConfig, LinkPickerField } from "@pacsarcade/puck-config";
 import { cartridge } from "@/brand/cartridge";
 import { ONECOCREATION } from "@/brand/tokens";
-import MediaField from "@/components/studio/MediaField";
+import MediaField from "@/components/style/MediaField";
 import { createParallaxBand } from "@/lib/puck-blocks/parallax-band";
 import { createJoinSurface } from "@/lib/puck-blocks/join-surface";
 import { createFormDoors } from "@/lib/puck-blocks/form-doors";

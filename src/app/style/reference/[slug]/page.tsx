@@ -10,14 +10,16 @@ import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-au
 import { RECON_ROOT, reconPage } from "@/lib/shinepages-recon";
 
 /**
- * /studio/reference/[slug] (TASK-105, cut 0018.06.12 a₿) — the ShinePages
- * recon viewer. Love wanted to verify the old site's fonts, sizes and colors
- * against ours before switching anything, so each captured page renders its
- * verbatim copy beside its scroll-series shots, under a sticky STYLE STRIP
- * that puts ShinePages' global styling (docs/shinepages-recon/styling/INDEX.md)
- * next to OUR live cartridge tokens — "ShinePages → ours".
+ * /style/reference/[slug] (TASK-105, cut 0018.06.12 a₿; route renamed
+ * /studio/reference → /style/reference by TASK-175, 0018.06.17 a₿) — the
+ * ShinePages recon viewer. Love wanted to verify the old site's fonts,
+ * sizes and colors against ours before switching anything, so each captured
+ * page renders its verbatim copy beside its scroll-series shots, under a
+ * sticky STYLE STRIP that puts ShinePages' global styling
+ * (docs/shinepages-recon/styling/INDEX.md) next to OUR live cartridge
+ * tokens — "ShinePages → ours".
  *
- * Gated EXACTLY like /studio ([[...slug]]/page.tsx): no operator cookie, no
+ * Gated EXACTLY like /style ([[...slug]]/page.tsx): no operator cookie, no
  * viewer. The static `reference` segment beats the optional catch-all, so
  * this route never collides with editing a page.
  *
@@ -139,7 +141,7 @@ export default async function ReferencePage({
             ShinePages global styling (capture 0018.06.12) → ours (cartridge.css night tokens, read live)
           </span>
           <span style={{ flex: 1 }} />
-          <Link href="/studio" style={{ fontSize: 11, color: "var(--puck-color-text-secondary)" }}>← back to the studio</Link>
+          <Link href="/style" style={{ fontSize: 11, color: "var(--puck-color-text-secondary)" }}>← back to Style</Link>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "0 28px", marginTop: 8 }}>
           <div>

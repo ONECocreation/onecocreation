@@ -1,10 +1,10 @@
-# Changing a photo on your site — the studio way
+# Changing a photo on your site — the Style way
 
-A short guide for Love. No code, no developer needed for pages the studio serves.
+A short guide for Love. No code, no developer needed for pages Style serves.
 
 ## The short version
 
-1. Open **/studio** on your site and sign in as the operator.
+1. Open **/style** on your site and sign in as the operator.
 2. In the pages panel, pick the page you want (or make a new one).
 3. Click the block with the picture. In its fields you'll see the image row —
    click **library**.
@@ -36,7 +36,7 @@ That means the picture library isn't connected yet. Right under the button
 there's a **connect box**: paste a GitHub token there and press **connect** —
 it's checked live, saved safely on the server, and never shown again. If you
 don't have that token, ask your developer; it takes them a minute to make
-one. And an honest note: what I can see in the code tells me the studio is
+one. And an honest note: what I can see in the code tells me Style is
 built to work this way, but I can't see your live site's hosting settings
 from here — so if connecting doesn't take, or the pages panel says it's
 disabled, that's a hosting-setting question for your developer, not something
@@ -45,7 +45,7 @@ you did wrong.
 ## One honest exception (for now)
 
 The photo on **/meditation** is still placed by hand in the site's code
-today, so the studio can't swap that one yet — that page switches over once
-its studio version is published (your developer can do this quickly). On
-every page the studio serves — anything you've published from /studio — the
+today, so Style can't swap that one yet — that page switches over once
+its Style version is published (your developer can do this quickly). On
+every page Style serves — anything you've published from /style — the
 steps above are exactly how it works, every time.

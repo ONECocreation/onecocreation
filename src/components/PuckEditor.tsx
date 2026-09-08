@@ -13,16 +13,16 @@ import { createPresence, type PresenceClient } from "@pacsarcade/presence";
 import { createNostrTransport } from "@pacsarcade/presence/nostr";
 import { loadIdentity, saveIdentity, colorFor, newSessionId } from "@pacsarcade/presence";
 import { usePresence, PresenceBridge, PresenceChips, PresenceHalos } from "@pacsarcade/presence/react";
-import PagesPanel from "@/components/studio/PagesPanel";
-import PopupsPanel from "@/components/studio/PopupsPanel";
+import PagesPanel from "@/components/style/PagesPanel";
+import PopupsPanel from "@/components/style/PopupsPanel";
 import type { PopupTrigger } from "@/lib/puck-store";
 
 /**
- * PuckEditor — the studio, wearing the MOCKUP CHROME (UI update, Admiral
- * 2026-08-13). Puck's compositional API lets us own the layout with zero
- * core patches:
+ * PuckEditor — the page designer (Style), wearing the MOCKUP CHROME (UI
+ * update, Admiral 2026-08-13). Puck's compositional API lets us own the
+ * layout with zero core patches:
  *
- *   ┌ top bar: STUDIO · page · brand · guidelines · zoom · zen · publish ┐
+ *   ┌ top bar: STYLE · page · brand · guidelines · zoom · zen · publish ┐
  *   │ LIBRARY   │        canvas        │  STYLE   │  NUMBER ONE          │
  *   │ (blocks + │   (Puck.Preview)     │ (fields) │  (docked copilot)    │
  *   │  outline) │                      │          │                      │
@@ -35,9 +35,14 @@ import type { PopupTrigger } from "@/lib/puck-store";
  *
  * TASK-97 PROP-LIFT (cut 0018.06.10 a₿): this component is brand-neutral —
  * puck-config, the seed library, the brand tokens and the Copilot all
- * arrive as PROPS, wired by the studio page's client bridge
- * (src/components/studio/StudioEditor.tsx), so a second StylePac tenant
+ * arrive as PROPS, wired by the style page's client bridge
+ * (src/components/style/StyleEditor.tsx), so a second StylePac tenant
  * can feed it its own cartridge without forking the editor.
+ *
+ * TASK-175 (naming ruling, Admiral 0018.06.17 a₿, block 966094): the badge
+ * reads STYLE — "the studio" names only StudioPac, the VDO.Ninja go-live
+ * fork. The `oc-studio*` localStorage keys and `.oc-studio` / `--studio-*`
+ * CSS identifiers are code names and stay (module law).
  */
 
 type LiveState = "idle" | "publishing" | "live" | "error";
@@ -261,7 +266,7 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
       window.alert("'brand' is the brand board — pick another name");
       return;
     }
-    window.location.assign(t === "home" ? "/studio" : `/studio/${t}`);
+    window.location.assign(t === "home" ? "/style" : `/style/${t}`);
   }
 
   /* flush any pending debounced autosave right now — used before navigating
@@ -276,11 +281,11 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
   }
 
   /* → the brand board: flush any pending draft save first, remember where
-     we were so "back to studio" returns here */
+     we were so "back to Style" returns here */
   async function goBrandBoard() {
     try { sessionStorage.setItem("oc-last-slug", slug); } catch { /* private mode */ }
     await flushDraft();
-    window.location.assign("/studio/brand");
+    window.location.assign("/style/brand");
   }
 
   const pill: React.CSSProperties = {
@@ -291,7 +296,7 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
   const GOLD = "var(--gold-deep, #D9B24E)"; /* S2: fallback repaired to the token's night value (integrator ruling 0018.05.25 a₿). The D2-ruled "Publish to live" button keeps this EXACTLY — the ruling is sacred; S33 touches only the unruled Preview button below */
   const errCount = findings.filter((f) => f.severity === "error").length;
   const warnCount = findings.length - errCount;
-  /* "brand" is RESERVED: /studio/brand is the brand board, never a page;
+  /* "brand" is RESERVED: /style/brand is the brand board, never a page;
      popup: slugs stay out of the switcher (gate ruling 0018.05.25 a₿ —
      popups belong to the ◱ popups panel only) EXCEPT the one being edited,
      so the control still names what you're on */
@@ -322,7 +327,7 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
           background: "var(--puck-color-surface)", borderBottom: "1px solid var(--puck-color-interactive-inverse-active)", flex: "none",
           fontFamily: "var(--font-body)", flexWrap: "wrap" }}>
           <span style={{ fontFamily: "var(--font-mono)", /* S24: the ruling closed — the cartridge's --font-mono carries the stack */ fontWeight: 800, letterSpacing: ".22em", color: "var(--puck-color-text)", fontSize: 13, whiteSpace: "nowrap" }}>
-            ■ <i style={{ fontStyle: "normal", color: "var(--oc-gold-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twin #8A6410 via token (B3) */ }}>STUDIO</i>
+            ■ <i style={{ fontStyle: "normal", color: "var(--oc-gold-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twin #8A6410 via token (B3) */ }}>STYLE</i>
           </span>
 
           {/* page switcher — LEGIBILITY DOCTRINE: solid night panel, full
