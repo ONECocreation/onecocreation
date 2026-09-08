@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     items: await listItems({ includeHidden: true }),
     // honest rail states for the RAILS berths — btcpay and square are both
     // real adapters now (env-wired or not); stripe stays a key drawer only
-    // (see StripeRailCard) until its own adapter ships
+    // (see the Cards card's Stripe section) until its own adapter ships
     rails: { btcpay: btcpayAdapter.configured(), square: squareAdapter.configured() },
     partners: partnerRails(),
     // deliverable uploads: browser → blob directly when the blob store is
