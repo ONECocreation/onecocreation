@@ -266,3 +266,15 @@ describe("TASK-187 — the memberships switch gates its two routes", () => {
   });
 });
 
+
+import { readFileSync as _rf } from "node:fs";
+describe("T-187 follow-through — the footer and the Related row follow the Memberships switch", () => {
+  it("the footer's Memberships link is gated on features.memberships", () => {
+    const src = _rf("src/components/SiteFooter.tsx", "utf8");
+    expect(src).toContain('switches?.features.memberships !== false && <Link href="/memberships">');
+  });
+  it("the item page's catalog drops package items when memberships is OFF", () => {
+    const src = _rf("src/app/store/[id]/page.tsx", "utf8");
+    expect(src).toContain('switches.features.memberships !== false || i.kind !== "package"');
+  });
+});

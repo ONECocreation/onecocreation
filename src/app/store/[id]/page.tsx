@@ -90,7 +90,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
      door could render against Love's OFF switch while the card door vanished
      per serverless instance (Love's meeting: "we tried bitcoin and square",
      "cash payment doesn't show up"). Await both truths, THEN judge the rails. */
-  await getSiteConfig();
+  const switches = await getSiteConfig();
   await ensureSquareVault();
 
   // TASK-157: same rail truth BuyPanel judges by, a few lines down.
@@ -107,7 +107,10 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
      the phone, picture first. The night ground holds in both themes
      (keep-dark + .item-veil, the T-152/T-155 page-scoped veil precedent).
      "Related" below: up to three live items of the same kind. */
-  const catalog = (await listItems()).map(stripPrivateMedia);
+  /* T-187 seam: with the Memberships switch OFF a package never rides another item's
+     Related row — its door would open onto NotOpenYet */
+  const catalog = (await listItems()).map(stripPrivateMedia)
+    .filter((i) => switches.features.memberships !== false || i.kind !== "package");
 
   return (
     <main>

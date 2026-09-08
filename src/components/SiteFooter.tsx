@@ -34,7 +34,7 @@ export default function SiteFooter() {
         <nav className="fnav">
           <Link href="/">Home</Link>
           <Link href="/about">About</Link>
-          <Link href="/memberships">Memberships</Link>
+          {switches?.features.memberships !== false && <Link href="/memberships">Memberships</Link>}{/* T-187: the footer follows the Memberships switch (absent = ON) */}
           {switches?.features.sessions && <Link href="/book">Sessions</Link>}
           <Link href="/classes">Community</Link>{/* T-137 seam: the header always shows Community now; the footer follows */}
           <Link href="/support">⚡ Support</Link>
