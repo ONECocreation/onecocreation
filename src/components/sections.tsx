@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES } from "@/lib/tiers-content";
-import { ROOMS } from "@/lib/matrix";
+import { ROOMS, type MatrixRoom } from "@/lib/matrix";
 import { listServices } from "@/lib/booking";
 import { listItems } from "@/lib/store";
 import { getSiteConfig } from "@/lib/site-config";
@@ -18,7 +18,36 @@ import ContactDoors from "./ContactDoors";
 
 /* eslint-disable @next/next/no-img-element */
 
+/* TASK-178 (0018.06.18 a₿ · block 966098) — THE HERO'S SECOND DOOR: join the
+   weekly reading. DERIVED, never hardcoded: the room comes from the rooms
+   registry (derive-or-dash — no registry entry, NO door, never a fake link),
+   and the words follow the room's OWN tier — TIERS' name for it — so "free
+   for every member" is only ever said of a room whose door is open to every
+   member (the Weekly Reading is minTier B today → "with the Observer"). No
+   public calendar derives the next Weekly Reading, so the words carry the
+   room's standing cadence ("every week"). Pure + exported for
+   tests/join-the-reading.test.ts — the house pins the model, not the render
+   (same idiom as packageWaitlistProps below). */
+export interface WeeklyReadingDoor {
+  /** the room's Stage — T-174's gate sorts the visitor from there */
+  href: string;
+  /** when it happens + whose key opens it, both derived */
+  words: string;
+}
+
+export function weeklyReadingDoor(rooms: MatrixRoom[] = ROOMS): WeeklyReadingDoor | null {
+  const slugOf = (id: string) => id.slice(1, id.indexOf(":"));
+  const room = rooms.find((r) => slugOf(r.id) === "weekly-reading");
+  if (!room) return null;
+  const words =
+    room.minTier === "all"
+      ? "Every week, live in Love's room — free for every member."
+      : `Every week, live in Love's room — with the ${TIERS[room.minTier].name} membership.`;
+  return { href: `/rooms/${slugOf(room.id)}`, words };
+}
+
 export function Hero() {
+  const readingDoor = weeklyReadingDoor();
   return (
     <section className="hero keep-dark">{/* keep-dark: the design holds the dark hero in both
         themes — "light code draws in light against the void" (cartridge.css);
@@ -40,8 +69,17 @@ export function Hero() {
             "Home IS where the Heart IS" — the pull-quote's var(--serif),
             plain: the uppercase + wide tracking leave, the face stays. */}
         <div className="sub" style={{ textTransform: "none", letterSpacing: ".02em", fontSize: "1.25rem" }}>Where Heaven and Earth Meet</div>
-        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+        {/* TASK-178: the doors STACK top-to-bottom at the bottom of the
+            hero (the Admiral's law, 0018.06.17), the house's rose + ghost
+            pair — the meditation stays ghost, the reading door wears rose. */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
           <Link className="btn btn-ghost" href="/#free">Receive the Free Meditation</Link>
+          {readingDoor && (
+            <>
+              <p style={{ margin: "4px 0 0", fontSize: ".9rem", color: "var(--muted)" }}>{readingDoor.words}</p>
+              <Link className="btn btn-rose" href={readingDoor.href}>Join the Weekly Reading</Link>
+            </>
+          )}
         </div>
       </div>
     </section>
