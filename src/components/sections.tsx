@@ -291,7 +291,15 @@ export async function Classes() {
   );
 }
 
-export function Affirmations() {
+export async function Affirmations() {
+  /* TASK-137 (0018.06.17 a₿) — Affirmations FOLLOWS THE STORE SWITCH: "If I
+     turn the store off the guided affirmations should be gone too" (the
+     Admiral). Same pattern as Classes()/jarsOpen() — visibility only, no
+     copy change, store OFF (Love's streamlined default) → this section
+     doesn't render on the home page at all.
+     (ported from the home lane's stalled attempt, worktree task-137) */
+  const switches = await getSiteConfig();
+  if (!switches.features.store) return null;
   const aff = [
     { name: "Thank You", sub: "Wake Up Affirmations · 1 hr 11 min", img: "/images/affirmation-thankyou.webp" },
     { name: "Large Sums of Money", sub: "Sleep Affirmation · 16 min · no music", img: "/images/affirmation-largesums.webp" },

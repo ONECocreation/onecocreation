@@ -7,9 +7,24 @@ import JitsiRoom from "@/components/booking/JitsiRoom";
 import { getBooking } from "@/lib/booking-orders";
 import { getService } from "@/lib/booking";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = { title: "Your session — One Cocreation" };
 export const dynamic = "force-dynamic";
+
+/** TASK-137 (0018.06.17 a₿) — pure, so tests/nav-config.test.ts can pin the
+    fallback without rendering the whole server page (next/navigation's
+    redirect()/notFound() throw, and this route also needs request headers
+    for the vdo branch — the resolution logic is the only part worth
+    isolating). The service's own url wins when filled in; a blank/old one
+    falls back to the site-wide standing link; neither set → null (no link
+    to invent). */
+export function resolveStaticMeetingUrl(serviceUrl: string | undefined, siteStaticUrl: string): string | null {
+  const own = serviceUrl?.trim();
+  if (own) return own;
+  const site = siteStaticUrl?.trim();
+  return site || null;
+}
 
 /**
  * /meet/<bookingId> — the confirmed session's own room, on our ground.
@@ -31,7 +46,14 @@ export default async function MeetPage({ params }: { params: Promise<{ bookingId
 
   const service = await getService(booking.serviceId);
   const rail = service?.meetingRail;
-  if (rail?.kind === "static") redirect(rail.url);
+  if (rail?.kind === "static") {
+    // TASK-137 (0018.06.17 a₿): the standing link belongs in /a/site — "the
+    // standing link is entered in /a/site by the operator (never in
+    // code)" (Operator runbook).
+    const url = resolveStaticMeetingUrl(rail.url, (await getSiteConfig()).meeting.staticUrl);
+    if (!url) notFound(); // neither set — no link to invent, no dead redirect
+    redirect(url);
+  }
 
   if (rail?.kind === "vdo") {
     const room = encodeURIComponent(bookingId);

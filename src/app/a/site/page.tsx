@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Chip, SectionHead, field } from "@/components/console/glass";
+import NavEditor from "@/components/console/NavEditor";
 import type { SiteConfig } from "@/lib/site-config";
 
 /**
@@ -12,6 +13,11 @@ import type { SiteConfig } from "@/lib/site-config";
  * never color alone. Payment toggles name their env vars and say
  * configured/not — a switch can't conjure a rail whose env isn't there, so
  * an unconfigured rail's toggle greys out and says why.
+ *
+ * TASK-137 (0018.06.17 a₿): the meeting fields below the rail picker now
+ * change WITH the rail (jitsi domain / vdo room prefix / static standing
+ * link — each rail shows only its own knobs), and a new "Menu" section
+ * holds the nav editor (NavEditor) — Love's own doors, no AI required.
  */
 
 type RailStatus = Record<"btcpay" | "square" | "stripe", { configured: boolean; env: string[] }>;
@@ -192,32 +198,71 @@ export default function SiteRoom() {
         </div>
         <Chip tone="lavender">rail: {config.meeting.rail}</Chip>
       </div>
-      <div style={row}>
-        <div style={{ flex: 1, minWidth: 220 }}>
-          <b style={{ fontSize: ".9rem" }}>Jitsi domain</b>
-          <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — where the Jitsi rooms open; prefilled with this site&apos;s own</span>
+      {/* TASK-137 (0018.06.17 a₿) — the fields below CHANGE WITH THE RAIL:
+          "the /a/site meeting fields don't change per rail" was the
+          Admiral's complaint; each rail now shows only its own knobs. The
+          "Zoom / any link" toggle folds into the static block — choosing
+          that rail already IS the operator's consent (site-config.ts's
+          sanitize enforces allowStaticLinks:true whenever rail === "static",
+          so there's nothing left to toggle separately). */}
+      {config.meeting.rail === "jitsi" && (
+        <div style={row}>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <b style={{ fontSize: ".9rem" }}>Jitsi domain</b>
+            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — where the Jitsi rooms open; prefilled with this site&apos;s own</span>
+            <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
+              room name pattern (read-only): each session opens at <code>{config.meeting.jitsiDomain}/&lt;booking id&gt;</code> —
+              the booking&apos;s own id, never a name you have to invent
+            </div>
+          </div>
+          <input
+            value={config.meeting.jitsiDomain}
+            onChange={(e) => setConfig({ ...config, meeting: { ...config.meeting, jitsiDomain: e.target.value } })}
+            style={{ ...field, minWidth: 260 }}
+            aria-label="Jitsi domain"
+          />
         </div>
-        <input
-          value={config.meeting.jitsiDomain}
-          onChange={(e) => setConfig({ ...config, meeting: { ...config.meeting, jitsiDomain: e.target.value } })}
-          style={{ ...field, minWidth: 260 }}
-          aria-label="Jitsi domain"
-        />
-      </div>
-      <div style={row}>
-        {toggle(config.meeting.allowStaticLinks, false,
-          `Zoom / any link — currently ${config.meeting.allowStaticLinks ? "allowed" : "hidden"}`, () =>
-            setConfig({ ...config, meeting: { ...config.meeting, allowStaticLinks: !config.meeting.allowStaticLinks } }))}
-        <div style={{ flex: 1, minWidth: 220 }}>
-          <b style={{ fontSize: ".9rem" }}>Zoom / any link</b>
-          <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>
-            {" "}— {config.meeting.allowStaticLinks ? "allowed" : "hidden"}: lets a service carry any pasted meeting link in the booking room
-          </span>
+      )}
+      {config.meeting.rail === "vdo" && (
+        <div style={row}>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <b style={{ fontSize: ".9rem" }}>VDO.Ninja room prefix</b>
+            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — defaults to the site&apos;s own name</span>
+            <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
+              guests get <code>?room={config.meeting.vdoRoomPrefix || "prefix"}-&lt;booking&gt;</code> — a new session&apos;s room name starts with this prefix
+            </div>
+          </div>
+          <input
+            value={config.meeting.vdoRoomPrefix}
+            onChange={(e) => setConfig({ ...config, meeting: { ...config.meeting, vdoRoomPrefix: e.target.value } })}
+            style={{ ...field, minWidth: 260 }}
+            aria-label="VDO.Ninja room prefix"
+          />
         </div>
-        <Chip tone={config.meeting.allowStaticLinks ? "green" : "grey"}>
-          {config.meeting.allowStaticLinks ? "ON — allowed" : "OFF — hidden"}
-        </Chip>
-      </div>
+      )}
+      {config.meeting.rail === "static" && (
+        <div style={row}>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <b style={{ fontSize: ".9rem" }}>Standing meeting link</b>
+            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — Zoom, Webex, anything; a new session defaults to this link</span>
+            <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
+              choosing this rail already allows &quot;any link&quot; per session — there&apos;s no separate switch to flip
+            </div>
+          </div>
+          <input
+            value={config.meeting.staticUrl}
+            onChange={(e) => setConfig({ ...config, meeting: { ...config.meeting, staticUrl: e.target.value } })}
+            style={{ ...field, minWidth: 260 }}
+            placeholder="https://zoom.us/j/…"
+            aria-label="Standing meeting link"
+          />
+          <Chip tone="green">any link — allowed</Chip>
+        </div>
+      )}
+
+      {/* ── the menu ── */}
+      <SectionHead label="Menu — the doors Love shapes" />
+      <NavEditor />
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 18 }}>
         <button type="button" className="btn btn-gold btn-sm" disabled={busy} onClick={save}

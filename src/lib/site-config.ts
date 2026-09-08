@@ -24,6 +24,37 @@ import { SPACE_NAME, domainForSpace } from "./identity-config.ts";
  * the square-payments harness pins synchronous; see its note below.
  */
 
+/**
+ * THE NAV (TASK-137, cut 0018.06.17 a₿) — Love's own menu, no AI required.
+ * `nav` is absent by default: absent means "build the menu from the
+ * switches" (buildMenu's own default in NavMenu.tsx). Only once Love saves
+ * an edited nav from the console does this field appear, and even then
+ * sanitize() will hand back `undefined` rather than an empty/garbage doc —
+ * a broken nav file can never blank the menu, it just falls back to the
+ * switch-driven default. hrefs are checked against KNOWN_NAV_HREFS below
+ * (the site's real routes) so a hand-edited doc can't point the menu
+ * somewhere the house didn't build; the feature-gating itself (a page whose
+ * switch is OFF never renders publicly even if nav lists it) lives in
+ * NavMenu.tsx's buildMenu, which is the one place that already knows both
+ * the switches and the catalog.
+ */
+export interface NavChild {
+  id: string;
+  label: string;
+  href: string;
+}
+export interface NavItem {
+  id: string;
+  label: string;
+  /** headers may omit href (pure grouping) or carry one (click-through) */
+  href?: string;
+  /** one level only — the editor never nests a child under a child */
+  children?: NavChild[];
+}
+export interface NavConfig {
+  items: NavItem[];
+}
+
 export interface SiteConfig {
   features: {
     community: boolean;
@@ -40,14 +71,34 @@ export interface SiteConfig {
     rail: "jitsi" | "vdo" | "static";
     jitsiDomain: string;
     allowStaticLinks: boolean;
+    /** TASK-137: VDO.Ninja room prefix — guests get ?room=<prefix>-<booking> */
+    vdoRoomPrefix: string;
+    /** TASK-137: the standing meeting link for the static rail (Zoom, Webex,
+        anything) — entered here by the operator, never in code */
+    staticUrl: string;
   };
+  /** TASK-137: the menu Love can shape. Absent = switch-driven default. */
+  nav?: NavConfig;
 }
 
 export type SiteConfigPatch = {
   features?: Partial<SiteConfig["features"]>;
   payments?: Partial<SiteConfig["payments"]>;
   meeting?: Partial<SiteConfig["meeting"]>;
+  /** whole-document replace when present (a partial nav patch makes no
+      sense — the editor always saves its full row set) */
+  nav?: NavConfig;
 };
+
+/** The site's real routes a nav item may point to (TASK-137) — kept in sync
+    by hand with PAGE_CATALOG in NavMenu.tsx, which carries the plain names
+    and feature-gating; this list is only the storage-layer allow-list so a
+    hand-edited doc can never grow a door (or an external link) the house
+    didn't build. */
+export const KNOWN_NAV_HREFS: readonly string[] = [
+  "/about", "/memberships", "/packages", "/store", "/book", "/services",
+  "/classes", "/news", "/letters", "/meditation", "/support", "/contact", "/me",
+];
 
 /** Love's streamlined site (the Admiral, 0018.06.16 a₿): only the jars and
     the news stay up; bitcoin + card rails live, stripe still dark; meetings
@@ -68,6 +119,8 @@ export function defaultSiteConfig(): SiteConfig {
       rail: "jitsi",
       jitsiDomain: `meet.${domainForSpace(SPACE_NAME)}`,
       allowStaticLinks: false,
+      vdoRoomPrefix: SPACE_NAME,
+      staticUrl: "",
     },
   };
 }
@@ -91,21 +144,83 @@ function sanitize(raw: unknown): SiteConfig {
     return out;
   };
   const m = (o.meeting ?? {}) as Record<string, unknown>;
+  const rail = (RAILS as readonly string[]).includes(m.rail as string)
+    ? (m.rail as SiteConfig["meeting"]["rail"])
+    : d.meeting.rail;
   return {
     features: bools(o.features, d.features),
     payments: bools(o.payments, d.payments),
     meeting: {
-      rail: (RAILS as readonly string[]).includes(m.rail as string)
-        ? (m.rail as SiteConfig["meeting"]["rail"])
-        : d.meeting.rail,
+      rail,
       jitsiDomain:
         typeof m.jitsiDomain === "string" && m.jitsiDomain.trim()
           ? m.jitsiDomain.trim()
           : d.meeting.jitsiDomain,
+      // the static rail IMPLIES the "any link" door is allowed — choosing it
+      // in /a/site is the operator's own consent, no separate toggle needed
       allowStaticLinks:
-        typeof m.allowStaticLinks === "boolean" ? m.allowStaticLinks : d.meeting.allowStaticLinks,
+        rail === "static"
+          ? true
+          : typeof m.allowStaticLinks === "boolean"
+            ? m.allowStaticLinks
+            : d.meeting.allowStaticLinks,
+      vdoRoomPrefix:
+        typeof m.vdoRoomPrefix === "string" && m.vdoRoomPrefix.trim()
+          ? m.vdoRoomPrefix.trim().slice(0, 40)
+          : d.meeting.vdoRoomPrefix,
+      staticUrl: typeof m.staticUrl === "string" ? m.staticUrl.trim().slice(0, 300) : d.meeting.staticUrl,
     },
+    nav: sanitizeNav(o.nav),
   };
+}
+
+/** One child row: a leaf that must point at a real, known route — an
+    unknown href (hand-edited doc, or a route this house never built) is
+    simply dropped, never fabricated into a dead link. */
+function sanitizeNavChild(raw: unknown): NavChild | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const href = typeof o.href === "string" ? o.href : "";
+  if (!KNOWN_NAV_HREFS.includes(href)) return null;
+  const label = typeof o.label === "string" && o.label.trim() ? o.label.trim().slice(0, 60) : href;
+  const id = typeof o.id === "string" && o.id.trim() ? o.id.trim().slice(0, 60) : href;
+  return { id, label, href };
+}
+
+/** One top-level row: a leaf (href) or a header (children), one level of
+    nesting only. A row that ends up with neither a valid href nor any
+    surviving children is a dead header and is dropped. */
+function sanitizeNavItem(raw: unknown): NavItem | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const childrenRaw = Array.isArray(o.children) ? o.children : [];
+  const children = childrenRaw
+    .map(sanitizeNavChild)
+    .filter((c): c is NavChild => c !== null)
+    .slice(0, 12);
+  const hrefRaw = typeof o.href === "string" ? o.href : undefined;
+  const href = hrefRaw && KNOWN_NAV_HREFS.includes(hrefRaw) ? hrefRaw : undefined;
+  if (!href && children.length === 0) return null;
+  const fallbackLabel = href ?? children[0]?.label ?? "Untitled";
+  const label = typeof o.label === "string" && o.label.trim() ? o.label.trim().slice(0, 60) : fallbackLabel;
+  const fallbackId = href ?? `header-${children[0]?.id ?? "x"}`;
+  const id = typeof o.id === "string" && o.id.trim() ? o.id.trim().slice(0, 60) : fallbackId;
+  return { id, label, ...(href ? { href } : {}), ...(children.length ? { children } : {}) };
+}
+
+/** The whole nav doc → known-good rows, or `undefined` when there's nothing
+    left standing — an empty or garbage doc can never blank the menu, it
+    just falls back to the switch-driven default (buildMenu's own job). */
+function sanitizeNav(raw: unknown): NavConfig | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  const itemsRaw = Array.isArray(o.items) ? o.items : [];
+  const items = itemsRaw
+    .map(sanitizeNavItem)
+    .filter((i): i is NavItem => i !== null)
+    .slice(0, 20);
+  if (items.length === 0) return undefined;
+  return { items };
 }
 
 /* ── the three drivers ─────────────────────────────────────────────────── */
@@ -235,6 +350,11 @@ export async function saveSiteConfig(patch: SiteConfigPatch): Promise<SiteConfig
     features: { ...current.features, ...(patch.features ?? {}) },
     payments: { ...current.payments, ...(patch.payments ?? {}) },
     meeting: { ...current.meeting, ...(patch.meeting ?? {}) },
+    // nav is a whole row-set, never merged field-by-field: the editor always
+    // saves its complete list, and omitting `nav` from the patch (every
+    // OTHER save on this route — features, payments, meeting) must leave
+    // Love's saved menu untouched rather than wiping it.
+    nav: patch.nav !== undefined ? patch.nav : current.nav,
   });
   await writeStored(next);
   cache = next;

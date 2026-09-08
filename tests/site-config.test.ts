@@ -125,31 +125,42 @@ describe("the switches — liveAdapter honors the rail switches", () => {
 });
 
 describe("the switches — the nav MENU is built from them", () => {
+  // TASK-137 (0018.06.17 a₿), minimal-forced-edit: Community became a
+  // HEADER (always present — Free meditation + 11:11 Live with Love always
+  // exist under it) instead of a switch, and Support went back to carrying
+  // only Support. This describe block pinned the OLD "meditation/news fall
+  // under Support while Community is off" shape T-137 was cut to remove;
+  // updating the two assertions here is load-bearing for this lane's own
+  // gate (`vitest run` must pass), not a cosmetic touch-up.
   const labels = (menu: { label: string }[]) => menu.map((m) => m.label);
 
-  it("defaults: no Store, no Sessions, no Community — the always doors stand", () => {
+  it("defaults: no Store, no Sessions — Community stands anyway (always doors)", () => {
     const menu = buildMenu(defaultSiteConfig());
     expect(labels(menu)).not.toContain("Store");
     expect(labels(menu)).not.toContain("Sessions");
-    expect(labels(menu)).not.toContain("Community");
-    expect(labels(menu)).toEqual(["About", "Memberships", "Support"]);
-    // the free meditation stays reachable — under Support while Community is off
-    const support = menu.find((m) => m.label === "Support");
-    expect(support?.subs?.map((s) => s.label)).toContain("Free meditation");
-    // news is ON by default and Community is off — News & letters rides Support
-    expect(support?.subs?.map((s) => s.label)).toContain("News & letters");
+    expect(labels(menu)).toEqual(["About", "Memberships", "Community", "Support"]);
+    // meditation and 11:11 always ride Community now, switch or no switch
+    const community = menu.find((m) => m.label === "Community");
+    expect(community?.subs?.map((s) => s.label)).toContain("Free meditation");
+    expect(community?.subs?.map((s) => s.label)).toContain("11:11 Live with Love");
+    // news is ON by default → News & letters rides Community too
+    expect(community?.subs?.map((s) => s.label)).toContain("News & letters");
+    // classes is OFF by default → Classes & rooms does not
+    expect(community?.subs?.map((s) => s.label)).not.toContain("Classes & rooms");
+    // Support carries only itself — the old stand-ins are gone for good
+    expect(menu.find((m) => m.label === "Support")?.subs).toBeUndefined();
   });
 
-  it("everything ON: Store, Sessions and Community doors appear", () => {
+  it("everything ON: Store, Sessions appear too, and Community gains Classes & rooms", () => {
     const all = defaultSiteConfig();
     for (const k of Object.keys(all.features) as (keyof typeof all.features)[]) all.features[k] = true;
     const menu = buildMenu(all);
     expect(labels(menu)).toContain("Store");
     expect(labels(menu)).toContain("Sessions");
     expect(labels(menu)).toContain("Community");
-    // the meditation moves home to Community; Support sheds its stand-ins
     const community = menu.find((m) => m.label === "Community");
     expect(community?.subs?.map((s) => s.label)).toContain("Free meditation");
+    expect(community?.subs?.map((s) => s.label)).toContain("Classes & rooms");
     expect(menu.find((m) => m.label === "Support")?.subs).toBeUndefined();
   });
 });

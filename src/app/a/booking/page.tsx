@@ -48,13 +48,17 @@ const blankService = (tz: string, meeting?: SiteConfig["meeting"]): Service => (
   maxAdvanceDays: 60,
   /* TASK-129 (0018.06.16 a₿): a new service's rail follows THE SWITCHES'
      meeting rail (jitsi with the doc's domain / vdo / static only when
-     allowStaticLinks) — the /a/site meeting card is the knob. */
+     allowStaticLinks) — the /a/site meeting card is the knob.
+     TASK-137 (0018.06.17 a₿): the vdo/static defaults now also ride the
+     site-wide room prefix and standing link, so a fresh service starts
+     from what the operator already entered in /a/site rather than a
+     blank field every time — both stay per-service editable right below. */
   meetingRail:
     meeting?.rail === "jitsi"
       ? { kind: "jitsi", domain: meeting.jitsiDomain }
       : meeting?.rail === "vdo"
-        ? { kind: "vdo", room: "" }
-        : { kind: "static", url: "" },
+        ? { kind: "vdo", room: meeting.vdoRoomPrefix ?? "" }
+        : { kind: "static", url: meeting?.staticUrl ?? "" },
   artistTz: tz,
   status: "hidden",
 });
@@ -214,7 +218,9 @@ export default function BookingRoom() {
       {/* the meeting rail, quick-select (Admiral's ask): a knob, never
           hardcoded — link / jitsi / matrix / the RV studio in person.
           TASK-129: "Zoom / any link" hides unless the switches allow static
-          links; the jitsi default domain rides the switches' meeting card. */}
+          links; the jitsi default domain rides the switches' meeting card.
+          TASK-137: the static default rides the standing link from /a/site
+          the same way — still per-service editable right below. */}
       <Field label="how you meet" wide>
         <div className="flex flex-wrap gap-2">
           {([
@@ -230,7 +236,7 @@ export default function BookingRoom() {
                 setDraft({
                   ...draft,
                   meetingRail:
-                    kind === "static" ? { kind, url: draft.meetingRail.kind === "static" ? draft.meetingRail.url : "" }
+                    kind === "static" ? { kind, url: draft.meetingRail.kind === "static" ? draft.meetingRail.url : siteMeeting?.staticUrl ?? "" }
                     : kind === "jitsi" ? { kind, domain: draft.meetingRail.kind === "jitsi" ? draft.meetingRail.domain : siteMeeting?.jitsiDomain ?? "meet.jit.si" }
                     : kind === "matrix" ? { kind, roomId: draft.meetingRail.kind === "matrix" ? draft.meetingRail.roomId : "" }
                     : { kind,

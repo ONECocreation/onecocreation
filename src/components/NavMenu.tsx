@@ -11,16 +11,30 @@ import type { SiteConfig } from "@/lib/site-config";
  * The tail (basket + name) renders beside this and never wraps.
  *
  * TASK-129 (0018.06.16 a₿): the MENU is built from THE SWITCHES
- * (site-config.ts) — Sessions only when `sessions`, Store only when `store`,
- * Community only when `community` (Classes & rooms sub only when `classes`,
- * News & letters only when `news`), About · Memberships · Support always.
- * The free meditation stays reachable either way: under Community when the
- * community door is open, under Support when it isn't (same for News &
- * letters). SiteHeader can't pass the doc down (it's client-reachable via
+ * (site-config.ts) — Sessions only when `sessions`, Store only when `store`.
+ * SiteHeader can't pass the doc down (it's client-reachable via
  * FrenProfile/OperatorGate, so no server import may enter its graph), so the
  * switches ride the public half of /api/admin/site — same fetch idiom as
  * FrenBadge. Until the answer lands only the doors every config carries
  * render, so a hidden feature never flashes on.
+ *
+ * TASK-137 (0018.06.17 a₿) — the menu Love can shape:
+ *  · Community is now a HEADER, not a switch: it always renders because two
+ *    of its children (Free meditation, 11:11 Live with Love) always exist.
+ *    News & letters joins it only when `news` is ON; Classes & rooms only
+ *    when `classes` is ON. Support goes back to carrying only Support — the
+ *    old "meditation/news fall under Support while Community is off" dodge
+ *    is gone (they used to hide there; the Admiral's ask was to surface
+ *    them, not bury them one level down).
+ *  · PAGE_CATALOG is the one place that knows every real route, its plain
+ *    name, and which switch (if any) gates it — the nav editor's page
+ *    picker, the public switch-filter below, and the "hidden by the X
+ *    switch" grey-out all read the same table so they can never disagree.
+ *  · buildMenu(s) now prefers `s.nav` (Love's saved rows) when present,
+ *    running it through the SAME switch filter as the default menu — a
+ *    page she placed under a header she invented still disappears the
+ *    moment its switch goes OFF. No nav saved yet → the switch-driven
+ *    default below, unchanged in spirit from T-129.
  */
 
 export interface MenuItem {
@@ -29,9 +43,49 @@ export interface MenuItem {
   subs?: { label: string; href: string }[];
 }
 
-/** MENU from the switches — pure, so tests/site-config.test.ts pins it.
-    `null` = the pre-fetch paint: only the doors every config carries. */
-export function buildMenu(s: SiteConfig | null): MenuItem[] {
+/** Every real route a nav item may point to: its plain name (the editor's
+    page picker), and the switch that must be ON for it to show (`feature`
+    omitted = always shown). One source for the public filter AND the
+    editor's "hidden by the X switch" note — they can never disagree.
+    Kept in sync by hand with KNOWN_NAV_HREFS in site-config.ts (the
+    storage-layer allow-list; that file can't import this "use client"
+    module, so the href *strings* are the seam between them). */
+export const PAGE_CATALOG: { href: string; label: string; feature?: keyof SiteConfig["features"] }[] = [
+  { href: "/about", label: "About" },
+  { href: "/memberships", label: "Memberships" },
+  { href: "/packages", label: "Packages" },
+  { href: "/store", label: "Store", feature: "store" },
+  { href: "/book", label: "Book", feature: "sessions" },
+  { href: "/services", label: "Services", feature: "cuts" },
+  { href: "/classes", label: "Classes", feature: "classes" },
+  { href: "/news", label: "News", feature: "news" },
+  { href: "/letters", label: "Letters", feature: "news" },
+  { href: "/meditation", label: "Meditation" },
+  { href: "/support", label: "Support" },
+  { href: "/contact", label: "Contact" },
+  { href: "/me", label: "Me…" },
+];
+
+/** The switch (if any) a given href needs ON to show publicly. Unknown
+    hrefs (never fabricated — sanitize() already dropped them, this is only
+    a second, cheap belt) are treated as always-on rather than hidden, since
+    an unrecognized route was never gated by a switch in the first place. */
+function featureForHref(href: string): keyof SiteConfig["features"] | undefined {
+  return PAGE_CATALOG.find((p) => p.href === href)?.feature;
+}
+
+/** True when a page's own switch is ON (or it has none). `s === null` is
+    the pre-fetch paint: only switch-free doors render, same law as before. */
+function pageOn(s: SiteConfig | null, href: string): boolean {
+  const feature = featureForHref(href);
+  if (!feature) return true;
+  return !!s?.features[feature];
+}
+
+/** The switch-driven default menu (T-129's shape, T-137's Community rule).
+    Exported so the nav editor can seed its rows and answer "Reset to
+    default" without re-deriving this logic. */
+export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
   const menu: MenuItem[] = [
     { label: "About", href: "/about" },
     {
@@ -57,26 +111,58 @@ export function buildMenu(s: SiteConfig | null): MenuItem[] {
     menu.push({
       label: "Store",
       href: "/store",
-      subs: [{ label: "All offerings", href: "/store" }],
-    });
-  }
-  if (s?.features.community) {
-    menu.push({
-      label: "Community",
-      href: "/classes",
+      /* Love's meeting (0018.06.17 a₿, RESUME NOTE): under the Store header,
+         two buttons — Meditations and Memberships. The header itself stays
+         the click-through door to the whole shelf (/store); store OFF still
+         hides the header and its buttons with it. Plain routes (not #anchors)
+         so a seeded nav survives sanitize()'s KNOWN_NAV_HREFS round-trip. */
       subs: [
-        ...(s.features.classes ? [{ label: "Classes & rooms", href: "/classes" }] : []),
-        ...(s.features.news ? [{ label: "News & letters", href: "/news" }] : []),
-        { label: "11:11 Live with Love", href: "/contact" },
-        { label: "Free meditation", href: "/meditation" },
+        { label: "Meditations", href: "/meditation" },
+        { label: "Memberships", href: "/memberships" },
       ],
     });
   }
-  const supportSubs = [
-    ...(s && s.features.news && !s.features.community ? [{ label: "News & letters", href: "/news" }] : []),
-    ...(s && !s.features.community ? [{ label: "Free meditation", href: "/meditation" }] : []),
-  ];
-  menu.push({ label: "Support", href: "/support", ...(supportSubs.length ? { subs: supportSubs } : {}) });
+  // Community is a HEADER (TASK-137): Free meditation and 11:11 Live with
+  // Love always exist, so this always renders — the community SWITCH only
+  // still gates the deeper rooms (Classes & rooms follows `classes`, same
+  // as it always has; `community` itself no longer hides the header).
+  menu.push({
+    label: "Community",
+    href: "/classes",
+    subs: [
+      ...(s?.features.news ? [{ label: "News & letters", href: "/news" }] : []),
+      { label: "Free meditation", href: "/meditation" },
+      { label: "11:11 Live with Love", href: "/contact" },
+      ...(s?.features.classes ? [{ label: "Classes & rooms", href: "/classes" }] : []),
+    ],
+  });
+  menu.push({ label: "Support", href: "/support" });
+  return menu;
+}
+
+/** MENU from Love's saved nav, or the switches — pure, so tests pin it.
+    `null` = the pre-fetch paint: only the doors every config carries.
+    A LEAF item (no children) is gated by its own href's switch. A HEADER
+    (children present) is gated by its CHILDREN's switches only — never its
+    own href — which is exactly why Community always survives: it always
+    has at least one always-on child (Free meditation, 11:11), so it's
+    never empty, so it's never dropped, no matter what its own href is. A
+    header whose every child switches off has nothing left to show and
+    disappears with them. */
+export function buildMenu(s: SiteConfig | null): MenuItem[] {
+  const nav = s?.nav;
+  if (!nav || nav.items.length === 0) return buildDefaultMenu(s);
+  const menu: MenuItem[] = [];
+  for (const item of nav.items) {
+    const rawChildren = item.children ?? [];
+    if (rawChildren.length === 0) {
+      if (item.href && pageOn(s, item.href)) menu.push({ label: item.label, href: item.href });
+      continue;
+    }
+    const subs = rawChildren.filter((c) => pageOn(s, c.href)).map((c) => ({ label: c.label, href: c.href }));
+    if (subs.length === 0) continue;
+    menu.push({ label: item.label, href: item.href ?? subs[0].href, subs });
+  }
   return menu;
 }
 

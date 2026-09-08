@@ -3,9 +3,11 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import StoreItemCard from "@/components/store/StoreItemCard";
 import StackedHero from "@/components/StackedHero";
+import NotOpenYet from "@/components/NotOpenYet";
 import { listItems, stripPrivateMedia, type StoreItem } from "@/lib/store";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { cartridge } from "@/brand/cartridge";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Store — One Cocreation",
@@ -94,6 +96,24 @@ function effectiveAmount(item: StoreItem): number {
 }
 
 export default async function StorePage() {
+  // TASK-137 (0018.06.17 a₿): the store switch reaches the /store route
+  // itself — OFF means a quiet "not open yet" panel, never a dead page or
+  // a wall of buy buttons nobody can actually check out from. (OFF-state
+  // panel only — T-148's card rewiring below is untouched. Panel pattern
+  // ported from the home lane's stalled attempt, worktree task-137.)
+  const switches = await getSiteConfig();
+  if (!switches.features.store) {
+    return (
+      <main>
+        <SiteHeader />
+        <NotOpenYet
+          title="The store isn't open yet"
+          body="Love's shelf is still being set up — sessions, meditations, memberships and wares are coming. Check back soon."
+        />
+        <SiteFooter />
+      </main>
+    );
+  }
   // THE LEAK RULE (store.ts): public serialization strips deliverable.blobPath
   const items = (await listItems()).map(stripPrivateMedia);
   const groups = GROUPS.map((g) => ({
