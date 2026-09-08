@@ -161,7 +161,7 @@ describe("compose (TASK-131)", () => {
 
     const list = await (await lettersGET())(req("/api/admin/letters")).then((r) => r.json());
     const keys = list.letters.map((l: { key: string }) => l.key);
-    expect(keys).toContain("news-sample"); // the seeded six still lead
+    expect(keys).toContain("news-sample"); // the seeded set still leads
     expect(keys).toContain("lions-gate-gathering");
     const composed = list.letters.find((l: { key: string }) => l.key === "lions-gate-gathering");
     expect(composed.kind).toBe("composed");
@@ -169,7 +169,9 @@ describe("compose (TASK-131)", () => {
     expect(composed.audience).toBe("members"); // "list" rides the house's members vocabulary
 
     const { EDITABLE_LETTERS } = await import("@/lib/letters");
-    expect(EDITABLE_LETTERS).toHaveLength(6); // the seeded set did not grow
+    /* the seeded set grew to seven exactly once, by spec: TASK-156 added the
+       `welcome` first-sign-in key — a compose must not grow it further */
+    expect(EDITABLE_LETTERS).toHaveLength(7);
   });
 
   it("rejects a clashing key and a non-slug key", async () => {

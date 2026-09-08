@@ -37,6 +37,7 @@ export function emailAuthConfigured(): boolean {
 
 const codeKey = (email: string) => `auth:email:code:${email.toLowerCase()}`;
 const triesKey = (email: string) => `auth:email:tries:${email.toLowerCase()}`;
+const welcomedKey = (email: string) => `auth:email:welcomed:${email.toLowerCase()}`;
 
 /** The code is stored HASHED — a vault peek must not mint sessions. */
 function hashCode(email: string, code: string): string {
@@ -61,4 +62,14 @@ export async function verifyCode(email: string, code: string): Promise<boolean> 
   await kv(["DEL", codeKey(email)]);
   await kv(["DEL", triesKey(email)]);
   return true;
+}
+
+/** TASK-156 (0018.06.17 a₿): the FIRST-sign-in marker. SET NX answers "OK"
+ *  exactly once per email — the verify route pours the welcome gifts (list
+ *  source `welcome`, the `welcome` letter, the free meditation) only behind
+ *  a won claim, so a repeat sign-in — or a raced double submit — never
+ *  re-pours them. */
+export async function claimFirstSignIn(email: string): Promise<boolean> {
+  const res = await kv(["SET", welcomedKey(email), String(Date.now()), "NX"]);
+  return res === "OK";
 }

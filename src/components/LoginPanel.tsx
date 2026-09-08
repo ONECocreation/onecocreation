@@ -9,6 +9,7 @@ import SignerNudge from "@/components/SignerNudge";
 import SignerDoors from "@/components/SignerDoors";
 import EmailDoor from "@/components/EmailDoor";
 import useFrenSession, { applyFrenSession } from "@/hooks/useFrenSession";
+import { nextPathFromLocation } from "@/lib/next-path";
 import { cartridge } from "@/brand/cartridge";
 
 /* one-shot environment read, hydration-safe and lint-clean */
@@ -87,8 +88,11 @@ export default function LoginPanel() {
   }
 
   /* One submit path for EVERY door — extension, bunker, Android signer app.
-     Returns the error to show, or null after taking over navigation. */
-  async function submitLogin(event: unknown, destination = "/me"): Promise<string | null> {
+     Returns the error to show, or null after taking over navigation.
+     TASK-156 (0018.06.17 a₿): a `?next=` on /login (the free-reading door
+     carries `?next=/rooms/weekly-reading`) wins the landing — validated
+     same-origin only (src/lib/next-path.ts); no next → /me, as ever. */
+  async function submitLogin(event: unknown, destination?: string): Promise<string | null> {
     lastEvent.current = event;
     try {
       const res = await fetch("/api/frens/session", {
@@ -117,7 +121,7 @@ export default function LoginPanel() {
       applyFrenSession({ handle: data.handle!, space: data.space!, npub: data.npub ?? null });
       // the basket follows its soul through the door (merge happens server-side)
       window.dispatchEvent(new Event("oc-cart-changed"));
-      router.push(destination);
+      router.push(destination ?? nextPathFromLocation() ?? "/me");
       return null;
     } catch {
       return "couldn't reach the server — check your connection and try again";
@@ -176,11 +180,13 @@ export default function LoginPanel() {
       if (data.session) {
         applyFrenSession(data.session);
         window.dispatchEvent(new Event("oc-cart-changed"));
-        router.push("/welcome?step=face");
+        /* TASK-156: a name claimed off a ?next= door (the free reading path)
+           lands where the door pointed; no next → the welcome walk, as ever */
+        router.push(nextPathFromLocation() ?? "/welcome?step=face");
         return;
       }
       // no session in the answer (stale challenge?) — one honest fallback
-      const reason = await submitLogin(lastEvent.current, "/welcome?step=face");
+      const reason = await submitLogin(lastEvent.current, nextPathFromLocation() ?? "/welcome?step=face");
       if (reason) setClaimNote(reason);
     } catch {
       setClaimNote("couldn't reach the server — try again");

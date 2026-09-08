@@ -1,7 +1,7 @@
 import { unsubscribeUrl, siteBase } from "@/lib/subscribers";
 import { sendMail, brandShell } from "@/lib/mail";
 import { enqueue } from "@/lib/mail-queue";
-import { getLetterOverride, bodyToHtml } from "@/lib/letters";
+import { getLetterOverride, bodyToHtml, LETTER_DEFAULTS } from "@/lib/letters";
 import { getSiteConfig } from "@/lib/site-config";
 
 /**
@@ -95,7 +95,34 @@ export async function sendReadWithLoveLetter(email: string): Promise<void> {
   });
 }
 
-/** The day-two welcome — rides the drip queue, genuinely-new joins only.
+/** TASK-156 (0018.06.17 a₿, Love's meeting: "if they login they get the
+ *  newsletter, and a welcome, free meditation"): the FIRST-sign-in welcome
+ *  letter — registry key `welcome` (letters.ts), queued for the next tick.
+ *  The default copy is a plain honest placeholder; Love's own words replace
+ *  it from /a/letters without a deploy. */
+export async function enqueueWelcomeLetter(email: string): Promise<void> {
+  const unsub = unsubscribeUrl(email);
+  const tpl = (await getLetterOverride("welcome")) ?? LETTER_DEFAULTS.welcome;
+  await enqueue([
+    {
+      to: email,
+      subject: tpl?.subject ?? "Welcome home — One Cocreation",
+      html: brandShell(
+        tpl
+          ? bodyToHtml(tpl.body)
+          : `<p>Welcome, beautiful soul.</p>
+             <p>You're in — truly. Your free meditation is on its way, and the
+             reading room and the commons are open whenever you are.</p>
+             <p>With love,<br/>One Cocreation</p>`,
+        { unsubscribeUrl: unsub },
+      ),
+    },
+  ]);
+}
+
+/** The day-two welcome — rides the drip queue: genuinely-new list joins
+ *  (the subscribe route) and first sign-ins (the email verify route,
+ *  TASK-156), never repeats.
  *  Copy is a placeholder shape awaiting Love's own voice (checklist item). */
 export async function enqueueDayTwoWelcome(email: string): Promise<void> {
   const unsub = unsubscribeUrl(email);
