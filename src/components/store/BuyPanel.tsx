@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
 import type { Price, StoreItem } from "@/lib/store";
 import { dollars, priceWords, type MoneyPrefer } from "@/lib/money-words";
@@ -129,6 +129,10 @@ export default function BuyPanel({
   const bothAvailable = railLive && cardAvailable;
   const [rail, setRail] = useState<"btcpay" | "square">(railLive ? "btcpay" : "square");
   const anyRailLive = railLive || cardAvailable;
+  /* the visitor's own tap on a rail chip is the last word; until then the
+     rail follows the money word (the Admiral's ruling: fiat → card, sats →
+     bitcoin, by DEFAULT — on first paint too, not only after a toggle) */
+  const railTouched = useRef(false);
 
   /* TASK-186 — the visitor's denomination word. The "$ · sats" toggle below
      flips every price on the page (MONEY_EVENT) and remembers it; a signed-in
@@ -152,9 +156,16 @@ export default function BuyPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (railTouched.current) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the default rail derives from the remembered word once it resolves (a microtask after first paint); a tapped chip stops this
+    setRail(railForPrefer(prefer, { btcpay: railLive, square: cardAvailable }));
+  }, [prefer, railLive, cardAvailable]);
+
   /** the toggle's one tap: remember it (browser + the member's profile when
    *  signed in), and let the pay door's default rail follow the choice */
   function choosePrefer(p: MoneyPrefer) {
+    railTouched.current = false;
     setPrefer(p);
     setRail(railForPrefer(p, { btcpay: railLive, square: cardAvailable }));
     if (memberPrefKnown) void saveMemberPrefer(p);
@@ -261,7 +272,7 @@ export default function BuyPanel({
             type="button"
             className="chip-select"
             aria-pressed={rail === "btcpay"}
-            onClick={() => setRail("btcpay")}
+            onClick={() => { railTouched.current = true; setRail("btcpay"); }}
             style={{ fontSize: ".82rem" }}
           >
             ⚡ bitcoin
@@ -270,7 +281,7 @@ export default function BuyPanel({
             type="button"
             className="chip-select"
             aria-pressed={rail === "square"}
-            onClick={() => setRail("square")}
+            onClick={() => { railTouched.current = true; setRail("square"); }}
             style={{ fontSize: ".82rem" }}
           >
             💳 card
