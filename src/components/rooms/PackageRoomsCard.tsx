@@ -18,6 +18,21 @@ import type { RoomPackage } from "@/lib/matrix-rooms";
  * SAYS isn't there yet (live === false in the feed) wears "— opens soon"
  * in words. live === null (the server won't say) paints nothing —
  * derive-or-dash, never an invented marker.
+ *
+ * TASK-183 (0018.06.18 a₿ · block 966,098) — ADMIRAL'S LAW: the buttons
+ * were "not even — this looks like slop". The doors now HUG THE BOTTOM:
+ * the card fills its grid cell (`.room-card` in house.css), the body
+ * flexes, and the doors ride one bottom column (`.room-card-doors`) —
+ * stacked top-to-bottom (the who-you-are / sign-in door first, then the
+ * enter/see door), the same width, the same order on every card. The
+ * signed-in soul's name rides the top of the door column ("you're in as
+ * <name>") so a visitor with a second name knows which one they wear;
+ * signed out, the sign-in door stands in its place. The ENTER door names
+ * the package ("Enter the Heart Field Commons") and lands on the room's
+ * STAGE — the bare `/rooms/<slug>` IS the Stage's address: vantage.ts's
+ * ROOM_VANTAGE_SITE_DEFAULT is "stage" (T-149/T-174 made the Stage the
+ * gated door; no `?v=` param exists — a member's own saved vantage still
+ * wins, by T-149's design).
  */
 export interface PackageRoomLine {
   slug: string;
@@ -30,10 +45,14 @@ export interface PackageRoomLine {
 export default function PackageRoomsCard({
   pkg,
   signedIn,
+  name = null,
   compact = false,
 }: {
   pkg: RoomPackage<PackageRoomLine>;
   signedIn: boolean;
+  /** the signed-in soul's handle — the "you're in as <name>" line atop the
+      door column; absent (or a feed that won't say) paints nothing */
+  name?: string | null;
   compact?: boolean;
 }) {
   const pill = pkg.open
@@ -49,7 +68,7 @@ export default function PackageRoomsCard({
 
   return (
     <div
-      className="card"
+      className="card room-card"
       style={{ padding: compact ? "12px 16px" : "14px 18px", opacity: pkg.open ? 1 : 0.82 }}
     >
       {compact ? (
@@ -118,24 +137,40 @@ export default function PackageRoomsCard({
           </li>
         ))}
       </ul>
-      {pkg.open ? (
-        <Link className="btn btn-sm" href={`/rooms/${pkg.primary.slug}`}>
-          Enter
-        </Link>
-      ) : !signedIn && pkg.tier === "all" ? (
-        <Link className="btn btn-sm" href="/login">
-          Sign in · join free
-        </Link>
-      ) : (
-        /* paid rooms are not free — say so honestly (Admiral); the package
-           page carries the sign-in and the door */
-        <Link
-          className="btn btn-ghost btn-sm"
-          href={pkg.packageSlug ? `/packages/${pkg.packageSlug}` : "/memberships"}
-        >
-          See {pkg.name}
-        </Link>
-      )}
+      {/* TASK-183: THE DOOR COLUMN — the doors HUG THE BOTTOM (margin-top:auto
+          in house.css), stacked top-to-bottom, the same width, the same order
+          on every card: FIRST who you are (signed in: your name; signed out:
+          the sign-in door), THEN the card's door — ENTER when the member
+          holds the tier, SEE <PACKAGE> (ghost) when not. The ENTER door lands
+          on the room's STAGE: the bare /rooms/<slug> is the Stage's address
+          (ROOM_VANTAGE_SITE_DEFAULT, T-149/T-174). Signed out, the Commons'
+          single door is the welcome path — sign in · join free. */}
+      <div className="room-card-doors">
+        {signedIn && name && (
+          <p className="room-card-name">
+            you&apos;re in as <b>@{name}</b>
+          </p>
+        )}
+        {!signedIn && (
+          <Link className="btn btn-sm" href="/login">
+            {pkg.tier === "all" ? "Sign in · join free" : "Sign in"}
+          </Link>
+        )}
+        {pkg.open ? (
+          <Link className="btn btn-sm" href={`/rooms/${pkg.primary.slug}`}>
+            Enter the {pkg.name}
+          </Link>
+        ) : pkg.tier !== "all" ? (
+          /* paid rooms are not free — say so honestly (Admiral); the package
+             page carries the door */
+          <Link
+            className="btn btn-ghost btn-sm"
+            href={pkg.packageSlug ? `/packages/${pkg.packageSlug}` : "/memberships"}
+          >
+            See {pkg.name}
+          </Link>
+        ) : null}
+      </div>
     </div>
   );
 }
