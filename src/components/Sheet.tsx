@@ -4,12 +4,13 @@ import { useEffect } from "react";
 
 /**
  * THE SHEET (cartridge walk step 6, Admiral's walk, 0018.05.15): ONE
- * overlay+sheet primitive where four grew wild — glass.tsx, QuickView,
- * the lightbox, and AdminWeekGrid's verbatim re-declaration. The scrim
+ * overlay+sheet primitive where four grew wild — glass.tsx, the store
+ * item's peek popup (retired T-148 — the shelf now flips instead), the
+ * lightbox, and AdminWeekGrid's verbatim re-declaration. The scrim
  * and the z-ladder are law here; every popup closes on Escape AND a tap
  * outside by adoption, not by luck. The sheet surface rides --sheet-bg
- * (night glass in dark, paper in light); deliberate paper surfaces like
- * QuickView pass their own sheetStyle and keep their lit face.
+ * (night glass in dark, paper in light); deliberate paper surfaces pass
+ * their own sheetStyle and keep their lit face.
  */
 
 /** the house scrim — every popup dims the room the same way */
