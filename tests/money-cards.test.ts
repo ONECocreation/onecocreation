@@ -310,11 +310,14 @@ describe("the webhook route — proof markers for the desk", () => {
     expect(kvStore["square:webhook:last-verified"]).toBeUndefined();
   });
 
-  it("a VERIFIED but unactionable event (order.updated OPEN) writes NO marker", async () => {
+  it("a VERIFIED but unactionable event (order.updated OPEN) still stamps last-verified — the key + URL are proven — and never last-rejected", async () => {
+    // the Admiral's ruling 0018.06.17 a₿: Square's dashboard test event is exactly this shape,
+    // and the desk's webhook rows must turn green on it
     const POST = await webhookPOST();
     const res = await POST(signed(UNMAPPED_EVENT));
     expect(res.status).toBe(200);
-    expect(kvStore["square:webhook:last-verified"]).toBeUndefined();
+    const v = JSON.parse(kvStore["square:webhook:last-verified"] ?? "null") as { eventType?: string } | null;
+    expect(v?.eventType).toBe("order.updated");
     expect(kvStore["square:webhook:last-rejected"]).toBeUndefined();
   });
 

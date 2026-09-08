@@ -63,7 +63,17 @@ export async function POST(request: Request) {
     // a signed knock whose signature fails verification is the ONE case the
     // desk shows in red — unsigned/missing-config POSTs and verified-but-
     // unactionable events leave no mark
-    if ((await squareWebhookSignatureOk(rawBody, request.headers)) === false) {
+    const signed = await squareWebhookSignatureOk(rawBody, request.headers);
+    if (signed === true) {
+      /* a GOOD signature on an event we do not act on (Square's dashboard
+         test event, an OPEN order) still proves the key + URL — the desk's
+         two webhook rows turn green on it (Admiral's test, 0018.06.17 a₿) */
+      let eventType = "signed event";
+      try { const t = (JSON.parse(rawBody) as { type?: string }).type; if (typeof t === "string" && t) eventType = t; } catch { /* keep the word */ }
+      await writeMarker(KV_VERIFIED, { at: new Date().toISOString(), eventType });
+      return NextResponse.json({ ok: true });
+    }
+    if (signed === false) {
       /* the mismatch explains itself (Admiral's test events, 0018.06.17 a₿):
          the URL the site signed over vs the door Square actually knocked on,
          and whether a key was present — never the key itself */
