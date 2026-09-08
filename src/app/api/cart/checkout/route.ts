@@ -1,3 +1,4 @@
+import { getSiteConfig } from "@/lib/site-config";
 import { NextResponse } from "next/server";
 import { cartIdFromRequest, getCart, clearCart, mergeCarts, type CartLine } from "@/lib/cart";
 import {
@@ -36,6 +37,7 @@ export const dynamic = "force-dynamic";
  * member (ruling #3).
  */
 export async function POST(request: Request) {
+  await getSiteConfig(); // T-147 seam 1 (Number One): warm the switch truth before judging a rail on a cold instance
   await ensureSquareVault();
   const adapter = liveAdapter();
   if (!adapter) return NextResponse.json({ ok: false, reason: "payment rail not connected" }, { status: 503 });

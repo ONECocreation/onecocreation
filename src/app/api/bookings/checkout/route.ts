@@ -1,3 +1,4 @@
+import { getSiteConfig } from "@/lib/site-config";
 import { NextResponse } from "next/server";
 import { getService, slotsFor, readConfig, isValidTz } from "@/lib/booking";
 import { busyFeed, subtractBusy } from "@/lib/ical-busy";
@@ -39,6 +40,7 @@ export const dynamic = "force-dynamic";
 const HOLD_MS = { lightning: 15 * 60_000, onchain: 90 * 60_000 } as const;
 
 export async function POST(request: Request) {
+  await getSiteConfig(); // T-147 seam 1 (Number One): warm the switch truth before judging a rail on a cold instance
   await ensureSquareVault();
   const adapter = liveAdapter();
   if (!adapter) {

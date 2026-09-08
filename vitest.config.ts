@@ -12,6 +12,9 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
+    // T-147 seam 3 (Number One): three suites share data/site-config.json through process.cwd() and race
+    // under parallel workers (~1 in 2 full runs red). Serial files until the suites isolate their cwd (mkdtemp).
+    fileParallelism: false,
   },
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },

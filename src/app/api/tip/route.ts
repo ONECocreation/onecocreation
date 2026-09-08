@@ -1,3 +1,4 @@
+import { getSiteConfig } from "@/lib/site-config";
 import { NextResponse } from "next/server";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 
@@ -24,6 +25,7 @@ const MIN_SATS = 210;
 const MAX_SATS = 10_000_000;
 
 export async function POST(request: Request) {
+  await getSiteConfig(); // T-147 seam 1 (Number One): warm the switch truth before judging a rail on a cold instance
   await ensureSquareVault();
   const adapter = liveAdapter();
   if (!adapter) {
