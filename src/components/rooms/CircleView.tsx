@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   BftMonthGrid,
@@ -13,15 +12,17 @@ import {
   type CalendarDayMarksLookup,
 } from "@/components/calendar";
 import type { RoomsFeed, LiveFeed } from "./ClassroomView";
-import { TIER_SLUG } from "./tier-slug";
+import { groupRoomsByPackage, shelfRoomsForRoom } from "@/lib/matrix-rooms";
+import PackageRoomsCard from "./PackageRoomsCard";
 
 /**
  * C — THE CIRCLE (loves-desk-and-classroom-plan.md): calendar-first. CAL's
  * BftMonthGrid, fed by the public-safe `/api/rooms/marks` (blackouts +
  * retreats, day-level only — no client names, ever) plus a calendar
- * PROJECTION of the live weekly rhythm, with the room-cards grid beneath —
- * Enter doors, honest locked pills, the same shape RoomsShelf's own cards
- * use.
+ * PROJECTION of the live weekly rhythm, with the room-cards grid beneath.
+ * TASK-150 (0018.06.17 a₿): ONE CARD PER PACKAGE, and only THIS class's
+ * package plus the Commons — Love: the calendar view had "too many buttons
+ * on the bottom". Same card shape RoomsShelf uses, one door per package.
  */
 
 const MONTH_WORDS = [
@@ -64,33 +65,13 @@ function buildPublicMarks(
 
 function RoomCardsGrid({ feed, activeSlug }: { feed: RoomsFeed | null; activeSlug: string }) {
   if (!feed) return <p style={{ color: "var(--muted)" }}>opening the rooms…</p>;
+  /* only this class's package + the Commons — never the whole house */
+  const packages = groupRoomsByPackage(shelfRoomsForRoom(feed.rooms, activeSlug));
   return (
     <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(min(240px,100%), 1fr))" }}>
-      {feed.rooms.map((r) => {
-        const isActive = r.slug === activeSlug;
-        return (
-          <div
-            key={r.slug}
-            className="card"
-            style={{ padding: "12px 16px", opacity: r.open ? 1 : 0.82, ...(isActive ? { borderColor: "var(--gold-deep)" } : {}) }}
-          >
-            <p style={{ margin: "0 0 6px", fontSize: ".6rem", fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: r.open ? "var(--ok)" : "var(--muted)" }}>
-              {r.open ? (r.minTier === "all" ? "open to all members" : "yours") : `🔒 ${r.neededName ?? "members"}`}
-            </p>
-            <h4 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: ".96rem", margin: "0 0 10px", color: "var(--ink-strong)" }}>{r.title}</h4>
-            {r.open ? (
-              <Link className="btn btn-sm" href={`/rooms/${r.slug}`}>Enter</Link>
-            ) : (
-              <Link
-                className="btn btn-ghost btn-sm"
-                href={feed.signedIn ? (r.neededName ? `/packages/${TIER_SLUG[r.minTier] ?? ""}` : "/memberships") : "/login"}
-              >
-                {feed.signedIn ? `See ${r.neededName ?? "memberships"}` : "Sign in"}
-              </Link>
-            )}
-          </div>
-        );
-      })}
+      {packages.map((p) => (
+        <PackageRoomsCard key={p.tier} pkg={p} signedIn={feed.signedIn} compact />
+      ))}
     </div>
   );
 }
