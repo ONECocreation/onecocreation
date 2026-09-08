@@ -3,6 +3,13 @@ import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
 import type { ReactElement, ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { isolateCwd } from "./helpers/isolate-cwd";
+
+/* TASK-159: isolated cwd FIRST (the helper's own doc: it must run ahead of
+   any top-level path.join(process.cwd(), …)) — the store gate's fixture
+   site-config writes land here, never in the repo's real data/. */
+const cwd = isolateCwd("oc-puck-publish-159-");
 
 /**
  * TASK-153 (0018.06.17 a₿) — the studio's "Publish to live" for /memberships
@@ -35,17 +42,29 @@ import type { ReactElement, ReactNode } from "react";
  * only changes which branch <main> takes, so walking the returned element
  * tree's props is the honest, narrow way to pin it.
  *
- * "@/lib/puck-config" is mocked out: it re-exports @pacsarcade/puck-config,
- * which ships raw .tsx (the package's own README: "hosts consume via
- * transpilePackages") — Next's transpilePackages covers it for `next build`
- * and the dev server, but vitest.config.ts (T-158's OWNS, untouched here)
- * has no equivalent include for it, so importing it here hits a bare JSX
- * file with no automatic-runtime import ("React is not defined"). The
- * mock is exactly enough surface for this spec: <Render config={config}>
- * only needs SOME config value to compare by reference against, which
- * these specs never inspect.
+ * TASK-153 pinned the fix with "@/lib/puck-config" MOCKED OUT: it
+ * re-exports @pacsarcade/puck-config, which ships raw .tsx (the package's
+ * own README: "hosts consume via transpilePackages") — Next's
+ * transpilePackages covered it for `next build` and the dev server, but
+ * vitest.config.ts had no equivalent include, so importing it hit a bare
+ * JSX file with no automatic-runtime import ("React is not defined").
+ *
+ * TASK-159 (0018.06.17 a₿ · block 966,055) closed that second seam:
+ * vitest.config.ts now inlines @pacsarcade/puck-config with
+ * esbuild jsx:"automatic", so this suite rides the REAL config — the
+ * published-branch pins below go one step further than T-153's tree walk
+ * and render the page's own <Render> element to static markup, proving the
+ * real blocks render the published doc, not just that the branch flips.
+ *
+ * TASK-159 also wires the same PUCK P4 first read into the four remaining
+ * seeded routes — /support, /book, /classes, /store — pinned below against
+ * the same fixture storage, both branches each (publish -> Render; nothing
+ * published -> the hand-built fallback), plus the store's T-137 switch
+ * gate proven to sit ABOVE the Puck-first read (the T-160 lane contract:
+ * gate -> puck -> fallback). The suite's cwd is isolated
+ * (tests/helpers/isolate-cwd.ts) so the store gate's fixture
+ * data/site-config.json never lands in the repo's real data/.
  */
-vi.mock("@/lib/puck-config", () => ({ config: {} }));
 
 function isElement(n: unknown): n is ReactElement {
   return !!n && typeof n === "object" && "type" in (n as object) && "props" in (n as object);
@@ -79,6 +98,7 @@ beforeEach(async () => {
 afterAll(async () => {
   vi.unstubAllEnvs();
   if (tmpDir) await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+  cwd.cleanup();
 });
 
 describe("the publish path itself (fixture filesystem store)", () => {
@@ -148,5 +168,165 @@ describe("MembershipsPage — publish to live actually takes", () => {
 
     const mains = findAll(el, (e) => e.type === "main");
     expect((mains[0].props as { className?: string }).className).toBe("lions-gate-dark");
+  });
+});
+
+/* ── TASK-159 (0018.06.17 a₿ · block 966,055) — the four remaining seeded
+   routes read their studio publish first, mirroring T-153's /memberships
+   (itself mirroring /about). Same fixture storage (PUCK_STORE_FS_DIR temp
+   dir), both branches pinned per page: nothing published -> the hand-built
+   fallback (a marker only that page's own JSX carries); draft+publish ->
+   exactly one <Render> holding the published doc, the fallback marker gone,
+   and the page's own <Render> element rendered to static markup — the REAL
+   config now (no mock), so the real blocks render the fixture words. ── */
+
+/* the seed-shaped style object (puck-seeds.ts's st()) — the real Heading
+   block's render reads style/level/align, so the fixture doc carries them */
+const FIXTURE_STYLE = { font: "default", size: 0, kerning: 0, lineHeight: 0, color: "default", spaceAbove: 0, spaceBelow: 0 };
+const fixtureDoc = (text: string) => ({
+  content: [{ type: "Heading", props: { id: "h1", text, level: "h1", align: "center", style: FIXTURE_STYLE } }],
+  root: {},
+});
+
+async function publish(slug: string, text: string) {
+  const store = await import("@/lib/puck-store");
+  const doc = fixtureDoc(text);
+  await store.setPuckDraft(slug, doc);
+  await store.publishDraft(slug);
+  return doc;
+}
+
+describe("SupportPage — publish to live actually takes", () => {
+  it("with nothing published: the hand-built room (its own StackedHero kicker), no Render", async () => {
+    const SupportPage = (await import("@/app/support/page")).default;
+    const { default: StackedHero } = await import("@/components/StackedHero");
+    const el = await SupportPage();
+
+    const { Render } = await import("@puckeditor/core");
+    expect(findAll(el, (e) => e.type === Render)).toHaveLength(0);
+    const heroes = findAll(el, (e) => e.type === StackedHero);
+    expect(heroes).toHaveLength(1);
+    expect((heroes[0].props as { kicker?: string }).kicker).toBe("Support This Work — Gently ⚡");
+  });
+
+  it("after Publish to live in /studio: the SAME request renders the published Puck doc", async () => {
+    const doc = await publish("support", "Fixture publish — support live");
+
+    const SupportPage = (await import("@/app/support/page")).default;
+    const { default: StackedHero } = await import("@/components/StackedHero");
+    const el = await SupportPage();
+
+    const { Render } = await import("@puckeditor/core");
+    const renders = findAll(el, (e) => e.type === Render);
+    expect(renders).toHaveLength(1);
+    expect((renders[0].props as { data?: unknown }).data).toEqual(doc);
+    // the real blocks render the fixture words — no mock in this suite
+    expect(renderToStaticMarkup(renders[0])).toContain("Fixture publish — support live");
+    // the hand-built branch is gone from this request's output
+    expect(findAll(el, (e) => e.type === StackedHero)).toHaveLength(0);
+  });
+});
+
+describe("BookIndexPage — publish to live actually takes", () => {
+  it("with nothing published: the hand-built night-shelf page (book-hero-veil), no Render", async () => {
+    const BookIndexPage = (await import("@/app/book/page")).default;
+    const el = await BookIndexPage();
+
+    const { Render } = await import("@puckeditor/core");
+    expect(findAll(el, (e) => e.type === Render)).toHaveLength(0);
+    const heroes = findAll(el, (e) =>
+      typeof (e.props as { className?: string }).className === "string" &&
+      ((e.props as { className?: string }).className ?? "").includes("book-hero-veil"));
+    expect(heroes).toHaveLength(1);
+  });
+
+  it("after Publish to live in /studio: the SAME request renders the published Puck doc", async () => {
+    const doc = await publish("book", "Fixture publish — book live");
+
+    const BookIndexPage = (await import("@/app/book/page")).default;
+    const el = await BookIndexPage();
+
+    const { Render } = await import("@puckeditor/core");
+    const renders = findAll(el, (e) => e.type === Render);
+    expect(renders).toHaveLength(1);
+    expect((renders[0].props as { data?: unknown }).data).toEqual(doc);
+    expect(renderToStaticMarkup(renders[0])).toContain("Fixture publish — book live");
+    const heroes = findAll(el, (e) =>
+      ((e.props as { className?: string }).className ?? "").includes?.("book-hero-veil"));
+    expect(heroes).toHaveLength(0);
+  });
+});
+
+describe("ClassesPage — publish to live actually takes", () => {
+  it("with nothing published: the hand-built commons hero (The Heartfield Commons), no Render", async () => {
+    const ClassesPage = (await import("@/app/classes/page")).default;
+    const el = await ClassesPage();
+
+    const { Render } = await import("@puckeditor/core");
+    expect(findAll(el, (e) => e.type === Render)).toHaveLength(0);
+    const kickers = findAll(el, (e) => (e.props as { className?: string }).className === "kicker");
+    expect(kickers).toHaveLength(1);
+    expect((kickers[0].props as { children?: unknown }).children).toBe("The Heartfield Commons");
+  });
+
+  it("after Publish to live in /studio: the SAME request renders the published Puck doc", async () => {
+    const doc = await publish("classes", "Fixture publish — classes live");
+
+    const ClassesPage = (await import("@/app/classes/page")).default;
+    const el = await ClassesPage();
+
+    const { Render } = await import("@puckeditor/core");
+    const renders = findAll(el, (e) => e.type === Render);
+    expect(renders).toHaveLength(1);
+    expect((renders[0].props as { data?: unknown }).data).toEqual(doc);
+    expect(renderToStaticMarkup(renders[0])).toContain("Fixture publish — classes live");
+    expect(findAll(el, (e) => (e.props as { className?: string }).className === "kicker")).toHaveLength(0);
+  });
+});
+
+describe("StorePage — publish to live actually takes", () => {
+  it("the T-137 switch gate sits ABOVE the Puck-first read: store OFF swallows even a published doc", async () => {
+    // the isolated cwd holds no site-config yet -> defaults -> store OFF
+    await publish("store", "Fixture publish — store gated");
+
+    const StorePage = (await import("@/app/store/page")).default;
+    const { default: NotOpenYet } = await import("@/components/NotOpenYet");
+    const el = await StorePage();
+
+    const { Render } = await import("@puckeditor/core");
+    expect(findAll(el, (e) => e.type === Render)).toHaveLength(0);
+    expect(findAll(el, (e) => e.type === NotOpenYet)).toHaveLength(1);
+  });
+
+  it("store ON, nothing published: the hand-built shelf (its StackedHero), no Render", async () => {
+    const { saveSiteConfig } = await import("@/lib/site-config");
+    await saveSiteConfig({ features: { store: true } }); // fixture file in the isolated cwd
+
+    const StorePage = (await import("@/app/store/page")).default;
+    const { default: StackedHero } = await import("@/components/StackedHero");
+    const el = await StorePage();
+
+    const { Render } = await import("@puckeditor/core");
+    expect(findAll(el, (e) => e.type === Render)).toHaveLength(0);
+    const heroes = findAll(el, (e) => e.type === StackedHero);
+    expect(heroes).toHaveLength(1);
+    expect((heroes[0].props as { kicker?: string }).kicker).toBe("Where Heaven and Earth Meet");
+  });
+
+  it("store ON, after Publish to live in /studio: the SAME request renders the published Puck doc", async () => {
+    const { saveSiteConfig } = await import("@/lib/site-config");
+    await saveSiteConfig({ features: { store: true } });
+    const doc = await publish("store", "Fixture publish — store live");
+
+    const StorePage = (await import("@/app/store/page")).default;
+    const { default: StackedHero } = await import("@/components/StackedHero");
+    const el = await StorePage();
+
+    const { Render } = await import("@puckeditor/core");
+    const renders = findAll(el, (e) => e.type === Render);
+    expect(renders).toHaveLength(1);
+    expect((renders[0].props as { data?: unknown }).data).toEqual(doc);
+    expect(renderToStaticMarkup(renders[0])).toContain("Fixture publish — store live");
+    expect(findAll(el, (e) => e.type === StackedHero)).toHaveLength(0);
   });
 });

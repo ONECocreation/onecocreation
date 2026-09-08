@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import StoreItemCard from "@/components/store/StoreItemCard";
 import StackedHero from "@/components/StackedHero";
 import NotOpenYet from "@/components/NotOpenYet";
+import PaletteVars from "@/components/PaletteVars";
+import PopupHost from "@/components/PopupHost";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
 import { listItems, stripPrivateMedia, type StoreItem } from "@/lib/store";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { cartridge } from "@/brand/cartridge";
@@ -118,6 +125,28 @@ export default async function StorePage() {
       </main>
     );
   }
+  /* TASK-159 (0018.06.17 a₿ · block 966,055) — PUCK P4 first read, mirroring
+     /about and T-153's /memberships byte-for-byte: once Love publishes the
+     Puck rebuild (/studio/store -> Publish to live), the live /store serves
+     it. Until then, the hand-built shelf below is untouched — nothing
+     changes for visitors until she chooses it. Sits AFTER the T-137 switch
+     gate above — the order is (1) switch gate, (2) this Puck-first read,
+     (3) the hand-built fallback (the T-160 lane contract). */
+  const puck = await getPuckPage("store");
+  if (puck) {
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main><Render config={config} data={puck as Data} /></main>
+        <SiteFooter />
+        {/* STUDIO P2: popup host rides both branches of this page */}
+        <PopupHost />
+      </>
+    );
+  }
+  /* ── end TASK-159 Puck-first branch; hand-built fallback below ── */
+
   // THE LEAK RULE (store.ts): public serialization strips deliverable.blobPath
   const items = (await listItems()).map(stripPrivateMedia);
   const groups = GROUPS.map((g) => ({
