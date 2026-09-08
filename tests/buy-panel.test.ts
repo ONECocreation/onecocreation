@@ -62,6 +62,14 @@ beforeAll(async () => {
   process.env.BTCPAY_API_KEY = "fixture-btcpay-key";
 
   kvStore.set("store:catalog", JSON.stringify(CATALOG));
+  // the LIVE switch truth (read from the public /api/admin/site shape,
+  // 0018.06.17 a₿): bitcoin OFF, square ON — a cold instance must not
+  // resurrect the bitcoin rail from the defaults
+  kvStore.set("site:config:onecocreation", JSON.stringify({
+    features: { community: true, classes: true, store: true, sessions: true, cuts: false, jars: true, news: true },
+    payments: { btcpay: false, square: true, stripe: false },
+    meeting: { rail: "jitsi", jitsiDomain: "meet.onecocreation.com", allowStaticLinks: false },
+  }));
   kvStore.set("oc:square:access-token", "EAAAtest-sandbox-fixture");
   kvStore.set("oc:square:location-id", "LTESTFIXTURE0");
   kvStore.set("oc:square:environment", "sandbox");
@@ -150,6 +158,19 @@ describe("the cold-instance card door (fault 1 — the vault must be warm before
 });
 
 describe("POST /api/store/checkout — the rail's own sentence, never a silent 500 (fault 2)", () => {
+  it("a rail Love switched OFF stays off on a COLD route instance — no invoice against it", async () => {
+    // the FIRST route call in this file: nothing has warmed the switch cache.
+    // The route must read the vault truth itself (btcpay OFF) rather than
+    // judge off the cold-cache defaults (btcpay:true) and mint an invoice
+    // against Love's OFF switch — the pre-fix behavior, reproduced live.
+    const res = await checkout({ itemId: "thank-you-wakeup" });
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({
+      ok: false,
+      reason: "payment rail not connected — the shelf is browse-only",
+    });
+  });
+
   it("a guest buying a meditation (digital) is asked to sign in, in words", async () => {
     const res = await checkout({ itemId: "thank-you-wakeup", rail: "card" });
     expect(res.status).toBe(401);
@@ -205,8 +226,8 @@ describe("POST /api/store/checkout — the rail's own sentence, never a silent 5
     const card = await checkout({ itemId: "thank-you-wakeup", rail: "card" }, await frenCookie());
     expect(card.status).toBe(503);
     expect(await card.json()).toEqual({ ok: false, reason: "card rail not connected" });
-    // restore Love's defaults for anything that runs after
-    await saveSiteConfig({ payments: { btcpay: true, square: true } });
+    // restore the live truth (btcpay OFF, square ON) for anything that runs after
+    await saveSiteConfig({ payments: { btcpay: false, square: true } });
   });
 });
 

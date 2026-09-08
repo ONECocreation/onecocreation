@@ -10,6 +10,7 @@ import {
   type PriceSnapshot,
 } from "@/lib/store";
 import { liveAdapter, getAdapter, ensureSquareVault, type CreatedCharge, type PaymentAdapter, type ChargeRequest } from "@/lib/payments";
+import { getSiteConfig } from "@/lib/site-config";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 import { frenFromRequest } from "@/lib/fren-auth";
@@ -77,6 +78,17 @@ export async function POST(request: Request) {
   }
 
   const wantsCard = body.rail === "card";
+  /* TASK-147 (0018.06.17 a₿) — WARM BEFORE YOU JUDGE, at the money boundary
+     too: liveAdapter() reads siteSwitchesSync(), which on a COLD instance
+     serves the DEFAULTS (btcpay:true) until the first getSiteConfig() read
+     warms it — so a switch Love turned OFF at /a/site could still mint an
+     invoice here (reproduced: fixture btcpay invoice answered 200 with
+     payments.btcpay=false in the vault). One awaited read makes the switch
+     mean what it says before any charge is created. (The same cold-defaults
+     seam remains in the OTHER money routes — cart checkout, tip, booking;
+     flagged in the SUMMARY for a payments.ts-level follow-up, outside this
+     lane's OWNS.) */
+  await getSiteConfig();
   await ensureSquareVault();
   const adapter = liveAdapter(wantsCard ? "square" : undefined);
   if (!adapter) {
