@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import NotOpenYet from "@/components/NotOpenYet";
 import ScrollTop from "@/components/ScrollTop";
 import AddTierButton from "@/components/store/AddTierButton";
 import AddonActions from "@/components/store/AddonActions";
@@ -78,13 +79,34 @@ export default async function TierPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  /* ── TASK-187 GATE (0018.06.18 a₿ · block 966,104) — the route itself
+     follows the `memberships` switch now, not just the nav: OFF means a
+     direct /packages/<slug> URL renders the shared NotOpenYet quiet panel
+     (T-137) inside the site chrome, never a tier page — gate first, before
+     even the slug lookup (the T-159/T-160 lane contract: this route has no
+     Puck branch, so it's just 1 gate → 2 hand-built). ── */
+  const switches = await getSiteConfig();
+  if (!switches.features.memberships) {
+    return (
+      <>
+        <SiteHeader />
+        <main>
+          <NotOpenYet
+            title="Memberships aren't open yet"
+            body="Love's memberships are still being prepared — come back soon."
+          />
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+  /* ── end TASK-187 GATE ── */
   const { slug } = await params;
   const sp = await searchParams;
   const page = tierPageBySlug(slug);
   if (!page) notFound();
   const t = TIERS[page.tier];
   const upgrade = page.upgradeSlug ? tierPageBySlug(page.upgradeSlug) : undefined;
-  const switches = await getSiteConfig();
   /* TASK-147 (0018.06.17 a₿): the add-on strip's doors need the rail TRUTH —
      warm the square vault (cold instance) and judge both rails ONCE here,
      then hand the truth down as props (AddonActions is a client component). */

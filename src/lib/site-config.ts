@@ -82,6 +82,16 @@ export interface SiteConfig {
     cuts: boolean;
     jars: boolean;
     news: boolean;
+    /** TASK-187 (0018.06.18 a₿ · block 966,104): one switch for the whole
+        Memberships surface — "I didn't see a way to turn on and off the
+        memberships" (the Admiral). Default ON (memberships are Love's own
+        offer, the streamlined site's centerpiece); OFF gates /memberships
+        and /packages/* to the shared NotOpenYet panel, hides the header's
+        Memberships door, the Store header's Memberships button, and the
+        home hero's Packages doors. A single package's own on/off stays what
+        it already is — that item's status in /a/store (Items); this switch
+        is the whole surface, not any one package. */
+    memberships: boolean;
   };
   payments: { btcpay: boolean; square: boolean; stripe: boolean };
   meeting: {
@@ -136,6 +146,7 @@ export function defaultSiteConfig(): SiteConfig {
       cuts: false,
       jars: true,
       news: true,
+      memberships: true,
     },
     payments: { btcpay: true, square: true, stripe: false },
     meeting: {
