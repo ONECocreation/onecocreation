@@ -158,7 +158,6 @@ export default function BuyPanel({
 
   useEffect(() => {
     if (railTouched.current) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- the default rail derives from the remembered word once it resolves (a microtask after first paint); a tapped chip stops this
     setRail(railForPrefer(prefer, { btcpay: railLive, square: cardAvailable }));
   }, [prefer, railLive, cardAvailable]);
 
