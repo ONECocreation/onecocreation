@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import QuickView from "@/components/store/QuickView";
+import StoreItemCard from "@/components/store/StoreItemCard";
 import StackedHero from "@/components/StackedHero";
 import { listItems, stripPrivateMedia, type StoreItem } from "@/lib/store";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { cartridge } from "@/brand/cartridge";
-import { dollars } from "@/lib/money-words";
 
 export const metadata: Metadata = {
   title: "Store — One Cocreation",
@@ -78,25 +76,15 @@ const BANDS: Record<string, { bg: string; dark?: boolean }> = {
   wares: { bg: "linear-gradient(180deg,var(--band-5) 0%,var(--band-9) 100%)" },
 };
 
-function satsLabel(n: number): string {
-  return `${n.toLocaleString("en-US")} sats`;
-}
-
-function fiatLabel(f: { amount: number; currency: string }): string {
-  return dollars(f.amount, f.currency);
-}
-
-/** One entry per kind — the disconnect Pac flagged: every card now has one
-    clear gold door, labeled by what actually happens next. A package door
-    goes STRAIGHT to its own page (Admiral, 0018.05.15). */
-function doorFor(item: StoreItem): { href: string; label: string } {
-  // the journey (Admiral, 0018.05.15): store → quick view → DETAIL → cart/time
-  if (item.kind === "service") return { href: `/store/${item.id}`, label: "The full story" };
+/** The card's one door: the item's OWN page (Admiral, 0018.05.15 — a
+    package door goes STRAIGHT to its package page; TASK-148: the buy/basket
+    doors live there, the shelf card carries only this full-view door). */
+function doorFor(item: StoreItem): string {
   if (item.kind === "package") {
     const page = TIER_PAGES.find((p) => p.tier === item.entitlementTier);
-    return { href: page ? `/packages/${page.slug}` : "/packages", label: "See the package" };
+    return page ? `/packages/${page.slug}` : "/packages";
   }
-  return { href: `/store/${item.id}`, label: item.kind === "digital" ? "Get it ⚡" : "View ⚡" };
+  return `/store/${item.id}`;
 }
 
 /** ascending price — the tiers climb left to right (Admiral, 0018.05.15) */
@@ -154,80 +142,20 @@ export default async function StorePage() {
               </p>
             </div>
             <div className={`grid ${group.items.length >= 3 ? "grid-3" : "grid-2"}`}>
-              {group.items.map((item, idx) => {
-                const effective = item.sale ?? item.price;
-                const shot = item.media?.images[0] ?? item.images[0];
-                const door = doorFor(item);
-                return (
-                  <div className="card reveal" key={item.id} style={{ transitionDelay: `${(idx % 3) * 0.12}s` }}>
-                    {shot ? (
-                      // product shots come from blob/dev-file URLs — plain img
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img className="thumb" src={shot} alt={item.title} />
-                    ) : (
-                      <div className="thumb" style={{ display: "grid", placeItems: "center", fontSize: "2.6rem",
-                        /* #f3dce3 stays literal — it's the cartridge.ts `blush` brand def, kept as data (S2) */
-                        background: "linear-gradient(135deg,#f3dce3,var(--lavender-soft))" }}>
-                        {group.icon}
-                      </div>
-                    )}
-                    <div className="body">
-                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
-                        <h3 style={{ fontWeight: 400, fontSize: "1.12rem", margin: 0 }}>{item.title}</h3>
-                        {item.status === "soldout" && (
-                          <span style={{ fontSize: ".64rem", fontWeight: 700, textTransform: "uppercase",
-                            letterSpacing: ".06em", color: "var(--rose)", whiteSpace: "nowrap" }}>sold out</span>
-                        )}
-                      </div>
-                      <p className="clamp2" style={{ color: "var(--muted)", fontSize: ".88rem", margin: ".4em 0 .2em" }}>
-                        {item.blurb}
-                      </p>
-                      {item.media?.deliverable && (
-                        <p style={{ fontSize: ".72rem", color: "var(--lavender)", margin: "0 0 .2em" }}>
-                          ✦ includes {item.media.deliverable.label}
-                        </p>
-                      )}
-                      <div style={{ margin: "10px 0 14px" }}>
-                        <span className="price" style={{ fontSize: "1.25rem" }}>
-                          {effective.sats != null ? satsLabel(effective.sats) : effective.fiat ? fiatLabel(effective.fiat) : "—"}
-                        </span>
-                        {item.sale && (
-                          <span style={{ marginLeft: 8, fontSize: ".72rem", fontWeight: 700, textTransform: "uppercase",
-                            letterSpacing: ".06em", color: "var(--rose)" }}>on sale</span>
-                        )}
-                        {effective.sats != null && effective.fiat && (
-                          <span style={{ marginLeft: 8, fontSize: ".78rem", color: "var(--muted)" }}>
-                            {fiatLabel(effective.fiat)}
-                          </span>
-                        )}
-                      </div>
-                      {/* doors: centered at the card's foot (Admiral, 0018.05.15) */}
-                      <div className="push" style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", width: "100%" }}>
-                        <Link className="btn btn-sm" href={door.href}>{door.label}</Link>
-                        <QuickView
-                          item={{
-                            id: item.id,
-                            title: item.title,
-                            blurb: item.blurb,
-                            priceLabel:
-                              effective.sats != null
-                                ? satsLabel(effective.sats)
-                                : effective.fiat
-                                  ? fiatLabel(effective.fiat)
-                                  : "—",
-                            img: shot ?? null,
-                            icon: group.icon,
-                            href: door.href,
-                            doorLabel: door.label,
-                            canBasket: item.kind !== "service" && item.kind !== "package" && item.status !== "soldout",
-                            discoveryNudge: item.kind === "service" && item.id !== "discovery-call",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {group.items.map((item, idx) => (
+                /* TASK-148 (0018.06.17 a₿): every shelf card turns over on the
+                   ONE house flip mechanism — the QuickView peek Sheet (whose
+                   position:fixed the card's backdrop-filter trapped inside the
+                   grid cell) is retired; buy/basket doors live on the full
+                   view page now, the card carries only the full-view door */
+                <StoreItemCard
+                  key={item.id}
+                  item={item}
+                  icon={group.icon}
+                  href={doorFor(item)}
+                  delay={(idx % 3) * 0.12}
+                />
+              ))}
             </div>
           </div>
         </section>
