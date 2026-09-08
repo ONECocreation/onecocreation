@@ -1,28 +1,31 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import VantageSwitcher from "./VantageSwitcher";
 import { useRoomVantage } from "./vantage";
-import SanctuaryView from "./SanctuaryView";
 import LessonPathView from "./LessonPathView";
 import CircleView from "./CircleView";
-import VideoView from "./VideoView";
-import MaterialsView from "./MaterialsView";
-import PeopleView from "./PeopleView";
 import StageView from "./StageView";
-import { TIER_SLUG } from "./tier-slug";
+import type { RosterResult } from "./RoomPresence";
 import type { RoomPin } from "@/lib/room-pins";
 import type { RoomGate } from "@/lib/room-access";
 import "./classroom.css";
 
 /**
- * THE CLASSROOM VANTAGE MOUNT (loves-desk-and-classroom-plan.md, Lane
- * ROOM) — sits at `/rooms/[slug]`, the room route the site already ships.
- * Reads the SAME `/api/matrix/rooms` feed RoomsShelf.tsx already proves
- * (tab list + honest tier pills, softly-locked doors) and `/api/live` (the
- * gold live door), then hands the member's chosen vantage
- * (`useRoomVantage`) off to one of Sanctuary / Lesson Path / Circle.
+ * THE CLASSROOM VANTAGE MOUNT — a classroom is THREE rooms (TASK-184,
+ * 0018.06.18 a₿, the Admiral's ruling; born C4 of
+ * loves-desk-and-classroom-plan.md): **Stage** (the Video layout's shape —
+ * live embed, the chat beside it, who's-here folded in as the roster),
+ * **Lesson Path** (recordings + previous sessions + the Materials merged
+ * in as resources), **The Circle** (the weekly ribbon over the month, the
+ * classrooms strip in the standard card layout). The Sanctuary and the
+ * separate Video/Materials/People vantages retired — a stale stored pick
+ * resolves to the Stage in vantage.ts, never a 404.
+ *
+ * Sits at `/rooms/[slug]`. Reads the SAME `/api/matrix/rooms` feed
+ * RoomsShelf.tsx already proves (the Circle's rooms strip) and `/api/live`
+ * (the gold live door), then hands the member's chosen vantage
+ * (`useRoomVantage`) off to one of the three.
  */
 
 export interface RoomCardFeedItem {
@@ -57,57 +60,25 @@ interface Props {
   kind: "class" | "community";
   pin: RoomPin | null;
   /** TASK-146: pass-through only — the room page's own site-switches read,
-   *  handed to the Video vantage so it can mount the live embed. See
+   *  handed to the Stage so it can mount the live embed. See
    *  RoomVideoSlot's docblock for why this client tree never imports
    *  live.ts's liveRoomName() directly. */
   jitsiDomain?: string;
   liveRoom?: string;
-  /** TASK-174 minimal-forced-edit: pass-through only — the room page's
-   *  gate decision (room-access.ts's roomGate, computed server-side),
-   *  handed to the Stage vantage so its video slot follows the SAME door
-   *  as the chat. See RoomVideoSlot's docblock. */
+  /** TASK-174: pass-through only — the room page's gate decision
+   *  (room-access.ts's roomGate, computed server-side), riding ALL THREE
+   *  vantages (TASK-184): the Stage's video slot, the Lesson Path's
+   *  recordings, the Circle's events all follow the SAME door as the chat. */
   door?: RoomGate;
   doorPackage?: string | null;
+  /** TASK-184 · the 429 hunt: the page's ONE roster/presence read per open
+   *  (matrix.ts's rosterForRequest — per-request cached, bot-seat), handed
+   *  to the Stage's roster. null = the gate closed the room for this
+   *  visitor and no read was taken. */
+  roster?: RosterResult | null;
 }
 
-function RoomTabs({ feed, activeSlug }: { feed: RoomsFeed | null; activeSlug: string }) {
-  if (!feed) return null;
-  return (
-    <div className="cls-tabs" role="tablist" aria-label="rooms">
-      {feed.rooms.map((r) => {
-        const active = r.slug === activeSlug;
-        if (r.open) {
-          return (
-            <Link
-              key={r.slug}
-              href={`/rooms/${r.slug}`}
-              role="tab"
-              aria-selected={active}
-              className="btn btn-sm"
-              style={active ? { background: "linear-gradient(135deg,var(--gold-2),var(--gold))", color: "var(--gold-ink)", borderColor: "var(--gold-deep)" } : undefined}
-            >
-              {r.title}
-            </Link>
-          );
-        }
-        return (
-          <Link
-            key={r.slug}
-            href={feed.signedIn ? (r.neededName ? `/packages/${TIER_SLUG[r.minTier] ?? ""}` : "/memberships") : "/login"}
-            role="tab"
-            aria-selected={false}
-            className="btn btn-ghost btn-sm"
-            title={r.neededName ? `opens with the ${r.neededName} package` : "opens with any membership"}
-          >
-            🔒 {r.title}
-          </Link>
-        );
-      })}
-    </div>
-  );
-}
-
-export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage }: Props) {
+export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster }: Props) {
   const [vantage] = useRoomVantage();
   const [feed, setFeed] = useState<RoomsFeed | null>(null);
   const [live, setLive] = useState<LiveFeed | null>(null);
@@ -141,24 +112,13 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
       <div className="cls-bar">
         <VantageSwitcher />
       </div>
-      {vantage === "sanctuary" && <RoomTabs feed={feed} activeSlug={slug} />}
 
-      {vantage === "sanctuary" && (
-        <SanctuaryView slug={slug} alias={alias} title={title} kind={kind} pin={pin} live={thisRoomLive} />
+      {/* TASK-184: exactly three vantages, in the ruling's order */}
+      {vantage === "stage" && (
+        <StageView slug={slug} alias={alias} title={title} kind={kind} pin={pin} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} roster={roster} />
       )}
-      {vantage === "lesson" && <LessonPathView slug={slug} alias={alias} title={title} kind={kind} />}
-      {vantage === "circle" && <CircleView feed={feed} live={live} activeSlug={slug} />}
-
-      {/* TASK-123: the four restored classroom layouts — video slot,
-          materials list, people rail; only the arrangement differs.
-          TASK-149: the Stage leads (first tab + default) and adds the
-          room's own chat under the embed — StageChat reuses RoomView. */}
-      {vantage === "video" && (
-        <VideoView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />
-      )}
-      {vantage === "materials" && <MaterialsView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />}
-      {vantage === "people" && <PeopleView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />}
-      {vantage === "stage" && <StageView slug={slug} alias={alias} title={title} kind={kind} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} />}
+      {vantage === "lesson" && <LessonPathView slug={slug} alias={alias} title={title} kind={kind} door={door} doorPackage={doorPackage} />}
+      {vantage === "circle" && <CircleView feed={feed} live={live} activeSlug={slug} slug={slug} title={title} door={door} doorPackage={doorPackage} />}
     </div>
   );
 }

@@ -9,7 +9,10 @@ import RelatedItems from "@/components/store/RelatedItems";
 import { getItem, listItems, stripPrivateMedia, type StoreItem } from "@/lib/store";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 import { getSiteConfig } from "@/lib/site-config";
-import { dollars } from "@/lib/money-words";
+import { priceWords, defaultPreferOf, type MoneyPrefer, type MoneyRails } from "@/lib/money-words";
+import { preferFromCookieHeader } from "@/lib/money-preference";
+import { cookies } from "next/headers";
+import { sectionForKind } from "@/lib/store-sections";
 
 export const dynamic = "force-dynamic";
 
@@ -17,30 +20,25 @@ export const dynamic = "force-dynamic";
  * TASK-157 (0018.06.17 a₿, cut from the T-147 review): the price line
  * follows THE SWITCHES (T-129) — the same rail truth BuyPanel's
  * buyDoorLabel() judges by (railLive/squareLive off liveAdapter()), now
- * judging the price LINE instead of the button. Bitcoin off → dollars
- * lead (dash if card's off too). Both live → sats first, the dollar echo
- * second. Only bitcoin → sats alone, no fiat echo, even when the item
- * carries a fiat price — that rail isn't open. Neither live → a dash
- * (derive-or-dash). The shelf card carries the identical rule as its own
- * copy (StoreItemCard.tsx's priceLine) — a "use client" module's exports
- * can't be called from this server component (RSC boundary — confirmed by
- * `next dev`, not merely assumed), so the two are hand-kept in lockstep;
- * tests/price-line.test.ts pins both, word for word.
+ * judging the price LINE instead of the button. Neither live → a dash
+ * (derive-or-dash).
+ *
+ * TASK-186 (0018.06.18 a₿): THE ONE DISPLAY LAW — priceWords() in
+ * money-words.ts. The visitor's PREFERRED denomination first (the `oc-money`
+ * cookie the checkout toggle writes — a server component can't import the
+ * shelf card's "use client" module, but money-words/money-preference are
+ * plain dual-world libs), the other as "or …", only when both exist and
+ * both rails are live; a single-denomination price shows alone; never "≈".
+ * This wrapper and the shelf card's (StoreItemCard.tsx) are thin shims over
+ * priceWords — one law, two faces, no drift. tests/price-line.test.ts pins
+ * both, word for word.
  */
 export function priceLine(
   item: StoreItem,
-  rails: { btc: boolean; card: boolean },
+  rails: MoneyRails,
+  prefer: MoneyPrefer,
 ): { primary: string; secondary: string | null } {
-  const effective = item.sale ?? item.price;
-  const sats = rails.btc && effective.sats != null
-    ? `${effective.sats.toLocaleString("en-US")} sats`
-    : null;
-  const fiat = rails.card && effective.fiat != null
-    ? dollars(effective.fiat.amount, effective.fiat.currency)
-    : null;
-  if (sats) return { primary: sats, secondary: fiat };
-  if (fiat) return { primary: fiat, secondary: null };
-  return { primary: "—", secondary: null };
+  return priceWords(item.sale ?? item.price, rails, prefer);
 }
 
 /**
@@ -52,21 +50,11 @@ export function priceLine(
  */
 export function struckLine(
   item: StoreItem,
-  rails: { btc: boolean; card: boolean },
+  rails: MoneyRails,
+  prefer: MoneyPrefer,
 ): string | null {
-  return item.sale ? priceLine({ ...item, sale: undefined }, rails).primary : null;
+  return item.sale ? priceLine({ ...item, sale: undefined }, rails, prefer).primary : null;
 }
-
-/** the breadcrumb's third crumb — the shelf section this kind lives in,
- *  mirrored from store/page.tsx's GROUPS (hand-kept; derive-or-dash: a kind
- *  with no shelf section — retreat — gets no third crumb, never an invented one) */
-const SECTION_BY_KIND: Partial<Record<StoreItem["kind"], { anchor: string; pill: string }>> = {
-  digital: { anchor: "meditations", pill: "Meditations" },
-  package: { anchor: "memberships", pill: "Memberships" },
-  self: { anchor: "wares", pill: "Wares" },
-  fourthwall: { anchor: "wares", pill: "Wares" },
-  service: { anchor: "sessions", pill: "Sessions" },
-};
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -90,15 +78,24 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
      door could render against Love's OFF switch while the card door vanished
      per serverless instance (Love's meeting: "we tried bitcoin and square",
      "cash payment doesn't show up"). Await both truths, THEN judge the rails. */
-  await getSiteConfig();
+  const switches = await getSiteConfig();
   await ensureSquareVault();
 
   // TASK-157: same rail truth BuyPanel judges by, a few lines down.
   const rails = { btc: liveAdapter() !== null, card: liveAdapter("square") !== null };
-  const { primary: priceWords, secondary: priceEcho } = priceLine(item, rails);
-  const struckWords = struckLine(item, rails);
+  /* TASK-186 — the visitor's denomination word off the `oc-money` cookie
+     (the checkout toggle writes it), the rail-judged default otherwise:
+     fiat when the card rail is live, else sats */
+  const prefer: MoneyPrefer =
+    preferFromCookieHeader((await cookies()).toString()) ?? defaultPreferOf(rails);
+  const { primary: priceLead, secondary: priceEcho } = priceLine(item, rails, prefer);
+  const struckWords = struckLine(item, rails, prefer);
   const shots = item.media?.images.length ? item.media.images : item.images;
-  const section = SECTION_BY_KIND[item.kind];
+  // TASK-189: the breadcrumb's third crumb — the ONE kind→section map
+  // (src/lib/store-sections.ts), the same one the shelf and Related read.
+  // derive-or-dash still stands: a kind with no shelf section (retreat)
+  // gets no third crumb, never an invented one.
+  const section = sectionForKind(item.kind);
 
   /* TASK-177 (0018.06.18 a₿) — the ShinePages product layout Love chose
      (recon 03/04): TWO columns at ≥900px (.product-cols, house.css) — the
@@ -107,7 +104,10 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
      the phone, picture first. The night ground holds in both themes
      (keep-dark + .item-veil, the T-152/T-155 page-scoped veil precedent).
      "Related" below: up to three live items of the same kind. */
-  const catalog = (await listItems()).map(stripPrivateMedia);
+  /* T-187 seam: with the Memberships switch OFF a package never rides another item's
+     Related row — its door would open onto NotOpenYet */
+  const catalog = (await listItems()).map(stripPrivateMedia)
+    .filter((i) => switches.features.memberships !== false || i.kind !== "package");
 
   return (
     <main>
@@ -140,7 +140,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
                     {struckWords}
                   </s>
                 )}
-                {priceWords}
+                {priceLead}
                 {priceEcho && (
                   <span style={{ marginLeft: 8, fontSize: ".78rem", fontWeight: 400, color: "var(--muted)" }}>
                     {priceEcho}

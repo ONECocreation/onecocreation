@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
+import { priceWords, satsWords, type MoneyPrefer, type MoneyRails } from "@/lib/money-words";
+import { readMemberPrefer, saveMemberPrefer, useMoneyPrefer } from "@/lib/money-preference";
 
 /* eslint-disable @next/next/no-img-element */
 import CartTimePicker from "./CartTimePicker";
@@ -16,6 +18,9 @@ interface Line {
   sats: number | null;
   listSats: number | null;
   offerSats: number | null;
+  /** TASK-186 — the line's unit fiat price (when the item carries one), so
+   *  the basket can speak the visitor's chosen denomination */
+  fiat: { amount: number; currency: string } | null;
   giftTo: string | null;
   image: string | null;
   physical: boolean;
@@ -44,7 +49,30 @@ interface ExpiredHold {
   title: string;
 }
 
-export default function CartPanel() {
+/** TASK-186 — the basket's fiat total, derived line by line: every line must
+ *  carry a fiat price in ONE currency and no pay-what-you-can offer may stand
+ *  (an offer is a sats word — there is no fiat truth for it). Anything less
+ *  → null, and the total speaks sats alone (derive-or-dash, never a sum with
+ *  a hole in it). */
+export function cartTotalFiat(lines: Line[]): { amount: number; currency: string } | null {
+  let sum = 0;
+  let currency: string | null = null;
+  for (const l of lines) {
+    if (l.offerSats != null || !l.fiat) return null;
+    if (currency && l.fiat.currency !== currency) return null;
+    currency = l.fiat.currency;
+    sum += l.fiat.amount * l.qty;
+  }
+  return currency ? { amount: sum, currency } : null;
+}
+
+export default function CartPanel({
+  rails = { btc: true, card: true },
+}: {
+  /** the live rails, judged server-side by the basket page (T-147's warm-
+   *  before-you-judge pattern) — the price words and the toggle follow them */
+  rails?: MoneyRails;
+}) {
   const [lines, setLines] = useState<Line[] | null>(null);
   const [totalSats, setTotalSats] = useState(0);
   const [expired, setExpired] = useState<ExpiredHold[]>([]);
@@ -61,6 +89,29 @@ export default function CartPanel() {
   const [giftInput, setGiftInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /* TASK-186 — the visitor's denomination word; the "$ · sats" toggle by the
+     total flips every price on the page and remembers it. A signed-in
+     member's saved word wins over the cookie and is written back on flip. */
+  const [prefer, setPrefer] = useMoneyPrefer(rails);
+  const [memberPrefKnown, setMemberPrefKnown] = useState(false);
+  useEffect(() => {
+    let live = true;
+    readMemberPrefer()
+      .then((m) => {
+        if (!live || !m.signedIn) return;
+        setMemberPrefKnown(true);
+        if (m.prefer) setPrefer(m.prefer); // signed in wins — the browser learns the word
+      })
+      .catch(() => {});
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function choosePrefer(p: MoneyPrefer) {
+    setPrefer(p);
+    if (memberPrefKnown) void saveMemberPrefer(p);
+  }
 
   async function refresh() {
     const d = await fetch("/api/cart").then((r) => (r.ok ? r.json() : null)).catch(() => null);
@@ -253,11 +304,29 @@ export default function CartPanel() {
                 <p style={{ margin: "2px 0 0", fontSize: ".82rem", fontFamily: "var(--serif, sans-serif)", color: "var(--gold-deep, #b4862b)" }}>
                   {l.offerSats != null ? (
                     <>
-                      your offer: {l.offerSats.toLocaleString()} sats
+                      {/* an offer is a sats word (the PWYC rail's own law) —
+                          it shows alone, whichever way the preference leans */}
+                      your offer: {satsWords(l.offerSats)}
                       {l.listSats != null && <span style={{ color: "var(--muted, #897f97)", fontFamily: "inherit" }}> (listed {l.listSats.toLocaleString()})</span>}
                     </>
                   ) : (
-                    <>{l.sats?.toLocaleString()} sats{!l.slot && l.qty > 1 ? " each" : ""}</>
+                    (() => {
+                      const w = priceWords(
+                        { sats: l.sats ?? undefined, fiat: l.fiat ?? undefined },
+                        rails,
+                        prefer,
+                      );
+                      return (
+                        <>
+                          {w.primary}{!l.slot && l.qty > 1 ? " each" : ""}
+                          {w.secondary && (
+                            <span style={{ marginLeft: 6, fontSize: ".9em", color: "var(--muted, #897f97)", fontFamily: "inherit" }}>
+                              {w.secondary}
+                            </span>
+                          )}
+                        </>
+                      );
+                    })()
                   )}
                 </p>
               </div>
@@ -334,12 +403,55 @@ export default function CartPanel() {
       </ul>
 
       <div style={{ textAlign: "center" }}>
-        <p style={{ margin: "18px 0 0", fontSize: "1.05rem" }}>
-          Total:{" "}
-          <b style={{ fontFamily: "var(--serif, sans-serif)", color: "var(--gold-deep, #b4862b)", fontSize: "1.2rem" }}>
-            {totalSats.toLocaleString()} sats
-          </b>
-        </p>
+        {/* TASK-186 — the total speaks the visitor's chosen denomination
+            through the ONE display law; the fiat half is derived line by
+            line (cartTotalFiat) and stays silent the moment a line can't
+            honestly carry it (an offer stands, or no fiat price) */}
+        {(() => {
+          const w = priceWords(
+            { sats: totalSats || undefined, fiat: cartTotalFiat(lines) ?? undefined },
+            rails,
+            prefer,
+          );
+          return (
+            <p style={{ margin: "18px 0 0", fontSize: "1.05rem" }}>
+              Total:{" "}
+              <b style={{ fontFamily: "var(--serif, sans-serif)", color: "var(--gold-deep, #b4862b)", fontSize: "1.2rem" }}>
+                {w.primary}
+              </b>
+              {w.secondary && (
+                <span style={{ marginLeft: 8, fontSize: ".82rem", color: "var(--muted, #897f97)" }}>
+                  {w.secondary}
+                </span>
+              )}
+            </p>
+          );
+        })()}
+        {/* the customer's choice at checkout — one tap flips every price on
+            the page and remembers it (cookie + the member's saved word) */}
+        {rails.btc && rails.card && (
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 8 }}
+            role="group" aria-label="show prices in">
+            <button
+              type="button"
+              className="chip-select"
+              aria-pressed={prefer === "fiat"}
+              onClick={() => choosePrefer("fiat")}
+              style={{ fontSize: ".82rem" }}
+            >
+              $
+            </button>
+            <button
+              type="button"
+              className="chip-select"
+              aria-pressed={prefer === "sats"}
+              onClick={() => choosePrefer("sats")}
+              style={{ fontSize: ".82rem" }}
+            >
+              ⚡ sats
+            </button>
+          </div>
+        )}
         {anyOffer && (
           <p style={{ margin: "6px auto 0", fontSize: ".78rem", color: "var(--muted, #897f97)", maxWidth: 480 }}>
             offers below the listed price are received with love — Love looks at each one, and if it can&apos;t be

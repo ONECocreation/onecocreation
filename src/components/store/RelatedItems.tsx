@@ -1,6 +1,6 @@
 import Link from "next/link";
 import StoreItemCard, { type PriceRails } from "@/components/store/StoreItemCard";
-import { TIER_PAGES } from "@/lib/tiers-content";
+import { doorForItem } from "@/lib/store-sections";
 import type { StoreItem } from "@/lib/store";
 
 /**
@@ -12,6 +12,11 @@ import type { StoreItem } from "@/lib/store";
  * which excludes both hidden and soldout (the shelf's own listItems()
  * already drops hidden; this pins the law at the component too). The item
  * itself is never its own relative.
+ *
+ * TASK-189 (0018.06.18 a₿): the door is now the ONE doorForItem
+ * (src/lib/store-sections.ts) — the same function the shelf's
+ * shelfDoorFor calls, so a related card's door can never disagree with
+ * the same item's shelf card.
  */
 
 /** the related set, pure for tests/item-page.test.ts — derive-or-dash:
@@ -35,17 +40,6 @@ const ICON: Record<StoreItem["kind"], string> = {
   service: "✂️",
   retreat: "🕊️",
 };
-
-/** the card's one door, mirrored from the shelf's doorFor (store/page.tsx):
- *  a package goes STRAIGHT to its package page (the Admiral's law), every
- *  other kind opens its own full view */
-function doorFor(item: StoreItem): string {
-  if (item.kind === "package") {
-    const page = TIER_PAGES.find((p) => p.tier === item.entitlementTier);
-    return page ? `/packages/${page.slug}` : "/packages";
-  }
-  return `/store/${item.id}`;
-}
 
 export default function RelatedItems({
   items,
@@ -73,7 +67,7 @@ export default function RelatedItems({
               item={item}
               rails={rails}
               icon={ICON[item.kind]}
-              href={doorFor(item)}
+              href={doorForItem(item)}
               delay={(idx % 3) * 0.12}
             />
           ))}

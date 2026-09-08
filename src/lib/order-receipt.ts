@@ -3,7 +3,8 @@ import { getItem, kv, type OrderRecord } from "./store";
 import { getLetterOverride, LETTER_DEFAULTS, bodyToHtml } from "./letters";
 import { sendMail, brandShell } from "./mail";
 import { siteBase } from "./subscribers";
-import { dollars } from "./money-words";
+import { priceWords, defaultPreferOf, type MoneyPrefer, type PriceLike } from "./money-words";
+import { liveAdapter } from "./payments";
 
 /**
  * TASK-173 (0018.06.17 a₿ · block 966094) — the order receipt + the download
@@ -103,15 +104,40 @@ const receiptMarker = (orderId: string) => `order:${orderId}:receipt-sent`;
 
 export type ReceiptResult = { sent: true } | { sent: false; reason: string };
 
+/** TASK-186 (0018.06.18 a₿) — the letter's amount reads through THE ONE
+ *  DISPLAY LAW (priceWords), server side: the member's saved money word
+ *  (the profile's additive moneyPrefer field) wins, else the rail-judged
+ *  default — fiat when the card rail is live. The snapshot is the one
+ *  currency that was actually CHARGED — history, not an offer — so both
+ *  rails read live here and a single-denomination price shows alone,
+ *  whichever way the preference leans. */
+async function receiptAmountWords(order: OrderRecord): Promise<string> {
+  const email = buyerEmailOf(order);
+  let memberPrefer: MoneyPrefer | null = null;
+  if (email) {
+    try {
+      const raw = (await kv(["GET", `member:profile:${email}`])) as { result?: string | null };
+      const p = raw?.result ? (JSON.parse(raw.result) as { moneyPrefer?: unknown }) : null;
+      memberPrefer = p?.moneyPrefer === "fiat" || p?.moneyPrefer === "sats" ? p.moneyPrefer : null;
+    } catch {
+      /* a profile the vault can't reach never holds the letter back */
+    }
+  }
+  const prefer =
+    memberPrefer ?? defaultPreferOf({ btc: liveAdapter() !== null, card: liveAdapter("square") !== null });
+  const price: PriceLike =
+    order.priceSnapshot.currency === "SATS"
+      ? { sats: order.priceSnapshot.amount }
+      : { fiat: { amount: order.priceSnapshot.amount, currency: order.priceSnapshot.currency } };
+  return priceWords(price, { btc: true, card: true }, prefer).primary;
+}
+
 /** The letter itself — subject + rendered html for a settled order. Pure
  *  (no marker, no send): the words + slots, the signed door when a line
  *  truly carries a digital deliverable. Exported so the letter can be
  *  rendered for review without mailing anyone. */
 export async function buildReceiptLetter(order: OrderRecord): Promise<{ subject: string; html: string }> {
-  const amountWords =
-    order.priceSnapshot.currency === "SATS"
-      ? `${order.priceSnapshot.amount.toLocaleString("en-US")} sats`
-      : dollars(order.priceSnapshot.amount, order.priceSnapshot.currency);
+  const amountWords = await receiptAmountWords(order);
   const items = order.lineItems
     .map((l) => `• ${l.title}${l.qty > 1 ? ` × ${l.qty}` : ""}${l.size ? ` (size ${l.size})` : ""}`)
     .join("\n");

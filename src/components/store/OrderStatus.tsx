@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
 import { cartridge } from "@/brand/cartridge";
-import { dollars } from "@/lib/money-words";
+import { priceWords, type PriceLike } from "@/lib/money-words";
+import { useMoneyPrefer } from "@/lib/money-preference";
 import { bftDateTime, estimateHeightAt } from "@/lib/bb/bft";
 
 /** TASK-173 — a recorded moment wears a stamp, never a dash: the BFT stamp
@@ -88,6 +89,10 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
   const [tipOk, setTipOk] = useState(false);
   const [keyMail, setKeyMail] = useState<"idle" | "sending" | "sent" | "failed">("idle");
   const orderRef = useRef<OrderView | null>(null);
+  /* TASK-186 — the visitor's denomination word, read on the receipt page
+     too (the amount as paid rides the ONE display law below). Hooked with
+     the others — the early returns below must never sit above a hook. */
+  const [receiptPrefer] = useMoneyPrefer({ btc: true, card: true });
   /* TASK-173 — the receipt letter's signed key rides the page URL
      (?key=…); every status poll carries it, and the orders route pours the
      buyer's email session when it verifies (same cookie as the code door). */
@@ -183,6 +188,17 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
   const canRecharge = ["expired", "underpaid"].includes(order.state);
   const settledFine = ["settled", "fulfilled"].includes(order.state);
 
+  /* TASK-186 — the amount as paid reads through the ONE display law too. A
+     receipt is HISTORY, not an offer: the snapshot carries the one currency
+     that was actually charged, so both rails read live here (a settled sats
+     charge never dashes because the bitcoin switch later flipped), and a
+     single-denomination price shows alone — the preference has nothing to
+     flip. */
+  const receiptPrice: PriceLike = order.priceSnapshot.currency === "SATS"
+    ? { sats: order.priceSnapshot.amount }
+    : { fiat: { amount: order.priceSnapshot.amount, currency: order.priceSnapshot.currency } };
+  const receiptWords = priceWords(receiptPrice, { btc: true, card: true }, receiptPrefer);
+
   return (
     <div style={{ marginTop: 20, textAlign: "center" }}>
       <p style={{ margin: 0, textTransform: "uppercase", fontWeight: 700,
@@ -209,9 +225,7 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
           </p>
         ))}
         <p style={{ margin: "6px 0 0", fontFamily: "var(--serif, sans-serif)", fontSize: "1.3rem", color: "var(--gold-deep, #b4862b)" }}>
-          {order.priceSnapshot.currency === "SATS"
-            ? `${order.priceSnapshot.amount.toLocaleString("en-US")} sats`
-            : dollars(order.priceSnapshot.amount, order.priceSnapshot.currency)}
+          {receiptWords.primary}
         </p>
         {order.entitlementSubject && (
           <p style={{ margin: "4px 0 0", fontSize: ".8rem", color: "var(--info, #5f4b96)" }}>unlocks for {prettySubject(order.entitlementSubject)}</p>

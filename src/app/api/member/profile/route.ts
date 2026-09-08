@@ -30,25 +30,42 @@ async function kv(cmd: unknown[]): Promise<unknown> {
 
 const key = (email: string) => `member:profile:${email.toLowerCase()}`;
 
+/** TASK-186 (0018.06.18 a₿) — the additive money word: which denomination
+ *  the member reads first ("fiat" | "sats"). Signed in wins over the
+ *  browser's `oc-money` cookie (money-preference.ts). Absent = never chose. */
+interface ProfileDoc {
+  displayName?: string;
+  accountName?: string;
+  moneyPrefer?: "fiat" | "sats";
+}
+
+const normPrefer = (v: unknown): "fiat" | "sats" | undefined =>
+  v === "fiat" || v === "sats" ? v : undefined;
+
 export async function GET(request: Request) {
   const fren = frenFromRequest(request);
   if (!fren || fren.space !== "email") return NextResponse.json({ ok: false }, { status: 401 });
   const raw = (await kv(["GET", key(fren.handle)])) as string | null;
-  const profile = raw ? (JSON.parse(raw) as { displayName?: string; accountName?: string }) : {};
+  const profile: ProfileDoc = raw ? JSON.parse(raw) : {};
   return NextResponse.json({
     ok: true,
     email: fren.handle,
     displayName: profile.displayName ?? "",
     accountName: profile.accountName ?? "",
+    moneyPrefer: profile.moneyPrefer ?? null,
   });
 }
 
 export async function PUT(request: Request) {
   const fren = frenFromRequest(request);
   if (!fren || fren.space !== "email") return NextResponse.json({ ok: false }, { status: 401 });
-  const body = (await request.json().catch(() => ({}))) as { displayName?: string; accountName?: string };
+  const body = (await request.json().catch(() => ({}))) as {
+    displayName?: string;
+    accountName?: string;
+    moneyPrefer?: unknown;
+  };
   const raw = (await kv(["GET", key(fren.handle)])) as string | null;
-  const cur = raw ? (JSON.parse(raw) as { displayName?: string; accountName?: string }) : {};
+  const cur: ProfileDoc = raw ? JSON.parse(raw) : {};
   const displayName = (body.displayName ?? cur.displayName ?? "").trim().slice(0, 48);
   // the ACCOUNT NAME (Admiral's welcome answers, 0018.05.15): their chosen
   // @onecocreation community name — held on the profile now, and the very
@@ -61,6 +78,9 @@ export async function PUT(request: Request) {
     }
     accountName = want;
   }
-  await kv(["SET", key(fren.handle), JSON.stringify({ displayName, accountName })]);
-  return NextResponse.json({ ok: true, displayName, accountName });
+  // TASK-186 — the money word is additive: a valid choice replaces, anything
+  // else leaves the saved word standing (never a silent wipe)
+  const moneyPrefer = normPrefer(body.moneyPrefer) ?? cur.moneyPrefer;
+  await kv(["SET", key(fren.handle), JSON.stringify({ displayName, accountName, moneyPrefer })]);
+  return NextResponse.json({ ok: true, displayName, accountName, moneyPrefer: moneyPrefer ?? null });
 }

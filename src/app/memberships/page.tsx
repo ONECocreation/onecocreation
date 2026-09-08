@@ -7,8 +7,10 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PopupHost from "@/components/PopupHost";
 import PaletteVars from "@/components/PaletteVars";
+import NotOpenYet from "@/components/NotOpenYet";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Memberships — One Cocreation",
@@ -35,6 +37,29 @@ export const metadata: Metadata = {
  * routes is flagged under ## Seams in the SUMMARY for a follow-through.
  */
 export default async function MembershipsPage() {
+  /* ── TASK-187 GATE (0018.06.18 a₿ · block 966,104) — the route itself
+     follows the `memberships` switch now, not just the nav: OFF (still
+     Love's own call — default is ON) means a direct /memberships URL
+     renders the shared NotOpenYet quiet panel (T-137) inside the site
+     chrome, never the lion page. This branch stays FIRST — the PUCK
+     P4 read lands right after it (order: 1 gate → 2 Puck → 3 hand-built,
+     the T-160 lane's contract). ── */
+  const switches = await getSiteConfig();
+  if (!switches.features.memberships) {
+    return (
+      <>
+        <SiteHeader />
+        <main>
+          <NotOpenYet
+            title="Memberships aren't open yet"
+            body="Love's memberships are still being prepared — come back soon."
+          />
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+  /* ── end TASK-187 GATE ── */
   // PUCK P4, mirroring /about/page.tsx byte-for-byte: once Love publishes
   // the Puck rebuild (/studio/memberships -> Publish to live), the live
   // /memberships serves it. Until then, the hand-built page below is

@@ -35,9 +35,9 @@ import {
  *    ONE roomGate decision + its shared door words), computed server-side
  *    by the room page and threaded down. Signed-out → the sign-in door
  *    with the room's name; a lower tier → "opens with the <package>" in
- *    words. Callers that don't thread it (the Video/Materials/People
- *    vantages — an unowned Seam, noted in this lane's SUMMARY) keep the
- *    pre-gate behavior byte-identical.
+ *    words. (TASK-184: the Video/Materials/People vantages this once
+ *    noted as unthreaded retired — the Stage, the only vantage mounting
+ *    this slot, always threads the door.)
  */
 export default function RoomVideoSlot({
   live,

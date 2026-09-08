@@ -50,13 +50,20 @@ export interface MenuItem {
     Kept in sync by hand with KNOWN_NAV_HREFS in site-config.ts (the
     storage-layer allow-list; that file can't import this "use client"
     module, so the href *strings* are the seam between them). */
-export const PAGE_CATALOG: { href: string; label: string; feature?: keyof SiteConfig["features"] }[] = [
+export const PAGE_CATALOG: {
+  href: string;
+  label: string;
+  /** TASK-187: a route may need MORE than one switch ON (the Store shelf's
+      Memberships button needs `store` AND `memberships`) — an array means
+      every listed switch must be ON. */
+  feature?: keyof SiteConfig["features"] | (keyof SiteConfig["features"])[];
+}[] = [
   { href: "/about", label: "About" },
-  { href: "/memberships", label: "Memberships" },
-  { href: "/packages", label: "Packages" },
+  { href: "/memberships", label: "Memberships", feature: "memberships" },
+  { href: "/packages", label: "Packages", feature: "memberships" },
   { href: "/store", label: "Store", feature: "store" },
   { href: "/store/meditations", label: "Meditations shelf", feature: "store" },
-  { href: "/store/memberships", label: "Memberships shelf", feature: "store" },
+  { href: "/store/memberships", label: "Memberships shelf", feature: ["store", "memberships"] },
   { href: "/book", label: "Book", feature: "sessions" },
   { href: "/services", label: "Services", feature: "cuts" },
   { href: "/classes", label: "Classes", feature: "classes" },
@@ -72,16 +79,18 @@ export const PAGE_CATALOG: { href: string; label: string; feature?: keyof SiteCo
     hrefs (never fabricated — sanitize() already dropped them, this is only
     a second, cheap belt) are treated as always-on rather than hidden, since
     an unrecognized route was never gated by a switch in the first place. */
-function featureForHref(href: string): keyof SiteConfig["features"] | undefined {
-  return PAGE_CATALOG.find((p) => p.href === href)?.feature;
+function featuresForHref(href: string): (keyof SiteConfig["features"])[] {
+  const f = PAGE_CATALOG.find((p) => p.href === href)?.feature;
+  if (!f) return [];
+  return Array.isArray(f) ? f : [f];
 }
 
-/** True when a page's own switch is ON (or it has none). `s === null` is
-    the pre-fetch paint: only switch-free doors render, same law as before. */
+/** True when EVERY switch a page needs is ON (or it needs none). `s === null`
+    is the pre-fetch paint: only switch-free doors render, same law as before. */
 function pageOn(s: SiteConfig | null, href: string): boolean {
-  const feature = featureForHref(href);
-  if (!feature) return true;
-  return !!s?.features[feature];
+  const features = featuresForHref(href);
+  if (features.length === 0) return true;
+  return features.every((feature) => !!s?.features[feature]);
 }
 
 /** The switch-driven default menu (T-129's shape, T-137's Community rule).
@@ -90,15 +99,20 @@ function pageOn(s: SiteConfig | null, href: string): boolean {
 export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
   const menu: MenuItem[] = [
     { label: "About", href: "/about" },
-    {
+  ];
+  // TASK-187 (0018.06.18 a₿ · block 966,104): the whole Memberships door
+  // follows its own switch now — default ON, so this keeps standing exactly
+  // as before until Love (or the Admiral) turns it off.
+  if (s?.features.memberships) {
+    menu.push({
       label: "Memberships",
       href: "/memberships",
       subs: [
         { label: "Heart Field", href: "/memberships" },
         { label: "Three packages", href: "/packages" },
       ],
-    },
-  ];
+    });
+  }
   if (s?.features.sessions) {
     menu.push({
       label: "Sessions",
@@ -127,7 +141,9 @@ export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
          header's "Free meditation" child keeps /meditation — it IS the gift. */
       subs: [
         { label: "Meditations", href: "/store/meditations" },
-        { label: "Memberships", href: "/store/memberships" },
+        // TASK-187: the shelf's Memberships button follows the memberships
+        // switch too, same as the header door and the home hero's doors.
+        ...(s.features.memberships ? [{ label: "Memberships", href: "/store/memberships" }] : []),
       ],
     });
   }

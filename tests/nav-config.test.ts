@@ -42,10 +42,12 @@ let getSiteConfig: (typeof import("@/lib/site-config"))["getSiteConfig"];
 let saveSiteConfig: (typeof import("@/lib/site-config"))["saveSiteConfig"];
 let defaultSiteConfig: (typeof import("@/lib/site-config"))["defaultSiteConfig"];
 let buildMenu: (typeof import("@/components/NavMenu"))["buildMenu"];
+let buildDefaultMenu: (typeof import("@/components/NavMenu"))["buildDefaultMenu"];
 let PAGE_CATALOG: (typeof import("@/components/NavMenu"))["PAGE_CATALOG"];
 let navTabHere: (typeof import("@/components/NavMenu"))["navTabHere"];
 let navChildHere: (typeof import("@/components/NavMenu"))["navChildHere"];
 let Affirmations: (typeof import("@/components/sections"))["Affirmations"];
+let Packages: (typeof import("@/components/sections"))["Packages"];
 let resolveStaticMeetingUrl: (typeof import("@/app/meet/[bookingId]/page"))["resolveStaticMeetingUrl"];
 
 const kvStore = new Map<string, string>();
@@ -71,8 +73,8 @@ beforeAll(async () => {
   delete process.env.REGISTRY_DRIVER;
   vi.stubGlobal("fetch", fakeFetch);
   ({ getSiteConfig, saveSiteConfig, defaultSiteConfig } = await import("@/lib/site-config"));
-  ({ buildMenu, PAGE_CATALOG, navTabHere, navChildHere } = await import("@/components/NavMenu"));
-  ({ Affirmations } = await import("@/components/sections"));
+  ({ buildMenu, buildDefaultMenu, PAGE_CATALOG, navTabHere, navChildHere } = await import("@/components/NavMenu"));
+  ({ Affirmations, Packages } = await import("@/components/sections"));
   ({ resolveStaticMeetingUrl } = await import("@/app/meet/[bookingId]/page"));
 });
 
@@ -334,5 +336,123 @@ describe("TASK-176 — the nav underline ruling (Admiral, 0018.06.17)", () => {
     expect(navChildHere("/book/xyz", "/book")).toBe(true); // a child's own sub-path still marks it
     expect(navChildHere("/store", "/store/meditations")).toBe(false);
     expect(navChildHere("/memberships", "/store/memberships")).toBe(false);
+  });
+});
+
+/* TASK-187 (0018.06.18 a₿ · block 966,104) — THE MEMBERSHIPS SWITCH.
+   "I didn't see a way to turn on and off the memberships" (the Admiral).
+   Pins:
+    · buildDefaultMenu(): the top-level Memberships door follows its own
+      switch (default ON, so nothing visibly changes until it's flipped),
+      and the Store header's Memberships button follows it TOO — on top of
+      the store switch it already needed;
+    · PAGE_CATALOG: /memberships and /packages carry `feature: "memberships"`,
+      /store/memberships now needs BOTH `store` and `memberships` (an array);
+    · buildMenu()'s custom-nav filter (pageOn) honors the same multi-switch
+      row, and a saved nav's /memberships / /packages rows still survive
+      sanitize (KNOWN_NAV_HREFS never lost these hrefs). */
+
+describe("TASK-187 — the memberships switch", () => {
+  it("buildDefaultMenu: memberships ON (the default) — the top-level door stands with its two subs", () => {
+    const menu = buildDefaultMenu(defaultSiteConfig());
+    const memberships = menu.find((m) => m.label === "Memberships");
+    expect(memberships).toBeTruthy();
+    expect(memberships?.href).toBe("/memberships");
+    expect(memberships?.subs?.map((s) => s.label)).toEqual(["Heart Field", "Three packages"]);
+    expect(memberships?.subs?.map((s) => s.href)).toEqual(["/memberships", "/packages"]);
+  });
+
+  it("buildDefaultMenu: memberships OFF — the top-level door disappears entirely", () => {
+    const c = defaultSiteConfig();
+    c.features.memberships = false;
+    const menu = buildDefaultMenu(c);
+    expect(menu.map((m) => m.label)).not.toContain("Memberships");
+  });
+
+  it("the Store header's Memberships button follows memberships too, on top of the store switch", () => {
+    const c = defaultSiteConfig();
+    c.features.store = true;
+    // memberships ON (the default) + store ON → both buttons
+    expect(buildDefaultMenu(c).find((m) => m.label === "Store")?.subs?.map((s) => s.label)).toEqual([
+      "Meditations",
+      "Memberships",
+    ]);
+    // store ON, memberships OFF → only Meditations — the button follows its OWN switch even
+    // though the header itself is store's to show
+    c.features.memberships = false;
+    expect(buildDefaultMenu(c).find((m) => m.label === "Store")?.subs?.map((s) => s.label)).toEqual([
+      "Meditations",
+    ]);
+  });
+
+  it("PAGE_CATALOG: /memberships and /packages carry feature: \"memberships\"; /store/memberships needs both switches", () => {
+    expect(PAGE_CATALOG.find((p) => p.href === "/memberships")?.feature).toBe("memberships");
+    expect(PAGE_CATALOG.find((p) => p.href === "/packages")?.feature).toBe("memberships");
+    expect(PAGE_CATALOG.find((p) => p.href === "/store/memberships")?.feature).toEqual(["store", "memberships"]);
+  });
+
+  it("buildMenu's custom-nav filter: a saved row to /memberships follows the switch, same as the default menu", () => {
+    const c = defaultSiteConfig();
+    c.nav = { items: [{ id: "/memberships", label: "Field", href: "/memberships" }] };
+    expect(buildMenu(c).map((m) => m.label)).toContain("Field"); // memberships ON by default
+    c.features.memberships = false;
+    expect(buildMenu(c).map((m) => m.label)).not.toContain("Field");
+  });
+
+  it("buildMenu's custom-nav filter: /store/memberships needs BOTH switches, not just one", () => {
+    const c = defaultSiteConfig();
+    c.features.store = true;
+    c.nav = {
+      items: [
+        {
+          id: "header-1",
+          label: "Shelf",
+          children: [{ id: "/store/memberships", label: "Memberships shelf", href: "/store/memberships" }],
+        },
+      ],
+    };
+    // store ON, memberships ON (default) → survives
+    expect(buildMenu(c).find((m) => m.label === "Shelf")?.subs?.map((s) => s.label)).toEqual(["Memberships shelf"]);
+    // store ON, memberships OFF → filtered out, the header itself then has nothing left and drops too
+    c.features.memberships = false;
+    expect(buildMenu(c).map((m) => m.label)).not.toContain("Shelf");
+  });
+
+  it("a saved nav's /memberships and /packages rows survive sanitize — the KNOWN_NAV_HREFS allow-list never lost them", async () => {
+    await saveSiteConfig({
+      nav: {
+        items: [
+          { id: "/memberships", label: "Field", href: "/memberships" },
+          { id: "/packages", label: "Packages", href: "/packages" },
+        ],
+      },
+    });
+    const c = await getSiteConfig();
+    expect(c.nav?.items.map((i) => i.href)).toEqual(["/memberships", "/packages"]);
+  });
+
+  it("site-config sanitize: memberships defaults ON and round-trips through save/get", async () => {
+    const c = await getSiteConfig();
+    expect(c.features.memberships).toBe(true);
+    await saveSiteConfig({ features: { memberships: false } });
+    expect((await getSiteConfig()).features.memberships).toBe(false);
+    await saveSiteConfig({ features: { memberships: true } });
+    expect((await getSiteConfig()).features.memberships).toBe(true);
+  });
+});
+
+describe("Packages() — the home hero's package doors follow the memberships switch", () => {
+  it("memberships ON (the default): renders the three-card section", async () => {
+    await saveSiteConfig({ features: { memberships: true } });
+    const result = await Packages();
+    expect(result).not.toBeNull();
+    expect((result as ReactElement).type).toBe("section");
+    expect((result as ReactElement<{ id: string }>).props.id).toBe("packages");
+  });
+
+  it("memberships OFF: renders nothing — same visibility-only idiom as Affirmations()", async () => {
+    await saveSiteConfig({ features: { memberships: false } });
+    const result = await Packages();
+    expect(result).toBeNull();
   });
 });

@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   BftMonthGrid,
+  WeekRibbon,
   CalendarOptions,
   bftMonthGrid,
   bftToday,
@@ -13,16 +15,34 @@ import {
 } from "@/components/calendar";
 import type { RoomsFeed, LiveFeed } from "./ClassroomView";
 import { groupRoomsByPackage, shelfRoomsForRoom } from "@/lib/matrix-rooms";
+import { signInDoorLine, signInDoorHref, packageDoorLine, type RoomGate } from "@/lib/room-access";
 import PackageRoomsCard from "./PackageRoomsCard";
 
 /**
- * C — THE CIRCLE (loves-desk-and-classroom-plan.md): calendar-first. CAL's
- * BftMonthGrid, fed by the public-safe `/api/rooms/marks` (blackouts +
- * retreats, day-level only — no client names, ever) plus a calendar
- * PROJECTION of the live weekly rhythm, with the room-cards grid beneath.
- * TASK-150 (0018.06.17 a₿): ONE CARD PER PACKAGE, and only THIS class's
- * package plus the Commons — Love: the calendar view had "too many buttons
- * on the bottom". Same card shape RoomsShelf uses, one door per package.
+ * C — THE CIRCLE (loves-desk-and-classroom-plan.md): calendar-first.
+ * TASK-184 (0018.06.18 a₿ · the Admiral's three-rooms ruling):
+ *  · THE WEEKLY VIEW LEADS — the same WeekRibbon the trainer's home
+ *    dashboard (/a, WeekAltitude) rides, this week, over the month grid.
+ *  · THE MONTH'S EVENTS SIT CENTRED in their day cells (Love: "the 11:11
+ *    live left-aligned doesn't look good") — scoped via .circle-cal in
+ *    classroom.css, so Love's own /a calendars keep their alignment.
+ *  · MEMBERS NEVER SEE BLACKOUT TIME — a blocked day renders as a plain
+ *    day here (no rose wash, no "blackout" mark, and no ~11:11 projection
+ *    onto it — a live pill on a dark day would leak it). TASK-189
+ *    (0018.06.18 a₿): the legend follows — a member never sees the word
+ *    "blackout" named in the legend row either (BftMonthGrid's
+ *    legendBlackout={false} here); a member never sees blackout means the
+ *    legend never names it, not just the marks. Love's own calendar on /a
+ *    keeps both the blackout marks (console/desk/marks.ts, untouched) and
+ *    the legend swatch (LovesDesk.tsx passes no prop, default true).
+ *    Retreats stay lavender — they were always member-visible.
+ *  · THE GATE RIDES THE EVENTS (T-174's roomGate, threaded from the page):
+ *    signed out → the sign-in door with the room's name; under-tier → the
+ *    package words. The rooms strip below stays either way — showing which
+ *    classrooms CAN open is its whole job.
+ *  · The "other classrooms" strip at the bottom wears the STANDARD card
+ *    layout (TASK-150/183's PackageRoomsCard — doors hugging the bottom,
+ *    uniform across the row).
  */
 
 const MONTH_WORDS = [
@@ -42,7 +62,11 @@ interface MarksFeed {
   overrides: { date: string; kind: "blocked" | "extra"; isRetreat: boolean }[];
 }
 
-function buildPublicMarks(
+/* TASK-184: the member marks — blackout HIDDEN. A blocked day (not a
+ *  retreat) is a plain day: no mark, and the live projection skips it (a
+ *  pill on a blocked day would whisper what the wash no longer says).
+ *  Exported pure so tests/classroom-three-rooms.test.ts pins it. */
+export function buildPublicMarks(
   feed: MarksFeed | null,
   opts: { liveNowCivilKey: string | null; liveRoomTitle: string | null },
 ): CalendarDayMarksLookup {
@@ -58,8 +82,9 @@ function buildPublicMarks(
       pills.push({ id: `live-${cell.civilKey}`, label: "~11:11 live", variant: "gold" });
     }
 
-    if (!blackout && !multiDay && pills.length === 0) return undefined;
-    return { blackout, multiDay, pills: pills.slice(0, 3) };
+    /* blackout rides out only as the live-pill skip — never a visible mark */
+    if (!multiDay && pills.length === 0) return undefined;
+    return { multiDay, pills: pills.slice(0, 3) };
   };
 }
 
@@ -77,11 +102,17 @@ function RoomCardsGrid({ feed, activeSlug }: { feed: RoomsFeed | null; activeSlu
 }
 
 export default function CircleView({
-  feed, live, activeSlug,
+  feed, live, activeSlug, slug, title, door, doorPackage,
 }: {
   feed: RoomsFeed | null;
   live: LiveFeed | null;
   activeSlug: string;
+  /** TASK-184: the gate rides the events — the room's own slug/title feed
+   *  the sign-in door's words and href. */
+  slug: string;
+  title: string;
+  door?: RoomGate;
+  doorPackage?: string | null;
 }) {
   const today = useMemo(() => bftToday(), []);
   const [bftYear, setBftYear] = useState(today.year);
@@ -89,11 +120,18 @@ export default function CircleView({
   const [marksFeed, setMarksFeed] = useState<MarksFeed | null>(null);
   const { primary, counts } = useCalendarPrefs();
 
+  const gated = !!door && door !== "open";
+
   const grid = useMemo(() => bftMonthGrid(bftYear, bftMonth), [bftYear, bftMonth]);
   const firstCell = grid.cells[0];
   const lastCell = grid.cells[grid.cells.length - 1];
 
+  /* the weekly view: THIS week — the same bft-day math the desk's Week
+     altitude rides (weekOfMonth = ceil(day/7), bftWeekContaining's own) */
+  const weekOfMonth = Math.ceil(today.day / 7);
+
   useEffect(() => {
+    if (gated) return; // the gate closed — the events never load
     if (!firstCell || !lastCell) return;
     const start = firstCell.civilDate;
     const days = Math.round((lastCell.civilDate.getTime() - firstCell.civilDate.getTime()) / 86_400_000) + 1;
@@ -103,7 +141,7 @@ export default function CircleView({
       .then((d) => { if (alive && d?.ok) setMarksFeed(d); })
       .catch(() => {});
     return () => { alive = false; };
-  }, [firstCell, lastCell]);
+  }, [firstCell, lastCell, gated]);
 
   function stepMonth(dir: -1 | 1) {
     let m = bftMonth + dir;
@@ -128,13 +166,46 @@ export default function CircleView({
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
-        <button type="button" className="btn-round" aria-label="previous month" onClick={() => stepMonth(-1)}>‹</button>
-        <p style={{ flex: 1, minWidth: 160, margin: 0, fontSize: ".82rem", color: "var(--ink-body)" }}>{header}</p>
-        <button type="button" className="btn-round" aria-label="next month" onClick={() => stepMonth(1)}>›</button>
-        <CalendarOptions />
-      </div>
-      <BftMonthGrid bftYear={bftYear} bftMonth={bftMonth} marks={marks} />
+      {/* the gate rides the events: the calendar only opens WITH the room;
+          the rooms strip below stays either way */}
+      {gated ? (
+        <div className="card" style={{ padding: 24, maxWidth: 520 }}>
+          {door === "signin" ? (
+            <>
+              <p style={{ margin: "0 0 12px" }}>{signInDoorLine(title)}</p>
+              <Link className="btn btn-sm" href={signInDoorHref(slug)}>Sign in · join free</Link>
+            </>
+          ) : (
+            <>
+              <p style={{ margin: "0 0 6px" }}>🔒 {packageDoorLine(doorPackage ?? null)}</p>
+              <p style={{ margin: "0 0 12px", color: "var(--muted)", fontSize: ".86rem" }}>
+                The lock is an invitation — everything inside stays waiting for you.
+              </p>
+              <Link href="/memberships" className="btn btn-sm">
+                See the memberships
+              </Link>
+            </>
+          )}
+        </div>
+      ) : (
+        /* .circle-cal scopes the centred-events ruling to the Circle —
+           Love's /a calendars keep their own alignment */
+        <div className="circle-cal">
+          <WeekRibbon bftYear={today.year} bftMonth={today.month} weekOfMonth={weekOfMonth} marks={marks} />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0 10px", flexWrap: "wrap" }}>
+            <button type="button" className="btn-round" aria-label="previous month" onClick={() => stepMonth(-1)}>‹</button>
+            <p style={{ flex: 1, minWidth: 160, margin: 0, fontSize: ".82rem", color: "var(--ink-body)" }}>{header}</p>
+            <button type="button" className="btn-round" aria-label="next month" onClick={() => stepMonth(1)}>›</button>
+            <CalendarOptions />
+          </div>
+          {/* TASK-189: a member never sees blackout — the marks already
+              paint a blocked day plain (buildPublicMarks above), and now
+              the legend doesn't NAME it either. Love's own /a calendar
+              (console/LovesDesk.tsx) passes no prop here and keeps it. */}
+          <BftMonthGrid bftYear={bftYear} bftMonth={bftMonth} marks={marks} legendBlackout={false} />
+        </div>
+      )}
 
       <div style={{ marginTop: 26 }}>
         <h3 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: "1.02rem", margin: "0 0 12px", color: "var(--ink-strong)" }}>The rooms</h3>
