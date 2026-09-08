@@ -13,6 +13,7 @@ import PeopleView from "./PeopleView";
 import StageView from "./StageView";
 import { TIER_SLUG } from "./tier-slug";
 import type { RoomPin } from "@/lib/room-pins";
+import type { RoomGate } from "@/lib/room-access";
 import "./classroom.css";
 
 /**
@@ -61,6 +62,12 @@ interface Props {
    *  live.ts's liveRoomName() directly. */
   jitsiDomain?: string;
   liveRoom?: string;
+  /** TASK-174 minimal-forced-edit: pass-through only — the room page's
+   *  gate decision (room-access.ts's roomGate, computed server-side),
+   *  handed to the Stage vantage so its video slot follows the SAME door
+   *  as the chat. See RoomVideoSlot's docblock. */
+  door?: RoomGate;
+  doorPackage?: string | null;
 }
 
 function RoomTabs({ feed, activeSlug }: { feed: RoomsFeed | null; activeSlug: string }) {
@@ -100,7 +107,7 @@ function RoomTabs({ feed, activeSlug }: { feed: RoomsFeed | null; activeSlug: st
   );
 }
 
-export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom }: Props) {
+export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage }: Props) {
   const [vantage] = useRoomVantage();
   const [feed, setFeed] = useState<RoomsFeed | null>(null);
   const [live, setLive] = useState<LiveFeed | null>(null);
@@ -151,7 +158,7 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
       )}
       {vantage === "materials" && <MaterialsView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />}
       {vantage === "people" && <PeopleView slug={slug} alias={alias} title={title} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />}
-      {vantage === "stage" && <StageView slug={slug} alias={alias} title={title} kind={kind} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />}
+      {vantage === "stage" && <StageView slug={slug} alias={alias} title={title} kind={kind} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} />}
     </div>
   );
 }

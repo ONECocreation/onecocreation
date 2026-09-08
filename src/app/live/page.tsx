@@ -19,17 +19,19 @@ export const metadata: Metadata = {
  * which is the member door, so sign-in and locks stay exactly as honest as
  * the rooms shelf. Idle: the schedule voice (the single truth the /a
  * console now reads too) + the standing YouTube pointer. TASK-146
- * (0018.06.17 a₿): when live and the room is a class room, the same
- * on-site Jitsi embed the classroom Video vantage mounts appears above the
- * door card here too — commons rooms stay chat-only (Matrix), unchanged.
+ * (0018.06.17 a₿): when live, the same on-site Jitsi embed the classroom
+ * Video vantage mounts appears above the door card here too. TASK-174
+ * (0018.06.17 a₿ · block 966094): the embed follows WHICHEVER room is live
+ * — class or community (a live Commons showed no embed here before, and
+ * the door below led nowhere that could show it).
  */
 export default async function LivePage() {
   const state = await getLiveState();
   const room = state.live && state.room ? roomForSlug(state.room) : undefined;
-  /* TASK-146: the class door's video embed — same domain/room derivation
+  /* TASK-146: the live door's video embed — same domain/room derivation
    * as the classroom Video vantage, the ONE liveRoomName() helper, never a
-   * second invention. Community rooms stay chat-only (Matrix), unchanged. */
-  const embed = state.live && room && room.kind === "class"
+   * second invention. TASK-174: any kind embeds — the doors match. */
+  const embed = state.live && room
     ? { jitsiDomain: (await getSiteConfig()).meeting.jitsiDomain, liveRoom: liveRoomName(state.room!) }
     : null;
 

@@ -2,6 +2,13 @@
 
 import Link from "next/link";
 import JitsiRoom from "@/components/booking/JitsiRoom";
+import { ROOMS } from "@/lib/matrix-rooms";
+import {
+  signInDoorLine,
+  signInDoorHref,
+  packageDoorLine,
+  type RoomGate,
+} from "@/lib/room-access";
 
 /**
  * THE VIDEO SLOT (TASK-123, 0018.06.16 a₿ — first embed TASK-146, 0018.06.17
@@ -15,12 +22,22 @@ import JitsiRoom from "@/components/booking/JitsiRoom";
  * `jitsiDomain` and `liveRoom` are OPTIONAL and come from the server page
  * (the room page reads the site switches + derives the room name via
  * live.ts's ONE liveRoomName() helper — this client leaf never imports
- * live.ts itself, see that file's docblock). Three of the four classroom
- * layouts (Materials/People/Stage) don't thread these through yet — an
- * unowned Seam, noted in this lane's SUMMARY — so this slot degrades
- * gracefully to the original text-only door when either is absent: no
- * domain/room means no embed, only the honest fallback link. That keeps
- * every existing caller compiling and rendering byte-identical.
+ * live.ts itself, see that file's docblock). When either is absent the slot
+ * degrades gracefully to the original text-only door: no domain/room means
+ * no embed, only the honest fallback link.
+ *
+ * TASK-174 (0018.06.17 a₿ · block 966094) — the doors match:
+ *  · the "Join Live Session" door leads to the room's OWN Stage
+ *    (/rooms/<slug>, slug derived from the rooms registry by title —
+ *    derive-or-dash: no match → /live, which embeds any live room since
+ *    this lane), never to a page that cannot show it.
+ *  · `door` is the SAME gate the chat follows (src/lib/room-access.ts's
+ *    ONE roomGate decision + its shared door words), computed server-side
+ *    by the room page and threaded down. Signed-out → the sign-in door
+ *    with the room's name; a lower tier → "opens with the <package>" in
+ *    words. Callers that don't thread it (the Video/Materials/People
+ *    vantages — an unowned Seam, noted in this lane's SUMMARY) keep the
+ *    pre-gate behavior byte-identical.
  */
 export default function RoomVideoSlot({
   live,
@@ -28,19 +45,55 @@ export default function RoomVideoSlot({
   jitsiDomain,
   liveRoom,
   displayName,
+  door,
+  doorPackage,
 }: {
   live: boolean;
   roomTitle: string;
   jitsiDomain?: string;
   liveRoom?: string;
   displayName?: string;
+  /** TASK-174: the room page's gate decision for THIS visitor — absent
+   *  reads as "open" (the pre-gate behavior, byte-identical). */
+  door?: RoomGate;
+  /** the package the door opens with (TIERS' own name, threaded server-side) */
+  doorPackage?: string | null;
 }) {
   const canEmbed = live && !!jitsiDomain && !!liveRoom;
+  /* the room's own slug, derived from the registry by title (the title
+     itself comes from the same registry at the page) */
+  const own = ROOMS.find((r) => r.title === roomTitle);
+  const slug = own ? own.id.slice(1, own.id.indexOf(":")) : null;
+  const joinHref = slug ? `/rooms/${slug}` : "/live";
+  const gate: RoomGate = door ?? "open";
 
   return (
     <div className="card cl-video-slot">
       <h3 className="cl-video-title">Video</h3>
-      {canEmbed ? (
+      {live && gate === "signin" ? (
+        /* the sign-in door — the SAME words the chat's door says */
+        <div className="cl-video-stage">
+          <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem", maxWidth: 380 }}>
+            {signInDoorLine(roomTitle)}
+          </p>
+          <Link href={signInDoorHref(slug)} className="btn btn-sm">
+            Sign in · join free
+          </Link>
+        </div>
+      ) : live && gate === "package" ? (
+        /* the lower-tier door — "opens with the <package>" in words */
+        <div className="cl-video-stage">
+          <p style={{ margin: "0 0 6px", color: "var(--ink-body)", fontSize: ".9rem", maxWidth: 380 }}>
+            🔒 {packageDoorLine(doorPackage ?? null)}
+          </p>
+          <p style={{ margin: "0 0 12px", color: "var(--muted)", fontSize: ".86rem", maxWidth: 380 }}>
+            The lock is an invitation — everything inside stays waiting for you.
+          </p>
+          <Link href="/memberships" className="btn btn-sm">
+            See the memberships
+          </Link>
+        </div>
+      ) : canEmbed ? (
         <div>
           <div style={{ aspectRatio: "16 / 9", borderRadius: 14, overflow: "hidden", marginBottom: 12 }}>
             <JitsiRoom domain={jitsiDomain!} room={liveRoom!} displayName={displayName} height="100%" />
@@ -48,7 +101,7 @@ export default function RoomVideoSlot({
           <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem" }}>
             Love is live in {roomTitle} now — the stage is lit.
           </p>
-          <Link href="/live" className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <Link href={joinHref} className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             ● Join Live Session
           </Link>
         </div>
@@ -59,7 +112,7 @@ export default function RoomVideoSlot({
               <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem" }}>
                 Love is live in {roomTitle} now — the stage is lit.
               </p>
-              <Link href="/live" className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <Link href={joinHref} className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 ● Join Live Session
               </Link>
             </div>

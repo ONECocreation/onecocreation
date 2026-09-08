@@ -4,6 +4,7 @@ import RoomVideoSlot from "./RoomVideoSlot";
 import RoomMaterialsShelf from "./RoomMaterialsShelf";
 import RoomPresence from "./RoomPresence";
 import StageChat from "./StageChat";
+import type { RoomGate } from "@/lib/room-access";
 
 /**
  * THE STAGE (TASK-149, 0018.06.17 a₿ — from Love's meeting; born TASK-123
@@ -17,7 +18,7 @@ import StageChat from "./StageChat";
  * (tests/classroom-layouts.test.ts) intact.
  */
 export default function StageView({
-  slug, alias, title, kind, live, jitsiDomain, liveRoom}: {
+  slug, alias, title, kind, live, jitsiDomain, liveRoom, door, doorPackage}: {
   slug: string;
   alias: string;
   title: string;
@@ -26,12 +27,17 @@ export default function StageView({
   /** T-146 follow-through: the live stage rides every vantage, not only Video */
   jitsiDomain?: string;
   liveRoom?: string;
+  /** TASK-174 minimal-forced-edit: pass-through only — the room page's gate
+   *  decision for this visitor, so the video slot follows the SAME door as
+   *  the chat below it (room-access.ts's shared words). */
+  door?: RoomGate;
+  doorPackage?: string | null;
 }) {
   return (
     <div className="cl-grid-stage">
       <div className="cl-stage-main">
         <div role="region" className="cl-region" data-region="video" aria-label="Video">
-          <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} />
+          <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} />
         </div>
         <div role="region" className="cl-region" data-region="chat" aria-label="Chat">
           <StageChat slug={slug} alias={alias} title={title} kind={kind} />

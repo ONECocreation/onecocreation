@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { signInDoorLine, signInDoorHref, packageDoorLine } from "@/lib/room-access";
 
 /**
  * THE ROOM, WORN IN HER BRAND (C4, mockups 2–3 blessed 0018.05.14): the
@@ -56,7 +57,7 @@ const avaOf = (sender: string) => {
   return AVA_GRADIENTS[h % AVA_GRADIENTS.length];
 };
 
-export default function RoomView({ alias, title, kind }: Props) {
+export default function RoomView({ slug, alias, title, kind }: Props) {
   const [state, setState] = useState<"loading" | "signedout" | "locked" | "open" | "error">("loading");
   const [reason, setReason] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -189,18 +190,21 @@ export default function RoomView({ alias, title, kind }: Props) {
   }
 
   /* ── the door states ───────────────────────────────────────────────── */
+  /* TASK-174: the door words come from src/lib/room-access.ts — the ONE
+     helper the Stage's video slot reads too, so the two doors can never
+     disagree (additive: the states and the fetch flow are untouched). */
   if (state === "loading") return <p style={{ color: "var(--muted)" }}>opening the room…</p>;
   if (state === "signedout")
     return (
       <div className="card" style={{ padding: 24, maxWidth: 520 }}>
-        <p style={{ margin: "0 0 12px" }}>This room opens for members — sign in and it knows you.</p>
-        <Link className="btn btn-sm" href="/login">Sign in · join free</Link>
+        <p style={{ margin: "0 0 12px" }}>{signInDoorLine(title)}</p>
+        <Link className="btn btn-sm" href={signInDoorHref(slug)}>Sign in · join free</Link>
       </div>
     );
   if (state === "locked")
     return (
       <div className="card" style={{ padding: 24, maxWidth: 520 }}>
-        <p style={{ margin: "0 0 6px" }}>🔒 This door opens with a higher package.</p>
+        <p style={{ margin: "0 0 6px" }}>🔒 {packageDoorLine(null)}</p>
         <p style={{ color: "var(--muted)", fontSize: ".88rem", margin: "0 0 14px" }}>
           The lock is an invitation — everything inside stays waiting for you.
         </p>
