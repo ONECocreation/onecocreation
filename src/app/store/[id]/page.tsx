@@ -5,12 +5,42 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BuyPanel from "@/components/store/BuyPanel";
 import ImageLightbox from "@/components/store/ImageLightbox";
-import { getItem, stripPrivateMedia } from "@/lib/store";
+import { getItem, stripPrivateMedia, type StoreItem } from "@/lib/store";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 import { getSiteConfig } from "@/lib/site-config";
 import { dollars } from "@/lib/money-words";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * TASK-157 (0018.06.17 a₿, cut from the T-147 review): the price line
+ * follows THE SWITCHES (T-129) — the same rail truth BuyPanel's
+ * buyDoorLabel() judges by (railLive/squareLive off liveAdapter()), now
+ * judging the price LINE instead of the button. Bitcoin off → dollars
+ * lead (dash if card's off too). Both live → sats first, the dollar echo
+ * second. Only bitcoin → sats alone, no fiat echo, even when the item
+ * carries a fiat price — that rail isn't open. Neither live → a dash
+ * (derive-or-dash). The shelf card carries the identical rule as its own
+ * copy (StoreItemCard.tsx's priceLine) — a "use client" module's exports
+ * can't be called from this server component (RSC boundary — confirmed by
+ * `next dev`, not merely assumed), so the two are hand-kept in lockstep;
+ * tests/price-line.test.ts pins both, word for word.
+ */
+export function priceLine(
+  item: StoreItem,
+  rails: { btc: boolean; card: boolean },
+): { primary: string; secondary: string | null } {
+  const effective = item.sale ?? item.price;
+  const sats = rails.btc && effective.sats != null
+    ? `${effective.sats.toLocaleString("en-US")} sats`
+    : null;
+  const fiat = rails.card && effective.fiat != null
+    ? dollars(effective.fiat.amount, effective.fiat.currency)
+    : null;
+  if (sats) return { primary: sats, secondary: fiat };
+  if (fiat) return { primary: fiat, secondary: null };
+  return { primary: "—", secondary: null };
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -37,7 +67,9 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   await getSiteConfig();
   await ensureSquareVault();
 
-  const effective = item.sale ?? item.price;
+  // TASK-157: same rail truth BuyPanel judges by, a few lines down.
+  const rails = { btc: liveAdapter() !== null, card: liveAdapter("square") !== null };
+  const { primary: priceWords, secondary: priceEcho } = priceLine(item, rails);
   const shots = item.media?.images.length ? item.media.images : item.images;
 
   return (
@@ -70,11 +102,12 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
           )}
           {item.sku && <p style={{ margin: "10px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>item № {item.sku}</p>}
           <p className="price" style={{ fontSize: "1.5rem", margin: "16px 0 0" }}>
-            {effective.sats != null
-              ? `${effective.sats.toLocaleString("en-US")} sats`
-              : effective.fiat
-                ? dollars(effective.fiat.amount, effective.fiat.currency)
-                : ""}
+            {priceWords}
+            {priceEcho && (
+              <span style={{ marginLeft: 8, fontSize: ".78rem", fontWeight: 400, color: "var(--muted)" }}>
+                {priceEcho}
+              </span>
+            )}
             {item.sale && (
               <span style={{ marginLeft: 10, fontSize: ".72rem", fontWeight: 700, textTransform: "uppercase",
                 letterSpacing: ".06em", color: "var(--rose)" }}>on sale</span>

@@ -25,8 +25,45 @@ import { dollars } from "@/lib/money-words";
  * "Full view →", on both faces.
  */
 
-/** everything the card shows, derived from the item — derive-or-dash */
-export function storeCardModel(item: StoreItem): {
+/**
+ * TASK-157 (0018.06.17 a₿, cut from the T-147 review): the price line
+ * follows THE SWITCHES (T-129), the same rail truth BuyPanel's
+ * buyDoorLabel() judges by (railLive/squareLive off liveAdapter()) — a
+ * rail that isn't live shows no price in its currency, never an invented
+ * one. Bitcoin off → dollars lead (or dash if card's off too). Both live →
+ * sats first, the dollar echo second. Only bitcoin → sats alone, no fiat
+ * echo, even when the item carries a fiat price — that rail isn't open.
+ * Neither live → a dash (derive-or-dash), same law as no price at all.
+ * One helper, two faces: the shelf card below (storeCardModel) and the
+ * item page (src/app/store/[id]/page.tsx) call this word for word —
+ * pinned by tests/price-line.test.ts.
+ */
+export type PriceRails = { btc: boolean; card: boolean };
+
+export function priceLine(
+  item: StoreItem,
+  rails: PriceRails,
+): { primary: string; secondary: string | null } {
+  const effective = item.sale ?? item.price;
+  const sats = rails.btc && effective.sats != null
+    ? `${effective.sats.toLocaleString("en-US")} sats`
+    : null;
+  const fiat = rails.card && effective.fiat != null
+    ? dollars(effective.fiat.amount, effective.fiat.currency)
+    : null;
+  if (sats) return { primary: sats, secondary: fiat };
+  if (fiat) return { primary: fiat, secondary: null };
+  return { primary: "—", secondary: null };
+}
+
+/** everything the card shows, derived from the item — derive-or-dash.
+ *  `rails` defaults to both live — the shelf (store/page.tsx) doesn't yet
+ *  fetch the switches (see SUMMARY.md ## Seams); callers that do know the
+ *  live rails should pass them through. */
+export function storeCardModel(
+  item: StoreItem,
+  rails: PriceRails = { btc: true, card: true },
+): {
   priceLabel: string;
   fiatSecondary: string | null;
   onSale: boolean;
@@ -34,18 +71,10 @@ export function storeCardModel(item: StoreItem): {
   deliverableLabel: string | null;
   img: string | null;
 } {
-  const effective = item.sale ?? item.price;
+  const { primary, secondary } = priceLine(item, rails);
   return {
-    priceLabel:
-      effective.sats != null
-        ? `${effective.sats.toLocaleString("en-US")} sats`
-        : effective.fiat
-          ? dollars(effective.fiat.amount, effective.fiat.currency)
-          : "—",
-    fiatSecondary:
-      effective.sats != null && effective.fiat
-        ? dollars(effective.fiat.amount, effective.fiat.currency)
-        : null,
+    priceLabel: primary,
+    fiatSecondary: secondary,
     onSale: item.sale != null,
     soldOut: item.status === "soldout",
     deliverableLabel: item.media?.deliverable?.label ?? null,
