@@ -615,6 +615,17 @@ export async function recordChargeEvent(
        and 0 flips the item to soldout. Guarded by the no-op rule above, so
        a retried settle never double-spends the shelf. */
     await spendInventory(order);
+    /* TASK-173 (0018.06.17 a₿) — the receipt letter rides the ONE settle
+       point the BTCPay AND Square webhooks share (reconcile polling lands
+       here too). Idempotent inside via the KV marker, so a retried settle
+       never re-mails; a mail-rail hiccup never costs the state flip.
+       Dynamic import: order-receipt reads getItem/kv from this module. */
+    try {
+      const { sendOrderReceipt } = await import("./order-receipt");
+      await sendOrderReceipt(order);
+    } catch (err) {
+      console.error(`order ${order.id}: receipt letter failed —`, err instanceof Error ? err.message : "error");
+    }
   }
   order.events.push({ type: ev.type, chargeId: ev.chargeId, atMs: Date.now() });
   await writeOrder(order);

@@ -27,6 +27,7 @@ export const EDITABLE_LETTERS = [
   "offer-love-notify",
   "pwyc-accept",
   "pwyc-decline",
+  "order-receipt",
 ] as const;
 /** The SEEDED set — six until TASK-156 (0018.06.17 a₿) added `welcome` (the
  *  FIRST-sign-in letter Love edits in /a/letters); Love's own composed
@@ -55,6 +56,8 @@ export const DEFAULT_AUDIENCE: Record<LetterKey, LetterAudience> = {
   "offer-love-notify": "members",
   "pwyc-accept": "members",
   "pwyc-decline": "members",
+  // the receipt is one soul's mail — never the open feed
+  "order-receipt": "members",
 };
 
 export function audienceOf(k: string, override: LetterOverride | null): LetterAudience {
@@ -167,6 +170,24 @@ One Cocreation`,
 This time it can't be carried — with love, your sats are coming back.
 
 {{refund}}
+
+With love,
+One Cocreation`,
+  },
+  /* TASK-173 (0018.06.17 a₿): the RECEIPT — sent once when a store order
+   * settles, from src/lib/order-receipt.ts. The {{slots}} are machine-built
+   * and load-bearing: {{lines}} = what was bought (titles + the amount as
+   * paid), {{door}} = the signed download link for a digital item. A slot
+   * Love edits out is appended at the end so the door can never be lost. */
+  "order-receipt": {
+    subject: "Your order — received with love",
+    body: `Thank you, beautiful soul — your order is settled and held with love.
+
+{{lines}}
+
+{{door}}
+
+This page is yours to keep — come back whenever you like, the door stays open.
 
 With love,
 One Cocreation`,

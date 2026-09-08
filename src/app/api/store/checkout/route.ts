@@ -13,6 +13,7 @@ import { liveAdapter, getAdapter, ensureSquareVault, type CreatedCharge, type Pa
 import { getSiteConfig } from "@/lib/site-config";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
+import { orderDoorUrl, sendOrderReceipt } from "@/lib/order-receipt";
 import { frenFromRequest } from "@/lib/fren-auth";
 
 export const dynamic = "force-dynamic";
@@ -119,7 +120,9 @@ export async function POST(request: Request) {
       amount: order.priceSnapshot.amount,
       currency: order.priceSnapshot.currency,
       buyerEmail: order.contact?.email,
-      redirectUrl: `${origin}/store/order/${order.id}`,
+      /* TASK-173 — the return URL carries the order's signed key, so the
+         buyer's own browser lands unlocked the moment PAID lands */
+      redirectUrl: orderDoorUrl(order, origin),
     }, `${order.id}:${order.chargeIds.length}`);
     if ("error" in charge) return charge.error;
     await attachCharge(order.id, charge.chargeId);
@@ -208,6 +211,9 @@ export async function POST(request: Request) {
     order.events.push({ type: "settled", chargeId: `discount:${discountApplied.code}`, atMs: Date.now() });
     await createOrder(order);
     await settleEntitlementFromOrder(order);
+    /* TASK-173 — a code-settled order is still a settled order: the receipt
+       letter goes out (idempotent inside, same as the webhook path) */
+    await sendOrderReceipt(order).catch(() => {});
     return NextResponse.json({ ok: true, orderId: order.id, paid: true });
   }
   await createOrder(order);
@@ -217,7 +223,8 @@ export async function POST(request: Request) {
     amount: snapshot.amount,
     currency: snapshot.currency,
     buyerEmail: body.contact?.email,
-    redirectUrl: `${origin}/store/order/${order.id}`,
+    /* TASK-173 — the key rides the return URL (see the retry path above) */
+    redirectUrl: orderDoorUrl(order, origin),
   }, `${order.id}:0`);
   if ("error" in charge) return charge.error;
   await attachCharge(order.id, charge.chargeId);
