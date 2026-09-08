@@ -171,13 +171,20 @@ describe("POST /api/store/checkout — the rail's own sentence, never a silent 5
     });
   });
 
-  it("a guest buying a meditation (digital) is asked to sign in, in words", async () => {
+  it("a guest with NO email buying a meditation (digital) is stopped, in the basket's words", async () => {
     const res = await checkout({ itemId: "thank-you-wakeup", rail: "card" });
     expect(res.status).toBe(401);
     expect(await res.json()).toEqual({
       ok: false,
-      reason: "sign in first (email or key) — this unlocks FOR you",
+      reason: "add your email (it becomes your account) or sign in — this unlocks FOR you",
     });
+  });
+
+  it("the basket rule on the item page: a guest WITH an email gets through — the email becomes the account", async () => {
+    squareRefuses = true; // the rail refuses the fixture token — proves the guest passed the gate and reached the rail
+    const res = await checkout({ itemId: "thank-you-wakeup", rail: "card", contact: { email: "Guest@Example.com" } });
+    expect(res.status).toBe(502);
+    expect(await res.json()).toEqual({ ok: false, reason: "square: payment link create 401" });
   });
 
   it("Square's own refusal reaches the buyer as JSON words, not a bare 500", async () => {

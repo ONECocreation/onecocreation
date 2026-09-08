@@ -141,16 +141,22 @@ export async function POST(request: Request) {
   }
 
   // the gate's subject: packages + digital goods buy AS someone
+  // THE BASKET RULE, on the item page too (Admiral, 0018.06.17 a₿ — after T-147's finding):
+  // a guest WITH an email checks out fine — the email becomes their account, the grant
+  // settles to it, and signing in with that email later finds it waiting (same words and
+  // subject shape as /api/cart/checkout, 0018.05.18). Only a guest with NO email is stopped.
   let entitlementSubject: string | undefined;
   if (item.kind === "digital" || item.kind === "package") {
     const fren = frenFromRequest(request);
-    if (!fren) {
+    const guestEmail = (body.contact?.email ?? "").trim().toLowerCase();
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail);
+    if (!fren && !emailOk) {
       return NextResponse.json(
-        { ok: false, reason: "sign in first (email or key) — this unlocks FOR you" },
+        { ok: false, reason: "add your email (it becomes your account) or sign in — this unlocks FOR you" },
         { status: 401 }
       );
     }
-    entitlementSubject = `${fren.handle}@${fren.space}`;
+    entitlementSubject = fren ? `${fren.handle}@${fren.space}` : `${guestEmail}@email`;
   }
 
   // sats-primary: sale price (gold rail) wins when present — EXCEPT on the

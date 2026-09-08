@@ -181,7 +181,7 @@ export default function BuyPanel({
       )}
       {gated && (
         <p style={{ margin: "8px 0 0", fontSize: ".8rem", color: "var(--info)" }}>
-          unlocks for your account — sign in first so the door knows you, then it’s yours the moment payment settles.
+          unlocks for your account — sign in, or your email below becomes your account, and it’s yours the moment payment settles.
         </p>
       )}
       {needsSize && (
@@ -210,7 +210,7 @@ export default function BuyPanel({
       <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
         {/* 1rem fields = 16px, so iOS doesn't zoom-jump on focus */}
         <label style={fieldLabel}>
-          email for your receipt {gated ? "(optional — the unlock rides your sign-in)" : "(optional)"}
+          email for your receipt {gated ? "(it becomes your account if you are not signed in)" : "(optional)"}
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email"
             style={{ ...glassField, marginTop: 3 }} />
         </label>
