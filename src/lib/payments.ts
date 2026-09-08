@@ -461,6 +461,38 @@ export function mapSquareWebhookEvent(payload: SquareWebhookPayload): ChargeEven
   return null;
 }
 
+/**
+ * TASK-167 (0018.06.17 a₿) — the signature check on its own, exported so
+ * the webhook route can tell "the signature FAILED" apart from "verified
+ * fine, but an event shape we don't act on" (order.updated with state OPEN
+ * maps to null). The distinction is load-bearing for the desk's honesty:
+ * only a genuinely bad signature may stamp `square:webhook:last-rejected`.
+ * Returns null when the inputs to verify are missing (no key/url/header) —
+ * "was never asked"; false = asked and failed. verifyWebhook() rides this
+ * same function, so the scheme still lives in exactly ONE place.
+ */
+export async function squareWebhookSignatureOk(rawBody: string, headers: Headers): Promise<boolean | null> {
+  // env-then-vault (TASK-136) — an env var, if the deploy sets one,
+  // always wins; else the vault's saved value (warmed by the Money
+  // desk's vault route) lets the webhook verify with no redeploy
+  const key = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY || squareVaultCache?.webhookSecret;
+  // the exact webhook subscription URL configured in the Square
+  // dashboard — not a secret, but required INPUT to the signature (see
+  // the file-header note); wrong value = every event fails to verify
+  const url = process.env.SQUARE_WEBHOOK_URL || squareVaultCache?.webhookUrl;
+  const sig = headers.get("x-square-hmacsha256-signature");
+  if (!key || !url || !sig) return null;
+  const expected = createHmac("sha256", key).update(url + rawBody).digest("base64");
+  let given: Buffer, want: Buffer;
+  try {
+    given = Buffer.from(sig, "base64");
+    want = Buffer.from(expected, "base64");
+  } catch {
+    return false;
+  }
+  return given.length === want.length && timingSafeEqual(given, want);
+}
+
 export const squareAdapter: PaymentAdapter = {
   id: "square",
   rails: ["card"],
@@ -503,25 +535,7 @@ export const squareAdapter: PaymentAdapter = {
   },
 
   async verifyWebhook(rawBody, headers) {
-    // env-then-vault (TASK-136) — an env var, if the deploy sets one,
-    // always wins; else the vault's saved value (warmed by the Money
-    // desk's vault route) lets the webhook verify with no redeploy
-    const key = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY || squareVaultCache?.webhookSecret;
-    // the exact webhook subscription URL configured in the Square
-    // dashboard — not a secret, but required INPUT to the signature (see
-    // the file-header note); wrong value = every event fails to verify
-    const url = process.env.SQUARE_WEBHOOK_URL || squareVaultCache?.webhookUrl;
-    const sig = headers.get("x-square-hmacsha256-signature");
-    if (!key || !url || !sig) return null;
-    const expected = createHmac("sha256", key).update(url + rawBody).digest("base64");
-    let given: Buffer, want: Buffer;
-    try {
-      given = Buffer.from(sig, "base64");
-      want = Buffer.from(expected, "base64");
-    } catch {
-      return null;
-    }
-    if (given.length !== want.length || !timingSafeEqual(given, want)) return null;
+    if (!(await squareWebhookSignatureOk(rawBody, headers))) return null;
     let payload: SquareWebhookPayload;
     try {
       payload = JSON.parse(rawBody) as SquareWebhookPayload;

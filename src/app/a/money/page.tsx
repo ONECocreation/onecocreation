@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import CardsRailCard from "@/components/console/CardsRailCard";
 import DiscountsDesk from "@/components/console/DiscountsDesk";
 import PwycDesk from "@/components/console/PwycDesk";
-import SquareRailCard from "@/components/console/SquareRailCard";
-import StripeRailCard from "@/components/console/StripeRailCard";
 import { Chip, SectionHead, field, overlay, sheet } from "@/components/console/glass";
 import { bftDateTime, estimateHeightAt } from "@/lib/bb/bft";
 import type { OrderRecord } from "@/lib/store";
@@ -34,11 +33,11 @@ const JARS: { key: string; label: string }[] = [
 const MOON_MS = 29.530588853 * 24 * 3600 * 1000;
 const WEEK_MS = 7 * 24 * 3600 * 1000;
 
-/** TASK-136 (0018.06.17 a₿) — ONE glass-card grammar for all three rail
- *  cards (Bitcoin/Square/Stripe), so the Bitcoin card built inline here
- *  matches SquareRailCard/StripeRailCard's own inline style exactly. No
- *  floating chip row above the cards any more — every chip lives in its
- *  own card header (the Admiral's picture). */
+/** TASK-136 (0018.06.17 a₿) — ONE glass-card grammar for the rail cards
+ *  (Bitcoin inline here; Square + Stripe folded into the one Cards card,
+ *  TASK-167), so every card wears the same frame. No floating chip row
+ *  above the cards — every chip lives in its own card header (the
+ *  Admiral's picture). */
 const bigCard: React.CSSProperties = {
   background: "var(--glass)",
   border: "1px solid rgba(255,255,255,.9)",
@@ -237,15 +236,12 @@ export default function MoneyRoom() {
         )}
       </div>
 
-      {/* the real Square desk (Admiral's walk — replaced the dead "soon"
-          chip): status chip, the five-value vault drawer, "test the
-          connection", the bitcoin-enablement check, and the catalog
-          display folded in as a section of this same card */}
-      <SquareRailCard />
-
-      {/* Love's own key drawer + RTFM — storage and instructions only; the
-          card rail that spends these keys ships next build (0018.05.23) */}
-      <StripeRailCard />
+      {/* TASK-167 (0018.06.17 a₿) — ONE "Cards" card (the Admiral's walk):
+          the Square section (test button first, then the five-value
+          checklist with per-row verification) and the Stripe section
+          (two keys, honestly "not built yet") folded together — replaced
+          the separate SquareRailCard/StripeRailCard mounts */}
+      <CardsRailCard />
 
       <PwycDesk />
       <DiscountsDesk />
