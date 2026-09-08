@@ -103,30 +103,11 @@ const receiptMarker = (orderId: string) => `order:${orderId}:receipt-sent`;
 
 export type ReceiptResult = { sent: true } | { sent: false; reason: string };
 
-/**
- * Send the receipt letter ONCE per settled order. Never throws at its caller
- * beyond vault/send failures it can't honor — a mail-rail hiccup must not
- * cost the money path its state flip (the caller catches).
- */
-export async function sendOrderReceipt(order: OrderRecord): Promise<ReceiptResult> {
-  if (!["settled", "fulfilled"].includes(order.state)) {
-    return { sent: false, reason: `order is ${order.state}` };
-  }
-  /* booking orders already mail their own confirmation (mail-booking.ts) —
-     the store receipt would be a second letter for the same moment */
-  if (order.bookingId || order.lineItems.some((l) => l.bookingId)) {
-    return { sent: false, reason: "a booking order — its own letter rides" };
-  }
-  const email = buyerEmailOf(order);
-  if (!email) return { sent: false, reason: "no buyer email on the order" };
-
-  /* the idempotency marker: SET NX answers "OK" exactly once. No vault
-     (the dev file driver) → no marker is possible; send and say so. */
-  const marked = await kv(["SET", receiptMarker(order.id), "1", "NX"]);
-  if (marked !== null && marked.result !== "OK") {
-    return { sent: false, reason: "receipt already sent" };
-  }
-
+/** The letter itself — subject + rendered html for a settled order. Pure
+ *  (no marker, no send): the words + slots, the signed door when a line
+ *  truly carries a digital deliverable. Exported so the letter can be
+ *  rendered for review without mailing anyone. */
+export async function buildReceiptLetter(order: OrderRecord): Promise<{ subject: string; html: string }> {
   const amountWords =
     order.priceSnapshot.currency === "SATS"
       ? `${order.priceSnapshot.amount.toLocaleString("en-US")} sats`
@@ -162,10 +143,34 @@ export async function sendOrderReceipt(order: OrderRecord): Promise<ReceiptResul
   if (door && !hadDoor) body += `\n\n${door}`;
   body = body.replace(/\n{3,}/g, "\n\n").trim();
 
-  await sendMail("bookings", {
-    to: email,
-    subject,
-    html: brandShell(bodyToHtml(body)),
-  });
+  return { subject, html: brandShell(bodyToHtml(body)) };
+}
+
+/**
+ * Send the receipt letter ONCE per settled order. Never throws at its caller
+ * beyond vault/send failures it can't honor — a mail-rail hiccup must not
+ * cost the money path its state flip (the caller catches).
+ */
+export async function sendOrderReceipt(order: OrderRecord): Promise<ReceiptResult> {
+  if (!["settled", "fulfilled"].includes(order.state)) {
+    return { sent: false, reason: `order is ${order.state}` };
+  }
+  /* booking orders already mail their own confirmation (mail-booking.ts) —
+     the store receipt would be a second letter for the same moment */
+  if (order.bookingId || order.lineItems.some((l) => l.bookingId)) {
+    return { sent: false, reason: "a booking order — its own letter rides" };
+  }
+  const email = buyerEmailOf(order);
+  if (!email) return { sent: false, reason: "no buyer email on the order" };
+
+  /* the idempotency marker: SET NX answers "OK" exactly once. No vault
+     (the dev file driver) → no marker is possible; send and say so. */
+  const marked = await kv(["SET", receiptMarker(order.id), "1", "NX"]);
+  if (marked !== null && marked.result !== "OK") {
+    return { sent: false, reason: "receipt already sent" };
+  }
+
+  const { subject, html } = await buildReceiptLetter(order);
+  await sendMail("bookings", { to: email, subject, html });
   return { sent: true };
 }
