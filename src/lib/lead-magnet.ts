@@ -1,7 +1,7 @@
 import { unsubscribeUrl, siteBase } from "@/lib/subscribers";
 import { sendMail, brandShell } from "@/lib/mail";
 import { enqueue } from "@/lib/mail-queue";
-import { getLetterOverride, bodyToHtml, LETTER_DEFAULTS } from "@/lib/letters";
+import { getLetterOverride, bodyToHtml, letterHtml, LETTER_DEFAULTS } from "@/lib/letters";
 import { getSiteConfig } from "@/lib/site-config";
 
 /**
@@ -98,24 +98,27 @@ export async function sendReadWithLoveLetter(email: string): Promise<void> {
 /** TASK-156 (0018.06.17 a₿, Love's meeting: "if they login they get the
  *  newsletter, and a welcome, free meditation"): the FIRST-sign-in welcome
  *  letter — registry key `welcome` (letters.ts), queued for the next tick.
- *  The default copy is a plain honest placeholder; Love's own words replace
- *  it from /a/letters without a deploy. */
+ *  TASK-172 (0018.06.18 a₿): the default is Love's own words now, carrying
+ *  a !section/!cta pair — routed through letterHtml() (not bodyToHtml() +
+ *  brandShell() directly) so those directive lines actually lift into the
+ *  rich shell's card + button instead of showing as literal "!cta: …" text.
+ *  Love's /a/letters override still wins, untouched. */
 export async function enqueueWelcomeLetter(email: string): Promise<void> {
   const unsub = unsubscribeUrl(email);
   const tpl = (await getLetterOverride("welcome")) ?? LETTER_DEFAULTS.welcome;
   await enqueue([
     {
       to: email,
-      subject: tpl?.subject ?? "Welcome home — One Cocreation",
-      html: brandShell(
-        tpl
-          ? bodyToHtml(tpl.body)
-          : `<p>Welcome, beautiful soul.</p>
+      subject: tpl?.subject ?? "Welcome home",
+      html: tpl
+        ? letterHtml(tpl.body, { unsubscribeUrl: unsub })
+        : brandShell(
+            `<p>Welcome, beautiful soul.</p>
              <p>You're in — truly. Your free meditation is on its way, and the
              reading room and the commons are open whenever you are.</p>
              <p>With love,<br/>One Cocreation</p>`,
-        { unsubscribeUrl: unsub },
-      ),
+            { unsubscribeUrl: unsub },
+          ),
     },
   ]);
 }
@@ -123,31 +126,34 @@ export async function enqueueWelcomeLetter(email: string): Promise<void> {
 /** The day-two welcome — rides the drip queue: genuinely-new list joins
  *  (the subscribe route) and first sign-ins (the email verify route,
  *  TASK-156), never repeats.
- *  Copy is a placeholder shape awaiting Love's own voice (checklist item). */
+ *  TASK-172 (0018.06.18 a₿): now falls back to LETTER_DEFAULTS["welcome-day-two"]
+ *  exactly like enqueueWelcomeLetter does for `welcome` — before this it
+ *  never read that default at all, and this hardcoded fallback's own "little
+ *  map of the field" (four bullet items) carried the two filler items the
+ *  Admiral saw at the bottom of the real send: "The store — meditations,
+ *  affirmations and adornments" and "Community — the rooms where the field
+ *  gathers between sessions", generic list padding never named by Love's
+ *  words. Routed through letterHtml() for the same directive-rendering
+ *  reason as `welcome`, above. */
 export async function enqueueDayTwoWelcome(email: string): Promise<void> {
   const unsub = unsubscribeUrl(email);
-  const welcomeTpl = await getLetterOverride("welcome-day-two");
+  const tpl = (await getLetterOverride("welcome-day-two")) ?? LETTER_DEFAULTS["welcome-day-two"];
   await enqueue([
     {
       to: email,
       notBefore: Date.now() + 24 * 3600 * 1000,
-      subject: welcomeTpl?.subject ?? "Welcome to the field — a note from One Cocreation",
-      html: brandShell(
-        welcomeTpl
-          ? bodyToHtml(welcomeTpl.body)
-          : `<p>Welcome, beautiful soul — we're so glad you're here.</p>
-         <p>Yesterday the meditation found you; today, a little map of the field:</p>
-         <p><b>Memberships</b> — three ways in, each holding the one before:
-         The Weekly Intuitive, The Observer, and The Evening Star.<br/>
-         <b>Sessions</b> — 1:1 time with Love, booked in a few clicks.<br/>
-         <b>The store</b> — meditations, affirmations and adornments.<br/>
-         <b>Community</b> — the rooms where the field gathers between sessions.</p>
-         <p style="margin:22px 0;"><a href="${siteBase()}/packages"
+      subject: tpl?.subject ?? "Welcome to the field — a note from One Cocreation",
+      html: tpl
+        ? letterHtml(tpl.body, { unsubscribeUrl: unsub })
+        : brandShell(
+            `<p>Welcome, beautiful soul — we're so glad you're here.</p>
+         <p>Yesterday the meditation found you; today is just a hello.</p>
+         <p style="margin:22px 0;"><a href="${siteBase()}/memberships"
             style="background:#b4862b;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;">
             Step into the field</a></p>
          <p>With love,<br/>One Cocreation</p>`,
-        { unsubscribeUrl: unsub },
-      ),
+            { unsubscribeUrl: unsub },
+          ),
     },
   ]);
 }

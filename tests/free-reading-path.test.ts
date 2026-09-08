@@ -16,7 +16,7 @@ import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
  *      `welcome` letter + day-two queued) fires ONLY behind a won
  *      first-sign-in claim — repeat sign-ins get nothing.
  *   4. THE REGISTRY — letters.ts carries the seeded `welcome` key with a
- *      members audience and an honest placeholder default.
+ *      members audience and (TASK-172) Love's own words as the default.
  *
  * Mail, queue, subscribers and the email-auth vault are mocked — the spec
  * pins the ROUTE's branches and the LETTERS, not SMTP/KV.
@@ -160,7 +160,7 @@ describe("the sign-in success hook — first sign-in only (TASK-156)", () => {
 
     // the welcome letter AND the day-two note are queued, in that order
     expect(enqueued).toHaveLength(2);
-    expect(enqueued[0][0].subject).toBe("Welcome home — One Cocreation");
+    expect(enqueued[0][0].subject).toBe("Welcome home");
     expect(enqueued[1][0].subject).toBe("Welcome to the field — a note from One Cocreation");
   });
 
@@ -211,12 +211,12 @@ describe("the welcome letter's registry seat (TASK-156)", () => {
     expect(audienceOf("welcome", null)).toBe("members");
   });
 
-  it("the default copy is an honest placeholder Love can edit in /a/letters", async () => {
+  it("the default copy is Love's own words, not a placeholder (TASK-172)", async () => {
     const { LETTER_DEFAULTS } = await import("@/lib/letters");
     const tpl = LETTER_DEFAULTS.welcome;
-    expect(tpl?.subject).toBe("Welcome home — One Cocreation");
+    expect(tpl?.subject).toBe("Welcome home");
     expect(tpl?.body).toContain("Unzip Into the New You"); // the gift is named
-    expect(tpl?.body).toContain("PLACEHOLDER VOICE"); // never masquerades as Love's words
+    expect(tpl?.body).not.toContain("PLACEHOLDER"); // Love's own words now — see tests/letters-welcome.test.ts
   });
 
   it("enqueueWelcomeLetter queues the default — and Love's override wins", async () => {
@@ -224,6 +224,6 @@ describe("the welcome letter's registry seat (TASK-156)", () => {
     await enqueueWelcomeLetter("reader@example.com");
     expect(enqueued).toHaveLength(1);
     expect(enqueued[0][0].to).toBe("reader@example.com");
-    expect(enqueued[0][0].subject).toBe("Welcome home — One Cocreation");
+    expect(enqueued[0][0].subject).toBe("Welcome home");
   });
 });

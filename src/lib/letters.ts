@@ -85,34 +85,46 @@ Save it, return to it, share the stillness. A weekly note of inspiration will fi
 With love,
 One Cocreation`,
   },
+  /* TASK-172 (0018.06.18 a₿): Love's own words, drawn from her About page
+   * (about-content.ts — "welcome home", "you are the bridge, where heaven
+   * and earth meet", "breathe with us"). The placeholder line and the two
+   * filler items the Admiral saw at the bottom of the real send (the
+   * "little map of the field" hardcoded in lead-magnet.ts — never actually
+   * this default, a seam fixed alongside) are both gone: day two stays "just
+   * a hello" and carries ONE next step, nothing more. */
   "welcome-day-two": {
     subject: "Welcome to the field — a note from One Cocreation",
     body: `Beautiful soul — welcome, truly.
 
-Yesterday you received your meditation; today is just a hello. This field is a gathering of people saying YES to themselves, and you belong here.
+Yesterday you received your meditation; today is just a hello. This field is a gathering of people saying YES to themselves, and you belong here — you are the bridge, where heaven and earth meet.
 
-When you're ready: the memberships open the weekly rhythm, and the free meditation is yours forever either way.
+When you're ready, the memberships open the weekly rhythm; the free meditation is yours to keep either way.
 
-(PLACEHOLDER VOICE — awaiting Love's own words.)
+!cta: Step into the field | /memberships
 
 With love,
-One Cocreation`,
+Love · ONE Cocreation`,
   },
-  /* TASK-156 (0018.06.17 a₿): the FIRST-sign-in welcome — queued the moment
-   * a new member's first code matches. PLACEHOLDER VOICE: plain honest words
-   * until Love writes her own in /a/letters (her copy stays hers). */
+  /* TASK-156 (0018.06.17 a₿) seeded this key; TASK-172 (0018.06.18 a₿)
+   * replaces the placeholder with Love's own words (about-content.ts). ONE
+   * next step (!cta → the Commons) and at most one !section card (the free
+   * meditation) — nothing else rides the bottom of this letter. */
   welcome: {
-    subject: "Welcome home — One Cocreation",
-    body: `Welcome, beautiful soul.
+    subject: "Welcome home",
+    body: `Welcome home, beautiful soul.
 
-You're in — truly. Your free meditation, "Unzip Into the New You", is on its way to your inbox, and the reading room and the commons are open whenever you are.
+You are the bridge, where heaven and earth meet — and you have found your way in.
 
-Come as you are. There is nothing to prove here, only a field to rest in.
+Your free meditation, "Unzip Into the New You", is on its way to your inbox, and the reading room comes alive the moment I am live.
 
-(PLACEHOLDER VOICE — awaiting Love's own words. Edit me in /a/letters.)
+Breathe with us.
+
+!section: Your free meditation | | /meditation | "Unzip Into the New You" is already on its way — return to it any time you need to come home to yourself.
+
+!cta: Step into the Commons | /classes
 
 With love,
-One Cocreation`,
+Love · ONE Cocreation`,
   },
   "news-sample": {
     subject: "Greetings and Cheers — from One Cocreation",
