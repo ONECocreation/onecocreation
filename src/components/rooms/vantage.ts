@@ -28,8 +28,15 @@ const VANTAGE_KEY = "oc-room-vantage";
  *  seam. An admin surface may someday write `BookingConfig.
  *  classroomVantageDefault` (booking-time.ts) and this constant steps
  *  aside for it, but NOTHING reads that field yet — first-time visitors
- *  (no localStorage key set) get this constant until that wiring lands. */
-export const ROOM_VANTAGE_SITE_DEFAULT: RoomVantage = "sanctuary";
+ *  (no localStorage key set) get this constant until that wiring lands.
+ *
+ *  TASK-149 (0018.06.17 a₿, from Love's meeting): the classroom opens on
+ *  the STAGE — the default vantage for class rooms AND the reading room
+ *  (both ride the same ClassroomView, so the one site-wide constant covers
+ *  them). A member's own stored pick still wins — `readVantage` reads
+ *  localStorage FIRST, so every saved vantage keeps landing exactly where
+ *  the member left it. */
+export const ROOM_VANTAGE_SITE_DEFAULT: RoomVantage = "stage";
 
 function isVantage(v: string | null): v is RoomVantage {
   return v === "sanctuary" || v === "lesson" || v === "circle"
