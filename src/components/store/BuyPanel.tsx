@@ -81,6 +81,21 @@ export default function BuyPanel({
   const [rail, setRail] = useState<"btcpay" | "square">(railLive ? "btcpay" : "square");
   const anyRailLive = railLive || cardAvailable;
 
+  /* TASK-145 (0018.06.17 a₿) — the price in words above the doors, DISPLAY
+     ONLY: USD is shown whenever the item carries it AND the card rail could
+     actually charge it (T-157's law: no fiat echo on a dark rail). A sale
+     strikes the regular price through, in words ("· on sale", never color
+     alone). Nothing here opens, closes, or reprices a rail. */
+  const displayWords = (p: StoreItem["price"]): string | null => {
+    const sats = p.sats != null ? `${p.sats.toLocaleString("en-US")} sats` : null;
+    const fiat = p.fiat ? dollars(p.fiat.amount, p.fiat.currency) : null;
+    if (bothAvailable) return [sats, fiat].filter(Boolean).join(" · ") || null;
+    if (cardAvailable) return fiat;
+    return sats ?? fiat; // bitcoin-only: the rail can still take a fiat-denominated invoice
+  };
+  const shownPrice = displayWords(effective);
+  const struckPrice = item.sale ? displayWords(item.price) : null;
+
   async function buy() {
     setBusy(true);
     setError(null);
@@ -182,6 +197,13 @@ export default function BuyPanel({
       {gated && (
         <p style={{ margin: "8px 0 0", fontSize: ".8rem", color: "var(--info)" }}>
           unlocks for your account — sign in, or your email below becomes your account, and it’s yours the moment payment settles.
+        </p>
+      )}
+      {shownPrice && (
+        <p style={{ margin: "12px 0 0", fontSize: "1.05rem", color: "var(--ink-strong, #2d2440)" }}>
+          {struckPrice && <s style={{ marginRight: 8, color: "var(--muted, #897f97)" }}>{struckPrice}</s>}
+          {shownPrice}
+          {item.sale && <span style={{ fontSize: ".78rem", color: "var(--rose, #b64f6b)" }}> · on sale</span>}
         </p>
       )}
       {needsSize && (
