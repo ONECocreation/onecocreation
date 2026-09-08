@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import * as React from "react";
 import { defaultPreferOf, type MoneyPrefer, type MoneyRails } from "./money-words";
 
 /**
@@ -80,18 +80,25 @@ export function savePrefer(prefer: MoneyPrefer): void {
 export function useMoneyPrefer(
   rails: MoneyRails,
 ): [MoneyPrefer, (p: MoneyPrefer) => void] {
-  const [prefer, setPreferState] = useState<MoneyPrefer>(() => defaultPreferOf(rails));
-  useEffect(() => {
-    const remembered = readPrefer();
-    if (remembered) setPreferState(remembered);
+  /* React.* member calls, never a named import: this module is dual-world —
+     server components import its pure half (preferFromCookieHeader), and
+     Turbopack's RSC gate rejects a NAMED hook import anywhere in the graph.
+     The hook itself only ever runs inside "use client" components. */
+  const [prefer, setPreferState] = React.useState<MoneyPrefer>(() => defaultPreferOf(rails));
+  React.useEffect(() => {
+    /* the remembered word rides a microtask — a synchronous setState in the
+       effect body would cascade a second render (the set-state-in-effect
+       law, the basket's own hard-won note) */
+    void Promise.resolve().then(() => {
+      const remembered = readPrefer();
+      if (remembered) setPreferState(remembered);
+    });
     const onFlip = () => {
       const p = readPrefer();
       if (p) setPreferState(p);
     };
     window.addEventListener(MONEY_EVENT, onFlip);
     return () => window.removeEventListener(MONEY_EVENT, onFlip);
-    // the rails are a per-page constant — the listener doesn't re-arm per render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const setPrefer = (p: MoneyPrefer) => {
     savePrefer(p);
