@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
 import { USA_ZONES, zipToTz } from "@/lib/us-zip-tz";
+import { visibleMonths } from "@/lib/booking-time";
 
 /**
  * The slot picker — step 2, and the whole timezone law made visible.
@@ -61,18 +62,24 @@ function dayKey(iso: string, tz: string): string {
 }
 
 /** THE MONTH CALENDAR — the traditional picker (Admiral, 0018.05.17):
- *  Sun-first grid, open days tappable with their count, the rest resting. */
+ *  Sun-first grid, open days tappable with their count, the rest resting.
+ *
+ *  TASK-151: `months` is a required prop, never derived from `days` here —
+ *  `days` can be empty (a zone with no open slots this window) and the grid
+ *  must still open on a real month instead of unmounting (see SlotPicker's
+ *  `visibleMonths` call and booking-time.ts's doc comment on it). */
 function MonthCalendar({
   days,
+  months,
   chosenDay,
   onPick,
 }: {
   days: [string, { startUtc: string }[]][];
+  months: string[];
   chosenDay: string | null;
   onPick: (key: string) => void;
 }) {
   const counts = new Map(days.map(([k, s]) => [k, s.length]));
-  const months = [...new Set(days.map(([k]) => k.slice(0, 7)))].sort();
   const [cursor, setCursor] = useState(months[0]);
   const month = months.includes(cursor) || !months.length ? cursor : months[0];
 
@@ -280,6 +287,15 @@ export default function SlotPicker({
     return [...grouped.entries()];
   }, [slots, viewerTz]);
 
+  // TASK-151: the calendar's own reference point for "which months to show
+  // when nothing is open here" — stable for the component's lifetime, no
+  // need to track the server's own `now`.
+  const [nowMs] = useState(() => Date.now());
+  const months = useMemo(
+    () => visibleMonths(nowMs, viewerTz, days.map(([k]) => k)),
+    [nowMs, viewerTz, days],
+  );
+
   const artistTz = service?.artistTz ?? "UTC";
   const zonesDiffer = artistTz !== viewerTz;
 
@@ -469,96 +485,102 @@ export default function SlotPicker({
         </label>
       </div>
 
-      {days.length === 0 ? (
-        <p style={{ marginTop: 24, fontSize: ".9rem", color: "var(--muted, #897f97)", textAlign: "center" }}>
-          No open times in this window yet.
-        </p>
-      ) : (
+      {/* TASK-151 (the vanishing-calendar bug): this used to be
+          `days.length === 0 ? <p>no times</p> : <the whole grid>` — a
+          real zone with a genuinely empty board (a narrow artist window
+          that doesn't overlap any of the visitor's five sacred moments,
+          e.g. New York against an 11:00–12:15 Denver window) unmounted the
+          ENTIRE calendar, which read as "the calendar disappeared" when
+          Love switched zones on the call. The grid stays mounted always;
+          only the right-hand panel's copy changes when there is nothing
+          open anywhere in view. */}
+      <div
+        className="mt-4"
+        style={{
+          display: "grid",
+          gap: 20,
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(340px,100%), 1fr))",
+          alignItems: "start",
+        }}
+      >
+        {/* step 1 — a TRADITIONAL month calendar (Admiral, 0018.05.17) */}
+        <MonthCalendar
+          days={days}
+          months={months}
+          chosenDay={chosenDay}
+          onPick={(key) => { setChosenDay(chosenDay === key ? null : key); setChosen(null); }}
+        />
+
+        {/* step 2 — the day's times in their own glass panel beside the
+            calendar (the booking-split, uicookies 07) */}
         <div
-          className="mt-4"
           style={{
-            display: "grid",
-            gap: 20,
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(340px,100%), 1fr))",
-            alignItems: "start",
+            borderRadius: 20,
+            border: "1px solid var(--glass-edge)",
+            background: "var(--glass)",
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 24px 60px -30px rgba(120,100,160,.55)",
+            padding: "18px 20px",
+            minHeight: 120,
           }}
         >
-          {/* step 1 — a TRADITIONAL month calendar (Admiral, 0018.05.17) */}
-          <MonthCalendar
-            days={days}
-            chosenDay={chosenDay}
-            onPick={(key) => { setChosenDay(chosenDay === key ? null : key); setChosen(null); }}
-          />
-
-          {/* step 2 — the day's times in their own glass panel beside the
-              calendar (the booking-split, uicookies 07) */}
-          <div
-            style={{
-              borderRadius: 20,
-              border: "1px solid var(--glass-edge)",
-              background: "var(--glass)",
-              backdropFilter: "blur(8px)",
-              boxShadow: "0 24px 60px -30px rgba(120,100,160,.55)",
-              padding: "18px 20px",
-              minHeight: 120,
-            }}
-          >
-            {(() => {
-              const day = days.find(([k]) => k === chosenDay);
-              if (!day) {
-                return (
-                  <p style={{ color: "var(--muted, #897f97)", fontSize: ".88rem", margin: 0 }}>
-                    ✨ pick a golden-dot day and its open times appear here
-                  </p>
-                );
-              }
-              const [, daySlots] = day;
+          {(() => {
+            const day = days.find(([k]) => k === chosenDay);
+            if (!day) {
               return (
-                <div>
-                  <h3 style={{ fontFamily: "var(--font-h3, sans-serif)", fontWeight: 400, fontSize: "1.1rem", color: "var(--ink-strong)", margin: "0 0 12px" }}>
-                    {fmtDayHeading(daySlots[0].startUtc, viewerTz)}
-                  </h3>
-                  <ul className="chip-grid">
-                    {daySlots.map((s) => {
-                      const isChosen = chosen === s.startUtc;
-                      return (
-                        <li key={s.startUtc}>
-                          <button
-                            type="button"
-                            className="chip-select"
-                            onClick={() => setChosen(s.startUtc)}
-                            aria-pressed={isChosen}
-                          >
-                            {/* TASK-138 step 6 (0018.06.17 a₿, the Admiral's
-                                catch): each clock gets its own row — a
-                                two-row flex column with its own line-height
-                                (chip-grid .chip-select in house.css) so the
-                                second line never collides with the first at
-                                narrow widths. Both clocks stay in words. */}
-                            <span className="chip-time">{fmtTime(s.startUtc, viewerTz)}</span>
-                            {/* THE TIMEZONE LAW on every chip — both clocks,
-                                spelled out: "11:11 your time · 9:11 Love's
-                                time". Inheriting the chip's own ink keeps the
-                                ≥4.5:1 contrast in both states, both themes.
-                                Truncates with an ellipsis rather than
-                                overlap — it never had room to wrap onto a
-                                third line in a fixed-height chip. */}
-                            {zonesDiffer && (
-                              <span className="chip-tz">
-                                {`${fmtTime(s.startUtc, artistTz)} Love's time`}
-                              </span>
-                            )}
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
+                <p style={{ color: "var(--muted, #897f97)", fontSize: ".88rem", margin: 0 }}>
+                  {days.length === 0
+                    ? "No open times in this window yet — try another zone above, or check back soon."
+                    : "✨ pick a golden-dot day and its open times appear here"}
+                </p>
               );
-            })()}
-          </div>
+            }
+            const [, daySlots] = day;
+            return (
+              <div>
+                <h3 style={{ fontFamily: "var(--font-h3, sans-serif)", fontWeight: 400, fontSize: "1.1rem", color: "var(--ink-strong)", margin: "0 0 12px" }}>
+                  {fmtDayHeading(daySlots[0].startUtc, viewerTz)}
+                </h3>
+                <ul className="chip-grid">
+                  {daySlots.map((s) => {
+                    const isChosen = chosen === s.startUtc;
+                    return (
+                      <li key={s.startUtc}>
+                        <button
+                          type="button"
+                          className="chip-select"
+                          onClick={() => setChosen(s.startUtc)}
+                          aria-pressed={isChosen}
+                        >
+                          {/* TASK-138 step 6 (0018.06.17 a₿, the Admiral's
+                              catch): each clock gets its own row — a
+                              two-row flex column with its own line-height
+                              (chip-grid .chip-select in house.css) so the
+                              second line never collides with the first at
+                              narrow widths. Both clocks stay in words. */}
+                          <span className="chip-time">{fmtTime(s.startUtc, viewerTz)}</span>
+                          {/* THE TIMEZONE LAW on every chip — both clocks,
+                              spelled out: "11:11 your time · 9:11 Love's
+                              time". Inheriting the chip's own ink keeps the
+                              ≥4.5:1 contrast in both states, both themes.
+                              Truncates with an ellipsis rather than
+                              overlap — it never had room to wrap onto a
+                              third line in a fixed-height chip. */}
+                          {zonesDiffer && (
+                            <span className="chip-tz">
+                              {`${fmtTime(s.startUtc, artistTz)} Love's time`}
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })()}
         </div>
-      )}
+      </div>
 
       {chosen && (
         <div

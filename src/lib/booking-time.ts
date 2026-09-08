@@ -239,6 +239,33 @@ export function zonedDateParts(instant: Date, tz: string): { date: string; weekd
   return { date: `${at.year}-${at.month}-${at.day}`, weekday: WEEKDAYS[at.weekday] ?? 0 };
 }
 
+/**
+ * TASK-151 — the vanishing-calendar bug. THE FINDING: switching the picker
+ * to a real US zone (New York, or any zip that maps to one) doesn't crash
+ * anything and `slotsFor` never throws — it correctly returns ZERO slots
+ * whenever the artist's window is narrow enough that none of the five
+ * sacred numbers, converted into her wall clock, still lands inside it
+ * (a tight window like Denver 11:00–12:15 keeps 11:11 for a Denver visitor
+ * but drops it for New York, who is two hours ahead: proven with a 14-day
+ * fixture in tests/booking-tz.test.ts). Zero slots is an honest answer —
+ * the surface's bug was reacting to it by unmounting the whole calendar
+ * (`days.length === 0 ? <p>no times</p> : <Calendar/>` in SlotPicker) and
+ * showing a bare sentence instead. The grid must stay up so the visitor can
+ * see today, page around, and try another zone.
+ *
+ * Which "YYYY-MM" months the pick-a-day calendar shows. Slot data sets the
+ * range when there is any; with none, the grid still opens on `viewerTz`'s
+ * current month plus the next, every cell closed, rather than disappearing.
+ */
+export function visibleMonths(nowMs: number, viewerTz: string, dayKeys: string[]): string[] {
+  const fromSlots = [...new Set(dayKeys.map((k) => k.slice(0, 7)))].sort();
+  if (fromSlots.length > 0) return fromSlots;
+  const { date } = zonedDateParts(new Date(nowMs), viewerTz);
+  const [y, m] = date.split("-").map(Number);
+  const next = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, "0")}`;
+  return [`${y}-${String(m).padStart(2, "0")}`, next];
+}
+
 /** Is this a real IANA zone on this runtime? */
 export function isValidTz(tz: string): boolean {
   try {

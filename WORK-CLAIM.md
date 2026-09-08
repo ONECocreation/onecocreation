@@ -1,17 +1,17 @@
-# WORK-CLAIM — TASK-157
+# WORK-CLAIM — TASK-151
 
 LANE: home (sonnet, Number One orchestrating)
-TASK: TASK-157 — ONE Cocreation: the item page's price line follows the live rails
-WORKTREE: ~/dev/worktrees/task-157
-BRANCH: feat/task-157-price-line-rails
+TASK: TASK-151 — ONE Cocreation: pick-a-day in New York time makes the calendar disappear
+WORKTREE: ~/dev/worktrees/task-151
+BRANCH: feat/task-151-booking-calendar-tz
 BASE: main @ 2facbacae8921d9f8f71b7a394ba2e5ed6361d0e
 BFT STAMP: 0018.06.17 a₿ (derived from live tip height 966016 — mempool.space/api/blocks/tip/height —
   year=⌊966016/52416⌋=18, rem=22528, month=⌊22528/4032⌋+1=6, rem2=2368, day=⌊2368/144⌋+1=17)
 
 OWNS (nothing else):
-- src/app/store/[id]/page.tsx — price line only
-- src/components/store/StoreItemCard.tsx — the same rule
-- src/components/Sheet.tsx — comment only (drop the retired QuickView mention)
-- tests/price-line.test.ts — new, pure
+- src/components/booking/SlotPicker.tsx — the calendar grid and the day panel
+- src/components/booking/*Calendar*.tsx — MonthCalendar lives inside SlotPicker.tsx; no separate file exists
+- src/lib/booking-time.ts — visitor-zone slot generation (T-122/T-125)
+- tests/booking-tz.test.ts — new
 
-Reported to ~/dev/home/outbox/task-157/SUMMARY.md.
+Reported to ~/dev/home/outbox/task-151/SUMMARY.md.
