@@ -17,6 +17,7 @@ import {
   ABOUT_VIDEOS,
   ABOUT_VIDEOS_EMPTY,
 } from "@/lib/about-content";
+import { getSiteConfig } from "@/lib/site-config";
 import PaletteVars from "@/components/PaletteVars";
 import PopupHost from "@/components/PopupHost";
 
@@ -61,6 +62,11 @@ export default async function AboutPage() {
   }
 
   const t = TIERS.A;
+  /* TASK-161 (0018.06.17 a₿ · block 966,080) — the playlist is Love's now:
+     her saved list (the /a/site "Videos on About" card) wins; absent = the
+     seed in @/lib/about-content stands; a saved EMPTY list is honoured and
+     renders the honest no-videos line below (derive-or-dash). */
+  const videos = (await getSiteConfig()).about?.videos ?? ABOUT_VIDEOS;
   return (
     <>
       <SiteHeader />
@@ -257,10 +263,12 @@ export default async function AboutPage() {
                 </p>
               </div>
               <div>
-                {/* TASK-154 item 8: a PLAYLIST, not one video — the ids live
-                    in ABOUT_VIDEOS above; each entry unfolds its own embed
-                    (native details, no JS); an empty list tells the truth. */}
-                {ABOUT_VIDEOS.length === 0 ? (
+                {/* TASK-154 item 8: a PLAYLIST, not one video — TASK-161:
+                    the list is `videos` above (Love's saved list first, the
+                    ABOUT_VIDEOS seed when she hasn't saved one); each entry
+                    unfolds its own embed (native details, no JS); an empty
+                    list tells the truth. */}
+                {videos.length === 0 ? (
                   <p style={{ fontSize: ".9rem", color: "var(--muted)", textAlign: "center" }}>
                     {ABOUT_VIDEOS_EMPTY}{" "}
                     <a href="https://www.youtube.com/@Onecocreation" target="_blank" rel="noreferrer">
@@ -269,7 +277,7 @@ export default async function AboutPage() {
                   </p>
                 ) : (
                   <div className="about-playlist">
-                    {ABOUT_VIDEOS.map((v, i) => (
+                    {videos.map((v, i) => (
                       <details key={v.id} className="about-video" open={i === 0}>
                         <summary>{v.title}</summary>
                         <div style={{ position: "relative", aspectRatio: v.ratio }}>

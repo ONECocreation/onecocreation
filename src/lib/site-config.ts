@@ -3,6 +3,8 @@ import path from "path";
 import { put, get } from "@vercel/blob";
 import { TENANT } from "./tenant.ts";
 import { SPACE_NAME, domainForSpace } from "./identity-config.ts";
+import { YOUTUBE_ID_RE } from "./youtube-id.ts";
+import type { AboutVideo } from "./about-content.ts";
 
 /**
  * THE SWITCHES (TASK-129, cut 0018.06.16 a₿) — one site-config doc so Love
@@ -55,6 +57,22 @@ export interface NavConfig {
   items: NavItem[];
 }
 
+/**
+ * THE ABOUT PLAYLIST (TASK-161, cut 0018.06.17 a₿ · block 966,080) — the
+ * four videos on /about were hard-coded in about-content.ts (ABOUT_VIDEOS);
+ * adding one meant a deploy. Now Love pastes YouTube links herself from the
+ * "Videos on About" card on /a/site. `about` is absent by default: absent
+ * means the seed list stands (the hand-built page reads
+ * `config.about?.videos ?? ABOUT_VIDEOS`). A saved list — even an EMPTY
+ * one — wins, and the page says its honest "No videos here yet" line
+ * instead of pretending (derive-or-dash): unlike the nav, an empty
+ * playlist is a legitimate state with an honest render, so sanitize keeps
+ * it rather than handing back `undefined`.
+ */
+export interface AboutConfig {
+  videos: AboutVideo[];
+}
+
 export interface SiteConfig {
   features: {
     community: boolean;
@@ -79,6 +97,8 @@ export interface SiteConfig {
   };
   /** TASK-137: the menu Love can shape. Absent = switch-driven default. */
   nav?: NavConfig;
+  /** TASK-161: the About playlist Love pastes. Absent = the seed stands. */
+  about?: AboutConfig;
 }
 
 export type SiteConfigPatch = {
@@ -88,6 +108,8 @@ export type SiteConfigPatch = {
   /** whole-document replace when present (a partial nav patch makes no
       sense — the editor always saves its full row set) */
   nav?: NavConfig;
+  /** same whole-list replace as nav — the card always saves its full set */
+  about?: AboutConfig;
 };
 
 /** The site's real routes a nav item may point to (TASK-137) — kept in sync
@@ -171,7 +193,58 @@ function sanitize(raw: unknown): SiteConfig {
       staticUrl: typeof m.staticUrl === "string" ? m.staticUrl.trim().slice(0, 300) : d.meeting.staticUrl,
     },
     nav: sanitizeNav(o.nav),
+    about: sanitizeAbout(o.about),
   };
+}
+
+/** One playlist entry → known-good, or dropped: the id must be the 11-char
+    YouTube id (never a fabricated one), the title real words, the ratio one
+    of the two the page can embed. */
+function sanitizeAboutVideo(raw: unknown): AboutVideo | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  if (typeof o.id !== "string" || !YOUTUBE_ID_RE.test(o.id)) return null;
+  if (typeof o.title !== "string" || !o.title.trim()) return null;
+  const ratio = o.ratio === "9/16" ? "9/16" : o.ratio === "16/9" ? "16/9" : null;
+  if (!ratio) return null;
+  return { id: o.id, title: o.title.trim().slice(0, 120), ratio };
+}
+
+/** The whole about doc → known-good rows, or `undefined` when `about` was
+    never saved. An EMPTY list survives on purpose (the page's honest
+    "No videos here yet" line — see the AboutConfig note above); only a
+    missing/malformed doc falls back to the seed. */
+function sanitizeAbout(raw: unknown): AboutConfig | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  if (!Array.isArray(o.videos)) return undefined;
+  const videos = o.videos
+    .map(sanitizeAboutVideo)
+    .filter((v): v is AboutVideo => v !== null)
+    .slice(0, 24);
+  return { videos };
+}
+
+/** Route-side patch validation (TASK-161) — the /api/admin/site PUT refuses
+    a malformed `about` patch IN WORDS instead of silently dropping rows on
+    the sanitize round-trip: a typo'd id or ratio is Love's to fix, not ours
+    to swallow. Returns the refusal reason, or null when the patch is
+    clean. sanitize() above stays the backstop for hand-edited docs. */
+export function aboutPatchError(raw: unknown): string | null {
+  if (!raw || typeof raw !== "object") return "about must be an object with a videos list";
+  const videos = (raw as Record<string, unknown>).videos;
+  if (!Array.isArray(videos)) return "about.videos must be a list";
+  for (const [i, v] of videos.entries()) {
+    if (!v || typeof v !== "object") return `video ${i + 1} isn't an object`;
+    const o = v as Record<string, unknown>;
+    if (typeof o.id !== "string" || !YOUTUBE_ID_RE.test(o.id))
+      return `video ${i + 1}: the id must be the 11-character YouTube id`;
+    if (typeof o.title !== "string" || !o.title.trim())
+      return `video ${i + 1}: a title is required`;
+    if (o.ratio !== "16/9" && o.ratio !== "9/16")
+      return `video ${i + 1}: the shape must be landscape (16/9) or portrait (9/16)`;
+  }
+  return null;
 }
 
 /** One child row: a leaf that must point at a real, known route — an
@@ -355,6 +428,9 @@ export async function saveSiteConfig(patch: SiteConfigPatch): Promise<SiteConfig
     // OTHER save on this route — features, payments, meeting) must leave
     // Love's saved menu untouched rather than wiping it.
     nav: patch.nav !== undefined ? patch.nav : current.nav,
+    // TASK-161: same whole-list rule for the About playlist — omitted leaves
+    // her saved list (or the absent-means-seed default) untouched.
+    about: patch.about !== undefined ? patch.about : current.about,
   });
   await writeStored(next);
   cache = next;

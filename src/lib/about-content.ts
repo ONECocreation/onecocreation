@@ -12,6 +12,12 @@
  *   videos, real ids from her channel @Onecocreation (titles confirmed over
  *   YouTube oEmbed, 0018.06.17). An empty list renders the honest note
  *   below instead of a broken frame (derive-or-dash).
+ *
+ * TASK-161 (0018.06.17 a₿ · block 966,080): the list TYPE leaves this file
+ * so the site-config doc (Love's own saved playlist) and this seed can
+ * never drift in shape — one `AboutVideo` for both. The seed itself stays
+ * exactly Love's four; when she saves her own list from /a/site it wins,
+ * and this is the standing fallback (absent = the seed stands).
  */
 
 export const ABOUT_JOIN_LINES = { ink: "BREATHE", teal: "WITH US" };
@@ -20,7 +26,17 @@ export const ABOUT_PINK_DOOR = "btn btn-rose";
 export const ABOUT_BRIDGE_LINE =
   "“To those drawn by the energy of the soul — Welcome Home to you. You Are the Bridge, Where Heaven and Earth Meet”";
 
-export const ABOUT_VIDEOS: { id: string; title: string; ratio: string }[] = [
+/** One playlist entry — the seed below AND Love's saved list in the
+    site-config doc share this exact shape. */
+export interface AboutVideo {
+  /** the 11-char YouTube id (see @/lib/youtube-id) */
+  id: string;
+  title: string;
+  /** embed aspect ratio — "9/16" portrait (shorts), "16/9" landscape */
+  ratio: "16/9" | "9/16";
+}
+
+export const ABOUT_VIDEOS: AboutVideo[] = [
   // her most-loved short (top of the channel by views, 0018.05.15) — breath, exactly the work
   { id: "2LrWVQDnLd0", title: "What Breath in discomfort?", ratio: "9/16" },
   { id: "Gt24u_BAybA", title: "CANNABIS | A Message from The Lemurians", ratio: "16/9" },

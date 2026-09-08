@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
-import { getSiteConfig, saveSiteConfig, type SiteConfigPatch } from "@/lib/site-config";
+import { getSiteConfig, saveSiteConfig, aboutPatchError, type SiteConfigPatch } from "@/lib/site-config";
 import { btcpayAdapter, squareAdapter } from "@/lib/payments";
 
 export const dynamic = "force-dynamic";
@@ -67,6 +67,13 @@ export async function PUT(request: Request) {
   }
   if (!patch || typeof patch !== "object") {
     return NextResponse.json({ ok: false, reason: "bad request" }, { status: 400 });
+  }
+  /* TASK-161 (0018.06.17 a₿ · block 966,080) — the About playlist rides this
+     route now; a malformed `about` patch is refused IN WORDS, never silently
+     sanitized into dropped rows. */
+  if ("about" in patch) {
+    const reason = aboutPatchError((patch as Record<string, unknown>).about);
+    if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
   }
   const config = await saveSiteConfig(patch);
   return NextResponse.json({ ok: true, config, rails: railStatus() });
