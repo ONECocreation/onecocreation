@@ -390,6 +390,20 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
 /* the sign-in button sheds its arcade drop-shadow inside site pages */
 .mgmt-body .button{box-shadow:var(--soft)!important;border:none!important}
 
+/* ── TASK-155 (0018.06.17 a₿, Love's meeting): "the darker purple galaxy
+   should be on the top area behind Member welcome home" — the shared
+   .sky-veil (cartridge.css) reads light at its own radial center by design
+   (it dresses several pages), so /login's hero gets its OWN deeper wash
+   as a page-scoped layer rather than darkening the shared cartridge rule
+   for everyone. Sits below CosmicSky's canvas (z-index 1) and the hero's
+   text wrap (z-index 2) — pure backdrop, pointer-events none. Only ever
+   deepens toward black/purple, so it can only help the kicker/heading
+   contrast already proven by eye against the lighter sky-veil. */
+.login-galaxy{position:relative}
+.login-galaxy::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(900px 520px at 50% 8%,rgba(88,52,150,.55),transparent 65%),
+             linear-gradient(180deg,rgba(10,6,20,.5) 0%,rgba(10,6,20,.85) 100%)}
+
 /* the nav's right tail (member name + Support) never wraps under the menu —
    the Admiral's persistent catch; it lives OUTSIDE the wrapping nav now */
 .site-header .bar{flex-wrap:wrap}

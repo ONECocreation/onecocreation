@@ -7,8 +7,35 @@ import { useState } from "react";
  * arrives, you enter it, you're home. Lives beside the key door on /login;
  * keys stay the sovereign path, this one is for reach.
  */
-export default function EmailDoor({ bare = false }: { bare?: boolean }) {
-  const [step, setStep] = useState<"email" | "code" | "done">("email");
+export type EmailDoorStep = "email" | "code" | "done";
+
+/* TASK-155 (0018.06.17 a₿, Love's meeting): "there isn't a button that says
+ * already have a login". The door only makes sense while the card is still
+ * ASKING for an email — once a code is in flight (or the fren is in),
+ * jumping to the key door mid-verify would strand a pending code, so it
+ * only shows on the "email" step, and only when a caller wired a handler
+ * (LoginPanel does; the bare /welcome usage of this component does not,
+ * since a brand-new fren has no key/login to switch to). */
+export function showSwitchDoor(step: EmailDoorStep, hasHandler: boolean): boolean {
+  return step === "email" && hasHandler;
+}
+
+/* pinned house contract (T-121's pink pass already proves .btn-rose clears
+ * 4.5:1 both themes — reused here, not re-derived) */
+export const EMAIL_CTA_CLASSNAME = "btn btn-rose";
+export const SWITCH_DOOR_CLASSNAME = "btn btn-ghost btn-sm";
+export const SWITCH_DOOR_LABEL = "Already have a login? Sign in";
+
+export default function EmailDoor({
+  bare = false,
+  onSwitchToKey,
+}: {
+  bare?: boolean;
+  /** wired by LoginPanel to flip the card to the key/nostr door — reuses
+   * the existing sign-in flow, no new auth path (T-155 OWNS law) */
+  onSwitchToKey?: () => void;
+}) {
+  const [step, setStep] = useState<EmailDoorStep>("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -100,7 +127,10 @@ export default function EmailDoor({ bare = false }: { bare?: boolean }) {
       </p>
 
       {step === "email" && (
-        <form onSubmit={start} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <form
+          onSubmit={start}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}
+        >
           <input
             type="email"
             required
@@ -109,11 +139,20 @@ export default function EmailDoor({ bare = false }: { bare?: boolean }) {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
             aria-label="Email address"
-            style={inputStyle}
+            style={{ ...inputStyle, flex: "none", width: "100%", maxWidth: 320 }}
           />
-          <button className="btn" type="submit" disabled={busy}>
-            {busy ? "Sending…" : "Email me a code"}
-          </button>
+          {/* the pink door, centered (Love, 0018.06.17 a₿) — the key door
+              rides beside it at the same rhythm when a caller wired one */}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
+            <button className={EMAIL_CTA_CLASSNAME} type="submit" disabled={busy}>
+              {busy ? "Sending…" : "Email me a code"}
+            </button>
+            {showSwitchDoor(step, !!onSwitchToKey) && (
+              <button type="button" className={SWITCH_DOOR_CLASSNAME} onClick={onSwitchToKey}>
+                {SWITCH_DOOR_LABEL}
+              </button>
+            )}
+          </div>
         </form>
       )}
 
