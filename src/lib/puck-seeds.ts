@@ -409,6 +409,9 @@ const bookContent: Block[] = [
 const mb = kit("mb");
 const membershipsContent: Block[] = [
   mb.band("sky-veil", skyHold, [
+    /* the white lion holding the field — the hand-built page's own picture; without it a
+       studio publish lost the lion (Admiral, 0018.06.17 a₿) */
+    mb.img("/images/lions-gate.webp", "The white lion holding the field", 720, "soft", "center"),
     mb.eyebrow("Memberships"),
     mb.heading("Welcome to The Heart Field — where “Heaven and Earth Meet”", "h1"),
     mb.rich("<b>3 Different Memberships</b>"),

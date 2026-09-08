@@ -53,3 +53,26 @@ export function applyPlaylistToPuck<T>(data: T, videos: AboutVideo[] | undefined
 
   return walk(data) as T;
 }
+
+/**
+ * Love's pictures are LEVEL, never fanned (the Admiral, 0018.06.17 a₿): a
+ * published /about snapshot may still carry Gallery blocks with tilt "yes"
+ * from an older seed — the live render sets every Gallery's tilt to "no".
+ * Pure; the input is never mutated.
+ */
+export function levelGalleries<T>(data: T): T {
+  const walk = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(walk);
+    if (v && typeof v === "object") {
+      const o = v as Record<string, unknown>;
+      const copy: Record<string, unknown> = {};
+      for (const k of Object.keys(o)) copy[k] = walk(o[k]);
+      if (copy.type === "Gallery" && copy.props && typeof copy.props === "object") {
+        copy.props = { ...(copy.props as Record<string, unknown>), tilt: "no" };
+      }
+      return copy;
+    }
+    return v;
+  };
+  return walk(data) as T;
+}

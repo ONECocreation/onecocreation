@@ -78,3 +78,20 @@ describe("applyPlaylistToPuck", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 });
+
+import { levelGalleries } from "@/lib/about-playlist-puck";
+describe("levelGalleries — Love's pictures are level on a published /about", () => {
+  it("sets every Gallery's tilt to no, nested or not, and leaves everything else alone", () => {
+    const data = { content: [
+      { type: "Band", props: { id: "b", content: [{ type: "Gallery", props: { id: "g1", tilt: "yes", images: [] } }] } },
+      { type: "Gallery", props: { id: "g2", tilt: "yes", images: [] } },
+      { type: "Text", props: { id: "t", text: "hi" } },
+    ] };
+    const out = levelGalleries(data);
+    const g1 = (out.content[0] as { props: { content: { props: { tilt: string } }[] } }).props.content[0].props.tilt;
+    const g2 = (out.content[1] as { props: { tilt: string } }).props.tilt;
+    expect([g1, g2]).toEqual(["no", "no"]);
+    expect((out.content[2] as { props: { text: string } }).props.text).toBe("hi");
+    expect((data.content[1] as { props: { tilt: string } }).props.tilt).toBe("yes"); // input untouched
+  });
+});

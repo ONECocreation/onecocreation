@@ -59,8 +59,8 @@ describe("TASK-152 — the sessions/book pages wear the house style", () => {
 
   it("/book holds the dark ground in both themes — keep-dark on the hero AND the shelf, veils by class", async () => {
     const src = await read("src/app/book/page.tsx");
-    expect(src.includes("keep-dark sky-veil book-hero-veil")).toBe(true);
-    expect(src.includes("keep-dark book-shelf-veil")).toBe(true);
+    expect(src.includes("keep-dark book-hero-veil")).toBe(true); // the grounds swapped (Admiral, 0018.06.17): the galaxy rides the shelf now
+    expect(src.includes("keep-dark sky-veil book-shelf-veil")).toBe(true);
   });
 
   it("the veils live in house.css as session/book rules (the T-155 page-scoped precedent), never inline", async () => {

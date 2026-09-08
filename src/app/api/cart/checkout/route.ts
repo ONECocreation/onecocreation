@@ -1,4 +1,5 @@
 import { getSiteConfig } from "@/lib/site-config";
+import { orderDoorUrl } from "@/lib/order-receipt";
 import { NextResponse } from "next/server";
 import { cartIdFromRequest, getCart, clearCart, mergeCarts, type CartLine } from "@/lib/cart";
 import {
@@ -270,7 +271,7 @@ export async function POST(request: Request) {
       amount: snapshot.amount,
       currency: snapshot.currency,
       buyerEmail: body.contact?.email,
-      redirectUrl: `${origin}/store/order/${order.id}`,
+      redirectUrl: orderDoorUrl(order, origin), // T-173: the basket's return carries the signed key too
     },
     `${order.id}:0`,
   );

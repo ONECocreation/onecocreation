@@ -416,15 +416,17 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
    contrast can only improve on the hero and is the cards' own night glass
    on the shelf. No new tokens: the literal families are the sky-veil /
    aurora ones (purple 88,52,150 · rose 231,178,195 · lavender 139,118,196). ── */
-.book-hero-veil{position:relative}
-.book-hero-veil::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-  background:radial-gradient(900px 520px at 50% 8%,rgba(88,52,150,.45),transparent 65%),
-             linear-gradient(180deg,rgba(10,6,20,.72) 0%,rgba(10,6,20,.45) 55%,rgba(10,6,20,.18) 100%)}
-.book-shelf-veil{position:relative;overflow:hidden;
+/* the Admiral, 0018.06.17 a₿ (book background.png): the two grounds SWAP — the hero wears the
+   gradient with the rose rising, the shelf wears the galaxy; CosmicSky's shooting stars ride both. */
+.book-hero-veil{position:relative;overflow:hidden;
   background:linear-gradient(180deg,#16111f 0%,#1a1428 55%,#241a33 100%)}
-.book-shelf-veil::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+.book-hero-veil::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
   background:radial-gradient(820px 500px at 50% 112%,rgba(231,178,195,.20),transparent 65%),
              radial-gradient(560px 380px at 88% 116%,rgba(139,118,196,.16),transparent 70%)}
+.book-shelf-veil{position:relative;overflow:hidden}
+.book-shelf-veil::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(900px 520px at 50% 8%,rgba(88,52,150,.45),transparent 65%),
+             linear-gradient(180deg,rgba(10,6,20,.72) 0%,rgba(10,6,20,.45) 55%,rgba(10,6,20,.18) 100%)}
 .book-shelf-veil>.wrap{position:relative;z-index:1}
 
 /* the nav's right tail (member name + Support) never wraps under the menu —
@@ -578,7 +580,7 @@ main .about-story-sky{background:radial-gradient(760px 460px at 50% 14%, rgba(12
 /* item 3 — a white 1px outline around the "Where Heaven and Earth Meet"
    script graphic (a transparent-alpha webp; the band behind follows the
    theme, the outline is decoration — never meaning). */
-.about-script{border:1px solid #fff}
+.about-script{border:0} /* the white box border was the wrong reading of "a white outline around the graphic" — the stroke rides the letters (below) */
 
 /* item 8 — the video playlist: each entry unfolds its own embed (native
    details, no JS); the faint purple bar matches the faces' frame. The
@@ -591,3 +593,8 @@ main .about-story-sky{background:radial-gradient(760px 460px at 50% 14%, rgba(12
 .about-video summary::-webkit-details-marker{display:none}
 .about-video summary::before{content:"▸ ";color:var(--rose)}
 .about-video[open] summary::before{content:"▾ "}
+
+/* the Admiral, 0018.06.17 a₿: the "Where Heaven and Earth Meet" script graphic wears a
+   1-weight white stroke so it stands off the darker grounds (four 1px drop-shadows =
+   an outline on a transparent raster; the asset itself is untouched) */
+.about-script{filter:drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)}

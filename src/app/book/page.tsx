@@ -101,7 +101,7 @@ export default async function BookIndexPage() {
       {/* ══ the hero — night sky settling into the page; the veil holds the
           top DARK (Love: "move background dark on top") — house.css
           .book-hero-veil, the T-155 .login-galaxy precedent ══ */}
-      <section className="keep-dark sky-veil book-hero-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
+      <section className="keep-dark book-hero-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
         <CosmicSky />
         <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "64px 22px 56px" }}>
           <p className="kicker">One-on-One with Love</p>
@@ -121,7 +121,8 @@ export default async function BookIndexPage() {
 
       {/* ══ the sessions — the living 2×2, on its own night with the galaxy
           pinkish rising behind the cards (Love's note; .book-shelf-veil) ══ */}
-      <section className="keep-dark book-shelf-veil" style={{ padding: "56px 0 70px" }}>
+      <section className="keep-dark sky-veil book-shelf-veil" style={{ padding: "56px 0 70px", position: "relative", overflow: "hidden" }}>
+        <CosmicSky />
         <div className="wrap" style={{ maxWidth: 880 }}>
           {services.length === 0 ? (
             <p className="center" style={{ color: "var(--ink-body)" }}>No sessions open yet — check back soon ✨</p>

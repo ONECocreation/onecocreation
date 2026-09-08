@@ -10,7 +10,7 @@ import { TIERS } from "@/lib/entitlement";
 import { cartridge } from "@/brand/cartridge";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
-import { applyPlaylistToPuck } from "@/lib/about-playlist-puck";
+import { applyPlaylistToPuck, levelGalleries } from "@/lib/about-playlist-puck";
 import {
   ABOUT_BRIDGE_LINE,
   ABOUT_JOIN_LINES,
@@ -54,7 +54,7 @@ export default async function AboutPage() {
        playlist — her list replaces the page's Video blocks in place; no saved
        list ⇒ the studio's own videos stand. */
     const saved = (await getSiteConfig()).about?.videos;
-    const data = applyPlaylistToPuck(puck as Data, saved);
+    const data = levelGalleries(applyPlaylistToPuck(puck as Data, saved));
     return (
       <>
         <SiteHeader />
