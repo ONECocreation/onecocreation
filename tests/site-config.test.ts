@@ -1,6 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { promises as fs } from "fs";
 import path from "path";
+import { isolateCwd } from "./helpers/isolate-cwd";
+
+/**
+ * TASK-158 (0018.06.17 a₿) — this file's own throwaway cwd (see
+ * tests/helpers/isolate-cwd.ts) so its `FILE` below — and every call the fs
+ * site-config driver makes off `process.cwd()` — never collides with
+ * package-waitlist.test.ts or jars.test.ts running in the same file-
+ * parallel pass. Must run before `FILE` is computed.
+ */
+const { cleanup: cleanupCwd } = isolateCwd("oc-site-config-");
 
 /**
  * TASK-129 (0018.06.16 a₿) — THE SWITCHES. Pins:
@@ -44,6 +54,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await fs.rm(FILE, { force: true });
+  cleanupCwd();
 });
 
 describe("the switches — defaults are Love's streamlined site", () => {
