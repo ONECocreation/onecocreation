@@ -58,7 +58,7 @@ beforeAll(async () => {
     }
     if (u.includes("/v2/locations/")) {
       return new Response(
-        JSON.stringify({ location: { name: "Pac's Arcade (sandbox)", capabilities: ["CASH_APP_BITCOIN"] } }),
+        JSON.stringify({ location: { name: "OneCocreation (sandbox)", capabilities: ["CREDIT_CARD_PROCESSING"] } }),
         { status: 200 },
       );
     }
@@ -182,7 +182,7 @@ describe("the vault route — test the connection", () => {
     expect(text).not.toContain("EAAA-secret-c");
     const body = JSON.parse(text);
     expect(body.ok).toBe(true);
-    expect(body.message).toBe("connected as Pac's Arcade (sandbox)");
+    expect(body.message).toBe("connected as OneCocreation (sandbox)");
   });
 });
 

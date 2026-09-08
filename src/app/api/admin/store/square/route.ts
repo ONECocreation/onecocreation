@@ -1,34 +1,41 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
-import { squareAdapter, squareEnv, squareFetch, squareBitcoinEnabled, loadSquareVaultEnv } from "@/lib/payments";
+import { squareAdapter, squareEnv, squareFetch, loadSquareVaultEnv } from "@/lib/payments";
 import { siteBase } from "@/lib/subscribers";
 
 export const dynamic = "force-dynamic";
 
 /**
- * SQUARE — THE ONE CARD'S DESK (TASK-136, 0018.06.17 a₿, folding the dead
- * "soon" chip's replacement together with the paste-keys drawer the
- * Admiral asked for: "the square button says soon... i have square. can we
- * build that one in.") This ONE route now carries everything the Money
- * desk's Square card needs:
+ * SQUARE — THE CARDS CARD'S DESK (TASK-136, rebuilt per the Admiral's walk
+ * TASK-167, 0018.06.17 a₿: "it would be nice to see the vercel items
+ * underneath the test button, and we could give a check box on all the
+ * items in the env settings, and if one fails an indicator that shows the
+ * error so we know what to fix"). This route now answers PER-ROW:
  *
- *  GET  — configured() + which of the five SQUARE_* names are env-set
- *         (never their values) + the vault's saved/at status per field +
- *         the bitcoin-enablement check (unchanged from the old status-only
- *         route) — `?refresh=1` bypasses that check's brief cache.
- *  POST — either a vault field save/clear (mirrors StripeRailCard's key
- *         drawer exactly: `{ field, value }` to save, `{ field, clear:
- *         true }` to clear) OR `{ action: "test" }`, the "test the
- *         connection" button: calls Square's own Locations endpoint with
- *         whatever squareEnv() resolves (env-then-vault) and reports
+ *  GET  — which of the five SQUARE_* names are env-set (never their values)
+ *         + the vault's saved/at status per field + the CONNECTION VERDICT
+ *         (one cached call to Square's own Locations endpoint — the honest
+ *         proof for the access-token / location-ID rows, and the host it
+ *         answered from for the environment row) + the two webhook proof
+ *         markers the webhook route writes (`square:webhook:last-verified`
+ *         / `square:webhook:last-rejected`) for the webhook key/URL rows.
+ *         `?refresh=1` bypasses the connection verdict's brief cache.
+ *         The old "bitcoin on this Square location" check is GONE (T-167 —
+ *         Square offers no bitcoin purchase feature for a merchant's
+ *         customers; the site's bitcoin rail is BTCPay, so the check could
+ *         never verify anything real).
+ *  POST — either a vault field save/clear (`{ field, value }` /
+ *         `{ field, clear: true }`) OR `{ action: "test" }`, the "Test the
+ *         connection" button: forces a fresh Locations call and reports
  *         "connected as <location name>" or the error text — NEVER the
- *         token, in either direction.
+ *         token, in either direction. The button's verdict IS the
+ *         checklist's verdict: it lands in the same cache the GET reads.
  *
  * Every vault write re-warms payments.ts's warm cache (loadSquareVaultEnv())
- * before responding, so "saved keys go live at once" is true on THIS
- * instance the moment the save lands — no redeploy, no waiting on a second
- * request to notice. Values are write-only: GET never echoes a saved value,
- * only {saved, at}, same law as the Stripe drawer.
+ * and drops the connection verdict cache (the values it proved may have
+ * just changed), so "saved keys go live at once" is true on THIS instance
+ * the moment the save lands — no redeploy. Values are write-only: GET never
+ * echoes a saved value, only {saved, at}, same law as the Stripe drawer.
  */
 
 const FIELDS = {
@@ -69,6 +76,10 @@ const FIELDS = {
 type FieldName = keyof typeof FIELDS;
 const savedAtKey = (kv: string) => `${kv}:saved-at`;
 
+/** the webhook route's proof markers (TASK-167) — read here, written there */
+const KV_WEBHOOK_VERIFIED = "square:webhook:last-verified";
+const KV_WEBHOOK_REJECTED = "square:webhook:last-rejected";
+
 function restEnv(): { url: string; token: string } | null {
   const url = process.env.KV_REST_API_URL;
   const token = process.env.KV_REST_API_TOKEN;
@@ -101,13 +112,81 @@ function defaultWebhookUrl(): string {
   return `${siteBase()}/api/store/webhook/square`;
 }
 
+// ---------------------------------------------------------------------------
+// The connection verdict — ONE cached Locations call proves three rows at
+// once: access token + location ID (the name Square answers with) and the
+// environment (which Square host answered). Brief + re-checkable, the same
+// convention as the house's other operator-facing live checks.
+// ---------------------------------------------------------------------------
+
+export interface ConnectionVerdict {
+  ok: boolean;
+  at: string; // ISO — the desk shows "checked <date>"
+  /** the name Square answered with ("connected as OneCocreation") — ok only */
+  locationName?: string;
+  /** the Square host that answered — the environment row's proof */
+  host?: string;
+  /** the error sentence, verbatim, when !ok — shown beside the red mark */
+  reason?: string;
+}
+
+function squareHost(environment: "sandbox" | "production"): string {
+  // mirrors payments.ts's squareBaseUrl() host map — kept in words here so
+  // the desk can SAY which host answered without a payments.ts seam
+  return environment === "production" ? "connect.squareup.com" : "connect.squareupsandbox.com";
+}
+
+let connectionCache: { key: string; atMs: number; verdict: ConnectionVerdict } | null = null;
+const CONNECTION_TTL_MS = 5 * 60 * 1000;
+
+async function verifyConnection(force = false): Promise<ConnectionVerdict | null> {
+  const env = squareEnv();
+  if (!env) return null; // token + location ID not both set — never asked
+  const key = `${env.accessToken}|${env.locationId}|${env.environment}`;
+  if (!force && connectionCache?.key === key && Date.now() - connectionCache.atMs < CONNECTION_TTL_MS) {
+    return connectionCache.verdict;
+  }
+  let verdict: ConnectionVerdict;
+  const at = new Date().toISOString();
+  try {
+    const res = await squareFetch(`/v2/locations/${env.locationId}`, env);
+    if (!res.ok) {
+      // Square's own error text, never the token that made the call
+      const errBody = (await res.json().catch(() => null)) as { errors?: { detail?: string }[] } | null;
+      verdict = { ok: false, at, host: squareHost(env.environment), reason: errBody?.errors?.[0]?.detail ?? `Square responded ${res.status}` };
+    } else {
+      const data = (await res.json()) as { location?: { name?: string } };
+      verdict = { ok: true, at, locationName: data.location?.name ?? "your Square location", host: squareHost(env.environment) };
+    }
+  } catch (err) {
+    verdict = { ok: false, at, host: squareHost(env.environment), reason: `Square unreachable — ${err instanceof Error ? err.message : "network error"}` };
+  }
+  connectionCache = { key, atMs: Date.now(), verdict };
+  return verdict;
+}
+
+/** a saved/cleared value may be exactly what the verdict proved — drop it */
+function invalidateConnection(): void {
+  connectionCache = null;
+}
+
+async function readMarker(key: string): Promise<Record<string, string> | null> {
+  const raw = (await kv(["GET", key])) as string | null;
+  if (!raw) return null;
+  try {
+    const v = JSON.parse(raw) as Record<string, unknown>;
+    return v && typeof v === "object" ? (v as Record<string, string>) : null;
+  } catch {
+    return null; // a marker that won't parse reads as absent, never as proof
+  }
+}
+
 export async function GET(request: Request) {
   const denied = gate(request);
   if (denied) return denied;
 
   // always re-warm from the vault first — the desk's own view of "is this
-  // configured" must be the freshest one in the house, same spirit as
-  // squareBitcoinEnabled's live re-check below
+  // configured" must be the freshest one in the house
   await loadSquareVaultEnv();
 
   const envSet: Record<string, boolean> = {};
@@ -116,12 +195,16 @@ export async function GET(request: Request) {
   }
 
   const vault: Record<string, { saved: boolean; at: string | null }> = {};
+  let webhookVerified: Record<string, string> | null = null;
+  let webhookRejected: Record<string, string> | null = null;
   try {
     for (const [name, f] of Object.entries(FIELDS)) {
       const present = ((await kv(["EXISTS", f.kv])) as number) === 1;
       const at = present ? ((await kv(["GET", savedAtKey(f.kv)])) as string | null) : null;
       vault[name] = { saved: present, at };
     }
+    webhookVerified = await readMarker(KV_WEBHOOK_VERIFIED);
+    webhookRejected = await readMarker(KV_WEBHOOK_REJECTED);
   } catch (err) {
     return NextResponse.json(
       { ok: false, reason: `vault unreachable: ${err instanceof Error ? err.message : "unknown"}` },
@@ -140,7 +223,7 @@ export async function GET(request: Request) {
         : "unset";
 
   const force = new URL(request.url).searchParams.get("refresh") === "1";
-  const squareBitcoin = configured ? await squareBitcoinEnabled(force) : null;
+  const connection = await verifyConnection(force);
 
   return NextResponse.json({
     ok: true,
@@ -149,11 +232,12 @@ export async function GET(request: Request) {
     envSet,
     vault,
     defaultWebhookUrl: defaultWebhookUrl(),
-    squareBitcoin,
+    connection,
+    webhook: { verified: webhookVerified, rejected: webhookRejected },
   });
 }
 
-/** Save/clear one vault field, or run the "test the connection" check. */
+/** Save/clear one vault field, or run the "Test the connection" check. */
 export async function POST(request: Request) {
   const denied = gate(request);
   if (denied) return denied;
@@ -166,22 +250,13 @@ export async function POST(request: Request) {
   if (!body) return NextResponse.json({ ok: false, reason: "bad request" }, { status: 400 });
 
   if (body.action === "test") {
-    const env = squareEnv();
-    if (!env) return NextResponse.json({ ok: false, reason: "not configured — paste the keys first" }, { status: 400 });
-    try {
-      const res = await squareFetch(`/v2/locations/${env.locationId}`, env);
-      if (!res.ok) {
-        // Square's own error text, never the token that made the call
-        const errBody = (await res.json().catch(() => null)) as { errors?: { detail?: string }[] } | null;
-        const detail = errBody?.errors?.[0]?.detail ?? `Square responded ${res.status}`;
-        return NextResponse.json({ ok: false, reason: detail });
-      }
-      const data = (await res.json()) as { location?: { name?: string } };
-      const name = data.location?.name ?? "your Square location";
-      return NextResponse.json({ ok: true, message: `connected as ${name}` });
-    } catch (err) {
-      return NextResponse.json({ ok: false, reason: err instanceof Error ? err.message : "Square unreachable" });
-    }
+    if (!squareEnv()) return NextResponse.json({ ok: false, reason: "not configured — paste the keys first" }, { status: 400 });
+    // the button forces a fresh verdict AND that verdict is the one the
+    // checklist shows on the next GET — one cache, one truth
+    const verdict = await verifyConnection(true);
+    if (!verdict) return NextResponse.json({ ok: false, reason: "not configured — paste the keys first" }, { status: 400 });
+    if (!verdict.ok) return NextResponse.json({ ok: false, reason: verdict.reason ?? "Square unreachable" });
+    return NextResponse.json({ ok: true, message: `connected as ${verdict.locationName}` });
   }
 
   if (!body.field || !(body.field in FIELDS)) {
@@ -193,6 +268,7 @@ export async function POST(request: Request) {
       await kv(["DEL", f.kv]);
       await kv(["DEL", savedAtKey(f.kv)]);
       await loadSquareVaultEnv();
+      invalidateConnection();
       return NextResponse.json({ ok: true, cleared: true });
     }
     const value = (body.value ?? "").trim();
@@ -211,6 +287,7 @@ export async function POST(request: Request) {
     await kv(["SET", f.kv, value]);
     await kv(["SET", savedAtKey(f.kv), at]);
     await loadSquareVaultEnv(); // "saved keys go live at once" — no redeploy
+    invalidateConnection();
     return NextResponse.json({ ok: true, saved: true, at });
   } catch (err) {
     return NextResponse.json(
