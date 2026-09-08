@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { priceLine, storeCardModel } from "@/components/store/StoreItemCard";
+import { priceLine as itemPagePriceLine } from "@/app/store/[id]/page";
 import type { StoreItem } from "@/lib/store";
 
 /**
@@ -16,9 +17,14 @@ import type { StoreItem } from "@/lib/store";
  *                            open, even when the item carries a fiat price
  *   - neither live         → a dash (derive-or-dash, same law as no price
  *                            at all)
- * One helper backs both faces: the item page (src/app/store/[id]/page.tsx)
- * and the shelf card (storeCardModel, StoreItemCard.tsx) — pinned here
- * word for word.
+ * TWO faces carry the identical rule: the item page (src/app/store/[id]/
+ * page.tsx) and the shelf card (storeCardModel, StoreItemCard.tsx). They
+ * are two copies, not one shared import — a "use client" module's exports
+ * cannot be called from a server component (the RSC boundary threw at
+ * runtime under `next dev` when this was first tried as one shared
+ * helper; StoreItemCard.tsx carries "use client" for its useState). Both
+ * copies are pinned here, word for word, plus a parity check that they
+ * never drift apart.
  */
 
 function item(over: Partial<StoreItem>): StoreItem {
@@ -134,5 +140,22 @@ describe("storeCardModel — the shelf card adopts the same rule, backward-compa
   it("neither rail live on the shelf: a dash, not a stale number", () => {
     const m = storeCardModel(item({ price: bothPrices }), NEITHER);
     expect(m.priceLabel).toBe("—");
+  });
+});
+
+describe("the item page's priceLine and the shelf's priceLine never drift apart", () => {
+  const fixtures: [string, StoreItem, { btc: boolean; card: boolean }][] = [
+    ["both live, both prices", item({ price: bothPrices }), BOTH],
+    ["bitcoin off, card live", item({ price: bothPrices }), CARD_ONLY],
+    ["only bitcoin live", item({ price: bothPrices }), BTC_ONLY],
+    ["neither live", item({ price: bothPrices }), NEITHER],
+    ["both live, sats only", item({ price: { sats: 11111 } }), BOTH],
+    ["both live, fiat only", item({ price: { fiat: { amount: 5500, currency: "USD" } } }), BOTH],
+    ["both live, no price at all", item({ price: {} }), BOTH],
+    ["a sale price", item({ price: { sats: 21000 }, sale: { sats: 11111, fiat: { amount: 900, currency: "USD" } } }), BOTH],
+  ];
+
+  it.each(fixtures)("%s", (_label, it_, rails) => {
+    expect(itemPagePriceLine(it_, rails)).toEqual(priceLine(it_, rails));
   });
 });
