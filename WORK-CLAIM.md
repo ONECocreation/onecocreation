@@ -1,56 +1,54 @@
-# WORK-CLAIM — TASK-147 (the pay button on meditations does nothing — bitcoin AND square; the card door never shows)
+# WORK-CLAIM — TASK-148 (every store item card flips like the session cards — front · back · full view)
 
 CLAIMED-BY: **kimi** (Kimi Code CLI, guest builder lane for Pac)
-CLAIMED-AT: 0018.06.17 a₿ (block 966,006)
-BRANCH: `feat/task-147-pay-button-meditations`
-WORKTREE: `~/dev/worktrees/task-147`
-BASE: main tip `d674dbd` (T-129 switches, T-136 money desk with
-ensureSquareVault(), T-138, T-145/146 all merged).
-ROOM: From Love's meeting — "payment button is not currently working when
-trying the meditation areas — we tried bitcoin and square"; "cash payment
-doesn't show up when purchasing a meditation or anything". Bug lane first,
-then the honest states. Live switches today (public read):
-payments.btcpay=false, square=true — and the store item page judges rails
-SYNCHRONOUSLY off siteSwitchesSync()'s cold-instance defaults
-(btcpay:true) and never awaits ensureSquareVault() before
-liveAdapter("square"), so the card door comes and goes per serverless
-instance while a switched-OFF bitcoin door can still render. Faults to
-verify, not assume (spec §2): railLive misjudged for fiat-priced items, no
-card door on the AddonActions strip, checkout errors swallowed silently.
+CLAIMED-AT: 0018.06.17 a₿ · block 966,012
+BRANCH: `feat/task-148-store-cards-flip`
+WORKTREE: `~/dev/worktrees/task-148`
+BASE: main tip `e540fa3` (T-147 pay-doors merged).
+ROOM: From Love's meeting + the Admiral's word — the item cards in /store
+"are not flipping — it extends the card in an unnatural way, it goes
+outside the box". The shelf cards ride a QuickView peek Sheet whose
+position:fixed is trapped by the .card's backdrop-filter containing block
+(the exact failure ServiceCard's header retires for sessions), while the
+session cards on /book already turn over clean on the house flip contract
+(house.css `.flip-card`). The fix is NOT a second flip: the store shelf
+adopts the same 3D flip mechanism, one card box, front rules the height,
+back scrolls inside, click anywhere turns it, Enter/Space turns it, the
+full-view door on both faces → /store/[id], and GET IT ⚡ / ADD TO BASKET
+leave the card for the full view page (the Admiral: "where the user can
+decide to purchase or add to cart"). Session cards stay byte-identical —
+their component is not touched.
 Does NOT touch `.env.local`, :3000/:4100 (the operator's live processes),
-the live vault or live site (read-only public GETs only, per spec), the
-main checkout, `~/dev/worktrees/task-137` (another lane's live claim), or
-any deployment. Dev server on :3138 only, killed by recorded PID.
+the live site, the main checkout, `~/dev/worktrees/task-137` (another
+lane's live claim), or any deployment. Dev server on :3139 only, killed
+by recorded PID.
 LAW: LANE-CLAIM before building (K5 ruling 1). Commit at gates. Never merge
 to main, never push, never archive. ENGLISH-PIN. No new dependencies. BFT
-dating in comments. Love design laws: no serif faces, contrast ≥ 4.5:1, no
-color-only meaning. Module law: no cross-app imports. Derive-or-dash —
-never a fake link, number or name. The word is CARD, never "cash".
+dating in comments. Love design laws: no serif faces (house tokens only),
+contrast ≥ 4.5:1, no color-only meaning. Derive-or-dash — never a fake
+link, number or name.
 
 Files this lane touches (the spec's OWNS list, nothing else):
 - `WORK-CLAIM.md` (this claim)
-- `src/components/store/BuyPanel.tsx` — the honest button states + the
-  rail's own error sentence, never a silent nothing
-- `src/app/store/[id]/page.tsx` — RAIL PROPS ONLY: await getSiteConfig() +
-  ensureSquareVault() before liveAdapter()/liveAdapter("square") are judged
-- `src/app/api/store/checkout/route.ts` — ERROR SHAPE ONLY: a throwing
-  adapter answers with the rail's own sentence as JSON, never a bare 500
-- `src/components/store/AddonActions.tsx` + `AddTierButton.tsx` — the strip
-  doors: card door when the card rail is live, failures spoken in words
-- `tests/buy-panel.test.ts` (new) — the vitest pins
-- (flagged in SUMMARY if forced) `src/app/packages/[slug]/page.tsx` — the
-  one line each that passes rail truth into AddonActions; without it the
-  strip's card door can never render (spec §2 fault 2)
+- `src/components/store/StoreItemCard.tsx` (new) — the shelf card on the
+  ONE house flip mechanism, reusing house.css's `.flip-card` contract
+- `src/app/store/page.tsx` — CARD WIRING ONLY: the shelf maps items into
+  StoreItemCard; the QuickView Sheet leaves the shelf
+- `src/components/store/QuickView.tsx` — RETIRED (dead after the rewiring;
+  it is the culprit: its Sheet is the fixed-position peek trapped inside
+  the card's containing block)
+- `src/app/house.css` — CARD FLIP RULES ONLY, if the contract needs a line
+- `tests/store-cards.test.ts` (new) — the vitest pins
 
-Brief: `~/dev/kimi/inbox/TASK-147-oc-pay-button-meditations.md` (cut
+Brief: `~/dev/kimi/inbox/TASK-148-oc-store-cards-flip.md` (cut
 0018.06.17 a₿)
-Gates: `npx vitest run` (main baseline 121 → grows) · ALL
-`node scripts/*.test.mjs` (square-payments 36 holds) · `npm run lint` = 0 ·
-`npx tsc --noEmit` · `npx next build` · shots both themes: a meditation
-item with (a) card only, (b) bitcoin only, (c) neither, (d) the error
-sentence after a failed checkout (own dev server :3138, stopped by PID
-after; harness borrowed per the outbox examples, lives in the outbox, not
-the repo; puppeteer borrowed by require-path, NEVER a dependency)
-→ `~/dev/kimi/outbox/task-147/shots/` · SUMMARY.md in
-`~/dev/kimi/outbox/task-147/`, ending LANE-DONE + full sha.
+Gates: `npx vitest run` (main baseline 130 + follow-throughs → grows) · ALL
+`node scripts/*.test.mjs` (calendar 70, cartridge 183, square-payments 36
+hold) · `npm run lint` = 0 · `npx tsc --noEmit` · `npx next build` · shots
+both themes × 1440/390: /store front, one card flipped, the full view
+page, /book's session cards unchanged (own dev server :3139, stopped by
+PID after; harness borrowed per the outbox examples, lives in the outbox,
+not the repo; puppeteer borrowed by require-path, NEVER a dependency)
+→ `~/dev/kimi/outbox/task-148/shots/` · SUMMARY.md in
+`~/dev/kimi/outbox/task-148/`, ending LANE-DONE + full sha.
 Questions → Number One.
