@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import TipJar from "@/components/TipJar";
 import WildDoors from "@/components/WildDoors";
 import StackedHero from "@/components/StackedHero";
+import PaletteVars from "@/components/PaletteVars";
+import PopupHost from "@/components/PopupHost";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
 import { jarsOpen } from "@/lib/payments";
 
 /**
@@ -37,7 +44,30 @@ const MORE_DOORS = [
   { icon: "🌙", title: "Share the free meditation", words: "sometimes the greatest gift is a friend's ear", href: "/meditation" },
 ];
 
-export default function SupportPage() {
+export default async function SupportPage() {
+  /* TASK-159 (0018.06.17 a₿ · block 966,055) — PUCK P4 first read, mirroring
+     /about and T-153's /memberships byte-for-byte: once Love publishes the
+     Puck rebuild (/studio/support -> Publish to live), the live /support
+     serves it. Until then, the hand-built page below is untouched — nothing
+     changes for visitors until she chooses it.
+     ── LANE CONTRACT (T-160): the feature-switch gate (NotOpenYet)
+     early-returns ABOVE this branch — the order is (1) switch gate,
+     (2) this Puck-first read, (3) the hand-built fallback. ── */
+  const puck = await getPuckPage("support");
+  if (puck) {
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main><Render config={config} data={puck as Data} /></main>
+        <SiteFooter />
+        {/* STUDIO P2: popup host rides both branches of this page */}
+        <PopupHost />
+      </>
+    );
+  }
+  /* ── end TASK-159 Puck-first branch; hand-built fallback below ── */
+
   return (
     <>
       <SiteHeader />
