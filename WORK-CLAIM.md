@@ -1,63 +1,61 @@
-# WORK-CLAIM — TASK-160 (routes follow their switches — NotOpenYet — + Love's Desk roster shows who is online)
+# WORK-CLAIM — TASK-145 (the item editor Love knows — sale USD, type + category, inventory, the ShinePages shelf shape)
 
 CLAIMED-BY: **kimi** (Kimi Code CLI, guest builder lane for Pac)
-CLAIMED-AT: 0018.06.17 a₿ · block 966,055
-BRANCH: `feat/task-160-route-gates-roster`
-WORKTREE: `~/dev/worktrees/task-160`
-BASE: main tip `31a5a10` (T-156 merge).
-ROOM: Cut from the T-137 + T-149 reviews. (A) Routes behind feature
-switches were never gated at the page level — the nav hides them but a
-direct URL still renders. With `community` AND `classes` OFF, /classes
-renders the shared `NotOpenYet` panel (T-137) inside the site chrome; same
-for /book vs `sessions`; /store vs `store` is said done — verify and pin.
-/meditation carries NO feature switch by design (T-129 kept the free
-meditation reachable either way; T-137's Community header always-on
-invariant depends on it; the welcome-trio gift and the one real popup both
-point at it) — flag-and-stop with evidence, no gate. (B) Love's Desk
-`RosterPanel.tsx` lists JOINED souls with no online filter — reuse T-149's
-exported `soulsOnline`/`isOnline`/`handleOf` so the roster shows who is
-here NOW, display names, and an honest "— nobody here yet".
-CONCURRENCY: lane T-159 is simultaneously adding a Puck-first publish read
-to `src/app/classes/page.tsx` and `src/app/book/page.tsx`. The contract:
-early-return ORDER is (1) switch gate → NotOpenYet (THIS lane, at the very
-top), (2) Puck-first read → Render (theirs), (3) hand-built fallback. The
-gate branch stays minimal and clearly delimited at the top; no surrounding
-restructure.
+CLAIMED-AT: 0018.06.17 a₿ · block 966,060
+BRANCH: `feat/task-145-item-editor`
+WORKTREE: `~/dev/worktrees/task-145`
+BASE: main tip `7c320a9` (T-134…138, T-153, T-159, T-160 already merged).
+ROOM: `/a/store` — the item editor + shelf list. The Admiral: "when I'm
+editing the price of an item it doesn't have a way for me to add the USD
+money… I would like this edit-item menu more similar to the way the items
+were set up in ShinePages" (captures `troubleshooting/onecocreation/
+shine-store1…7.png`). Main already ships (1032ddb + d55d20e): `price.fiat`
+beside sats in the editor, the shelf drops the "~", whole-dollar words via
+`src/lib/money-words.ts` dollars() — NOT rebuilt here, built upon.
+Remaining per the SCOPE UPDATE: sale price in USD beside sale sats · type +
+category (the ShinePages shape; map to the existing ItemKind — a missing
+kind is SAID, not invented) · a Categories view derived from items (rename
+a category = rename on its items) · inventory (count or blank = unlimited;
+counts down on paid orders — additive, no fulfilment wiring beyond the
+count; sold-out flips at 0) · SKU stays · sizes chooser only if the model
+already carries sizes (it does — `sizes?: string[]`, editor + BuyPanel
+already consume it) · the shelf table shows sats · $ · status · category.
+Every field has words next to it; validation in words, never color-only.
+No invented rate: USD never derives sats or vice versa; BuyPanel offers
+only the rails whose price exists (display USD when present — display
+only).
 Does NOT touch `.env.local`, :3000/:4100 (the operator's live processes),
-the live site/vault, the main checkout, any other lane's worktree (T-159
-included), or any deployment. Dev server on :3147 only, killed by recorded
-listener PID (`ss -tlnp`).
+the live site/vault, the main checkout, any other lane's worktree, or any
+deployment. Dev server on :3151 only, killed by recorded listener PID
+(`ss -tlnp`), never the npx wrapper.
 LAW: LANE-CLAIM before building (K5 ruling 1). Commit at gates. Never merge
-to main, never push, never archive. Never `git stash` (shared across
-worktrees). ENGLISH-PIN. No new dependencies. BFT dating in comments. Love
-design laws: no serif faces (house tokens only), contrast ≥ 4.5:1, no
-color-only meaning. Derive-or-dash — never a fake link, number or name.
+to main, never push, never archive. Never `git stash`. ENGLISH-PIN. No new
+dependencies. BFT dating in comments. Love design laws: no serif faces,
+contrast ≥ 4.5:1, words not color for state. Module law. Derive-or-dash.
+No secrets.
 
 Files this lane touches (the spec's OWNS list, nothing else):
 - `WORK-CLAIM.md` (this claim)
-- `src/app/classes/page.tsx` — GATE BRANCH ONLY, at the very top: both
-  `community` and `classes` OFF → NotOpenYet inside the site chrome
-- `src/app/book/page.tsx` — GATE BRANCH ONLY, at the very top: `sessions`
-  OFF → NotOpenYet (before the data reads, per the T-159 order contract)
-- `src/components/console/desk/RosterPanel.tsx` — online-only roster via
-  T-149's `soulsOnline`, display names, "— nobody here yet"
-- `tests/route-gates.test.ts` (new) — the vitest pins (both halves)
-- FORCED EDITS (OWNS exit 2, one-line justifications in SUMMARY.md):
-  `src/lib/matrix.ts` (`roomRoster` gains an additive, capped presence
-  batch on the bot's own token — the desk's only presence path; the
-  panel's filter is dead code without it) and
-  `src/app/api/admin/classroom/roster/route.ts` (pass the joined/presence
-  maps through in single-room mode).
+- `src/lib/store.ts` — ADDITIVE fields only: `category?`, `inventory?`,
+  `sale?.fiat` validation; inventory counts down on a paid (settled) order
+  via the ONE sanctioned state flip; sold-out flips at 0
+- `src/app/a/store/page.tsx` — the form (sale USD + sats, type in words,
+  category free text with suggestions, inventory) and the shelf table
+  (sats · $ · status · category · inventory) + the Items/Categories tabs
+- `src/components/store/BuyPanel.tsx` — show USD when present, display
+  only (no new rail behavior)
+- `tests/store-item-editor.test.ts` (new) — dollars→cents round-trip,
+  fiat saved+read back, sale fiat validated, USD-only live item valid,
+  inventory decrements on a paid-order fixture, categories derived
 
-Brief: `~/dev/kimi/inbox/TASK-160-oc-route-gates-and-roster-online.md`
-(cut 0018.06.17 a₿)
-Gates: `npx vitest run` (grows with the new pins) · ALL
+Brief: `~/dev/kimi/inbox/TASK-145-oc-item-editor-shine.md`
+(cut 0018.06.17 a₿, SCOPE UPDATE same cut)
+Gates: `npx vitest run` (270 on base, must grow) · ALL
 `node scripts/*.test.mjs` (calendar 70, cartridge 183, square-payments 36
-hold) · `npm run lint` = 0 · `npx tsc --noEmit` · `npx next build` · shots:
-/classes with both switches OFF (fixture) both themes, the roster
-before/after (own dev server :3147, stopped by recorded listener PID
-after; harness borrowed per the task-148 outbox idiom — shoot.cjs +
-run-shots.sh, puppeteer by require-path, NEVER a dependency) →
-`~/dev/kimi/outbox/task-160/shots/` · SUMMARY.md in
-`~/dev/kimi/outbox/task-160/`, ending LANE-DONE + full sha.
+confirmed on base) · `npm run lint` = 0 · `npx tsc --noEmit` ·
+`npx next build` exit 0 · shots: item form empty + filled (USD + sats),
+the shelf list, both themes, 1440 + 390 (harness borrowed per the
+task-148 outbox idiom — shoot.cjs + run-shots.sh, puppeteer by
+require-path, NEVER a dependency) → `~/dev/kimi/outbox/task-145/shots/` ·
+SUMMARY.md in `~/dev/kimi/outbox/task-145/`, ending LANE-DONE.
 Questions → Number One.
