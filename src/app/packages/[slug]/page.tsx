@@ -13,7 +13,9 @@ import { TIER_PAGES, TIER_ADDONS, tierPageBySlug, type TierPage } from "@/lib/ti
 import { getSiteConfig, type SiteConfig } from "@/lib/site-config";
 import { getItem } from "@/lib/store";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
-import { dollars } from "@/lib/money-words";
+import { dollars, priceWords, satsWords, defaultPreferOf, type MoneyPrefer } from "@/lib/money-words";
+import { preferFromCookieHeader } from "@/lib/money-preference";
+import { cookies } from "next/headers";
 
 /** Admiral, 0018.06.17 a₿: nothing is offered or recommended whose store item is not live — a hidden
  *  item is off everywhere, not just off the shelf. */
@@ -112,6 +114,23 @@ export default async function TierPage({
      then hand the truth down as props (AddonActions is a client component). */
   await ensureSquareVault();
   const rails = { btcpayLive: liveAdapter() !== null, squareLive: liveAdapter("square") !== null };
+  /* TASK-186 (0018.06.18 a₿) — the tier's money words ride THE ONE DISPLAY
+     LAW: the visitor's `oc-money` word (the checkout toggle writes the
+     cookie, so first paint already speaks their language), the rail-judged
+     default otherwise (fiat when the card rail is live). NEVER the
+     approximation mark — the sats number is Love's own angel number, not a conversion; a dark rail's
+     denomination stays silent (T-157's law rides here too). */
+  const moneyRails = { btc: rails.btcpayLive, card: rails.squareLive };
+  const prefer: MoneyPrefer =
+    preferFromCookieHeader((await cookies()).toString()) ?? defaultPreferOf(moneyRails);
+  const tierWords = priceWords(
+    { sats: t.priceSats, fiat: { amount: t.priceUsd * 100, currency: "USD" } },
+    moneyRails,
+    prefer,
+  );
+  /* the cadence follows what the primary actually IS (a dark rail can hand
+     the lead to the other denomination, whatever the preference said) */
+  const fiatPrimary = moneyRails.card && (prefer === "fiat" || !moneyRails.btc);
   const joined = sp?.joined === "1";
   const [mainLive, oneTimeLive, upgradeLive, related, addons] = await Promise.all([
     itemLive(page.slug),
@@ -161,13 +180,24 @@ export default async function TierPage({
             {/* words on the left — Love's own */}
             <div>
               <h2 style={{ fontFamily: "var(--font-h2)", fontWeight: 400, fontSize: "1.5rem" }}>{page.heading}</h2>
-              <div className="price">${t.priceUsd}<small>/mo</small></div>
+              {/* TASK-186 — preferred denomination first (the big .price
+                  line), the other as the "or …" echo, only when both exist
+                  and both rails are live; a single denomination shows alone;
+                  never the approximation mark — the sats number is Love's own */}
+              <div className="price">
+                {tierWords.primary}
+                {tierWords.primary !== "—" && <small>{fiatPrimary ? "/mo" : " / month"}</small>}
+              </div>
+              {tierWords.secondary && (
+                <div className="sats">
+                  {fiatPrimary ? `or ⚡ ${satsWords(t.priceSats)} / month` : `${tierWords.secondary} / month`}
+                </div>
+              )}
               {page.oneTime && (
                 <div style={{ color: "var(--muted)", fontSize: ".92rem" }}>
                   or ${page.oneTime.usd} — {page.oneTime.label}
                 </div>
               )}
-              <div className="sats">⚡ ≈ {t.priceSats.toLocaleString()} sats / month</div>
               <p style={{ fontWeight: 600, color: "var(--ink-strong)", marginTop: 14 }}>{page.cadence}</p>
               {page.paragraphs.map((p) => (
                 <p key={p.slice(0, 24)} style={{ color: "var(--ink-body)", margin: "14px 0" }}>{p}</p>
@@ -248,13 +278,29 @@ export default async function TierPage({
               {relatedLive.map((p, i) => {
                 const rt = TIERS[p.tier];
                 const img = { A: "/images/weekly-intuitive.webp", B: "/images/observer.webp", C: "/images/evening-star.webp" }[p.tier];
+                {/* TASK-186 — the related cards read the same ONE law */}
+                const rw = priceWords(
+                  { sats: rt.priceSats, fiat: { amount: rt.priceUsd * 100, currency: "USD" } },
+                  moneyRails,
+                  prefer,
+                );
                 return (
                   <Link key={p.slug} href={`/packages/${p.slug}`} className="card reveal"
                     style={{ textDecoration: "none", transitionDelay: `${i * 0.12}s` }}>
                     <img className="thumb" src={img} alt={rt.name} />
                     <div className="body" style={{ alignItems: "center", textAlign: "center" }}>
                       <h3 style={{ fontWeight: 400, fontSize: "1.1rem", margin: 0 }}>{rt.name}</h3>
-                      <div className="price" style={{ fontSize: "1.2rem" }}>${rt.priceUsd}<small>/mo</small></div>
+                      <div className="price" style={{ fontSize: "1.2rem" }}>
+                        {rw.primary}
+                        {rw.primary !== "—" && (
+                          <small>{moneyRails.card && (prefer === "fiat" || !moneyRails.btc) ? "/mo" : " / month"}</small>
+                        )}
+                        {rw.secondary && (
+                          <span style={{ display: "block", fontSize: ".72rem", fontWeight: 400, color: "var(--muted)" }}>
+                            {rw.secondary} / month
+                          </span>
+                        )}
+                      </div>
                       <span className="btn btn-sm push" style={{ marginTop: 10 }}>YES!</span>
                     </div>
                   </Link>
