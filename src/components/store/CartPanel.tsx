@@ -5,6 +5,10 @@ import { useEffect, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
 import { priceWords, satsWords, type MoneyPrefer, type MoneyRails } from "@/lib/money-words";
 import { readMemberPrefer, saveMemberPrefer, useMoneyPrefer } from "@/lib/money-preference";
+/* TASK-198 — the ONE money-word reader (T-186's own rule): the basket's
+ * rail follows the same derivation as the single-item door, never a second
+ * reader invented here. railForPrefer is a pure export, reused read-only. */
+import { railForPrefer } from "./BuyPanel";
 
 /* eslint-disable @next/next/no-img-element */
 import CartTimePicker from "./CartTimePicker";
@@ -183,6 +187,10 @@ export default function CartPanel({
     setBusy(true);
     setError(null);
     try {
+      // TASK-198 — the money word picks the rail (T-186's own toggle, the
+      // single-item door's own derivation): fiat asks for Square, sats
+      // keeps the bitcoin default — same helper, one reading of the word.
+      const chosenRail = railForPrefer(prefer, { btcpay: rails.btc, square: rails.card });
       const res = await fetch("/api/cart/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -192,6 +200,7 @@ export default function CartPanel({
           shipping: needsShipping ? { name: shipName, address: shipAddr } : undefined,
           location: hasInPerson ? { city, state: stateReg, zip } : undefined,
           name: shipName || undefined,
+          rail: chosenRail === "square" ? "card" : undefined,
         }),
       });
       const data = await res.json();

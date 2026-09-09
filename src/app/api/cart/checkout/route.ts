@@ -10,6 +10,7 @@ import {
   getItem,
   type OrderRecord,
   type PriceSnapshot,
+  type Price,
 } from "@/lib/store";
 import { getService } from "@/lib/booking";
 import {
@@ -37,13 +38,20 @@ export const dynamic = "force-dynamic";
  * refund with a kind letter). Digital/package lines require a signed-in
  * member (ruling #3).
  */
-export async function POST(request: Request) {
-  await getSiteConfig(); // T-147 seam 1 (Number One): warm the switch truth before judging a rail on a cold instance
-  await ensureSquareVault();
-  const adapter = liveAdapter();
-  if (!adapter) return NextResponse.json({ ok: false, reason: "payment rail not connected" }, { status: 503 });
-  if (!ordersConfigured()) return NextResponse.json({ ok: false, reason: "order store not configured" }, { status: 503 });
+/** TASK-198 (0018.06.18 a₿) — the sats-first price of a line, OR its fiat
+ *  price on the card rail (never both, never a rate between them): mirrors
+ *  store/checkout's per-item honesty at the basket's own multi-line scale.
+ *  A missing price on the asked rail is a 409 in the caller's own words,
+ *  never a silent fallback to the other rail's number. */
+function railPrice(
+  price: Price,
+  wantsCard: boolean,
+): { amount: number; currency: string } | null {
+  if (wantsCard) return price.fiat ? { amount: price.fiat.amount, currency: price.fiat.currency } : null;
+  return price.sats != null ? { amount: price.sats, currency: "SATS" } : null;
+}
 
+export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     discountCode?: string;
     contact?: { email?: string };
@@ -51,7 +59,23 @@ export async function POST(request: Request) {
     /** where the mobile studio drives — required with an in-person session */
     location?: { city?: string; state?: string; zip?: string };
     name?: string;
+    /** TASK-198 — the money word's own rail: "card" asks for Square
+     *  (fiat-only, mirrors /api/store/checkout); omitted keeps today's
+     *  sats-first default (BTCPay). */
+    rail?: "card";
   };
+  const wantsCard = body.rail === "card";
+
+  await getSiteConfig(); // T-147 seam 1 (Number One): warm the switch truth before judging a rail on a cold instance
+  await ensureSquareVault();
+  const adapter = liveAdapter(wantsCard ? "square" : undefined);
+  if (!adapter) {
+    return NextResponse.json(
+      { ok: false, reason: wantsCard ? "card rail not connected" : "payment rail not connected" },
+      { status: 503 },
+    );
+  }
+  if (!ordersConfigured()) return NextResponse.json({ ok: false, reason: "order store not configured" }, { status: 503 });
 
   const fren = frenFromRequest(request);
   const { id: rawId, anon } = cartIdFromRequest(request);
@@ -68,7 +92,22 @@ export async function POST(request: Request) {
   const cart = await getCart(cartId);
   if (cart.lines.length === 0) return NextResponse.json({ ok: false, reason: "your basket is empty" }, { status: 400 });
 
-  let totalSats = 0;
+  // TASK-198 — an offer is a sats word (the PWYC rail's own law, CartPanel's
+  // own comment above cartTotalFiat): there is no fiat truth for it, so the
+  // card rail never carries one — honest refusal, never a silent drop or an
+  // invented fiat number for the gap.
+  if (wantsCard && cart.lines.some((l) => l.offerSats != null)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        reason: "a pay-what-you-can offer in this basket only settles in sats — pay by bitcoin, or clear the offer, to use a card",
+      },
+      { status: 409 },
+    );
+  }
+
+  let totalAmount = 0;
+  let fiatCurrency: string | null = null;
   let needsShipping = false;
   let hasGated = false;
   let hasInPerson = false;
@@ -83,19 +122,33 @@ export async function POST(request: Request) {
       if (!service || service.status !== "live") {
         return NextResponse.json({ ok: false, reason: `that session left the shelf — remove it and retry` }, { status: 409 });
       }
-      const listSats = service.price.sats;
-      if (listSats == null) {
-        return NextResponse.json({ ok: false, reason: `"${service.title}" has no sats price — cart checkout is sats-first` }, { status: 409 });
+      const priced = railPrice(service.price, wantsCard);
+      if (!priced) {
+        return NextResponse.json(
+          {
+            ok: false,
+            reason: wantsCard
+              ? `"${service.title}" has no fiat price — not purchasable by card`
+              : `"${service.title}" has no sats price — cart checkout is sats-first`,
+          },
+          { status: 409 },
+        );
       }
-      const lineSats = l.offerSats ?? listSats;
-      totalSats += lineSats;
-      if (l.offerSats != null && l.offerSats < listSats) pwycPending = true;
+      if (wantsCard) {
+        if (fiatCurrency && fiatCurrency !== priced.currency) {
+          return NextResponse.json({ ok: false, reason: "this basket's prices don't share one currency — can't total it by card" }, { status: 409 });
+        }
+        fiatCurrency = priced.currency;
+      }
+      const lineAmount = l.offerSats ?? priced.amount;
+      totalAmount += lineAmount;
+      if (!wantsCard && l.offerSats != null && l.offerSats < priced.amount) pwycPending = true;
       lineItems.push({
         itemId: service.id,
         title: service.title,
         qty: 1,
         offerSats: l.offerSats,
-        listSats,
+        listSats: wantsCard ? undefined : priced.amount,
         giftTo: l.giftTo,
         voucher: true,
       });
@@ -119,13 +172,27 @@ export async function POST(request: Request) {
           { status: 409 },
         );
       }
-      const listSats = service.price.sats;
-      if (listSats == null) {
-        return NextResponse.json({ ok: false, reason: `"${service.title}" has no sats price — cart checkout is sats-first` }, { status: 409 });
+      const priced = railPrice(service.price, wantsCard);
+      if (!priced) {
+        return NextResponse.json(
+          {
+            ok: false,
+            reason: wantsCard
+              ? `"${service.title}" has no fiat price — not purchasable by card`
+              : `"${service.title}" has no sats price — cart checkout is sats-first`,
+          },
+          { status: 409 },
+        );
       }
-      const lineSats = l.offerSats ?? listSats;
-      totalSats += lineSats;
-      if (l.offerSats != null && l.offerSats < listSats) pwycPending = true;
+      if (wantsCard) {
+        if (fiatCurrency && fiatCurrency !== priced.currency) {
+          return NextResponse.json({ ok: false, reason: "this basket's prices don't share one currency — can't total it by card" }, { status: 409 });
+        }
+        fiatCurrency = priced.currency;
+      }
+      const lineAmount = l.offerSats ?? priced.amount;
+      totalAmount += lineAmount;
+      if (!wantsCard && l.offerSats != null && l.offerSats < priced.amount) pwycPending = true;
       if (service.meetingRail?.kind === "inPerson") hasInPerson = true;
       lineItems.push({
         itemId: service.id,
@@ -133,7 +200,7 @@ export async function POST(request: Request) {
         qty: 1,
         bookingId: l.slot.holdId,
         offerSats: l.offerSats,
-        listSats,
+        listSats: wantsCard ? undefined : priced.amount,
         giftTo: l.giftTo,
       });
       slotLines.push({ line: l, serviceTitle: service.title, endUtc: l.slot.endUtc, artistTz: service.artistTz });
@@ -145,18 +212,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, reason: `"${l.itemId}" left the shelf — remove it and retry` }, { status: 409 });
     }
     const eff = item.sale ?? item.price;
-    if (eff.sats == null) {
-      return NextResponse.json({ ok: false, reason: `"${item.title}" has no sats price — cart checkout is sats-first` }, { status: 409 });
+    const priced = railPrice(eff, wantsCard);
+    if (!priced) {
+      return NextResponse.json(
+        {
+          ok: false,
+          reason: wantsCard
+            ? `"${item.title}" has no fiat price — not purchasable by card`
+            : `"${item.title}" has no sats price — cart checkout is sats-first`,
+        },
+        { status: 409 },
+      );
     }
-    const listSats = eff.sats * l.qty;
-    const lineSats = l.offerSats ?? listSats;
-    totalSats += lineSats;
-    if (l.offerSats != null && l.offerSats < listSats) pwycPending = true;
+    if (wantsCard) {
+      if (fiatCurrency && fiatCurrency !== priced.currency) {
+        return NextResponse.json({ ok: false, reason: "this basket's prices don't share one currency — can't total it by card" }, { status: 409 });
+      }
+      fiatCurrency = priced.currency;
+    }
+    const listAmount = priced.amount * l.qty;
+    const lineAmount = l.offerSats ?? listAmount;
+    totalAmount += lineAmount;
+    if (!wantsCard && l.offerSats != null && l.offerSats < listAmount) pwycPending = true;
     if (item.kind === "self" || item.kind === "fourthwall") needsShipping = true;
     // retreat seats ride the gated rail too — the guest must be reachable
     // (their email becomes the account, same as digital/package)
     if (item.kind === "digital" || item.kind === "package" || item.kind === "retreat") hasGated = true;
-    lineItems.push({ itemId: item.id, title: item.title, qty: l.qty, size: l.size, offerSats: l.offerSats, listSats, giftTo: l.giftTo });
+    lineItems.push({ itemId: item.id, title: item.title, qty: l.qty, size: l.size, offerSats: l.offerSats, listSats: wantsCard ? undefined : listAmount, giftTo: l.giftTo });
   }
 
   // a guest WITH an email checks out fine (Admiral, 0018.05.18): the email
@@ -187,7 +269,11 @@ export async function POST(request: Request) {
     );
   }
 
-  let snapshot: PriceSnapshot = { amount: totalSats, currency: "SATS", at: new Date().toISOString() };
+  let snapshot: PriceSnapshot = {
+    amount: totalAmount,
+    currency: wantsCard ? fiatCurrency! : "SATS",
+    at: new Date().toISOString(),
+  };
   let discountApplied: { code: string; originalAmount: number } | undefined;
   if (body.discountCode) {
     const d = await findDiscount(body.discountCode);
