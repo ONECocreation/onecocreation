@@ -98,6 +98,8 @@ export default function CartPanel({
      total flips every price on the page and remembers it. A signed-in
      member's saved word wins over the cookie and is written back on flip. */
   const [prefer, setPrefer] = useMoneyPrefer(rails);
+  /* the words follow the rail (the bolt on a card charge is a lie of omission — BuyPanel's law, T-198 follow-through) */
+  const cardRail = railForPrefer(prefer, { btcpay: rails.btc, square: rails.card }) === "square";
   const [memberPrefKnown, setMemberPrefKnown] = useState(false);
   useEffect(() => {
     let live = true;
@@ -527,7 +529,7 @@ export default function CartPanel({
           className="btn btn-gold btn-shimmer"
           style={{ opacity: busy || needsTime || (needsShipping && (!shipName || !shipAddr)) || (hasInPerson && (!city || !stateReg || !zip)) ? 0.5 : 1 }}
         >
-          {busy ? "Opening invoice…" : needsTime ? "Choose your time first ⏰" : "Checkout ⚡"}
+          {busy ? (cardRail ? "Opening card checkout…" : "Opening invoice…") : needsTime ? "Choose your time first ⏰" : cardRail ? "Checkout 💳" : "Checkout ⚡"}
         </button>
       </div>
       {error && <p style={{ margin: "10px 0 0", fontSize: ".8rem", color: "var(--err)", textAlign: "center" }}>{error}</p>}

@@ -33,7 +33,7 @@ export default async function CartPage() {
               <span className="sh-teal">BASKET 🧺</span>
             </h1>
             <p style={{ color: "var(--muted)", fontSize: ".9rem", margin: "14px 0 0" }}>
-              one checkout, one lightning invoice — everything settles together.
+              one checkout — everything settles together, by lightning or by card.
             </p>
           </div>
           <CartPanel rails={rails} />
