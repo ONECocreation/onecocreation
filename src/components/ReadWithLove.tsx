@@ -2,6 +2,7 @@
 
 import useFrenSession from "@/hooks/useFrenSession";
 import { ROOMS } from "@/lib/matrix-rooms";
+import { weeklyReadingDoor, readingDoorHref, type VisitorSession } from "@/components/sections";
 
 /**
  * READ WITH LOVE — THE FREE READING DOOR (TASK-156, 0018.06.17 a₿, Love's
@@ -14,34 +15,11 @@ import { ROOMS } from "@/lib/matrix-rooms";
  * like its WildDoors siblings.
  */
 
-/** The reading room's slug, DERIVED from the rooms registry. TASK-174
- *  (0018.06.17 a₿ · block 966094): the free path leads to the FREE room —
- *  the one whose door is open to every member (minTier "all"), the Heart
- *  Field Commons — so the card's own words ("free for every member") stay
- *  true. Before this lane it derived the room whose title says "Reading"
- *  ("Chronicles: Weekly Reading", a tier-B room) while saying "free".
- *  Derive-or-dash: no free room in the registry → null, and the card shows
- *  its words with NO door rather than a fake link. */
-const readingRoom = ROOMS.find((r) => r.minTier === "all");
-export const READING_ROOM_SLUG: string | null = readingRoom
-  ? readingRoom.id.slice(1, readingRoom.id.indexOf(":"))
-  : null;
-export const READING_ROOM_PATH: string | null = READING_ROOM_SLUG
-  ? `/rooms/${READING_ROOM_SLUG}`
-  : null;
-
-/** Where the door leads. Exported for tests/free-reading-path.test.ts (the
- *  house pins the model, not the render — same idiom as EmailDoor's
- *  showSwitchDoor). */
-export function readingDoorHref(signedIn: boolean): string | null {
-  if (!READING_ROOM_PATH) return null;
-  return signedIn
-    ? READING_ROOM_PATH
-    : `/login?next=${encodeURIComponent(READING_ROOM_PATH)}`;
-}
-
 export default function ReadWithLove() {
   const { fren } = useFrenSession();
+  // Convert fren session to VisitorSession type
+  const visitor: VisitorSession | null = fren ? { handle: fren.handle, space: fren.space } : null;
+  const readingDoor = weeklyReadingDoor(ROOMS, visitor);
   const href = readingDoorHref(!!fren);
   const body = (
     <>

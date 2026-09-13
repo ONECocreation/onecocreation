@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { sessionsFromCookieHeader } from "@/lib/fren-auth";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PopupHost from "@/components/PopupHost";
@@ -11,11 +13,14 @@ import {
 export const dynamic = "force-dynamic";
 
 export default function Home() {
+  const cookieStore = cookies();
+  const sessions = sessionsFromCookieHeader(cookieStore.toString());
+  const session = sessions.length ? { handle: sessions[0].handle, space: sessions[0].space } : null;
   return (
     <>
       <SiteHeader />
       <main>
-        <Hero />
+        <Hero session={session} />
         <About />
         <Packages />
         <Classes />

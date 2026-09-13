@@ -35,7 +35,16 @@ export interface WeeklyReadingDoor {
   words: string;
 }
 
-export function weeklyReadingDoor(rooms: MatrixRoom[] = ROOMS): WeeklyReadingDoor | null {
+/** The signed-in state of the visitor — from the session cookie */
+export interface VisitorSession {
+  handle: string;
+  space: string;
+}
+
+export function weeklyReadingDoor(
+  rooms: MatrixRoom[] = ROOMS,
+  visitor?: VisitorSession | null
+): WeeklyReadingDoor | null {
   const slugOf = (id: string) => id.slice(1, id.indexOf(":"));
   const room = rooms.find((r) => slugOf(r.id) === "weekly-reading");
   if (!room) return null;
@@ -46,8 +55,32 @@ export function weeklyReadingDoor(rooms: MatrixRoom[] = ROOMS): WeeklyReadingDoo
   return { href: `/rooms/${slugOf(room.id)}`, words };
 }
 
-export function Hero() {
-  const readingDoor = weeklyReadingDoor();
+/** The reading room's slug, DERIVED from the rooms registry. TASK-174
+ *  (0018.06.17 a₿ · block 966094): the free path leads to the FREE room —
+ *  the one whose door is open to every member (minTier "all"), the Heart
+ *  Field Commons — so the card's own words ("free for every member") stay
+ *  true. Before this lane it derived the room whose title says "Reading"
+ *  ("Chronicles: Weekly Reading", a tier-B room) while saying "free".
+ *  Derive-or-dash: no free room in the registry → null, and the card shows
+ *  its words with NO door rather than a fake link. */
+const readingRoom = ROOMS.find((r) => r.minTier === "all");
+export const READING_ROOM_SLUG: string | null = readingRoom
+  ? readingRoom.id.slice(1, readingRoom.id.indexOf(":"))
+  : null;
+export const READING_ROOM_PATH: string | null = READING_ROOM_SLUG
+  ? `/rooms/${READING_ROOM_SLUG}`
+  : null;
+
+/** Where the reading door leads — for the ReadWithLove component */
+export function readingDoorHref(signedIn: boolean): string | null {
+  if (!READING_ROOM_PATH) return null;
+  return signedIn
+    ? READING_ROOM_PATH
+    : `/login?next=${encodeURIComponent(READING_ROOM_PATH)}`;
+}
+
+export function Hero({ session }: { session?: VisitorSession | null }) {
+  const readingDoor = weeklyReadingDoor(ROOMS, session);
   return (
     <section className="hero keep-dark">{/* keep-dark: the design holds the dark hero in both
         themes — "light code draws in light against the void" (cartridge.css);

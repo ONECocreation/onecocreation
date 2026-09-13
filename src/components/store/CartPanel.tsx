@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
 import { priceWords, satsWords, type MoneyPrefer, type MoneyRails } from "@/lib/money-words";
 import { readMemberPrefer, saveMemberPrefer, useMoneyPrefer } from "@/lib/money-preference";
+import { readSession } from "@/lib/session-read";
 /* TASK-198 — the ONE money-word reader (T-186's own rule): the basket's
  * rail follows the same derivation as the single-item door, never a second
  * reader invented here. railForPrefer is a pure export, reused read-only. */
@@ -101,6 +102,7 @@ export default function CartPanel({
   /* the words follow the rail (the bolt on a card charge is a lie of omission — BuyPanel's law, T-198 follow-through) */
   const cardRail = railForPrefer(prefer, { btcpay: rails.btc, square: rails.card }) === "square";
   const [memberPrefKnown, setMemberPrefKnown] = useState(false);
+  const [memberSession, setMemberSession] = useState<{ name: string; handle: string } | null>(null);
   useEffect(() => {
     let live = true;
     readMemberPrefer()
@@ -110,6 +112,12 @@ export default function CartPanel({
         if (m.prefer) setPrefer(m.prefer); // signed in wins — the browser learns the word
       })
       .catch(() => {});
+    // Also read the session for pre-filling email
+    readSession().then((s) => {
+      if (live && s && s.space === "email") {
+        setMemberSession({ name: s.name, handle: s.handle });
+      }
+    }).catch(() => {});
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -193,12 +201,14 @@ export default function CartPanel({
       // single-item door's own derivation): fiat asks for Square, sats
       // keeps the bitcoin default — same helper, one reading of the word.
       const chosenRail = railForPrefer(prefer, { btcpay: rails.btc, square: rails.card });
+      // TASK-210 — use member session email when signed in
+      const contactEmail = email || (memberSession ? memberSession.handle : undefined);
       const res = await fetch("/api/cart/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           discountCode: discountCode.trim() || undefined,
-          contact: email ? { email } : undefined,
+          contact: contactEmail ? { email: contactEmail } : undefined,
           shipping: needsShipping ? { name: shipName, address: shipAddr } : undefined,
           location: hasInPerson ? { city, state: stateReg, zip } : undefined,
           name: shipName || undefined,
@@ -482,11 +492,19 @@ export default function CartPanel({
       </div>
 
       <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
-        <label style={fieldLabel}>
-          email for your receipt {gated || hasSession ? "" : "(optional)"}
-          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email"
-            style={{ ...glassField, marginTop: 3 }} />
-        </label>
+        {/* TASK-210 — signed-in email members don't see the email field; it's pre-filled from the session */}
+        {!memberSession && (
+          <label style={fieldLabel}>
+            email for your receipt {gated || hasSession ? "" : "(optional)"}
+            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email"
+              style={{ ...glassField, marginTop: 3 }} />
+          </label>
+        )}
+        {memberSession && (
+          <p style={{ ...fieldLabel, marginBottom: 3, color: "var(--ok)" }}>
+            Signed in as <b>{memberSession.name}</b> — receipt goes to <b>{memberSession.handle}</b>
+          </p>
+        )}
         <label style={fieldLabel}>
           discount code (optional)
           <input value={discountCode} onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
