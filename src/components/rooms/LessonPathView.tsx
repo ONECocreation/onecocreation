@@ -69,6 +69,33 @@ export function deriveResources(items: MaterialItem[]): MaterialItem[] {
   return items.filter((m) => m.attachedTo.kind !== "session");
 }
 
+/** TASK-213 (0018.06.23 a₿): the resources card, pulled out so the Stage
+ *  can wear the SAME markup (item 21, "video on top, resources, chat") —
+ *  never a second spelling of the list. Empty resources render nothing
+ *  (derive-or-dash: never an empty box). */
+export function ResourcesCard({ resources }: { resources: MaterialItem[] }) {
+  if (resources.length === 0) return null;
+  return (
+    <div className="card" data-region="resources" style={{ marginTop: 20, padding: "14px 18px" }}>
+      <h3 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: ".98rem", margin: "0 0 10px", color: "var(--ink-strong)" }}>
+        Resources
+      </h3>
+      <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+        {resources.map((m) => (
+          <li key={m.id} style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+            <a href={m.url} target="_blank" rel="noreferrer" style={{ color: "var(--gold-deep)", fontSize: ".86rem", textDecoration: "none" }}>
+              {m.name}
+            </a>
+            <span style={{ fontSize: ".62rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+              {KIND_LABEL[m.kind]}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function doneKey(slug: string): string {
   return `oc-lesson-done:${slug}`;
 }
@@ -172,26 +199,10 @@ export default function LessonPathView({
   if (!feed.open) return <p style={{ color: "var(--muted)" }}>this room&apos;s lesson path opens with your package.</p>;
 
   /* TASK-184: the resources list — the retired Materials vantage's shelf,
-     derived from the same feed, under the path */
-  const resourcesCard = resources.length > 0 && (
-    <div className="card" data-region="resources" style={{ marginTop: 20, padding: "14px 18px" }}>
-      <h3 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: ".98rem", margin: "0 0 10px", color: "var(--ink-strong)" }}>
-        Resources
-      </h3>
-      <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-        {resources.map((m) => (
-          <li key={m.id} style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-            <a href={m.url} target="_blank" rel="noreferrer" style={{ color: "var(--gold-deep)", fontSize: ".86rem", textDecoration: "none" }}>
-              {m.name}
-            </a>
-            <span style={{ fontSize: ".62rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-              {KIND_LABEL[m.kind]}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+     derived from the same feed, under the path. TASK-213: the markup moved
+     to the shared ResourcesCard (above) so the Stage wears the identical
+     card — never a second spelling. */
+  const resourcesCard = <ResourcesCard resources={resources} />;
 
   // no lessons on the shelf: the honest empty state, chat open directly
   // below (not a collapsed drawer — there's nothing here to collapse

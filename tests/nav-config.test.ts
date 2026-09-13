@@ -88,25 +88,29 @@ afterAll(() => {
 });
 
 describe("buildMenu's default — Community is a header, not a switch", () => {
-  it("community OFF: Community still stands with meditation + 11:11; news rides it too (ON by default)", () => {
+  it("community OFF: Community still stands with meditation + 11:11 + the reading room; news rides it too (ON by default)", () => {
     const menu = buildMenu(defaultSiteConfig());
     const community = menu.find((m) => m.label === "Community");
     expect(community).toBeTruthy();
     expect(community?.subs?.map((s) => s.label)).toEqual(
-      expect.arrayContaining(["News & letters", "Free meditation", "11:11 Live with Love"]),
+      expect.arrayContaining(["News & letters", "Free meditation", "11:11 Live with Love", "The reading room"]),
     );
+    // TASK-213: "Classes & rooms" split into two doors — Classes (still
+    // classes-gated) and The reading room (always on, its own gate)
     expect(community?.subs?.map((s) => s.label)).not.toContain("Classes & rooms");
+    expect(community?.subs?.map((s) => s.label)).not.toContain("Classes");
     // Support carries only itself — the old fallback subs are gone
     expect(menu.find((m) => m.label === "Support")?.subs).toBeUndefined();
   });
 
-  it("news OFF, classes ON: News & letters drops off Community, Classes & rooms joins", () => {
+  it("news OFF, classes ON: News & letters drops off Community, Classes joins beside the reading room", () => {
     const c = defaultSiteConfig();
     c.features.news = false;
     c.features.classes = true;
     const community = buildMenu(c).find((m) => m.label === "Community");
     expect(community?.subs?.map((s) => s.label)).not.toContain("News & letters");
-    expect(community?.subs?.map((s) => s.label)).toContain("Classes & rooms");
+    expect(community?.subs?.map((s) => s.label)).toContain("Classes");
+    expect(community?.subs?.map((s) => s.label)).toContain("The reading room");
     expect(community?.subs?.map((s) => s.label)).toContain("Free meditation");
     expect(community?.subs?.map((s) => s.label)).toContain("11:11 Live with Love");
   });

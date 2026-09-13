@@ -146,13 +146,17 @@ describe("the switches — the nav MENU is built from them", () => {
     expect(community?.subs?.map((s) => s.label)).toContain("11:11 Live with Love");
     // news is ON by default → News & letters rides Community too
     expect(community?.subs?.map((s) => s.label)).toContain("News & letters");
-    // classes is OFF by default → Classes & rooms does not
+    // classes is OFF by default → Classes does not (TASK-213 split it off
+    // "Classes & rooms" into its own door, beside The reading room)
     expect(community?.subs?.map((s) => s.label)).not.toContain("Classes & rooms");
+    expect(community?.subs?.map((s) => s.label)).not.toContain("Classes");
+    // the reading room rides regardless of the classes switch — its own door
+    expect(community?.subs?.map((s) => s.label)).toContain("The reading room");
     // Support carries only itself — the old stand-ins are gone for good
     expect(menu.find((m) => m.label === "Support")?.subs).toBeUndefined();
   });
 
-  it("everything ON: Store, Sessions appear too, and Community gains Classes & rooms", () => {
+  it("everything ON: Store, Sessions appear too, and Community gains Classes beside the reading room", () => {
     const all = defaultSiteConfig();
     for (const k of Object.keys(all.features) as (keyof typeof all.features)[]) all.features[k] = true;
     const menu = buildMenu(all);
@@ -161,7 +165,8 @@ describe("the switches — the nav MENU is built from them", () => {
     expect(labels(menu)).toContain("Community");
     const community = menu.find((m) => m.label === "Community");
     expect(community?.subs?.map((s) => s.label)).toContain("Free meditation");
-    expect(community?.subs?.map((s) => s.label)).toContain("Classes & rooms");
+    expect(community?.subs?.map((s) => s.label)).toContain("Classes");
+    expect(community?.subs?.map((s) => s.label)).toContain("The reading room");
     expect(menu.find((m) => m.label === "Support")?.subs).toBeUndefined();
   });
 });
