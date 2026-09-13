@@ -52,6 +52,7 @@
 }
 
 .cl-area-video { grid-area: video; }
+.cl-area-resources { grid-area: resources; }
 .cl-area-chat { grid-area: chat; }
 .cl-area-people { grid-area: people; }
 
@@ -85,12 +86,15 @@
 /* STAGE (TASK-184 — "the Video layout wins"): the live embed leads
    FULL-WIDTH; beneath it the room's chat and who's-here (People folded in
    as the roster) sit side by side. On 390 the stack reads video → chat →
-   people. The materials shelf moved to the Lesson Path's resources list. */
+   people. TASK-213 (0018.06.23 a₿, item 21): a RESOURCES row rides between
+   video and chat/people — full-width, present only when the room has
+   resources (derive-or-dash: an empty grid area costs no space). */
 .cl-grid-stage {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(240px, 2fr);
   grid-template-areas:
     "video video"
+    "resources resources"
     "chat people";
   gap: 20px;
   align-items: start;
@@ -101,6 +105,7 @@
     grid-template-columns: 1fr;
     grid-template-areas:
       "video"
+      "resources"
       "chat"
       "people";
   }

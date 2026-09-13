@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import RoomVideoSlot from "./RoomVideoSlot";
 import RoomPresence, { type RosterResult } from "./RoomPresence";
 import StageChat from "./StageChat";
+import { deriveResources, ResourcesCard } from "./LessonPathView";
+import type { MaterialItem } from "@/lib/class-materials";
 import type { RoomPin } from "@/lib/room-pins";
 import type { RoomGate } from "@/lib/room-access";
 
@@ -15,12 +18,21 @@ import type { RoomGate } from "@/lib/room-access";
  * own chat (StageChat → the SAME RoomView — never a second chat) sits
  * BESIDE who's-here — People folds in here as the roster (RoomPresence,
  * fed the page's ONE per-open roster read — the 429 hunt, see that
- * component's docblock). The materials shelf no longer rides the Stage —
- * Materials merged into the Lesson Path's resources list (the same ruling).
+ * component's docblock).
  *
  * The Sanctuary's pinned welcome folds in here too (the Sanctuary vantage
  * retired; its chat always WAS this chat): "📌 from Love" rides atop the
  * stage when the operator has pinned one.
+ *
+ * TASK-213 (0018.06.23 a₿, Love's call #21 — "video on top, resources,
+ * chat"): a RESOURCES row rides between the video and the chat/people row —
+ * the exact `ResourcesCard` the Lesson Path already renders (`LessonPathView`'s
+ * exported card + `deriveResources`, reused rather than re-spelled), fed by
+ * its own read of the SAME per-room materials feed the Lesson Path reads
+ * (`/api/rooms/[slug]/materials`, already self-gated — a closed room answers
+ * `open:false` rather than a 403, the fetch costs nothing to duplicate here).
+ * Gated identically to the chat/people below it: a closed room takes no
+ * read. Empty resources render nothing (derive-or-dash) — never an empty box.
  */
 export default function StageView({
   slug, alias, title, kind, pin, live, jitsiDomain, liveRoom, door, doorPackage, roster,
@@ -44,6 +56,21 @@ export default function StageView({
    *  gate closed the room for this visitor (no read taken, the soft line). */
   roster?: RosterResult | null;
 }) {
+  const gated = !!door && door !== "open";
+  const [items, setItems] = useState<MaterialItem[] | null>(null);
+
+  useEffect(() => {
+    if (gated) return; // the gate closed — no fetch, same law as the Lesson Path
+    let alive = true;
+    fetch(`/api/rooms/${encodeURIComponent(slug)}/materials`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { ok: false }))
+      .then((d) => { if (alive) setItems(d?.ok && d.open ? (d.items ?? []) : []); })
+      .catch(() => { if (alive) setItems([]); });
+    return () => { alive = false; };
+  }, [slug, gated]);
+
+  const resources = deriveResources(items ?? []);
+
   return (
     <div>
       {pin?.text && (
@@ -58,6 +85,11 @@ export default function StageView({
         <div role="region" className="cl-region cl-area-video" data-region="video" aria-label="Video">
           <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} />
         </div>
+        {resources.length > 0 && (
+          <div role="region" className="cl-region cl-area-resources" aria-label="Resources">
+            <ResourcesCard resources={resources} />
+          </div>
+        )}
         <div role="region" className="cl-region cl-area-chat" data-region="chat" aria-label="Chat">
           <StageChat slug={slug} alias={alias} title={title} kind={kind} />
         </div>

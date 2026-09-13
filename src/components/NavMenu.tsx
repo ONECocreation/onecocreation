@@ -74,6 +74,14 @@ export const PAGE_CATALOG: {
   { href: "/support", label: "Support" },
   { href: "/contact", label: "Contact" },
   { href: "/me", label: "Me…" },
+  /* TASK-213 (0018.06.23 a₿, Love's call #19): the reading gets its own
+     door under Community — the SAME derived room reading-room.ts already
+     feeds ReadWithLove, the member menu, and the Heart Field row (never a
+     second spelling). No `feature`: the door is gated only by the room's
+     own presence in the registry (derive-or-dash), same as Free meditation
+     and 11:11. Omitted entirely when no free room exists — the editor's
+     picker never offers a dead page. */
+  ...(READING_ROOM_PATH ? [{ href: READING_ROOM_PATH, label: "The reading room" }] : []),
 ];
 
 /** The switch (if any) a given href needs ON to show publicly. Unknown
@@ -159,8 +167,13 @@ export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
   }
   // Community is a HEADER (TASK-137): Free meditation and 11:11 Live with
   // Love always exist, so this always renders — the community SWITCH only
-  // still gates the deeper rooms (Classes & rooms follows `classes`, same
-  // as it always has; `community` itself no longer hides the header).
+  // still gates the deeper rooms (Classes follows `classes`, same as it
+  // always has; `community` itself no longer hides the header).
+  // TASK-213 (0018.06.23 a₿, Love's call #19): the reading gets its OWN
+  // door here — the combined "Classes & rooms" split into two doors,
+  // Classes and the reading room. The reading room's gate is the room's
+  // own presence in the registry (derive-or-dash), independent of the
+  // classes switch — same standing as Free meditation and 11:11.
   menu.push({
     label: "Community",
     href: "/classes",
@@ -168,7 +181,8 @@ export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
       ...(s?.features.news ? [{ label: "News & letters", href: "/news" }] : []),
       { label: "Free meditation", href: "/meditation" },
       { label: "11:11 Live with Love", href: "/contact" },
-      ...(s?.features.classes ? [{ label: "Classes & rooms", href: "/classes" }] : []),
+      ...(s?.features.classes ? [{ label: "Classes", href: "/classes" }] : []),
+      ...(READING_ROOM_PATH ? [{ label: "The reading room", href: READING_ROOM_PATH }] : []),
     ],
   });
   menu.push({ label: "Support", href: "/support" });
