@@ -18,6 +18,13 @@
 .stack-hero .sh-amp{font-family:var(--serif);font-weight:400;text-transform:none;
   font-size:clamp(1.1rem,3.4vw,1.9rem);color:var(--gold-deep);letter-spacing:0}
 .stack-hero .sh-sub{font-size:clamp(1.3rem,4.6vw,2.4rem)}
+/* TASK-216 (0018.06.23 a₿, #39 — one header treatment): a named ROSE tone,
+   for the rare page whose own title wants both lines in the rose family
+   (e.g. /classes' "CLASSES & COMMUNITY") — a real CSS rule instead of the
+   inline `style={{color:"var(--rose)"}}` every hand-rolled hero used to
+   carry, so the choice rides the ONE <StackedHero> component, not a copy
+   of its markup. Same font-size as sh-ink/sh-teal — a standalone tone. */
+.stack-hero .sh-rose{font-size:clamp(1.9rem,6.2vw,3.2rem);color:var(--rose)}
 .constellation{font-size:1.25rem;letter-spacing:.4em;margin:12px 0 0}
 .btn-teal{background:linear-gradient(135deg,var(--teal-bright),var(--teal-deep));color:#fff}
 *{box-sizing:border-box}
@@ -43,6 +50,10 @@ h3,h4{font-family:var(--font-h3)}
 .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
 section{padding:76px 0;position:relative}
 .kicker{font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:var(--rose);font-weight:700;margin:0 0 1rem}
+/* TASK-216 (#39): the one page whose kicker wants the teal voice instead of
+   the default rose (/classes' "The Heart Field") — a named modifier, not
+   an inline color a hand-rolled hero used to carry. */
+.kicker-teal{color:var(--teal-bright)}
 /* no font-family here — .sec-h rides h1 or h2 (both tags used), so it takes
    whichever the element selector gives it (FONT TRIO, 0018.05.17) */
 .sec-h{font-size:clamp(1.9rem,5vw,2.6rem);color:var(--ink-strong);font-weight:400}
@@ -650,7 +661,13 @@ main .about-story-sky{background:radial-gradient(760px 460px at 50% 14%, rgba(12
    floating, never uneven. (`.card` is already display:flex/column; this
    block only adds the fill + the bottom column — additive, nothing else
    rests on it.) */
-.room-card{height:100%}
+.room-card{height:100%;padding:14px 18px}
+/* TASK-216 (#37): the padding recipe, moved OFF the component's inline
+   ternary and onto the card itself — the compact variant (CircleView's
+   denser grid) rides a data attribute, never a second class name, so
+   PackageRoomsCard's `className="card room-card"` literal never changes
+   (T-215's two-card-colors regression test reads it verbatim). */
+.room-card[data-compact]{padding:12px 16px}
 .room-card-doors{margin-top:auto;display:grid;gap:8px}
 .room-card-doors .btn{display:block;width:100%;text-align:center}
 /* the signed-in soul's name rides the top of the door column — quiet ink,

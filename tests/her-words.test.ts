@@ -52,8 +52,10 @@ describe("#17 — \"The Heart Field\", two words, no \"Commons\", no dash", () =
   });
 
   it("classes/page.tsx: the kicker reads \"The Heart Field\"", async () => {
+    // TASK-216: the hand-rolled <p className="kicker"> converged on
+    // <StackedHero kicker="…">  — same wording, now a component prop.
     const src = await read("src/app/classes/page.tsx");
-    expect(src).toContain(">The Heart Field</p>");
+    expect(src).toContain('kicker="The Heart Field"');
   });
 
   it("RoomsShelf.tsx: the signed-out line reads \"...the Heart Field opens for you.\"", async () => {

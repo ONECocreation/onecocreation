@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CartPanel from "@/components/store/CartPanel";
+import StackedHero from "@/components/StackedHero";
 import { getSiteConfig } from "@/lib/site-config";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 
@@ -27,11 +28,7 @@ export default async function CartPage() {
       <section>
         <div className="wrap" style={{ maxWidth: 720 }}>
           <div className="center reveal" style={{ marginBottom: 26 }}>
-            <p className="kicker">The Store</p>
-            <h1 className="stack-hero">
-              <span className="sh-ink">YOUR</span>
-              <span className="sh-teal">BASKET 🧺</span>
-            </h1>
+            <StackedHero kicker="The Store" lines={[{ t: "YOUR" }, { t: "BASKET 🧺", tone: "teal" }]} />
             <p style={{ color: "var(--muted)", fontSize: ".9rem", margin: "14px 0 0" }}>
               one checkout — everything settles together, by lightning or by card.
             </p>

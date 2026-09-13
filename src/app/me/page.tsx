@@ -3,7 +3,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
 import MeSwitch from "@/components/me/MeSwitch";
-import { cartridge } from "@/brand/cartridge";
+import StackedHero from "@/components/StackedHero";
 
 export const metadata: Metadata = {
   title: "My field — One Cocreation",
@@ -26,12 +26,7 @@ export default function MePage() {
         <section className="keep-dark sky-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
           <CosmicSky />
           <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "56px 22px 40px" }}>
-            <p className="kicker" style={{ color: "var(--rose)" }}>Members</p>
-            <h1 className="stack-hero">
-              <span className="sh-ink" style={{ color: "var(--ink-strong)" }}>YOUR</span>
-              <span className="sh-teal" style={{ color: "var(--teal-bright)" }}>FIELD</span>
-            </h1>
-            <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
+            <StackedHero kicker="Members" lines={[{ t: "YOUR" }, { t: "FIELD", tone: "teal" }]} constellation />
             <p style={{ color: "var(--ink-body)", fontSize: ".92rem", margin: "16px auto 0", maxWidth: 460 }}>
               Your name, your sessions, your profile card — this room is yours.
             </p>

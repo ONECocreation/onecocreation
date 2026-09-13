@@ -69,7 +69,19 @@ export default function PackageRoomsCard({
   return (
     <div
       className="card room-card"
-      style={{ padding: compact ? "12px 16px" : "14px 18px", opacity: pkg.open ? 1 : 0.82 }}
+      /* TASK-216 (0018.06.23 a₿, #37 — one card grammar): the padding used
+         to be an inline ternary literal on the card itself, the one real
+         outlier in "classes and community cards like the rest" (the OTHER
+         classes/community cards — CommunitySpotlight, the home teaser —
+         already wear the plain house `.card`, T-215). Moved into house.css
+         (`.room-card`/`.room-card[data-compact]`) so the recipe lives in
+         the ONE stylesheet, not a per-component magic number; className
+         stays the exact literal string `"card room-card"` on purpose (the
+         T-215 two-card-colors regression test pins it verbatim) and the
+         compact variant rides a data attribute instead of a template
+         class, for the same reason. */
+      data-compact={compact ? "" : undefined}
+      style={{ opacity: pkg.open ? 1 : 0.82 }}
     >
       {compact ? (
         <p

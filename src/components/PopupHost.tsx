@@ -8,6 +8,7 @@ import type { Data } from "@puckeditor/core";
 import { Render } from "@puckeditor/core";
 import { config } from "@/lib/puck-config";
 import type { PopupTrigger } from "@/lib/puck-store";
+import { popupShouldFireOn } from "@/lib/puck-popups";
 
 /**
  * PopupHost (STUDIO P2): mounts on the ruled routes (home /, /about,
@@ -39,10 +40,18 @@ const seenKey = (name: string) => `oc-popup-seen:${name}`;
    OUTSIDE the reach of `main .keep-dark` (cartridge.css) — so the same
    eight night pins ride inline and the Puck seed content never flips to
    dawn ink on the night card (S21: the 1.71 headline at dawn). Values
-   verbatim from the keep-dark scope. */
+   verbatim from the keep-dark scope.
+   TASK-216 (0018.06.23 a₿, #12 — the dark grounds re-swap): --gold-deep
+   here was still "#D9B24E", the money-metal value T-121 retired when it
+   repointed `main .keep-dark`'s own --gold-deep to the popup pink
+   "#E7B2C3" (see cartridge.css) — this hand-carried COPY was never told.
+   A real one-generation drift, exactly what "pin it with a test so it
+   cannot drift a third time" is for; fixed to match, and
+   tests/keep-dark-bands.test.ts now reads both files so the next edit to
+   either fails loud instead of drifting quietly again. */
 const POPUP_NIGHT_PINS = {
   "--ink-strong": "#F4ECFF", "--ink-body": "#D9D2E4", "--muted": "#9a8fae",
-  "--rose": "#E7B2C3", "--gold-deep": "#D9B24E", "--teal-bright": "#8FD0D8",
+  "--rose": "#E7B2C3", "--gold-deep": "#E7B2C3", "--teal-bright": "#8FD0D8",
   "--glass": "var(--glass-night)", "--glass-edge": "var(--glass-night-edge)",
 } as CSSProperties;
 
@@ -63,8 +72,7 @@ export default function PopupHost() {
       try {
         const reg = (await fetch("/api/puck-live").then((r) => (r.ok ? r.json() : null))) as
           { popups?: Record<string, PopupTrigger> } | null;
-        const hit = Object.entries(reg?.popups ?? {}).find(([, t]) =>
-          t?.enabled && Array.isArray(t.pages) && t.pages.includes(pathname));
+        const hit = Object.entries(reg?.popups ?? {}).find(([, t]) => popupShouldFireOn(t, pathname));
         if (!hit) return;
         const [name, t] = hit;
         if (t.oncePerSession) {

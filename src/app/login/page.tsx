@@ -3,7 +3,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
 import DoorSheet from "@/components/door/DoorSheet";
-import { cartridge } from "@/brand/cartridge";
+import StackedHero from "@/components/StackedHero";
 
 export const metadata: Metadata = {
   title: "Sign in — One Cocreation",
@@ -24,12 +24,7 @@ export default function LoginPage() {
         <section className="keep-dark sky-veil login-galaxy" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
           <CosmicSky />
           <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "56px 22px 40px" }}>
-            <p className="kicker" style={{ color: "var(--rose)" }}>Members</p>
-            <h1 className="stack-hero">
-              <span className="sh-ink" style={{ color: "var(--ink-strong)" }}>WELCOME</span>
-              <span className="sh-teal" style={{ color: "var(--teal-bright)" }}>HOME</span>
-            </h1>
-            <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
+            <StackedHero kicker="Members" lines={[{ t: "WELCOME" }, { t: "HOME", tone: "teal" }]} constellation />
           </div>
         </section>
         <section className="sky-night" style={{ padding: "40px 0 70px" }}>
