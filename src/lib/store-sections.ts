@@ -88,3 +88,29 @@ export function doorForItem(item: Pick<StoreItem, "kind" | "id" | "entitlementTi
   }
   return `/store/${item.id}`;
 }
+
+/**
+ * TASK-215 (0018.06.23 a₿, Love's call #35) — bundles: "hair together, soul
+ * conversations together". A bundle is items sharing one `bundle` word,
+ * clustered together on the shelf under a shared heading — each item keeps
+ * its OWN price and its OWN door (T-198 holds the money rail: this is a
+ * shelf grouping only, never a shared cart or a combined price). Order
+ * preserves each bundle's first appearance among the given items; an item
+ * with no bundle word is left out (the caller renders it standalone).
+ */
+export function groupItemsByBundle<T extends { bundle?: string }>(
+  items: T[],
+): { bundle: string; items: T[] }[] {
+  const order: string[] = [];
+  const byBundle = new Map<string, T[]>();
+  for (const item of items) {
+    const b = item.bundle?.trim();
+    if (!b) continue;
+    if (!byBundle.has(b)) {
+      byBundle.set(b, []);
+      order.push(b);
+    }
+    byBundle.get(b)!.push(item);
+  }
+  return order.map((bundle) => ({ bundle, items: byBundle.get(bundle)! }));
+}

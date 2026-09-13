@@ -359,16 +359,17 @@ html[data-oc-theme="light"],.oc-pv-light{--band-1:#F3EEF4;--band-2:#ECEAF6;--ban
    counterpart below. */
 #classes .lead{color:var(--ink-body)}
 html[data-oc-theme="light"] #classes .lead{color:var(--muted)}
-/* readability in the nebula (community classes1.png): cards go SOLID warm
-   glass, ink stays ink, and the note bar earns its own light */
-#classes .card{background:rgba(252,247,240,.94);backdrop-filter:blur(6px)}
-#classes .roomrow{color:var(--field-ink);border-bottom-color:rgba(139,118,196,.28)}
-/* T-121: the lockpill's gold wash + ink go rose — the cards are cream in
-   BOTH themes, so the deep rose ink #8E3A53 holds 5.3:1 on the 24% wash
-   either way (measured on the cream composite) */
-#classes .lockpill{background:rgba(197,110,139,.24);color:#8E3A53}
-#classes .note{background:rgba(252,247,240,.92);color:#544e64;border-color:rgba(255,255,255,.7)}
-#classes .note b{color:var(--gold-deep)}
+/* TASK-215 (0018.06.23 a₿, Love's call #11) — REMOVED: the solid-cream
+   card/roomrow/lockpill/note overrides that used to live here (readability
+   over the nebula) drifted into "the two cards differ, one brighter
+   pink/purple, one muted" — this teaser section's cards read cream while
+   the real /classes room cards (RoomsShelf → PackageRoomsCard) read the
+   standard house glass. Converged on the ONE house card color: this
+   section now falls through to the same default .card/.roomrow/.lockpill/
+   .note rules (house.css) every other card on the site uses — already
+   proven legible over this exact nebula.webp by the store's meditations
+   shelf (ShelfSection.tsx's SHELF_BANDS.meditations band, plain .card on
+   the same image). */
 #offers{background:linear-gradient(180deg,var(--band-5) 0%,var(--band-9) 100%)}
 #support{background:linear-gradient(180deg,var(--band-9) 0%,var(--band-6) 100%)}
 #free{background:linear-gradient(180deg,var(--band-6) 0%,var(--band-7) 100%)}

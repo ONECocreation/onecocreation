@@ -83,6 +83,13 @@ export interface StoreItem {
    *  "meditation" / "membership" / "ware" / "session" — the Categories tab
    *  is derived from these; renaming a category rewrites it on its items */
   category?: string;
+  /** TASK-215 (0018.06.23 a₿, Love's call #35 — "hair together, soul
+   *  conversations together"): a bundle is items grouped under one shared
+   *  shelf heading — free-text, same shape as category. Never a shared
+   *  cart or a shared price: each item keeps its own price and its own
+   *  door; the bundle word only clusters cards together on the shelf
+   *  (T-198 holds the money rail — this never touches checkout). */
+  bundle?: string;
   /** stock count — absent = unlimited; counts down by qty on each settled
    *  (paid) order, and 0 flips the item to soldout (TASK-145) */
   inventory?: number;
@@ -326,6 +333,9 @@ export function validateItem(item: StoreItem): { ok: true } | { ok: false; reaso
   if (item.category != null && (typeof item.category !== "string" || item.category.length > 64)) {
     return { ok: false, reason: "a category as short text (max 64 chars)" };
   }
+  if (item.bundle != null && (typeof item.bundle !== "string" || item.bundle.length > 64)) {
+    return { ok: false, reason: "a bundle name as short text (max 64 chars)" };
+  }
   if (item.inventory != null && (!Number.isInteger(item.inventory) || item.inventory < 0)) {
     return { ok: false, reason: "inventory as a whole number (0 or more), or blank for unlimited" };
   }
@@ -408,6 +418,23 @@ export function listCategories(items: StoreItem[]): { name: string; count: numbe
   for (const i of items) {
     const c = i.category?.trim();
     if (c) tally.set(c, (tally.get(c) ?? 0) + 1);
+  }
+  return [...tally.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * TASK-215 (0018.06.23 a₿) — bundles, same derivation law as categories:
+ * DERIVED from the items, never a second document. A bundle groups items
+ * "under one buy" on the shelf (each keeps its own price and its own
+ * door — no shared cart, never a new money rail).
+ */
+export function listBundles(items: StoreItem[]): { name: string; count: number }[] {
+  const tally = new Map<string, number>();
+  for (const i of items) {
+    const b = i.bundle?.trim();
+    if (b) tally.set(b, (tally.get(b) ?? 0) + 1);
   }
   return [...tally.entries()]
     .map(([name, count]) => ({ name, count }))

@@ -42,11 +42,20 @@ export const COMMONS_PACKAGE_NAME = "Heart Field";
 /* Fallback names + /packages/[slug] doors — they mirror TIERS (entitlement.ts)
    and rooms/tier-slug.ts. The rooms feed's `neededName` (derived server-side
    from TIERS, the one source of truth) always wins when present. */
-const PACKAGE_FALLBACK: Record<Tier, { name: string; slug: string }> = {
-  A: { name: "Weekly Intuitive", slug: "weekly-intuitive" },
-  B: { name: "Observer", slug: "observer" },
-  C: { name: "Evening Star", slug: "evening-star" },
+const PACKAGE_FALLBACK: Record<Tier, { name: string; slug: string; img: string }> = {
+  A: { name: "Weekly Intuitive", slug: "weekly-intuitive", img: "/images/weekly-intuitive.webp" },
+  B: { name: "Observer", slug: "observer", img: "/images/observer.webp" },
+  C: { name: "Evening Star", slug: "evening-star", img: "/images/evening-star.webp" },
 };
+
+/** TASK-215 (0018.06.23 a₿, Love's call #22) — the Commons' own banner: the
+ *  same nebula/cosmic image the store's meditations shelf already wears
+ *  (ShelfSection.tsx's SHELF_BANDS) — real, existing, no invented asset. The
+ *  paid packages wear their OWN tier photo (tiers-content.ts's TIER_PAGES
+ *  img, mirrored here as PACKAGE_FALLBACK.img for the same reason the name/
+ *  slug are mirrored: matrix-rooms.ts stays client-importable, no runtime
+ *  import of tiers-content.ts's server chain). */
+const COMMONS_BANNER = "/images/consciouscuts/nebula.webp";
 
 export interface RoomPackage<T> {
   tier: Tier | "all";
@@ -59,6 +68,9 @@ export interface RoomPackage<T> {
   rooms: T[];
   /** the ENTER door's target — the package's first room (the class leads) */
   primary: T;
+  /** TASK-215: this package's own banner image — the rooms stack wears one
+   *  band per package, each with its own picture behind it */
+  banner: string;
 }
 
 /**
@@ -84,6 +96,7 @@ export function groupRoomsByPackage<
       open: inTier.every((r) => r.open),
       rooms: inTier,
       primary: inTier[0],
+      banner: tier === "all" ? COMMONS_BANNER : PACKAGE_FALLBACK[tier].img,
     });
   }
   return out;

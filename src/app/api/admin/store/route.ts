@@ -60,6 +60,8 @@ export async function PUT(request: Request) {
   if (item.partner && !partners[item.partner]) item.partner = undefined;
   // v2 merchandising fields — trim to honest shapes; empty means absent
   item.sku = typeof item.sku === "string" && item.sku.trim() ? item.sku.trim() : undefined;
+  // TASK-215: the bundle word rides the same honest-shapes law as sku/category
+  item.bundle = typeof item.bundle === "string" && item.bundle.trim() ? item.bundle.trim() : undefined;
   item.sizes = Array.isArray(item.sizes)
     ? [...new Set(item.sizes.map((s) => String(s).trim()).filter(Boolean))]
     : undefined;

@@ -335,11 +335,12 @@ reset();
   const lockRule = house.match(/\.lockpill\{([^}]*)\}/)?.[1] ?? "";
   const lockWash = lockRule.match(/background:\s*(rgba?\([^)]*\))/)?.[1];
   const lockInkTok = lockRule.match(/color:\s*var\(--([\w-]+)\)/)?.[1];
-  const clsRule = css.match(/#classes \.lockpill\{([^}]*)\}/)?.[1] ?? "";
-  const clsWash = clsRule.match(/background:\s*(rgba?\([^)]*\))/)?.[1];
-  const clsInk = clsRule.match(/color:\s*(#[0-9a-fA-F]{6})/)?.[1];
-  t("the harness read both lockpill washes + inks", !!(lockWash && lockInkTok && clsWash && clsInk),
-    `${lockWash} / ${lockInkTok} / ${clsWash} / ${clsInk}`);
+  /* TASK-215 (0018.06.23 a₿, Love's call #11) — #classes .lockpill (the
+     cream-card-only rose wash) is GONE: it drifted into "the two cards
+     differ" (the teaser's cards read cream, the real /classes room cards
+     read the standard house glass) and was removed so both converge on
+     the ONE house .lockpill/.card rule — nothing left to audit separately. */
+  t("the harness read the lockpill wash + ink", !!(lockWash && lockInkTok), `${lockWash} / ${lockInkTok}`);
 
   for (const theme of ["dark", "dawn"]) {
     /* the fills: plum --gold-ink on BOTH rose gradient stops */
@@ -347,11 +348,10 @@ reset();
     pair(`${theme}: --gold-ink on the deep fill end (--gold)`, tok("gold-ink", theme), tok("gold", theme));
     /* the text rung on the theme ground */
     pair(`${theme}: --gold-deep text on the ground`, tok("gold-deep", theme), GROUND[theme]);
-    /* rose-on-wash: the shared lockpill + the classes card's own wash —
-       dark composites on the night ground, dawn on the cream card */
-    const cardGround = theme === "dark" ? GROUND.dark : "#FCF7F0";
-    pair(`${theme}: .lockpill --gold-wash-ink on its rose wash`, tok(lockInkTok, theme), over(lockWash, cardGround));
-    pair(`${theme}: #classes .lockpill ink on its rose wash (cream card both themes)`, clsInk, over(clsWash, "#FCF7F0"));
+    /* rose-on-wash: the lockpill's wash composited on the theme's own
+       .card ground (var(--panel) is itself translucent over the section
+       band — GROUND stands in as the honest worst-case backdrop) */
+    pair(`${theme}: .lockpill --gold-wash-ink on its rose wash`, tok(lockInkTok, theme), over(lockWash, GROUND[theme]));
     /* spec step 1's note: --warn must never land byte-identical to a rose */
     const roses = ["gold", "gold-2", "gold-deep", "rose", "rose-soft"].map((n) => tok(n, theme)?.toLowerCase());
     t(`${theme}: --warn is byte-distinct from every rose value`, !roses.includes(tok("warn", theme)?.toLowerCase()),
