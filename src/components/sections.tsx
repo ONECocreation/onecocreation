@@ -341,7 +341,7 @@ export async function Classes() {
     <section id="classes">
       <div className="wrap">
         {/* was "Chronicles of Wonderland" — a Degen Wonderland remnant (Admiral's catch, 0018.05.15) */}
-        <p className="kicker center">The Heartfield Commons</p>
+        <p className="kicker center">The Heart Field</p>
         <h2 className="center sec-h">Classes &amp; Community</h2>
         <p className="lead center">Your own luminous rooms — powered by Matrix — an open protocol; your rooms, your keys. Tier-gated: your package opens the doors.</p>
         <div className="grid grid-2" style={{ maxWidth: 860, margin: "0 auto" }}>

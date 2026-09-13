@@ -42,15 +42,15 @@ describe("groupRoomsByPackage — one card per package", () => {
     ]);
   });
 
-  it("names the package from the feed's neededName; the Commons is membership itself", () => {
+  it("names the package from the feed's neededName; the Heart Field is membership itself", () => {
     const pkgs = groupRoomsByPackage(feedRooms(true, "C"));
     expect(pkgs.map((p) => p.name)).toEqual([
-      "Heart Field Commons",
+      "Heart Field",
       "Weekly Intuitive",
       "Observer",
       "Evening Star",
     ]);
-    expect(COMMONS_PACKAGE_NAME).toBe("Heart Field Commons");
+    expect(COMMONS_PACKAGE_NAME).toBe("Heart Field");
   });
 
   it("the SEE door's /packages/[slug] — null for the Commons, real slugs for the packages", () => {
@@ -97,7 +97,7 @@ describe("groupRoomsByPackage — one card per package", () => {
   it("pure ROOMS data (no feed flags) falls back to the package names and reports locked", () => {
     const pkgs = groupRoomsByPackage(ROOMS.map((r) => ({ ...r })));
     expect(pkgs.map((p) => p.name)).toEqual([
-      "Heart Field Commons",
+      "Heart Field",
       "Weekly Intuitive",
       "Observer",
       "Evening Star",

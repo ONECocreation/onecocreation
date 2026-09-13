@@ -15,7 +15,7 @@ export interface MatrixRoom {
 
 /* ── CONTENT: Love's rooms ──────────────────────────────────────────────── */
 export const ROOMS: MatrixRoom[] = [
-  { id: "#heart-field:onecocreation.com", title: "The Heart Field — Commons", kind: "community", minTier: "all" },
+  { id: "#heart-field:onecocreation.com", title: "The Heart Field", kind: "community", minTier: "all" },
   { id: "#clair-senses:onecocreation.com", title: "Clair Senses — Foundations", kind: "class", minTier: "A" },
   { id: "#tune-up:onecocreation.com", title: "Daily Tune-Up & Check-ins", kind: "community", minTier: "A" },
   { id: "#weekly-reading:onecocreation.com", title: "Chronicles: Weekly Reading", kind: "class", minTier: "B" },
@@ -33,8 +33,11 @@ export const ROOMS: MatrixRoom[] = [
 /** Shelf order: the Commons leads, then the packages by tier rank. */
 const PACKAGE_ORDER = ["all", "A", "B", "C"] as const;
 
-/** The Commons "package" — membership itself, no /packages/[slug] door. */
-export const COMMONS_PACKAGE_NAME = "Heart Field Commons";
+/** The Heart Field "package" — membership itself, no /packages/[slug] door.
+ *  TASK-211 (0018.06.23 a₿, Love's call #17): "The Heart Field", two words,
+ *  no "Commons", no dash — bare (no article) so it composes into "Enter the
+ *  {name}" / "See {name}" the same way the other package names do. */
+export const COMMONS_PACKAGE_NAME = "Heart Field";
 
 /* Fallback names + /packages/[slug] doors — they mirror TIERS (entitlement.ts)
    and rooms/tier-slug.ts. The rooms feed's `neededName` (derived server-side

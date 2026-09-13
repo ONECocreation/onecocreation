@@ -19,12 +19,12 @@ import { ROOM_VANTAGE_SITE_DEFAULT } from "@/components/rooms/vantage";
  * UNIFORM. The Admiral (0018.06.17): "the buttons are not even, this looks
  * like slop" — the law: buttons and doors HUG THE BOTTOM of every card,
  * stacked top-to-bottom, uniform across a row. These pin:
- *  1. CARD ORDER — Heart Field Commons · Weekly Intuitive · Observer ·
+ *  1. CARD ORDER — Heart Field · Weekly Intuitive · Observer ·
  *     Evening Star (the shelf maps groupRoomsByPackage's order unchanged).
  *  2. THE DOOR COLUMN — every card ends in ONE `.room-card-doors` column;
  *     who-you-are first (the name line signed in, the sign-in door signed
  *     out), the enter/see door last; the column follows the rooms list.
- *  3. THE STAGE HREF — "Enter the Heart Field Commons" lands on
+ *  3. THE STAGE HREF — "Enter the Heart Field" lands on
  *     /rooms/heart-field, and the bare room URL IS the Stage's address:
  *     ROOM_VANTAGE_SITE_DEFAULT is "stage" (T-149/T-174 made the Stage the
  *     gated door; no `?v=` param exists anywhere in the room route).
@@ -56,10 +56,10 @@ function render(
 }
 
 describe("the card order — Commons first, then the packages by tier", () => {
-  it("Heart Field Commons · Weekly Intuitive · Observer · Evening Star, in the shelf's own mapping order", () => {
+  it("Heart Field · Weekly Intuitive · Observer · Evening Star, in the shelf's own mapping order", () => {
     const pkgs = groupRoomsByPackage(feedRooms(true, "C"));
     expect(pkgs.map((p) => p.name)).toEqual([
-      "Heart Field Commons",
+      "Heart Field",
       "Weekly Intuitive",
       "Observer",
       "Evening Star",
@@ -72,11 +72,11 @@ describe("the card order — Commons first, then the packages by tier", () => {
   });
 });
 
-describe("the Stage door — Enter the Heart Field Commons", () => {
-  it("the Commons' ENTER door names the room and lands on /rooms/heart-field", () => {
+describe("the Stage door — Enter the Heart Field", () => {
+  it("the Heart Field's ENTER door names the room and lands on /rooms/heart-field", () => {
     const commons = groupRoomsByPackage(feedRooms(true, "C"))[0];
     const html = render(commons, { signedIn: true, name: "love" });
-    expect(html).toContain("Enter the Heart Field Commons");
+    expect(html).toContain("Enter the Heart Field");
     expect(html).toContain('href="/rooms/heart-field"');
   });
 
@@ -112,7 +112,7 @@ describe("the door column — the doors hug the bottom, one column, one order", 
     const html = render(commons, { signedIn: true, name: "love" });
     const col = html.slice(html.indexOf("room-card-doors"));
     expect(col.indexOf("you&#x27;re in as")).toBeGreaterThanOrEqual(0);
-    expect(col.indexOf("you&#x27;re in as")).toBeLessThan(col.indexOf("Enter the Heart Field Commons"));
+    expect(col.indexOf("you&#x27;re in as")).toBeLessThan(col.indexOf("Enter the Heart Field"));
   });
 
   it("signed out, the sign-in door stands FIRST, the See door below it — never the other way", () => {

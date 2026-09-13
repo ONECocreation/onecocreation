@@ -198,7 +198,7 @@ const love = {
         tag: "@onecocreation",
         role: "join the field",
         blurb:
-          "Claim your name and the doors open — the booking calendar, the free meditation, Heartfield Commons.",
+          "Claim your name and the doors open — the booking calendar, the free meditation, the Heart Field.",
         href: "/welcome",
         cta: "Walk the welcome path →",
         accent: "pink",

@@ -31,7 +31,7 @@ import { stripModel } from "@/components/LiveStrip";
 const read = (rel: string) => readFileSync(rel, "utf8");
 
 const ROOM_FIXTURES: DoorRoom[] = [
-  { slug: "heart-field", title: "The Heart Field — Commons", kind: "community" },
+  { slug: "heart-field", title: "The Heart Field", kind: "community" },
   { slug: "clair-senses", title: "Clair Senses — Foundations", kind: "class" },
   { slug: "tune-up", title: "Daily Tune-Up & Check-ins", kind: "community" },
   { slug: "weekly-reading", title: "Chronicles: Weekly Reading", kind: "class" },
@@ -56,11 +56,11 @@ const renderRoom = (props: Partial<Parameters<typeof GoLiveRoom>[0]> = {}) =>
     }),
   );
 
-describe("the folded-in door model — the Commons first", () => {
+describe("the folded-in door model — the Heart Field first", () => {
   it("groups free → classes → community, unknown slugs never crash it", () => {
     const groups = doorRoomGroups([...ROOM_FIXTURES, { slug: "not-a-room", title: "Ghost", kind: "class" }]);
     expect(groups.map((g) => g.label)).toEqual([
-      "The Commons — free for every member",
+      "The Heart Field — free for every member",
       "Classes",
       "Community rooms",
     ]);

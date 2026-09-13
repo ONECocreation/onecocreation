@@ -38,7 +38,7 @@ export function doorRoomGroups(rooms: DoorRoom[]): DoorRoomGroup[] {
   const classes = rooms.filter((r) => r.kind === "class" && !free.includes(r));
   const community = rooms.filter((r) => r.kind === "community" && !free.includes(r));
   const out: DoorRoomGroup[] = [];
-  if (free.length) out.push({ label: "The Commons — free for every member", rooms: free });
+  if (free.length) out.push({ label: "The Heart Field — free for every member", rooms: free });
   if (classes.length) out.push({ label: "Classes", rooms: classes });
   if (community.length) out.push({ label: "Community rooms", rooms: community });
   return out;

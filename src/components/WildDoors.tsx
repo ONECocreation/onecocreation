@@ -5,7 +5,8 @@ import ReadWithLove from "./ReadWithLove";
  * THE SQUARES (TASK-120, 0018.06.16 a₿) — the grid keeps Love's first door
  * (the White Lions, her word 0018.05.15: "The White Lions are the heart of
  * the earth") and the two long-standing placeholder doors finally open:
- * Instagram (the fleet's @onecocreation, a real link out) and Read with
+ * Instagram (Love's own @gysyluv, a real link out — TASK-211 corrected the
+ * handle) and Read with
  * Love (the weekly live book reading — its own component, an email door,
  * the room link riding the welcome letter server-side, never this markup).
  * Each card is still a habitat; hover and the being grows out of its cell.
@@ -21,6 +22,15 @@ const INSTAGRAM_GLYPH = (
     <circle cx="17.35" cy="6.65" r="1.15" fill="currentColor" stroke="none" />
   </svg>
 );
+
+/** TASK-211 (0018.06.23 a₿, Love's call #26 corrected): the handle below is
+ *  the RIGHT one — the card previously named the fleet's own house handle,
+ *  never Love's. The card's DESCRIPTION line is Love's own words to write,
+ *  not ours to invent — until she sends it, `null` here means the card
+ *  names the handle alone (derive-or-dash: an honest-empty slot, never a
+ *  placeholder sentence). Drop her line in right here when it arrives. */
+const INSTAGRAM_HANDLE = "@gysyluv";
+const INSTAGRAM_DESCRIPTION: string | null = null;
 
 interface Door {
   key: string;
@@ -57,8 +67,8 @@ const DOORS: Door[] = [
     sprouts: ["🌿", "🦜"],
     ground: "linear-gradient(180deg,#e2f0da 0%,#a8cd9c 55%,#6f9e6e 100%)",
     title: "Love on Instagram",
-    words: "@onecocreation — stills and notes from the studio, most days",
-    href: "https://instagram.com/onecocreation",
+    words: INSTAGRAM_DESCRIPTION ? `${INSTAGRAM_HANDLE} — ${INSTAGRAM_DESCRIPTION}` : INSTAGRAM_HANDLE,
+    href: `https://instagram.com/${INSTAGRAM_HANDLE.slice(1)}`,
     cta: "Follow along ↗",
   },
 ];

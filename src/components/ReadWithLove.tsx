@@ -34,7 +34,9 @@ export default function ReadWithLove() {
       </div>
       <div className="wild-body">
         <h3>Read with Love</h3>
-        <p>Join me weekly for a live book reading in my own room — free for every member.</p>
+        {/* TASK-211 (0018.06.23 a₿, Love's call #40): dropped "— free for
+            every member" from this card's line */}
+        <p>Join me weekly for a live book reading in my own room.</p>
         {href && (
           <span className="wild-cta">
             {fren ? "Enter the reading room" : "Sign in — the reading is free"}

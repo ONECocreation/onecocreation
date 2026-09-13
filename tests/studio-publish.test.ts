@@ -264,7 +264,7 @@ describe("BookIndexPage — publish to live actually takes", () => {
 });
 
 describe("ClassesPage — publish to live actually takes", () => {
-  it("with nothing published: the hand-built commons hero (The Heartfield Commons), no Render", async () => {
+  it("with nothing published: the hand-built commons hero (The Heart Field), no Render", async () => {
     // T-160 gate: the route opens with `community` or `classes` ON; open it for this fixture (isolated cwd)
     const { saveSiteConfig } = await import("@/lib/site-config");
     await saveSiteConfig({ features: { classes: true } });
@@ -275,7 +275,7 @@ describe("ClassesPage — publish to live actually takes", () => {
     expect(findAll(el, (e) => e.type === Render)).toHaveLength(0);
     const kickers = findAll(el, (e) => (e.props as { className?: string }).className === "kicker");
     expect(kickers).toHaveLength(1);
-    expect((kickers[0].props as { children?: unknown }).children).toBe("The Heartfield Commons");
+    expect((kickers[0].props as { children?: unknown }).children).toBe("The Heart Field");
   });
 
   it("after Publish to live in /studio: the SAME request renders the published Puck doc", async () => {

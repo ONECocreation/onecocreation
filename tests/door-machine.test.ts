@@ -97,8 +97,9 @@ describe("the new-key test — the server's own words", () => {
 });
 
 describe("the member menu — the whole of it", () => {
-  it("what's yours now (ruling 1: /welcome linked), my library, my sessions, the reading room — sign out renders beside them in DoorButton", () => {
-    expect(MEMBER_MENU.map((i) => i.label)).toEqual(["What's yours now", "My library", "My sessions", "The reading room"]);
+  it("what's yours now (ruling 1: /welcome linked), my library, calendar, the reading room — sign out renders beside them in DoorButton", () => {
+    /* TASK-211 (0018.06.23 a₿, Love's call #18): "My sessions" → "Calendar" */
+    expect(MEMBER_MENU.map((i) => i.label)).toEqual(["What's yours now", "My library", "Calendar", "The reading room"]);
     expect(MEMBER_MENU[0]!.href).toBe("/welcome");
     for (const i of MEMBER_MENU) expect(i.href.startsWith("/")).toBe(true);
   });
@@ -167,7 +168,7 @@ describe("ruling 1 — /welcome is the what's-yours-now page, never a second wal
   it("the three what's-yours doors survive as the whole page", () => {
     const src = flow();
     expect(src).toContain("Book your discovery call");
-    expect(src).toContain("Step into Heartfield Commons");
+    expect(src).toContain("Step into The Heart Field");
     expect(src).toContain("Wander the store");
   });
 

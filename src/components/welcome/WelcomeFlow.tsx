@@ -79,7 +79,7 @@ export default function WelcomeFlow() {
           <div style={{ display: "grid", gap: 10, margin: "18px 0 0", textAlign: "left" }}>
             {[
               { icon: "🕊️", t: "Book your discovery call", w: "credited toward your first session", href: "/book/discovery-call" },
-              { icon: "💗", t: "Step into Heartfield Commons", w: "the free circle, open to every member", href: "/classes" },
+              { icon: "💗", t: "Step into The Heart Field", w: "the free circle, open to every member", href: "/classes" },
               { icon: "🌙", t: "Wander the store", w: "meditations, sessions, wares", href: "/store" },
             ].map((d) => (
               <Link key={d.t} href={d.href} style={{ display: "flex", alignItems: "center", gap: 12,
