@@ -184,9 +184,15 @@ export async function sendOfferNotify(order: OrderRecord): Promise<void> {
   const slots = {
     who: `<p style="margin:0 0 1.15em;line-height:1.75;">From <b>${esc(who)}</b> · order ${order.id.slice(0, 8)}</p>`,
     // S2: stays literal — inboxes don't resolve var() (integrator ruling 0018.05.25 a₿).
+    // TASK-214 minimal-forced-edit (NOT this lane's OWNS — brandShell's ground
+    // going dark is): #6b6478 measured ≈3.1:1 on the new #2b2733 card, under
+    // the legibility doctrine's 4.5:1. #9a8fae (cartridge.css --muted, the
+    // same token richShell's card blurbs now use) measures ≈4.8:1 there —
+    // one hex, load-bearing for THIS lane's own goal (the letter stays dark
+    // AND readable), everything else in this file untouched.
     lines:
       linesHtml(order) +
-      `<p style="margin:0 0 1.15em;line-height:1.75;color:#6b6478;">The gap: <b>${gap.toLocaleString()} sats</b> — accepted, the Pay-It-Forward jar may carry it.</p>`,
+      `<p style="margin:0 0 1.15em;line-height:1.75;color:#9a8fae;">The gap: <b>${gap.toLocaleString()} sats</b> — accepted, the Pay-It-Forward jar may carry it.</p>`,
     doors: `<div style="margin:6px 0 18px;">${pill(acceptUrl, "💛 Accept with love", "lg")}&nbsp;&nbsp;${pill(declineUrl, "🕊️ Decline, with care", "lg")}</div>`,
   };
 
