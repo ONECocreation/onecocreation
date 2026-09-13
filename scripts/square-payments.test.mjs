@@ -134,6 +134,99 @@ await rejects(
   t("the fallback name is capped at 500 too", longFallback.order.line_items[0].name.length === 500);
 }
 
+/* ── TASK-224 (0018.06.23 a₿) — the itemised bill, exact-sum only ────── */
+{
+  // the exact sum → itemised, one row per line, quantity as a STRING
+  const itemised = buildSquarePaymentLinkBody(
+    {
+      orderId: "ord_items1",
+      amount: 7700,
+      currency: "USD",
+      redirectUrl: "https://x/y",
+      description: "fallback should never appear",
+      lines: [
+        { name: "Both Rails Meditation", quantity: 2, unitAmount: 2200 },
+        { name: "Fiat Only Meditation", quantity: 1, unitAmount: 3300 },
+      ],
+    },
+    "idem-items",
+    "L_FAKE",
+  );
+  t("exact sum → two line items, not one", itemised.order.line_items.length === 2);
+  t("line 0 keeps its own name/qty/price", itemised.order.line_items[0].name === "Both Rails Meditation"
+    && itemised.order.line_items[0].quantity === "2"
+    && itemised.order.line_items[0].base_price_money.amount === 2200
+    && itemised.order.line_items[0].base_price_money.currency === "USD");
+  t("line 1 keeps its own name/qty/price", itemised.order.line_items[1].name === "Fiat Only Meditation"
+    && itemised.order.line_items[1].quantity === "1"
+    && itemised.order.line_items[1].base_price_money.amount === 3300);
+  t("the description fallback never appears once the sum matches exactly", !itemised.order.line_items.some((li) => li.name === "fallback should never appear"));
+
+  // a ONE-CENT mismatch → falls back to the single description line, never rounds
+  const mismatch = buildSquarePaymentLinkBody(
+    {
+      orderId: "ord_items2",
+      amount: 7699, // one cent short of the lines' own sum (7700)
+      currency: "USD",
+      redirectUrl: "https://x/y",
+      description: "Both Rails Meditation × 2, Fiat Only Meditation",
+      lines: [
+        { name: "Both Rails Meditation", quantity: 2, unitAmount: 2200 },
+        { name: "Fiat Only Meditation", quantity: 1, unitAmount: 3300 },
+      ],
+    },
+    "idem-mismatch",
+    "L_FAKE",
+  );
+  t("a 1-cent mismatch falls back to ONE line item", mismatch.order.line_items.length === 1);
+  t("the fallback line is the description, not a rounded itemised row", mismatch.order.line_items[0].name === "Both Rails Meditation × 2, Fiat Only Meditation");
+  t("the fallback line's amount is the REQUEST's own total, never a sum of the (mismatched) lines", mismatch.order.line_items[0].base_price_money.amount === 7699);
+
+  // no `lines` at all → unchanged single-line behaviour (T-223, still intact)
+  const noLines = buildSquarePaymentLinkBody(
+    { orderId: "ord_items3", amount: 1000, currency: "USD", redirectUrl: "https://x/y", description: "Just One Thing" },
+    "idem-none",
+    "L_FAKE",
+  );
+  t("no lines field → still one line item (T-223 unchanged)", noLines.order.line_items.length === 1 && noLines.order.line_items[0].name === "Just One Thing");
+
+  // an EMPTY lines array → treated the same as no lines (never an empty order)
+  const emptyLines = buildSquarePaymentLinkBody(
+    { orderId: "ord_items4", amount: 1000, currency: "USD", redirectUrl: "https://x/y", description: "Empty Lines Falls Back", lines: [] },
+    "idem-empty",
+    "L_FAKE",
+  );
+  t("an empty lines[] falls back to the single description line, never an empty line_items[]", emptyLines.order.line_items.length === 1 && emptyLines.order.line_items[0].name === "Empty Lines Falls Back");
+
+  // a line name over 500 chars is truncated the same way the fallback is
+  const longLineName = buildSquarePaymentLinkBody(
+    { orderId: "ord_items5", amount: 500, currency: "USD", redirectUrl: "https://x/y", lines: [{ name: "B".repeat(600), quantity: 1, unitAmount: 500 }] },
+    "idem-long-line",
+    "L_FAKE",
+  );
+  t("an itemised line's own name is capped at 500 too", longLineName.order.line_items[0].name.length === 500);
+
+  // idempotency_key / redirect_url / reference_id / metadata.orderId ride
+  // through UNCHANGED whether the body itemises or falls back — the
+  // money-path fields this lane must never touch
+  const referenced = buildSquarePaymentLinkBody(
+    {
+      orderId: "ord_items6",
+      amount: 4400,
+      currency: "USD",
+      redirectUrl: "https://site.example/store/order/ord_items6",
+      referenceId: "ord_item",
+      lines: [{ name: "Two Of A Thing", quantity: 2, unitAmount: 2200 }],
+    },
+    "idem-ref",
+    "L_FAKE",
+  );
+  t("itemised body still carries idempotency_key untouched", referenced.idempotency_key === "idem-ref");
+  t("itemised body still carries redirect_url untouched", referenced.checkout_options.redirect_url === "https://site.example/store/order/ord_items6");
+  t("itemised body still carries reference_id untouched", referenced.order.reference_id === "ord_item");
+  t("itemised body still carries metadata.orderId untouched", referenced.order.metadata.orderId === "ord_items6");
+}
+
 /* ── mapOrderState(): Orders API state → canonical machine ───────────── */
 t("OPEN → charge_created", mapOrderState("OPEN") === "charge_created");
 t("COMPLETED → settled", mapOrderState("COMPLETED") === "settled");

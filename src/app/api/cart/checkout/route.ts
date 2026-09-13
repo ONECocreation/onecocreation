@@ -125,6 +125,12 @@ export async function POST(request: Request) {
   let pwycPending = false;
   const lineItems: OrderRecord["lineItems"] = [];
   const slotLines: { line: CartLine; serviceTitle: string; endUtc: string; artistTz: string }[] = [];
+  // TASK-224 — the Square receipt's itemised rows: one entry per basket line,
+  // built ONLY on the card rail (Square's own feature) from the SAME priced
+  // fiat unit amount this loop already computed for that line — never a
+  // second price lookup. A PWYC/sats basket never reaches the card rail at
+  // all (refused above), so this array never needs to represent an offer.
+  const squareLines: { name: string; quantity: number; unitAmount: number }[] = [];
 
   for (const l of cart.lines) {
     if (l.serviceGift) {
@@ -154,6 +160,7 @@ export async function POST(request: Request) {
       const lineAmount = l.offerSats ?? priced.amount;
       totalAmount += lineAmount;
       if (!wantsCard && l.offerSats != null && l.offerSats < priced.amount) pwycPending = true;
+      if (wantsCard) squareLines.push({ name: service.title, quantity: 1, unitAmount: priced.amount });
       lineItems.push({
         itemId: service.id,
         title: service.title,
@@ -205,6 +212,7 @@ export async function POST(request: Request) {
       totalAmount += lineAmount;
       if (!wantsCard && l.offerSats != null && l.offerSats < priced.amount) pwycPending = true;
       if (service.meetingRail?.kind === "inPerson") hasInPerson = true;
+      if (wantsCard) squareLines.push({ name: service.title, quantity: 1, unitAmount: priced.amount });
       lineItems.push({
         itemId: service.id,
         title: service.title,
@@ -249,6 +257,7 @@ export async function POST(request: Request) {
     // retreat seats ride the gated rail too — the guest must be reachable
     // (their email becomes the account, same as digital/package)
     if (item.kind === "digital" || item.kind === "package" || item.kind === "retreat") hasGated = true;
+    if (wantsCard) squareLines.push({ name: item.title, quantity: l.qty, unitAmount: priced.amount });
     lineItems.push({ itemId: item.id, title: item.title, qty: l.qty, size: l.size, offerSats: l.offerSats, listSats: wantsCard ? undefined : listAmount, giftTo: l.giftTo });
   }
 
@@ -371,6 +380,10 @@ export async function POST(request: Request) {
       redirectUrl: orderDoorUrl(order, origin), // T-173: the basket's return carries the signed key too
       description: basketDescription(order.lineItems),
       referenceId: order.id.slice(0, 8),
+      // TASK-224 — card rail only; buildSquarePaymentLinkBody() re-checks the
+      // sum and falls back to `description` above on any mismatch (e.g. a
+      // discount code shrank the total after these per-line prices were set)
+      lines: wantsCard ? squareLines : undefined,
     },
     `${order.id}:0`,
   );
