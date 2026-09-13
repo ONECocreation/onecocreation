@@ -19,8 +19,9 @@ import type { StoreItem } from "@/lib/store";
  *     preference leans (never an invented number)
  *   - neither live → a dash (derive-or-dash)
  *   - NEVER "≈" — both numbers are Love's own
- * The default preference (no `oc-money` word yet) is fiat when the card
- * rail is live, else sats — storeCardModel derives it from the rails.
+ * The default preference (no `oc-money` word yet) is SATS — fiat only when
+ * the bitcoin rail is off and the card rail is on (H73, T-221; was fiat
+ * whenever the card rail was live) — storeCardModel derives it from the rails.
  */
 
 function item(over: Partial<StoreItem>): StoreItem {
@@ -138,20 +139,20 @@ describe("priceLine — the preferred denomination first, the other as \"or …\
   });
 });
 
-describe("storeCardModel — the shelf card adopts the same rule, fiat first by default when the card rail is live", () => {
-  it("no rails/prefer argument: both live assumed, fiat leads (Love's liked default), the sats echo second", () => {
+describe("storeCardModel — the shelf card adopts the same rule, SATS first by default (H73, T-221); fiat first only with bitcoin off and cards on", () => {
+  it("no rails/prefer argument: both live assumed, SATS leads (the Admiral's H73 ruling), the dollars echo second", () => {
     const m = storeCardModel(item({ price: bothPrices }));
-    expect(m.priceLabel).toBe("$11");
-    expect(m.fiatSecondary).toBe("or 11,111 sats");
-  });
-
-  it("an explicit sats word flips the line — the customer's choice", () => {
-    const m = storeCardModel(item({ price: bothPrices }), BOTH, "sats");
     expect(m.priceLabel).toBe("11,111 sats");
     expect(m.fiatSecondary).toBe("or $11");
   });
 
-  it("a caller that knows the live rails gets the same honest line as the item page", () => {
+  it("an explicit fiat word flips the line — the customer's choice", () => {
+    const m = storeCardModel(item({ price: bothPrices }), BOTH, "fiat");
+    expect(m.priceLabel).toBe("$11");
+    expect(m.fiatSecondary).toBe("or 11,111 sats");
+  });
+
+  it("a caller that knows the live rails gets the same honest line as the item page — bitcoin off + cards on is the one fiat-first state", () => {
     const m = storeCardModel(item({ price: bothPrices }), CARD_ONLY);
     expect(m.priceLabel).toBe("$11");
     expect(m.fiatSecondary).toBeNull();

@@ -50,10 +50,17 @@ export function satsWords(sats: number): string {
   return `${sats.toLocaleString("en-US")} sats`;
 }
 
-/** the default denomination when the visitor has never chosen: fiat when the
- *  card rail is live, else sats (Love's liked default, via the Admiral) */
+/** the default denomination when the visitor has never chosen — SATS.
+ *  H73 (the Admiral, 0018.06.23 a₿): "we defaultly want to show in sats
+ *  price. if the template has btc turned off and cards turned on then we
+ *  would switch to fiat on the display." So fiat leads ONLY when the
+ *  bitcoin rail is off and the card rail is on; every other rail state
+ *  (both live, bitcoin only, neither) reads sats first. Before this lane
+ *  (T-186) fiat led whenever the card rail was live. OC now, the template
+ *  follows. A visitor's own word (the toggle, the member profile) still
+ *  wins over this default — resolvePrefer, money-preference.ts. */
 export function defaultPreferOf(rails: MoneyRails): MoneyPrefer {
-  return rails.card ? "fiat" : "sats";
+  return !rails.btc && rails.card ? "fiat" : "sats";
 }
 
 /**
