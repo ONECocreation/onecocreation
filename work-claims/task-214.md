@@ -1,6 +1,6 @@
 # WORK-CLAIM — TASK-214 (ONE Cocreation: the letters desk)
 
-CLAIMED-BY: **kimi** (Kimi Code CLI, guest builder lane for Pac) — Track B, alone
+CLAIMED-BY: **kimi** (Kimi Code CLI) at cut — her 7-day window closed with only this claim landed → **REASSIGNED to the home crew (sonnet) by the Admiral, 0018.06.23 a₿** (block 966,827); the root-cause reads below stand. Track B, alone.
 CLAIMED-AT: 0018.06.22 a₿ · block 966,809
 BRANCH: `feat/task-214-letters-desk`
 WORKTREE: `~/dev/worktrees/task-214`
