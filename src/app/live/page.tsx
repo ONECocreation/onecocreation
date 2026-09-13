@@ -81,7 +81,7 @@ export default async function LivePage() {
                       : { background: "rgba(197,110,139,.13)", color: "var(--err)", border: "1px solid rgba(197,110,139,.4)" }),
                   }}
                 >
-                  {room.kind === "class" ? "Class" : "Commons"}
+                  {room.kind === "class" ? "Class" : "Community"}
                 </span>
               </div>
               <h2 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: "1.3rem", margin: "0 0 6px" }}>
