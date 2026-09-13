@@ -1,4 +1,6 @@
 import { promises as fs, readFileSync } from "fs";
+import { ROOMS } from "./matrix-rooms.ts";
+import { roomPath } from "./reading-room.ts";
 import path from "path";
 import { put, get } from "@vercel/blob";
 import { TENANT } from "./tenant.ts";
@@ -131,6 +133,12 @@ export const KNOWN_NAV_HREFS: readonly string[] = [
   "/about", "/memberships", "/packages", "/store", "/store/meditations",
   "/store/memberships", "/book", "/services",
   "/classes", "/news", "/letters", "/meditation", "/support", "/contact", "/me",
+  /* TASK-210 (0018.06.23 a₿): every room's Stage, DERIVED from the rooms
+     registry — the nav's Heart Field row leads to the Commons now, and a
+     saved menu row pointing at a room must survive sanitize (Love's call
+     item 19 wants a reading-room door under Community next). A room that
+     leaves the registry leaves this list with it: derive-or-dash. */
+  ...ROOMS.map((r) => roomPath(r.id)),
 ];
 
 /** Love's streamlined site (the Admiral, 0018.06.16 a₿): only the jars and

@@ -14,9 +14,12 @@ export const dynamic = "force-dynamic";
  * token, key, or env VALUE (the rail-status rule: names, not secrets).
  */
 export async function GET(request: Request) {
-  if (!operatorFromCookieHeader(request.headers.get("cookie"))) {
+  const operator = operatorFromCookieHeader(request.headers.get("cookie"));
+  if (!operator) {
     return NextResponse.json({ ok: false, reason: "operator session required" }, { status: 401 });
   }
-  const [rows, config] = await Promise.all([communityReadiness(), getSiteConfig()]);
+  /* TASK-210: the identity row resolves the seat THIS operator is in (Love's
+     own email door), never the bot's whoami printed under her name */
+  const [rows, config] = await Promise.all([communityReadiness({ operator }), getSiteConfig()]);
   return NextResponse.json({ ok: true, rows, communityOn: config.features.community });
 }

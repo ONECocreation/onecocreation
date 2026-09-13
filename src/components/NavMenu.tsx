@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { SiteConfig } from "@/lib/site-config";
+import { READING_ROOM_PATH } from "@/lib/reading-room";
 
 /**
  * The consolidated nav (Admiral, 0018.05.13): main doors with sub-menus, so
@@ -107,8 +108,17 @@ export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
     menu.push({
       label: "Memberships",
       href: "/memberships",
+      /* TASK-210 (0018.06.23 a₿, Love's 0018.06.18 call 01:53:35 "a
+         heart-field link lands in the wrong place"): the Heart Field row
+         pointed at /memberships — the same page as its own header, so the
+         click went nowhere. The Heart Field IS a room (the Commons, T-174's
+         free room): the row leads to its Stage, derived from the registry
+         (KNOWN_NAV_HREFS carries every room's path). A guest meets the
+         rooms' sign-in door with ?next= back — honest, never a dead click.
+         Derive-or-dash: no free room in the registry → the memberships
+         page, where the Heart Field is described. */
       subs: [
-        { label: "Heart Field", href: "/memberships" },
+        { label: "Heart Field", href: READING_ROOM_PATH ?? "/memberships" },
         { label: "Three packages", href: "/packages" },
       ],
     });

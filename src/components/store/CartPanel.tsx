@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { payInModal } from "@/lib/btcpay-modal";
 import { priceWords, satsWords, type MoneyPrefer, type MoneyRails } from "@/lib/money-words";
 import { readMemberPrefer, saveMemberPrefer, useMoneyPrefer } from "@/lib/money-preference";
+import { readSession, type MemberSession } from "@/lib/session-read";
+import { basketContact, basketGatedLine } from "@/lib/basket-contact";
 /* TASK-198 — the ONE money-word reader (T-186's own rule): the basket's
  * rail follows the same derivation as the single-item door, never a second
  * reader invented here. railForPrefer is a pure export, reused read-only. */
@@ -101,6 +103,11 @@ export default function CartPanel({
   /* the words follow the rail (the bolt on a card charge is a lie of omission — BuyPanel's law, T-198 follow-through) */
   const cardRail = railForPrefer(prefer, { btcpay: rails.btc, square: rails.card }) === "square";
   const [memberPrefKnown, setMemberPrefKnown] = useState(false);
+  /* TASK-210 — the basket knows who is signed in: the SAME session read the
+     header and BuyPanel make (session-read.ts, T-177). What follows from it
+     (field or no field, whose mailbox, the gated line's words) is
+     basket-contact.ts's one derivation, pinned by its own tests. */
+  const [memberSession, setMemberSession] = useState<MemberSession | null>(null);
   useEffect(() => {
     let live = true;
     readMemberPrefer()
@@ -109,6 +116,9 @@ export default function CartPanel({
         setMemberPrefKnown(true);
         if (m.prefer) setPrefer(m.prefer); // signed in wins — the browser learns the word
       })
+      .catch(() => {});
+    readSession()
+      .then((s) => { if (live) setMemberSession(s); })
       .catch(() => {});
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -193,12 +203,13 @@ export default function CartPanel({
       // single-item door's own derivation): fiat asks for Square, sats
       // keeps the bitcoin default — same helper, one reading of the word.
       const chosenRail = railForPrefer(prefer, { btcpay: rails.btc, square: rails.card });
+      const contactEmail = basketContact(memberSession, email).email ?? undefined;
       const res = await fetch("/api/cart/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           discountCode: discountCode.trim() || undefined,
-          contact: email ? { email } : undefined,
+          contact: contactEmail ? { email: contactEmail } : undefined,
           shipping: needsShipping ? { name: shipName, address: shipAddr } : undefined,
           location: hasInPerson ? { city, state: stateReg, zip } : undefined,
           name: shipName || undefined,
@@ -264,6 +275,7 @@ export default function CartPanel({
   const gated = lines.some((l) => l.gated);
   const hasInPerson = lines.some((l) => l.inPerson);
   const hasSession = lines.some((l) => l.slot);
+  const contact = basketContact(memberSession, email);
   /* time before money (Admiral, 0018.05.15): a session in the basket picks
      its slot BEFORE any invoice — gifts stay timeless (the voucher rail) */
   const needsTime = lines.some((l) => l.kind === "service" && !l.slot && !l.serviceGift && !l.giftTo);
@@ -471,7 +483,7 @@ export default function CartPanel({
         )}
         {gated && (
           <p style={{ margin: "6px auto 0", fontSize: ".78rem", color: "var(--info)", maxWidth: 480 }}>
-            part of this basket unlocks for your account — sign in, or just add your email below: it becomes your account.
+            {basketGatedLine(memberSession)}
           </p>
         )}
         {hasSession && (
@@ -482,11 +494,19 @@ export default function CartPanel({
       </div>
 
       <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
-        <label style={fieldLabel}>
-          email for your receipt {gated || hasSession ? "" : "(optional)"}
-          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email"
-            style={{ ...glassField, marginTop: 3 }} />
-        </label>
+        {/* TASK-210 — no email ask for a soul the site already knows (an email
+            member's receipt goes to the mailbox that answered the code); a
+            key member keeps an OPTIONAL field; the line names them either way */}
+        {contact.askEmail && (
+          <label style={fieldLabel}>
+            email for your receipt {(gated || hasSession) && !memberSession ? "" : "(optional)"}
+            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email"
+              style={{ ...glassField, marginTop: 3 }} />
+          </label>
+        )}
+        {contact.line && (
+          <p style={{ margin: 0, fontSize: ".78rem", color: "var(--muted, #897f97)" }}>{contact.line}</p>
+        )}
         <label style={fieldLabel}>
           discount code (optional)
           <input value={discountCode} onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
