@@ -354,12 +354,20 @@ export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUr
   return richShell({ heroUrl, bodyHtml, sections, cta, unsubscribeUrl: opts?.unsubscribeUrl, webUrl: opts?.webUrl });
 }
 
-/* S2: the link gold inside stays literal — decorative gold awaits the taste-maker's ruling (gold law). */
+/* TASK-214: the link rides the popup's rose now — T-121's pink pass repainted
+ * the gold token family site-wide (gold-is-money law: decorative gold in the
+ * letter mail follows the rose family, never money gold); #E7B2C3 is
+ * --rose/--gold's night value, ~8-10:1 on both the letter mail's dark panel
+ * and ground (measured, mail.ts). */
 export function bodyToHtml(body: string): string {
-  const esc = body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  // a pasted Windows line ending (\r\n) would otherwise survive as a stray
+  // \r inside a paragraph's <br/> line — normalize before anything else so
+  // paste always keeps exactly the breaks it showed on screen
+  const normalized = body.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const esc = normalized.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const inline = esc
     .replace(/!\[([^\]]*)\]\((https?:[^)\s]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:12px"/>')
-    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" style="color:#b4862b">$1</a>')
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" style="color:#E7B2C3">$1</a>')
     .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
     .replace(/\*([^*\n]+)\*/g, "<i>$1</i>");
   // inline margins ON the paragraph — site CSS resets and stricter mail

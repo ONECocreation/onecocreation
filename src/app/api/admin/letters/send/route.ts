@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { NextResponse } from "next/server";
 import {
   EDITABLE_LETTERS,
@@ -7,7 +8,7 @@ import {
   letterHtml,
   type LetterKey,
 } from "@/lib/letters";
-import { hourlyCap } from "@/lib/mail";
+import { hourlyCap, onceWithin } from "@/lib/mail";
 import { listSubscribers, subscribersConfigured, unsubscribeUrl } from "@/lib/subscribers";
 import { enqueue } from "@/lib/mail-queue";
 import { recordDelivery } from "@/lib/mailbox";
@@ -47,6 +48,18 @@ export async function POST(request: Request) {
       { ok: false, reason: "save the letter first — publishing sends YOUR saved version" },
       { status: 400 },
     );
+  }
+
+  // TASK-214: one send per click, enforced at the seam too (the panel's own
+  // disable is the first line — see [key]/page.tsx). The SAME request body
+  // (this letter, this segment/testTo, this typed count) arriving again
+  // inside 4s is a click that beat the disable or a retry, not a second send.
+  const dedupeKey = crypto
+    .createHash("sha256")
+    .update(JSON.stringify({ key: body.key, testTo: body.testTo ?? null, source: body.source ?? null, confirm: body.confirm ?? null, at: body.at ?? null }))
+    .digest("hex");
+  if (!(await onceWithin(dedupeKey, 4000))) {
+    return NextResponse.json({ ok: false, reason: "already sending — one moment" }, { status: 429 });
   }
 
   // derive-or-dash: a composed letter has no site page until the /letters

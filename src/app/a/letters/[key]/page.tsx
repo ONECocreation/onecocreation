@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 /**
@@ -42,6 +42,17 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   const [note, setNote] = useState("");
   const [deliveries, setDeliveries] = useState<{ to: string; when: string }[]>([]);
 
+  /* TASK-214: "the receipt sent 3× on 3 clicks" — the panel had no in-flight
+   * guard. A ref (not state) is the guard itself: state updates are async
+   * and a second click can fire before React re-renders with `disabled`,
+   * but a ref reads/writes synchronously in the same tick, so the SECOND of
+   * two rapid clicks sees the flag already up and returns before any fetch
+   * fires. `sending` (state) drives the visible disabled attribute — belt
+   * and suspenders, same shape as the send route's own onceWithin() guard
+   * (mail.ts) on the wire. */
+  const sendingRef = useRef(false);
+  const [sending, setSending] = useState(false);
+
   // the estimate updates from event handlers / the fetch callback (react
   // purity: never Date.now() in render, never setState in an effect body) —
   // past the cap the queue spans whole hours and the panel says when
@@ -76,39 +87,55 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   const confirmed = typed.trim() !== "" && Number(typed) === count;
 
   async function sendTest() {
+    if (sendingRef.current) return; // one click in flight at a time
+    sendingRef.current = true;
+    setSending(true);
     setNote("");
-    const d = await fetch("/api/admin/letters/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key, testTo }),
-    }).then((r) => r.json()).catch(() => null);
-    setNote(d?.ok ? `test copy queued for ${testTo}` : (d?.reason ?? "test send failed"));
+    try {
+      const d = await fetch("/api/admin/letters/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, testTo }),
+      }).then((r) => r.json()).catch(() => null);
+      setNote(d?.ok ? `test copy queued for ${testTo}` : (d?.reason ?? "test send failed"));
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
+    }
   }
 
   async function sendList() {
+    if (sendingRef.current) return; // one click in flight at a time
+    sendingRef.current = true;
+    setSending(true);
     setNote("");
     setDeliveries([]);
-    const d = await fetch("/api/admin/letters/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        key,
-        source: segment,
-        confirm: Number(typed),
-        at: sendAt ? new Date(sendAt).toISOString() : undefined,
-      }),
-    }).then((r) => r.json()).catch(() => null);
-    if (d?.ok) {
-      setNote(
-        `queued to ${d.queued} souls (${d.segment}) · ${d.scheduledFor === "next tick" ? "goes out on the next tick" : `scheduled for ${new Date(d.scheduledFor).toLocaleString()}`}` +
-          (d.estimatedFinish ? ` · the drip finishes ≈ ${new Date(d.estimatedFinish).toLocaleString()}` : ""),
-      );
-      setDeliveries((d.recipients ?? []).map((to: string) => ({ to, when: d.scheduledFor })));
-      setTyped("");
-    } else if (d?.expected !== undefined) {
-      setNote(`the list moved — it is now ${d.expected}; retype the count`);
-    } else {
-      setNote(d?.reason ?? "send failed");
+    try {
+      const d = await fetch("/api/admin/letters/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key,
+          source: segment,
+          confirm: Number(typed),
+          at: sendAt ? new Date(sendAt).toISOString() : undefined,
+        }),
+      }).then((r) => r.json()).catch(() => null);
+      if (d?.ok) {
+        setNote(
+          `queued to ${d.queued} souls (${d.segment}) · ${d.scheduledFor === "next tick" ? "goes out on the next tick" : `scheduled for ${new Date(d.scheduledFor).toLocaleString()}`}` +
+            (d.estimatedFinish ? ` · the drip finishes ≈ ${new Date(d.estimatedFinish).toLocaleString()}` : ""),
+        );
+        setDeliveries((d.recipients ?? []).map((to: string) => ({ to, when: d.scheduledFor })));
+        setTyped("");
+      } else if (d?.expected !== undefined) {
+        setNote(`the list moved — it is now ${d.expected}; retype the count`);
+      } else {
+        setNote(d?.reason ?? "send failed");
+      }
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
     }
   }
 
@@ -159,9 +186,9 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <input value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="you@example.com" type="email"
             className="border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
-          <button onClick={sendTest} disabled={!testTo.includes("@") || !hasBody}
+          <button onClick={sendTest} disabled={sending || !testTo.includes("@") || !hasBody}
             className="min-h-11 touch-manipulation border border-neutral-500 px-4 py-1 text-xs disabled:opacity-40">
-            SEND TEST COPY
+            {sending ? "SENDING…" : "SEND TEST COPY"}
           </button>
         </div>
       </div>
@@ -196,9 +223,9 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
               <input value={typed} onChange={(e) => setTyped(e.target.value)} inputMode="numeric" placeholder={String(count)}
                 className="ml-2 w-24 border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
             </label>
-            <button onClick={sendList} disabled={!confirmed || !hasBody}
+            <button onClick={sendList} disabled={sending || !confirmed || !hasBody}
               className="min-h-11 touch-manipulation border border-yellow-500 px-4 py-1 text-xs font-bold text-yellow-400 disabled:opacity-40">
-              {sendAt ? `SCHEDULE TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}` : `SEND TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}`}
+              {sending ? "SENDING…" : sendAt ? `SCHEDULE TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}` : `SEND TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}`}
             </button>
             {finish && (
               <p className="text-xs text-neutral-400">

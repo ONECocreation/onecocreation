@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { insertAtCaret, insertLink, toggleMark } from "@/lib/letter-marks";
 
 /**
  * LETTERS — every letter the house sends, in one room (wireframe v2).
@@ -132,6 +133,7 @@ export default function LettersRoom() {
 
   function openEditor(key: string, fallbackSubject: string) {
     setOpen(open === key ? null : key);
+    setPreviewOpen(null); // a fresh editor never opens onto a stale preview
     const l = api(key);
     setSubj(l?.override?.subject ?? l?.default?.subject ?? fallbackSubject);
     setBodyTxt(l?.override?.body ?? "");
@@ -140,11 +142,38 @@ export default function LettersRoom() {
 
   const [uploading, setUploading] = useState(false);
 
-  function insert(text: string) {
-    setBodyTxt((b) => b + (b.endsWith("\n") || b === "" ? "" : "\n") + text);
+  /* TASK-214: the toolbar's real wiring. Root cause of "bold/italic does
+   * nothing" — the old insert() always appended to the END of the body,
+   * never touching the selection. These read the live textarea's own
+   * selectionStart/End (the DOM, not React state, holds the truth of what's
+   * highlighted) and hand the result to letter-marks.ts's pure functions;
+   * a rAF after the state update restores the selection so a second click
+   * (toggling bold back off, say) still sees what the user is looking at. */
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  function currentSelection() {
+    const el = textareaRef.current;
+    if (!el) return { text: bodyTxt, start: bodyTxt.length, end: bodyTxt.length };
+    return { text: bodyTxt, start: el.selectionStart ?? bodyTxt.length, end: el.selectionEnd ?? bodyTxt.length };
   }
-  function wrap(marks: string) {
-    insert(`${marks}text${marks}`);
+  function applyMark(result: { text: string; start: number; end: number }) {
+    setBodyTxt(result.text);
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (el) {
+        el.focus();
+        el.setSelectionRange(result.start, result.end);
+      }
+    });
+  }
+  function insert(text: string) {
+    applyMark(insertAtCaret(currentSelection(), text));
+  }
+  function applyToggle(mark: string) {
+    applyMark(toggleMark(currentSelection(), mark));
+  }
+  function applyLink() {
+    applyMark(insertLink(currentSelection()));
   }
   async function uploadImage() {
     const input = document.createElement("input");
@@ -196,26 +225,72 @@ export default function LettersRoom() {
     } else setNote("save failed — subject and body both required");
   }
 
+  /* TASK-214: the NEW side-panel preview — "no preview found" on the call.
+   * mail.ts imports nodemailer, so the render can't happen in the client
+   * bundle; the panel asks the server for the SAME letterHtml() the send
+   * route fires (src/app/api/admin/letters/preview/route.ts), so what Love
+   * sees here is exactly what lands in the inbox — never a client-side
+   * approximation that could drift from the real send. */
+  const [previewOpen, setPreviewOpen] = useState<string | null>(null);
+  const [previewHtml, setPreviewHtml] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  function togglePreview(key: string) {
+    setPreviewOpen((cur) => (cur === key ? null : key));
+  }
+
+  useEffect(() => {
+    if (!previewOpen) return;
+    const t = setTimeout(() => {
+      setPreviewLoading(true);
+      fetch("/api/admin/letters/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: bodyTxt }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => setPreviewHtml(d?.ok ? d.html : ""))
+        .catch(() => setPreviewHtml(""))
+        .finally(() => setPreviewLoading(false));
+    }, 300); // live, but debounced — no fetch per keystroke
+    return () => clearTimeout(t);
+  }, [bodyTxt, previewOpen]);
+
   /** one letter row's shared editor block (seeded and composed alike) */
   function editor(key: string) {
     return (
-      <div className="mt-3 space-y-2">
-        <input value={subj} onChange={(e) => setSubj(e.target.value)} placeholder="subject"
-          className="w-full border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
-        <div className="flex flex-wrap gap-1 text-xs">
-          <button onClick={() => wrap("**")} className="border border-neutral-600 px-2 py-1 font-bold">B</button>
-          <button onClick={() => wrap("*")} className="border border-neutral-600 px-2 py-1 italic">I</button>
-          <button onClick={() => insert("[link text](https://)")} className="border border-neutral-600 px-2 py-1">link</button>
-          <button onClick={() => uploadImage()} className="border border-neutral-600 px-2 py-1">{uploading ? "uploading…" : "📷 image"}</button>
-          <span className="self-center text-[10px] text-neutral-500">**bold** · *italic* · [text](url) · emojis type right in 💛</span>
+      <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-start">
+        <div className="min-w-0 flex-1 space-y-2">
+          <input value={subj} onChange={(e) => setSubj(e.target.value)} placeholder="subject"
+            className="w-full border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
+          <div className="flex flex-wrap gap-1 text-xs">
+            <button onClick={() => applyToggle("**")} className="border border-neutral-600 px-2 py-1 font-bold">B</button>
+            <button onClick={() => applyToggle("*")} className="border border-neutral-600 px-2 py-1 italic">I</button>
+            <button onClick={applyLink} className="border border-neutral-600 px-2 py-1">link</button>
+            <button onClick={() => uploadImage()} className="border border-neutral-600 px-2 py-1">{uploading ? "uploading…" : "📷 image"}</button>
+            <button onClick={() => togglePreview(key)}
+              className="border border-cyan-700 px-2 py-1 text-cyan-300" aria-pressed={previewOpen === key}>
+              {previewOpen === key ? "✕ close preview" : "👁 preview"}
+            </button>
+            <span className="self-center text-[10px] text-neutral-500">**bold** · *italic* · [text](url) · emojis type right in 💛</span>
+          </div>
+          <textarea id={`ta-${key}`} ref={textareaRef} value={bodyTxt} onChange={(e) => setBodyTxt(e.target.value)} rows={10}
+            placeholder="the letter body — blank line makes a new paragraph; the brand shell wraps it"
+            className="w-full border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={() => save(key)} className="min-h-11 touch-manipulation border border-yellow-500 px-4 py-1 text-xs font-bold text-yellow-400">SAVE</button>
+            {note && <span className="self-center text-xs text-neutral-400">{note}</span>}
+          </div>
         </div>
-        <textarea id={`ta-${key}`} value={bodyTxt} onChange={(e) => setBodyTxt(e.target.value)} rows={10}
-          placeholder="the letter body — blank line makes a new paragraph; the brand shell wraps it"
-          className="w-full border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
-        <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => save(key)} className="min-h-11 touch-manipulation border border-yellow-500 px-4 py-1 text-xs font-bold text-yellow-400">SAVE</button>
-          {note && <span className="self-center text-xs text-neutral-400">{note}</span>}
-        </div>
+        {previewOpen === key && (
+          <div className="w-full shrink-0 border border-cyan-800 lg:w-[380px]">
+            <div className="border-b border-cyan-800 bg-black px-2 py-1 text-[10px] uppercase text-cyan-300">
+              preview — as the email renders
+            </div>
+            {previewLoading && <p className="p-2 text-xs text-neutral-400">rendering…</p>}
+            <iframe title={`letter preview — ${key}`} srcDoc={previewHtml} className="h-[520px] w-full bg-white" />
+          </div>
+        )}
       </div>
     );
   }
