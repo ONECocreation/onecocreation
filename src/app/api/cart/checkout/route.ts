@@ -51,6 +51,17 @@ function railPrice(
   return price.sats != null ? { amount: price.sats, currency: "SATS" } : null;
 }
 
+/** TASK-223 (Love's call #7): the buyer's Square receipt line-item name —
+ *  every line's title, qty shown when a line carries more than one. Capped
+ *  here too (not just in payments.ts) so a long basket's cap lands on a
+ *  whole title, not mid-word. */
+function basketDescription(lineItems: OrderRecord["lineItems"]): string {
+  return lineItems
+    .map((l) => (l.qty > 1 ? `${l.title} × ${l.qty}` : l.title))
+    .join(", ")
+    .slice(0, 500);
+}
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     discountCode?: string;
@@ -358,6 +369,8 @@ export async function POST(request: Request) {
       currency: snapshot.currency,
       buyerEmail: body.contact?.email,
       redirectUrl: orderDoorUrl(order, origin), // T-173: the basket's return carries the signed key too
+      description: basketDescription(order.lineItems),
+      referenceId: order.id.slice(0, 8),
     },
     `${order.id}:0`,
   );

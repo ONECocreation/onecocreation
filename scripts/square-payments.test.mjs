@@ -87,6 +87,53 @@ await rejects(
   t("no quick_pay field — metadata requires the full order shape", body.quick_pay === undefined);
 }
 
+/* ── TASK-223 (Love's call #7): the receipt names what was bought ────── */
+{
+  // no description/referenceId at all — the pre-T-223 fallback, unchanged
+  const bare = buildSquarePaymentLinkBody(
+    { orderId: "ord_bare1", amount: 1000, currency: "USD", redirectUrl: "https://x/y" },
+    "idem-bare",
+    "L_FAKE",
+  );
+  t("no description → falls back to the old 'Order <id>' name", bare.order.line_items[0].name === "Order ord_bare1");
+  t("no referenceId → order.reference_id is undefined (Square treats a missing key as none set)", bare.order.reference_id === undefined);
+
+  // a real description + referenceId — the fix itself
+  const named = buildSquarePaymentLinkBody(
+    {
+      orderId: "ord_named1",
+      amount: 2500,
+      currency: "USD",
+      redirectUrl: "https://x/y",
+      description: "Sunrise Reiki Session — Sep 15, 2:00 PM",
+      referenceId: "ORD_NAM1",
+    },
+    "idem-named",
+    "L_FAKE",
+  );
+  t("a description becomes the buyer's own receipt line-item name", named.order.line_items[0].name === "Sunrise Reiki Session — Sep 15, 2:00 PM");
+  t("referenceId rides as order.reference_id — the buyer-facing order number", named.order.reference_id === "ORD_NAM1");
+  t("the fallback name never appears once a real description is given", !named.order.line_items[0].name.includes("Order ord_named1"));
+
+  // the 500-char cap — Square's own line-item name limit
+  const longDescription = "A".repeat(600);
+  const capped = buildSquarePaymentLinkBody(
+    { orderId: "ord_long1", amount: 100, currency: "USD", redirectUrl: "https://x/y", description: longDescription },
+    "idem-long",
+    "L_FAKE",
+  );
+  t("a description over 500 chars is truncated to exactly 500", capped.order.line_items[0].name.length === 500);
+  t("the truncated name is the description's own leading 500 chars, not the fallback", capped.order.line_items[0].name === "A".repeat(500));
+
+  // the fallback itself also respects the cap (an absurdly long orderId can't blow past it either)
+  const longFallback = buildSquarePaymentLinkBody(
+    { orderId: "x".repeat(600), amount: 100, currency: "USD", redirectUrl: "https://x/y" },
+    "idem-long-fallback",
+    "L_FAKE",
+  );
+  t("the fallback name is capped at 500 too", longFallback.order.line_items[0].name.length === 500);
+}
+
 /* ── mapOrderState(): Orders API state → canonical machine ───────────── */
 t("OPEN → charge_created", mapOrderState("OPEN") === "charge_created");
 t("COMPLETED → settled", mapOrderState("COMPLETED") === "settled");

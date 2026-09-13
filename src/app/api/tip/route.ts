@@ -24,6 +24,18 @@ const JARS = new Set(["love", "onecocreation", "payforward"]);
 const MIN_SATS = 210;
 const MAX_SATS = 10_000_000;
 
+/** TASK-223 (Love's call #7): the receipt's line-item name — the same
+ *  words TipJar.tsx's own JARS table and /a's JAR_LABELS already show,
+ *  reused verbatim (grepped, not reinvented). Currency is always SATS
+ *  here, so this never actually reaches Square today (createCharge throws
+ *  on a sats request) — wired for consistency and whatever rail a tip
+ *  charges on next. */
+const JAR_LABELS: Record<string, string> = {
+  love: "Tip Love",
+  onecocreation: "Tip One Cocreation",
+  payforward: "Gifts of Gratitude",
+};
+
 export async function POST(request: Request) {
   await getSiteConfig(); // T-147 seam 1 (Number One): warm the switch truth before judging a rail on a cold instance
   await ensureSquareVault();
@@ -62,6 +74,8 @@ export async function POST(request: Request) {
       amount: sats,
       currency: "SATS",
       redirectUrl: `${origin}/support?thanks=${target}`,
+      description: JAR_LABELS[target] ?? "Tip",
+      referenceId: tipId,
     },
     tipId,
   );

@@ -39,6 +39,22 @@ export const dynamic = "force-dynamic";
 
 const HOLD_MS = { lightning: 15 * 60_000, onchain: 90 * 60_000 } as const;
 
+/** TASK-223 (Love's call #7): the buyer's Square receipt line-item name for
+ *  a booking — the service name + the slot's own civil time, in the
+ *  artist's zone (the wall-clock time she scheduled it at). A small local
+ *  formatter rather than importing mail-booking.ts's fmtWhen(): that
+ *  function is unexported, and mail-booking.ts is a seam, not this lane's
+ *  OWNS. */
+function civilTime(iso: string, tz: string): string {
+  return new Date(iso).toLocaleString("en-US", {
+    timeZone: tz,
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 export async function POST(request: Request) {
   await getSiteConfig(); // T-147 seam 1 (Number One): warm the switch truth before judging a rail on a cold instance
   await ensureSquareVault();
@@ -207,6 +223,8 @@ export async function POST(request: Request) {
         currency: snapshot.currency,
         buyerEmail: booking.customer.email,
         redirectUrl: `${origin}/book/receipt/${bookingId}`,
+        description: `${service.title} — ${civilTime(slot.startUtc, service.artistTz)}`,
+        referenceId: orderId.slice(0, 8),
       },
       `${orderId}:0`,
     );
