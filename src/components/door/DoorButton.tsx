@@ -158,6 +158,12 @@ export default function DoorButton() {
               onClick={() => setOpen(null)}
               style={{
                 display: "block", padding: "9px 18px",
+                /* TASK-210 shot bench, 390px: house.css's `.nav-tail a` phone rule
+                   (max-width 34vw + ellipsis, meant for the header's own chips)
+                   reaches these rows and clipped "What's yours now" / "The
+                   reading room" to "WHAT'S YO…" — the menu's rows are not
+                   tail chips; they keep their whole words */
+                maxWidth: "none", overflow: "visible", textOverflow: "clip",
                 color: "#ECE3C9", /* S2: pinned — same always-night ink as today's menu */
                 fontSize: ".8rem", letterSpacing: ".04em", textTransform: "uppercase",
                 textDecoration: "none",

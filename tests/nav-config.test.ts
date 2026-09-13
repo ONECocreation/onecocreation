@@ -359,7 +359,9 @@ describe("TASK-187 — the memberships switch", () => {
     expect(memberships).toBeTruthy();
     expect(memberships?.href).toBe("/memberships");
     expect(memberships?.subs?.map((s) => s.label)).toEqual(["Heart Field", "Three packages"]);
-    expect(memberships?.subs?.map((s) => s.href)).toEqual(["/memberships", "/packages"]);
+    /* TASK-210 (0018.06.23 a₿): the Heart Field row leads to the Commons'
+       Stage now — it pointed back at its own header (Love's call, 01:53:35) */
+    expect(memberships?.subs?.map((s) => s.href)).toEqual(["/rooms/heart-field", "/packages"]);
   });
 
   it("buildDefaultMenu: memberships OFF — the top-level door disappears entirely", () => {

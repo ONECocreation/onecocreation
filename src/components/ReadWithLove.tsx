@@ -1,8 +1,7 @@
 "use client";
 
 import useFrenSession from "@/hooks/useFrenSession";
-import { ROOMS } from "@/lib/matrix-rooms";
-import { weeklyReadingDoor, readingDoorHref, type VisitorSession } from "@/components/sections";
+import { readingDoorHref } from "@/lib/reading-room";
 
 /**
  * READ WITH LOVE — THE FREE READING DOOR (TASK-156, 0018.06.17 a₿, Love's
@@ -15,11 +14,13 @@ import { weeklyReadingDoor, readingDoorHref, type VisitorSession } from "@/compo
  * like its WildDoors siblings.
  */
 
+/* TASK-210 (0018.06.23 a₿): the derivation moved to src/lib/reading-room.ts
+   so the member menu and the nav's Heart Field row read the SAME room as
+   this card. Re-exported here for tests/free-reading-path.test.ts. */
+export { READING_ROOM_SLUG, READING_ROOM_PATH, readingDoorHref } from "@/lib/reading-room";
+
 export default function ReadWithLove() {
   const { fren } = useFrenSession();
-  // Convert fren session to VisitorSession type
-  const visitor: VisitorSession | null = fren ? { handle: fren.handle, space: fren.space } : null;
-  const readingDoor = weeklyReadingDoor(ROOMS, visitor);
   const href = readingDoorHref(!!fren);
   const body = (
     <>

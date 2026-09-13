@@ -37,6 +37,12 @@ const { cleanup: cleanupCwd } = isolateCwd("oc-community-readiness-");
 
 const HS = "http://matrix.test";
 const BOT_MXID = "@adminpacman:matrix.test";
+/* TASK-210: Love's own seat — the email-seat operator, derived exactly as the
+   login door derives it (mxidForSubject: mailbox → `.at.`, on the homeserver's
+   own server name — matrixServerName strips the `matrix.` host prefix, so
+   http://matrix.test seats her on `test`) */
+const LOVE_EMAIL = "love@example.com";
+const LOVE_MXID = "@love.at.example.com:test";
 const read = (rel: string) => fs.readFile(path.join(ROOT, rel), "utf8");
 
 /* the app imports ride AFTER the env + cwd knobs (hoisted, but the knobs
@@ -52,6 +58,9 @@ interface StubOpts {
   serverAnswers?: boolean;
   whoami?: "ok" | "refused";
   unreachable?: boolean;
+  /** TASK-210: what the homeserver says about a member's profile — the
+   *  display name it carries, or "none" (404: no account yet) */
+  profile?: Record<string, string | "none">;
 }
 
 /** The stubbed outside world: versions + whoami + the room directory on
@@ -67,6 +76,14 @@ function stubWorld(opts: StubOpts) {
       const authed = ((init?.headers as Record<string, string>)?.Authorization ?? "").startsWith("Bearer ");
       if (opts.whoami === "refused" || !authed) return reply(401, { errcode: "M_MISSING_TOKEN" });
       return reply(200, { user_id: BOT_MXID });
+    }
+    const prof = url.match(/\/_matrix\/client\/v3\/profile\/(.+)\/displayname$/);
+    if (prof) {
+      const authed = ((init?.headers as Record<string, string>)?.Authorization ?? "").startsWith("Bearer ");
+      if (!authed) return reply(401, { errcode: "M_MISSING_TOKEN" });
+      const known = opts.profile?.[prof[1]];
+      if (!known || known === "none") return reply(404, { errcode: "M_NOT_FOUND" });
+      return reply(200, { displayname: known });
     }
     const dir = url.match(/\/_matrix\/client\/v3\/directory\/room\/(.+)$/);
     if (dir) {
@@ -105,42 +122,75 @@ beforeEach(async () => {
 afterAll(() => cleanupCwd());
 
 describe("TASK-162 — the readiness rows from fixture probes", () => {
-  it("ALL OK: every probe answers, all five rows read ok", async () => {
-    stubWorld({ roomsResolve: ALL_ALIASES, whoami: "ok" });
-    const rows = await communityReadiness();
-    expect(rows.map((r) => r.key)).toEqual(["homeserver", "identity", "rooms", "meeting", "welcome-letter"]);
+  it("ALL OK: every probe answers, all six rows read ok — and Love's row names LOVE, never the bot seat (TASK-210)", async () => {
+    stubWorld({ roomsResolve: ALL_ALIASES, whoami: "ok", profile: { [LOVE_MXID]: "Love" } });
+    const rows = await communityReadiness({ operator: LOVE_EMAIL });
+    expect(rows.map((r) => r.key)).toEqual(["homeserver", "seat", "identity", "rooms", "meeting", "welcome-letter"]);
     expect(rows.every((r) => r.state === "ok")).toBe(true);
     expect(rows[0].words).toContain("matrix.test");
+    // the bot seat row says what it is — the house's voice, not Love's
+    expect(rows[1].name).toBe("The house's bot seat resolves");
     expect(rows[1].words).toContain(BOT_MXID);
-    expect(rows[2].words).toContain("7 of 7 rooms resolve");
-    expect(rows[3].words).toContain("meet.test answers");
+    expect(rows[1].words).toContain("not Love's own");
+    // Love's OWN row: derived from the seat she is signed into (the login
+    // door's own derivation), and the homeserver's word on who that is
+    expect(rows[2].name).toBe("Love's Matrix identity resolves");
+    expect(rows[2].words).toContain(LOVE_MXID);
+    expect(rows[2].words).toContain('"Love"');
+    expect(rows[2].words).not.toContain(BOT_MXID);
+    expect(rows[2].words).not.toContain("adminpacman");
+    expect(rows[3].words).toContain("7 of 7 rooms resolve");
+    expect(rows[4].words).toContain("meet.test answers");
     // the T-156 welcome letter: the built-in words stand until Love saves her own
-    expect(rows[4].words).toContain("built-in welcome words");
+    expect(rows[5].words).toContain("built-in welcome words");
   });
 
-  it("ONE MISSING: no bot token → the identity row says so, naming the ENV NAME only (never a value)", async () => {
+  it("TASK-210 — Love's row without Love: no operator → unknown (never the bot printed under her name); a keyed operator → unknown, in words", async () => {
+    stubWorld({ roomsResolve: ALL_ALIASES, whoami: "ok" });
+    const anon = (await communityReadiness()).find((r) => r.key === "identity")!;
+    expect(anon.state).toBe("unknown");
+    expect(anon.words).toContain("signed in as Love");
+    expect(anon.words).not.toContain(BOT_MXID);
+    const keyed = (await communityReadiness({ operator: "ab".repeat(32) })).find((r) => r.key === "identity")!;
+    expect(keyed.state).toBe("unknown");
+    expect(keyed.words).toContain("by key");
+  });
+
+  it("TASK-210 — no account yet for Love's derived seat (profile 404) → missing, naming the seat and the fix", async () => {
+    stubWorld({ roomsResolve: ALL_ALIASES, whoami: "ok", profile: { [LOVE_MXID]: "none" } });
+    const love = (await communityReadiness({ operator: LOVE_EMAIL })).find((r) => r.key === "identity")!;
+    expect(love.state).toBe("missing");
+    expect(love.words).toContain(LOVE_MXID);
+    expect(love.words).toContain("first room visit");
+  });
+
+  it("ONE MISSING: no bot token → the seat row says so, naming the ENV NAME only (never a value); Love's row can't ask either", async () => {
     delete process.env.MATRIX_BOT_TOKEN;
     delete process.env.MATRIX_OCC_ADMIN_TOKEN;
     stubWorld({ roomsResolve: ALL_ALIASES, whoami: "ok" });
-    const rows = await communityReadiness();
+    const rows = await communityReadiness({ operator: LOVE_EMAIL });
+    const seat = rows.find((r) => r.key === "seat")!;
+    expect(seat.state).toBe("missing");
+    expect(seat.words).toContain("MATRIX_BOT_TOKEN");
     const identity = rows.find((r) => r.key === "identity")!;
-    expect(identity.state).toBe("missing");
+    expect(identity.state).toBe("unknown");
     expect(identity.words).toContain("MATRIX_BOT_TOKEN");
+    expect(identity.words).toContain(LOVE_MXID); // the derivation still stands — only the asking can't
     expect(rows.filter((r) => r.state === "ok")).toHaveLength(4);
   });
 
-  it("ONE MISSING: the homeserver REFUSES the seat (whoami 401) → missing, in words", async () => {
+  it("ONE MISSING: the homeserver REFUSES the seat (whoami 401) → the seat row reads missing, in words", async () => {
     stubWorld({ roomsResolve: ALL_ALIASES, whoami: "refused" });
     const rows = await communityReadiness();
-    const identity = rows.find((r) => r.key === "identity")!;
-    expect(identity.state).toBe("missing");
-    expect(identity.words).toContain("refuses");
+    const seat = rows.find((r) => r.key === "seat")!;
+    expect(seat.state).toBe("missing");
+    expect(seat.words).toContain("refuses");
   });
 
   it("UNREACHABLE → UNKNOWN: a dead world never invents an ok", async () => {
     stubWorld({ unreachable: true });
-    const rows = await communityReadiness();
-    for (const key of ["homeserver", "identity", "rooms", "meeting"]) {
+    const rows = await communityReadiness({ operator: LOVE_EMAIL });
+    for (const key of ["homeserver", "seat", "identity", "rooms", "meeting"]) {
       expect(rows.find((r) => r.key === key)!.state, key).toBe("unknown");
     }
     // the welcome letter is a local read — it still stands, honestly

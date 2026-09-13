@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { TIERS } from "@/lib/entitlement";
+import { TIERS, type Tier } from "@/lib/entitlement";
+import { roomGate } from "@/lib/room-access";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { ROOMS, type MatrixRoom } from "@/lib/matrix";
 import { listServices } from "@/lib/booking";
@@ -35,48 +36,49 @@ export interface WeeklyReadingDoor {
   words: string;
 }
 
-/** The signed-in state of the visitor — from the session cookie */
+/** The signed-in state of the visitor, read ONCE by the page from the
+ *  session cookie (fren-auth's sessionsFromCookieHeader — the same read
+ *  the rooms' Stage makes) and threaded down as a plain prop. `tier` is
+ *  the package the soul holds (member-tier's tierForSubject), null when
+ *  the vault says none. TASK-210 (0018.06.23 a₿, Love's 0018.06.18 call):
+ *  "the home page weekly-reading door does not know the visitor is signed
+ *  in" — it never asked. */
 export interface VisitorSession {
   handle: string;
   space: string;
+  tier?: Tier | null;
 }
 
+/**
+ * The door, for THIS visitor. `visitor` undefined = the page didn't say
+ * (the T-178 render, the Stage's bare address); null = a signed-out soul
+ * (the door leads to the sign-in card with ?next= carried — the rooms
+ * middleware would bounce them there anyway; the door now says so
+ * upfront); a session = straight to the Stage, and when the soul's own
+ * key opens the room the words say THAT instead of naming a package to
+ * buy. The gate decision is roomGate's — the Stage's own — never a second
+ * ladder invented here.
+ */
 export function weeklyReadingDoor(
   rooms: MatrixRoom[] = ROOMS,
-  visitor?: VisitorSession | null
+  visitor?: VisitorSession | null,
 ): WeeklyReadingDoor | null {
   const slugOf = (id: string) => id.slice(1, id.indexOf(":"));
   const room = rooms.find((r) => slugOf(r.id) === "weekly-reading");
   if (!room) return null;
-  const words =
+  const stage = `/rooms/${slugOf(room.id)}`;
+  const tierWords =
     room.minTier === "all"
       ? "Every week, live in Love's room — free for every member."
       : `Every week, live in Love's room — with the ${TIERS[room.minTier].name} membership.`;
-  return { href: `/rooms/${slugOf(room.id)}`, words };
-}
-
-/** The reading room's slug, DERIVED from the rooms registry. TASK-174
- *  (0018.06.17 a₿ · block 966094): the free path leads to the FREE room —
- *  the one whose door is open to every member (minTier "all"), the Heart
- *  Field Commons — so the card's own words ("free for every member") stay
- *  true. Before this lane it derived the room whose title says "Reading"
- *  ("Chronicles: Weekly Reading", a tier-B room) while saying "free".
- *  Derive-or-dash: no free room in the registry → null, and the card shows
- *  its words with NO door rather than a fake link. */
-const readingRoom = ROOMS.find((r) => r.minTier === "all");
-export const READING_ROOM_SLUG: string | null = readingRoom
-  ? readingRoom.id.slice(1, readingRoom.id.indexOf(":"))
-  : null;
-export const READING_ROOM_PATH: string | null = READING_ROOM_SLUG
-  ? `/rooms/${READING_ROOM_SLUG}`
-  : null;
-
-/** Where the reading door leads — for the ReadWithLove component */
-export function readingDoorHref(signedIn: boolean): string | null {
-  if (!READING_ROOM_PATH) return null;
-  return signedIn
-    ? READING_ROOM_PATH
-    : `/login?next=${encodeURIComponent(READING_ROOM_PATH)}`;
+  if (visitor === null) {
+    return { href: `/login?next=${encodeURIComponent(stage)}`, words: `${tierWords} Sign in and the room knows you.` };
+  }
+  if (visitor && roomGate(room.minTier, { signedIn: true, tier: visitor.tier ?? null }) === "open") {
+    const key = room.minTier === "all" ? "your membership" : `your ${TIERS[visitor.tier as Tier].name} key`;
+    return { href: stage, words: `Every week, live in Love's room — ${key} opens it.` };
+  }
+  return { href: stage, words: tierWords };
 }
 
 export function Hero({ session }: { session?: VisitorSession | null }) {

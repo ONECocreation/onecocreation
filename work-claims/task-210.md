@@ -1,6 +1,6 @@
 # WORK-CLAIM — TASK-210 — ONE Cocreation: the site knows who is signed in
 
-CLAIMED-BY: **Chief O'Brien** (guest builder, Hermes lane)
+CLAIMED-BY: **Chief O'Brien** (guest builder, Hermes lane) — NVIDIA rail overloaded twice mid-lane; his sketch kept as WIP e880b08 → **Number One finishes** (the Admiral, 0018.06.23 a₿)
 CLAIMED-AT: 0018.06.23 a₿ · block 966,819
 BRANCH: `feat/task-210-signed-in`
 WORKTREE: `~/dev/worktrees/task-210`
