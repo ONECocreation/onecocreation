@@ -10,6 +10,7 @@ import ServiceCard from "@/components/ServiceCard";
 import NotOpenYet from "@/components/NotOpenYet";
 import PaletteVars from "@/components/PaletteVars";
 import PopupHost from "@/components/PopupHost";
+import StackedHero from "@/components/StackedHero";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
 import { listServices } from "@/lib/booking";
@@ -104,12 +105,7 @@ export default async function BookIndexPage() {
       <section className="keep-dark book-hero-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
         <CosmicSky />
         <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "64px 22px 56px" }}>
-          <p className="kicker">One-on-One with Love</p>
-          <h1 className="stack-hero">
-            <span className="sh-ink">BOOK</span>
-            <span className="sh-teal">A SESSION</span>
-          </h1>
-          <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
+          <StackedHero kicker="One-on-One with Love" lines={[{ t: "BOOK" }, { t: "A SESSION", tone: "teal" }]} constellation />
           {/* the house lede (.lead, the home shelf's own class) — the accent
               rides --gold-2, which since T-121's pink pass IS the light rose:
               one family with the rose Book doors below */}

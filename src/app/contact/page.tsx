@@ -4,7 +4,7 @@ import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
 import ContactForm from "@/components/ContactForm";
 import ContactDoors from "@/components/ContactDoors";
-import { cartridge } from "@/brand/cartridge";
+import StackedHero from "@/components/StackedHero";
 
 export const metadata: Metadata = {
   title: "Contact — One Cocreation",
@@ -31,12 +31,7 @@ export default function ContactPage() {
         <section className="keep-dark sky-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
           <CosmicSky />
           <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "64px 22px 60px" }}>
-            <p className="kicker" style={{ color: "var(--rose)" }}>E.T. Phone Home</p>
-            <h1 className="stack-hero">
-              <span className="sh-ink" style={{ color: "var(--ink-strong)" }}>I&apos;LL BE</span>
-              <span className="sh-teal" style={{ color: "var(--teal-bright)" }}>RIGHT HERE</span>
-            </h1>
-            <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
+            <StackedHero kicker="E.T. Phone Home" lines={[{ t: "I'LL BE" }, { t: "RIGHT HERE", tone: "teal" }]} constellation />
           </div>
         </section>
 

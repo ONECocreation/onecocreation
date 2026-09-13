@@ -210,6 +210,12 @@ describe("the free meditation card on the shelf", () => {
     }
   });
 
+  it("TASK-216 seam landed: wears the SAME no-scroll flip contract StoreItemCard got in T-215 (.item-flip), not the old .flip-scroll-only shape", async () => {
+    const { default: FreeMeditationCard } = await import("@/components/store/FreeMeditationCard");
+    const html = renderToStaticMarkup(createElement(FreeMeditationCard));
+    expect(html).toMatch(/class="flip-card item-flip/);
+  });
+
   it("its words are the gift's own, its doors go to /meditation, and no checkout rides it", async () => {
     const { default: FreeMeditationCard } = await import("@/components/store/FreeMeditationCard");
     const html = renderToStaticMarkup(createElement(FreeMeditationCard));

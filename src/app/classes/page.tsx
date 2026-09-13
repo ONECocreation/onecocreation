@@ -7,13 +7,13 @@ import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
 import RoomsShelf from "@/components/rooms/RoomsShelf";
 import CommunitySpotlight from "@/components/CommunitySpotlight";
+import StackedHero from "@/components/StackedHero";
 import PopupHost from "@/components/PopupHost";
 import NotOpenYet from "@/components/NotOpenYet";
 import { getSiteConfig } from "@/lib/site-config";
 import PaletteVars from "@/components/PaletteVars";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
-import { cartridge } from "@/brand/cartridge";
 
 export const metadata: Metadata = {
   title: "Classes & Community — One Cocreation",
@@ -82,13 +82,12 @@ export default async function ClassesPage() {
           <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "64px 22px 56px" }}>
             {/* TASK-156 (0018.06.17 a₿, Love's meeting): the words "Heart Field
                 Commons" wear TEAL, "classes & community" wears PINK (the house
-                pink is --rose) — two token swaps, no new tokens. */}
-            <p className="kicker" style={{ color: "var(--teal-bright)" }}>The Heart Field</p>
-            <h1 className="stack-hero">
-              <span className="sh-ink" style={{ color: "var(--rose)" }}>CLASSES &amp;</span>
-              <span className="sh-teal" style={{ color: "var(--rose)" }}>COMMUNITY</span>
-            </h1>
-            <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
+                pink is --rose) — two token swaps, no new tokens. TASK-216:
+                the same choice now rides StackedHero's named tones
+                (kickerTone="teal", tone="rose" on both lines) instead of a
+                hand-rolled copy of the component's markup. */}
+            <StackedHero kickerTone="teal" kicker="The Heart Field"
+              lines={[{ t: "CLASSES &", tone: "rose" }, { t: "COMMUNITY", tone: "rose" }]} constellation />
             <p style={{ color: "var(--ink-body)", fontSize: ".95rem", maxWidth: 520, margin: "18px auto 0" }}>
               Your own luminous rooms — your keys, Love&apos;s server, nobody in between.
               Your package opens the doors.

@@ -38,6 +38,22 @@ export function mergedPopupTriggers(
   return { ...DEFAULT_POPUP_TRIGGERS, ...(overrides ?? {}) };
 }
 
+/**
+ * TASK-216 (0018.06.23 a₿, #14 — the free-meditation pop-up): the exact
+ * "should this popup open on this route" condition, pulled out of
+ * PopupHost's client effect into a pure function so "test the trigger
+ * condition" (the brief's own words) is literal, not aspirational. The
+ * audit that led here found every OC-owned piece already correct — the
+ * mount is unconditional on `/`, DEFAULT_POPUP_TRIGGERS["free-guide"]
+ * already lists "/", the seed document already has content, and the
+ * operator panel always writes a complete 4-field trigger (no partial-
+ * merge risk in mergedPopupTriggers above) — so this is the one concrete,
+ * testable seam: the condition itself, named and pinned.
+ */
+export function popupShouldFireOn(t: PopupTrigger | undefined, pathname: string): boolean {
+  return Boolean(t?.enabled) && Array.isArray(t?.pages) && (t as PopupTrigger).pages.includes(pathname);
+}
+
 /* A brand-new popup starts dark: disabled, no pages — the operator turns it
    on deliberately (nothing ambushes a visitor by default). */
 export const NEW_POPUP_TRIGGER: PopupTrigger = {

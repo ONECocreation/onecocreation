@@ -273,9 +273,13 @@ describe("ClassesPage — publish to live actually takes", () => {
 
     const { Render } = await import("@puckeditor/core");
     expect(findAll(el, (e) => e.type === Render)).toHaveLength(0);
-    const kickers = findAll(el, (e) => (e.props as { className?: string }).className === "kicker");
-    expect(kickers).toHaveLength(1);
-    expect((kickers[0].props as { children?: unknown }).children).toBe("The Heart Field");
+    // TASK-216: the hand-rolled kicker/h1 converged on <StackedHero> — the
+    // tree walker doesn't execute function components, so the pin moves to
+    // the StackedHero element's own props (the same wording, now a prop).
+    const { default: StackedHero } = await import("@/components/StackedHero");
+    const heroes = findAll(el, (e) => e.type === StackedHero);
+    expect(heroes).toHaveLength(1);
+    expect((heroes[0].props as { kicker?: string }).kicker).toBe("The Heart Field");
   });
 
   it("after Publish to live in /studio: the SAME request renders the published Puck doc", async () => {

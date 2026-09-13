@@ -42,11 +42,17 @@ const CONSOLE_CLASSES = [
 
 describe("TASK-165 — /book/cuts wears the house style", () => {
   it("the page carries the house wrapper — keep-dark night, the T-152 veils, the house faces", async () => {
+    // TASK-216: the hand-rolled kicker/h1.stack-hero/constellation markup
+    // converged on <StackedHero> — the component owns .kicker/.stack-hero/
+    // .sh-ink/.sh-teal now (see tests/one-header-treatment.test.ts); this
+    // page keeps only the call + the trailing .lead copy.
     const src = await read(PAGE);
     expect(src.includes("keep-dark sky-veil book-hero-veil")).toBe(true);
     expect(src.includes("keep-dark book-shelf-veil")).toBe(true);
-    for (const cls of ["kicker", "stack-hero", "sh-ink", "sh-teal", "lead"]) {
-      expect(src.includes(cls), `/book/cuts lost the house .${cls}`).toBe(true);
+    expect(src.includes("StackedHero"), "/book/cuts hero lost <StackedHero>").toBe(true);
+    expect(src.includes("className=\"lead\""), "/book/cuts hero lost the house .lead").toBe(true);
+    for (const cls of ["className=\"kicker\"", "className=\"stack-hero\"", "className=\"sh-ink\"", "className=\"sh-teal\""]) {
+      expect(src.includes(cls), `/book/cuts should read this class via StackedHero, not a hand-rolled copy: ${cls}`).toBe(false);
     }
   });
 

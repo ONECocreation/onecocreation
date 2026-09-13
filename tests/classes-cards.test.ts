@@ -173,7 +173,10 @@ describe("source-level pins — the shelf threads the name; the CSS is the addit
 
   it("house.css carries the .room-card contract — the fill, the bottom column, the full-width doors", async () => {
     const css = await fs.readFile(path.join(process.cwd(), "src/app/house.css"), "utf8");
-    expect(css).toContain(".room-card{height:100%}");
+    // TASK-216 (#37): the padding recipe joined this rule (moved off the
+    // component's inline ternary — see tests/room-card-grammar.test.ts) —
+    // `height:100%` is still the load-bearing fill this test names.
+    expect(css).toMatch(/\.room-card\{[^}]*height:100%[^}]*\}/);
     expect(css).toMatch(/\.room-card-doors\{[^}]*margin-top:auto[^}]*\}/);
     expect(css).toMatch(/\.room-card-doors \.btn\{[^}]*width:100%[^}]*\}/);
   });

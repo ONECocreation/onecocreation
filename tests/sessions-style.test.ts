@@ -50,10 +50,16 @@ describe("TASK-152 — the sessions/book pages wear the house style", () => {
     }
   });
 
-  it("/book's hero rides the house classes — kicker, stack-hero, lead — no stale class set", async () => {
+  it("/book's hero rides the house face — <StackedHero>, the lead paragraph — no stale class set", async () => {
+    // TASK-216: the hand-rolled kicker/h1.stack-hero/constellation markup
+    // converged on <StackedHero> (the component itself owns .kicker/
+    // .stack-hero/.sh-ink/.sh-teal now — see tests/one-header-treatment.test.ts);
+    // this page's own source keeps only the call + the trailing .lead copy.
     const src = await read("src/app/book/page.tsx");
-    for (const cls of ["kicker", "stack-hero", "sh-ink", "sh-teal", "lead"]) {
-      expect(src.includes(cls), `/book hero lost the house .${cls}`).toBe(true);
+    expect(src.includes("StackedHero"), "/book hero lost <StackedHero>").toBe(true);
+    expect(src.includes("className=\"lead\""), "/book hero lost the house .lead").toBe(true);
+    for (const cls of ["className=\"kicker\"", "className=\"stack-hero\"", "className=\"sh-ink\"", "className=\"sh-teal\""]) {
+      expect(src.includes(cls), `/book should read this class via StackedHero, not a hand-rolled copy: ${cls}`).toBe(false);
     }
   });
 

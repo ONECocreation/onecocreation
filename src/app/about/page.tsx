@@ -12,6 +12,7 @@ import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
 import { applyPlaylistToPuck, levelGalleries } from "@/lib/about-playlist-puck";
 import AboutPlaylist from "@/components/about/AboutPlaylist";
+import StackedHero from "@/components/StackedHero";
 import {
   ABOUT_BRIDGE_LINE,
   ABOUT_JOIN_LINES,
@@ -85,14 +86,7 @@ export default async function AboutPage() {
         <section className="keep-dark about-story-sky" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
           <CosmicSky shooting={false} />
           <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "64px 22px 70px" }}>
-            <p className="kicker" style={{ color: "var(--rose)" }}>
-              Smiles, Love
-            </p>
-            <h1 className="stack-hero">
-              <span className="sh-ink" style={{ color: "var(--ink-strong)" }}>MY</span>
-              <span className="sh-teal" style={{ color: "var(--teal-bright)" }}>STORY</span>
-            </h1>
-            <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
+            <StackedHero kicker="Smiles, Love" lines={[{ t: "MY" }, { t: "STORY", tone: "teal" }]} constellation />
             {/* TASK-154 item 2: her pictures LEVEL, not fanned — framed
                 like the session cards: full square, the faint purple
                 rounded thin bar around the outside (.about-faces,

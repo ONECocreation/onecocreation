@@ -4,8 +4,8 @@ import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
 import NotOpenYet from "@/components/NotOpenYet";
 import CutsChooser from "@/components/booking/CutsChooser";
+import StackedHero from "@/components/StackedHero";
 import { getSiteConfig } from "@/lib/site-config";
-import { cartridge } from "@/brand/cartridge";
 
 export const metadata: Metadata = {
   title: "ConsciousCuts & Soul Work — book a session",
@@ -56,12 +56,7 @@ export default async function CutsPage() {
       <section className="keep-dark sky-veil book-hero-veil" style={{ padding: 0, position: "relative", overflow: "hidden" }}>
         <CosmicSky />
         <div className="wrap center reveal" style={{ position: "relative", zIndex: 2, padding: "64px 22px 56px" }}>
-          <p className="kicker">ConsciousCuts &amp; Waxing 🦋</p>
-          <h1 className="stack-hero">
-            <span className="sh-ink">BOOK</span>
-            <span className="sh-teal">YOUR SESSION</span>
-          </h1>
-          <div className="constellation" aria-hidden style={{ color: "var(--ink-strong)" }}>{cartridge.constellation}</div>
+          <StackedHero kicker="ConsciousCuts & Waxing 🦋" lines={[{ t: "BOOK" }, { t: "YOUR SESSION", tone: "teal" }]} constellation />
           {/* the house lede (.lead, the home shelf's own class) — the same
               measure /book's hero carries */}
           <p className="lead" style={{ fontSize: "1.05rem", maxWidth: 460, margin: "18px auto 0" }}>

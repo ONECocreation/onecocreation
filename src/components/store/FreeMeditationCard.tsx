@@ -42,7 +42,13 @@ export default function FreeMeditationCard({ delay = 0 }: { delay?: number }) {
        directly, and any className React re-writes on state change wipes
        that stamp — the card vanished on every flip. */
     <div className="reveal" style={{ transitionDelay: `${delay}s` }}>
-    <div className={`flip-card${flipped ? " is-flipped" : ""}`}>
+    {/* TASK-216 (0018.06.23 a₿) — landing T-215's own named seam: this card
+        rode the exact same `.flip-scroll` no-scroll bug as StoreItemCard.tsx
+        (T-215's #3), unfixed because T-215's OWNS named StoreItemCard.tsx
+        specifically. `.item-flip`'s CSS shipped in that same lane's
+        house.css — this is the one-line class addition T-215's SUMMARY
+        asked a follow-through to apply. */}
+    <div className={`flip-card item-flip${flipped ? " is-flipped" : ""}`}>
       <div className="flip-inner">
 
         {/* ══ FRONT — the gift's picture, name, one-line sub, free · a gift ══ */}

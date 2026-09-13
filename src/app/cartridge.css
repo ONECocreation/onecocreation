@@ -386,9 +386,21 @@ html[data-oc-theme="light"] #classes .lead{color:var(--muted)}
 /* keep-dark sections hold the NIGHT tokens in both themes — text and
    glass inside them never flip out from under their dark backgrounds
    (cartridge walk, 0018.05.15). T-121: the --gold-deep pin pours the NEW
-   night value — the popup pink #E7B2C3 (was the money metal #D9B24E) */
+   night value — the popup pink #E7B2C3 (was the money metal #D9B24E).
+   TASK-216 (0018.06.23 a₿, #12 — the dark grounds re-swap): --band-1/2/3
+   join the pin. Two keep-dark surfaces read var(--band-2) in their OWN
+   background formula (house.css's `.hero` and `.about-story-sky`, both
+   `radial-gradient(…),linear-gradient(…,var(--hero-grad-1) 55%,
+   var(--band-2))`) — the eight tokens above never covered them, so the
+   gradient's LAST stop still flipped to the dawn lavender #ECEAF6 while
+   everything else on the section held night. Root cause, not a stronger
+   !important: pin the bands here too, so no keep-dark section can ever
+   leak light through a --band-* read again (the popup pill test below
+   guards the OTHER hand-carried copy of this pin from drifting the same
+   way — see PopupHost.tsx). */
 main .keep-dark{--ink-strong:#F4ECFF;--ink-body:#D9D2E4;--muted:#9a8fae;
   --rose:#E7B2C3;--gold-deep:#E7B2C3;--teal-bright:#8FD0D8;
+  --band-1:#1a1428;--band-2:#241a33;--band-3:#1e1a2f;
   --glass:var(--glass-night);--glass-edge:var(--glass-night-edge)}
 /* light mode repaints the swept dark bands; image layers and keep-dark
    sections hold the night */
@@ -409,7 +421,12 @@ html[data-oc-theme="light"] main section.sky-glass:not(.keep-dark):not(.lions-ga
 html[data-oc-theme="light"] main section.sky-warm:not(.keep-dark):not(.lions-gate){background:linear-gradient(180deg,var(--sky-warm-dawn-0) 0%,var(--sky-warm-dawn-1) 100%)!important}
 /* the hero fade lands wherever the page continues */
 .hero::after{background:linear-gradient(180deg,transparent,#1a1428)}
-html[data-oc-theme="light"] .hero::after{background:linear-gradient(180deg,transparent,#F3EEF4)}
+/* TASK-216 (#12): `.hero` (sections.tsx's home hero) always carries
+   `keep-dark` — every other light-theme repaint rule in this file excludes
+   `.keep-dark`; this one didn't, so the hero's own bottom fade painted
+   cream at dawn under an always-dark hero (the same "grounds swapped"
+   family as the --band-2 leak above, caught in the same sweep). */
+html[data-oc-theme="light"] .hero:not(.keep-dark)::after{background:linear-gradient(180deg,transparent,#F3EEF4)}
 
 /* ✦ Love Light Language — drawn in light, dots added in (from the approved
    bench artifact; the version Love loved). LightCode.tsx runs the strokes. ✦ */
