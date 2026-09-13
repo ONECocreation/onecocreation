@@ -8,10 +8,16 @@ import { useEffect, useState } from "react";
  * the old five-step wizard demanded up front, offered here as gentle
  * stars to light whenever. Derived from the session + profile — never
  * a wall, never required.
+ *
+ * TASK-212 (Love's call #33, 01:16:41): `refreshKey` lets a caller who just
+ * saved the member's preferred name (EmailMemberPanel's "what would you
+ * like to be called" field) re-derive the stars without a page reload — the
+ * name the visitor just picked lights the star the same moment, not after a
+ * refresh. Omit the prop and this mounts once, same as before.
  */
 interface Star { done: boolean; icon: string; t: string; w: string; href: string }
 
-export default function ConstellationCard() {
+export default function ConstellationCard({ refreshKey }: { refreshKey?: number } = {}) {
   const [stars, setStars] = useState<Star[] | null>(null);
 
   useEffect(() => {
@@ -38,7 +44,7 @@ export default function ConstellationCard() {
         { done: !emailMember, icon: "🔑", t: "hold your own key", w: "when you're ready — your name becomes truly yours", href: "/login" },
       ]);
     });
-  }, []);
+  }, [refreshKey]);
 
   if (!stars || stars.length === 0) return null;
   const lit = stars.filter((s) => s.done).length;

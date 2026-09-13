@@ -24,6 +24,10 @@ export default function EmailMemberPanel() {
   const [displayName, setDisplayName] = useState("");
   const [saved, setSaved] = useState(false);
   const [orders, setOrders] = useState<MemberOrder[] | null>(null);
+  /* TASK-212 (Love's call #33): bumped on every successful save so the
+     constellation below re-derives and lights its name star the same
+     moment — no reload needed to see the name you just picked. */
+  const [profileVersion, setProfileVersion] = useState(0);
 
   useEffect(() => {
     fetch("/api/member/profile")
@@ -50,6 +54,7 @@ export default function EmailMemberPanel() {
     });
     if ((await res.json().catch(() => ({ ok: false }))).ok) {
       setSaved(true);
+      setProfileVersion((v) => v + 1);
       setTimeout(() => setSaved(false), 2000);
     }
   }
@@ -68,9 +73,10 @@ export default function EmailMemberPanel() {
         <h2 style={{ fontFamily: "var(--font-h2)", fontWeight: 400, fontSize: "1.2rem", margin: 0 }}>
           {displayName ? `Welcome, ${displayName}` : "Welcome, beautiful soul"}
         </h2>
-        <ConstellationCard />
+        <ConstellationCard refreshKey={profileVersion} />
         <p style={{ color: "var(--muted)", fontSize: ".88rem", margin: "6px 0 14px" }}>
-          Signed in with {email || "your email"} · What would you like to be called?
+          Signed in with {email || "your email"} · What would you like to be called? — this is
+          the name your constellation shows.
         </p>
         <form onSubmit={saveName} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <input
