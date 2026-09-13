@@ -38,6 +38,18 @@ export interface ChargeRequest {
    *  shown to Love at /a/money and in the offer-notify letter) — one order
    *  number everywhere, never a second. */
   referenceId?: string;
+  /** TASK-224 (0018.06.23 a₿, the Admiral's own card purchase: "it just
+   *  provided the order number... people will want the itemized bill") —
+   *  one entry per basket/order line, so Square's own automatic receipt
+   *  prints a row per item instead of one joined-titles line. `unitAmount`
+   *  is minor units in THIS request's `currency` (same units as `amount`).
+   *  MONEY-PATH LAW: emitted ONLY when a caller can vouch that
+   *  Σ quantity × unitAmount === amount EXACTLY — buildSquarePaymentLinkBody()
+   *  re-checks that sum itself (never trusts the caller) and falls back to
+   *  the single `description` line on ANY mismatch (a discount, a PWYC
+   *  offer, a stale price) — never rounds, never drops a cent. Omit this
+   *  field entirely for a sats-only or PWYC charge (no fiat truth to split). */
+  lines?: { name: string; quantity: number; unitAmount: number }[];
 }
 
 export interface CreatedCharge {
@@ -380,29 +392,50 @@ export async function squareFetch(pathname: string, env: SquareEnv, init?: Reque
  *  without a network call (scripts/square-payments.test.mjs). Uses the full
  *  `order` shape (not "quick_pay") so `metadata.orderId` can ride along —
  *  see the file-header note on why the webhook needs it. */
+/** TASK-224 — the single-line body every caller got before this lane
+ *  (T-223's own shape), unchanged. The fallback for any itemisation
+ *  mismatch, and the only shape when a caller sends no `lines` at all. */
+function singleLineItem(req: ChargeRequest) {
+  return {
+    // TASK-223 (Love's call #7): the buyer's own receipt shows this NAME
+    // verbatim — a product description when the caller has one, the old
+    // raw-id fallback when it doesn't. 500, not 512: Square's documented
+    // line-item name cap (this interface's own doc comment says the same;
+    // a caller can never actually hand more than 500 meaningful chars here
+    // anyway).
+    name: (req.description ?? `Order ${req.orderId}`).slice(0, 500),
+    quantity: "1",
+    base_price_money: { amount: req.amount, currency: req.currency },
+  };
+}
+
 export function buildSquarePaymentLinkBody(
   req: ChargeRequest,
   idempotencyKey: string,
   locationId: string,
 ) {
+  // TASK-224 — MONEY-PATH LAW: itemise ONLY when the caller's own lines sum
+  // to the EXACT charged amount. This is the one guard, checked here (never
+  // trusted from the caller) so the charged total can never drift by a
+  // cent — a mismatch (a discount, a PWYC offer, a stale price) falls back
+  // to the single description line, never rounds, never drops a line.
+  const sumsExactly =
+    !!req.lines &&
+    req.lines.length > 0 &&
+    req.lines.reduce((sum, l) => sum + l.quantity * l.unitAmount, 0) === req.amount;
+  const lineItems = sumsExactly
+    ? req.lines!.map((l) => ({
+        name: l.name.slice(0, 500),
+        quantity: String(l.quantity),
+        base_price_money: { amount: l.unitAmount, currency: req.currency },
+      }))
+    : [singleLineItem(req)];
   return {
     idempotency_key: idempotencyKey,
     order: {
       location_id: locationId,
       reference_id: req.referenceId,
-      line_items: [
-        {
-          // TASK-223 (Love's call #7): the buyer's own receipt shows this
-          // NAME verbatim — a product description when the caller has one,
-          // the old raw-id fallback when it doesn't. 500, not 512: Square's
-          // documented line-item name cap (this interface's own doc comment
-          // says the same; a caller can never actually hand more than 500
-          // meaningful chars here anyway).
-          name: (req.description ?? `Order ${req.orderId}`).slice(0, 500),
-          quantity: "1",
-          base_price_money: { amount: req.amount, currency: req.currency },
-        },
-      ],
+      line_items: lineItems,
       metadata: { orderId: req.orderId },
     },
     checkout_options: {

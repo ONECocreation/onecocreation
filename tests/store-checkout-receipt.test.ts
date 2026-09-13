@@ -118,3 +118,62 @@ describe("POST /api/store/checkout — the Square receipt names what was bought 
     expect(call.referenceId).toBe(orderId.slice(0, 8));
   });
 });
+
+/** TASK-224 (0018.06.23 a₿) — the same two call sites now also carry an
+ *  itemised `lines` candidate (Square's own per-row receipt); this file's
+ *  fixture already isolates exactly these two call sites, so the itemised
+ *  candidate is pinned here alongside T-223's description/referenceId. */
+describe("POST /api/store/checkout — the Square receipt itemises the bill (T-224)", () => {
+  it("a new order with rail: 'card' and qty 3 passes ONE line with the item's own unit price and the real qty", async () => {
+    const res = await post({ itemId: "meditation-single", qty: 3, rail: "card", contact: { email: "guest@example.com" } });
+    expect(res.status).toBe(200);
+    const call = createChargeCalls.at(-1)!;
+    expect(call.amount).toBe(6600); // 2200 × 3 — the money path, unchanged
+    expect(call.lines).toEqual([{ name: "Sunrise Meditation", quantity: 3, unitAmount: 2200 }]);
+  });
+
+  it("retrying an expired order derives its one line from the order's own stored qty and total — never a fresh item lookup", async () => {
+    const orderId = newOrderId();
+    await createOrder({
+      id: orderId,
+      schemaVersion: 2,
+      state: "expired",
+      lineItems: [{ itemId: "meditation-single", title: "Sunrise Meditation", qty: 2 }],
+      priceSnapshot: { amount: 4400, currency: "USD", at: new Date().toISOString() },
+      adapterId: "square",
+      chargeIds: [],
+      createdAtMs: Date.now(),
+      events: [],
+    } as never);
+
+    const res = await post({ orderId });
+    expect(res.status).toBe(200);
+    const call = createChargeCalls.at(-1)!;
+    expect(call.amount).toBe(4400); // the money path, unchanged
+    expect(call.lines).toEqual([{ name: "Sunrise Meditation", quantity: 2, unitAmount: 2200 }]);
+  });
+
+  it("retrying an order whose stored total doesn't divide evenly by its qty carries NO lines — the fallback description rides alone", async () => {
+    const orderId = newOrderId();
+    await createOrder({
+      id: orderId,
+      schemaVersion: 2,
+      state: "expired",
+      // a discount left an odd total (2199) that 2 doesn't divide evenly —
+      // this must never guess a per-unit price the order didn't agree to
+      lineItems: [{ itemId: "meditation-single", title: "Sunrise Meditation", qty: 2 }],
+      priceSnapshot: { amount: 2199, currency: "USD", at: new Date().toISOString() },
+      adapterId: "square",
+      chargeIds: [],
+      createdAtMs: Date.now(),
+      events: [],
+    } as never);
+
+    const res = await post({ orderId });
+    expect(res.status).toBe(200);
+    const call = createChargeCalls.at(-1)!;
+    expect(call.amount).toBe(2199); // the money path, unchanged
+    expect(call.lines).toBeUndefined();
+    expect(call.description).toBe("Sunrise Meditation");
+  });
+});

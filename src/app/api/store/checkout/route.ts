@@ -129,6 +129,26 @@ export async function POST(request: Request) {
       // reference convention (order.id.slice(0, 8), same as /a/money).
       description: order.lineItems.map((l) => l.title).join(", ").slice(0, 500),
       referenceId: order.id.slice(0, 8),
+      // TASK-224 — one itemised line, reverse-derived from THIS order's own
+      // stored qty and its (possibly discounted) fiat total: unitAmount =
+      // amount / qty, kept ONLY when that division is exact. A discount (or
+      // any non-even split) fails that check and is left undefined here —
+      // no re-fetch of the item's CURRENT price, so a retry can never charge
+      // an itemised line at a price the order didn't actually agree to.
+      lines: (() => {
+        const [line] = order.lineItems;
+        const qty = line?.qty ?? 0;
+        if (
+          !line ||
+          chargeAdapter.id !== "square" ||
+          order.priceSnapshot.currency === "SATS" ||
+          qty <= 0 ||
+          !Number.isInteger(order.priceSnapshot.amount / qty)
+        ) {
+          return undefined;
+        }
+        return [{ name: line.title, quantity: qty, unitAmount: order.priceSnapshot.amount / qty }];
+      })(),
     }, `${order.id}:${order.chargeIds.length}`);
     if ("error" in charge) return charge.error;
     await attachCharge(order.id, charge.chargeId);
@@ -240,6 +260,12 @@ export async function POST(request: Request) {
     // TASK-223 — same convention as the retry path above.
     description: order.lineItems.map((l) => l.title).join(", ").slice(0, 500),
     referenceId: order.id.slice(0, 8),
+    // TASK-224 — card rail only, the item's own fiat unit price (the exact
+    // number `snapshot` was built from above, pre-discount); a discount
+    // shrinks `snapshot.amount` below qty × unitAmount, so
+    // buildSquarePaymentLinkBody()'s own sum check falls back to
+    // `description` on its own — never re-derived or rounded here.
+    lines: wantsCard ? [{ name: item.title, quantity: qty, unitAmount: effective.fiat!.amount }] : undefined,
   }, `${order.id}:0`);
   if ("error" in charge) return charge.error;
   await attachCharge(order.id, charge.chargeId);

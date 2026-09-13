@@ -303,18 +303,89 @@ describe("POST /api/cart/checkout — the basket follows the money word (T-198)"
       expect(order.reference_id).toBe(data.orderId.slice(0, 8));
     });
 
-    it("a multi-line basket joins the titles, showing qty only when a line carries more than one", async () => {
+    it("a multi-line basket's joined-titles description is the FALLBACK — superseded by T-224's itemised lines whenever the sum matches exactly (see T-224 describe block below for the itemised case; this pins the fallback still firing on a mismatch)", async () => {
+      kvStore.set("store:discounts", JSON.stringify([{ code: "T223FALL", kind: "percent", value: 1, enabled: true }]));
       lastSquareCreateBody = null;
       seedCart("cart-receipt-multi", [
         { itemId: "both-rails-good", qty: 2 },
         { itemId: "fiat-only-good", qty: 1 },
       ]);
-      const res = await checkout("cart-receipt-multi", { contact: { email: "guest@example.com" }, rail: "card" });
+      const res = await checkout("cart-receipt-multi", { contact: { email: "guest@example.com" }, rail: "card", discountCode: "T223FALL" });
       expect(res.status).toBe(200);
       const data = await res.json();
       const order = lastSquareCreateBody!.order as { line_items: { name: string }[]; reference_id: string };
       expect(order.line_items[0].name).toBe("Both Rails Meditation × 2, Fiat Only Meditation");
       expect(order.reference_id).toBe(data.orderId.slice(0, 8));
+    });
+  });
+
+  /** TASK-224 (0018.06.23 a₿) — the Admiral's own card purchase: "it just
+   *  provided the order number... people will want the itemized bill."
+   *  These pin the ITEMISED shape (one Square line_items[] row per basket
+   *  line) riding on the SAME real request this fixture already captures —
+   *  the money-path fields (amount, currency, idempotency_key, redirect_url,
+   *  reference_id, metadata.orderId) are asserted unchanged alongside it. */
+  describe("the Square receipt itemises the bill (T-224)", () => {
+    it("a two-item basket becomes two Square line_items[] rows, each its own qty and price — the money path rides unchanged", async () => {
+      lastSquareCreateBody = null;
+      seedCart("cart-itemised-two", [
+        { itemId: "both-rails-good", qty: 2 },
+        { itemId: "fiat-only-good", qty: 1 },
+      ]);
+      const res = await checkout("cart-itemised-two", { contact: { email: "guest@example.com" }, rail: "card" });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(lastSquareCreateBody).not.toBeNull();
+      const body = lastSquareCreateBody! as unknown as {
+        idempotency_key: string;
+        order: {
+          reference_id: string;
+          metadata: { orderId: string };
+          line_items: { name: string; quantity: string; base_price_money: { amount: number; currency: string } }[];
+        };
+        checkout_options: { redirect_url: string };
+      };
+      expect(body.order.line_items).toHaveLength(2);
+      expect(body.order.line_items[0]).toEqual({
+        name: "Both Rails Meditation",
+        quantity: "2",
+        base_price_money: { amount: 2200, currency: "USD" },
+      });
+      expect(body.order.line_items[1]).toEqual({
+        name: "Fiat Only Meditation",
+        quantity: "1",
+        base_price_money: { amount: 3300, currency: "USD" },
+      });
+      // the money path — untouched by itemisation
+      expect(body.idempotency_key).toBe(`${data.orderId}:0`);
+      expect(body.order.reference_id).toBe(data.orderId.slice(0, 8));
+      expect(body.order.metadata.orderId).toBe(data.orderId);
+      expect(body.checkout_options.redirect_url).toContain(data.orderId);
+      const { getOrder } = await import("@/lib/store");
+      const order = await getOrder(data.orderId);
+      expect(order?.priceSnapshot).toMatchObject({ amount: 7700, currency: "USD" });
+    });
+
+    it("a discount that shrinks the total falls back to ONE description line, never a mismatched itemised sum", async () => {
+      kvStore.set("store:discounts", JSON.stringify([{ code: "ITEMFALL", kind: "percent", value: 10, enabled: true }]));
+      lastSquareCreateBody = null;
+      seedCart("cart-itemised-discount", [
+        { itemId: "both-rails-good", qty: 2 },
+        { itemId: "fiat-only-good", qty: 1 },
+      ]);
+      const res = await checkout("cart-itemised-discount", {
+        contact: { email: "guest@example.com" },
+        rail: "card",
+        discountCode: "ITEMFALL",
+      });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      const body = lastSquareCreateBody! as unknown as { order: { line_items: { name: string; base_price_money: { amount: number } }[] } };
+      expect(body.order.line_items).toHaveLength(1);
+      expect(body.order.line_items[0].name).toBe("Both Rails Meditation × 2, Fiat Only Meditation");
+      const { getOrder } = await import("@/lib/store");
+      const order = await getOrder(data.orderId);
+      expect(body.order.line_items[0].base_price_money.amount).toBe(order?.priceSnapshot.amount);
     });
   });
 });
