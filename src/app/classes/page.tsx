@@ -83,7 +83,7 @@ export default async function ClassesPage() {
             {/* TASK-156 (0018.06.17 a₿, Love's meeting): the words "Heart Field
                 Commons" wear TEAL, "classes & community" wears PINK (the house
                 pink is --rose) — two token swaps, no new tokens. */}
-            <p className="kicker" style={{ color: "var(--teal-bright)" }}>The Heartfield Commons</p>
+            <p className="kicker" style={{ color: "var(--teal-bright)" }}>The Heart Field</p>
             <h1 className="stack-hero">
               <span className="sh-ink" style={{ color: "var(--rose)" }}>CLASSES &amp;</span>
               <span className="sh-teal" style={{ color: "var(--rose)" }}>COMMUNITY</span>

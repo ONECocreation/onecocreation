@@ -82,7 +82,7 @@ export function landingFor(opts: { next: string | null; isNew: boolean; mount: "
 export const MEMBER_MENU: readonly { label: string; href: string }[] = [
   { label: "What's yours now", href: "/welcome" }, // ruling 1 — the `in` step became this page
   { label: "My library", href: "/me" }, // T-173's purchases live on /me
-  { label: "My sessions", href: "/me/calendar" },
+  { label: "Calendar", href: "/me/calendar" }, // TASK-211 (0018.06.23 a₿, Love's call #18): "My sessions" → "Calendar"
   /* TASK-210 (0018.06.23 a₿, Love's 0018.06.18 call 01:11:02 "the
      reading-room link from the user menu lands in the wrong place"): the
      row was hardwired to the tier-B Chronicles room, so a member without

@@ -8,8 +8,9 @@ import { renderToStaticMarkup } from "react-dom/server";
  * TASK-149 (0018.06.17 a₿, from Love's meeting) — THE CLASSROOM OPENS ON
  * THE STAGE; TASK-184 (0018.06.18 a₿ · the Admiral's three-rooms ruling) —
  * A CLASSROOM IS THREE ROOMS. Pins:
- *  · the vantage tabs are exactly Stage · Lesson Path · The Circle, in the
- *    ruling's order — the retired four (Sanctuary / Video / Materials /
+ *  · the vantage tabs are exactly Stage · Lesson Path · Events, in the
+ *    ruling's order (TASK-211, 0018.06.23 a₿, Love's call #31: "The Circle"
+ *    → "Events") — the retired four (Sanctuary / Video / Materials /
  *    People) no longer list, and the site default IS Stage.
  *  · the Stage layout — the VIDEO layout's shape won: the video region
  *    leads full-width, the room's chat sits beside who's-here beneath it
@@ -28,10 +29,10 @@ describe("vantage — three rooms, Stage first and default", () => {
     expect(ROOM_VANTAGE_SITE_DEFAULT).toBe("stage");
   });
 
-  it("the switcher's tabs are exactly Stage · Lesson Path · The Circle, in the ruling's order", async () => {
+  it("the switcher's tabs are exactly Stage · Lesson Path · Events, in the ruling's order", async () => {
     const VantageSwitcher = (await import("@/components/rooms/VantageSwitcher")).default;
     const html = renderToStaticMarkup(createElement(VantageSwitcher));
-    const order = ["Stage", "Lesson Path", "The Circle"];
+    const order = ["Stage", "Lesson Path", "Events"];
     const at = order.map((label) => html.indexOf(`>${label}<`));
     for (const [i, label] of order.entries()) {
       expect(at[i], `${label} tab is missing`).toBeGreaterThan(-1);

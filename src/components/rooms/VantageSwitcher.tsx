@@ -14,7 +14,7 @@ import { useRoomVantage, type RoomVantage } from "./vantage";
 const OPTIONS: { id: RoomVantage; label: string }[] = [
   { id: "stage", label: "Stage" },
   { id: "lesson", label: "Lesson Path" },
-  { id: "circle", label: "The Circle" },
+  { id: "circle", label: "Events" }, // TASK-211 (0018.06.23 a₿, Love's call #31) renamed this tab
 ];
 
 export default function VantageSwitcher() {

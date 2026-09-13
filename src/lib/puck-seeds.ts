@@ -281,9 +281,9 @@ const homeContent: Block[] = [
     hm.note("How the gate works: pay in bitcoin (or dollars) → your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing."),
   ]),
 
-  // 4 - the Heartfield Commons — rooms, tier-gated
+  // 4 - the Heart Field — rooms, tier-gated
   hm.band("plain", "theme", [
-    hm.eyebrow("The Heartfield Commons", "center"),
+    hm.eyebrow("The Heart Field", "center"),
     hm.heading("Classes & Community", "h2", "center"),
     hm.text("Your own luminous rooms — powered by Matrix — an open protocol; your rooms, your keys. Tier-gated: your package opens the doors.", "center"),
     hm.twocol(
@@ -298,7 +298,7 @@ const homeContent: Block[] = [
       [hm.panel([
         hm.heading("💗 Community", "h3"),
         hm.list([
-          "♡ The Heart Field — Commons · All members",
+          "♡ The Heart Field · All members",
           "♡ Daily Tune-Up & Check-ins · Package A",
           "♡ The Observers’ Circle · Package B",
           "♡ Evening Star — Inner Sanctum · Package C",
@@ -485,7 +485,7 @@ const supportContent: Block[] = [
 const cm = kit("cm");
 const classesContent: Block[] = [
   cm.band("sky-veil", skyHold, [
-    cm.eyebrow("The Heartfield Commons", "center"),
+    cm.eyebrow("The Heart Field", "center"),
     cm.stacked("CLASSES &", "COMMUNITY", "h1", "center"),
     cm.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
     cm.text("Your own luminous rooms — your keys, Love’s server, nobody in between. Your package opens the doors.", "center"),

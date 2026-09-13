@@ -71,17 +71,13 @@ export default function RoomsShelf() {
         {feed.signedIn ? (
           <>
             Your rooms open with your package and close kindly if it lapses. Your account —{" "}
-            <b>@{feed.handle}:onecocreation.com</b> — lives on Love&apos;s own server, and works in{" "}
-            <a href="https://app.element.io" target="_blank" rel="noreferrer" style={{ color: "var(--gold-deep)" }}>
-              Element
-            </a>{" "}
-            on your phone too.
+            <b>@{feed.handle}:onecocreation.com</b> — lives on Love&apos;s own server.
           </>
         ) : (
           <>
             The rooms live on One Cocreation&apos;s own server — nobody in between.{" "}
             <Link href="/login" style={{ color: "var(--gold-deep)" }}>Sign in or claim your free name</Link>{" "}
-            and the Commons opens for you.
+            and the Heart Field opens for you.
           </>
         )}
       </p>
