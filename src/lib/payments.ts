@@ -25,6 +25,19 @@ export interface ChargeRequest {
   currency: string; // "SATS" or ISO-4217
   buyerEmail?: string;
   redirectUrl: string;
+  /** what the buyer's receipt should call this — Square shows
+   *  line_items[].name verbatim on its own automatic receipt (TASK-223,
+   *  Love's call #7: "no product description, unreadable order number");
+   *  falls back to "Order <id>" when a caller has nothing better. ≤ 500
+   *  chars (Square's own line-item name limit) — longer is truncated, never
+   *  rejected. */
+  description?: string;
+  /** a short human order reference (Square's order.reference_id) — the
+   *  buyer-facing "order number" instead of the raw internal id. Callers
+   *  reuse the house's existing order.id.slice(0, 8) convention (already
+   *  shown to Love at /a/money and in the offer-notify letter) — one order
+   *  number everywhere, never a second. */
+  referenceId?: string;
 }
 
 export interface CreatedCharge {
@@ -376,9 +389,16 @@ export function buildSquarePaymentLinkBody(
     idempotency_key: idempotencyKey,
     order: {
       location_id: locationId,
+      reference_id: req.referenceId,
       line_items: [
         {
-          name: `Order ${req.orderId}`.slice(0, 512),
+          // TASK-223 (Love's call #7): the buyer's own receipt shows this
+          // NAME verbatim — a product description when the caller has one,
+          // the old raw-id fallback when it doesn't. 500, not 512: Square's
+          // documented line-item name cap (this interface's own doc comment
+          // says the same; a caller can never actually hand more than 500
+          // meaningful chars here anyway).
+          name: (req.description ?? `Order ${req.orderId}`).slice(0, 500),
           quantity: "1",
           base_price_money: { amount: req.amount, currency: req.currency },
         },

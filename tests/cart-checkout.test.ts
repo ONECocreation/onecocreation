@@ -73,6 +73,10 @@ function seedCart(id: string, lines: unknown[]) {
 }
 
 let btcpayCalled = false;
+/** TASK-223 (Love's call #7) — the last Square payment-link create body,
+ *  captured verbatim so its line_items[].name / order.reference_id can be
+ *  pinned against the real request shape this fixture already builds. */
+let lastSquareCreateBody: Record<string, unknown> | null = null;
 
 beforeAll(async () => {
   delete process.env.VERCEL;
@@ -128,6 +132,9 @@ beforeAll(async () => {
       return new Response(JSON.stringify({ id: "inv_fixture_1", status: "New" }), { status: 200 });
     }
     if (u.startsWith("https://connect.squareupsandbox.com")) {
+      if (u.includes("/online-checkout/payment-links") && init?.method === "POST") {
+        lastSquareCreateBody = JSON.parse(String(init.body));
+      }
       return new Response(
         JSON.stringify({
           payment_link: {
@@ -275,6 +282,39 @@ describe("POST /api/cart/checkout — the basket follows the money word (T-198)"
     expect(await res.json()).toEqual({
       ok: false,
       reason: "this basket's prices don't share one currency — can't total it by card",
+    });
+  });
+
+  /** TASK-223 (0018.06.23 a₿) — Love's call #7: the Square receipt had "no
+   *  product description, unreadable order number". These pin the actual
+   *  request body this fixture already sends to Square, so a regression
+   *  back to the bare "Order <id>" line item fails a real test, not just
+   *  the offline harness in scripts/square-payments.test.mjs. */
+  describe("the Square receipt names what was bought (T-223)", () => {
+    it("a single-line basket's item title becomes the receipt's line-item name; the order reference is the house's short id", async () => {
+      lastSquareCreateBody = null;
+      seedCart("cart-receipt-single", [{ itemId: "both-rails-good", qty: 1 }]);
+      const res = await checkout("cart-receipt-single", { contact: { email: "guest@example.com" }, rail: "card" });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(lastSquareCreateBody).not.toBeNull();
+      const order = lastSquareCreateBody!.order as { line_items: { name: string }[]; reference_id: string };
+      expect(order.line_items[0].name).toBe("Both Rails Meditation");
+      expect(order.reference_id).toBe(data.orderId.slice(0, 8));
+    });
+
+    it("a multi-line basket joins the titles, showing qty only when a line carries more than one", async () => {
+      lastSquareCreateBody = null;
+      seedCart("cart-receipt-multi", [
+        { itemId: "both-rails-good", qty: 2 },
+        { itemId: "fiat-only-good", qty: 1 },
+      ]);
+      const res = await checkout("cart-receipt-multi", { contact: { email: "guest@example.com" }, rail: "card" });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      const order = lastSquareCreateBody!.order as { line_items: { name: string }[]; reference_id: string };
+      expect(order.line_items[0].name).toBe("Both Rails Meditation × 2, Fiat Only Meditation");
+      expect(order.reference_id).toBe(data.orderId.slice(0, 8));
     });
   });
 });
