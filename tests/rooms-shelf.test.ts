@@ -94,6 +94,18 @@ describe("groupRoomsByPackage — one card per package", () => {
     expect(pkgs.map((p) => p.tier)).toEqual(["all", "B"]);
   });
 
+  it("TASK-215 — every package carries its OWN banner, real assets, never invented", () => {
+    const pkgs = groupRoomsByPackage(feedRooms(true, "C"));
+    expect(pkgs.map((p) => p.banner)).toEqual([
+      "/images/consciouscuts/nebula.webp",
+      "/images/weekly-intuitive.webp",
+      "/images/observer.webp",
+      "/images/evening-star.webp",
+    ]);
+    // no two packages share a banner — that's the whole point of "each with its own"
+    expect(new Set(pkgs.map((p) => p.banner)).size).toBe(pkgs.length);
+  });
+
   it("pure ROOMS data (no feed flags) falls back to the package names and reports locked", () => {
     const pkgs = groupRoomsByPackage(ROOMS.map((r) => ({ ...r })));
     expect(pkgs.map((p) => p.name)).toEqual([
@@ -129,5 +141,20 @@ describe("shelfRoomsForRoom — under a class calendar, that class's package + t
   it("the Commons' own calendar shows the Commons alone; an unknown slug degrades the same way", () => {
     expect(shelfRoomsForRoom(feed, "heart-field").map((r) => r.slug)).toEqual(["heart-field"]);
     expect(shelfRoomsForRoom(feed, "no-such-room").map((r) => r.slug)).toEqual(["heart-field"]);
+  });
+});
+
+describe("TASK-215 — the rooms STACK vertically, each with its own banner", () => {
+  it("RoomsShelf.tsx renders a vertical stack (flexDirection: column), never a grid of side-by-side cards", async () => {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    const src = await fs.readFile(
+      path.join(process.cwd(), "src/components/rooms/RoomsShelf.tsx"),
+      "utf8",
+    );
+    expect(src.includes('flexDirection: "column"'), "the shelf lost its vertical stack").toBe(true);
+    expect(src.includes("gridTemplateColumns"), "the old side-by-side grid is still here").toBe(false);
+    // one banner section per package, wearing that package's OWN picture
+    expect(src.includes("p.banner"), "each package's own banner never rides the section background").toBe(true);
   });
 });

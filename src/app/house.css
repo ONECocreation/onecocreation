@@ -202,6 +202,17 @@ section{padding:76px 0;position:relative}
 .flip-back .body{min-height:0}
 .flip-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
   scrollbar-width:thin;scrollbar-color:rgba(139,118,196,.5) transparent}
+/* TASK-215 (0018.06.23 a₿, Love's call #24) — "no scroll on the back,
+   bigger boxes": scoped to .item-flip alone (StoreItemCard.tsx) so the
+   /book session card (ServiceCard.tsx) keeps the original absolute-back
+   contract untouched. Both faces sit in the SAME grid cell (grid-area
+   1/1, overlapping) instead of the back being position:absolute over the
+   front's height — a CSS grid's row sizes to its TALLEST cell child, so
+   the card's box grows to whichever face is taller (front or back),
+   permanently, not just while flipped. Nothing left to clip or scroll. */
+.item-flip .flip-inner{display:grid}
+.item-flip .flip-front,.item-flip .flip-back{grid-area:1/1;position:relative;height:auto}
+.item-flip .flip-scroll{overflow:visible}
 @media(prefers-reduced-motion:reduce){
   .flip-front,.flip-back{transition:none} /* instant turn — the card still flips, without the sail */
 }
@@ -603,22 +614,32 @@ main .about-story-sky{background:radial-gradient(760px 460px at 50% 14%, rgba(12
    theme, the outline is decoration — never meaning). */
 .about-script{border:0} /* the white box border was the wrong reading of "a white outline around the graphic" — the stroke rides the letters (below) */
 
-/* item 8 — the video playlist: each entry unfolds its own embed (native
-   details, no JS); the faint purple bar matches the faces' frame. The
-   title carries the meaning; the ▸ marker is decoration, never the only
-   signal. */
+/* item 8 — the video playlist: each entry unfolds its own embed; the faint
+   purple bar matches the faces' frame. The title carries the meaning; the
+   ▸ marker is decoration, never the only signal.
+   TASK-215 (0018.06.23 a₿, Love's call #23) — was native <details>/
+   <summary> (a CLICK to open); now a hover-driven single-open list
+   (AboutPlaylist.tsx) — same look, the selectors adapt from [open]/
+   ::-webkit-details-marker to a real <button>.about-video-head and an
+   .is-active modifier class. */
 .about-playlist{display:flex;flex-direction:column;gap:12px;width:min(300px,88%);margin:0 auto}
 .about-video{border:1px solid rgba(139,118,196,.35);border-radius:16px;overflow:hidden}
-.about-video summary{cursor:pointer;list-style:none;padding:11px 14px;
-  font-size:.82rem;font-weight:700;color:var(--ink-strong)}
-.about-video summary::-webkit-details-marker{display:none}
-.about-video summary::before{content:"▸ ";color:var(--rose)}
-.about-video[open] summary::before{content:"▾ "}
+.about-video-head{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;
+  padding:11px 14px;font-size:.82rem;font-weight:700;color:var(--ink-strong)}
+.about-video-head::before{content:"▸ ";color:var(--rose)}
+.about-video.is-active .about-video-head::before{content:"▾ "}
 
 /* the Admiral, 0018.06.17 a₿: the "Where Heaven and Earth Meet" script graphic wears a
    1-weight white stroke so it stands off the darker grounds (four 1px drop-shadows =
-   an outline on a transparent raster; the asset itself is untouched) */
-.about-script{filter:drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)}
+   an outline on a transparent raster; the asset itself is untouched).
+   TASK-215 (0018.06.23 a₿, Love's call #10): still "far too thick and
+   blurred" at 1px on the live site — a symmetric 1px halo on thin script
+   letterforms roughly doubles their visual weight. Halved to .5px (a real
+   half-weight stroke; blur radius stays 0, the crisp-corner technique is
+   unchanged) — thinner on every side, same white, same four-drop-shadow
+   shape, contrast against the dark ground held (white on the darkest
+   band still clears 4.5:1 by a wide margin). */
+.about-script{filter:drop-shadow(.5px 0 0 #fff) drop-shadow(-.5px 0 0 #fff) drop-shadow(0 .5px 0 #fff) drop-shadow(0 -.5px 0 #fff)}
 
 /* ── TASK-183 (0018.06.18 a₿ · block 966,098) — THE ROOM CARD CONTRACT ──
    Admiral's law (0018.06.17): the doors HUG THE BOTTOM — "the buttons are

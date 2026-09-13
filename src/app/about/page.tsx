@@ -11,6 +11,7 @@ import { cartridge } from "@/brand/cartridge";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
 import { applyPlaylistToPuck, levelGalleries } from "@/lib/about-playlist-puck";
+import AboutPlaylist from "@/components/about/AboutPlaylist";
 import {
   ABOUT_BRIDGE_LINE,
   ABOUT_JOIN_LINES,
@@ -271,9 +272,11 @@ export default async function AboutPage() {
               <div>
                 {/* TASK-154 item 8: a PLAYLIST, not one video — TASK-161:
                     the list is `videos` above (Love's saved list first, the
-                    ABOUT_VIDEOS seed when she hasn't saved one); each entry
-                    unfolds its own embed (native details, no JS); an empty
-                    list tells the truth. */}
+                    ABOUT_VIDEOS seed when she hasn't saved one); an empty
+                    list tells the truth. TASK-215 (0018.06.23 a₿, Love's
+                    call #23): opens on HOVER not click, cycles once, never
+                    restarts — AboutPlaylist.tsx (the state machine lives in
+                    about-playlist-machine.ts). */}
                 {videos.length === 0 ? (
                   <p style={{ fontSize: ".9rem", color: "var(--muted)", textAlign: "center" }}>
                     {ABOUT_VIDEOS_EMPTY}{" "}
@@ -282,23 +285,7 @@ export default async function AboutPage() {
                     </a>
                   </p>
                 ) : (
-                  <div className="about-playlist">
-                    {videos.map((v, i) => (
-                      <details key={v.id} className="about-video" open={i === 0}>
-                        <summary>{v.title}</summary>
-                        <div style={{ position: "relative", aspectRatio: v.ratio }}>
-                          <iframe
-                            loading="lazy"
-                            src={`https://www.youtube-nocookie.com/embed/${v.id}`}
-                            title={`Love — ${v.title}`}
-                            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
-                            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                        </div>
-                      </details>
-                    ))}
-                  </div>
+                  <AboutPlaylist videos={videos} />
                 )}
                 <div className="center" style={{ marginTop: 18 }}>
                   <p style={{ fontSize: ".85rem", color: "var(--muted)", margin: "0 0 10px" }}>

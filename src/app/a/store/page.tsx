@@ -5,6 +5,7 @@ import { Chip, SectionHead, field, overlay, sheet } from "@/components/console/g
 import { upload as blobDirectUpload } from "@vercel/blob/client";
 import type { Price, StoreItem } from "@/lib/store";
 import { dollars } from "@/lib/money-words";
+import { KIND_WORD, categoryOptionsFor } from "@/lib/store-category-words";
 
 // entitlement.ts is server-only (fs/redis) — a "use client" screen must never
 // import it directly, so the tier names ride the /api/admin/store response
@@ -79,15 +80,6 @@ async function fetchShelf(): Promise<ShelfData | null> {
 /** TASK-145 (0018.06.17 a₿) — the ShinePages type words, mapped onto the
     existing ItemKind (nothing invented: ware→self/fourthwall,
     meditation→digital, membership→package, session→service). */
-const KIND_WORD: Record<StoreItem["kind"], string> = {
-  self: "ware",
-  fourthwall: "ware",
-  digital: "meditation",
-  package: "membership",
-  service: "session",
-  retreat: "retreat seat",
-};
-
 function priceWords(item: StoreItem): string {
   const sats = item.price.sats != null ? `${item.price.sats.toLocaleString("en-US")} sats` : null;
   const fiat = item.price.fiat ? dollars(item.price.fiat.amount, item.price.fiat.currency) : null;
@@ -119,6 +111,20 @@ function categoriesOf(items: StoreItem[]): { name: string; count: number }[] {
   for (const i of items) {
     const c = i.category?.trim();
     if (c) tally.set(c, (tally.get(c) ?? 0) + 1);
+  }
+  return [...tally.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/* TASK-215 — bundles, the same derived-not-stored law as categories, and
+   the same client-side copy for the same reason (store.ts's listBundles
+   is a server module). */
+function bundlesOf(items: StoreItem[]): { name: string; count: number }[] {
+  const tally = new Map<string, number>();
+  for (const i of items) {
+    const b = i.bundle?.trim();
+    if (b) tally.set(b, (tally.get(b) ?? 0) + 1);
   }
   return [...tally.entries()]
     .map(([name, count]) => ({ name, count }))
@@ -238,7 +244,10 @@ export default function StoreRoom() {
     await save({
       ...draft,
       sizes: sizes.length ? sizes : undefined,
-      category: draft.category?.trim() || undefined,
+      // TASK-215: the dropdown always carries a real word — never "not
+      // set" — defaulting to the item's own kind when somehow still blank
+      category: draft.category?.trim() || KIND_WORD[draft.kind],
+      bundle: draft.bundle?.trim() || undefined,
     });
   }
 
@@ -395,10 +404,11 @@ export default function StoreRoom() {
 
   const q = search.trim().toLowerCase();
   const cats = categoriesOf(items);
+  const bundles = bundlesOf(items);
   const shown = items.filter((i) => {
     if (catFilter && i.category?.trim() !== catFilter) return false;
     if (!q) return true;
-    return [i.title, i.sku ?? "", i.id, KIND_WORD[i.kind], i.category ?? ""]
+    return [i.title, i.sku ?? "", i.id, KIND_WORD[i.kind], i.category ?? "", i.bundle ?? ""]
       .some((s) => s.toLowerCase().includes(q));
   });
 
@@ -489,6 +499,7 @@ export default function StoreRoom() {
                           {KIND_WORD[item.kind]}
                           {item.category && item.category.trim().toLowerCase() !== KIND_WORD[item.kind] &&
                             ` · ${item.category}`}
+                          {item.bundle && ` · 🎁 ${item.bundle}`}
                           {item.sku && ` · №${item.sku}`}
                           {item.sizes && item.sizes.length > 0 && ` · ${item.sizes.join(" ")}`}
                           {item.media?.deliverable &&
@@ -642,16 +653,31 @@ export default function StoreRoom() {
                   <textarea value={draft.blurb} placeholder="a line or two in Love's voice"
                     onChange={(e) => setDraft({ ...draft, blurb: e.target.value })}
                     style={{ ...field, width: "100%", minHeight: 64, resize: "vertical" }} />
-                  <label style={fieldLabel}>category (optional)</label>
-                  <input value={draft.category ?? ""} list="oc-shelf-categories"
-                    placeholder="meditation, membership, ware, session…"
-                    onChange={(e) => setDraft({ ...draft, category: e.target.value || undefined })}
+                  <label style={fieldLabel}>category</label>
+                  {/* TASK-215 (0018.06.23 a₿, Love's call #8/#30) — a DROPDOWN
+                      of the real categories, not free text: every item's
+                      kind already resolves to one of these, so the field
+                      can never write "not set". Defaults to the item's own
+                      kind word; an older/custom word rides along if the
+                      item already carries one (categoryOptionsFor). */}
+                  <select value={draft.category?.trim() || KIND_WORD[draft.kind]}
+                    onChange={(e) => setDraft({ ...draft, category: e.target.value })}
+                    style={{ ...field, width: "100%" }}>
+                    {categoryOptionsFor(draft.kind, draft.category).map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <p style={fieldHint}>
+                    the real set the shelf groups its headers by — every item resolves under one
+                  </p>
+                  <label style={fieldLabel}>bundle (optional)</label>
+                  <input value={draft.bundle ?? ""} list="oc-shelf-bundles"
+                    placeholder="hair together, soul conversations together…"
+                    onChange={(e) => setDraft({ ...draft, bundle: e.target.value || undefined })}
                     style={{ ...field, width: "100%" }} />
-                  <datalist id="oc-shelf-categories">
-                    {cats.map((c) => <option key={c.name} value={c.name} />)}
+                  <datalist id="oc-shelf-bundles">
+                    {bundles.map((b) => <option key={b.name} value={b.name} />)}
                   </datalist>
                   <p style={fieldHint}>
-                    one word the shelf groups by — the Categories tab and the shelf chips are built from these
+                    one word — items sharing it cluster together on the shelf under one heading; each keeps its own price and its own door
                   </p>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ flex: 1, minWidth: 120 }}>

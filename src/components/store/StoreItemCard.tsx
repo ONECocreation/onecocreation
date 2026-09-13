@@ -111,7 +111,9 @@ export default function StoreItemCard({
        React re-writes on state change wipes that stamp — the card vanished
        on every flip. This wrapper's className never changes. */
     <div className="reveal" style={{ transitionDelay: `${delay}s` }}>
-    <div className={`flip-card${flipped ? " is-flipped" : ""}`}>
+    {/* TASK-215 (0018.06.23 a₿): item-flip scopes the no-scroll/bigger-box
+        fix to this card alone — house.css's .item-flip rules */}
+    <div className={`flip-card item-flip${flipped ? " is-flipped" : ""}`}>
       <div className="flip-inner">
 
         {/* ══ FRONT — picture, name, one-line sub, price, the doors ══ */}

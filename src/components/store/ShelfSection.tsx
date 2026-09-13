@@ -4,7 +4,7 @@ import Link from "next/link";
 import StoreItemCard, { type PriceRails } from "@/components/store/StoreItemCard";
 import FreeMeditationCard from "@/components/store/FreeMeditationCard";
 import type { StoreItem } from "@/lib/store";
-import { STORE_SECTIONS, doorForItem, type StoreSection } from "@/lib/store-sections";
+import { STORE_SECTIONS, doorForItem, groupItemsByBundle, type StoreSection } from "@/lib/store-sections";
 import { cartridge } from "@/brand/cartridge";
 
 /**
@@ -122,19 +122,63 @@ export default function ShelfSection({
                 row, the same house flip, its doors go to /meditation (the
                 gift's own page), never to a checkout */}
             {free && <FreeMeditationCard />}
-            {group.items.map((item, idx) => (
-              /* TASK-148 (0018.06.17 a₿): every shelf card turns over on the
-                 ONE house flip mechanism — buy/basket doors live on the full
-                 view page now, the card carries only the full-view door */
-              <StoreItemCard
-                key={item.id}
-                item={item}
-                rails={rails}
-                icon={group.icon}
-                href={shelfDoorFor(item)}
-                delay={(idx % 3) * 0.12}
-              />
-            ))}
+            {(() => {
+              /* TASK-215 (0018.06.23 a₿, Love's call #35) — a bundle clusters
+                 its items under ONE shared heading, spanning the whole grid
+                 row; each item still carries its own price and its own door
+                 (no shared cart, never a new money rail — T-198 holds). The
+                 bundle's own items keep the shelf's price order; a bundle is
+                 rendered once, at the position of its first item. */
+              const bundles = groupItemsByBundle(group.items);
+              const rendered = new Set<string>();
+              let cardIdx = 0;
+              return group.items.map((item) => {
+                const b = item.bundle?.trim();
+                if (b) {
+                  if (rendered.has(b)) return null;
+                  rendered.add(b);
+                  const cluster = bundles.find((g) => g.bundle === b)!;
+                  return (
+                    <div key={`bundle-${b}`} className="reveal"
+                      style={{
+                        gridColumn: "1 / -1", background: "var(--glass)",
+                        border: "1px solid var(--glass-edge)", borderRadius: 24, padding: "22px 20px",
+                      }}>
+                      <p style={{ margin: "0 0 16px", textAlign: "center", fontSize: ".8rem", fontWeight: 700,
+                        letterSpacing: ".04em", color: band?.dark ? "var(--ink-strong)" : "var(--ink-body)" }}>
+                        🎁 the {b} bundle — {cluster.items.length} together
+                      </p>
+                      <div className="grid grid-3">
+                        {cluster.items.map((it) => (
+                          /* TASK-148 (0018.06.17 a₿): every shelf card turns over on the
+                             ONE house flip mechanism — buy/basket doors live on the full
+                             view page now, the card carries only the full-view door */
+                          <StoreItemCard
+                            key={it.id}
+                            item={it}
+                            rails={rails}
+                            icon={group.icon}
+                            href={shelfDoorFor(it)}
+                            delay={(cardIdx++ % 3) * 0.12}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                cardIdx++;
+                return (
+                  <StoreItemCard
+                    key={item.id}
+                    item={item}
+                    rails={rails}
+                    icon={group.icon}
+                    href={shelfDoorFor(item)}
+                    delay={(cardIdx % 3) * 0.12}
+                  />
+                );
+              });
+            })()}
           </div>
         )}
       </div>

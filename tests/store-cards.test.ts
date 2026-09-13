@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { storeCardModel } from "@/components/store/StoreItemCard";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import StoreItemCard, { storeCardModel } from "@/components/store/StoreItemCard";
 import type { StoreItem } from "@/lib/store";
 
 /**
@@ -84,5 +86,25 @@ describe("storeCardModel — the shelf card's derived face", () => {
     })).img).toBe("/v2.webp");
     expect(storeCardModel(item({ images: ["/legacy.webp"] })).img).toBe("/legacy.webp");
     expect(storeCardModel(item({})).img).toBeNull();
+  });
+});
+
+describe("TASK-215 (0018.06.23 a₿, Love's call #24) — Full view is a REAL full view, not a zoom", () => {
+  it('both faces carry a real <a href> to the item\'s own page — a navigation, never a modal/lightbox trigger', () => {
+    const html = renderToStaticMarkup(
+      createElement(StoreItemCard, { item: item({ id: "iam-worthy" }), icon: "🌙", href: "/store/iam-worthy" }),
+    );
+    // two "Full view →" doors (front + back), both real links to the item's page
+    const hrefs = [...html.matchAll(/<a\s[^>]*href="([^"]+)"[^>]*>Full view/g)].map((m) => m[1]);
+    expect(hrefs).toEqual(["/store/iam-worthy", "/store/iam-worthy"]);
+    // never a button/onclick standing in for the door
+    expect(html).not.toMatch(/<button[^>]*>Full view/);
+  });
+
+  it("the flip contract's no-scroll fix is scoped to the item card (item-flip), not the /book session card", () => {
+    const html = renderToStaticMarkup(
+      createElement(StoreItemCard, { item: item({ id: "x" }), icon: "🌙", href: "/store/x" }),
+    );
+    expect(html).toMatch(/class="flip-card item-flip/);
   });
 });

@@ -52,19 +52,28 @@ export default function RoomsShelf() {
       <h2 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: "1.3rem", margin: "0 0 16px", color: "var(--ink-strong)" }}>
         The rooms
       </h2>
-      <div
-        style={{
-          display: "grid",
-          gap: 12,
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(290px,100%), 1fr))",
-        }}
-      >
+      {/* TASK-215 (0018.06.23 a₿, Love's call #22) — STACKED vertically, one
+          full-width band per package, each wearing its OWN banner picture
+          (matrix-rooms.ts's `banner` — the Commons' nebula, then each
+          paid package's own tier photo) so all the packages stand behind
+          one another as you scroll, the same house pattern the store's
+          shelf sections already use (ShelfSection.tsx's SHELF_BANDS) —
+          not a new idiom, the same one, applied here. */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
         {packages.map((p) => (
-          /* TASK-183: the signed-in soul's name rides each card's door
-             column — "you're in as <name>" (the feed's handle, derived
-             server-side; a feed that won't say passes null and the line
-             stays unpainted — derive-or-dash) */
-          <PackageRoomsCard key={p.tier} pkg={p} signedIn={feed.signedIn} name={feed.handle} />
+          <section key={p.tier} className="reveal"
+            style={{
+              borderRadius: 22, overflow: "hidden", padding: "36px 20px",
+              background: `linear-gradient(180deg, rgba(14,10,28,.6), rgba(14,10,28,.8)), url(${p.banner}) center / cover no-repeat`,
+            }}>
+            <div style={{ maxWidth: 440, margin: "0 auto" }}>
+              {/* TASK-183: the signed-in soul's name rides each card's door
+                  column — "you're in as <name>" (the feed's handle, derived
+                  server-side; a feed that won't say passes null and the
+                  line stays unpainted — derive-or-dash) */}
+              <PackageRoomsCard pkg={p} signedIn={feed.signedIn} name={feed.handle} />
+            </div>
+          </section>
         ))}
       </div>
       <p className="note" style={{ marginTop: 26 }}>
