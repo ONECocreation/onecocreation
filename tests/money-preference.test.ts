@@ -7,7 +7,9 @@ import { describe, it, expect, beforeAll, afterEach, vi } from "vitest";
  *  1. priceWords — THE ONE DISPLAY LAW's own table: both denominations ×
  *     both preferences, a single denomination alone, dark-rail silence,
  *     the dash, NEVER "≈".
- *  2. the default — fiat when the card rail is live, else sats.
+ *  2. the default — SATS; fiat only when the bitcoin rail is off and the
+ *     card rail is on (H73, the Admiral 0018.06.23 — was: fiat whenever the
+ *     card rail was live).
  *  3. the resolution — signed in wins over the cookie, the cookie over the
  *     default (resolvePrefer, pure).
  *  4. the toggle persists — savePrefer writes localStorage AND the
@@ -98,10 +100,10 @@ describe("priceWords — THE ONE DISPLAY LAW", () => {
 });
 
 describe("the default + the resolution — signed in wins", () => {
-  it("the default is fiat when the card rail is live, else sats", async () => {
+  it("the default is SATS — fiat only when the bitcoin rail is off and the card rail is on (H73, T-221)", async () => {
     const { defaultPreferOf } = await import("@/lib/money-words");
-    expect(defaultPreferOf({ btc: true, card: true })).toBe("fiat");
-    expect(defaultPreferOf({ btc: false, card: true })).toBe("fiat");
+    expect(defaultPreferOf({ btc: true, card: true })).toBe("sats"); // both live: sats leads (was fiat, T-186)
+    expect(defaultPreferOf({ btc: false, card: true })).toBe("fiat"); // the ONE fiat-first state
     expect(defaultPreferOf({ btc: true, card: false })).toBe("sats");
     expect(defaultPreferOf({ btc: false, card: false })).toBe("sats");
   });
@@ -112,8 +114,9 @@ describe("the default + the resolution — signed in wins", () => {
     expect(resolvePrefer("sats", "fiat", BOTH)).toBe("sats");
     expect(resolvePrefer("fiat", "sats", BOTH)).toBe("fiat");
     expect(resolvePrefer(null, "sats", BOTH)).toBe("sats");
-    expect(resolvePrefer(null, null, BOTH)).toBe("fiat");
+    expect(resolvePrefer(null, null, BOTH)).toBe("sats"); // H73: sats leads with both rails live
     expect(resolvePrefer(null, null, { btc: true, card: false })).toBe("sats");
+    expect(resolvePrefer(null, null, { btc: false, card: true })).toBe("fiat"); // the one fiat-first state
   });
 
   it("the cookie parse takes only the two honest words", async () => {

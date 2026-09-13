@@ -1,3 +1,4 @@
+import { READING_ROOM_PATH } from "@/lib/reading-room";
 /**
  * TASK-185 Phase B — THE DOOR's state machine, as ruled (the Admiral,
  * 0018.06.18 a₿: the design stands).
@@ -78,12 +79,18 @@ export function landingFor(opts: { next: string | null; isNew: boolean; mount: "
 /** The member menu — the whole of it (Number One, from the Admiral's words).
  *  Ruling 1 (0018.06.18 a₿): /welcome keeps its URL as the post-sign-in
  *  "what's yours now" page, linked from this menu. */
-export const MEMBER_MENU = [
+export const MEMBER_MENU: readonly { label: string; href: string }[] = [
   { label: "What's yours now", href: "/welcome" }, // ruling 1 — the `in` step became this page
   { label: "My library", href: "/me" }, // T-173's purchases live on /me
   { label: "My sessions", href: "/me/calendar" },
-  { label: "The reading room", href: "/rooms/weekly-reading" },
-] as const;
+  /* TASK-210 (0018.06.23 a₿, Love's 0018.06.18 call 01:11:02 "the
+     reading-room link from the user menu lands in the wrong place"): the
+     row was hardwired to the tier-B Chronicles room, so a member without
+     that package met a package wall. The member's reading room is the FREE
+     one — the same derivation as the home card (T-174: minTier "all", the
+     Heart Field Commons). Derive-or-dash: no free room → no row. */
+  ...(READING_ROOM_PATH ? [{ label: "The reading room", href: READING_ROOM_PATH }] : []),
+];
 
 /** K7 (0018.06.17 a₿) — real or bot: ONE honest badge wherever a soul is
  *  listed. email = an inbox answered a code; key = a signer signed. The

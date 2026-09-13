@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { TIERS } from "@/lib/entitlement";
+import { TIERS, type Tier } from "@/lib/entitlement";
+import { roomGate } from "@/lib/room-access";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { ROOMS, type MatrixRoom } from "@/lib/matrix";
 import { listServices } from "@/lib/booking";
@@ -35,19 +36,53 @@ export interface WeeklyReadingDoor {
   words: string;
 }
 
-export function weeklyReadingDoor(rooms: MatrixRoom[] = ROOMS): WeeklyReadingDoor | null {
+/** The signed-in state of the visitor, read ONCE by the page from the
+ *  session cookie (fren-auth's sessionsFromCookieHeader — the same read
+ *  the rooms' Stage makes) and threaded down as a plain prop. `tier` is
+ *  the package the soul holds (member-tier's tierForSubject), null when
+ *  the vault says none. TASK-210 (0018.06.23 a₿, Love's 0018.06.18 call):
+ *  "the home page weekly-reading door does not know the visitor is signed
+ *  in" — it never asked. */
+export interface VisitorSession {
+  handle: string;
+  space: string;
+  tier?: Tier | null;
+}
+
+/**
+ * The door, for THIS visitor. `visitor` undefined = the page didn't say
+ * (the T-178 render, the Stage's bare address); null = a signed-out soul
+ * (the door leads to the sign-in card with ?next= carried — the rooms
+ * middleware would bounce them there anyway; the door now says so
+ * upfront); a session = straight to the Stage, and when the soul's own
+ * key opens the room the words say THAT instead of naming a package to
+ * buy. The gate decision is roomGate's — the Stage's own — never a second
+ * ladder invented here.
+ */
+export function weeklyReadingDoor(
+  rooms: MatrixRoom[] = ROOMS,
+  visitor?: VisitorSession | null,
+): WeeklyReadingDoor | null {
   const slugOf = (id: string) => id.slice(1, id.indexOf(":"));
   const room = rooms.find((r) => slugOf(r.id) === "weekly-reading");
   if (!room) return null;
-  const words =
+  const stage = `/rooms/${slugOf(room.id)}`;
+  const tierWords =
     room.minTier === "all"
       ? "Every week, live in Love's room — free for every member."
       : `Every week, live in Love's room — with the ${TIERS[room.minTier].name} membership.`;
-  return { href: `/rooms/${slugOf(room.id)}`, words };
+  if (visitor === null) {
+    return { href: `/login?next=${encodeURIComponent(stage)}`, words: `${tierWords} Sign in and the room knows you.` };
+  }
+  if (visitor && roomGate(room.minTier, { signedIn: true, tier: visitor.tier ?? null }) === "open") {
+    const key = room.minTier === "all" ? "your membership" : `your ${TIERS[visitor.tier as Tier].name} key`;
+    return { href: stage, words: `Every week, live in Love's room — ${key} opens it.` };
+  }
+  return { href: stage, words: tierWords };
 }
 
-export function Hero() {
-  const readingDoor = weeklyReadingDoor();
+export function Hero({ session }: { session?: VisitorSession | null }) {
+  const readingDoor = weeklyReadingDoor(ROOMS, session);
   return (
     <section className="hero keep-dark">{/* keep-dark: the design holds the dark hero in both
         themes — "light code draws in light against the void" (cartridge.css);
