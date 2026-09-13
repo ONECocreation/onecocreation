@@ -47,7 +47,7 @@ const seenKey = (name: string) => `oc-popup-seen:${name}`;
    "#E7B2C3" (see cartridge.css) — this hand-carried COPY was never told.
    A real one-generation drift, exactly what "pin it with a test so it
    cannot drift a third time" is for; fixed to match, and
-   tests/popup-night-pins.test.ts now reads both files so the next edit to
+   tests/keep-dark-bands.test.ts now reads both files so the next edit to
    either fails loud instead of drifting quietly again. */
 const POPUP_NIGHT_PINS = {
   "--ink-strong": "#F4ECFF", "--ink-body": "#D9D2E4", "--muted": "#9a8fae",

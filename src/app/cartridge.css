@@ -395,9 +395,9 @@ html[data-oc-theme="light"] #classes .lead{color:var(--muted)}
    gradient's LAST stop still flipped to the dawn lavender #ECEAF6 while
    everything else on the section held night. Root cause, not a stronger
    !important: pin the bands here too, so no keep-dark section can ever
-   leak light through a --band-* read again (the popup pill test below
-   guards the OTHER hand-carried copy of this pin from drifting the same
-   way — see PopupHost.tsx). */
+   leak light through a --band-* read again (tests/keep-dark-bands.test.ts
+   also guards the OTHER hand-carried copy of this pin from drifting the
+   same way — see PopupHost.tsx). */
 main .keep-dark{--ink-strong:#F4ECFF;--ink-body:#D9D2E4;--muted:#9a8fae;
   --rose:#E7B2C3;--gold-deep:#E7B2C3;--teal-bright:#8FD0D8;
   --band-1:#1a1428;--band-2:#241a33;--band-3:#1e1a2f;
