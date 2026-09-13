@@ -1,5 +1,10 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- WELCOME_PHOTO_URL is an
+   arbitrary URL Love emails in, not a build-time asset next/image can
+   optimize; the ServiceCard.tsx precedent disables the same rule for the
+   same reason. */
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import useFrenSession from "@/hooks/useFrenSession";
@@ -12,7 +17,19 @@ import { cartridge } from "@/brand/cartridge";
  * door sheet owns sign-up now. Today's `in` step IS this page: the
  * greeting and the three doors. A signed-out visitor meets one door to
  * /login — never a second sign-up walk, never the same email asked twice.
+ *
+ * TASK-212 (0018.06.23 a₿, Love's call #25/#38): the three doors wear the
+ * SAME border /book's session cards do (`.card`, house.css — imported, not
+ * re-spelled) and a shine walks over them one after another (the fleet's
+ * own `.shine-hover` recipe, house.css, unedited — the trigger class below
+ * just fires it off a JS-cycled state instead of `:hover`). Love's picture
+ * slot (her hands): an honest empty frame until her photo lands by email —
+ * derive-or-dash, never a stock face.
  */
+
+/** Love's welcome photo — her hands, sent by email. `null` until it lands:
+ *  the frame below stays an honest empty circle, never a stock face. */
+const WELCOME_PHOTO_URL: string | null = null;
 
 const shell: React.CSSProperties = {
   maxWidth: 420, margin: "0 auto", textAlign: "center",
@@ -21,11 +38,25 @@ const shell: React.CSSProperties = {
   boxShadow: "0 30px 70px -28px rgba(5,3,16,.8)",
 };
 
+/** The three what's-yours doors — pulled out so the walking shine can index
+ *  them by position (item 2, "one after another"). */
+const DOORS = [
+  { icon: "🕊️", t: "Book your discovery call", w: "credited toward your first session", href: "/book/discovery-call" },
+  { icon: "💗", t: "Step into The Heart Field", w: "the free circle, open to every member", href: "/classes" },
+  { icon: "🌙", t: "Wander the store", w: "meditations, sessions, wares", href: "/store" },
+] as const;
+
 export default function WelcomeFlow() {
   const { fren: session, checked } = useFrenSession();
   /* the known-by name (the door's own rule): an email member is greeted by
      who they ARE once the name is claimed, never by the mailbox */
   const [knownBy, setKnownBy] = useState<string | null>(null);
+  /* the walking shine (item 2): one door lit at a time, one after another.
+     prefers-reduced-motion holds all three lit, still, no interval. */
+  const [walkIdx, setWalkIdx] = useState(0);
+  const [reducedMotion, setReducedMotion] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
 
   useEffect(() => {
     if (!session || session.space !== "email") return;
@@ -37,6 +68,19 @@ export default function WelcomeFlow() {
       })
       .catch(() => {});
   }, [session]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = () => setReducedMotion(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    if (!session || reducedMotion) return;
+    const id = setInterval(() => setWalkIdx((i) => (i + 1) % DOORS.length), 2600);
+    return () => clearInterval(id);
+  }, [session, reducedMotion]);
 
   const name = session ? (session.space === "email" ? knownBy : session.handle) : null;
 
@@ -73,18 +117,43 @@ export default function WelcomeFlow() {
       {/* signed in — what's yours now (today's `in` step, the whole page) */}
       {checked && session && (
         <>
+          {/* Love's picture slot (item 4, her hands): an honest empty frame
+              until her photo lands by email — never a stock face. */}
+          <div style={{ margin: "4px auto 2px", width: 84, height: 84, borderRadius: "50%",
+            border: "1.5px dashed var(--glass-edge)", display: "flex", alignItems: "center",
+            justifyContent: "center", background: "rgba(255,255,255,.03)", overflow: "hidden" }}>
+            {WELCOME_PHOTO_URL ? (
+              <img src={WELCOME_PHOTO_URL} alt="Love" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <span aria-hidden style={{ fontSize: "1.3rem", opacity: 0.5 }}>🕊️</span>
+            )}
+          </div>
+          {!WELCOME_PHOTO_URL && (
+            <p style={{ fontSize: ".64rem", color: "var(--muted)", margin: "4px 0 0" }}>
+              Love&apos;s photo is on its way
+            </p>
+          )}
+
           <p style={{ fontSize: ".9rem", margin: "10px 0 4px" }}>
             welcome home{name ? <>, <b style={{ color: "#EBCB77" }}>{name}</b></> : ""} — your doors are open.
           </p>
+          {/* the walking shine (item 2): the same border-beam recipe the
+              fleet already runs on hover (.shine-hover, house.css,
+              unedited) — this rule just fires it off a class instead of
+              :hover, one door lit at a time. */}
+          <style>{`
+            .shine-hover.shine-walk::before{opacity:1;animation:shine-spin 2.4s linear infinite}
+            @media (prefers-reduced-motion:reduce){
+              .shine-hover.shine-walk::before{animation:none;opacity:.6}
+            }
+          `}</style>
           <div style={{ display: "grid", gap: 10, margin: "18px 0 0", textAlign: "left" }}>
-            {[
-              { icon: "🕊️", t: "Book your discovery call", w: "credited toward your first session", href: "/book/discovery-call" },
-              { icon: "💗", t: "Step into The Heart Field", w: "the free circle, open to every member", href: "/classes" },
-              { icon: "🌙", t: "Wander the store", w: "meditations, sessions, wares", href: "/store" },
-            ].map((d) => (
-              <Link key={d.t} href={d.href} style={{ display: "flex", alignItems: "center", gap: 12,
-                textDecoration: "none", color: "var(--ink-body)", borderRadius: 16, padding: "13px 16px",
-                background: "rgba(255,255,255,.05)", border: "1px solid var(--glass-edge)", fontSize: ".85rem" }}>
+            {DOORS.map((d, i) => (
+              <Link key={d.t} href={d.href}
+                className={`card shine-hover${reducedMotion || i === walkIdx ? " shine-walk" : ""}`}
+                style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12,
+                  textDecoration: "none", color: "var(--ink-body)", padding: "13px 16px",
+                  background: "rgba(255,255,255,.05)", fontSize: ".85rem" }}>
                 <span style={{ fontSize: "1.2rem" }}>{d.icon}</span>
                 <span style={{ flex: 1 }}>
                   <b style={{ display: "block", fontFamily: "var(--font-h3)", fontWeight: 400, color: "var(--ink-strong)" }}>{d.t}</b>
