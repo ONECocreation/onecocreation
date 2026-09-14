@@ -1,24 +1,29 @@
-"use client";
-
-import { SectionHead } from "@/components/console/glass";
-import CommunityDoorCard from "@/components/console/CommunityDoorCard";
+import type { Metadata } from "next";
+import { headers } from "next/headers";
+import OperatorGate from "@/components/OperatorGate";
+import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
+import SiteCommunityDoorRoom from "./SiteCommunityDoorRoom";
 
 /**
- * /a/site/community-door — the COMMUNITY DOOR sub-room (TASK-188, 0018.06.18
- * a₿ · block 966,112). T-162's card moved here from beside the switches when
- * the Site room became an accordion; the card itself is untouched — the five
- * readiness probes in plain words and the community switch with the flip
- * rule AS WORDS, her call, never a hard block.
+ * /a/site/community-door — THE COMMUNITY DOOR readiness room (TASK-241,
+ * 0018.09.14 a₿). The room (T-162's card) is untouched — it moved to
+ * `SiteCommunityDoorRoom.tsx` verbatim so this file could become a SERVER
+ * component and carry the same key-is-the-operator gate as every other /a
+ * room: no operator cookie, the door renders.
  */
-export default function SiteCommunityDoorRoom() {
-  return (
-    <div className="p-6" style={{ maxWidth: 860 }}>
-      <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>The Community door</h1>
-      <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
-        What the Community door needs before it opens — and the switch, when the rows read ok.
-      </p>
-      <SectionHead label="Community door — what it needs before it opens" />
-      <CommunityDoorCard />
-    </div>
-  );
+
+export const metadata: Metadata = {
+  title: "Community door — admin",
+  robots: { index: false, follow: false },
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function SiteCommunityDoorPage() {
+  const cookie = (await headers()).get("cookie");
+  const operator = operatorFromCookieHeader(cookie);
+  if (!operator) {
+    return <OperatorGate configured={operatorsConfigured()} />;
+  }
+  return <SiteCommunityDoorRoom />;
 }
