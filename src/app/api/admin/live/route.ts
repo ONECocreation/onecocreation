@@ -12,6 +12,8 @@ import {
   defaultGoodbyeWord,
   sendClassStartingLetters,
 } from "@/lib/live";
+import { getStudioDoc, saveStudioDoc } from "@/lib/studio/roster";
+import { isStudioScene } from "@/lib/studio/scenes";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +32,15 @@ export const dynamic = "force-dynamic";
  *
  * The class-starting letter rides as an OPTION (`letter: true`), default
  * OFF — the mail rail is reputation armor.
+ *
+ * TASK-235 (0018.06.23 a₿) — the SAME door gains a third action, `scene`:
+ * the opened card's next doors (the studio camera, the waiting scene, on
+ * camera) patch the studio doc's `activeScene` (+ `startsAt` when the
+ * caller asks for a minutes-from-now countdown — built here from `Date`,
+ * never a caller-supplied ISO string, so `sanitizeStudioDoc` never sees a
+ * bad one). Operator-gated exactly like open/close, but it never touches
+ * the matrix bot or the live vault — the studio doc is its own store, so
+ * it skips those two config gates entirely.
  */
 
 interface OpenBody {
@@ -37,6 +48,8 @@ interface OpenBody {
   room?: string;
   message?: string;
   letter?: boolean;
+  scene?: string;
+  startsInMinutes?: number;
 }
 
 export async function GET(request: Request) {
@@ -44,12 +57,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, reason: "operator session required" }, { status: 401 });
   }
   const state = await getLiveState();
+  const studio = await getStudioDoc();
   return NextResponse.json({
     ok: true,
     state,
     rooms: ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind })),
     matrixConfigured: matrixConfigured(),
     vaultConfigured: liveStoreConfigured(),
+    scene: { active: studio.activeScene, startsAt: studio.startsAt },
   });
 }
 
@@ -57,13 +72,32 @@ export async function POST(request: Request) {
   if (!operatorFromCookieHeader(request.headers.get("cookie"))) {
     return NextResponse.json({ ok: false, reason: "operator session required" }, { status: 401 });
   }
+  const body = (await request.json().catch(() => ({}))) as OpenBody;
+
+  // TASK-235: the studio doc is its own store — no matrix bot, no live
+  // vault involved, so `scene` skips those two gates entirely.
+  if (body.action === "scene") {
+    if (!isStudioScene(body.scene)) {
+      return NextResponse.json({ ok: false, reason: "unknown scene — pick one of the studio's six" }, { status: 400 });
+    }
+    // the countdown is bounded: a finite 0–240 minutes, else 400 — never a
+    // NaN/Infinity reaching Date (toISOString would throw a 500)
+    const mins = body.startsInMinutes;
+    if (mins !== undefined && !(typeof mins === "number" && Number.isFinite(mins) && mins >= 0 && mins <= 240)) {
+      return NextResponse.json({ ok: false, reason: "startsInMinutes must be 0–240" }, { status: 400 });
+    }
+    const doc = await getStudioDoc();
+    const startsAt = mins !== undefined ? new Date(Date.now() + mins * 60_000).toISOString() : doc.startsAt;
+    const saved = await saveStudioDoc({ ...doc, activeScene: body.scene, startsAt });
+    return NextResponse.json({ ok: true, scene: { active: saved.activeScene, startsAt: saved.startsAt } });
+  }
+
   if (!matrixConfigured()) {
     return NextResponse.json({ ok: false, reason: "matrix bot token not configured" }, { status: 503 });
   }
   if (!liveStoreConfigured()) {
     return NextResponse.json({ ok: false, reason: "live flag vault not configured" }, { status: 503 });
   }
-  const body = (await request.json().catch(() => ({}))) as OpenBody;
 
   if (body.action === "open") {
     const room = typeof body.room === "string" ? roomForSlug(body.room) : undefined;
