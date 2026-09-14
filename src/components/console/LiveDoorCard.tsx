@@ -1,4 +1,5 @@
 import { ROOMS } from "@/lib/matrix-rooms";
+import type { Tier } from "@/lib/entitlement";
 
 /**
  * THE CLASS DOOR MODEL (TASK-37/S40 lane 1) — what stays after TASK-192
@@ -19,6 +20,12 @@ export interface DoorRoom {
   slug: string;
   title: string;
   kind: string;
+  /** TASK-236: the room's own package gate, threaded from the registry —
+   *  the after-hours picker filters to member rooms with this (never the
+   *  free Commons, `minTier: "all"`). Optional so every existing feed/
+   *  fixture that predates this lane keeps typing (absent reads as
+   *  unknown, never assumed "all"). */
+  minTier?: Tier | "all";
 }
 export interface DoorRoomGroup {
   label: string;

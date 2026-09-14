@@ -41,6 +41,20 @@
  *     from the meeting config, the guest link derived (never stored) and
  *     copy-able.
  *
+ * TASK-236 (0018.06.23 a₿) — the opened "Read live on the site" card gains
+ * ONE more row, ALL rails (unlike the vdo-only "Next" row above): "then, in
+ * N minutes: <room ▾> [Set] [Clear]" — the deeper-dive door Love's call #3
+ * asked for ("Weekly Intuitive members join Love in the members' room 45
+ * minutes later"). Writes through the SAME rail as open/close/scene,
+ * `POST /api/admin/live` with `action: "after-hours"` / `"after-hours-
+ * clear"` — a new pair of blocks on that route, gated the same way, that
+ * patch the live flag's OWN `afterHours` field (live.ts). The room picker
+ * excludes the free Commons (`minTier: "all"`, never a legitimate
+ * after-hours target — the write route 400s it too) and defaults to the
+ * first TIER-A room (Weekly Intuitive's own room, PACKAGE_FALLBACK's
+ * naming in matrix-rooms.ts). House `btn-ghost` only — gold is money-
+ * and-join only, never this row.
+ *
  * The Admiral's law holds on every card: the buttons hug the bottom,
  * stacked, uniform.
  */
@@ -102,7 +116,14 @@ export function guestMeetingLink(
 
 interface DoorFeed {
   ok: boolean;
-  state: { live: boolean; kind?: string; room?: string; startedAt?: number };
+  state: {
+    live: boolean;
+    kind?: string;
+    room?: string;
+    startedAt?: number;
+    /** TASK-236: the after-hours door's own state, riding the same flag. */
+    afterHours?: { room: string; at: number };
+  };
   rooms: DoorRoom[];
   matrixConfigured: boolean;
   vaultConfigured: boolean;
@@ -174,6 +195,9 @@ export default function GoLiveRoom({
   const [roster, setRoster] = useState<{ slug: string; count: number; names: string[] } | null>(null);
   const [guestName, setGuestName] = useState("");
   const [guestRail, setGuestRail] = useState<"jitsi" | "vdo">(meeting.rail === "vdo" ? "vdo" : "jitsi");
+  const [afterHoursMinutes, setAfterHoursMinutes] = useState(45);
+  const [afterHoursRoomSlug, setAfterHoursRoomSlug] = useState("");
+  const [afterHoursBusy, setAfterHoursBusy] = useState(false); // its own busy flag, like sceneBusy — never locks open/close
 
   const load = useCallback(() => {
     fetch("/api/admin/live", { cache: "no-store" })
@@ -183,10 +207,23 @@ export default function GoLiveRoom({
         setFeed(d);
         /* the Commons leads the picker, so it leads the default too */
         setRoom((cur) => cur || doorRoomGroups(d.rooms)[0]?.rooms[0]?.slug || "");
+        /* TASK-236: the after-hours picker's own default — the first
+           TIER-A room (Weekly Intuitive's own room), set ONCE the feed
+           answers, never overwritten once the operator picks (same
+           cur-wins pattern as `room` above). Never the free Commons —
+           the write route 400s it too. */
+        const memberRooms = (d.rooms as DoorRoom[]).filter((r) => r.minTier !== "all");
+        setAfterHoursRoomSlug(
+          (cur) => cur || memberRooms.find((r) => r.minTier === "A")?.slug || memberRooms[0]?.slug || "",
+        );
       })
       .catch(() => {});
   }, []);
   useEffect(load, [load]);
+
+  /* the after-hours picker's own rooms, re-derived at render (never the
+     free Commons — see the default above) */
+  const afterHoursRooms = (feed?.rooms ?? rooms).filter((r) => r.minTier !== "all");
 
   /* who's here — the bot's own roster read for the live room; a dark
      answer reads as a dash, never an invented count. Keyed by slug so a
@@ -259,12 +296,42 @@ export default function GoLiveRoom({
     load();
   }
 
+  // TASK-236: the deeper-dive door — same write rail, ALL rails (unlike
+  // actScene's vdo-only "Next" row); `minutes` only rides with the set
+  // action, never the clear.
+  async function actAfterHours(action: "after-hours" | "after-hours-clear") {
+    setAfterHoursBusy(true);
+    setNote(null);
+    try {
+      const r = await fetch("/api/admin/live", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          action === "after-hours"
+            ? { action, room: afterHoursRoomSlug, minutes: afterHoursMinutes }
+            : { action },
+        ),
+      });
+      const d = await r.json().catch(() => null);
+      if (!d?.ok) setNote(d?.reason ?? `the door said no (${r.status})`);
+    } catch {
+      setNote("the door could not be reached");
+    }
+    setAfterHoursBusy(false);
+    load();
+  }
+
   const groups = doorRoomGroups(feed?.rooms ?? rooms);
   const liveTitle = liveSlug
     ? (feed?.rooms ?? rooms).find((r) => r.slug === liveSlug)?.title ?? liveSlug
     : null;
   const railsDark = feed ? !feed.matrixConfigured || !feed.vaultConfigured : false;
+  const vaultDark = feed ? !feed.vaultConfigured : false; // TASK-236: after-hours never needs the matrix bot
   const guestLink = guestMeetingLink(guestRail, guestName, meeting);
+  const afterHours = feed?.state.afterHours ?? null;
+  const afterHoursRoomTitle = afterHours
+    ? afterHoursRooms.find((r) => r.slug === afterHours.room)?.title ?? afterHours.room
+    : null;
 
   const DOORS: { id: GoLiveDoorId; title: string; blurb: string }[] = [
     { id: "read", title: "Read live on the site", blurb: "open a room — the banner lights, the words land in the room" },
@@ -400,6 +467,58 @@ export default function GoLiveRoom({
                     )}
                   </>
                 )}
+
+                {/* TASK-236: the deeper-dive door — ALL rails, live or dark */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <span style={fieldLabel}>then, in N minutes</span>
+                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: ".82rem", color: "var(--ink)" }}>then, in</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={240}
+                      value={afterHoursMinutes}
+                      onChange={(e) => setAfterHoursMinutes(Number(e.target.value) || 1)}
+                      style={{ ...field, width: 64 }}
+                      disabled={!!afterHours}
+                    />
+                    <span style={{ fontSize: ".82rem", color: "var(--ink)" }}>minutes:</span>
+                    <select
+                      value={afterHours ? afterHours.room : afterHoursRoomSlug}
+                      onChange={(e) => setAfterHoursRoomSlug(e.target.value)}
+                      style={field}
+                      disabled={!!afterHours || afterHoursRooms.length === 0}
+                    >
+                      {afterHoursRooms.map((r) => (
+                        <option key={r.slug} value={r.slug}>{r.title}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-ghost"
+                      onClick={() => actAfterHours("after-hours")}
+                      disabled={afterHoursBusy || !!afterHours || !afterHoursRoomSlug || vaultDark}
+                    >
+                      Set
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-ghost"
+                      onClick={() => actAfterHours("after-hours-clear")}
+                      disabled={afterHoursBusy || !afterHours}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  {afterHours && (
+                    <p style={muted}>
+                      then at{" "}
+                      {new Date(afterHours.at * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                      {" → "}
+                      {afterHoursRoomTitle}
+                    </p>
+                  )}
+                </div>
               </>
             )}
 

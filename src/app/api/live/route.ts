@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getLiveState, roomForSlug } from "@/lib/live";
 import { getStudioDoc } from "@/lib/studio/roster";
 import { studioSceneKind } from "@/lib/studio/scenes";
+import { TIERS, type Tier } from "@/lib/entitlement";
+import { TIER_PAGES } from "@/lib/tiers-content";
 
 export const dynamic = "force-dynamic";
 
@@ -22,12 +24,30 @@ export const dynamic = "force-dynamic";
  * `room`/`live` the way the rest of this payload is — getStudioDoc()
  * already answers the honest empty-stage default on any read failure,
  * never a 500.
+ *
+ * TASK-236 (0018.06.23 a₿): `afterHours` rides beside `scene` — the SAME
+ * live-state read's own after-hours room and clock (already sanitised by
+ * `getLiveState`, so `room` here always resolves and is never the free
+ * Commons), resolved into words: `roomTitle` from ROOMS, `package` from
+ * TIERS (the fren-facing package name), `packageSlug` from TIER_PAGES (the
+ * /packages/[slug] door). null when unset — never a half-built object.
  */
 export async function GET() {
   const state = await getLiveState();
   const room = state.live && state.room ? roomForSlug(state.room) : undefined;
   const doc = await getStudioDoc();
   const scene = studioSceneKind(doc.activeScene) === "full" ? doc.activeScene : null;
+  const afterHoursRoom = state.afterHours ? roomForSlug(state.afterHours.room) : undefined;
+  const afterHours =
+    state.afterHours && afterHoursRoom && afterHoursRoom.minTier !== "all"
+      ? {
+          room: state.afterHours.room,
+          roomTitle: afterHoursRoom.title,
+          package: TIERS[afterHoursRoom.minTier as Tier].name,
+          packageSlug: TIER_PAGES.find((t) => t.tier === afterHoursRoom.minTier)?.slug ?? null,
+          at: state.afterHours.at,
+        }
+      : null;
   return NextResponse.json(
     {
       ok: true,
@@ -37,6 +57,7 @@ export async function GET() {
       roomTitle: state.live ? (room?.title ?? null) : null,
       startedAt: state.live ? (state.startedAt ?? null) : null,
       scene,
+      afterHours,
     },
     { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=30" } },
   );

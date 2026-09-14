@@ -41,6 +41,19 @@ export const dynamic = "force-dynamic";
  * bad one). Operator-gated exactly like open/close, but it never touches
  * the matrix bot or the live vault — the studio doc is its own store, so
  * it skips those two config gates entirely.
+ *
+ * TASK-236 (0018.06.23 a₿) — two more actions, `after-hours` and
+ * `after-hours-clear`: the deeper-dive door, a SECOND room and a clock
+ * riding beside the live flag in the SAME vault key (`LiveState.afterHours`,
+ * live.ts). Operator-gated exactly like open/close, but — like `scene` —
+ * it never posts to the matrix bot (no room announcement rides it), so it
+ * skips ONLY the matrix gate; the vault gate still applies (this writes
+ * `setLiveState` same as open/close). `room` must resolve through
+ * `roomForSlug` and must not be the free Commons (`minTier: "all"`);
+ * `minutes` must be a finite 1–240, else 400 (the same NaN/Infinity guard
+ * `scene`'s `startsInMinutes` already proved). Clearing rides on close for
+ * free (`setLiveState({live:false})` already drops every other field) —
+ * `after-hours-clear` is for clearing it WITHOUT closing the room.
  */
 
 interface OpenBody {
@@ -50,6 +63,7 @@ interface OpenBody {
   letter?: boolean;
   scene?: string;
   startsInMinutes?: number;
+  minutes?: number;
 }
 
 export async function GET(request: Request) {
@@ -92,11 +106,38 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, scene: { active: saved.activeScene, startsAt: saved.startsAt } });
   }
 
-  if (!matrixConfigured()) {
+  // TASK-236: after-hours writes the SAME vault key as open/close but never
+  // posts to the matrix bot — skip ONLY the matrix gate for it.
+  const isAfterHoursAction = body.action === "after-hours" || body.action === "after-hours-clear";
+  if (!isAfterHoursAction && !matrixConfigured()) {
     return NextResponse.json({ ok: false, reason: "matrix bot token not configured" }, { status: 503 });
   }
   if (!liveStoreConfigured()) {
     return NextResponse.json({ ok: false, reason: "live flag vault not configured" }, { status: 503 });
+  }
+
+  if (body.action === "after-hours") {
+    const room = typeof body.room === "string" ? roomForSlug(body.room) : undefined;
+    if (!room || room.minTier === "all") {
+      return NextResponse.json(
+        { ok: false, reason: "after-hours needs one of Love's member rooms — not the free Commons" },
+        { status: 400 },
+      );
+    }
+    const mins = body.minutes;
+    if (!(typeof mins === "number" && Number.isFinite(mins) && mins >= 1 && mins <= 240)) {
+      return NextResponse.json({ ok: false, reason: "minutes must be 1–240" }, { status: 400 });
+    }
+    const state = await getLiveState();
+    const afterHours = { room: slugOfRoom(room), at: Math.floor(Date.now() / 1000) + mins * 60 };
+    await setLiveState({ ...state, afterHours });
+    return NextResponse.json({ ok: true, afterHours });
+  }
+
+  if (body.action === "after-hours-clear") {
+    const state = await getLiveState();
+    await setLiveState({ live: state.live, kind: state.kind, room: state.room, startedAt: state.startedAt });
+    return NextResponse.json({ ok: true, afterHours: null });
   }
 
   if (body.action === "open") {
@@ -147,5 +188,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, closed: state.room, goodbye });
   }
 
-  return NextResponse.json({ ok: false, reason: "unknown action — open or close" }, { status: 400 });
+  return NextResponse.json({ ok: false, reason: "unknown action — open, close, or after-hours" }, { status: 400 });
 }

@@ -58,6 +58,10 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
   const session = sessionsFromCookieHeader((await headers()).get("cookie"))[0] ?? null;
   const visitorTier = session ? await tierForSubject(`${session.handle}@${session.space}`) : null;
   const door = roomGate(room.minTier, { signedIn: !!session, tier: visitorTier });
+  /* TASK-236 (0018.06.23 a₿): the SAME signedIn/tier feed the after-hours
+   * door's own gate (AfterHoursDoor, a Stage region) — its target room is a
+   * DIFFERENT room than this one, so it can't reuse `door` above; it reuses
+   * roomGate itself with these two threaded down instead. */
   const doorPackage = room.minTier === "all" ? null : TIERS[room.minTier].name;
 
   /* TASK-184 · the 429 hunt: ONE roster/presence read per open, taken
@@ -171,6 +175,8 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           fullSceneShowTitle={fullSceneShowTitle}
           fullSceneStartsAt={fullSceneStartsAt}
           fullSceneAfterHoursLine={fullSceneAfterHoursLine}
+          signedIn={!!session}
+          viewerTier={visitorTier}
         />
       </section>
       <SiteFooter />
