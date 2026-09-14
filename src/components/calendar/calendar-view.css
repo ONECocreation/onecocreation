@@ -10,7 +10,7 @@
    rather than the mockup's literal gold, to keep gold=money intact.
    ════════════════════════════════════════════════════════════════════ */
 
-.cal-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.cal-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;--cal-cell-radius:6px}
 
 /* ── the month grid ───────────────────────────────────────────────── */
 .cal-month-grid{display:grid;grid-template-columns:repeat(7,minmax(84px,1fr));gap:6px;min-width:588px}
@@ -19,7 +19,7 @@
 
 /* ── the day cell ──────────────────────────────────────────────────── */
 .cal-cell{position:relative;display:flex;flex-direction:column;gap:4px;min-height:64px;
-  padding:8px 9px 7px;border-radius:14px;background:var(--panel);border:1px solid var(--glass-edge);
+  padding:8px 9px 7px;border-radius:var(--cal-cell-radius,6px);background:var(--panel);border:1px solid var(--glass-edge);
   font-family:var(--sans);color:var(--ink)}
 .cal-cell--blackout{background:rgba(231,178,195,.14);border-color:rgba(231,178,195,.4)}
 .cal-cell--multiday{background:rgba(139,118,196,.14);border-color:rgba(139,118,196,.4)}
