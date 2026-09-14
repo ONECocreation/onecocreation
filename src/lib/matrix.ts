@@ -297,7 +297,7 @@ export async function postToRoom(
   const id = await resolveRoom(alias);
   if (!id) return { ok: false, reason: "room not found on the homeserver" };
   const txn = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-  const res = await call("POST", `/rooms/${encodeURIComponent(id)}/send/m.room.message/${encodeURIComponent(txn)}`, {
+  const res = await call("PUT", `/rooms/${encodeURIComponent(id)}/send/m.room.message/${encodeURIComponent(txn)}`, {
     msgtype: "m.text",
     body,
   });
