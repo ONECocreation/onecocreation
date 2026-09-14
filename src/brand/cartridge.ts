@@ -69,7 +69,10 @@ const love = {
   },
 
   portraits: {
-    headshot: "/images/love-headshot.webp",
+    // TASK-252 (0018.06.24 a₿): the home "My Story" block reads this same
+    // field, so flipping the one line here also flips it there — Love's
+    // Sep 8 selfie (already the /about middle face, T-238), 900×900 square.
+    headshot: "/images/about/love-2.webp",
     /** the ConsciousCuts service photography, matched by service id */
     cuts: {
       women: "/images/cut-1.jpg",

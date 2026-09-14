@@ -74,8 +74,9 @@ const aboutContent: Block[] = [
      the Band block carries no star field, so there is nothing to mute
      here). Item 2 — the faces stand LEVEL (tilt "no"); the square purple
      session-card frame lives in house.css's about rules, beyond the
-     Gallery block's vocabulary. The middle slot keeps today's picture
-     until Love's new one lands (Seams). */
+     Gallery block's vocabulary. The middle slot wears Love's Sep 8 selfie
+     (TASK-238, love-2.webp, 900×900 — landed) and TASK-252 (0018.06.24 a₿)
+     carried the same file into the home "My Story" block below. */
   band("sky-glass", skyHold, [
     eyebrow("Smiles, Love", "center"),
     stacked("MY", "STORY", "h1", "center"),

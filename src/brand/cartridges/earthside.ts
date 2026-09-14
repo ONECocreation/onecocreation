@@ -51,7 +51,7 @@ export const earthside: Cartridge = {
   },
 
   portraits: {
-    headshot: "/images/love-headshot.webp", // REAL — the same person
+    headshot: "/images/about/love-2.webp", // REAL — the same person, TASK-252's flip (Love's Sep 8 selfie)
     /** the ConsciousCuts service photography, matched by service id */
     cuts: {
       women: "/images/cut-1.jpg",
