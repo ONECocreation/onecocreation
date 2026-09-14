@@ -4,6 +4,7 @@ import {
   operatorFromCookieHeader,
   operatorsConfigured,
   isOperatorNpub,
+  hasOperatorEmailSeat,
   OPERATOR_COOKIE,
 } from "@/lib/operator-auth";
 import { frenFromRequest } from "@/lib/fren-auth";
@@ -22,8 +23,12 @@ export async function GET(request: Request) {
       const entry = await getEntry(fren.handle, fren.space);
       if (entry?.npub) eligible = isOperatorNpub(entry.npub);
     }
+    // an allowlisted email door present anywhere in the cookie (any slot) —
+    // lets OperatorGate say the email seat is what's missing, without
+    // reaching for the allowlist env's name or value.
+    const emailSeat = hasOperatorEmailSeat(request.headers.get("cookie"));
     return Response.json(
-      { ok: false, configured: operatorsConfigured(), eligible },
+      { ok: false, configured: operatorsConfigured(), eligible, emailSeat },
       { status: 401 }
     );
   }

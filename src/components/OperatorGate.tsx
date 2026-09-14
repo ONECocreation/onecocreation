@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SignerDoors from "@/components/SignerDoors";
+import useFrenSession from "@/hooks/useFrenSession";
 
 /**
  * The admin door — same trust model as everything else here: the operator IS
@@ -15,6 +16,21 @@ import SignerDoors from "@/components/SignerDoors";
 export default function OperatorGate({ configured }: { configured: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { accounts } = useFrenSession();
+  const [emailSeat, setEmailSeat] = useState<boolean | null>(null);
+
+  /* The one honest line: an email door is signed in on this browser (any
+     slot — the door switcher, a key login or an order claim can move it),
+     but it isn't on the operator allowlist. Never names the env or shows
+     any value but the fren's own address, which the browser already knows. */
+  useEffect(() => {
+    fetch("/api/admin/session")
+      .then((r) => r.json())
+      .then((d) => setEmailSeat(!!d.emailSeat))
+      .catch(() => {});
+  }, []);
+  const emailDoor = accounts.find((a) => a.space === "email");
+  const notOnTheList = emailSeat === false && !!emailDoor;
 
   /* One submit path for every door — extension, bunker, Android signer. */
   async function submitConsole(event: unknown): Promise<string | null> {
@@ -81,6 +97,11 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
             This area is for site operators. Sign in with your operator key &mdash;
             one click if your signer extension is installed.
           </p>
+          {notOnTheList && (
+            <p className="mb-6 font-body text-sm" style={{ color: "var(--muted)" }} data-testid="operator-gate-email-seat">
+              Signed in as {emailDoor?.handle}, but this address is not on the operator list.
+            </p>
+          )}
           {configured ? (
             <>
               <button
