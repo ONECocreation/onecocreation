@@ -1,15 +1,18 @@
 "use client";
 
 /**
- * THE DIRECTOR'S DESK (TASK-191, 0018.06.18 a₿ · block 966119) — the
- * client half of /a/studio. Everything here is typed or copied by the
- * operator: the scene chips, the host's own lower third, the guest roster
+ * THE DIRECTOR'S DESK (TASK-191, 0018.06.18 a₿ · block 966119; the
+ * "Starts at"/"After-hours line" fields and the full scenes' "show in the
+ * studio" doors added TASK-244) — the client half of /a/studio. Everything
+ * here is typed or copied by the operator: the scene chips (grouped "On
+ * camera" / "Full screen"), the host's own lower third, the guest roster
  * (name + specialty — the overlay's duo/phone thirds read the FIRST
- * guest), the show title, the per-scene overlay URLs to paste into OBS,
- * and the VDO push/guest links the page derived from the meeting config.
- * One save button writes the whole stage doc through the room's server
- * action. The cameras' live state is Phase 2 — it comes with the studio
- * kit, and the page says so up front.
+ * guest), the show title, the countdown target and the after-hours line,
+ * the per-scene overlay URLs to paste into OBS, the full scenes' extra
+ * VDO.Ninja "&website" source URL, and the VDO push/guest links the page
+ * derived from the meeting config. One save button writes the whole stage
+ * doc through the room's server action. The cameras' live state is Phase 2
+ * — it comes with the studio kit, and the page says so up front.
  *
  * The Admiral's law holds on every card: the buttons hug the bottom,
  * stacked and uniform.
@@ -20,6 +23,22 @@ import { Chip, SectionHead, field, glassCard } from "@/components/console/glass"
 import { STUDIO_SCENES, type StudioSceneId } from "@/lib/studio/scenes";
 import { GUEST_LIMIT, type StudioDoc } from "@/lib/studio/doc";
 import { saveStudio } from "@/app/a/studio/actions";
+
+/* datetime-local speaks LOCAL wall-clock words with no timezone — the
+   doc stores an instant (ISO), so the field's value is a round-trip
+   translation, never the stored string itself. */
+function isoToLocalInput(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function localInputToIso(v: string): string {
+  if (!v) return "";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+}
 
 const fieldLabel: React.CSSProperties = {
   display: "block", fontSize: ".62rem", letterSpacing: ".1em", textTransform: "uppercase",
@@ -59,12 +78,15 @@ export default function StudioRoom({
   overlayUrls,
   overlayReady,
   vdo,
+  showInStudioUrls,
   showTitleFallback,
 }: {
   initial: StudioDoc;
   overlayUrls: Record<StudioSceneId, string | null>;
   overlayReady: boolean;
   vdo: { room: string; push: string; guest: string };
+  /** TASK-244: null for the on-camera scenes and for a full scene with no minted overlay URL yet */
+  showInStudioUrls: Record<StudioSceneId, string | null>;
   showTitleFallback: string;
 }) {
   const [doc, setDoc] = useState<StudioDoc>(initial);
@@ -110,20 +132,32 @@ export default function StudioRoom({
         <p style={{ margin: "10px 0 0", fontSize: ".82rem", color: "var(--ok)" }}>{note}</p>
       )}
 
-      {/* ── the scene picker ─────────────────────────────────────────── */}
+      {/* ── the scene picker — six chips, grouped ────────────────────── */}
       <SectionHead label="Scene" />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
-        {STUDIO_SCENES.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => setDoc({ ...doc, activeScene: s.id })}
-            className={`btn btn-sm ${doc.activeScene === s.id ? "btn-on" : "btn-ghost"}`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
+      {(
+        [
+          { kind: "overlay" as const, heading: "On camera" },
+          { kind: "full" as const, heading: "Full screen" },
+        ]
+      ).map((group) => (
+        <div key={group.kind} style={{ marginBottom: 10 }}>
+          <span style={{ display: "block", fontSize: ".64rem", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 6 }}>
+            {group.heading}
+          </span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {STUDIO_SCENES.filter((s) => s.kind === group.kind).map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setDoc({ ...doc, activeScene: s.id })}
+                className={`btn btn-sm ${doc.activeScene === s.id ? "btn-on" : "btn-ghost"}`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
       <p style={{ margin: "0 0 4px", fontSize: ".78rem", color: "var(--muted)" }}>
         {STUDIO_SCENES.find((s) => s.id === doc.activeScene)?.blurb}
       </p>
@@ -162,6 +196,46 @@ export default function StudioRoom({
         <div style={doorStack}>
           <button type="button" disabled={busy} onClick={() => save(doc)} className="btn btn-sm">
             {busy ? "Saving…" : "Save the stage"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── TASK-244: the full scenes' own two inputs ────────────────── */}
+      <SectionHead label="The full scenes" />
+      <div style={card}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span style={fieldLabel}>starts at</span>
+            <input
+              type="datetime-local"
+              value={isoToLocalInput(doc.startsAt)}
+              onChange={(e) => setDoc({ ...doc, startsAt: localInputToIso(e.target.value) })}
+              style={{ ...field, width: "100%" }}
+            />
+          </label>
+          <label className="block">
+            <span style={fieldLabel}>after-hours line</span>
+            <input
+              value={doc.afterHoursLine}
+              onChange={(e) => setDoc({ ...doc, afterHoursLine: e.target.value })}
+              placeholder="left blank = the thank-you scene omits the line"
+              style={{ ...field, width: "100%" }}
+            />
+          </label>
+        </div>
+        <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
+          left blank, &ldquo;starting soon&rdquo; shows the words alone — no clock, ever.
+        </p>
+        <div style={doorStack}>
+          <button
+            type="button"
+            onClick={() => setDoc({ ...doc, startsAt: new Date(Date.now() + 20 * 60_000).toISOString() })}
+            className="btn btn-ghost btn-sm"
+          >
+            In 20 min
+          </button>
+          <button type="button" disabled={busy} onClick={() => save(doc)} className="btn btn-sm">
+            {busy ? "Saving…" : "Save the full scenes"}
           </button>
         </div>
       </div>
@@ -241,13 +315,18 @@ export default function StudioRoom({
             {overlayUrls[s.id] && (
               <div style={doorStack}>
                 <CopyDoor value={overlayUrls[s.id]!} label={`Copy the ${s.id} overlay URL`} />
+                {s.kind === "full" && showInStudioUrls[s.id] && (
+                  <CopyDoor value={showInStudioUrls[s.id]!} label={`Show ${s.id} in the studio`} />
+                )}
               </div>
             )}
           </div>
         ))}
       </div>
       <p style={{ margin: "10px 0 0", fontSize: ".78rem", color: "var(--muted)" }}>
-        paste one into OBS as a browser source, 1920×1080 — the page is transparent, the URL is the key.
+        paste one into OBS as a browser source, 1920×1080 — the on-camera scenes are transparent, the
+        full-screen scenes are opaque; &ldquo;Show … in the studio&rdquo; pushes a full scene straight into the VDO
+        room instead, via its own &amp;website source.
       </p>
 
       {/* ── the VDO links ────────────────────────────────────────────── */}
