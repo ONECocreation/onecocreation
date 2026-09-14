@@ -9,6 +9,7 @@ import StageView from "./StageView";
 import type { RosterResult } from "./RoomPresence";
 import type { RoomPin } from "@/lib/room-pins";
 import type { RoomGate } from "@/lib/room-access";
+import type { StudioSceneId } from "@/lib/studio/scenes";
 import "./classroom.css";
 
 /**
@@ -51,6 +52,12 @@ export interface LiveFeed {
   room: string | null;
   roomTitle: string | null;
   startedAt: number | null;
+  /** TASK-251: the studio doc's active FULL scene (starting/brb/ending) or
+   *  null — polled every 20s (same s-maxage=15 cache as the rest of this
+   *  feed) so the Stage's video slot can react when Love changes it while
+   *  a viewer watches. The room page's own SSR `fullScene` prop below
+   *  carries the first paint; this poll carries the updates. */
+  scene: Extract<StudioSceneId, "starting" | "brb" | "ending"> | null;
 }
 
 interface Props {
@@ -91,9 +98,19 @@ interface Props {
    *  viewer's own camera door, set only when Love named THEM as today's
    *  guest and they're present on camera. Null = nothing rendered. */
   cameraDoor?: string | null;
+  /** TASK-251: pass-through only — the room page's own derivation off the
+   *  studio doc's activeScene (null unless its kind is `full`), the FIRST
+   *  paint of what `LiveFeed.scene`'s poll keeps current afterward. */
+  fullScene?: Extract<StudioSceneId, "starting" | "brb" | "ending"> | null;
+  /** TASK-251: pass-through only — the studio doc's own show title/start
+   *  time/after-hours line, SSR'd once alongside fullScene (never
+   *  re-polled — only the scene id itself updates live, see LiveFeed.scene). */
+  fullSceneShowTitle?: string;
+  fullSceneStartsAt?: string;
+  fullSceneAfterHoursLine?: string;
 }
 
-export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids, stageMxids, cameraDoor }: Props) {
+export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids, stageMxids, fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, cameraDoor }: Props) {
   const [vantage] = useRoomVantage();
   const [feed, setFeed] = useState<RoomsFeed | null>(null);
   const [live, setLive] = useState<LiveFeed | null>(null);
@@ -121,6 +138,10 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
   }, []);
 
   const thisRoomLive = !!live?.live && live.room === slug;
+  /* TASK-251: first paint = the room page's own SSR derivation (fullScene
+     prop); once the poll above answers, its `scene` field takes over — the
+     doc can change while a viewer watches. */
+  const activeFullScene = live ? live.scene : fullScene ?? null;
 
   return (
     <div>
@@ -130,7 +151,7 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
 
       {/* TASK-184: exactly three vantages, in the ruling's order */}
       {vantage === "stage" && (
-        <StageView slug={slug} alias={alias} title={title} kind={kind} pin={pin} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} roster={roster} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} />
+        <StageView slug={slug} alias={alias} title={title} kind={kind} pin={pin} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} roster={roster} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={activeFullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} />
       )}
       {vantage === "lesson" && <LessonPathView slug={slug} alias={alias} title={title} kind={kind} door={door} doorPackage={doorPackage} />}
       {vantage === "circle" && <CircleView feed={feed} live={live} activeSlug={slug} slug={slug} title={title} door={door} doorPackage={doorPackage} />}

@@ -8,6 +8,7 @@ import { deriveResources, ResourcesCard } from "./LessonPathView";
 import type { MaterialItem } from "@/lib/class-materials";
 import type { RoomPin } from "@/lib/room-pins";
 import type { RoomGate } from "@/lib/room-access";
+import type { StudioSceneId } from "@/lib/studio/scenes";
 
 /**
  * THE STAGE (TASK-184, 0018.06.18 a₿ — the Admiral's three-rooms ruling:
@@ -36,6 +37,7 @@ import type { RoomGate } from "@/lib/room-access";
  */
 export default function StageView({
   slug, alias, title, kind, pin, live, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids, stageMxids, cameraDoor,
+  fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine,
 }: {
   slug: string;
   alias: string;
@@ -73,6 +75,14 @@ export default function StageView({
    *  only when Love named THEM as today's guest and they're present on
    *  camera. Null/absent = nothing rendered. */
   cameraDoor?: string | null;
+  /** TASK-251: pass-through only — the room page's own derivation off the
+   *  studio doc's activeScene (null unless its kind is `full`), handed to
+   *  the video slot so it can swap the `?view=host` iframe for the site's
+   *  own FullScene, inline. */
+  fullScene?: Extract<StudioSceneId, "starting" | "brb" | "ending"> | null;
+  fullSceneShowTitle?: string;
+  fullSceneStartsAt?: string;
+  fullSceneAfterHoursLine?: string;
 }) {
   const gated = !!door && door !== "open";
   const [items, setItems] = useState<MaterialItem[] | null>(null);
@@ -101,7 +111,7 @@ export default function StageView({
       )}
       <div className="cl-grid-stage">
         <div role="region" className="cl-region cl-area-video" data-region="video" aria-label="Video">
-          <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} />
+          <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={fullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} />
         </div>
         {resources.length > 0 && (
           <div role="region" className="cl-region cl-area-resources" aria-label="Resources">

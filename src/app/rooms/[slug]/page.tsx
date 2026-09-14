@@ -11,6 +11,7 @@ import { getPin } from "@/lib/room-pins";
 import { getSiteConfig } from "@/lib/site-config";
 import { liveRoomName, studioVdoLinks, studioGuestCameraLink } from "@/lib/live";
 import { getStudioDoc } from "@/lib/studio/roster";
+import { studioSceneKind, type StudioSceneId } from "@/lib/studio/scenes";
 import { sessionsFromCookieHeader } from "@/lib/fren-auth";
 import { tierForSubject } from "@/lib/member-tier";
 import { TIERS } from "@/lib/entitlement";
@@ -101,8 +102,27 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
    * room open) — never a stray read, never a door for anyone Love didn't
    * name. */
   let cameraDoor: string | null = null;
+  /* TASK-251 (0018.06.23 a₿): Love's full-frame scene (starting soon / be
+   * right back / thank you) — the doc's own `activeScene` when its kind is
+   * `full` (studioSceneKind, the overlay route's one branch point), else
+   * null. "Live 20 minutes early, camera off" used to leave viewers
+   * watching an empty host frame: nothing on the Stage ever watched this
+   * id, it only ever rode a VDO `&website=` push to /studio/overlay. The
+   * three text fields ride alongside it (the SAME doc read, never a second
+   * one) so RoomVideoSlot can render the scene without an overlay token —
+   * no signed key ever reaches this public page. */
+  let fullScene: Extract<StudioSceneId, "starting" | "brb" | "ending"> | null = null;
+  let fullSceneShowTitle = "";
+  let fullSceneStartsAt = "";
+  let fullSceneAfterHoursLine = "";
   if (switches.meeting.rail === "vdo" && door === "open" && roster?.ok) {
     const doc = await getStudioDoc();
+    if (studioSceneKind(doc.activeScene) === "full") {
+      fullScene = doc.activeScene as Extract<StudioSceneId, "starting" | "brb" | "ending">;
+      fullSceneShowTitle = doc.showTitle;
+      fullSceneStartsAt = doc.startsAt;
+      fullSceneAfterHoursLine = doc.afterHoursLine;
+    }
     const norm = (n: string) => n.trim().toLowerCase();
     const hostName = norm(doc.host.name);
     const guestNames = new Set(doc.guests.map((g) => norm(g.name)).filter((n) => n !== ""));
@@ -147,6 +167,10 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           onCameraMxids={onCameraMxids}
           stageMxids={stageMxids}
           cameraDoor={cameraDoor}
+          fullScene={fullScene}
+          fullSceneShowTitle={fullSceneShowTitle}
+          fullSceneStartsAt={fullSceneStartsAt}
+          fullSceneAfterHoursLine={fullSceneAfterHoursLine}
         />
       </section>
       <SiteFooter />

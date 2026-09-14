@@ -35,13 +35,25 @@ export interface FullSceneProps {
   /** the site's door, as words — never a button (it's a picture on a stream) */
   membershipsWords: string;
   tokens: OverlayTokens;
+  /** TASK-251 (0018.06.23 a₿): the Heart Field Stage renders this scene
+   *  INLINE inside a scaled 1920×1080 box (`SceneFrame.tsx`) rather than as
+   *  the browser-source page itself — a `position: fixed` frame would
+   *  escape that box and cover the whole room page. `true` (absent reads
+   *  as `true`, the pre-T-251 behavior, byte-identical) keeps the fixed
+   *  full-viewport frame `/studio/overlay` needs for OBS/VDO; that route's
+   *  own call site never passes this prop. `SceneFrame` is the one other
+   *  caller and passes `false` — the frame then renders `position:
+   *  absolute` so it sits inside its wrapper instead of over the page. */
+  fixed?: boolean;
 }
 
-const STAGE: React.CSSProperties = { position: "fixed", inset: 0, width: 1920, height: 1080, overflow: "hidden" };
+function stageStyle(fixed: boolean): React.CSSProperties {
+  return { position: fixed ? "fixed" : "absolute", inset: 0, width: 1920, height: 1080, overflow: "hidden" };
+}
 
-function NightGround({ nebula, tokens, children }: { nebula: string; tokens: OverlayTokens; children: React.ReactNode }) {
+function NightGround({ nebula, tokens, fixed, children }: { nebula: string; tokens: OverlayTokens; fixed: boolean; children: React.ReactNode }) {
   return (
-    <div style={{ ...STAGE, background: tokens.space }}>
+    <div style={{ ...stageStyle(fixed), background: tokens.space }}>
       {/* eslint-disable-next-line @next/next/no-img-element -- a broadcast ground, not content: no optimizer on the OBS surface */}
       <img
         src={nebula}
@@ -80,15 +92,15 @@ function Book({ src, width }: { src: string; width: number }) {
 }
 
 export default function FullScene({
-  scene, showTitle, mark, nebula, book, startsAt, afterHoursLine, membershipsWords, tokens,
+  scene, showTitle, mark, nebula, book, startsAt, afterHoursLine, membershipsWords, tokens, fixed = true,
 }: FullSceneProps) {
   const title: React.CSSProperties = { fontFamily: tokens.displayFont, fontWeight: 700, color: tokens.cream, letterSpacing: ".02em" };
   const soft: React.CSSProperties = { fontFamily: tokens.displayFont, fontWeight: 500, color: tokens.teal, letterSpacing: ".04em" };
 
   if (scene === "starting") {
     return (
-      <div style={STAGE} data-scene={scene}>
-        <NightGround nebula={nebula} tokens={tokens}>
+      <div style={stageStyle(fixed)} data-scene={scene}>
+        <NightGround nebula={nebula} tokens={tokens} fixed={fixed}>
           <Mark mark={mark} />
           <div style={{ position: "absolute", left: 190, top: 250 }}>
             <Book src={book} width={480} />
@@ -115,8 +127,8 @@ export default function FullScene({
 
   if (scene === "brb") {
     return (
-      <div style={STAGE} data-scene={scene}>
-        <NightGround nebula={nebula} tokens={tokens}>
+      <div style={stageStyle(fixed)} data-scene={scene}>
+        <NightGround nebula={nebula} tokens={tokens} fixed={fixed}>
           <Mark mark={mark} />
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 26 }}>
             <span style={{ ...title, fontSize: 72 }}>be right back</span>
@@ -130,8 +142,8 @@ export default function FullScene({
 
   /* ending */
   return (
-    <div style={STAGE} data-scene={scene}>
-      <NightGround nebula={nebula} tokens={tokens}>
+    <div style={stageStyle(fixed)} data-scene={scene}>
+      <NightGround nebula={nebula} tokens={tokens} fixed={fixed}>
         <Mark mark={mark} />
         <div style={{
           position: "absolute", inset: 0, display: "flex", flexDirection: "column",
