@@ -653,6 +653,19 @@ export default function StoreRoom() {
                   <textarea value={draft.blurb} placeholder="a line or two in Love's voice"
                     onChange={(e) => setDraft({ ...draft, blurb: e.target.value })}
                     style={{ ...field, width: "100%", minHeight: 64, resize: "vertical" }} />
+                  {/* TASK-253 (ADDENDUM, 0018.06.24 a₿ — the Admiral: "we
+                      needed a short description for the back of the card,
+                      and a long description for the full view") */}
+                  <p style={fieldHint}>a line or two — the back of the card; the long story goes below</p>
+                  {!draft.description?.trim() && draft.blurb.length > 280 && (
+                    <p style={{ ...fieldHint, color: "var(--info)" }}>
+                      this blurb is long for a card back — move the story into Full description
+                    </p>
+                  )}
+                  <label style={fieldLabel}>Full description (the full view)</label>
+                  <textarea value={draft.description ?? ""} placeholder="the long story — the item's own page tells it in full"
+                    onChange={(e) => setDraft({ ...draft, description: e.target.value || undefined })}
+                    style={{ ...field, width: "100%", minHeight: 120, resize: "vertical" }} />
                   <label style={fieldLabel}>category</label>
                   {/* TASK-215 (0018.06.23 a₿, Love's call #8/#30) — a DROPDOWN
                       of the real categories, not free text: every item's

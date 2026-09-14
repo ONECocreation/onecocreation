@@ -6,7 +6,7 @@ import SiteFooter from "@/components/SiteFooter";
 import BuyPanel from "@/components/store/BuyPanel";
 import ImageLightbox from "@/components/store/ImageLightbox";
 import RelatedItems from "@/components/store/RelatedItems";
-import { getItem, listItems, stripPrivateMedia, type StoreItem } from "@/lib/store";
+import { getItem, listItems, stripPrivateMedia, fullStoryOf, type StoreItem } from "@/lib/store";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 import { getSiteConfig } from "@/lib/site-config";
 import { priceWords, defaultPreferOf, type MoneyPrefer, type MoneyRails } from "@/lib/money-words";
@@ -168,9 +168,14 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
               <div className="reveal" style={{ transitionDelay: ".18s" }}>
                 <BuyPanel item={item} railLive={liveAdapter() !== null} squareLive={liveAdapter("square") !== null} />
               </div>
-              {/* the item's words, under the buy door (the template's order) */}
+              {/* the item's words, under the buy door (the template's order).
+                  TASK-253 (ADDENDUM, 0018.06.24 a₿): the LONG story —
+                  fullStoryOf() prefers `description` when Love has written
+                  one, else falls back to `blurb` — derive-or-dash, never
+                  both stacked (the card's own SHORT blurb is a separate
+                  read, StoreItemCard.tsx). */}
               <p className="reveal" style={{ margin: "20px 0 0", whiteSpace: "pre-line", fontSize: ".95rem",
-                color: "var(--ink-body)", transitionDelay: ".1s" }}>{item.blurb}</p>
+                color: "var(--ink-body)", transitionDelay: ".1s" }}>{fullStoryOf(item)}</p>
               {item.media?.deliverable && (
                 <p style={{ margin: "10px 0 0", fontSize: ".82rem", color: "var(--info)" }}>
                   ✦ includes {item.media.deliverable.label} ({item.media.deliverable.kind} download) —

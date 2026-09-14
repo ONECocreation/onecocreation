@@ -185,7 +185,17 @@ section{padding:76px 0;position:relative}
    story inside — so the grid rows stay level and nothing spills (the old
    peek Sheet's position:fixed was trapped by the card's backdrop-filter
    containing block and overflowed the grid — retired). ── */
-.flip-card{position:relative}
+/* TASK-253 (0018.06.24 a₿, the Admiral: "the it cards are supposed to be
+   uniform sizes … prices and buttons should line up") — the card fills its
+   grid cell: `.reveal` (the grid item under .grid-3/.grid-2) already
+   stretches to the row's height by CSS Grid's default align-items:stretch,
+   which makes that stretched box's height DEFINITE for percentage-height
+   descendants — so height:100% here cascades through .flip-inner (already
+   100%, below) → .flip-front (already 100%, below) → .card, and `.push`
+   (margin-top:auto) then pins every row's doors to the SAME y. Scoped to
+   .flip-card alone (owned here) — .reveal itself is shared site-wide and
+   stays untouched. */
+.flip-card{position:relative;height:100%}
 .flip-inner{position:relative;width:100%;height:100%;perspective:1400px}
 /* each face turns on its OWN hinge — no preserve-3d to inherit. The first
    contract rotated a preserve-3d parent, but the faces are .cards
@@ -213,17 +223,17 @@ section{padding:76px 0;position:relative}
 .flip-back .body{min-height:0}
 .flip-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
   scrollbar-width:thin;scrollbar-color:rgba(139,118,196,.5) transparent}
-/* TASK-215 (0018.06.23 a₿, Love's call #24) — "no scroll on the back,
-   bigger boxes": scoped to .item-flip alone (StoreItemCard.tsx) so the
-   /book session card (ServiceCard.tsx) keeps the original absolute-back
-   contract untouched. Both faces sit in the SAME grid cell (grid-area
-   1/1, overlapping) instead of the back being position:absolute over the
-   front's height — a CSS grid's row sizes to its TALLEST cell child, so
-   the card's box grows to whichever face is taller (front or back),
-   permanently, not just while flipped. Nothing left to clip or scroll. */
-.item-flip .flip-inner{display:grid}
-.item-flip .flip-front,.item-flip .flip-back{grid-area:1/1;position:relative;height:auto}
-.item-flip .flip-scroll{overflow:visible}
+/* TASK-215 (0018.06.23 a₿, Love's call #24) tried "no scroll on the back,
+   bigger boxes" by putting both faces in the SAME grid cell (grid-area
+   1/1, height:auto) so the row sized to whichever face was TALLEST —
+   but a long, unclamped back blurb then grew the card past its row-mates
+   (the IAM Worthy shot: 394 chars vs 34/37 next door). TASK-253
+   (0018.06.24 a₿) reverts .item-flip to the base flip contract above: the
+   FRONT alone sizes the card (.flip-front{height:100%}), the back overlays
+   it exactly (.flip-back{position:absolute;inset:0}) and its story scrolls
+   INSIDE that fixed box (base .flip-scroll{overflow-y:auto}, restored — no
+   override here anymore). .item-flip carries no rules of its own now; the
+   class stays on the two store cards as a marker/hook, harmless. */
 @media(prefers-reduced-motion:reduce){
   .flip-front,.flip-back{transition:none} /* instant turn — the card still flips, without the sail */
 }
