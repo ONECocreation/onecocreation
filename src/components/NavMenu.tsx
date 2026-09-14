@@ -8,7 +8,7 @@ import { READING_ROOM_PATH } from "@/lib/reading-room";
 
 /**
  * The consolidated nav (Admiral, 0018.05.13): main doors with sub-menus, so
- * the bar never crowds — and a hamburger below 920px.
+ * the bar never crowds — and a hamburger below 1000px (was 920 — TASK-257: six links + a signed-in name overflowed the row between 920 and 1000).
  * The tail (basket + name) renders beside this and never wraps.
  *
  * TASK-129 (0018.06.16 a₿): the MENU is built from THE SWITCHES

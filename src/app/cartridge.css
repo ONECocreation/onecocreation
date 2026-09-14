@@ -472,3 +472,24 @@ html[data-oc-theme="light"] .hero:not(.keep-dark)::after{background:linear-gradi
 }
 .lions-gate-dark .sec-h{color:#F4ECFF}
 .lions-gate-dark p{color:#D9D2E4}
+/* LIONS GATE AT DAWN (Admiral, 0018.06.24 a₿: "the lion on light view used
+   to brighten up the background. it's not doing that now"): the lion page
+   flips with the lantern the way the home section's .lions-gate does — the
+   same cream veil over the same lion, ink text. The 0018.05.24 pale-on-cream
+   sighting is answered here by flipping the TEXT too, not by holding the
+   night. The designer page's bands go transparent in light so the page's
+   own lion ground shows through (in the dark their own veil rides the same
+   lion, untouched). */
+html[data-oc-theme="light"] main.lions-gate-dark{
+  background:
+    linear-gradient(rgba(251,246,239,.82), rgba(251,246,239,.9)),
+    url("/images/lions-gate.webp") center top / cover no-repeat;
+}
+html[data-oc-theme="light"] .lions-gate-dark .sec-h{color:var(--ink-strong)}
+html[data-oc-theme="light"] .lions-gate-dark p:not(.kicker){color:var(--ink-body)!important}
+html[data-oc-theme="light"] main.lions-gate-dark section{background:transparent!important}
+/* Love's published band holds the night (hold:"night" → .keep-dark), which
+   re-scopes the ink tokens pale; on the lion page at dawn the tokens fall
+   back to the page's own (light) values so the words read on cream. */
+html[data-oc-theme="light"] main.lions-gate-dark .keep-dark{--ink-strong:inherit;--ink-body:inherit;--muted:inherit;
+  --rose:inherit;--gold-deep:inherit;--teal-bright:inherit;--glass:inherit;--glass-edge:inherit}

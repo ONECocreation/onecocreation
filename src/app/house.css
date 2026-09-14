@@ -547,6 +547,19 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
 .site-header .bar{flex-wrap:wrap}
 .nav-tail{display:flex;align-items:center;gap:14px;flex-shrink:0;margin-left:auto}
 .site-nav{margin-left:auto;margin-right:0}
+/* TASK-257 (Admiral, 0018.06.24 a₿, "a bad wrapping job on the menu"): on a
+   desktop the bar is ONE row — signed in as a long name the tail was
+   dropping under the menu. The nav tightens (smaller word, tighter gap),
+   the name clips with an ellipsis, and the bar never wraps above the
+   phone breakpoint. */
+@media(min-width:1001px){
+  .site-header .bar{flex-wrap:nowrap}
+  .nav-menu{min-width:0}
+  .nav-items{gap:14px}
+  .site-nav .nav-link{font-size:.9rem;letter-spacing:.02em;white-space:nowrap}
+  .nav-tail{min-width:0}
+  .nav-tail>*{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
 
 /* ── the console's left rail (wireframe v2) ── */
 .mgmt-shell{display:grid;grid-template-columns:190px minmax(0,1fr);gap:26px;align-items:start}
@@ -559,7 +572,7 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
    and oversized heroes on the public pages must never open a horizontal
    body scroll either (rubric: no horizontal body scroll, anywhere). */
 html,body{overflow-x:clip}
-@media(max-width:920px){
+@media(max-width:1000px){
   .mgmt-stage,.mgmt-body{min-width:0}
   .mgmt-body table{display:block;max-width:100%;overflow-x:auto}
 }
@@ -611,7 +624,7 @@ html,body{overflow-x:clip}
   opacity:1;visibility:visible;transform:none;pointer-events:auto;transition-delay:.06s,.06s,0s}
 .nav-sub::before{content:"";position:absolute;top:-10px;left:0;right:0;height:10px}
 @media(prefers-reduced-motion:reduce){.nav-item.has-sub .nav-sub{transition:none;transform:none}}
-@media(max-width:920px){
+@media(max-width:1000px){
   /* ONE row on phones (mobile menu1.png fix): logo left, then
      basket+name, burger far right — nothing wraps to a second line.
      The logo cell GROWS to eat the free space (mobile menu2.png fix),
