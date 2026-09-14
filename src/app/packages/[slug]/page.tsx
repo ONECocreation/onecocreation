@@ -221,7 +221,16 @@ export default async function TierPage({
 
             {/* the image card + stacked YES pills on the right */}
             <div className="card" style={{ padding: 18 }}>
-              <img src={page.img} alt={t.name} style={{ borderRadius: 16, width: "100%" }} />
+              {/* TASK-254 (0018.06.24 a₿): the three tiers' native art carries
+                  three different aspect ratios (327×480 · 488×480 · 640×455),
+                  so a raw width:100% <img> swings the right column's height
+                  per tier. A 4/3 frame (the .thumb recipe, house.css:171)
+                  keeps one column height across every tier. */}
+              <img
+                src={page.img}
+                alt={t.name}
+                style={{ aspectRatio: "4/3", width: "100%", objectFit: "cover", borderRadius: 16 }}
+              />
               {page.caption && (
                 <p style={{ textAlign: "center", color: "var(--muted)", fontSize: ".85rem", margin: "12px 4px 4px" }}>
                   {page.caption}
@@ -296,7 +305,12 @@ export default async function TierPage({
                           </span>
                         )}
                       </div>
-                      <span className="btn btn-sm push" style={{ marginTop: 10 }}>YES!</span>
+                      {/* TASK-254 (0018.06.24 a₿): the inline marginTop
+                          overrode .push's own margin-top:auto (house.css:238,
+                          T-253's — untouched here), so the YES! doors never
+                          levelled with the card above them; dropping the
+                          inline style lets .push do its job. */}
+                      <span className="btn btn-sm push">YES!</span>
                     </div>
                   </Link>
                 );

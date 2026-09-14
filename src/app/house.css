@@ -353,6 +353,28 @@ section{padding:76px 0;position:relative}
   .shine-hover:hover::before{animation:none;opacity:.6}
 }
 
+/* ── TASK-254 (0018.06.24 a₿) — THE MEMBERSHIP CARDS STAND LEVEL (the
+   Admiral: "that issue bled into the memberships area. they are all off
+   now"). Additive only — T-252 owns About()/cartridge.ts, T-253 owns
+   src/components/store/** and the .card/.flip-card/.item-flip/
+   .flip-scroll/.card-title/.card-sub/.push rules; none of those rules are
+   rewritten here:
+   · the feature list reserves TWO LINES PER BULLET, not one min-height on
+     the whole list — the three tiers' bullets each wrap a different
+     number of times, so a per-li reserve lands the door row at the same
+     y no matter which bullets wrap (the CARD CONTRACT's em-reserve idiom,
+     :176-177, applied per item instead of once);
+   · the tier-name pill was stretching full-width and left-aligned inside
+     the card's flex column — a blockified inline-block flex item
+     stretches on the cross axis by default (align-items:normal on
+     `.card .body`) — align-self:center shrinks it back to its own
+     content width and centres it;
+   · the shine rim (26px) is pulled in to match the card's own rim (24px,
+     :170) so the light doesn't ride outside the card's corner. */
+.feat li{min-height:4em}
+.tier-name-pill{align-self:center}
+.shine-hover::before{border-radius:24px}
+
 /* the sun with shades — theme toggle in the header, by the login name
    (Admiral, 0018.05.17: "easy on the eyes?") */
 .theme-sun{width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(235,203,119,.45);
