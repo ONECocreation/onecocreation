@@ -9,7 +9,7 @@ import { ROOMS } from "@/lib/matrix-rooms";
 import { rosterForRequest } from "@/lib/matrix";
 import { getPin } from "@/lib/room-pins";
 import { getSiteConfig } from "@/lib/site-config";
-import { liveRoomName, studioVdoLinks } from "@/lib/live";
+import { liveRoomName, studioVdoLinks, studioGuestCameraLink } from "@/lib/live";
 import { getStudioDoc } from "@/lib/studio/roster";
 import { sessionsFromCookieHeader } from "@/lib/fren-auth";
 import { tierForSubject } from "@/lib/member-tier";
@@ -91,6 +91,16 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
    * leaves the gallery entirely (she is already the big frame above it,
    * pushed as `host`), and only the named GUESTS go on camera. */
   const stageMxids: string[] = [];
+  /* TASK-249: a present soul Love NAMED as today's guest draws a VDO tile
+   * addressed by their OWN site handle — but nothing publishes under that
+   * id until they open a door pushing it. `cameraDoor` is that door,
+   * derived only when THIS viewer's own session handle matches one of the
+   * mxids the loop below just placed on camera (mxid `@<handle>:<domain>`,
+   * the local part compared handleOf-style, lowercase, against the
+   * session handle). Same gate as the derivation above (vdo rail, live,
+   * room open) — never a stray read, never a door for anyone Love didn't
+   * name. */
+  let cameraDoor: string | null = null;
   if (switches.meeting.rail === "vdo" && door === "open" && roster?.ok) {
     const doc = await getStudioDoc();
     const norm = (n: string) => n.trim().toLowerCase();
@@ -100,6 +110,13 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
       const name = norm(info.display_name || mxid.slice(1, mxid.indexOf(":")));
       if (hostName !== "" && name === hostName) stageMxids.push(mxid);
       else if (guestNames.has(name)) onCameraMxids.push(mxid);
+    }
+    if (session) {
+      const viewerHandle = norm(session.handle);
+      const mine = onCameraMxids.find((mxid) => norm(mxid.slice(1, mxid.indexOf(":"))) === viewerHandle);
+      if (mine) {
+        cameraDoor = studioGuestCameraLink(switches.meeting.vdoHost, studioVdo.room, mine.slice(1, mine.indexOf(":")));
+      }
     }
   }
 
@@ -129,6 +146,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           studioRoom={studioVdo.room}
           onCameraMxids={onCameraMxids}
           stageMxids={stageMxids}
+          cameraDoor={cameraDoor}
         />
       </section>
       <SiteFooter />
