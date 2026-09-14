@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { insertAtCaret, insertHeroLine, insertLink, insertReadingRoomLink, toggleMark } from "@/lib/letter-marks";
 import { READING_ROOM_PATH } from "@/lib/reading-room";
 import { cartridge } from "@/brand/cartridge";
-import { glassCard, field, SectionHead } from "@/components/console/glass";
+import { glassCard, field } from "@/components/console/glass";
 
 /**
  * LETTERS — every letter the house sends, in one room (wireframe v2).
