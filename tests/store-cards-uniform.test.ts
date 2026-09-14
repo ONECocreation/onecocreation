@@ -113,9 +113,9 @@ describe("StoreItemCard — a 40-char and a 1500-char blurb render the SAME stru
     }
   });
 
-  it("the front's one-line clamp still holds (WebkitLineClamp:1) regardless of length", () => {
+  it("the front's blurb clamps to TWO lines inside the 2.2em reserve (Number One follow-through: a one-line clamp in a two-line box showed a sliver of line two)", () => {
     for (const html of [htmlShort, htmlLong]) {
-      expect(html).toMatch(/-webkit-line-clamp:1/);
+      expect(html).toMatch(/-webkit-line-clamp:2/);
     }
   });
 

@@ -168,7 +168,7 @@ export default function StoreItemCard({
             {/* the one-line sub — the shelf stays level, the story lives on
                 the back. card-sub reserves its row (house.css min-height:2.2em) */}
             <p className="card-sub" style={{ color: "var(--muted)", fontSize: ".88rem", margin: ".4em 0 .2em",
-              display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+              display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
               {item.blurb}
             </p>
             {/* TASK-253: a FIXED-HEIGHT meta slot — always rendered, empty

@@ -69,7 +69,7 @@ export default function FreeMeditationCard({ delay = 0 }: { delay?: number }) {
                 same empty slot it sat shorter than a paid card in its row */}
             <h3 className="card-title" style={{ fontWeight: 400, fontSize: "1.12rem", margin: 0 }}>{m.title}</h3>
             <p className="card-sub" style={{ color: "var(--muted)", fontSize: ".88rem", margin: ".4em 0 .2em",
-              display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+              display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
               {m.blurb}
             </p>
             <p style={{ fontSize: ".72rem", color: "var(--lavender)", margin: "0 0 .2em", minHeight: "1.2em" }}>
