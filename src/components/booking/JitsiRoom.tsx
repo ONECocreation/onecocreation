@@ -2,12 +2,26 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { cartridge } from "@/brand/cartridge";
 
 /**
  * The meeting, held ON the site (Admiral, 0018.05.17): the jitsi room rides
  * an embed, and when the call ends the member is still home with us — no
  * third-party farewell page, no advertisement.
  */
+
+/**
+ * TASK-246: the mark's absolute URL, for the branding override below.
+ * lib/subscribers.ts's siteBase() does the same job server-side but pulls
+ * in node:crypto (unsafe in this client bundle) — lifted and adapted for
+ * the browser: NEXT_PUBLIC_SITE_URL first (inlined at build time), else
+ * the page's own origin (always right, this only ever runs client-side).
+ */
+function siteOrigin(): string {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  if (typeof window !== "undefined") return window.location.origin;
+  return "http://localhost:3000";
+}
 declare global {
   interface Window {
     JitsiMeetExternalAPI?: new (domain: string, opts: Record<string, unknown>) => {
@@ -40,13 +54,34 @@ export default function JitsiRoom({
 
     const boot = () => {
       if (!live || !holder.current || !window.JitsiMeetExternalAPI) return;
+      /* TASK-246: belt-and-braces branding from OUR side — the server kit
+       * (briefings/vps-scripts/jitsi/deploy/branding/custom-interface_config.js)
+       * strips the Jitsi mark on the box itself; this override does the same
+       * from the embed no matter whether that kit has been applied yet, and
+       * puts ONE Cocreation's own mark up instead. Same keys as the kit so
+       * client and server never disagree about what should show. */
+      const markUrl = `${siteOrigin()}${cartridge.logo.mark}`;
       const a = new window.JitsiMeetExternalAPI(domain, {
         roomName: room,
         parentNode: holder.current,
         width: "100%",
         height: "100%",
         userInfo: displayName ? { displayName } : undefined,
-        configOverwrite: { prejoinConfig: { enabled: true }, disableDeepLinking: true },
+        configOverwrite: {
+          prejoinConfig: { enabled: true },
+          disableDeepLinking: true,
+          defaultLogoUrl: markUrl,
+        },
+        interfaceConfigOverwrite: {
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_WATERMARK_FOR_GUESTS: false,
+          SHOW_BRAND_WATERMARK: true,
+          BRAND_WATERMARK_LINK: siteOrigin(),
+          DEFAULT_LOGO_URL: markUrl,
+          DEFAULT_WELCOME_PAGE_LOGO_URL: markUrl,
+          APP_NAME: "One Cocreation",
+          JITSI_WATERMARK_LINK: "",
+        },
       });
       api = a;
       setState("live");
@@ -70,7 +105,7 @@ export default function JitsiRoom({
   if (state === "ended") {
     return (
       <div className="card" style={{ padding: 32, textAlign: "center" }}>
-        <p style={{ fontFamily: "var(--serif)", fontSize: "1.4rem", margin: "0 0 8px" }}>
+        <p style={{ fontFamily: "var(--sans)", fontWeight: 600, fontSize: "1.4rem", margin: "0 0 8px" }}>
           The field holds what you brought 🕊️
         </p>
         <p style={{ color: "var(--muted)", margin: "0 0 20px" }}>
@@ -91,10 +126,16 @@ export default function JitsiRoom({
       </p>
     );
   }
+  /* TASK-246: the wrapper takes the FULL height its parent hands it (the
+   * literal passed in — "100%" for an aspect-ratio'd box, "72vh" for /meet's
+   * unconstrained one) and lays it out as a column so the holder can claim
+   * everything the loading line doesn't need, rather than resolving its own
+   * "100%" against an auto-height parent and collapsing to Jitsi's own
+   * ~240px minimum (the fault in the Admiral's picture). */
   return (
-    <div>
+    <div style={{ height, display: "flex", flexDirection: "column", minHeight: 0 }}>
       {state === "loading" && <p style={{ color: "var(--muted)" }}>opening the room…</p>}
-      <div ref={holder} style={{ height, borderRadius: 18, overflow: "hidden", border: "1.5px solid rgba(139,118,196,.35)" }} />
+      <div ref={holder} style={{ flex: 1, minHeight: 0, borderRadius: 18, overflow: "hidden", border: "1.5px solid rgba(139,118,196,.35)" }} />
     </div>
   );
 }
