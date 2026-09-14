@@ -63,10 +63,17 @@ export default function FreeMeditationCard({ delay = 0 }: { delay?: number }) {
               alt="Love's own photograph: a still lake under mountains at dusk, orange light breaking through storm cloud" />
           </div>
           <div className="body">
-            <h3 style={{ fontWeight: 400, fontSize: "1.12rem", margin: 0 }}>{m.title}</h3>
-            <p style={{ color: "var(--muted)", fontSize: ".88rem", margin: ".4em 0 .2em",
+            {/* TASK-253 (0018.06.24 a₿) — card-title/card-sub + the fixed-
+                height meta slot mirror StoreItemCard.tsx exactly: this card
+                carries none of the optional rows today, so WITHOUT that
+                same empty slot it sat shorter than a paid card in its row */}
+            <h3 className="card-title" style={{ fontWeight: 400, fontSize: "1.12rem", margin: 0 }}>{m.title}</h3>
+            <p className="card-sub" style={{ color: "var(--muted)", fontSize: ".88rem", margin: ".4em 0 .2em",
               display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
               {m.blurb}
+            </p>
+            <p style={{ fontSize: ".72rem", color: "var(--lavender)", margin: "0 0 .2em", minHeight: "1.2em" }}>
+              {" "}
             </p>
             <div style={{ margin: "10px 0 14px" }}>
               <span className="price" style={{ fontSize: "1.25rem" }}>{m.priceLabel}</span>

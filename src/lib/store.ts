@@ -70,11 +70,46 @@ export function stripPrivateMedia(item: StoreItem): StoreItem {
   return { ...item, media: { ...media, deliverable: { kind: d.kind, label: d.label } } };
 }
 
+/**
+ * TASK-253 (ADDENDUM, 0018.06.24 a₿) — `description`'s one sanitiser: free
+ * length (the full-view story can run as long as Love writes it), only
+ * TRIMMED (outer whitespace only — internal line breaks stay, the full
+ * view prints it `whiteSpace: pre-line`); empty/whitespace-only or absent
+ * both mean "no description" (undefined, never `""`). Deliberately does
+ * NOT touch `blurb` — that field's shape is untouched by this task,
+ * production carries a couple of long blurbs already and this never
+ * rejects them. The one caller today is the admin PUT route
+ * (api/admin/store/route.ts); exported so the round-trip is a direct unit
+ * test, not a route-shaped one. */
+export function sanitizeDescription(raw: unknown): string | undefined {
+  return typeof raw === "string" && raw.trim() ? raw.trim() : undefined;
+}
+
+/**
+ * The full view's one story line (/store/[id]/page.tsx): `description`
+ * when present, else `blurb` — derive-or-dash, never both stacked. The
+ * card (front one-line clamp + back) never calls this; it reads `blurb`
+ * directly, by design (see StoreItemCard.tsx's TASK-253 note). */
+export function fullStoryOf(item: StoreItem): string {
+  return item.description?.trim() || item.blurb;
+}
+
 export interface StoreItem {
   id: string;
   schemaVersion: 2;
   title: string;
+  /** the SHORT story — the card front's one-line clamp and the card back
+   *  (StoreItemCard.tsx); unchanged in shape by TASK-253's `description`
+   *  addition (production already carries a couple of long blurbs — this
+   *  field is never rejected or truncated for it). */
   blurb: string;
+  /** TASK-253 (ADDENDUM, 0018.06.24 a₿ — the Admiral: "we needed a short
+   *  description for the back of the card, and a long description for the
+   *  full view"). The LONG story — free length, sanitized by
+   *  sanitizeDescription() below. The full view (/store/[id]) prefers this
+   *  over `blurb` when present (see fullStoryOf()); the card back never
+   *  reads it — derive-or-dash, never both stacked. */
+  description?: string;
   /** legacy v1 field — mirrored from media.images so old readers keep working */
   images: string[];
   /** artist-entered item number */
@@ -329,6 +364,11 @@ export function validateItem(item: StoreItem): { ok: true } | { ok: false; reaso
     }
     const saleBad = priceProblem(item.sale, "sale");
     if (saleBad) return { ok: false, reason: saleBad };
+  }
+  // TASK-253 (ADDENDUM): description is free length by design (the long
+  // full-view story) — type-checked only, never a length ceiling.
+  if (item.description != null && typeof item.description !== "string") {
+    return { ok: false, reason: "description as text" };
   }
   if (item.category != null && (typeof item.category !== "string" || item.category.length > 64)) {
     return { ok: false, reason: "a category as short text (max 64 chars)" };

@@ -24,6 +24,24 @@ import { useMoneyPrefer } from "@/lib/money-preference";
  * so the grid never reflows. The buy/basket doors (GET IT ⚡, ADD TO
  * BASKET) live on the FULL VIEW page only — the card's one door is
  * "Full view →", on both faces.
+ *
+ * TASK-253 (0018.06.24 a₿ — the Admiral: "the it cards are supposed to be
+ * uniform sizes … prices and buttons should line up. the IAM worthy sleep
+ * meditation is not like the others") fixed the actual "IAM Worthy shot"
+ * the note above only named: the T-215 grid-overlap made the card as tall
+ * as its TALLEST face (house.css .item-flip, reverted) while the front's
+ * title/sub/meta rows carried no reserved height (`.card-title`/`.card-sub`
+ * below, plus the fixed-height meta slot for the optional "✦ includes …"
+ * line) — so a long blurb (394 chars) sat taller AND its price line sat
+ * lower than its 34/37-char shelf-mates. `.flip-card{height:100%}`
+ * (house.css) now stretches every card to its row; the back's story
+ * scrolls INSIDE the card (restored `.flip-scroll{overflow-y:auto}`) — the
+ * front's height rules, never the back's.
+ *
+ * ADDENDUM (the Admiral, 0018.06.24 a₿ — "we needed a short description for
+ * the back of the card, and a long description for the full view"): the
+ * back face reads `blurb` ONLY, by design — never `description` (that's the
+ * full view's field, /store/[id]/page.tsx via fullStoryOf(), store.ts).
  */
 
 /**
@@ -137,23 +155,28 @@ export default function StoreItemCard({
             )}
           </div>
           <div className="body">
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+            {/* TASK-253: card-title reserves its row (house.css min-height:
+                2.5em) so a sold-out badge's extra width never shifts the
+                sub/meta/price rows below it on ITS card alone */}
+            <div className="card-title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
               <h3 style={{ fontWeight: 400, fontSize: "1.12rem", margin: 0 }}>{item.title}</h3>
               {m.soldOut && (
                 <span style={{ fontSize: ".64rem", fontWeight: 700, textTransform: "uppercase",
                   letterSpacing: ".06em", color: "var(--rose)", whiteSpace: "nowrap" }}>sold out</span>
               )}
             </div>
-            {/* the one-line sub — the shelf stays level, the story lives on the back */}
-            <p style={{ color: "var(--muted)", fontSize: ".88rem", margin: ".4em 0 .2em",
+            {/* the one-line sub — the shelf stays level, the story lives on
+                the back. card-sub reserves its row (house.css min-height:2.2em) */}
+            <p className="card-sub" style={{ color: "var(--muted)", fontSize: ".88rem", margin: ".4em 0 .2em",
               display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
               {item.blurb}
             </p>
-            {m.deliverableLabel && (
-              <p style={{ fontSize: ".72rem", color: "var(--lavender)", margin: "0 0 .2em" }}>
-                ✦ includes {m.deliverableLabel}
-              </p>
-            )}
+            {/* TASK-253: a FIXED-HEIGHT meta slot — always rendered, empty
+                when there's no deliverable, so the price line below sits at
+                the SAME y whether or not an item carries this row */}
+            <p style={{ fontSize: ".72rem", color: "var(--lavender)", margin: "0 0 .2em", minHeight: "1.2em" }}>
+              {m.deliverableLabel ? `✦ includes ${m.deliverableLabel}` : " "}
+            </p>
             <div style={{ margin: "10px 0 14px" }}>
               <span className="price" style={{ fontSize: "1.25rem" }}>{m.priceLabel}</span>
               {m.onSale && (
