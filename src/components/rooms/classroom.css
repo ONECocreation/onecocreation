@@ -96,16 +96,16 @@
 
 /* TASK-251 (seam, SceneFrame.tsx owns the element that wears this class):
    the box Love's full-frame scene (starting soon / be right back / thank
-   you) scales into — its OWN true 16:9, independent of the enclosing
-   .cl-stage-embed's min-height floor above, so the scene is always
-   correctly proportioned (never stretched to fill a floor-forced taller
-   box) and never escapes past its own edges (overflow: hidden pairs with
+   you) scales into — it fills the enclosing .cl-stage-embed (floor and
+   all) and SceneFrame centres a true-proportion canvas inside on the
+   scene's own ground, so the scene is never stretched and never leaves a
+   strip of page ground under it, and never escapes past its own edges (overflow: hidden pairs with
    FullScene's fixed={false} position: absolute, the fix for the frame that
    used to spill over the whole page). */
 .cl-scene-frame {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: 100%; /* fills the embed box (definite: aspect-ratio or its min-height floor); SceneFrame letterboxes inside */
   overflow: hidden;
 }
 

@@ -55,12 +55,21 @@ const TOKENS: OverlayTokens = {
 
 export default function SceneFrame({ scene, showTitle, startsAt, afterHoursLine }: SceneFrameProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0);
+  const [fit, setFit] = useState({ scale: 0, x: 0, y: 0 });
 
   useLayoutEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    const measure = () => setScale(el.clientWidth / 1920);
+    /* Number One follow-through: the frame FILLS the embed box (which has a
+       min-height floor, T-246 — taller than 16:9 on a phone), so the scale
+       is the smaller of the two fits and the canvas sits centred on the
+       scene's own night ground — never a strip of page ground under it */
+    const measure = () => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      const scale = Math.min(w / 1920, h / 1080);
+      setFit({ scale, x: (w - 1920 * scale) / 2, y: (h - 1080 * scale) / 2 });
+    };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -69,7 +78,17 @@ export default function SceneFrame({ scene, showTitle, startsAt, afterHoursLine 
 
   return (
     <div ref={wrapRef} className="cl-scene-frame" style={{ background: TOKENS.space }}>
-      <div style={{ width: 1920, height: 1080, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+      <div
+        style={{
+          position: "absolute",
+          left: fit.x,
+          top: fit.y,
+          width: 1920,
+          height: 1080,
+          transform: `scale(${fit.scale})`,
+          transformOrigin: "top left",
+        }}
+      >
         <FullScene
           scene={scene}
           showTitle={showTitle || cartridge.copy.productName}
