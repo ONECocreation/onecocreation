@@ -9,7 +9,8 @@ import { ROOMS } from "@/lib/matrix-rooms";
 import { rosterForRequest } from "@/lib/matrix";
 import { getPin } from "@/lib/room-pins";
 import { getSiteConfig } from "@/lib/site-config";
-import { liveRoomName } from "@/lib/live";
+import { liveRoomName, studioVdoLinks } from "@/lib/live";
+import { getStudioDoc } from "@/lib/studio/roster";
 import { sessionsFromCookieHeader } from "@/lib/fren-auth";
 import { tierForSubject } from "@/lib/member-tier";
 import { TIERS } from "@/lib/entitlement";
@@ -69,6 +70,39 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
    * A 429 answer renders honest words in RoomPresence, never a blank room. */
   const roster = door === "open" ? await rosterForRequest(room.id) : null;
 
+  /* TASK-245: the same pass-through shape as jitsiDomain/liveRoom above —
+   * the Stage's video slot needs the meeting rail to know which studio to
+   * mount, and (on the vdo rail) the studio's own room name, T-243's ONE
+   * derivation (studioVdoLinks), never re-spelled here. */
+  const studioVdo = studioVdoLinks(switches.meeting.vdoRoomPrefix, switches.meeting.vdoHost);
+
+  /* TASK-245: the gallery's on-camera set — derived, never fabricated. No
+   * signal anywhere answers "is this soul's camera on right now" (the
+   * studio kit's live state is Phase 2), so this reads the ONE real
+   * intention already on record: the director's own guest roster
+   * (studio/doc.ts's StudioDoc, typed at /a/studio before the show) — a
+   * present soul whose display name matches the host or a listed guest is
+   * who Love actually arranged to be on camera today. Read only on the vdo
+   * rail while live and the room is open — the one case the gallery can
+   * ever show, same gate the roster read above already takes. */
+  const onCameraMxids: string[] = [];
+  /* TASK-245 gate follow-through: the HOST is the stage itself, never a
+   * watcher — a present soul whose name matches the director's own name
+   * leaves the gallery entirely (she is already the big frame above it,
+   * pushed as `host`), and only the named GUESTS go on camera. */
+  const stageMxids: string[] = [];
+  if (switches.meeting.rail === "vdo" && door === "open" && roster?.ok) {
+    const doc = await getStudioDoc();
+    const norm = (n: string) => n.trim().toLowerCase();
+    const hostName = norm(doc.host.name);
+    const guestNames = new Set(doc.guests.map((g) => norm(g.name)).filter((n) => n !== ""));
+    for (const [mxid, info] of Object.entries(roster.joined)) {
+      const name = norm(info.display_name || mxid.slice(1, mxid.indexOf(":")));
+      if (hostName !== "" && name === hostName) stageMxids.push(mxid);
+      else if (guestNames.has(name)) onCameraMxids.push(mxid);
+    }
+  }
+
   return (
     <main className="mgmt-ground">
       <SiteHeader />
@@ -90,6 +124,11 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           door={door}
           doorPackage={doorPackage}
           roster={roster}
+          rail={switches.meeting.rail}
+          vdoHost={switches.meeting.vdoHost}
+          studioRoom={studioVdo.room}
+          onCameraMxids={onCameraMxids}
+          stageMxids={stageMxids}
         />
       </section>
       <SiteFooter />

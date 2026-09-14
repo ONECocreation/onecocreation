@@ -35,7 +35,7 @@ import type { RoomGate } from "@/lib/room-access";
  * read. Empty resources render nothing (derive-or-dash) — never an empty box.
  */
 export default function StageView({
-  slug, alias, title, kind, pin, live, jitsiDomain, liveRoom, door, doorPackage, roster,
+  slug, alias, title, kind, pin, live, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids, stageMxids,
 }: {
   slug: string;
   alias: string;
@@ -53,8 +53,22 @@ export default function StageView({
   door?: RoomGate;
   doorPackage?: string | null;
   /** TASK-184: the page's ONE roster/presence read per open — null when the
-   *  gate closed the room for this visitor (no read taken, the soft line). */
+   *  gate closed the room for this visitor (no read taken, the soft line).
+   *  TASK-245: also the video slot's gallery source (RoomPresence and the
+   *  gallery share this ONE read, never a second one). */
   roster?: RosterResult | null;
+  /** TASK-245: pass-through only, same shape as jitsiDomain/liveRoom above —
+   *  the room page's site-switches read, handed to the Stage so the video
+   *  slot can pick its rail. */
+  rail?: "jitsi" | "vdo" | "static";
+  vdoHost?: string;
+  studioRoom?: string;
+  /** TASK-245: pass-through only — the room page's own derivation off the
+   *  director's guest roster (who Love actually arranged to be on camera
+   *  today), handed to the video slot's gallery. */
+  onCameraMxids?: readonly string[];
+  /** TASK-245: present souls who ARE the stage (the director by name) — never a gallery tile. */
+  stageMxids?: readonly string[];
 }) {
   const gated = !!door && door !== "open";
   const [items, setItems] = useState<MaterialItem[] | null>(null);
@@ -83,7 +97,7 @@ export default function StageView({
       )}
       <div className="cl-grid-stage">
         <div role="region" className="cl-region cl-area-video" data-region="video" aria-label="Video">
-          <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} />
+          <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} />
         </div>
         {resources.length > 0 && (
           <div role="region" className="cl-region cl-area-resources" aria-label="Resources">
