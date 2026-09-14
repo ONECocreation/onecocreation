@@ -57,12 +57,92 @@ const avaOf = (sender: string) => {
   return AVA_GRADIENTS[h % AVA_GRADIENTS.length];
 };
 
+/* TASK-247 (0018.06.23 a₿ · block ~966,922, the Admiral via Love's call: the
+   emote button sat centre-text; most social sites keep it bottom-right, and
+   "different colour hearts are always nice") — the corner picker, 12 in the
+   order the Admiral asked for (coloured hearts first). Exported so the
+   picker's exact membership+order is a direct pin, not a rendered guess. */
+export const REACTION_EMOJIS: { key: string; name: string }[] = [
+  { key: "❤️", name: "red heart" },
+  { key: "🧡", name: "orange heart" },
+  { key: "💛", name: "yellow heart" },
+  { key: "💚", name: "green heart" },
+  { key: "💙", name: "blue heart" },
+  { key: "💜", name: "purple heart" },
+  { key: "🤍", name: "white heart" },
+  { key: "🩷", name: "pink heart" },
+  { key: "✨", name: "sparkles" },
+  { key: "🙏", name: "pray" },
+  { key: "😊", name: "smile" },
+  { key: "🔥", name: "fire" },
+];
+
+type TimelineEvent = {
+  type: string; event_id: string; sender: string; origin_server_ts: number;
+  content?: { body?: string; msgtype?: string; ["m.relates_to"]?: { rel_type?: string; event_id?: string; key?: string } };
+};
+
+export interface ParsedTimeline {
+  msgs: Msg[];
+  reactions: Record<string, Record<string, number>>;
+  myReactions: Record<string, Set<string>>;
+}
+
+/** the timeline reader's pure core: turns one homeserver chunk into
+ *  messages + a reactions map keyed by event id then by emoji key — every
+ *  `m.annotation` counts now, not just a hardcoded "❤️", so a legacy
+ *  ❤️-only event from before this lane still counts under the new map.
+ *  Exported so the counting rule is a direct pin, not a rendered guess. */
+export function parseTimelineChunk(chunk: TimelineEvent[], myUserId?: string): ParsedTimeline {
+  const msgs: Msg[] = [];
+  const reactions: Record<string, Record<string, number>> = {};
+  const myReactions: Record<string, Set<string>> = {};
+  for (const e of chunk) {
+    if (e.type === "m.room.message" && e.content?.body) {
+      msgs.push({
+        id: e.event_id, sender: e.sender, name: localOf(e.sender),
+        body: e.content.body, ts: e.origin_server_ts, encrypted: false,
+      });
+    } else if (e.type === "m.room.encrypted") {
+      msgs.push({
+        id: e.event_id, sender: e.sender, name: localOf(e.sender),
+        body: "", ts: e.origin_server_ts, encrypted: true,
+      });
+    } else if (e.type === "m.reaction") {
+      const rel = e.content?.["m.relates_to"];
+      if (rel?.rel_type === "m.annotation" && rel.event_id && rel.key) {
+        const forEvent = reactions[rel.event_id] ?? (reactions[rel.event_id] = {});
+        forEvent[rel.key] = (forEvent[rel.key] ?? 0) + 1;
+        if (myUserId && e.sender === myUserId) {
+          const mine = myReactions[rel.event_id] ?? (myReactions[rel.event_id] = new Set());
+          mine.add(rel.key);
+        }
+      }
+    }
+  }
+  msgs.reverse();
+  return { msgs, reactions, myReactions };
+}
+
+/** the send path keeps the `oc<stamp>h<n>` txn-id shape untouched. */
+export function reactionSendPath(roomId: string, stamp: number, n: number) {
+  return `/rooms/${encodeURIComponent(roomId)}/send/m.reaction/oc${stamp}h${n}`;
+}
+export function reactionEventBody(eventId: string, key: string) {
+  return { "m.relates_to": { rel_type: "m.annotation", event_id: eventId, key } };
+}
+/** once per person per key — a direct pin on the guard `react()` uses. */
+export function canReact(mineForId: Set<string> | undefined, key: string): boolean {
+  return !mineForId?.has(key);
+}
+
 export default function RoomView({ slug, alias, title, kind }: Props) {
   const [state, setState] = useState<"loading" | "signedout" | "locked" | "open" | "error">("loading");
   const [reason, setReason] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
-  const [hearts, setHearts] = useState<Record<string, number>>({});
-  const [myHearts, setMyHearts] = useState<Set<string>>(new Set());
+  const [reactions, setReactions] = useState<Record<string, Record<string, number>>>({});
+  const [myReactions, setMyReactions] = useState<Record<string, Set<string>>>({});
+  const [openPicker, setOpenPicker] = useState<string | null>(null);
   const [who, setWho] = useState(0);
   const [names, setNames] = useState<Record<string, string>>({});
   const [draft, setDraft] = useState("");
@@ -103,36 +183,12 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
       if (r.status === 403) setState("locked");
       return;
     }
-    const chunk = (r.data.chunk ?? []) as {
-      type: string; event_id: string; sender: string; origin_server_ts: number;
-      content?: { body?: string; msgtype?: string; ["m.relates_to"]?: { rel_type?: string; event_id?: string; key?: string } };
-    }[];
-    const nextMsgs: Msg[] = [];
-    const nextHearts: Record<string, number> = {};
-    const mine = new Set<string>();
-    for (const e of chunk) {
-      if (e.type === "m.room.message" && e.content?.body) {
-        nextMsgs.push({
-          id: e.event_id, sender: e.sender, name: localOf(e.sender),
-          body: e.content.body, ts: e.origin_server_ts, encrypted: false,
-        });
-      } else if (e.type === "m.room.encrypted") {
-        nextMsgs.push({
-          id: e.event_id, sender: e.sender, name: localOf(e.sender),
-          body: "", ts: e.origin_server_ts, encrypted: true,
-        });
-      } else if (e.type === "m.reaction") {
-        const rel = e.content?.["m.relates_to"];
-        if (rel?.rel_type === "m.annotation" && rel.event_id && rel.key === "❤️") {
-          nextHearts[rel.event_id] = (nextHearts[rel.event_id] ?? 0) + 1;
-          if (e.sender === session.current?.userId) mine.add(rel.event_id);
-        }
-      }
-    }
-    nextMsgs.reverse();
+    const chunk = (r.data.chunk ?? []) as TimelineEvent[];
+    const { msgs: nextMsgs, reactions: nextReactions, myReactions: mine } =
+      parseTimelineChunk(chunk, session.current?.userId);
     setMsgs(nextMsgs);
-    setHearts(nextHearts);
-    setMyHearts(mine);
+    setReactions(nextReactions);
+    setMyReactions(mine);
     setState("open");
   }, [api]);
 
@@ -178,16 +234,37 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
     setSending(false);
   }
 
-  async function heart(id: string, stamp: number) {
+  async function react(id: string, key: string, stamp: number) {
     const s = session.current;
-    if (!s || myHearts.has(id)) return;
-    setMyHearts((m) => new Set(m).add(id));
-    setHearts((h) => ({ ...h, [id]: (h[id] ?? 0) + 1 }));
-    await api(`/rooms/${encodeURIComponent(s.roomId)}/send/m.reaction/oc${stamp}h${txn.current++}`, {
+    if (!s || !canReact(myReactions[id], key)) return;
+    setMyReactions((m) => {
+      const next = { ...m };
+      next[id] = new Set(next[id] ?? []).add(key);
+      return next;
+    });
+    setReactions((r) => ({ ...r, [id]: { ...(r[id] ?? {}), [key]: (r[id]?.[key] ?? 0) + 1 } }));
+    setOpenPicker(null);
+    await api(reactionSendPath(s.roomId, stamp, txn.current++), {
       method: "PUT",
-      body: JSON.stringify({ "m.relates_to": { rel_type: "m.annotation", event_id: id, key: "❤️" } }),
+      body: JSON.stringify(reactionEventBody(id, key)),
     });
   }
+
+  /* the picker closes on Escape or a click outside the corner (both the
+     button and its popover carry data-reaction-corner). */
+  useEffect(() => {
+    if (!openPicker) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpenPicker(null); };
+    const onClick = (e: MouseEvent) => {
+      if (!(e.target as Element)?.closest?.("[data-reaction-corner]")) setOpenPicker(null);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onClick);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onClick);
+    };
+  }, [openPicker]);
 
   /* ── the door states ───────────────────────────────────────────────── */
   /* TASK-174: the door words come from src/lib/room-access.ts — the ONE
@@ -243,7 +320,7 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
               <div style={{ width: 38, height: 38, borderRadius: "50%", flex: "none", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--serif)", background: avaOf(m.sender) }}>
                 {(label[0] ?? "?").toUpperCase()}
               </div>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div
                   style={{
                     /* house glass, not paper — the white bubbles wore day ink on the dark ground */
@@ -254,6 +331,11 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
                     fontSize: ".9rem",
                     color: "var(--ink-body)",
                     boxShadow: "0 8px 22px -16px rgba(5,3,16,.6)",
+                    /* TASK-247: the corner picker lives INSIDE the card now,
+                       not beside it in the flex row — the Admiral's ask
+                       ("most emojis on other social sites are on the right
+                       bottom side of the item") */
+                    position: "relative",
                   }}
                 >
                   {m.encrypted ? (
@@ -264,26 +346,93 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
                     <span style={{ whiteSpace: "pre-line" }}>{m.body}</span>
                   )}
                   {/* the "from" line lives at the FOOT of the card (Admiral, comments-1) —
-                      and it is always the SENDER's own name (T-133) */}
-                  <div style={{ fontSize: ".68rem", fontWeight: 700, color: teacher ? "var(--gold-deep)" : "var(--muted)", marginTop: 6 }}>
+                      and it is always the SENDER's own name (T-133); right padding keeps
+                      it clear of the corner picker so the two never overlap */}
+                  <div style={{ fontSize: ".68rem", fontWeight: 700, color: teacher ? "var(--gold-deep)" : "var(--muted)", marginTop: 6, paddingRight: m.encrypted ? 0 : 34 }}>
                     {label}
                     <span style={{ color: "var(--muted)", fontWeight: 400, fontSize: ".64rem", marginLeft: 8 }}>
                       {new Date(m.ts).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                     </span>
                   </div>
+
+                  {!m.encrypted && (
+                    <div data-reaction-corner style={{ position: "absolute", right: 8, bottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                      {/* existing reactions as small chips at the card's foot-right; tap = send that key (once per person per key) */}
+                      {Object.entries(reactions[m.id] ?? {}).map(([key, count]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => react(m.id, key, Date.now())}
+                          aria-label={`react with ${key}`}
+                          style={{
+                            border: "1px solid var(--glass-edge)", background: "var(--glass)", borderRadius: 999,
+                            padding: "1px 6px", fontSize: ".68rem", cursor: "pointer", color: "var(--ink-body)",
+                            display: "flex", alignItems: "center", gap: 3, lineHeight: 1.6,
+                          }}
+                        >
+                          <span>{key}</span><span>{count}</span>
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setOpenPicker((p) => (p === m.id ? null : m.id))}
+                        aria-label="react"
+                        aria-haspopup="true"
+                        aria-expanded={openPicker === m.id}
+                        style={{
+                          width: 22, height: 22, borderRadius: "50%", border: "1px solid var(--glass-edge)",
+                          background: "var(--glass)", cursor: "pointer", display: "grid", placeItems: "center",
+                          fontSize: ".78rem", padding: 0,
+                          color: (myReactions[m.id]?.size ?? 0) > 0 ? "var(--rose)" : "var(--muted)",
+                        }}
+                      >
+                        ♡
+                      </button>
+                    </div>
+                  )}
+                  {/* the popover is a SIBLING of the corner, positioned off
+                      the CARD's own box (not the small corner strip) — a
+                      short one-line card still clears the popover above
+                      itself instead of the picker overlapping the text
+                      (data-reaction-corner on this one too, so a click
+                      inside it never counts as "outside" and self-closes) */}
+                  {!m.encrypted && openPicker === m.id && (
+                    <div
+                      data-reaction-corner
+                      role="menu"
+                      aria-label="react with an emoji"
+                      style={{
+                        /* left+right (not just right) so its own width is
+                           bounded by the CARD it shares an ancestor with —
+                           a lone `right` let the row's natural width push
+                           past the card's own left edge on a narrow phone
+                           card, clipped invisibly by the room's outer
+                           overflow:hidden instead of just scrolling */
+                        position: "absolute", left: 8, right: 8, bottom: "calc(100% + 8px)",
+                        display: "flex", gap: 4, padding: "6px 8px", borderRadius: 12,
+                        background: "var(--glass)", border: "1px solid var(--glass-edge)",
+                        boxShadow: "0 8px 22px -12px rgba(5,3,16,.6)", zIndex: 1,
+                        /* still ONE row (the brief's ask) — scrolls sideways
+                           if 12 emoji don't fit the card's own width rather
+                           than wrapping or clipping */
+                        overflowX: "auto", WebkitOverflowScrolling: "touch",
+                      }}
+                    >
+                      {REACTION_EMOJIS.map(({ key, name }) => (
+                        <button
+                          key={key}
+                          type="button"
+                          role="menuitem"
+                          onClick={() => react(m.id, key, Date.now())}
+                          aria-label={`react with ${name}`}
+                          style={{ border: "none", background: "none", cursor: "pointer", fontSize: "1rem", lineHeight: 1, padding: 3 }}
+                        >
+                          {key}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                {!m.encrypted && (
-                  <button
-                    onClick={() => heart(m.id, Date.now())}
-                    style={{
-                      marginTop: 4, border: "none", background: "none", cursor: "pointer",
-                      fontSize: ".76rem", color: myHearts.has(m.id) ? "var(--rose)" : "var(--muted)",
-                    }}
-                    aria-label="love this"
-                  >
-                    {myHearts.has(m.id) ? "❤️" : "♡"} {hearts[m.id] ?? ""}
-                  </button>
-                )}
               </div>
             </div>
           );
