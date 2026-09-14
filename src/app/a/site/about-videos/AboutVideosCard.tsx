@@ -37,6 +37,19 @@ export default function AboutVideosCard() {
   const [note, setNote] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
+  /* TASK-239 (0018.06.23 a₿ · block 966,895) — "Top of About": one video
+     that plays, muted, at the very top of /about (Love's Sep 8 ask). Its
+     own state — `null` once loaded means "nothing saved", never confused
+     with the loading `undefined`. Saved/cleared together with the playlist
+     rows in one PUT (site-config.ts's `about` doc is a whole-doc replace),
+     so this card always carries both in memory. */
+  const [featured, setFeatured] = useState<AboutVideo | null | undefined>(undefined);
+  const [featLink, setFeatLink] = useState("");
+  const [featTitle, setFeatTitle] = useState("");
+  const [featBusy, setFeatBusy] = useState(false);
+  const [featNote, setFeatNote] = useState<string | null>(null);
+  const [featErr, setFeatErr] = useState<string | null>(null);
+
   useEffect(() => {
     (async () => {
       const res = await fetch("/api/admin/site", { cache: "no-store" });
@@ -46,10 +59,69 @@ export default function AboutVideosCard() {
       const about = (data.config as SiteConfig).about;
       setSavedYet(about !== undefined);
       setRows(about?.videos ?? ABOUT_VIDEOS); // unsaved = the seed the page shows
+      setFeatured(about?.featured ?? null); // absent = no top video (no seed fallback)
     })();
   }, []);
 
   const parsed = parseYoutubeInput(link);
+  const featParsed = parseYoutubeInput(featLink);
+
+  async function putAbout(next: { videos: AboutVideo[]; featured: AboutVideo | null | undefined }) {
+    const res = await fetch("/api/admin/site", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ about: { videos: next.videos, featured: next.featured ?? undefined } }),
+    });
+    return res.json();
+  }
+
+  async function saveFeatured() {
+    if (!rows) return;
+    setFeatErr(null);
+    if (!featParsed) {
+      setFeatErr("That doesn't look like a YouTube video link — paste the watch link, the youtu.be share link, or the 11-character video id.");
+      return;
+    }
+    if (!featTitle.trim()) {
+      setFeatErr("The video needs a title — what visitors read under it.");
+      return;
+    }
+    setFeatBusy(true);
+    setFeatNote(null);
+    try {
+      const next: AboutVideo = { id: featParsed.id, title: featTitle.trim(), ratio: "16/9" };
+      const data = await putAbout({ videos: rows, featured: next });
+      if (data.ok) {
+        setFeatured(data.config.about?.featured ?? null);
+        setSavedYet(true);
+        setFeatLink("");
+        setFeatTitle("");
+        setFeatNote("saved ✓ it plays, muted, at the top of /about");
+      } else setFeatNote(data.reason ?? "save failed");
+    } catch {
+      setFeatNote("save failed");
+    } finally {
+      setFeatBusy(false);
+    }
+  }
+
+  async function clearFeatured() {
+    if (!rows) return;
+    setFeatBusy(true);
+    setFeatNote(null);
+    try {
+      const data = await putAbout({ videos: rows, featured: null });
+      if (data.ok) {
+        setFeatured(null);
+        setSavedYet(true);
+        setFeatNote("cleared ✓ /about shows nothing at the top again");
+      } else setFeatNote(data.reason ?? "clear failed");
+    } catch {
+      setFeatNote("clear failed");
+    } finally {
+      setFeatBusy(false);
+    }
+  }
 
   function onLinkChange(v: string) {
     setLink(v);
@@ -93,14 +165,14 @@ export default function AboutVideosCard() {
     setBusy(true);
     setNote(null);
     try {
-      const res = await fetch("/api/admin/site", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ about: { videos: rows } }),
-      });
-      const data = await res.json();
+      // TASK-239: `about` is a whole-doc replace (site-config.ts) — carry
+      // the current featured video along so saving the PLAYLIST never
+      // clears the TOP video, and vice versa (saveFeatured/clearFeatured
+      // above carry `rows` the same way).
+      const data = await putAbout({ videos: rows, featured });
       if (data.ok) {
         setRows(data.config.about?.videos ?? []);
+        setFeatured(data.config.about?.featured ?? null);
         setSavedYet(true);
         setNote("saved ✓ the About page reads this list on its next render");
       } else setNote(data.reason ?? "save failed");
@@ -115,7 +187,65 @@ export default function AboutVideosCard() {
 
   return (
     <div style={{ marginBottom: 12 }}>
-      <p style={{ fontSize: ".8rem", color: "var(--muted)", margin: "0 0 10px", maxWidth: 640 }}>
+      {/* TASK-239 (0018.06.23 a₿ · block 966,895) — "Top of About": the one
+          video that plays, muted, at the very top of /about (Love's Sep 8
+          ask). Same idiom as the playlist below: paste, the id shown, a
+          malformed link refused in words; Save / Clear, not a list. */}
+      <b style={{ fontSize: ".9rem" }}>Top of About</b>
+      <p style={{ fontSize: ".8rem", color: "var(--muted)", margin: "4px 0 10px", maxWidth: 640 }}>
+        One video that plays, muted, the instant a visitor opens /about — she taps the speaker to hear it.{" "}
+        {featured
+          ? "This is your saved video."
+          : "Nothing plays yet — /about shows nothing at the top until you save one."}
+      </p>
+      {featured && (
+        <div style={row}>
+          <b style={{ fontSize: ".88rem", flex: 1, minWidth: 200 }}>{featured.title}</b>
+          <Chip tone="grey">{featured.id}</Chip>
+          <button type="button" disabled={featBusy} onClick={clearFeatured}
+            style={{ ...videoIconBtn, width: "auto", padding: "0 8px", color: "var(--err)" }}>
+            {featBusy ? "…" : "Clear"}
+          </button>
+        </div>
+      )}
+      <div style={{ ...row, background: "transparent", border: "1px dashed rgba(139,118,196,.3)", alignItems: "flex-start" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 240 }}>
+          <input
+            value={featLink}
+            onChange={(e) => { setFeatLink(e.target.value); setFeatErr(null); }}
+            placeholder="paste the YouTube link or the video id…"
+            style={{ ...field, width: "100%" }}
+            aria-label="Top of About — YouTube link or video id"
+          />
+          <input
+            value={featTitle}
+            onChange={(e) => setFeatTitle(e.target.value)}
+            placeholder="the title visitors see under it…"
+            style={{ ...field, width: "100%" }}
+            aria-label="Top of About — video title"
+          />
+          <span style={{ fontSize: ".74rem", color: featParsed ? "var(--ok)" : "var(--muted)" }}>
+            {featLink.trim()
+              ? featParsed
+                ? `id: ${featParsed.id} ✓`
+                : "not a YouTube video link the house knows"
+              : "watch, youtu.be, Shorts, embed, or the bare 11-character id"}
+          </span>
+        </div>
+        <button type="button" className="btn btn-gold btn-sm" disabled={featBusy} onClick={saveFeatured}
+          style={featBusy ? { opacity: 0.5 } : undefined}>
+          {featBusy ? "Saving…" : featured ? "Replace" : "Save"}
+        </button>
+      </div>
+      {featErr && <p style={{ fontSize: ".8rem", color: "var(--err)", margin: "4px 0 0" }}>{featErr}</p>}
+      {featNote && (
+        <p style={{ fontSize: ".8rem", color: featNote.startsWith("saved") || featNote.startsWith("cleared") ? "var(--ok)" : "var(--err)", margin: "4px 0 0" }}>
+          {featNote}
+        </p>
+      )}
+
+      <b style={{ fontSize: ".9rem", display: "block", marginTop: 20 }}>Playlist</b>
+      <p style={{ fontSize: ".8rem", color: "var(--muted)", margin: "4px 0 10px", maxWidth: 640 }}>
         Paste a YouTube link — the watch link, the youtu.be share link, or a Shorts link all work; the house keeps
         only the video&apos;s id. Reorder with the arrows; the first video stands open on the page, the rest folded.{" "}
         {savedYet
