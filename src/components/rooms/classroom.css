@@ -70,6 +70,30 @@
   color: var(--rose);
 }
 
+/* TASK-246 (seam, RoomVideoSlot owns the embed block that wears this
+   class): the Stage's LIVE embed box. 16:9 stays the preferred shape, but
+   a min-height FLOOR keeps the prejoin card's name field from falling
+   below the fold the way it did in the Admiral's picture — JitsiRoom's own
+   flex fix fills whatever height this box ends up with, so the floor here
+   is what actually guarantees room for the card. */
+.cl-stage-embed {
+  /* the explicit width keeps it definite BEFORE aspect-ratio resolves —
+     without it Chromium let the min-height floor drive width back up via
+     the ratio (16:9 of 300px height = 533px), overflowing a narrow card */
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  min-height: 300px;
+}
+
+@media (min-width: 900px) {
+  .cl-stage-embed {
+    min-height: 420px;
+  }
+}
+
 /* the embed slot's stage frame — 16:9, dashed edge, centered voice */
 .cl-video-stage {
   aspect-ratio: 16 / 9;
