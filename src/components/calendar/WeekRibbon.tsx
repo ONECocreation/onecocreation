@@ -2,7 +2,7 @@
 
 import { bftWeek, isTodayCell, type CalendarDayCell } from "@/lib/calendar-view";
 import { useCalendarPrefs, type CalendarPrimary } from "./CalendarPrefs";
-import DayCell, { type CalendarDayMarksLookup } from "./DayCell";
+import DayCell, { type CalendarDayMarksLookup, type CalendarEventPill } from "./DayCell";
 import "./calendar-view.css";
 
 export interface WeekRibbonProps {
@@ -15,6 +15,8 @@ export interface WeekRibbonProps {
   marks?: CalendarDayMarksLookup;
   selectedBftKey?: string;
   onSelectDay?: (cell: CalendarDayCell) => void;
+  /** T-248: threaded straight to each DayCell — see DayCell's own doc. */
+  onSelectPill?: (pill: CalendarEventPill, cell: CalendarDayCell) => void;
   nowMs?: number;
   className?: string;
 }
@@ -28,7 +30,7 @@ export interface WeekRibbonProps {
  */
 export default function WeekRibbon({
   bftYear, bftMonth, weekOfMonth, primary: primaryProp, counts: countsProp,
-  marks, selectedBftKey, onSelectDay, nowMs, className,
+  marks, selectedBftKey, onSelectDay, onSelectPill, nowMs, className,
 }: WeekRibbonProps) {
   const prefs = useCalendarPrefs();
   const primary = primaryProp ?? prefs.primary;
@@ -62,6 +64,7 @@ export default function WeekRibbon({
             isSelected={selectedBftKey === cell.bftKey}
             marks={marks?.(cell)}
             onSelect={onSelectDay}
+            onSelectPill={onSelectPill}
           />
         ))}
       </div>

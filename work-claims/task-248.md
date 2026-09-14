@@ -1,0 +1,1 @@
+lane/task-248 — owns: src/components/calendar/DayCell.tsx, src/components/calendar/WeekRibbon.tsx, src/components/calendar/BftMonthGrid.tsx, src/components/console/desk/WeekAltitude.tsx, src/components/console/desk/DayAltitude.tsx, src/components/console/LovesDesk.tsx, src/components/calendar/calendar-view.css (hover rule only), tests/calendar-clicks-through.test.ts

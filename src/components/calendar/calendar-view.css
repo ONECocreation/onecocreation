@@ -56,6 +56,17 @@
 .cal-pill--gold{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink)}
 .cal-pill--lav{background:rgba(139,118,196,.28);color:var(--ink-strong)}
 
+/* T-248: a pill that opens something (DayCell's onSelectPill button form,
+   every calendar view) says so — a glass-edge door frame that lights up
+   info-teal on hover/focus, PLUS an underline so the cue never rides
+   colour alone. Scoped to `button.cal-pill` only: the plain <span> pills
+   (MemberCalendar and anywhere else that never wires onSelectPill) must
+   never appear to be a door they aren't. */
+button.cal-pill{cursor:pointer;font:inherit;appearance:none;-webkit-appearance:none;
+  border:1px solid var(--glass-edge)}
+button.cal-pill:hover{border-color:var(--info);text-decoration:underline}
+button.cal-pill:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+
 /* civil-primary: the a₿|AD slider swaps which value leads (positions
    trade, not just weight — the Admiral's ruling). DayCell already swaps
    the JSX; this class is the styling HOOK the ruling calls for, so a

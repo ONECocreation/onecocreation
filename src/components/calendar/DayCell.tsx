@@ -34,12 +34,19 @@ export interface DayCellProps {
   isSelected?: boolean;
   marks?: CalendarDayMarks;
   onSelect?: (cell: CalendarDayCell) => void;
+  /** T-248: a pill is its own door — when given, each pill renders as its
+   *  own button (same look, `aria-label="open <label>"`) instead of an
+   *  inert span, and its click `stopPropagation`s so the day's own
+   *  onSelect never also fires. Omit it and the span stays — MemberCalendar
+   *  and any other consumer that never wires this keep today's rendering,
+   *  byte for byte. */
+  onSelectPill?: (pill: CalendarEventPill, cell: CalendarDayCell) => void;
 }
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
 export default function DayCell({
-  cell, primary, counts, showWeekOfYear, isToday, isSelected, marks, onSelect,
+  cell, primary, counts, showWeekOfYear, isToday, isSelected, marks, onSelect, onSelectPill,
 }: DayCellProps) {
   const bftLabel = `D${pad2(cell.bftDay)}`;
   const civilLabel = String(cell.civilDayNum);
@@ -83,7 +90,19 @@ export default function DayCell({
       {pills.length > 0 && (
         <div className="cal-cell__pills">
           {pills.map((p) => (
-            <span key={p.id} className={`cal-pill cal-pill--${p.variant ?? "plain"}`}>{p.label}</span>
+            onSelectPill
+              ? (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`cal-pill cal-pill--${p.variant ?? "plain"}`}
+                  aria-label={`open ${p.label}`}
+                  onClick={(e) => { e.stopPropagation(); onSelectPill(p, cell); }}
+                >
+                  {p.label}
+                </button>
+              )
+              : <span key={p.id} className={`cal-pill cal-pill--${p.variant ?? "plain"}`}>{p.label}</span>
           ))}
         </div>
       )}
