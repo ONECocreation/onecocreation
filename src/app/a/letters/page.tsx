@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { insertAtCaret, insertLink, toggleMark } from "@/lib/letter-marks";
+import { insertAtCaret, insertHeroLine, insertLink, insertReadingRoomLink, toggleMark } from "@/lib/letter-marks";
+import { READING_ROOM_PATH } from "@/lib/reading-room";
+import { cartridge } from "@/brand/cartridge";
 
 /**
  * LETTERS — every letter the house sends, in one room (wireframe v2).
@@ -175,6 +177,19 @@ export default function LettersRoom() {
   function applyLink() {
     applyMark(insertLink(currentSelection()));
   }
+  /* TASK-227: the caret line where Love asked for the reading's link —
+   * READING_ROOM_PATH (reading-room.ts's own derivation, the Commons Stage
+   * `/rooms/heart-field`) rides straight in, never typed by hand. */
+  function insertReadingRoom() {
+    applyMark(insertReadingRoomLink(currentSelection(), READING_ROOM_PATH));
+  }
+  /* TASK-227: the hero banner directive — cartridge.hero.heavenEarth, the
+   * curvy purple-and-black "Where Heaven and Earth Meet" script (confirmed
+   * against public/images before wiring this in; the same file /about's
+   * about-script and the news-sample letter's own default already use). */
+  function insertSitePicture() {
+    applyMark(insertHeroLine(currentSelection(), cartridge.hero.heavenEarth));
+  }
   async function uploadImage() {
     const input = document.createElement("input");
     input.type = "file";
@@ -268,11 +283,13 @@ export default function LettersRoom() {
             <button onClick={() => applyToggle("*")} className="border border-neutral-600 px-2 py-1 italic">I</button>
             <button onClick={applyLink} className="border border-neutral-600 px-2 py-1">link</button>
             <button onClick={() => uploadImage()} className="border border-neutral-600 px-2 py-1">{uploading ? "uploading…" : "📷 image"}</button>
+            <button onClick={insertReadingRoom} className="border border-neutral-600 px-2 py-1">Reading room</button>
+            <button onClick={insertSitePicture} className="border border-neutral-600 px-2 py-1">Site picture</button>
             <button onClick={() => togglePreview(key)}
               className="border border-cyan-700 px-2 py-1 text-cyan-300" aria-pressed={previewOpen === key}>
               {previewOpen === key ? "✕ close preview" : "👁 preview"}
             </button>
-            <span className="self-center text-[10px] text-neutral-500">**bold** · *italic* · [text](url) · emojis type right in 💛</span>
+            <span className="self-center text-[10px] text-neutral-500">**bold** · *italic* · [text](url) or [text](/site-path) · Reading room → the weekly reading&apos;s link · Site picture → the banner image · emojis type right in 💛</span>
           </div>
           <textarea id={`ta-${key}`} ref={textareaRef} value={bodyTxt} onChange={(e) => setBodyTxt(e.target.value)} rows={10}
             placeholder="the letter body — blank line makes a new paragraph; the brand shell wraps it"

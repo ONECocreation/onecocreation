@@ -93,3 +93,38 @@ export function insertAtCaret(sel: MarkSelection, piece: string): MarkResult {
   const pos = start + piece.length;
   return { text: next, start: pos, end: pos };
 }
+
+/**
+ * TASK-227 — the "Reading room" toolbar quick-insert: the free reading's
+ * own markdown link, built from the CALLER's path (page.tsx passes
+ * READING_ROOM_PATH, imported from reading-room.ts — this file never types
+ * or hardcodes the room path itself). A null path (the room registry
+ * carries no free room) inserts nothing — derive-or-dash, never a broken
+ * link. `bodyToHtml`'s site-path link rule (letters.ts) then absolutises it
+ * through siteBase() at render time, so the link survives the DNS cutover.
+ */
+export function insertReadingRoomLink(sel: MarkSelection, path: string | null): MarkResult {
+  if (!path) return { text: sel.text, start: sel.start, end: sel.end };
+  return insertAtCaret(sel, `[Join the weekly reading](${path})`);
+}
+
+/**
+ * TASK-227 — the "Site picture" toolbar quick-insert: the `!hero:`
+ * directive line letterHtml() reads for the letter's banner image
+ * (letters.ts:341, `/^!hero:\s*(\S+)/` against each line, TRIMMED — a
+ * directive must own its whole line). Unlike insertAtCaret's inline
+ * pieces, this wraps the line in its own newlines unless the caret already
+ * sits at the very start/end of the body or on an already-empty line, so a
+ * click mid-paragraph can never fuse the directive onto surrounding prose.
+ */
+export function insertHeroLine(sel: MarkSelection, path: string): MarkResult {
+  const { text, start, end } = sel;
+  const before = text.slice(0, start);
+  const after = text.slice(end);
+  const lead = before.length === 0 || before.endsWith("\n") ? "" : "\n";
+  const trail = after.length === 0 || after.startsWith("\n") ? "" : "\n";
+  const line = `!hero: ${path}`;
+  const piece = `${lead}${line}${trail}`;
+  const pos = before.length + lead.length + line.length;
+  return { text: before + piece + after, start: pos, end: pos };
+}

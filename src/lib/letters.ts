@@ -1,4 +1,5 @@
 import { brandShell, richShell, type LetterSection } from "./mail";
+import { siteBase } from "./subscribers";
 /**
  * LETTER TEMPLATES (Letters room, wireframe v2): editable copies of the
  * news-side letters live in the vault; the senders read the override first
@@ -367,7 +368,19 @@ export function bodyToHtml(body: string): string {
   const esc = normalized.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const inline = esc
     .replace(/!\[([^\]]*)\]\((https?:[^)\s]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:12px"/>')
-    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" style="color:#E7B2C3">$1</a>')
+    /* TASK-227 — a link can also point at a site path: `[text](/rooms/x)`
+     * (a single leading slash, no scheme) rides through siteBase() so it
+     * survives the onecocreation.com DNS cutover with no edit (siteBase()
+     * reads NEXT_PUBLIC_SITE_URL → VERCEL_PROJECT_PRODUCTION_URL →
+     * localhost, per call — see mail.ts's abs()). `//host/x` (scheme-
+     * relative, a phishing-style off-site jump) is deliberately EXCLUDED —
+     * only exactly one leading slash counts as "the site". Anything else
+     * (`javascript:`, `mailto:`, a bare word, `//`) fails the match and
+     * ships as the original literal `[text](url)` text, same as today. */
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+|\/(?!\/)[^)\s]*)\)/g, (_m, label: string, url: string) => {
+      const href = url.startsWith("http") ? url : `${siteBase()}${url}`;
+      return `<a href="${href}" style="color:#E7B2C3">${label}</a>`;
+    })
     .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
     .replace(/\*([^*\n]+)\*/g, "<i>$1</i>");
   // inline margins ON the paragraph — site CSS resets and stricter mail
