@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { insertAtCaret, insertHeroLine, insertLink, insertReadingRoomLink, toggleMark } from "@/lib/letter-marks";
 import { READING_ROOM_PATH } from "@/lib/reading-room";
 import { cartridge } from "@/brand/cartridge";
+import { glassCard, field, SectionHead } from "@/components/console/glass";
 
 /**
  * LETTERS — every letter the house sends, in one room (wireframe v2).
@@ -277,35 +278,36 @@ export default function LettersRoom() {
       <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-start">
         <div className="min-w-0 flex-1 space-y-2">
           <input value={subj} onChange={(e) => setSubj(e.target.value)} placeholder="subject"
-            className="w-full border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
-          <div className="flex flex-wrap gap-1 text-xs">
-            <button onClick={() => applyToggle("**")} className="border border-neutral-600 px-2 py-1 font-bold">B</button>
-            <button onClick={() => applyToggle("*")} className="border border-neutral-600 px-2 py-1 italic">I</button>
-            <button onClick={applyLink} className="border border-neutral-600 px-2 py-1">link</button>
-            <button onClick={() => uploadImage()} className="border border-neutral-600 px-2 py-1">{uploading ? "uploading…" : "📷 image"}</button>
-            <button onClick={insertReadingRoom} className="border border-neutral-600 px-2 py-1">Reading room</button>
-            <button onClick={insertSitePicture} className="border border-neutral-600 px-2 py-1">Site picture</button>
+            className="w-full" style={field} />
+          <div className="flex flex-wrap items-center gap-1">
+            <button onClick={() => applyToggle("**")} className="btn btn-ghost btn-sm" style={{ fontWeight: 700 }}>B</button>
+            <button onClick={() => applyToggle("*")} className="btn btn-ghost btn-sm" style={{ fontStyle: "italic" }}>I</button>
+            <button onClick={applyLink} className="btn btn-ghost btn-sm">link</button>
+            <button onClick={() => uploadImage()} className="btn btn-ghost btn-sm">{uploading ? "uploading…" : "📷 image"}</button>
+            <button onClick={insertReadingRoom} className="btn btn-ghost btn-sm">Reading room</button>
+            <button onClick={insertSitePicture} className="btn btn-ghost btn-sm">Site picture</button>
             <button onClick={() => togglePreview(key)}
-              className="border border-cyan-700 px-2 py-1 text-cyan-300" aria-pressed={previewOpen === key}>
+              className={`btn btn-sm ${previewOpen === key ? "btn-on" : "btn-ghost"}`} aria-pressed={previewOpen === key}>
               {previewOpen === key ? "✕ close preview" : "👁 preview"}
             </button>
-            <span className="self-center text-[10px] text-neutral-500">**bold** · *italic* · [text](url) or [text](/site-path) · Reading room → the weekly reading&apos;s link · Site picture → the banner image · emojis type right in 💛</span>
+            <span style={{ alignSelf: "center", fontSize: ".68rem", color: "var(--muted)" }}>**bold** · *italic* · [text](url) or [text](/site-path) · Reading room → the weekly reading&apos;s link · Site picture → the banner image · emojis type right in 💛</span>
           </div>
           <textarea id={`ta-${key}`} ref={textareaRef} value={bodyTxt} onChange={(e) => setBodyTxt(e.target.value)} rows={10}
             placeholder="the letter body — blank line makes a new paragraph; the brand shell wraps it"
-            className="w-full border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
+            className="w-full" style={field} />
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={() => save(key)} className="min-h-11 touch-manipulation border border-yellow-500 px-4 py-1 text-xs font-bold text-yellow-400">SAVE</button>
-            {note && <span className="self-center text-xs text-neutral-400">{note}</span>}
+            <button onClick={() => save(key)} className="btn btn-sm">SAVE</button>
+            {note && <span style={{ alignSelf: "center", fontSize: ".75rem", color: "var(--muted)" }}>{note}</span>}
           </div>
         </div>
         {previewOpen === key && (
-          <div className="w-full shrink-0 border border-cyan-800 lg:w-[380px]">
-            <div className="border-b border-cyan-800 bg-black px-2 py-1 text-[10px] uppercase text-cyan-300">
+          <div className="w-full shrink-0 lg:w-[380px]" style={{ ...glassCard, padding: 0, overflow: "hidden" }}>
+            <div style={{ padding: "6px 10px", fontSize: ".62rem", textTransform: "uppercase", letterSpacing: ".06em",
+              color: "var(--info)", borderBottom: "1px solid var(--glass-edge)" }}>
               preview — as the email renders
             </div>
-            {previewLoading && <p className="p-2 text-xs text-neutral-400">rendering…</p>}
-            <iframe title={`letter preview — ${key}`} srcDoc={previewHtml} className="h-[520px] w-full bg-white" />
+            {previewLoading && <p style={{ padding: 8, fontSize: ".75rem", color: "var(--muted)" }}>rendering…</p>}
+            <iframe title={`letter preview — ${key}`} srcDoc={previewHtml} className="w-full" style={{ height: 520, background: "#fff", border: 0 }} />
           </div>
         )}
       </div>
@@ -313,16 +315,16 @@ export default function LettersRoom() {
   }
 
   return (
-    <div className="p-2 text-sm">
+    <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
       {/* TASK-131: the composer — a new letter beyond the seeded set */}
-      <div className="mb-3 border border-yellow-700 p-3">
+      <div className="mb-3" style={glassCard}>
         {composing ? (
           <div className="space-y-2">
             <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="letter title — e.g. Lions Gate Gathering"
-              className="w-full border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
+              className="w-full" style={field} />
             <input value={newKey} onChange={(e) => setNewKey(e.target.value)} placeholder="key (optional — derived from the title)"
-              className="w-full border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
-            <div className="flex flex-wrap items-center gap-3 text-xs">
+              className="w-full" style={field} />
+            <div className="flex flex-wrap items-center gap-3" style={{ fontSize: ".78rem" }}>
               <label className="flex items-center gap-1">
                 <input type="radio" checked={newAudience === "list"} onChange={() => setNewAudience("list")} />
                 ✉ the list — emailed, members-only
@@ -333,71 +335,65 @@ export default function LettersRoom() {
               </label>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button onClick={createNew} className="min-h-11 touch-manipulation border border-yellow-500 px-4 py-1 text-xs font-bold text-yellow-400">CREATE LETTER</button>
-              <button onClick={() => setComposing(false)} className="border border-neutral-600 px-3 py-1 text-xs">cancel</button>
-              {note && <span className="self-center text-xs text-neutral-400">{note}</span>}
+              <button onClick={createNew} className="btn btn-sm">CREATE LETTER</button>
+              <button onClick={() => setComposing(false)} className="btn btn-ghost btn-sm">cancel</button>
+              {note && <span style={{ alignSelf: "center", fontSize: ".75rem", color: "var(--muted)" }}>{note}</span>}
             </div>
           </div>
         ) : (
-          <button onClick={() => { setComposing(true); setNote(""); }}
-            className="min-h-11 touch-manipulation border border-yellow-500 px-4 py-1 text-xs font-bold text-yellow-400">
+          <button onClick={() => { setComposing(true); setNote(""); }} className="btn btn-sm">
             + NEW LETTER
           </button>
         )}
       </div>
 
-      <ul className="space-y-2">
+      <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
         {composed.map((c) => (
-          <li key={c.key} className="border border-yellow-800 p-3">
+          <li key={c.key} style={glassCard}>
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <b>
                 {c.title ?? c.key} ✎
-                <button onClick={() => openEditor(c.key, c.title ?? c.key)} className="ml-2 border border-neutral-600 px-2 py-0.5 text-[10px] uppercase text-cyan-300">
+                <button onClick={() => openEditor(c.key, c.title ?? c.key)} className="ml-2 btn btn-ghost btn-sm">
                   {open === c.key ? "close" : "edit"}
                 </button>
-                <a href={`/a/letters/${c.key}`}
-                  className="ml-1 border border-yellow-600 px-2 py-0.5 text-[10px] uppercase text-yellow-400">
+                <a href={`/a/letters/${c.key}`} className="ml-1 btn btn-sm">
                   send panel →
                 </a>
                 {/* S2: pinned — needs a ruling: this desk page is night chrome (the Tailwind around it never dawns); the theme-aware --ok/--muted would flip at dawn */}
                 <button onClick={() => flipAudience(c.key)}
                   title="public letters show on /news and the guest feed; members letters only in their receivers' /letters"
-                  className="ml-1 border border-neutral-600 px-2 py-0.5 text-[10px] uppercase"
-                  style={{ color: c.audience === "public" ? "#7fb98f" : "#9a8fae" }}>
+                  className={`ml-1 btn btn-sm ${c.audience === "public" ? "btn-on" : "btn-ghost"}`}>
                   {c.audience === "public" ? "🌍 public" : "✉ the list"}
                 </button>
               </b>
-              <span className="text-xs text-cyan-300">news@ · composed by Love · EDITABLE</span>
+              <span style={{ fontSize: ".75rem", color: "var(--info)" }}>news@ · composed by Love · EDITABLE</span>
             </div>
-            <p className="mt-1 text-neutral-300">&ldquo;{c.override?.subject ?? c.title}&rdquo;</p>
+            <p className="mt-1" style={{ color: "var(--ink-body)" }}>&ldquo;{c.override?.subject ?? c.title}&rdquo;</p>
             {open === c.key && editor(c.key)}
           </li>
         ))}
         {LETTERS.map((l) => (
-          <li key={l.name} className="border border-neutral-700 p-3">
+          <li key={l.name} style={glassCard}>
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <b>
                 {l.name}{api(l.key)?.override ? " ✎" : ""}
                 {l.key && (
                   <>
-                    <button onClick={() => openEditor(l.key!, l.subject)} className="ml-2 border border-neutral-600 px-2 py-0.5 text-[10px] uppercase text-cyan-300">
+                    <button onClick={() => openEditor(l.key!, l.subject)} className="ml-2 btn btn-ghost btn-sm">
                       {open === l.key ? "close" : "edit"}
                     </button>
-                    <a href={`/letters/${l.key}`} target="_blank" rel="noreferrer"
-                      className="ml-1 border border-neutral-600 px-2 py-0.5 text-[10px] uppercase text-yellow-400">
+                    <a href={`/letters/${l.key}`} target="_blank" rel="noreferrer" className="ml-1 btn btn-ghost btn-sm">
                       preview
                     </a>
                     {!l.noPublish && (
                       <>
-                        <a href={`/a/letters/${l.key}`}
-                          className="ml-1 border border-yellow-600 px-2 py-0.5 text-[10px] uppercase text-yellow-400">
+                        <a href={`/a/letters/${l.key}`} className="ml-1 btn btn-sm">
                           send panel →
                         </a>
                         {/* S2: pinned — needs a ruling: this desk page is night chrome (the Tailwind around it never dawns); the theme-aware --ok/--muted would flip at dawn */}
                         <button onClick={() => flipAudience(l.key!)}
                           title="public letters show on /news and the guest feed; members letters only in their receivers' /letters"
-                          className="ml-1 border border-neutral-600 px-2 py-0.5 text-[10px] uppercase"
-                          style={{ color: api(l.key)?.audience === "public" ? "#7fb98f" : "#9a8fae" }}>
+                          className={`ml-1 btn btn-sm ${api(l.key)?.audience === "public" ? "btn-on" : "btn-ghost"}`}>
                           {api(l.key)?.audience === "public" ? "🌍 public" : "🔒 members"}
                         </button>
                       </>
@@ -405,23 +401,23 @@ export default function LettersRoom() {
                   </>
                 )}
               </b>
-              <span className="text-xs text-cyan-300">{l.from} · {l.kind}</span>
+              <span style={{ fontSize: ".75rem", color: "var(--info)" }}>{l.from} · {l.kind}</span>
             </div>
-            <p className="mt-1 text-neutral-300">&ldquo;{api(l.key)?.override?.subject ?? l.subject}&rdquo;</p>
-            <p className="mt-1 text-xs text-neutral-400">{l.note}</p>
+            <p className="mt-1" style={{ color: "var(--ink-body)" }}>&ldquo;{api(l.key)?.override?.subject ?? l.subject}&rdquo;</p>
+            <p className="mt-1" style={{ fontSize: ".75rem", color: "var(--muted)" }}>{l.note}</p>
             {l.key ? null : (
-              <p className="mt-2 text-[10px] uppercase text-neutral-500">system letter — copy lives in code for now</p>
+              <p className="mt-2" style={{ fontSize: ".62rem", textTransform: "uppercase", color: "var(--muted)" }}>system letter — copy lives in code for now</p>
             )}
             {open === l.key && l.key && (
               <div>
                 {editor(l.key)}
                 {!l.noPublish && (
-                  <p className="mt-2 text-[10px] uppercase text-neutral-500">
-                    sending moved to the <a href={`/a/letters/${l.key}`} className="underline text-yellow-400">send panel</a> — segment, test copy, typed count
+                  <p className="mt-2" style={{ fontSize: ".62rem", textTransform: "uppercase", color: "var(--muted)" }}>
+                    sending moved to the <a href={`/a/letters/${l.key}`} style={{ textDecoration: "underline", color: "var(--info)" }}>send panel</a> — segment, test copy, typed count
                   </p>
                 )}
                 {l.noPublish && (
-                  <p className="mt-2 text-[10px] uppercase text-neutral-500">
+                  <p className="mt-2" style={{ fontSize: ".62rem", textTransform: "uppercase", color: "var(--muted)" }}>
                     one-soul letter — sends itself when its moment comes; never a list blast
                   </p>
                 )}
@@ -430,7 +426,7 @@ export default function LettersRoom() {
           </li>
         ))}
       </ul>
-      <p className="mt-4 text-xs text-neutral-400">
+      <p className="mt-4" style={{ fontSize: ".75rem", color: "var(--muted)" }}>
         Every letter wears the brand shell — logo header, gold accents, honest unsubscribe where
         the law wants it. A letter you compose here can be emailed to the whole list or one
         door&rsquo;s people, and — marked public — published on /news too.
