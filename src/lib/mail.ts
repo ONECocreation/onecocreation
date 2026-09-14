@@ -191,7 +191,7 @@ export function brandShell(bodyHtml: string, opts?: { unsubscribeUrl?: string })
   const footer = opts?.unsubscribeUrl
     ? `<p style="margin-top:28px;font-size:12px;color:#9a8fae;">You are receiving this because you joined the One Cocreation list. <a href="${opts.unsubscribeUrl}" style="color:#E7B2C3;">Unsubscribe</a> any time.</p>`
     : "";
-  return `<!doctype html><html><body style="margin:0;padding:0;background:#141021;">
+  return `<!doctype html><html><head><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"></head><body style="margin:0;padding:0;background:#141021;">
 <div style="max-width:560px;margin:0 auto;padding:32px 24px;font-family:Arial,Helvetica,sans-serif;color:#E9E2F2;background:#2b2733;">
   <div style="text-align:center;padding-bottom:20px;border-bottom:1px solid rgba(139,118,196,.34);">
     <img src="${site()}/brand/onecocreation-lockup-email.png" height="38" alt="One Cocreation" style="display:block;height:38px;margin:0 auto;border:0;"/>
@@ -240,20 +240,56 @@ const abs = (u: string) => (u.startsWith("http") ? u : `${site()}${u}`);
 
 /** The bulletproof pill: a real table cell with bgcolor — survives clients
  *  that strip <a> styling (the Admiral's "just words" report, 0018.05.18).
- *  TASK-214: gold-is-money — the CTA fill rides T-121's rose (--rose
- *  #E7B2C3), ink is the pink pass's own --gold-ink #6B2A44 (5.66:1 on that
- *  fill, the exact pairing cartridge.css documents). `variant: "muted"` is
- *  the quieter Unsubscribe pill (--mail-muted-2 #6b6478 fill, white ink,
- *  5.65:1) — a parameter now, not the old double string-replace hack that
- *  broke the moment this fill's own literal changed. */
+ *  TASK-242 (0018.06.23 a₿, the Admiral's forward "the color on the buttons
+ *  here is not on onecocreation brand"): the evidence
+ *  (briefings/mail/incoming/welcome-home-0018.06.23.html, a Thunderbird
+ *  "adapt message colours" dark-mode pass) had stripped every DARK ink
+ *  declaration from the primary pill — the `<a>`'s `color`, the `<font
+ *  color>`, even the `bgcolor` attribute — while leaving the muted pill's
+ *  WHITE ink alone, because a "make dark mail readable" pass keeps light
+ *  inks and removes dark ones on the theory the client will supply its own
+ *  background. Two independent fixes, since either alone leaves a hole:
+ *   1. the primary pill now IS the site's own `.btn-rose` door
+ *      (house.css:90) instead of a flat swatch — the gradient
+ *      `linear-gradient(135deg,#E7B2C3,#C56E8B)` plus a solid `#D890A7`
+ *      fallback (the gradient's own midpoint) on both `bgcolor` and
+ *      `background-color`, so a client that drops the gradient still shows
+ *      a rose fill, not the browser's white default. Ink is
+ *      `--rose-btn-ink` #2E0E1D (cartridge.css:63, ≥4.99:1 on every stop of
+ *      the gradient) declared FOUR redundant ways so a client that strips
+ *      three of them still leaves one standing: on the `<td>` (`color`),
+ *      on the `<a>` with `!important`, in a `<font color>` wrapper, and in
+ *      a `<span style="color:...!important">` around the label — the
+ *      stripped-client regression test below proves the span survives even
+ *      when every other ink declaration is torn out the way Thunderbird's
+ *      pass tore them.
+ *   2. richShell/brandShell's `<head>` now tells dark-mode clients this
+ *      night ground is INTENTIONAL (`color-scheme`/`supported-color-schemes:
+ *      dark`) so a client that behaves shouldn't feel the need to repaint
+ *      us at all — the ink redundancy above is the line of defence for the
+ *      ones that still do.
+ *  `variant: "muted"` (the Unsubscribe pill, `--mail-muted-2` #6b6478 fill,
+ *  white ink, 5.65:1) is unchanged — it already survived the strip because
+ *  white is exactly the ink a "make it dark-mode safe" pass leaves alone. */
 export function pill(href: string, label: string, size: "sm" | "lg" = "sm", variant: "primary" | "muted" = "primary"): string {
   const pad = size === "lg" ? "13px 30px" : "10px 24px";
   const fs = size === "lg" ? "15px" : "13px";
-  const bg = variant === "muted" ? "#6b6478" : "#E7B2C3";
-  const ink = variant === "muted" ? "#ffffff" : "#6B2A44";
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-table;"><tr>
+  if (variant === "muted") {
+    const bg = "#6b6478";
+    const ink = "#ffffff";
+    return `<table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-table;"><tr>
     <td bgcolor="${bg}" style="border-radius:999px;background:${bg};">
       <a href="${abs(href)}" style="display:inline-block;padding:${pad};font-family:Arial,sans-serif;font-size:${fs};color:${ink};text-decoration:none;border-radius:999px;"><font color="${ink}">${label}</font></a>
+    </td></tr></table>`;
+  }
+  // primary — the site's own rose door (.btn-rose, house.css:90), ink
+  // (--rose-btn-ink #2E0E1D, cartridge.css:63) declared four ways.
+  const gradient = "linear-gradient(135deg,#E7B2C3,#C56E8B)";
+  const solidFallback = "#D890A7"; // the gradient's midpoint, for clients that drop gradients
+  const ink = "#2E0E1D";
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-table;"><tr>
+    <td bgcolor="${solidFallback}" style="border-radius:999px;background:${gradient};background-color:${solidFallback};color:${ink};">
+      <a href="${abs(href)}" style="display:inline-block;padding:${pad};font-family:Arial,sans-serif;font-size:${fs};color:${ink} !important;text-decoration:none;border-radius:999px;"><font color="${ink}"><span style="color:${ink} !important;">${label}</span></font></a>
     </td></tr></table>`;
 }
 
@@ -286,7 +322,7 @@ export function richShell(letter: RichLetter): string {
   /* S2: every hex below stays literal — inboxes don't resolve var()
      (integrator ruling 0018.05.25 a₿); --ground/--mail-panel/--ink/--muted/
      --mail-cream-2 are cartridge.css's documented palette record. */
-  return `<!doctype html><html><body style="margin:0;padding:0;background:#141021;">
+  return `<!doctype html><html><head><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"></head><body style="margin:0;padding:0;background:#141021;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#141021;"><tr><td align="center" style="padding:18px 10px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#2b2733;font-family:Arial,Helvetica,sans-serif;">
   <tr><td style="background:#0e0c18;padding:14px 24px;">
@@ -304,9 +340,9 @@ export function richShell(letter: RichLetter): string {
     <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#4a4458;">
       <b>One Cocreation</b> · Where Heaven and Earth Meet
     </p>
-    <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#6b6478;">
-      <a href="${site()}" style="color:#6b6478;">OneCocreation</a>
-      ${letter.webUrl ? ` &nbsp;|&nbsp; <a href="${abs(letter.webUrl)}" style="color:#6b6478;">View on the site</a>` : ""}
+    <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#9a8fae;">
+      <a href="${site()}" style="color:#9a8fae !important;">OneCocreation</a>
+      ${letter.webUrl ? ` &nbsp;|&nbsp; <a href="${abs(letter.webUrl)}" style="color:#9a8fae !important;">View on the site</a>` : ""}
     </p>
     ${letter.unsubscribeUrl ? `<p style="margin:14px 0 0;">${pill(letter.unsubscribeUrl, "Unsubscribe", "sm", "muted")}</p>` : ""}
   </td></tr>
