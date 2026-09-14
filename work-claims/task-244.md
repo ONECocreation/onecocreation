@@ -1,0 +1,1 @@
+lane/task-244 — owns: src/lib/studio/scenes.ts, src/lib/studio/roster.ts, src/app/a/studio/actions.ts, src/app/a/studio/page.tsx (NOT lines 58-62), src/app/studio/overlay/page.tsx, src/components/studio-overlay/**, tests/studio-full-scenes.test.ts

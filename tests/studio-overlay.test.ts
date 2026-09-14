@@ -142,8 +142,9 @@ describe("the three scenes render their elements", () => {
   const render = (scene: "solo" | "duo" | "phone") =>
     renderToStaticMarkup(h(OverlayStage, { scene, ...base }));
 
-  it("the scene ids are exactly the ruling's three, in order", () => {
-    expect(STUDIO_SCENES.map((s) => s.id)).toEqual(["solo", "duo", "phone"]);
+  it("T-191's three overlay scenes still lead the list, in order — TASK-244's three full scenes ride behind them", () => {
+    expect(STUDIO_SCENES.map((s) => s.id)).toEqual(["solo", "duo", "phone", "starting", "brb", "ending"]);
+    expect(STUDIO_SCENES.map((s) => s.kind)).toEqual(["overlay", "overlay", "overlay", "full", "full", "full"]);
   });
 
   it("every scene wears the shared chrome: logo bug, LIVE pill, show title, runner", () => {
