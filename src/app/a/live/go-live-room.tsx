@@ -20,6 +20,19 @@
  *     the meeting config's prefix). The studio's live state is NOT probed:
  *     the kit exposes none here, so the card says "the studio's state
  *     comes with the kit" in words — never an invented camera state.
+ *
+ * TASK-235 (0018.06.23 a₿) — once the "Read live on the site" door is OPEN
+ * and the meeting rail is the studio (`meeting.rail === "vdo"`, T-245's
+ * flip), the opened card grows a "Next" row: Love's own studio camera
+ * (`studioVdo.push`, the exact seat the stage's `?view=host` watches) and
+ * the two scene doors StudioRoom otherwise carries alone — Waiting scene
+ * (the "In 20 min" semantics: `activeScene: "starting"`, `startsAt` now +
+ * 20 min) and On camera (`activeScene: "solo"`). Both ride the SAME write
+ * rail as open/close, `POST /api/admin/live` with `action: "scene"` — a
+ * new block on that route, gated the same way, that patches the studio
+ * doc rather than the live flag. `GET /api/admin/live`'s `scene` field
+ * tells the card which door is already open. House `btn`/`btn-ghost` only
+ * — gold is money-and-join only, never these.
  *  3. Discovery call · 1:1 — today's confirmed bookings from the booking
  *     store (live.ts's confirmedToday, server-derived), one button each →
  *     /meet/<id> — Love hosts (the operator's director seat rides the same
@@ -37,6 +50,10 @@ import Link from "next/link";
 import { Chip, field, glassCard } from "@/components/console/glass";
 import { doorRoomGroups, type DoorRoom } from "@/components/console/LiveDoorCard";
 import type { TodaySession } from "@/lib/live";
+// TASK-235: scenes.ts is pure shape (no fs, no env) — StudioRoom.tsx
+// already imports it as a client component, so this stays inside the
+// client-bundle law the file's docblock states above.
+import type { StudioSceneId } from "@/lib/studio/scenes";
 
 /* ── the pure model (exported for the tests — the house pins the model) ── */
 
@@ -89,6 +106,7 @@ interface DoorFeed {
   rooms: DoorRoom[];
   matrixConfigured: boolean;
   vaultConfigured: boolean;
+  scene: { active: StudioSceneId; startsAt: string };
 }
 
 export interface GoLiveMeeting {
@@ -152,6 +170,7 @@ export default function GoLiveRoom({
   const [letter, setLetter] = useState(false); // DEFAULT OFF — reputation armor
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [sceneBusy, setSceneBusy] = useState(false); // TASK-235: its own busy flag — the scene doors never lock the open/close button
   const [roster, setRoster] = useState<{ slug: string; count: number; names: string[] } | null>(null);
   const [guestName, setGuestName] = useState("");
   const [guestRail, setGuestRail] = useState<"jitsi" | "vdo">(meeting.rail === "vdo" ? "vdo" : "jitsi");
@@ -217,6 +236,29 @@ export default function GoLiveRoom({
     load();
   }
 
+  // TASK-235: the studio's own two next-doors — same write rail as
+  // open/close, a different action; startsInMinutes only rides along for
+  // the waiting scene (the "In 20 min" semantics), never for on-camera.
+  async function actScene(scene: StudioSceneId, startsInMinutes?: number) {
+    setSceneBusy(true);
+    setNote(null);
+    try {
+      const r = await fetch("/api/admin/live", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          startsInMinutes === undefined ? { action: "scene", scene } : { action: "scene", scene, startsInMinutes },
+        ),
+      });
+      const d = await r.json().catch(() => null);
+      if (!d?.ok) setNote(d?.reason ?? `the door said no (${r.status})`);
+    } catch {
+      setNote("the door could not be reached");
+    }
+    setSceneBusy(false);
+    load();
+  }
+
   const groups = doorRoomGroups(feed?.rooms ?? rooms);
   const liveTitle = liveSlug
     ? (feed?.rooms ?? rooms).find((r) => r.slug === liveSlug)?.title ?? liveSlug
@@ -278,11 +320,40 @@ export default function GoLiveRoom({
             {open === d.id && d.id === "read" && (
               <>
                 {feed?.state.live ? (
-                  <p style={muted}>
-                    ● <b>{liveTitle}</b> is open — the banner is up. The Stage:{" "}
-                    <Link href={`/rooms/${liveSlug}`} style={{ color: "var(--gold-deep)" }}>/rooms/{liveSlug}</Link>{" "}
-                    — sign in as Love at the door; the room&apos;s own gate knows your key.
-                  </p>
+                  <>
+                    <p style={muted}>
+                      ● <b>{liveTitle}</b> is open — the banner is up. The Stage:{" "}
+                      <Link href={`/rooms/${liveSlug}`} style={{ color: "var(--gold-deep)" }}>/rooms/{liveSlug}</Link>{" "}
+                      — sign in as Love at the door; the room&apos;s own gate knows your key.
+                    </p>
+                    {meeting.rail === "vdo" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        <span style={fieldLabel}>Next</span>
+                        <a href={studioVdo.push} target="_blank" rel="noopener noreferrer" className="btn">
+                          Go to your studio
+                        </a>
+                        <p style={muted}>opens your camera in a new tab; the stage watches this seat</p>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                          <button
+                            type="button"
+                            className={`btn btn-sm ${feed.scene?.active === "starting" ? "btn-on" : "btn-ghost"}`}
+                            onClick={() => actScene("starting", 20)}
+                            disabled={sceneBusy}
+                          >
+                            {feed.scene?.active === "starting" ? "Waiting scene ✓" : "Waiting scene"}
+                          </button>
+                          <button
+                            type="button"
+                            className={`btn btn-sm ${feed.scene?.active === "solo" ? "btn-on" : "btn-ghost"}`}
+                            onClick={() => actScene("solo")}
+                            disabled={sceneBusy}
+                          >
+                            {feed.scene?.active === "solo" ? "On camera ✓" : "On camera"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
