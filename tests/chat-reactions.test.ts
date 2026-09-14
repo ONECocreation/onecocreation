@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 /**
  * TASK-247 (0018.06.23 a₿ · block ~966,922, cut from the Admiral via Love's
@@ -92,6 +94,37 @@ describe("canReact — once per person per key", () => {
   it("blocks a key already sent by this viewer for this message", async () => {
     const { canReact } = await import("@/components/rooms/RoomView");
     expect(canReact(new Set(["❤️"]), "❤️")).toBe(false);
+  });
+});
+
+describe("ReactionPicker — the RENDERED popover carries all 12 buttons (not just the data array)", () => {
+  it("renders exactly 12 role=menuitem buttons, one per REACTION_EMOJIS entry, in order, none clipped out of the markup", async () => {
+    const { ReactionPicker, REACTION_EMOJIS } = await import("@/components/rooms/RoomView");
+    const html = renderToStaticMarkup(createElement(ReactionPicker, { onPick: () => {} }));
+    const matches = [...html.matchAll(/role="menuitem"/g)];
+    expect(matches).toHaveLength(12);
+    // every emoji actually appears as a button's own text, in REACTION_EMOJIS' order
+    let cursor = -1;
+    for (const { key } of REACTION_EMOJIS) {
+      const at = html.indexOf(`>${key}</button>`);
+      expect(at, `${key} is missing from the rendered picker`).toBeGreaterThan(-1);
+      expect(at, `${key} is out of order`).toBeGreaterThan(cursor);
+      cursor = at;
+    }
+  });
+
+  it("lays out as a fixed 6-column grid — two rows of six, not one row of twelve (T-247's re-shot fix: a one-row-of-12 was wider than a short message bubble and got clipped by the messages pane's implicit overflow-x)", async () => {
+    const { ReactionPicker } = await import("@/components/rooms/RoomView");
+    const html = renderToStaticMarkup(createElement(ReactionPicker, { onPick: () => {} }));
+    expect(html).toMatch(/grid-template-columns:\s*repeat\(6,\s*auto\)/);
+  });
+
+  it("every menu item's aria-label carries \"react with <name>\"", async () => {
+    const { ReactionPicker, REACTION_EMOJIS } = await import("@/components/rooms/RoomView");
+    const html = renderToStaticMarkup(createElement(ReactionPicker, { onPick: () => {} }));
+    for (const { name } of REACTION_EMOJIS) {
+      expect(html).toContain(`aria-label="react with ${name}"`);
+    }
   });
 });
 
