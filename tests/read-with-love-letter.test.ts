@@ -8,8 +8,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
  * the room line is built from the site's meeting config
  * (getSiteConfig().meeting, T-129 — mocked here per test so the pin is the
  * LETTER, not the fs/KV drivers): jitsi → https://<jitsiDomain>/
- * read-with-love with no "Zoom" anywhere; vdo → the VDO.Ninja guest link
- * for that room; neither → the honest "coming" line (derive-or-dash, never
+ * read-with-love with no "Zoom" anywhere; vdo (TASK-250, 0018.06.23 a₿:
+ * the studio rail) → the SITE'S OWN STAGE, the free reading room through
+ * siteBase() — never the raw studio host; neither → the honest "coming"
+ * line (derive-or-dash, never
  * a fake or placeholder URL — the URLs in this spec are test fakes and live
  * nowhere else). The optional override env READ_WITH_LOVE_ROOM_URL (renamed
  * from READ_WITH_LOVE_ZOOM_URL) wins when set, server-side only. The
@@ -103,13 +105,32 @@ describe("the Read with Love letter (TASK-126 + TASK-132)", () => {
     expect(sent[0].html).not.toContain("Unzip Into the New You");
   });
 
-  it("vdo config → the VDO.Ninja guest link for the fixed room", async () => {
+  it("vdo config (the studio rail, TASK-250) → the site's own stage, absolutised through siteBase()", async () => {
     meeting.rail = "vdo";
+    process.env.NEXT_PUBLIC_SITE_URL = "https://site.example.invalid";
+    try {
+      const { sendReadWithLoveLetter } = await leadMagnet();
+      await sendReadWithLoveLetter("reader@example.com");
+      expect(sent[0].html).toContain('href="https://site.example.invalid/rooms/heart-field"');
+      expect(sent[0].html).toContain("Join the reading on the stage");
+      expect(sent[0].html).not.toContain("vdo.onecocreation.com"); // the studio host never rides in the letter
+      expect(sent[0].html).not.toContain("?room=");
+      expect(sent[0].html).not.toContain("moderator"); // the stage has no moderator seat
+      expect(sent[0].html.toLowerCase()).not.toContain("zoom");
+      expect(sent[0].html).not.toContain("The room link is coming");
+    } finally {
+      delete process.env.NEXT_PUBLIC_SITE_URL;
+    }
+  });
+
+  it("the studio rail's link is the free reading room's path — one derivation with the letter toolbar (T-227)", async () => {
+    meeting.rail = "vdo";
+    const { READING_ROOM_PATH } = await import("@/lib/reading-room");
+    const { siteBase } = await import("@/lib/subscribers");
     const { sendReadWithLoveLetter } = await leadMagnet();
     await sendReadWithLoveLetter("reader@example.com");
-    expect(sent[0].html).toContain('href="https://vdo.onecocreation.com/?room=read-with-love"');
-    expect(sent[0].html.toLowerCase()).not.toContain("zoom");
-    expect(sent[0].html).not.toContain("The room link is coming");
+    expect(READING_ROOM_PATH).toBe("/rooms/heart-field");
+    expect(sent[0].html).toContain(`href="${siteBase()}${READING_ROOM_PATH}"`);
   });
 
   it("no rail configured → the honest 'coming' line", async () => {
