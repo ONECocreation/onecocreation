@@ -215,8 +215,14 @@ export async function Packages() {
     <section id="packages" className="lions-gate">
       {/* TASK-229: keyboard focus on the new picture-door link, scoped here
           (this lane owns Packages() only, not house.css) — same "own-CSS
-          via a scoped <style>" idiom Contact() already uses above. */}
-      <style>{`#packages .thumb-link{display:block}#packages .thumb-link:focus-visible{outline:2px solid var(--rose,#c56e8b);outline-offset:3px;border-radius:16px}`}</style>
+          via a scoped <style>" idiom Contact() already uses above.
+          TASK-254 (0018.06.24 a₿): the rails-ON door ("See the package")
+          is a direct child of `.push`, the rails-OFF door is a `<form>`
+          whose own button sits a level deeper — `.push>a.btn` reaches
+          ONLY the direct-child anchor, so the waitlist form's button
+          (SubscribeForm.tsx) is untouched, and `.push` itself in
+          house.css (T-253's) is never edited. No class/word changes. */}
+      <style>{`#packages .thumb-link{display:block}#packages .thumb-link:focus-visible{outline:2px solid var(--rose,#c56e8b);outline-offset:3px;border-radius:16px}#packages .push>a.btn{width:100%;text-align:center}`}</style>
       <div className="wrap">
         <p className="kicker center">The Heart Field — Where Heaven and Earth Meet</p>
         <h2 className="center sec-h">Memberships</h2>
