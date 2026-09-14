@@ -150,17 +150,35 @@ export function createOperatorAuth(config: OperatorAuthConfig) {
       .filter(Boolean);
   }
 
+  /** The FIRST allowlisted email seat anywhere in the fren cookie — a door
+   *  switch, a key login, or a store-order claim can all re-order the
+   *  cookie's up-to-8 tokens, so the email seat isn't necessarily slot 0
+   *  any more (Love's "signed in more than once", 0018.06.23). Checked by
+   *  handle across every session, not just the active one. */
+  function findEmailSeat(cookieHeader: string | null): OperatorFrenSession | undefined {
+    const emails = operatorEmails();
+    return config
+      .frenSessionsFromCookieHeader(cookieHeader)
+      .find((session) => session.space === "email" && emails.includes(session.handle.toLowerCase()));
+  }
+
   /** Pulls the operator identity from a cookie header value, or null —
-   *  a keyed operator's pubkey, or an allowlisted email seat's address. */
+   *  a keyed operator's pubkey, or an allowlisted email seat's address,
+   *  found in ANY door slot. */
   function operatorFromCookieHeader(cookieHeader: string | null): string | null {
     const match = (cookieHeader ?? "").match(new RegExp(`${OPERATOR_COOKIE}=([^;]+)`));
     const keyed = verifyOperatorToken(match?.[1]);
     if (keyed) return keyed;
-    const active = config.frenSessionsFromCookieHeader(cookieHeader)[0];
-    if (active && active.space === "email" && operatorEmails().includes(active.handle.toLowerCase())) {
-      return active.handle;
-    }
-    return null;
+    const seat = findEmailSeat(cookieHeader);
+    return seat ? seat.handle : null;
+  }
+
+  /** True when an allowlisted email door is present ANYWHERE in the fren
+   *  cookie — lets the session route tell the console the email seat is
+   *  what's missing (or present), without ever naming the allowlist env
+   *  or its values. */
+  function hasOperatorEmailSeat(cookieHeader: string | null): boolean {
+    return !!findEmailSeat(cookieHeader);
   }
 
   return {
@@ -172,6 +190,7 @@ export function createOperatorAuth(config: OperatorAuthConfig) {
     makeOperatorToken,
     verifyOperatorToken,
     operatorFromCookieHeader,
+    hasOperatorEmailSeat,
   };
 }
 
