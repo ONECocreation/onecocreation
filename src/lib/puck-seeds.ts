@@ -3,6 +3,7 @@ import {
   ABOUT_BRIDGE_LINE,
   ABOUT_JOIN_LINES,
   ABOUT_VIDEOS,
+  type AboutVideo,
 } from "@/lib/about-content";
 import { renderCartridgeId, cartridge } from "@/brand/cartridge";
 
@@ -171,6 +172,46 @@ const aboutContent: Block[] = [
     ], "center"),
   ]),
 ];
+
+/**
+ * TASK-239 (0018.06.23 a₿ · block 966,895) — the "Top of About" video
+ * (SiteConfig.about.featured, site-config.ts; Love's Sep 8 ask) on a
+ * published Puck /about, applied the same way about-playlist-puck.ts's
+ * applyPlaylistToPuck applies her saved playlist: a pure, structural insert
+ * at request time, not baked into the seed, so a page published BEFORE she
+ * ever pastes one — or before this feature existed at all — still gains it
+ * the moment she saves it on /a/site/about-videos. (applyPlaylistToPuck
+ * itself lives in about-playlist-puck.ts, a file outside this lane's OWNS —
+ * see the lane's Seams note — so this sibling transform lives here, next to
+ * the seed it's registered into.)
+ *
+ * No saved featured ⇒ the data comes back UNTOUCHED, same reference
+ * (derive-or-dash — nothing added, no placeholder band).
+ *
+ * Inserted as its own plain Band right after the FIRST top-level block —
+ * the "Smiles, Love" faces band in the /about seed above, and the lead
+ * section of any hand-edited version — the same "between section 1 and
+ * section 2" spot the hand-built page mounts <AboutFeatured> at. The Puck
+ * vendored Video block never autoplays (that behaviour is code-side, on
+ * AboutFeatured itself); this is the designer-branch equivalent so the
+ * video is at least visible there too, not the pixel-identical component.
+ */
+export function applyFeaturedToPuck<T extends { content?: unknown[] }>(
+  data: T,
+  featured: AboutVideo | undefined,
+): T {
+  if (!featured) return data;
+  const current = Array.isArray(data.content) ? data.content : [];
+  const featuredBand = band("plain", "theme", [
+    video(featured.id, "16/9"),
+    text(featured.title, "center", st({ color: "ink", spaceAbove: 12 })),
+    text("Tap the speaker to hear her", "center", st({ color: "muted", size: 14 })),
+  ]);
+  const content = current.length === 0
+    ? [featuredBand]
+    : [current[0], featuredBand, ...current.slice(1)];
+  return { ...data, content } as T;
+}
 
 /*
  * The content import (PUCK P4 grows, 2026-08-14): every static page becomes

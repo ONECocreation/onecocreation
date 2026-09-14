@@ -11,7 +11,9 @@ import { cartridge } from "@/brand/cartridge";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
 import { applyPlaylistToPuck, levelGalleries } from "@/lib/about-playlist-puck";
+import { applyFeaturedToPuck } from "@/lib/puck-seeds";
 import AboutPlaylist from "@/components/about/AboutPlaylist";
+import AboutFeatured from "@/components/about/AboutFeatured";
 import StackedHero from "@/components/StackedHero";
 import {
   ABOUT_BRIDGE_LINE,
@@ -25,6 +27,19 @@ import PaletteVars from "@/components/PaletteVars";
 import PopupHost from "@/components/PopupHost";
 
 /* eslint-disable @next/next/no-img-element */
+
+/* TASK-239 (0018.06.23 a₿ · block 966,895) — found while shooting the
+   featured video: this page reads the site config from KV (both the
+   TASK-161 playlist and the new `featured` field) but carried no
+   `dynamic = "force-dynamic"`, so `next build` prerendered it STATIC (the
+   build log showed "○ /about") — the SAME bug T-229 found and fixed on
+   /packages and /memberships (the same line / and /store already carry).
+   Without this, neither Love's saved playlist nor a saved featured video
+   ever reaches a real visitor; only the build-time snapshot does, until the
+   next deploy. Confirmed with the shot harness: /api/admin/site reported
+   the fixture featured video correctly, but /about's HTML had none of it
+   until this line went in. */
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "My Story — Love · One Cocreation",
@@ -54,9 +69,12 @@ export default async function AboutPage() {
   if (puck) {
     /* T-161 seam 1 (Number One): the studio snapshot still shows Love's saved
        playlist — her list replaces the page's Video blocks in place; no saved
-       list ⇒ the studio's own videos stand. */
-    const saved = (await getSiteConfig()).about?.videos;
-    const data = levelGalleries(applyPlaylistToPuck(puck as Data, saved));
+       list ⇒ the studio's own videos stand. TASK-239: the "Top of About"
+       video rides the same fetch — absent ⇒ nothing inserted. */
+    const aboutSaved = (await getSiteConfig()).about;
+    const data = levelGalleries(
+      applyFeaturedToPuck(applyPlaylistToPuck(puck as Data, aboutSaved?.videos), aboutSaved?.featured),
+    );
     return (
       <>
         <SiteHeader />
@@ -73,8 +91,12 @@ export default async function AboutPage() {
   /* TASK-161 (0018.06.17 a₿ · block 966,080) — the playlist is Love's now:
      her saved list (the /a/site "Videos on About" card) wins; absent = the
      seed in @/lib/about-content stands; a saved EMPTY list is honoured and
-     renders the honest no-videos line below (derive-or-dash). */
-  const videos = (await getSiteConfig()).about?.videos ?? ABOUT_VIDEOS;
+     renders the honest no-videos line below (derive-or-dash). TASK-239: the
+     "Top of About" video rides the same doc; absent = no seed fallback at
+     all — nothing renders (derive-or-dash). */
+  const aboutSaved = (await getSiteConfig()).about;
+  const videos = aboutSaved?.videos ?? ABOUT_VIDEOS;
+  const featured = aboutSaved?.featured;
   return (
     <>
       <SiteHeader />
@@ -99,6 +121,12 @@ export default async function AboutPage() {
             </div>
           </div>
         </section>
+
+        {/* ══ 1.5 · the featured video — Love's Sep 8 ask, "Top of about
+             pg?" (TASK-239). AboutFeatured renders null when absent — no
+             wrapper here either, so an absent config truly renders
+             nothing (derive-or-dash, no placeholder gap). ══ */}
+        <AboutFeatured video={featured} />
 
         {/* ══ 2 · the hero's journey — her words, whole ══ */}
         <section className="keep-dark sky-glass" style={{ padding: "64px 0" }}>

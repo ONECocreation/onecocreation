@@ -26,6 +26,16 @@ export const ABOUT_PINK_DOOR = "btn btn-rose";
 export const ABOUT_BRIDGE_LINE =
   "“To those drawn by the energy of the soul — Welcome Home to you. You Are the Bridge, Where Heaven and Earth Meet”";
 
+/**
+ * TASK-239 (0018.06.23 a₿ · block 966,895) — Love's Sep 8 ask: "This could
+ * be an instant play thing … Top of about pg?" (Welcome Home to You,
+ * https://youtu.be/YAJMh0qoftI). The featured video atop /about reuses this
+ * SAME `AboutVideo` shape (`SiteConfig.about.featured`, site-config.ts) —
+ * one type for the playlist row and the top-of-page feature, so they can
+ * never drift apart. No seed constant here: absent = no video at all
+ * (derive-or-dash) — unlike the playlist, there is no built-in fallback.
+ */
+
 /** One playlist entry — the seed below AND Love's saved list in the
     site-config doc share this exact shape. */
 export interface AboutVideo {

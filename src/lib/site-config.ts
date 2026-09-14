@@ -70,9 +70,16 @@ export interface NavConfig {
  * instead of pretending (derive-or-dash): unlike the nav, an empty
  * playlist is a legitimate state with an honest render, so sanitize keeps
  * it rather than handing back `undefined`.
+ *
+ * TASK-239 (0018.06.23 a₿ · block 966,895) — `featured` rides the same doc:
+ * the one video that plays, muted, at the very top of /about (Love's Sep 8
+ * ask). Absent = no top video at all — there is no seed fallback the way
+ * `videos` has ABOUT_VIDEOS, so an absent/cleared `featured` renders
+ * nothing (derive-or-dash, no placeholder box).
  */
 export interface AboutConfig {
   videos: AboutVideo[];
+  featured?: AboutVideo;
 }
 
 export interface SiteConfig {
@@ -242,7 +249,14 @@ function sanitizeAbout(raw: unknown): AboutConfig | undefined {
     .map(sanitizeAboutVideo)
     .filter((v): v is AboutVideo => v !== null)
     .slice(0, 24);
-  return { videos };
+  // TASK-239: a malformed featured entry is dropped silently here (this is
+  // the hand-edited-doc backstop, same as videos above) — the PUT route's
+  // aboutPatchError below is what refuses a bad save IN WORDS. `null` and
+  // `undefined` both mean "no featured video" (the Clear button sends the
+  // key omitted; a hand-edited doc might write it explicitly as null).
+  const featured =
+    o.featured !== undefined && o.featured !== null ? (sanitizeAboutVideo(o.featured) ?? undefined) : undefined;
+  return { videos, featured };
 }
 
 /** Route-side patch validation (TASK-161) — the /api/admin/site PUT refuses
@@ -263,6 +277,20 @@ export function aboutPatchError(raw: unknown): string | null {
       return `video ${i + 1}: a title is required`;
     if (o.ratio !== "16/9" && o.ratio !== "9/16")
       return `video ${i + 1}: the shape must be landscape (16/9) or portrait (9/16)`;
+  }
+  // TASK-239: the "Top of About" video rides the same doc, refused the same
+  // way — but it's optional (an omitted key, or an explicit null, both mean
+  // "no featured video", cleared).
+  if ((raw as Record<string, unknown>).featured !== undefined && (raw as Record<string, unknown>).featured !== null) {
+    const f = (raw as Record<string, unknown>).featured;
+    if (!f || typeof f !== "object") return "the featured video isn't an object";
+    const fo = f as Record<string, unknown>;
+    if (typeof fo.id !== "string" || !YOUTUBE_ID_RE.test(fo.id))
+      return "the featured video: the id must be the 11-character YouTube id";
+    if (typeof fo.title !== "string" || !fo.title.trim())
+      return "the featured video: a title is required";
+    if (fo.ratio !== "16/9" && fo.ratio !== "9/16")
+      return "the featured video: the shape must be landscape (16/9) or portrait (9/16)";
   }
   return null;
 }
