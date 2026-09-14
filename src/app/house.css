@@ -105,6 +105,10 @@ section{padding:76px 0;position:relative}
    in the cascade so it wins regardless of where each class's other
    properties live in the file. Gold is money only, never shimmering. */
 .btn-gold::after,.btn-ghost::after,.btn-teal::after,.btn-on::after,.btn-quiet::after,.btn-round::after{content:none}
+/* a money door that ASKS for the sweep keeps it (CartPanel's checkout:
+   `btn btn-gold btn-shimmer`, the one door on the site that most needs the
+   eye) — explicit opt-in only, (0,2,1) beats the kill rule above. */
+.btn-gold.btn-shimmer::after{content:""}
 /* the /a operator console keeps ONE calm dialect: the pink base, no
    shimmer. Bare `.mgmt-body` is NOT console-only — public single-card
    pages (/live, /gift/[voucherId], /rooms/[slug], /me/calendar, …) wear

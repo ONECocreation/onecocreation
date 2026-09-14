@@ -74,14 +74,24 @@ describe("TASK-255 — the .btn base flips to pink + shimmer", () => {
     const css = await read(HOUSE_CSS);
     const rule = css.match(/\.btn-shimmer\{[^}]*\}/)?.[0] ?? "";
     expect(rule).toBe(".btn-shimmer{}");
-    // and it never regains its own ::after rule
-    expect(css).not.toMatch(/\.btn-shimmer::after\{/);
+    // and it never regains its own ::after rule (the gold opt-in `.btn-gold.btn-shimmer::after` is a compound, not its own)
+    expect(css).not.toMatch(/(?<![\w-])\.btn-shimmer::after\{/);
   });
 
   it("the six paint overrides — gold, ghost, teal, on, quiet, round — kill the sweep with ::after{content:none}", async () => {
     const css = await read(HOUSE_CSS);
     const rule = css.match(/\.btn-gold::after,\.btn-ghost::after,\.btn-teal::after,\.btn-on::after,\.btn-quiet::after,\.btn-round::after\{content:none\}/);
     expect(rule).not.toBeNull();
+  });
+
+  it("a gold door that asks for the sweep keeps it — .btn-gold.btn-shimmer::after re-enables content after the kill rule", async () => {
+    const css = await read("src/app/house.css");
+    const kill = css.indexOf(".btn-gold::after,.btn-ghost::after");
+    const keep = css.indexOf('.btn-gold.btn-shimmer::after{content:""}');
+    expect(kill).toBeGreaterThan(-1);
+    expect(keep).toBeGreaterThan(kill);
+    const cart = await read("src/components/store/CartPanel.tsx");
+    expect(cart).toMatch(/btn btn-gold btn-shimmer/);
   });
 
   it("gold is money only — .btn-gold keeps its own gold paint, untouched by the base flip", async () => {
