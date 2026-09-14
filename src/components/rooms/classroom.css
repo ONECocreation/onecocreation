@@ -94,6 +94,50 @@
   }
 }
 
+/* TASK-245 (seam, RoomVideoSlot owns the gallery block that wears these
+   classes): the people watching, below Love's own studio frame — one tile
+   per soul the room's presence already counts. A tile on camera rides the
+   same rounded frame at a smaller size; a tile off camera wears the
+   fren's own picture (or the house initial tile) with their name under
+   it. Never taller than a name needs — the frame never fights the stage
+   above it for the eye. */
+.cl-stage-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+
+.cl-gallery-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 84px;
+}
+
+.cl-gallery-tile__frame,
+.cl-gallery-tile__pic {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  overflow: hidden;
+  object-fit: cover;
+  border: 0;
+  background: var(--glass);
+}
+
+.cl-gallery-tile__name {
+  margin: 0;
+  max-width: 84px;
+  font-size: .68rem;
+  color: var(--muted);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* the embed slot's stage frame — 16:9, dashed edge, centered voice */
 .cl-video-stage {
   aspect-ratio: 16 / 9;

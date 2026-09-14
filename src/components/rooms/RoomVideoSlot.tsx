@@ -1,7 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import JitsiRoom from "@/components/booking/JitsiRoom";
+import { PixelAvatar } from "@pacsarcade/arcade-ui";
+import useNostrProfile from "@/hooks/useNostrProfile";
+import { SPACE_NAME } from "@/lib/identity-config";
 import { ROOMS } from "@/lib/matrix-rooms";
 import {
   signInDoorLine,
@@ -9,6 +13,7 @@ import {
   packageDoorLine,
   type RoomGate,
 } from "@/lib/room-access";
+import { soulsOnline, handleOf, type RosterResult, type Soul } from "./RoomPresence";
 
 /**
  * THE VIDEO SLOT (TASK-123, 0018.06.16 a₿ — first embed TASK-146, 0018.06.17
@@ -38,7 +43,108 @@ import {
  *    words. (TASK-184: the Video/Materials/People vantages this once
  *    noted as unthreaded retired — the Stage, the only vantage mounting
  *    this slot, always threads the door.)
+ *
+ * TASK-245 (0018.06.23 a₿, the Admiral's ruling — "it's meant to be focused
+ * on her and her reading. the others can be in a gallery area below."): a
+ * SECOND rail. When `config.meeting.rail === "vdo"` and the room is live,
+ * this slot shows Love's own studio (VDO.Ninja, Love's fork at
+ * `vdoHost`) full-width instead of Jitsi — `?view=host&room=<studioRoom>`,
+ * the same "one publisher" view link T-243's studioVdoLinks hands the
+ * director's desk, `push=host` on her own push link so this view can
+ * always find her. BELOW it, the Admiral's own follow-up ruling (civil
+ * 2026-09-14): "for the gallery for the people watching: if they don't
+ * want to be on video their profile picture should be displayed" — one
+ * tile per soul the room's OWN presence already counts (RoomPresence's
+ * soulsOnline, the exact "who's here" filter, never a second read), a VDO
+ * view tile (`?view=<their handle>&room=<studioRoom>`, addressable because
+ * the guest link this site hands out always pushes `&push=<handle>`) when
+ * they're on camera, their fren picture (the site's ONE picture helper —
+ * useNostrProfile, same hook FrenChip/FrenMenu/FrenProfile already share —
+ * PixelAvatar's seeded body standing in for an absent one, never a broken
+ * image) when they're not. The gallery hides entirely when the room is
+ * otherwise empty (only Love — the stage, never a "watcher" — is here).
+ *
+ * SEAM, stated plainly: nothing in this codebase reads the studio's actual
+ * WebRTC state — the studio kit's live camera-live state is explicitly
+ * Phase 2 (StudioRoom.tsx's own docblock, T-191), and no signal like it
+ * exists anywhere else either (matrix presence only knows chat-online,
+ * never "joined the VDO room"). Rather than fabricate one, the room page
+ * derives `onCameraMxids` from the ONE real, already-typed intention Love
+ * leaves lying around for this: the director's OWN guest roster
+ * (studio/doc.ts's StudioDoc — her name and today's guests' names,
+ * typed at /a/studio before the show) — a present soul whose display name
+ * matches the host or a listed guest is who Love actually arranged to be
+ * on camera today. A soul that matches nobody draws their picture — the
+ * Admiral's own privacy default holds for everyone she didn't name.
+ *
+ * The Jitsi branch below stays byte-identical for `rail !== "vdo"` (absent
+ * reads as jitsi, the pre-T-245 behavior) — this is a NEW branch inserted
+ * ahead of it, never a rewrite of it.
  */
+/** TASK-245: handle → npub, the one lookup this lane needs that no route
+ *  yet exposes on its own — reused rather than reinvented from the public
+ *  claim-availability answer (frens/availability already hands back an
+ *  npub for a handle "already claimed", the same publicly-known fact
+ *  nostr.json serves). A handle that isn't a claimed tag (an email member,
+ *  or the lookup simply hasn't answered yet) stays null — no picture, no
+ *  guess, the house initial tile stands. */
+function useHandleNpub(handle: string): string | null {
+  const [npub, setNpub] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch(`/api/frens/availability?handle=${encodeURIComponent(handle)}&space=${encodeURIComponent(SPACE_NAME)}`, {
+      cache: "no-store",
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (alive && typeof d?.npub === "string") setNpub(d.npub);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [handle]);
+  return npub;
+}
+
+/** TASK-245: one gallery tile — the VDO view when this soul is on camera,
+ *  else their own fren picture, else the house initial tile. Never a
+ *  broken image (PixelAvatar's seeded body always renders). */
+function GalleryTile({
+  soul,
+  onCamera,
+  vdoHost,
+  studioRoom,
+}: {
+  soul: Soul;
+  onCamera: boolean;
+  vdoHost: string;
+  studioRoom: string;
+}) {
+  const handle = handleOf(soul.mxid);
+  const npub = useHandleNpub(handle);
+  const { profile } = useNostrProfile(npub);
+
+  return (
+    <div className="cl-gallery-tile">
+      {onCamera ? (
+        <iframe
+          className="cl-gallery-tile__frame"
+          src={`https://${vdoHost}/?view=${encodeURIComponent(handle)}&room=${encodeURIComponent(studioRoom)}&cleanoutput&autostart`}
+          allow="autoplay; fullscreen"
+          title={soul.name}
+        />
+      ) : profile?.picture ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={profile.picture} alt="" className="cl-gallery-tile__pic" />
+      ) : (
+        <PixelAvatar variant="player" seed={handle} size={48} />
+      )}
+      <p className="cl-gallery-tile__name">{soul.name}</p>
+    </div>
+  );
+}
+
 export default function RoomVideoSlot({
   live,
   roomTitle,
@@ -47,6 +153,11 @@ export default function RoomVideoSlot({
   displayName,
   door,
   doorPackage,
+  rail,
+  vdoHost,
+  studioRoom,
+  roster,
+  onCameraMxids,
 }: {
   live: boolean;
   roomTitle: string;
@@ -58,6 +169,27 @@ export default function RoomVideoSlot({
   door?: RoomGate;
   /** the package the door opens with (TIERS' own name, threaded server-side) */
   doorPackage?: string | null;
+  /** TASK-245: the site's meeting rail — absent/"jitsi" reads as the
+   *  pre-T-245 Jitsi behavior, byte-identical. */
+  rail?: "jitsi" | "vdo" | "static";
+  /** TASK-245: config.meeting.vdoHost — Love's own studio fork, never the
+   *  public vdo.ninja (T-243's law). */
+  vdoHost?: string;
+  /** TASK-245: the studio's own room name (T-243's studioVdoLinks, one
+   *  more word than liveRoom — the studio is its own room, not this
+   *  room's namespaced alias). */
+  studioRoom?: string;
+  /** TASK-245: the room page's ONE roster/presence read (T-184's 429 hunt)
+   *  — the gallery's source of WHO, the exact same read RoomPresence
+   *  already renders from, never a second one. */
+  roster?: RosterResult | null;
+  /** TASK-245: present souls Love actually arranged to be on camera today
+   *  — the room page's own derivation off the director's guest roster
+   *  (studio/doc.ts's StudioDoc: her name + today's guests), never a
+   *  guessed or fabricated live signal. Absent/empty (no studio doc, or
+   *  nobody present matches a named soul) reads as "everyone draws their
+   *  picture" — the Admiral's own privacy default. */
+  onCameraMxids?: readonly string[];
 }) {
   const canEmbed = live && !!jitsiDomain && !!liveRoom;
   /* the room's own slug, derived from the registry by title (the title
@@ -66,6 +198,13 @@ export default function RoomVideoSlot({
   const slug = own ? own.id.slice(1, own.id.indexOf(":")) : null;
   const joinHref = slug ? `/rooms/${slug}` : "/live";
   const gate: RoomGate = door ?? "open";
+  /* TASK-245: the vdo rail's own embed gate — live + both halves of the
+     studio address present. Checked AHEAD of `canEmbed` so a config that
+     (misconfigured) carries both a jitsiDomain and rail:"vdo" still shows
+     the studio, never Jitsi silently, when the operator chose vdo. */
+  const canEmbedVdo = rail === "vdo" && live && !!vdoHost && !!studioRoom;
+  const souls: Soul[] = roster?.ok ? soulsOnline(roster.joined, roster.presence) : [];
+  const onCameraSet = new Set(onCameraMxids ?? []);
 
   return (
     <div className="card cl-video-slot">
@@ -96,6 +235,36 @@ export default function RoomVideoSlot({
               See the memberships
             </Link>
           </div>
+        </div>
+      ) : canEmbedVdo ? (
+        <div>
+          <div className="cl-stage-embed">
+            <iframe
+              style={{ width: "100%", height: "100%", border: 0 }}
+              src={`https://${vdoHost}/?view=host&room=${encodeURIComponent(studioRoom!)}&cleanoutput&autostart`}
+              allow="autoplay; camera; microphone; fullscreen"
+              title={`${roomTitle} — the studio`}
+            />
+          </div>
+          {souls.length > 0 && (
+            <div className="cl-stage-gallery" aria-label="Who's watching">
+              {souls.map((s) => (
+                <GalleryTile
+                  key={s.mxid}
+                  soul={s}
+                  onCamera={onCameraSet.has(s.mxid)}
+                  vdoHost={vdoHost!}
+                  studioRoom={studioRoom!}
+                />
+              ))}
+            </div>
+          )}
+          <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem" }}>
+            Love is live in {roomTitle} now — the stage is lit.
+          </p>
+          <Link href={joinHref} className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            ● Join Live Session
+          </Link>
         </div>
       ) : canEmbed ? (
         <div>
