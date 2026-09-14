@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ROOMS } from "@/lib/matrix-rooms";
-import { roomGate, signInDoorLine, signInDoorHref, packageDoorLine } from "@/lib/room-access";
+import { roomGate, signInDoorLine, signInDoorHref } from "@/lib/room-access";
 import type { Tier } from "@/lib/entitlement";
 
 /**
@@ -33,7 +33,8 @@ import type { Tier } from "@/lib/entitlement";
  * records):
  *  · satisfied (signed in, tier clears the room) → `btn btn-sm btn-ghost`
  *    "Go deeper in <room title>" → `/rooms/<slug>`;
- *  · signed in, tier too low → the package door line (`packageDoorLine`) +
+ *  · signed in, tier too low → the deeper dive's own package line (not the
+ *    stage's `packageDoorLine` — the STAGE is open to them; the dive is not) +
  *    a ghost link to `/packages/<packageSlug>`;
  *  · signed out → the sign-in door line (`signInDoorLine`) + a ghost
  *    "Sign in · join free" link.
@@ -105,7 +106,7 @@ export default function AfterHoursDoor({
           </Link>
         ) : gate === "package" ? (
           <>
-            <p className="cl-after-hours__sub">{packageDoorLine(afterHours.package)}</p>
+            <p className="cl-after-hours__sub">The deeper dive opens with the {afterHours.package} package — and everything above it.</p>
             {afterHours.packageSlug && (
               <Link href={`/packages/${afterHours.packageSlug}`} className="btn btn-sm btn-ghost">
                 See the {afterHours.package} package

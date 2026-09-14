@@ -302,7 +302,8 @@ describe("AfterHoursDoor — the Stage's deeper-dive door", () => {
     const html = renderToStaticMarkup(
       h(AfterHoursDoor, { afterHours: { ...AFTER_HOURS, at }, signedIn: true, viewerTier: null }),
     );
-    expect(html).toContain("This stage opens with the Weekly Intuitive package");
+    expect(html).toContain("The deeper dive opens with the Weekly Intuitive package"); // Number One follow-through: the stage IS open to them; the dive is the gated room
+    expect(html).not.toContain("This stage opens with");
     expect(html).toContain('href="/packages/weekly-intuitive"');
     expect(html).not.toContain('href="/rooms/clair-senses"');
     expect(html).not.toContain("btn-gold");
