@@ -239,7 +239,7 @@ export default function Kind0Doors({
                   <button
                     type="button"
                     onClick={copyInvite}
-                    className="btn btn-sm" style={{ flex: 1 }}
+                    className={`btn btn-sm btn-ghost${copied ? " btn-on" : ""}`} style={{ flex: 1 }}
                   >
                     {copied ? "Copied ✓" : "Copy invite"}
                   </button>
@@ -257,7 +257,7 @@ export default function Kind0Doors({
                 type="button"
                 onClick={makeInvite}
                 disabled={busy !== "idle"}
-                className="btn btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
+                className="btn btn-sm btn-ghost" style={{ width: "100%", boxSizing: "border-box" }}
               >
                 Mint a connect invite
               </button>

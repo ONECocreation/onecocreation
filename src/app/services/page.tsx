@@ -146,7 +146,7 @@ export default async function ServicesPage() {
               total of your session (your Discovery Call, kept).
             </p>
             <div className="center reveal" style={{ marginTop: 18 }}>
-              <Link className="btn btn-shimmer" href="/welcome">Get started today</Link>
+              <Link className="btn btn-shimmer" href="/welcome">Get Started Today</Link>
             </div>
           </div>
         </section>

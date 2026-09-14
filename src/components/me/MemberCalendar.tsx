@@ -130,8 +130,8 @@ export default function MemberCalendar() {
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-        <button type="button" className="btn btn-sm" aria-pressed={view === "week"} onClick={() => setView("week")}>Week</button>
-        <button type="button" className="btn btn-sm" aria-pressed={view === "month"} onClick={() => setView("month")}>Month</button>
+        <button type="button" className={`btn btn-sm btn-ghost${view === "week" ? " btn-on" : ""}`} aria-pressed={view === "week"} onClick={() => setView("week")}>Week</button>
+        <button type="button" className={`btn btn-sm btn-ghost${view === "month" ? " btn-on" : ""}`} aria-pressed={view === "month"} onClick={() => setView("month")}>Month</button>
         <CalendarOptions />
       </div>
 
@@ -199,7 +199,7 @@ export default function MemberCalendar() {
                     </a>
                   )}
                   {hasLocation && (
-                    <button className="btn btn-sm" onClick={() => copyLocation(b)}>
+                    <button className={`btn btn-sm btn-ghost${copied === b.bookingId ? " btn-on" : ""}`} onClick={() => copyLocation(b)}>
                       {copied === b.bookingId ? "Copied ✓" : "📍 Location"}
                     </button>
                   )}
