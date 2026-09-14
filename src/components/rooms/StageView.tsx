@@ -35,7 +35,7 @@ import type { RoomGate } from "@/lib/room-access";
  * read. Empty resources render nothing (derive-or-dash) — never an empty box.
  */
 export default function StageView({
-  slug, alias, title, kind, pin, live, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids, stageMxids,
+  slug, alias, title, kind, pin, live, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids, stageMxids, cameraDoor,
 }: {
   slug: string;
   alias: string;
@@ -69,6 +69,10 @@ export default function StageView({
   onCameraMxids?: readonly string[];
   /** TASK-245: present souls who ARE the stage (the director by name) — never a gallery tile. */
   stageMxids?: readonly string[];
+  /** TASK-249: pass-through only — this viewer's own camera door, set
+   *  only when Love named THEM as today's guest and they're present on
+   *  camera. Null/absent = nothing rendered. */
+  cameraDoor?: string | null;
 }) {
   const gated = !!door && door !== "open";
   const [items, setItems] = useState<MaterialItem[] | null>(null);
@@ -97,7 +101,7 @@ export default function StageView({
       )}
       <div className="cl-grid-stage">
         <div role="region" className="cl-region cl-area-video" data-region="video" aria-label="Video">
-          <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} />
+          <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} />
         </div>
         {resources.length > 0 && (
           <div role="region" className="cl-region cl-area-resources" aria-label="Resources">

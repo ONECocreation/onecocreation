@@ -109,7 +109,7 @@ describe("source-level pins", () => {
 
   it("the room page calls the ONE liveRoomName() helper too", async () => {
     const src = await fs.readFile(path.join(process.cwd(), "src/app/rooms/[slug]/page.tsx"), "utf8");
-    expect(src).toContain('import { liveRoomName, studioVdoLinks } from "@/lib/live"');
+    expect(src).toContain('import { liveRoomName, studioVdoLinks, studioGuestCameraLink } from "@/lib/live"');
     expect(src).toMatch(/liveRoomName\(slug\)/);
   });
 

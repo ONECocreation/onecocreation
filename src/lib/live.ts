@@ -96,6 +96,20 @@ export function studioVdoLinks(roomPrefix: string, host: string): { room: string
   };
 }
 
+/** TASK-249: a named guest's own camera door — the same `push=` shape
+ *  T-243's studioVdoLinks uses for `host` (`push=host`), one word further:
+ *  `push=<the guest's own handle>`, so the tile the gallery already
+ *  addresses at `?view=<handle>&room=<studioRoom>` (RoomVideoSlot's
+ *  GalleryTile) can actually find them once they open this door and
+ *  publish. Deliberately NOT folded into studioVdoLinks — Love's own
+ *  copyable off-site guest link (`.guest`, bare `?room=<room>`, VDO
+ *  assigns a random id) on `/a/studio` and `/a/live` stays exactly as it
+ *  was; this is a SECOND, narrower door for a soul the director already
+ *  named. Pure: host/room/handle in, one link out. */
+export function studioGuestCameraLink(host: string, room: string, handle: string): string {
+  return `${vdoBase(host)}?room=${encodeURIComponent(room)}&push=${encodeURIComponent(handle)}`;
+}
+
 /** TASK-192 (additive read): one confirmed call, shaped for the Go-Live
  *  room's Discovery-call door. */
 export interface TodaySession {

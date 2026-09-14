@@ -59,12 +59,19 @@ import { soulsOnline, handleOf, type RosterResult, type Soul } from "./RoomPrese
  * the director herself, `stageMxids`: she IS the frame above, never a
  * watcher), a VDO view tile (`?view=<their handle>&room=<studioRoom>`) when
  * they're on camera — addressable ONLY once that guest published with
- * `&push=<their handle>`; T-243's guest link is bare today, so a guest's
- * own camera door with her handle pushed is the next lane, not this one — their fren picture (the site's ONE picture helper —
- * useNostrProfile, same hook FrenChip/FrenMenu/FrenProfile already share —
- * PixelAvatar's seeded body standing in for an absent one, never a broken
- * image) when they're not. The gallery hides entirely when the room is
+ * `&push=<their handle>`, else their fren picture (the site's ONE picture
+ * helper — useNostrProfile, same hook FrenChip/FrenMenu/FrenProfile
+ * already share — PixelAvatar's seeded body standing in for an absent one,
+ * never a broken image). The gallery hides entirely when the room is
  * otherwise empty (only Love — the stage, never a "watcher" — is here).
+ *
+ * TASK-249: the named guest's own push door. T-243's
+ * `.guest` link stayed bare (VDO assigns a random id), so a named guest's
+ * OWN tile above could never find them — `cameraDoor` (the room page's
+ * derivation, `live.ts`'s new `studioGuestCameraLink`) is that door: a
+ * `push=<their handle>` link, rendered under the gallery ONLY for the
+ * viewer Love actually named and only while they're present on camera.
+ * Never gold — `btn-ghost`, a quiet door, not the money/join one.
  *
  * SEAM, stated plainly: nothing in this codebase reads the studio's actual
  * WebRTC state — the studio kit's live camera-live state is explicitly
@@ -161,6 +168,7 @@ export default function RoomVideoSlot({
   roster,
   onCameraMxids,
   stageMxids,
+  cameraDoor,
 }: {
   live: boolean;
   roomTitle: string;
@@ -197,6 +205,13 @@ export default function RoomVideoSlot({
    *  name against the studio doc on the room page) — already the big frame
    *  above the gallery, so never a tile in it. Absent = nobody excluded. */
   stageMxids?: readonly string[];
+  /** TASK-249: THIS viewer's own camera door — set by the room page only
+   *  when Love named them as today's guest and they're present on camera
+   *  (`onCameraMxids` above holds who; this is the one door addressed to
+   *  the viewer themself). Absent/null = nothing rendered, not even the
+   *  wrapping paragraph — grep-pin: "Step on camera" appears zero times
+   *  when this prop is absent. */
+  cameraDoor?: string | null;
 }) {
   const canEmbed = live && !!jitsiDomain && !!liveRoom;
   /* the room's own slug, derived from the registry by title (the title
@@ -267,6 +282,17 @@ export default function RoomVideoSlot({
                   studioRoom={studioRoom!}
                 />
               ))}
+            </div>
+          )}
+          {cameraDoor && (
+            <div style={{ margin: "0 0 12px" }}>
+              <p style={{ margin: "0 0 6px", color: "var(--muted)", fontSize: ".86rem", maxWidth: 380 }}>
+                Love named you as today&apos;s guest — this opens your studio camera in a new tab; your tile here
+                follows.
+              </p>
+              <a href={cameraDoor} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">
+                Step on camera
+              </a>
             </div>
           )}
           <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem" }}>
