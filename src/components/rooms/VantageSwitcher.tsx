@@ -25,13 +25,8 @@ export default function VantageSwitcher() {
         <button
           key={o.id}
           type="button"
-          className="btn btn-sm"
+          className={`btn btn-sm btn-ghost${vantage === o.id ? " btn-on" : ""}`}
           aria-pressed={vantage === o.id}
-          style={
-            vantage === o.id
-              ? { background: "linear-gradient(135deg,var(--gold-2),var(--gold))", color: "var(--gold-ink)", borderColor: "var(--gold-deep)" }
-              : undefined
-          }
           onClick={() => setVantage(o.id)}
         >
           {o.label}

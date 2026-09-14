@@ -73,14 +73,45 @@ section{padding:76px 0;position:relative}
    rounded or pill buttons anywhere — square is the brand law for buttons.
    .btn-gold below is the curated fill door (sats / checkout / donations),
    never the default — and since T-121's PINK PASS its gradient pours the
-   rose family (the gold tokens carry rose values now), plum ink on top. ══ */
+   rose family (the gold tokens carry rose values now), plum ink on top.
+
+   TASK-255 (0018.06.24 a₿ — "the white square buttons were supposed to be
+   replaced with the pink gradient ones ... have all of those square type
+   buttons unified with that pink gradient with shimmer"): the BASE flips
+   from WHITE to the .btn-rose paint (same T-121 gradient + --rose-btn-ink,
+   still 9.65 / 7.57 / 4.99:1 across the two stops) and carries the shimmer
+   sweep, moved up from .btn-shimmer below (BORROWED MAGIC) so it isn't
+   opt-in anymore. Every bare `.btn` door on the public site turns pink and
+   shimmers with no per-site edit. .btn-rose stays declared below as an
+   alias of the same paint (order-sensitive tests pin `btn btn-rose btn-sm`
+   strings) — it needs no shimmer of its own, it always rides beside `.btn`.
+   Shape metrics (Open Sans, square corners, 20px 40px) are untouched. ══ */
 .btn{display:inline-block;padding:20px 40px;border-radius:0;
   font-family:var(--font-open-sans),'Open Sans',-apple-system,'Segoe UI',sans-serif;
   font-weight:700;letter-spacing:2px;font-size:1.5rem;line-height:1.25;
   text-transform:uppercase;text-align:center;cursor:pointer;border:0;
-  background:#fff;color:var(--btn-ink);
+  background:linear-gradient(135deg,#E7B2C3,#C56E8B);color:var(--rose-btn-ink);
+  position:relative;overflow:hidden;
   transition:transform .18s;-webkit-tap-highlight-color:transparent}
 .btn:hover{transform:translateY(-3px)}
+/* the shimmer sweep itself — was .btn-shimmer::after, now the base's own
+   (see the BORROWED MAGIC block below for .btn-shimmer's no-op alias and
+   the rose-shimmer keyframes/reduced-motion rule it still shares) */
+.btn::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 32%,rgba(231,178,195,.4) 50%,transparent 68%);
+  transform:translateX(-140%);animation:rose-shimmer 5.2s ease-in-out infinite}
+/* overrides that keep their OWN paint lose the sweep — one calm dialect
+   each. Same specificity as .btn::after (0,1,1); this rule sits after it
+   in the cascade so it wins regardless of where each class's other
+   properties live in the file. Gold is money only, never shimmering. */
+.btn-gold::after,.btn-ghost::after,.btn-teal::after,.btn-on::after,.btn-quiet::after,.btn-round::after{content:none}
+/* the /a operator console keeps ONE calm dialect: the pink base, no
+   shimmer. Bare `.mgmt-body` is NOT console-only — public single-card
+   pages (/live, /gift/[voucherId], /rooms/[slug], /me/calendar, …) wear
+   the same card dialect — so this scopes to `.mgmt-shell`, the wrapper
+   ONLY SiteConsoleShell renders around /a's own content (T-234's /a
+   convergence; src/components/console/SiteConsoleShell.tsx). */
+.mgmt-shell .btn::after{content:none}
 .btn-gold{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink);
   text-shadow:0 1px 1px color-mix(in oklab, var(--gold-ink) 40%, transparent),0 0 8px color-mix(in oklab, var(--gold-ink) 35%, transparent)}
 /* the fill's deep end rides --gold, never the dawn-flipped --gold-deep
@@ -341,11 +372,14 @@ section{padding:76px 0;position:relative}
 @keyframes aur3{to{transform:translate(10%,-16%) scale(1.3)}}
 /* shimmer — a slow light pass, PRIMARY doors only (Admiral, 0018.05.15);
    T-121: the pass tint goes rose (was lavender) so it reads as one family
-   on the white CTA and the rose fills alike */
-.btn-shimmer{position:relative;overflow:hidden}
-.btn-shimmer::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(115deg,transparent 32%,rgba(231,178,195,.4) 50%,transparent 68%);
-  transform:translateX(-140%);animation:rose-shimmer 5.2s ease-in-out infinite}
+   on the white CTA and the rose fills alike.
+   TASK-255: the sweep itself now lives on .btn (the PRIMARY CTA block,
+   above) — every bare door carries it with no class to add. .btn-shimmer
+   is kept as a harmless no-op alias so old markup (`btn btn-shimmer`,
+   `btn btn-gold btn-shimmer`) and anything matching that string still
+   holds; the keyframes stay here, named the same, so .btn::after finds
+   them regardless of stylesheet order. */
+.btn-shimmer{}
 @keyframes rose-shimmer{0%,55%{transform:translateX(-140%)}85%,100%{transform:translateX(140%)}}
 /* shine-border — a light runs the card's rim on hover (≈ MagicUI border-beam) */
 @property --shine-ang{syntax:"<angle>";initial-value:0deg;inherits:false}
@@ -359,7 +393,7 @@ section{padding:76px 0;position:relative}
 @keyframes shine-spin{to{--shine-ang:360deg}}
 @media(prefers-reduced-motion:reduce){
   .aurora i{animation:none}
-  .btn-shimmer::after{animation:none}
+  .btn::after{animation:none}
   .shine-hover:hover::before{animation:none;opacity:.6}
 }
 

@@ -242,7 +242,7 @@ export default function LessonPathView({
               </li>
             ))}
           </ul>
-          <button type="button" className="btn btn-sm" style={{ marginTop: 14 }} onClick={() => toggleDone(active.sessionKey)}>
+          <button type="button" className={`btn btn-sm btn-ghost${done.has(active.sessionKey) ? " btn-on" : ""}`} style={{ marginTop: 14 }} onClick={() => toggleDone(active.sessionKey)}>
             {done.has(active.sessionKey) ? "✓ done" : "mark done"}
           </button>
         </div>
