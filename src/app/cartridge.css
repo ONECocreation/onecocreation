@@ -311,6 +311,14 @@ html[data-oc-theme="light"] .lions-gate{
 .habitat{position:relative;height:104px;display:flex;align-items:flex-end;justify-content:center}
 .habitat .ground{position:absolute;inset:0;border-radius:22px 22px 0 0;overflow:hidden}
 .habitat .ground i{position:absolute;inset:0;display:block}
+/* TASK-228 (0018.06.23 a₿): Read with Love's habitat art is a real photo,
+   not a gradient — fills the ground exactly like the `i` above, the heart
+   (the frame's own centre) held by object-position, a hover scale of its
+   own standing in for the retired 📖 beast's lift. */
+.habitat .habitat-pic{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center;display:block;
+  transition:transform .38s cubic-bezier(.34,1.56,.64,1)}
+.habitat:hover .habitat-pic{transform:scale(1.08)}
 .beast{position:relative;z-index:2;font-size:3.3rem;line-height:1;transform:translateY(6px);
   transform-origin:50% 100%;transition:transform .38s cubic-bezier(.34,1.56,.64,1);
   filter:drop-shadow(0 10px 14px rgba(60,40,10,.28))}
