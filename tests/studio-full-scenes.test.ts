@@ -208,3 +208,13 @@ describe("T-191's three overlay scenes still render byte-identical (snapshot pin
     expect(html).toMatchSnapshot();
   });
 });
+
+/* follow-through (Number One, 0018.06.23): gold is money only — the
+   "starting soon" kicker and the after-hours line wear the rose token,
+   never gold (the runner's items on the overlay scenes are the one earned
+   gold on a stream). */
+import { readFileSync as _rf } from "node:fs";
+it("the full scenes never wear gold (gold is money only)", () => {
+  const src = _rf(new URL("../src/components/studio-overlay/FullScene.tsx", import.meta.url), "utf8");
+  expect(src.includes("tokens.gold")).toBe(false);
+});

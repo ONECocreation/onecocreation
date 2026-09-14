@@ -94,7 +94,7 @@ export default function FullScene({
             <Book src={book} width={480} />
           </div>
           <div style={{ position: "absolute", left: 760, top: 300, width: 980, display: "flex", flexDirection: "column", gap: 22 }}>
-            <span style={{ ...title, fontSize: 30, color: tokens.gold, letterSpacing: ".28em", textTransform: "uppercase" }}>
+            <span style={{ ...title, fontSize: 30, color: tokens.rose, letterSpacing: ".28em", textTransform: "uppercase" }}>
               starting soon
             </span>
             <span style={{ ...title, fontSize: 64, lineHeight: 1.1 }}>{showTitle}</span>
@@ -139,7 +139,7 @@ export default function FullScene({
         }}>
           <span style={{ ...title, fontSize: 66 }}>thank you for being here</span>
           <span style={{ ...soft, fontSize: 30, color: tokens.cream }}>{showTitle}</span>
-          {afterHoursLine && <span style={{ ...title, fontSize: 26, color: tokens.gold }}>{afterHoursLine}</span>}
+          {afterHoursLine && <span style={{ ...title, fontSize: 26, color: tokens.rose }}>{afterHoursLine}</span>}
           <span style={{ ...soft, fontSize: 22, marginTop: 10 }}>{membershipsWords}</span>
         </div>
       </NightGround>
