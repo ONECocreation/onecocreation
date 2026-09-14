@@ -329,7 +329,7 @@ export default function GoLiveRoom({
                     {meeting.rail === "vdo" && (
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                         <span style={fieldLabel}>Next</span>
-                        <a href={studioVdo.push} target="_blank" rel="noopener noreferrer" className="btn">
+                        <a href={studioVdo.push} target="_blank" rel="noopener noreferrer" className="btn btn-sm" style={{ alignSelf: "flex-start" }}>
                           Go to your studio
                         </a>
                         <p style={muted}>opens your camera in a new tab; the stage watches this seat</p>

@@ -78,6 +78,13 @@ describe("POST /api/admin/live — action: scene (TASK-235)", () => {
     expect(d.ok).toBe(false);
   });
 
+  it("400 on an out-of-bounds or non-finite countdown (Number One follow-through: never a NaN reaching Date)", async () => {
+    for (const startsInMinutes of [-1, 241, Number.NaN, Number.POSITIVE_INFINITY, "20" as unknown as number]) {
+      const r = await postAdminLive({ action: "scene", scene: "starting", startsInMinutes }, operatorCookie);
+      expect(r.status).toBe(400);
+    }
+  });
+
   it("the waiting scene: activeScene = starting, startsAt ≈ now + 20 min", async () => {
     const before = Date.now();
     const r = await postAdminLive({ action: "scene", scene: "starting", startsInMinutes: 20 }, operatorCookie);

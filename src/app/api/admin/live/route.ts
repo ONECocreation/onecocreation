@@ -80,11 +80,14 @@ export async function POST(request: Request) {
     if (!isStudioScene(body.scene)) {
       return NextResponse.json({ ok: false, reason: "unknown scene — pick one of the studio's six" }, { status: 400 });
     }
+    // the countdown is bounded: a finite 0–240 minutes, else 400 — never a
+    // NaN/Infinity reaching Date (toISOString would throw a 500)
+    const mins = body.startsInMinutes;
+    if (mins !== undefined && !(typeof mins === "number" && Number.isFinite(mins) && mins >= 0 && mins <= 240)) {
+      return NextResponse.json({ ok: false, reason: "startsInMinutes must be 0–240" }, { status: 400 });
+    }
     const doc = await getStudioDoc();
-    const startsAt =
-      typeof body.startsInMinutes === "number"
-        ? new Date(Date.now() + body.startsInMinutes * 60_000).toISOString()
-        : doc.startsAt;
+    const startsAt = mins !== undefined ? new Date(Date.now() + mins * 60_000).toISOString() : doc.startsAt;
     const saved = await saveStudioDoc({ ...doc, activeScene: body.scene, startsAt });
     return NextResponse.json({ ok: true, scene: { active: saved.activeScene, startsAt: saved.startsAt } });
   }
