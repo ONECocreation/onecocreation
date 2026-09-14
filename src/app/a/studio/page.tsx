@@ -72,10 +72,10 @@ export default async function StudioRoomPage() {
      fork (ONECocreation/studio, main.js: the non-director AND director
      branches both read urlParams "website" (or its "iframe" alias) and
      publish it as a stream into the room; see SUMMARY for the read-out).
-     Host derived from the vdo links above (never a new literal) — T-243's
-     config.meeting.vdoHost isn't on main yet at this lane's base, so the
-     existing push link's own origin stands in for it. */
-  const studioOrigin = new URL(vdo.push).origin;
+     T-243 landed config.meeting.vdoHost on main before this lane rebased
+     onto it, so the studio host reads straight from there — never a new
+     literal, and never re-derived from the vdo links above. */
+  const studioOrigin = `https://${config.meeting.vdoHost}`;
   const showInStudioUrls = Object.fromEntries(
     STUDIO_SCENES.map((s) => {
       const overlayUrl = overlayUrls[s.id];
