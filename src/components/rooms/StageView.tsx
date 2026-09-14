@@ -5,10 +5,12 @@ import RoomVideoSlot from "./RoomVideoSlot";
 import RoomPresence, { type RosterResult } from "./RoomPresence";
 import StageChat from "./StageChat";
 import { deriveResources, ResourcesCard } from "./LessonPathView";
+import AfterHoursDoor, { type AfterHoursFeed } from "./AfterHoursDoor";
 import type { MaterialItem } from "@/lib/class-materials";
 import type { RoomPin } from "@/lib/room-pins";
 import type { RoomGate } from "@/lib/room-access";
 import type { StudioSceneId } from "@/lib/studio/scenes";
+import type { Tier } from "@/lib/entitlement";
 
 /**
  * THE STAGE (TASK-184, 0018.06.18 a₿ — the Admiral's three-rooms ruling:
@@ -34,10 +36,16 @@ import type { StudioSceneId } from "@/lib/studio/scenes";
  * `open:false` rather than a 403, the fetch costs nothing to duplicate here).
  * Gated identically to the chat/people below it: a closed room takes no
  * read. Empty resources render nothing (derive-or-dash) — never an empty box.
+ *
+ * TASK-236 (0018.06.23 a₿): a NEW region rides right after the video — the
+ * after-hours door (AfterHoursDoor.tsx, its own client leaf, its own
+ * region wrapper). It is NOT threaded into RoomVideoSlot: that component's
+ * Jitsi branch is byte-pinned (tests/stage-shows-the-studio.test.ts), so
+ * this is a sibling region instead of a rewrite.
  */
 export default function StageView({
   slug, alias, title, kind, pin, live, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids, stageMxids, cameraDoor,
-  fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine,
+  fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, afterHours, signedIn, viewerTier,
 }: {
   slug: string;
   alias: string;
@@ -83,6 +91,15 @@ export default function StageView({
   fullSceneShowTitle?: string;
   fullSceneStartsAt?: string;
   fullSceneAfterHoursLine?: string;
+  /** TASK-236: the after-hours door's own polled state — pass-through only,
+   *  the room page's `/api/live` poll (ClassroomView) resolved into words
+   *  server-side. null = unset or cleared, the door renders nothing. */
+  afterHours?: AfterHoursFeed | null;
+  /** TASK-236: this viewer's own signed-in state + tier — the after-hours
+   *  door's own gate (its target room differs from this Stage's own room,
+   *  so it can't reuse `door` above). */
+  signedIn?: boolean;
+  viewerTier?: Tier | null;
 }) {
   const gated = !!door && door !== "open";
   const [items, setItems] = useState<MaterialItem[] | null>(null);
@@ -113,6 +130,7 @@ export default function StageView({
         <div role="region" className="cl-region cl-area-video" data-region="video" aria-label="Video">
           <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={fullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} />
         </div>
+        <AfterHoursDoor afterHours={afterHours ?? null} signedIn={signedIn} viewerTier={viewerTier} />
         {resources.length > 0 && (
           <div role="region" className="cl-region cl-area-resources" aria-label="Resources">
             <ResourcesCard resources={resources} />

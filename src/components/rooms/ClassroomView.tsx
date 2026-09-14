@@ -10,6 +10,8 @@ import type { RosterResult } from "./RoomPresence";
 import type { RoomPin } from "@/lib/room-pins";
 import type { RoomGate } from "@/lib/room-access";
 import type { StudioSceneId } from "@/lib/studio/scenes";
+import type { Tier } from "@/lib/entitlement";
+import type { AfterHoursFeed } from "./AfterHoursDoor";
 import "./classroom.css";
 
 /**
@@ -58,6 +60,12 @@ export interface LiveFeed {
    *  a viewer watches. The room page's own SSR `fullScene` prop below
    *  carries the first paint; this poll carries the updates. */
   scene: Extract<StudioSceneId, "starting" | "brb" | "ending"> | null;
+  /** TASK-236: the after-hours door's own state — the SAME live flag's
+   *  `afterHours` field, resolved into words server-side. null when unset
+   *  or cleared (the room closing clears it for free too). No SSR first
+   *  paint (unlike `scene`) — the door is purely poll-driven, the same 20s
+   *  breath as the rest of this feed. */
+  afterHours: AfterHoursFeed | null;
 }
 
 interface Props {
@@ -108,9 +116,15 @@ interface Props {
   fullSceneShowTitle?: string;
   fullSceneStartsAt?: string;
   fullSceneAfterHoursLine?: string;
+  /** TASK-236: this visitor's own signed-in state + tier, server-derived
+   *  (the room page's `session`/`visitorTier`) — the after-hours door's own
+   *  gate (its target room is a DIFFERENT room than this one, so it can't
+   *  reuse `door` above). */
+  signedIn?: boolean;
+  viewerTier?: Tier | null;
 }
 
-export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids, stageMxids, fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, cameraDoor }: Props) {
+export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids, stageMxids, fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, signedIn, viewerTier, cameraDoor }: Props) {
   const [vantage] = useRoomVantage();
   const [feed, setFeed] = useState<RoomsFeed | null>(null);
   const [live, setLive] = useState<LiveFeed | null>(null);
@@ -151,7 +165,7 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
 
       {/* TASK-184: exactly three vantages, in the ruling's order */}
       {vantage === "stage" && (
-        <StageView slug={slug} alias={alias} title={title} kind={kind} pin={pin} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} roster={roster} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={activeFullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} />
+        <StageView slug={slug} alias={alias} title={title} kind={kind} pin={pin} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} roster={roster} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={activeFullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} afterHours={live?.afterHours ?? null} signedIn={signedIn} viewerTier={viewerTier} />
       )}
       {vantage === "lesson" && <LessonPathView slug={slug} alias={alias} title={title} kind={kind} door={door} doorPackage={doorPackage} />}
       {vantage === "circle" && <CircleView feed={feed} live={live} activeSlug={slug} slug={slug} title={title} door={door} doorPackage={doorPackage} />}

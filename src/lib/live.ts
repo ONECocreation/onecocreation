@@ -32,6 +32,15 @@ export interface LiveState {
   kind?: "class" | "community";
   room?: string;
   startedAt?: number;
+  /** TASK-236 (0018.06.23 a₿) — the after-hours door: a SECOND room and a
+   *  clock, riding beside the live room, not replacing it. `room` is a slug
+   *  resolvable through `roomForSlug` (never the free Commons — a room with
+   *  `minTier: "all"` is rejected at write time and dropped at read time,
+   *  same honesty law as the top-level `room`), `at` is unix SECONDS. Rides
+   *  ONLY while the room itself is live (this whole object reads IDLE the
+   *  instant `live !== true`) — closing the room clears it for free, no
+   *  separate clear ever required by that path. */
+  afterHours?: { room: string; at: number };
 }
 
 const KEY = "oc:live";
@@ -173,6 +182,20 @@ async function kv(cmd: unknown[]): Promise<unknown> {
   return ((await res.json()) as { result: unknown }).result;
 }
 
+/** TASK-236: the after-hours door's own sanitise, field-by-field — bad
+ *  shape, a room outside ROOMS, or the free Commons (never a legitimate
+ *  after-hours target, mirrors the write route's own check) all drop it
+ *  silently (derive-or-dash), never a half-good object reaching a caller. */
+function sanitizeAfterHours(raw: unknown): { room: string; at: number } | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  if (typeof o.room !== "string") return undefined;
+  const room = roomForSlug(o.room);
+  if (!room || room.minTier === "all") return undefined;
+  if (typeof o.at !== "number" || !Number.isFinite(o.at)) return undefined;
+  return { room: o.room, at: o.at };
+}
+
 /** The flag, honestly: an unreadable vault or a flag pointing at a room
  *  that isn't in ROOMS both read as DARK — a stale or foreign flag must
  *  never light the banner. */
@@ -188,6 +211,7 @@ export async function getLiveState(): Promise<LiveState> {
       kind: s.kind === "community" ? "community" : "class",
       room: s.room,
       startedAt: typeof s.startedAt === "number" ? s.startedAt : undefined,
+      afterHours: sanitizeAfterHours(s.afterHours),
     };
   } catch {
     return IDLE;

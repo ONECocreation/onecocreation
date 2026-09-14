@@ -38,7 +38,7 @@ export default async function GoLivePage() {
 
   return (
     <GoLiveRoom
-      rooms={ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind }))}
+      rooms={ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind, minTier: r.minTier }))}
       studioVdo={studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost)}
       sessions={confirmedToday(bookings)}
       meeting={{

@@ -52,6 +52,7 @@
 }
 
 .cl-area-video { grid-area: video; }
+.cl-area-after-hours { grid-area: afterhours; }
 .cl-area-resources { grid-area: resources; }
 .cl-area-chat { grid-area: chat; }
 .cl-area-people { grid-area: people; }
@@ -177,6 +178,7 @@
   grid-template-columns: minmax(0, 3fr) minmax(240px, 2fr);
   grid-template-areas:
     "video video"
+    "afterhours afterhours"
     "resources resources"
     "chat people";
   gap: 20px;
@@ -188,10 +190,37 @@
     grid-template-columns: 1fr;
     grid-template-areas:
       "video"
+      "afterhours"
       "resources"
       "chat"
       "people";
   }
+}
+
+/* TASK-236 (seam, AfterHoursDoor.tsx owns the element that wears these
+   classes): the deeper-dive door — "then, in N minutes: <room>" spoken
+   back on the Stage. Rides the SAME `.card` panel (var(--panel) +
+   var(--glass-edge)) every other region's boxed content already proves at
+   4.5:1 in both themes, so no new color is invented here — the countdown
+   is WORDS, never a color-coded badge (the legibility law: no
+   color-only meaning). Absent from the DOM entirely when there is nothing
+   to say (the component returns null, never an empty bordered box). */
+.cl-after-hours {
+  padding: 14px 18px;
+}
+
+.cl-after-hours__line {
+  margin: 0 0 10px;
+  color: var(--ink-body);
+  font-size: .92rem;
+  font-weight: 600;
+}
+
+.cl-after-hours__sub {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: .84rem;
+  max-width: 440px;
 }
 
 /* CIRCLE (TASK-184 — "centre the events in the monthly calendar"): the
