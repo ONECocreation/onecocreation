@@ -113,6 +113,21 @@ export function Hero({ session }: { session?: VisitorSession | null }) {
             <>
               <p style={{ margin: "4px 0 0", fontSize: ".9rem", color: "var(--muted)" }}>{readingDoor.words}</p>
               <Link className="btn btn-rose" href={readingDoor.href}>Join the Weekly Reading</Link>
+              {/* TASK-228 (0018.06.23 a₿): Love's own Weekly Reading art — an
+                  open book whose pages curl into a heart — sits under the
+                  door, the door's own width, framed like the welcome doors'
+                  .card (theme-aware border/panel/shadow so the dark ground
+                  image still reads on a dawn page). No crop of the heart:
+                  intrinsic 1400×1017, scaled by width alone. */}
+              <div className="card" style={{ width: "100%", maxWidth: 280, overflow: "hidden" }}>
+                <img
+                  src="/images/reading-book.webp"
+                  alt="An open book whose pages curl into a heart"
+                  width={1400}
+                  height={1017}
+                  style={{ display: "block", width: "100%", height: "auto" }}
+                />
+              </div>
             </>
           )}
         </div>

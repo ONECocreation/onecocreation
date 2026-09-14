@@ -3,6 +3,9 @@
 import useFrenSession from "@/hooks/useFrenSession";
 import { readingDoorHref } from "@/lib/reading-room";
 
+/* eslint-disable @next/next/no-img-element -- the habitat's own art, not an
+   optimizer candidate (same idiom as sections.tsx's portrait) */
+
 /**
  * READ WITH LOVE — THE FREE READING DOOR (TASK-156, 0018.06.17 a₿, Love's
  * meeting: "click → they log in → a link takes them to the reading area").
@@ -25,11 +28,18 @@ export default function ReadWithLove() {
   const body = (
     <>
       <div className="habitat">
+        {/* TASK-228 (0018.06.23 a₿): the habitat art IS Love's own Weekly
+            Reading photo now — the book-emoji beast retired. `.habitat-pic` fills
+            the ground (object-fit cover, heart centred) and keeps a hover
+            scale of its own (cartridge.css `.habitat` rules). */}
         <span className="ground">
-          <i style={{ background: "linear-gradient(180deg,#ece4f4 0%,#cdbfdf 55%,#a493c0 100%)" }} />
+          <img
+            className="habitat-pic"
+            src="/images/reading-book-thumb.webp"
+            alt="An open book whose pages curl into a heart"
+          />
         </span>
         <span className="sprout sprout--l">🌿</span>
-        <span className="beast">📖</span>
         <span className="sprout sprout--r">💧</span>
       </div>
       <div className="wild-body">
