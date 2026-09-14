@@ -165,16 +165,9 @@ export default function MoneyRoom() {
     );
 
   return (
-    <div className="p-2 text-sm" style={{ color: "var(--ink)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "0 0 10px" }}>
-        <span style={{ borderRadius: 999, padding: "4px 16px", fontSize: ".72rem", fontWeight: 700,
-          letterSpacing: ".08em", textTransform: "uppercase", color: "var(--gold-wash-ink, #b4862b)",
-          border: "1.5px solid rgba(180,134,43,.45)", background: "rgba(217,178,78,.10)", whiteSpace: "nowrap" }}>
-          The Jars
-        </span>
-        <span style={{ flex: 1, height: 1, background: "rgba(180,134,43,.25)" }} />
-        <span style={{ fontSize: ".72rem", color: "var(--muted)" }}>read live from BTCPay</span>
-      </div>
+    <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
+      <SectionHead label="The Jars" />
+      <p style={{ margin: "-4px 0 8px", fontSize: ".72rem", color: "var(--muted)" }}>read live from BTCPay</p>
       <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))" }}>
         {JARS.map(({ key, label }) => {
           const t = ledger?.totals?.[key];
@@ -184,7 +177,7 @@ export default function MoneyRoom() {
             <div key={key} style={{ background: "var(--glass)", border: "1px solid rgba(255,255,255,.9)",
               borderRadius: 18, padding: "14px 16px", boxShadow: "0 18px 44px -28px rgba(120,100,160,.45)" }}>
               <b style={{ fontSize: ".85rem" }}>{label}</b>
-              <div style={{ fontFamily: "var(--serif)", fontSize: "1.65rem", color: "var(--gold-deep)", lineHeight: 1.15 }}>
+              <div style={{ fontFamily: "var(--sans)", fontWeight: 700, fontSize: "1.65rem", color: "var(--gold-deep)", lineHeight: 1.15 }}>
                 {(t?.settledSats ?? 0).toLocaleString("en-US")} <span style={{ fontSize: ".9rem" }}>sats</span>
               </div>
               <div style={{ fontSize: ".72rem", color: "var(--muted)" }}>
@@ -307,7 +300,7 @@ export default function MoneyRoom() {
                   <td style={{ ...td, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {o.entitlementSubject ?? o.contact?.email ?? "guest"}
                   </td>
-                  <td style={{ ...td, whiteSpace: "nowrap", fontFamily: "var(--serif)", color: "var(--gold-deep)" }}>
+                  <td style={{ ...td, whiteSpace: "nowrap", fontFamily: "var(--sans)", fontWeight: 700, color: "var(--gold-deep)" }}>
                     {orderSats(o)}
                   </td>
                   <td style={{ ...td, borderRadius: "0 12px 12px 0", borderRight: "1px solid rgba(139,118,196,.16)" }}>
@@ -348,7 +341,7 @@ export default function MoneyRoom() {
               ))}
             </ul>
             <p style={{ fontSize: ".92rem", margin: "0 0 4px" }}>
-              <span style={{ fontFamily: "var(--serif)", color: "var(--gold-deep)", fontSize: "1.05rem" }}>
+              <span style={{ fontFamily: "var(--sans)", fontWeight: 700, color: "var(--gold-deep)", fontSize: "1.05rem" }}>
                 {orderSats(detail)}{detail.priceSnapshot.currency === "SATS" ? " sats" : ""}
               </span>{" "}
               <Chip tone={stateTone(detail.state)}>{detail.state}</Chip>
