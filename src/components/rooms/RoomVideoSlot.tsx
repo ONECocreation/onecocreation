@@ -55,10 +55,12 @@ import { soulsOnline, handleOf, type RosterResult, type Soul } from "./RoomPrese
  * 2026-09-14): "for the gallery for the people watching: if they don't
  * want to be on video their profile picture should be displayed" — one
  * tile per soul the room's OWN presence already counts (RoomPresence's
- * soulsOnline, the exact "who's here" filter, never a second read), a VDO
- * view tile (`?view=<their handle>&room=<studioRoom>`, addressable because
- * the guest link this site hands out always pushes `&push=<handle>`) when
- * they're on camera, their fren picture (the site's ONE picture helper —
+ * soulsOnline, the exact "who's here" filter, never a second read — minus
+ * the director herself, `stageMxids`: she IS the frame above, never a
+ * watcher), a VDO view tile (`?view=<their handle>&room=<studioRoom>`) when
+ * they're on camera — addressable ONLY once that guest published with
+ * `&push=<their handle>`; T-243's guest link is bare today, so a guest's
+ * own camera door with her handle pushed is the next lane, not this one — their fren picture (the site's ONE picture helper —
  * useNostrProfile, same hook FrenChip/FrenMenu/FrenProfile already share —
  * PixelAvatar's seeded body standing in for an absent one, never a broken
  * image) when they're not. The gallery hides entirely when the room is
@@ -158,6 +160,7 @@ export default function RoomVideoSlot({
   studioRoom,
   roster,
   onCameraMxids,
+  stageMxids,
 }: {
   live: boolean;
   roomTitle: string;
@@ -190,6 +193,10 @@ export default function RoomVideoSlot({
    *  nobody present matches a named soul) reads as "everyone draws their
    *  picture" — the Admiral's own privacy default. */
   onCameraMxids?: readonly string[];
+  /** TASK-245: present souls who ARE the stage (the director, matched by
+   *  name against the studio doc on the room page) — already the big frame
+   *  above the gallery, so never a tile in it. Absent = nobody excluded. */
+  stageMxids?: readonly string[];
 }) {
   const canEmbed = live && !!jitsiDomain && !!liveRoom;
   /* the room's own slug, derived from the registry by title (the title
@@ -203,7 +210,10 @@ export default function RoomVideoSlot({
      (misconfigured) carries both a jitsiDomain and rail:"vdo" still shows
      the studio, never Jitsi silently, when the operator chose vdo. */
   const canEmbedVdo = rail === "vdo" && live && !!vdoHost && !!studioRoom;
-  const souls: Soul[] = roster?.ok ? soulsOnline(roster.joined, roster.presence) : [];
+  const stageSet = new Set(stageMxids ?? []);
+  const souls: Soul[] = roster?.ok
+    ? soulsOnline(roster.joined, roster.presence).filter((s) => !stageSet.has(s.mxid))
+    : [];
   const onCameraSet = new Set(onCameraMxids ?? []);
 
   return (

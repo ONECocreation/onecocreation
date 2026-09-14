@@ -85,9 +85,11 @@ interface Props {
   /** TASK-245: pass-through only — the room page's own derivation off the
    *  director's guest roster, handed to the Stage's gallery. */
   onCameraMxids?: readonly string[];
+  /** TASK-245: present souls who ARE the stage (the director by name) — never a gallery tile. */
+  stageMxids?: readonly string[];
 }
 
-export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids }: Props) {
+export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids, stageMxids }: Props) {
   const [vantage] = useRoomVantage();
   const [feed, setFeed] = useState<RoomsFeed | null>(null);
   const [live, setLive] = useState<LiveFeed | null>(null);
@@ -124,7 +126,7 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
 
       {/* TASK-184: exactly three vantages, in the ruling's order */}
       {vantage === "stage" && (
-        <StageView slug={slug} alias={alias} title={title} kind={kind} pin={pin} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} roster={roster} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} onCameraMxids={onCameraMxids} />
+        <StageView slug={slug} alias={alias} title={title} kind={kind} pin={pin} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} roster={roster} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} onCameraMxids={onCameraMxids} stageMxids={stageMxids} />
       )}
       {vantage === "lesson" && <LessonPathView slug={slug} alias={alias} title={title} kind={kind} door={door} doorPackage={doorPackage} />}
       {vantage === "circle" && <CircleView feed={feed} live={live} activeSlug={slug} slug={slug} title={title} door={door} doorPackage={doorPackage} />}

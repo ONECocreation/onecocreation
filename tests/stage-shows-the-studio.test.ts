@@ -107,12 +107,47 @@ describe("RoomVideoSlot — rail vdo", () => {
         onCameraMxids: ["@ada:onecocreation.com"],
       }),
     );
-    // ada is on camera — addressed by her own handle, pushed the same way
-    // the guest link hands it out (&push=<handle>)
+    // ada is on camera — addressed by her own handle (the stream id a guest
+    // publishes as `&push=<handle>`; the bare guest link is the next lane's seam)
     expect(html).toContain("cl-gallery-tile__frame");
     expect(html).toContain("https://vdo.onecocreation.com/?view=ada&amp;room=onecocreation-studio&amp;cleanoutput&amp;autostart");
     // bee stays camera-off — her tile is the picture branch, never a view iframe addressed to her
     expect(html).not.toContain("view=bee&amp;room=onecocreation-studio");
+  });
+
+  it("the director herself (stageMxids) never draws a gallery tile — she IS the frame above it", async () => {
+    const RoomVideoSlot = (await import("@/components/rooms/RoomVideoSlot")).default;
+    const roster = rosterOk({
+      "@love:onecocreation.com": { display_name: "Love" },
+      "@bee:onecocreation.com": { display_name: "Bee" },
+    });
+    const html = renderToStaticMarkup(
+      createElement(RoomVideoSlot, {
+        live: true,
+        roomTitle: "The Heart Field",
+        rail: "vdo",
+        vdoHost: "vdo.onecocreation.com",
+        studioRoom: "onecocreation-studio",
+        roster,
+        stageMxids: ["@love:onecocreation.com"],
+      }),
+    );
+    expect(html).toContain("cl-stage-gallery");
+    expect(html).toContain(">Bee<");
+    expect(html).not.toContain(">Love<");
+    // and when she is the only one present, no gallery at all
+    const alone = renderToStaticMarkup(
+      createElement(RoomVideoSlot, {
+        live: true,
+        roomTitle: "The Heart Field",
+        rail: "vdo",
+        vdoHost: "vdo.onecocreation.com",
+        studioRoom: "onecocreation-studio",
+        roster: rosterOk({ "@love:onecocreation.com": { display_name: "Love" } }),
+        stageMxids: ["@love:onecocreation.com"],
+      }),
+    );
+    expect(alone).not.toContain("cl-stage-gallery");
   });
 
   it("hides the gallery entirely when the room is otherwise empty (only Love is here)", async () => {
@@ -165,6 +200,12 @@ describe("the room page — onCameraMxids derives from the director's OWN guest 
     expect(PAGE_SRC).toContain("vdoHost={switches.meeting.vdoHost}");
     expect(PAGE_SRC).toContain("studioRoom={studioVdo.room}");
     expect(PAGE_SRC).toContain("onCameraMxids={onCameraMxids}");
+    expect(PAGE_SRC).toContain("stageMxids={stageMxids}");
+  });
+
+  it("the host's name puts her on the STAGE list, never the on-camera list — only named guests go on camera", () => {
+    expect(PAGE_SRC).toMatch(/if \(hostName !== "" && name === hostName\) stageMxids\.push\(mxid\);/);
+    expect(PAGE_SRC).toMatch(/else if \(guestNames\.has\(name\)\) onCameraMxids\.push\(mxid\);/);
   });
 
   it("only reads the studio doc on the vdo rail, live, with the room open — never a stray read", () => {

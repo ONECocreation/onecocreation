@@ -86,16 +86,20 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
    * rail while live and the room is open — the one case the gallery can
    * ever show, same gate the roster read above already takes. */
   const onCameraMxids: string[] = [];
+  /* TASK-245 gate follow-through: the HOST is the stage itself, never a
+   * watcher — a present soul whose name matches the director's own name
+   * leaves the gallery entirely (she is already the big frame above it,
+   * pushed as `host`), and only the named GUESTS go on camera. */
+  const stageMxids: string[] = [];
   if (switches.meeting.rail === "vdo" && door === "open" && roster?.ok) {
     const doc = await getStudioDoc();
-    const named = new Set(
-      [doc.host.name, ...doc.guests.map((g) => g.name)]
-        .map((n) => n.trim().toLowerCase())
-        .filter((n) => n !== ""),
-    );
+    const norm = (n: string) => n.trim().toLowerCase();
+    const hostName = norm(doc.host.name);
+    const guestNames = new Set(doc.guests.map((g) => norm(g.name)).filter((n) => n !== ""));
     for (const [mxid, info] of Object.entries(roster.joined)) {
-      const name = (info.display_name || mxid.slice(1, mxid.indexOf(":"))).trim().toLowerCase();
-      if (named.has(name)) onCameraMxids.push(mxid);
+      const name = norm(info.display_name || mxid.slice(1, mxid.indexOf(":")));
+      if (hostName !== "" && name === hostName) stageMxids.push(mxid);
+      else if (guestNames.has(name)) onCameraMxids.push(mxid);
     }
   }
 
@@ -124,6 +128,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           vdoHost={switches.meeting.vdoHost}
           studioRoom={studioVdo.room}
           onCameraMxids={onCameraMxids}
+          stageMxids={stageMxids}
         />
       </section>
       <SiteFooter />
