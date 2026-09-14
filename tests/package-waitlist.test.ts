@@ -173,4 +173,68 @@ describe("/packages/[slug] — the switch decides buy vs waitlist vs the joined 
     await saveSiteConfig({ features: { store: false } });
     expect(tierRailsOn(await getSiteConfig())).toBe(false);
   });
+
+  it("tierRailsOn/tierOfferMode live in src/lib/tier-offer.ts and the page re-exports the SAME functions", async () => {
+    const fromLib = await import("@/lib/tier-offer");
+    const fromPage = await import("@/app/packages/[slug]/page");
+    expect(fromPage.tierRailsOn).toBe(fromLib.tierRailsOn);
+    expect(fromPage.tierOfferMode).toBe(fromLib.tierOfferMode);
+  });
+});
+
+/**
+ * TASK-229 (0018.06.23 a₿) — Love on the call: "I'd rather just the picture
+ * be a [button] instead of more words." The home card's picture becomes the
+ * door to its own tier page, and the card's action door reads the SAME
+ * `features.store` switch the tier page reads (`tierRailsOn`, now lifted to
+ * `src/lib/tier-offer.ts`): rails ON walks straight to the sale, rails OFF
+ * keeps today's waitlist. The closing line is pinned as one exported const
+ * so T-232's later verbiage seed can find it.
+ */
+describe("Packages() — on /packages the picture is the door (TASK-229)", () => {
+  it("every card's picture is a Link to its own tier page, aria-label = the package name", async () => {
+    const { Packages } = await import("@/components/sections");
+    const { TIER_PAGES } = await import("@/lib/tiers-content");
+    const { TIERS } = await import("@/lib/entitlement");
+    const html = renderToStaticMarkup(await Packages());
+    for (const p of TIER_PAGES) {
+      const name = TIERS[p.tier].name;
+      expect(html).toContain(`<a class="thumb-link" aria-label="${name}" href="/packages/${p.slug}">`);
+    }
+    // the picture itself still rides inside the link, unchanged src/alt
+    expect(html).toMatch(/<a class="thumb-link"[^>]*><img class="thumb"/);
+  });
+
+  it("PACKAGE_DOORS_WORDS is pinned and is what the card actually renders", async () => {
+    const { Packages, PACKAGE_DOORS_WORDS } = await import("@/components/sections");
+    expect(PACKAGE_DOORS_WORDS).toBe("Your package opens its doors.");
+    const html = renderToStaticMarkup(await Packages());
+    expect(html).toContain(PACKAGE_DOORS_WORDS);
+  });
+
+  it("rails OFF (Love's default) — the card's door is still the waitlist form, no 'See the package' link", async () => {
+    const { Packages } = await import("@/components/sections");
+    const { getSiteConfig } = await import("@/lib/site-config");
+    expect((await getSiteConfig()).features.store).toBe(false);
+    const html = renderToStaticMarkup(await Packages());
+    expect(html).not.toContain("See the package");
+    expect((html.match(/I&#x27;m interested/g) ?? []).length).toBe(3);
+  });
+
+  it("rails ON (features.store) — each card's door becomes a 'See the package' link to that tier's page, the waitlist form leaves the card", async () => {
+    const { saveSiteConfig } = await import("@/lib/site-config");
+    const { Packages } = await import("@/components/sections");
+    const { TIER_PAGES } = await import("@/lib/tiers-content");
+    await saveSiteConfig({ features: { store: true } });
+    try {
+      const html = renderToStaticMarkup(await Packages());
+      expect((html.match(/See the package/g) ?? []).length).toBe(3);
+      expect(html).not.toContain("I&#x27;m interested");
+      for (const p of TIER_PAGES) {
+        expect(html).toContain(`<a class="btn btn-sm" href="/packages/${p.slug}">See the package</a>`);
+      }
+    } finally {
+      await saveSiteConfig({ features: { store: false } });
+    }
+  });
 });
