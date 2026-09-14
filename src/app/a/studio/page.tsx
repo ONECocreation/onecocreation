@@ -58,8 +58,8 @@ export default async function StudioRoomPage() {
   const vdoRoom = `${config.meeting.vdoRoomPrefix}-studio`;
   const vdo = {
     room: vdoRoom,
-    push: `https://vdo.ninja/?room=${encodeURIComponent(vdoRoom)}&push=host`,
-    guest: `https://vdo.ninja/?room=${encodeURIComponent(vdoRoom)}`,
+    push: `https://${config.meeting.vdoHost}/?room=${encodeURIComponent(vdoRoom)}&push=host`,
+    guest: `https://${config.meeting.vdoHost}/?room=${encodeURIComponent(vdoRoom)}`,
   };
 
   return (

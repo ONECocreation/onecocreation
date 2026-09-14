@@ -67,11 +67,17 @@ export function guestSlug(name: string): string {
 export function guestMeetingLink(
   rail: "jitsi" | "vdo",
   name: string,
-  cfg: { jitsiDomain: string; jitsiPrefix: string; vdoRoomPrefix: string },
+  cfg: { jitsiDomain: string; jitsiPrefix: string; vdoRoomPrefix: string; vdoHost: string },
 ): string | null {
   const slug = guestSlug(name);
   if (!slug) return null;
-  if (rail === "vdo") return `https://vdo.ninja/?room=${encodeURIComponent(`${cfg.vdoRoomPrefix}-${slug}`)}`;
+  // TASK-243: the config's own vdoHost, not the public vdo.ninja — built
+  // inline (not via live.ts's vdoBase) because this is a client component:
+  // a VALUE import from live.ts would drag its server-only entitlement/
+  // mail-queue chain into the client bundle (the Turbopack lesson recorded
+  // on matrix-rooms.ts; this file already only ever `import type`s from
+  // live.ts for that reason).
+  if (rail === "vdo") return `https://${cfg.vdoHost}/?room=${encodeURIComponent(`${cfg.vdoRoomPrefix}-${slug}`)}`;
   return `https://${cfg.jitsiDomain}/${cfg.jitsiPrefix}${slug}`;
 }
 
@@ -90,6 +96,7 @@ export interface GoLiveMeeting {
   jitsiDomain: string;
   jitsiPrefix: string;
   vdoRoomPrefix: string;
+  vdoHost: string;
 }
 
 /* every card: the buttons hug the bottom, stacked, uniform */

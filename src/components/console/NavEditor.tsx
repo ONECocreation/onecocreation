@@ -159,7 +159,7 @@ export default function NavEditor() {
   function resetToDefault() {
     if (!features) return;
     setRows(menuToNav(buildDefaultMenu({ features, payments: { btcpay: false, square: false, stripe: false },
-      meeting: { rail: "jitsi", jitsiDomain: "", allowStaticLinks: false, vdoRoomPrefix: "", staticUrl: "" } })));
+      meeting: { rail: "jitsi", jitsiDomain: "", allowStaticLinks: false, vdoRoomPrefix: "", vdoHost: "", staticUrl: "" } })));
     setNote(null);
   }
 

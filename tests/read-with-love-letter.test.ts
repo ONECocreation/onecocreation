@@ -26,6 +26,7 @@ const meeting = vi.hoisted(() => ({
   rail: "jitsi" as "jitsi" | "vdo" | "static",
   jitsiDomain: "meet.onecocreation.com",
   allowStaticLinks: false,
+  vdoHost: "vdo.onecocreation.com",
 }));
 
 vi.mock("@/lib/mail", async (importActual) => {
@@ -106,7 +107,7 @@ describe("the Read with Love letter (TASK-126 + TASK-132)", () => {
     meeting.rail = "vdo";
     const { sendReadWithLoveLetter } = await leadMagnet();
     await sendReadWithLoveLetter("reader@example.com");
-    expect(sent[0].html).toContain('href="https://vdo.ninja/?room=read-with-love"');
+    expect(sent[0].html).toContain('href="https://vdo.onecocreation.com/?room=read-with-love"');
     expect(sent[0].html.toLowerCase()).not.toContain("zoom");
     expect(sent[0].html).not.toContain("The room link is coming");
   });
