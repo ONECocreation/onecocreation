@@ -1,0 +1,1 @@
+lane/task-243 — owns: src/lib/live.ts, src/lib/site-config.ts (meeting block only), src/app/a/live/go-live-room.tsx (line 74 only), src/app/meet/[bookingId]/page.tsx (the two hrefs only), src/lib/community-readiness.ts (line 261 only), the /a/site meeting card file, src/app/a/studio/page.tsx (lines 58-62 ONLY), tests/studio-own-door.test.ts

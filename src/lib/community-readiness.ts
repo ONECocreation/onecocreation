@@ -258,7 +258,7 @@ async function probeMeetingRail(): Promise<ReadinessRow> {
   if (meeting.rail === "static") {
     return row(KEY, NAME, "ok", "the 'any link' rail needs no server — the standing link is the whole door");
   }
-  const domain = meeting.rail === "vdo" ? "vdo.ninja" : meeting.jitsiDomain;
+  const domain = meeting.rail === "vdo" ? meeting.vdoHost : meeting.jitsiDomain;
   try {
     const res = await fetch(`https://${domain}/`, {
       signal: AbortSignal.timeout(TIMEOUT_MS),

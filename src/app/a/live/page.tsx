@@ -39,13 +39,14 @@ export default async function GoLivePage() {
   return (
     <GoLiveRoom
       rooms={ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind }))}
-      studioVdo={studioVdoLinks(config.meeting.vdoRoomPrefix)}
+      studioVdo={studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost)}
       sessions={confirmedToday(bookings)}
       meeting={{
         rail: config.meeting.rail,
         jitsiDomain: config.meeting.jitsiDomain,
         jitsiPrefix: liveRoomPrefix(),
         vdoRoomPrefix: config.meeting.vdoRoomPrefix,
+        vdoHost: config.meeting.vdoHost,
       }}
       youtube={LIVE_YOUTUBE}
     />

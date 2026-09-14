@@ -70,7 +70,7 @@ export async function sendReadWithLoveLetter(email: string): Promise<void> {
     ?? (meeting.rail === "jitsi"
       ? `https://${meeting.jitsiDomain}/read-with-love`
       : meeting.rail === "vdo"
-        ? "https://vdo.ninja/?room=read-with-love"
+        ? `https://${meeting.vdoHost}/?room=read-with-love`
         : null);
   const roomLine = roomUrl
     ? `<p style="margin:22px 0;"><a href="${esc(roomUrl)}"

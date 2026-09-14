@@ -72,16 +72,27 @@ export function liveRoomPrefix(): string {
   return `${space}-`;
 }
 
-/** TASK-192 (additive read): T-191's studio VDO derivation, one word
- *  further — the same `${prefix}-studio` room the /a/studio desk derives
- *  inline, shared so the Go-Live room's YouTube door can never drift from
- *  the director's desk. Pure: in, links out. */
-export function studioVdoLinks(roomPrefix: string): { room: string; push: string; guest: string } {
+/** TASK-243: the one join point for a VDO.Ninja-shaped link — a bare host
+ *  in, `https://<host>/` out — so a scheme is never pasted twice across the
+ *  handful of call-sites that build a room URL from it. Pure. */
+export function vdoBase(host: string): string {
+  return `https://${host}/`;
+}
+
+/** TASK-192 (additive read), TASK-243 (own studio door): T-191's studio
+ *  VDO derivation, one word further — the same `${prefix}-studio` room the
+ *  /a/studio desk derives inline, shared so the Go-Live room's YouTube door
+ *  can never drift from the director's desk. `host` is the meeting config's
+ *  own VDO host (SiteConfig.meeting.vdoHost) — Love's own studio
+ *  (vdo.onecocreation.com), never the public vdo.ninja by default. Pure:
+ *  in, links out. */
+export function studioVdoLinks(roomPrefix: string, host: string): { room: string; push: string; guest: string } {
   const room = `${roomPrefix}-studio`;
+  const base = vdoBase(host);
   return {
     room,
-    push: `https://vdo.ninja/?room=${encodeURIComponent(room)}&push=host`,
-    guest: `https://vdo.ninja/?room=${encodeURIComponent(room)}`,
+    push: `${base}?room=${encodeURIComponent(room)}&push=host`,
+    guest: `${base}?room=${encodeURIComponent(room)}`,
   };
 }
 

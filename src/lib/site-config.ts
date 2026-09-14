@@ -110,6 +110,13 @@ export interface SiteConfig {
     allowStaticLinks: boolean;
     /** TASK-137: VDO.Ninja room prefix — guests get ?room=<prefix>-<booking> */
     vdoRoomPrefix: string;
+    /** TASK-243: the VDO rail's own host — a bare host, no scheme, no path
+        (sanitised like jitsiDomain, but a scheme/path is refused outright,
+        not stripped). Every studio/session link on the vdo rail opens HERE,
+        not on the public vdo.ninja — Love's own fork at vdo.onecocreation.com
+        by default; the field exists so the next artist's clone can point at
+        their own studio too. */
+    vdoHost: string;
     /** TASK-137: the standing meeting link for the static rail (Zoom, Webex,
         anything) — entered here by the operator, never in code */
     staticUrl: string;
@@ -169,12 +176,28 @@ export function defaultSiteConfig(): SiteConfig {
       jitsiDomain: `meet.${domainForSpace(SPACE_NAME)}`,
       allowStaticLinks: false,
       vdoRoomPrefix: SPACE_NAME,
+      // TASK-243: this artist clone's own studio (ONECocreation/studio,
+      // live at vdo.onecocreation.com) — same derivation as jitsiDomain
+      // above, one word further, never the public vdo.ninja.
+      vdoHost: `vdo.${domainForSpace(SPACE_NAME)}`,
       staticUrl: "",
     },
   };
 }
 
 const RAILS = ["jitsi", "vdo", "static"] as const;
+
+/** TASK-243: a bare host only — no scheme, no path, no query, no
+    whitespace. Unlike jitsiDomain (which only trims), a value that LOOKS
+    like a scheme or a path is refused outright — falls back to the
+    derived default — rather than silently mangled into a host that might
+    not be what the operator meant. */
+function sanitizeVdoHost(raw: unknown, fallback: string): string {
+  if (typeof raw !== "string") return fallback;
+  const v = raw.trim();
+  if (!v || /[:/\s?#]/.test(v)) return fallback;
+  return v.slice(0, 100);
+}
 
 /** Stored doc → honest config: defaults underneath, known keys only, wrong
     types ignored. An unknown key simply never survives the read. */
@@ -217,6 +240,7 @@ function sanitize(raw: unknown): SiteConfig {
         typeof m.vdoRoomPrefix === "string" && m.vdoRoomPrefix.trim()
           ? m.vdoRoomPrefix.trim().slice(0, 40)
           : d.meeting.vdoRoomPrefix,
+      vdoHost: sanitizeVdoHost(m.vdoHost, d.meeting.vdoHost),
       staticUrl: typeof m.staticUrl === "string" ? m.staticUrl.trim().slice(0, 300) : d.meeting.staticUrl,
     },
     nav: sanitizeNav(o.nav),

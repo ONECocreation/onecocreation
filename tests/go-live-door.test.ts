@@ -42,13 +42,14 @@ const MEETING: GoLiveMeeting = {
   jitsiDomain: "meet.onecocreation.com",
   jitsiPrefix: "onecocreation-",
   vdoRoomPrefix: "onecocreation",
+  vdoHost: "vdo.onecocreation.com",
 };
 
 const renderRoom = (props: Partial<Parameters<typeof GoLiveRoom>[0]> = {}) =>
   renderToStaticMarkup(
     h(GoLiveRoom, {
       rooms: ROOM_FIXTURES,
-      studioVdo: studioVdoLinks("onecocreation"),
+      studioVdo: studioVdoLinks("onecocreation", "vdo.onecocreation.com"),
       sessions: [],
       meeting: MEETING,
       youtube: "https://www.youtube.com/@Onecocreation",
@@ -121,10 +122,10 @@ describe("the Discovery card — today's confirmed bookings from the booking sto
 
 describe("the YouTube card — T-191's studio links, the studio's honest state", () => {
   it("studioVdoLinks is exactly the director's desk derivation", () => {
-    const vdo = studioVdoLinks("onecocreation");
+    const vdo = studioVdoLinks("onecocreation", "vdo.onecocreation.com");
     expect(vdo.room).toBe("onecocreation-studio");
-    expect(vdo.push).toBe("https://vdo.ninja/?room=onecocreation-studio&push=host");
-    expect(vdo.guest).toBe("https://vdo.ninja/?room=onecocreation-studio");
+    expect(vdo.push).toBe("https://vdo.onecocreation.com/?room=onecocreation-studio&push=host");
+    expect(vdo.guest).toBe("https://vdo.onecocreation.com/?room=onecocreation-studio");
   });
 
   it("the card carries the links and says the state comes with the kit — never invented", () => {
@@ -151,9 +152,9 @@ describe("the co-create card — the guest link derived from the meeting config"
     );
   });
 
-  it("the VDO rail rooms by the config's prefix, T-191's shape", () => {
+  it("the VDO rail rooms by the config's prefix and host, T-191/T-243's shape", () => {
     expect(guestMeetingLink("vdo", "reading with ada", MEETING)).toBe(
-      "https://vdo.ninja/?room=onecocreation-reading-with-ada",
+      "https://vdo.onecocreation.com/?room=onecocreation-reading-with-ada",
     );
   });
 

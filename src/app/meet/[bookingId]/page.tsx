@@ -8,6 +8,7 @@ import { getBooking } from "@/lib/booking-orders";
 import { getService } from "@/lib/booking";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { getSiteConfig } from "@/lib/site-config";
+import { vdoBase } from "@/lib/live";
 
 export const metadata: Metadata = { title: "Your session — One Cocreation" };
 export const dynamic = "force-dynamic";
@@ -58,6 +59,8 @@ export default async function MeetPage({ params }: { params: Promise<{ bookingId
   if (rail?.kind === "vdo") {
     const room = encodeURIComponent(bookingId);
     const operator = operatorFromCookieHeader((await headers()).get("cookie"));
+    // TASK-243: her own studio door, not the public vdo.ninja.
+    const vdo = vdoBase((await getSiteConfig()).meeting.vdoHost);
     return (
       <main className="mgmt-ground">
         <SiteHeader />
@@ -73,7 +76,7 @@ export default async function MeetPage({ params }: { params: Promise<{ bookingId
             </p>
             <a
               className="btn btn-gold"
-              href={`https://vdo.ninja/?room=${room}`}
+              href={`${vdo}?room=${room}`}
               target="_blank"
               rel="noreferrer"
             >
@@ -86,7 +89,7 @@ export default async function MeetPage({ params }: { params: Promise<{ bookingId
                 </p>
                 <a
                   className="btn btn-ghost btn-sm"
-                  href={`https://vdo.ninja/?director=${room}`}
+                  href={`${vdo}?director=${room}`}
                   target="_blank"
                   rel="noreferrer"
                 >

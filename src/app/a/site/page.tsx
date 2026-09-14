@@ -247,6 +247,25 @@ export default function SiteRoom() {
           />
         </div>
       )}
+      {config.meeting.rail === "vdo" && (
+        <div style={row}>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <b style={{ fontSize: ".9rem" }}>Studio host</b>
+            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — where the VDO rooms open; prefilled with this site&apos;s own studio</span>
+            <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
+              a bare host only — no <code>https://</code>, no path — every guest/push/director link on this rail opens at{" "}
+              <code>{config.meeting.vdoHost || "host"}</code>
+            </div>
+          </div>
+          <input
+            value={config.meeting.vdoHost}
+            onChange={(e) => setConfig({ ...config, meeting: { ...config.meeting, vdoHost: e.target.value } })}
+            style={{ ...field, minWidth: 260 }}
+            placeholder="vdo.onecocreation.com"
+            aria-label="Studio host"
+          />
+        </div>
+      )}
       {config.meeting.rail === "static" && (
         <div style={row}>
           <div style={{ flex: 1, minWidth: 220 }}>
