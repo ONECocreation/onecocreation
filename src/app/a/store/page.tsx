@@ -507,7 +507,7 @@ export default function StoreRoom() {
                         </span>
                       </td>
                       <td style={{ ...td, whiteSpace: "nowrap" }}>
-                        <span style={{ fontFamily: "var(--serif)", color: "var(--gold-deep)" }}>{priceWords(item)}</span>
+                        <span style={{ fontFamily: "var(--sans)", fontWeight: 700, color: "var(--gold-deep)" }}>{priceWords(item)}</span>
                         {item.sale && (
                           <span style={{ display: "block", fontSize: ".68rem", color: "var(--err)" }}>
                             sale {saleWords(item.sale)}
