@@ -147,7 +147,8 @@ describe("MembershipsPage — publish to live actually takes", () => {
     // the hand-built branch is gone — <main> now wraps Puck's own <Render>
     const mains = findAll(el, (e) => e.type === "main");
     expect(mains).toHaveLength(1);
-    expect((mains[0].props as { className?: string }).className).toBeUndefined();
+    // TASK-256 (0018.06.24 a₿): the designer branch wears the lion page too
+    expect((mains[0].props as { className?: string }).className).toBe("lions-gate-dark");
 
     const { Render } = await import("@puckeditor/core");
     const renders = findAll(el, (e) => e.type === Render);

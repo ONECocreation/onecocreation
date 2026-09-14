@@ -197,6 +197,28 @@ const aboutContent: Block[] = [
  * AboutFeatured itself); this is the designer-branch equivalent so the
  * video is at least visible there too, not the pixel-identical component.
  */
+/** The white lion — one path, the cartridge's own (`hero.lionsGate`). */
+export const LION_GROUND = "/images/lions-gate.webp";
+
+/**
+ * TASK-256 (0018.06.24 a₿) — the lion holds the memberships field on the
+ * DESIGNER branch too. A published /memberships snapshot from before the
+ * seed carried the lion has a first Band with no ground of its own; this
+ * gives that Band the lion as `bgSrc` (the Band's own veil rides over it,
+ * the way the home section's .lions-gate veil does). A Band that already
+ * carries a custom ground (bgSrc or bgColor) is Love's own choice and is
+ * left alone; a page whose first block is not a Band is left alone
+ * (derive-or-dash — never a guessed wrapper). Pure; never touches the store.
+ */
+export function applyLionToPuck<T extends { content?: unknown[] }>(data: T, lion: string = LION_GROUND): T {
+  const current = Array.isArray(data.content) ? data.content : [];
+  const first = current[0] as { type?: string; props?: Record<string, unknown> } | undefined;
+  if (!first || first.type !== "Band" || !first.props) return data;
+  if (first.props.bgSrc || first.props.bgColor) return data;
+  const patched = { ...first, props: { ...first.props, bgSrc: lion } };
+  return { ...data, content: [patched, ...current.slice(1)] } as T;
+}
+
 export function applyFeaturedToPuck<T extends { content?: unknown[] }>(
   data: T,
   featured: AboutVideo | undefined,
@@ -450,10 +472,14 @@ const bookContent: Block[] = [
 /* ── memberships — the lion page, Love's words from her live site ───────── */
 const mb = kit("mb");
 const membershipsContent: Block[] = [
+  /* TASK-256 (0018.06.24 a₿): the white lion is the BAND'S GROUND — the same
+     lion background the home page's memberships section (.lions-gate) and the
+     hand-built page (.lions-gate-dark) wear — not an inline picture (the
+     0018.06.17 seed put it in as an Image; the Admiral: "we lost the lion
+     background on the /memberships page"). bgSrc rides the Band's own veil
+     (0.13.0 custom grounds). A page published BEFORE this seed gets the same
+     ground at render time through applyLionToPuck (memberships/page.tsx). */
   mb.band("sky-veil", skyHold, [
-    /* the white lion holding the field — the hand-built page's own picture; without it a
-       studio publish lost the lion (Admiral, 0018.06.17 a₿) */
-    mb.img("/images/lions-gate.webp", "The white lion holding the field", 720, "soft", "center"),
     mb.eyebrow("Memberships"),
     mb.heading("Welcome to The Heart Field — where “Heaven and Earth Meet”", "h1"),
     mb.rich("<b>3 Different Memberships</b>"),
@@ -465,7 +491,7 @@ const membershipsContent: Block[] = [
     mb.text("For you hold the universe within you. The earth, planets, stars, galaxies… We will feel into our clair senses and bring tools forth that have always been there — you just didn’t know where to look. We will explore together through sound, movement, inspiration and community. Unifying your connection within and without, Above and Below — Where Heaven Meets Earth, Paradise in Form."),
     mb.text("Here to live a life: we love to love, and live to love. Your presence adds to the field and shapes the new human. You have arrived! Welcome to the Field of the Heart! 💖"),
     mb.button("Get Started Today", "/packages", "gold", "center"),
-  ]),
+  ], { bgSrc: LION_GROUND }),
 ];
 
 /* ── support — the full room: hero, jars, wild doors, more ways ─────────── */
