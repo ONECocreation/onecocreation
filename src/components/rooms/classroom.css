@@ -94,6 +94,21 @@
   }
 }
 
+/* TASK-251 (seam, SceneFrame.tsx owns the element that wears this class):
+   the box Love's full-frame scene (starting soon / be right back / thank
+   you) scales into — its OWN true 16:9, independent of the enclosing
+   .cl-stage-embed's min-height floor above, so the scene is always
+   correctly proportioned (never stretched to fill a floor-forced taller
+   box) and never escapes past its own edges (overflow: hidden pairs with
+   FullScene's fixed={false} position: absolute, the fix for the frame that
+   used to spill over the whole page). */
+.cl-scene-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
 /* TASK-245 (seam, RoomVideoSlot owns the gallery block that wears these
    classes): the people watching, below Love's own studio frame — one tile
    per soul the room's presence already counts. A tile on camera rides the

@@ -14,6 +14,8 @@ import {
   type RoomGate,
 } from "@/lib/room-access";
 import { soulsOnline, handleOf, type RosterResult, type Soul } from "./RoomPresence";
+import SceneFrame from "./SceneFrame";
+import type { StudioSceneId } from "@/lib/studio/scenes";
 
 /**
  * THE VIDEO SLOT (TASK-123, 0018.06.16 a₿ — first embed TASK-146, 0018.06.17
@@ -89,6 +91,21 @@ import { soulsOnline, handleOf, type RosterResult, type Soul } from "./RoomPrese
  * The Jitsi branch below stays byte-identical for `rail !== "vdo"` (absent
  * reads as jitsi, the pre-T-245 behavior) — this is a NEW branch inserted
  * ahead of it, never a rewrite of it.
+ *
+ * TASK-251 (0018.06.23 a₿) — Love's full-frame scenes (starting soon / be
+ * right back / thank you) now honour `fullScene`: when the room page's own
+ * derivation off the studio doc's `activeScene` resolves to a `full` kind
+ * (`studioSceneKind`), the vdo rail's frame renders the site's own
+ * `FullScene` inline (`SceneFrame.tsx`, a small client leaf that scales the
+ * scene's fixed 1920×1080 canvas to fit) instead of the `?view=host`
+ * iframe — this is the fix for "live 20 minutes early, camera off": before
+ * this the viewer's frame just showed an empty host picture, because
+ * nothing on the stage ever watched the scene id Love picks on her desk
+ * (that id only ever rode a VDO `&website=` push, `/studio/overlay`'s own
+ * gated route). `fullScene` null (the default, no full scene active) keeps
+ * today's `?view=host` iframe exactly as it was. The gallery, the camera
+ * door and the "Join Live Session" pill below the frame are UNCHANGED —
+ * this only swaps what fills the frame above them.
  */
 /** TASK-245: handle → npub, the one lookup this lane needs that no route
  *  yet exposes on its own — reused rather than reinvented from the public
@@ -169,6 +186,10 @@ export default function RoomVideoSlot({
   onCameraMxids,
   stageMxids,
   cameraDoor,
+  fullScene,
+  fullSceneShowTitle,
+  fullSceneStartsAt,
+  fullSceneAfterHoursLine,
 }: {
   live: boolean;
   roomTitle: string;
@@ -212,6 +233,20 @@ export default function RoomVideoSlot({
    *  wrapping paragraph — grep-pin: "Step on camera" appears zero times
    *  when this prop is absent. */
   cameraDoor?: string | null;
+  /** TASK-251: the room page's own derivation off the studio doc's
+   *  `activeScene` — set only when its kind is `full` (the overlay route's
+   *  one branch point, `studioSceneKind`, read once server-side). Null/
+   *  absent = no full scene active, the pre-T-251 `?view=host` iframe.
+   *  First paint only; `ClassroomView`'s `/api/live` poll carries updates
+   *  while a viewer watches (the doc can change mid-show). */
+  fullScene?: Extract<StudioSceneId, "starting" | "brb" | "ending"> | null;
+  /** TASK-251: the studio doc's own show title (derive-or-dash applied in
+   *  `SceneFrame`), SSR'd once alongside `fullScene` — never re-polled. */
+  fullSceneShowTitle?: string;
+  /** TASK-251: the "starting soon" scene's countdown target, ISO — "" = no clock. */
+  fullSceneStartsAt?: string;
+  /** TASK-251: the "thank you" scene's after-hours line — "" = omitted. */
+  fullSceneAfterHoursLine?: string;
 }) {
   const canEmbed = live && !!jitsiDomain && !!liveRoom;
   /* the room's own slug, derived from the registry by title (the title
@@ -264,12 +299,23 @@ export default function RoomVideoSlot({
       ) : canEmbedVdo ? (
         <div>
           <div className="cl-stage-embed">
-            <iframe
-              style={{ width: "100%", height: "100%", border: 0 }}
-              src={`https://${vdoHost}/?view=host&room=${encodeURIComponent(studioRoom!)}&cleanoutput&autostart`}
-              allow="autoplay; camera; microphone; fullscreen"
-              title={`${roomTitle} — the studio`}
-            />
+            {fullScene ? (
+              /* TASK-251: Love's full-frame scene, INLINE — no camera, no
+                 overlay token, just the same picture /studio/overlay shows */
+              <SceneFrame
+                scene={fullScene}
+                showTitle={fullSceneShowTitle ?? ""}
+                startsAt={fullSceneStartsAt ?? ""}
+                afterHoursLine={fullSceneAfterHoursLine ?? ""}
+              />
+            ) : (
+              <iframe
+                style={{ width: "100%", height: "100%", border: 0 }}
+                src={`https://${vdoHost}/?view=host&room=${encodeURIComponent(studioRoom!)}&cleanoutput&autostart`}
+                allow="autoplay; camera; microphone; fullscreen"
+                title={`${roomTitle} — the studio`}
+              />
+            )}
           </div>
           {souls.length > 0 && (
             <div className="cl-stage-gallery" aria-label="Who's watching">
