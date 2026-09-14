@@ -12,6 +12,11 @@ import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
 import { getSiteConfig } from "@/lib/site-config";
 
+/* T-229 follow-through (0018.06.23 a₿): this page reads the site switches from KV;
+   without this Next bakes it at build time and a switch Love flips never lands
+   until the next deploy (the same line / and /store already carry). */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Memberships — One Cocreation",
   description: "Welcome to The Heart Field, where Heaven and Earth Meet.",
