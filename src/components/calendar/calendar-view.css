@@ -21,6 +21,17 @@
 .cal-cell{position:relative;display:flex;flex-direction:column;gap:4px;min-height:64px;
   padding:8px 9px 7px;border-radius:var(--cal-cell-radius,6px);background:var(--panel);border:1px solid var(--glass-edge);
   font-family:var(--sans);color:var(--ink)}
+/* the month grid's cell is a <button> (it takes onSelectDay — DayCell.tsx),
+   the week ribbon's is a plain <div> (WeekAltitude never wires
+   onSelectDay) — inside the admin shell, `.mgmt-body button{border-radius:
+   999px}` (globals.css) outranks the bare `.cal-cell` class above by
+   specificity (0,1,1) beats (0,1,0), so the button-rendered month cell
+   never saw the token above; the div-rendered week cell did. This rule's
+   (0,2,1)/(0,2,0) beats that shell rule regardless of stylesheet order,
+   for BOTH element shapes, so a click target changing shape here never
+   re-opens this exact bug. */
+.cal-scroll .cal-cell,
+.cal-scroll button.cal-cell{border-radius:var(--cal-cell-radius,6px)}
 .cal-cell--blackout{background:rgba(231,178,195,.14);border-color:rgba(231,178,195,.4)}
 .cal-cell--multiday{background:rgba(139,118,196,.14);border-color:rgba(139,118,196,.4)}
 .cal-cell--today{border:2px solid var(--teal-bright);padding:7px 8px 6px}
