@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import OperatorGate from "@/components/OperatorGate";
 import OverviewPanel from "@/components/console/OverviewPanel";
+import { glassCard, SectionHead } from "@/components/console/glass";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { CONSOLE_SITE, CONSOLE_CHROME } from "@/lib/console";
 import { listTips, tipsConfigured, type TipLedger } from "@/lib/tips";
@@ -28,7 +29,7 @@ async function TipJarsCard({ banner = false }: { banner?: boolean }) {
     ledger = await listTips();
   } catch {
     return (
-      <p className="border border-neutral-800 px-4 py-2 text-xs text-neutral-400">
+      <p style={{ ...glassCard, padding: "8px 16px", fontSize: ".75rem", color: "var(--muted)" }}>
         jars unreachable — check the BTCPay key&apos;s &quot;view invoices&quot; permission
       </p>
     );
@@ -86,30 +87,31 @@ export default async function ConsoleOverviewPage() {
     const liveRoom = live.live && live.room ? roomForSlug(live.room) : undefined;
     // Home & Calendar (wireframe v2): the jars at a glance, then the week.
     return (
-      <div>
+      <div className="p-6">
         <LovesDesk />
         {/* the day's actions live WITH the calendar (Admiral, 0018.05.15) —
             goods to ship + offers waiting; sessions close out in their popups */}
         <AttentionStrip />
         {/* TASK-192 — the class door folded into the Go-Live room (one door
             on Love's desk, four ways in); this pointer is all that stays here */}
-        <div className="mt-6 border border-neutral-800 p-4 text-sm">
-          <h2 className="text-sm text-neutral-100">● Go live</h2>
-          <p className="mt-2 text-xs text-neutral-300">
-            The class door moved — <Link className="underline" href="/a/live">the Go-Live room</Link> holds
+        <SectionHead label="Go live" />
+        <div style={glassCard}>
+          <p style={{ margin: 0, fontSize: ".82rem", color: "var(--ink-body)" }}>
+            The class door moved — <Link href="/a/live" style={{ color: "var(--info)", textDecoration: "underline" }}>the Go-Live room</Link> holds
             the strip and the four ways in: the rooms, YouTube, today&apos;s calls, a guest.
           </p>
         </div>
         {/* THE WEEKLY RHYTHM (Admiral, 0018.05.18): where Love checks, when */}
-        <div className="mt-6 border border-neutral-800 p-4 text-sm">
-          <h2 className="text-sm text-neutral-100">Love&apos;s week — where to check</h2>
-          <ul className="mt-2 space-y-1 text-xs text-neutral-300">
-            <li>📺 {liveRoom ? <>🔴 <b>LIVE now</b> — <Link className="underline" href="/live">{liveRoom.title}</Link> is open · the banner is up</> : <><b>{LIVE_SCHEDULE}</b> — go live on <a className="underline" href={LIVE_YOUTUBE} target="_blank" rel="noreferrer">YouTube</a></>}</li>
+        <SectionHead label="Love's week — where to check" />
+        <div style={glassCard}>
+          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column",
+            gap: 4, fontSize: ".82rem", color: "var(--ink-body)" }}>
+            <li>📺 {liveRoom ? <>🔴 <b>LIVE now</b> — <Link href="/live" style={{ color: "var(--info)", textDecoration: "underline" }}>{liveRoom.title}</Link> is open · the banner is up</> : <><b>{LIVE_SCHEDULE}</b> — go live on <a href={LIVE_YOUTUBE} target="_blank" rel="noreferrer" style={{ color: "var(--info)", textDecoration: "underline" }}>YouTube</a></>}</li>
             <li>⚑ <b>Daily</b> — tap a flagged session on the calendar above; saving notes closes it out</li>
-            <li>✉️ <b>Weekly</b> — write &amp; publish the news: <Link className="underline" href="/a/letters">Letters</Link> (it lands on <Link className="underline" href="/news">/news</Link> + every inbox)</li>
-            <li>🎁 <b>Every visit</b> — give-what-you-can offers waiting: <Link className="underline" href="/a/money">Money Jars · offers desk</Link></li>
+            <li>✉️ <b>Weekly</b> — write &amp; publish the news: <Link href="/a/letters" style={{ color: "var(--info)", textDecoration: "underline" }}>Letters</Link> (it lands on <Link href="/news" style={{ color: "var(--info)", textDecoration: "underline" }}>/news</Link> + every inbox)</li>
+            <li>🎁 <b>Every visit</b> — give-what-you-can offers waiting: <Link href="/a/money" style={{ color: "var(--info)", textDecoration: "underline" }}>Money Jars · offers desk</Link></li>
             <li>📅 <b>Weekly</b> — hours &amp; days off ring true: the calendar above</li>
-            <li>👥 <b>Monthly</b> — who&apos;s new, who needs a hand: <Link className="underline" href="/a/people">People</Link></li>
+            <li>👥 <b>Monthly</b> — who&apos;s new, who needs a hand: <Link href="/a/people" style={{ color: "var(--info)", textDecoration: "underline" }}>People</Link></li>
           </ul>
         </div>
         {/* the jars, as a scoreboard strip (Admiral, 0018.05.18) — the big
