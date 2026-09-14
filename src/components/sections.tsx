@@ -144,7 +144,12 @@ export function About() {
         <p className="kicker center">Smiles, Love</p>
         <h2 className="center sec-h" style={{ marginBottom: "1em" }}>My Story</h2>
         <div className="two-col" style={{ "--cols": "minmax(0,.8fr) minmax(0,1.2fr)" } as CSSProperties}>
-          <img src={cartridge.portraits.headshot} alt="Love — founder of One Cocreation" style={{ borderRadius: 24, boxShadow: "var(--soft)" }} />
+          {/* TASK-252 (0018.06.24 a₿): the cartridge's headshot flipped to
+              Love's new square photo (love-2.webp, 900×900) — the block was
+              sized by the old 2:3 portrait, so the img gets an explicit
+              square frame here (cover-crop) rather than reflowing the
+              two-column composition. */}
+          <img src={cartridge.portraits.headshot} alt="Love — founder of One Cocreation" style={{ width: "100%", maxWidth: 360, aspectRatio: "1/1", objectFit: "cover", borderRadius: 24, boxShadow: "var(--soft)" }} />
           <div>
             <p>I have been a solo adventurer for a while now — like most, on the hero&apos;s journey. Over time I found none of us are here to shrink, but to standout. Not here to separate, but to gather together — to bring kindness to the world, to be unapologetically US.</p>
             <p style={{ color: "var(--rose)", fontFamily: "var(--serif)", fontSize: "1.3rem", lineHeight: 1.5 }}>

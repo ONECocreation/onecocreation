@@ -112,8 +112,10 @@ export default async function AboutPage() {
             {/* TASK-154 item 2: her pictures LEVEL, not fanned — framed
                 like the session cards: full square, the faint purple
                 rounded thin bar around the outside (.about-faces,
-                house.css). The middle slot keeps today's picture until
-                Love's new one lands (see SUMMARY ## Seams). */}
+                house.css). The middle slot wears Love's Sep 8 selfie
+                (TASK-238, love-2.webp — landed); TASK-252 (0018.06.24 a₿)
+                carried the same file into the home "My Story" block via
+                the shared cartridge field. */}
             <div className="about-faces" style={{ display: "flex", justifyContent: "center", gap: 18, flexWrap: "wrap", marginTop: 34 }}>
               {["love-1", "love-2", "love-3"].map((n) => (
                 <img key={n} src={`/images/about/${n}.webp`} alt="Love" />
