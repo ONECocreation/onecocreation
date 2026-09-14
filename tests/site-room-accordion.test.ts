@@ -56,7 +56,9 @@ describe("the accordion's rows + the current mark", () => {
 
 describe("the sub-routes — each renders its one card", () => {
   it("/a/site keeps the switches alone — the moved cards are gone (source pin)", async () => {
-    const page = await read("src/app/a/site/page.tsx");
+    // TASK-241: the room body moved from page.tsx to SiteRoom.tsx (page.tsx
+    // is now the server operator-gate wrapper) — same body, new file.
+    const page = await read("src/app/a/site/SiteRoom.tsx");
     expect(page).toContain("The Switches");
     expect(page).toContain("FEATURE_ROWS");
     expect(page).toContain("RAIL_ROWS");
@@ -67,19 +69,22 @@ describe("the sub-routes — each renders its one card", () => {
   });
 
   it("/a/site/menu renders the nav editor", async () => {
-    const page = await read("src/app/a/site/menu/page.tsx");
+    // TASK-241: body moved to SiteMenuRoom.tsx.
+    const page = await read("src/app/a/site/menu/SiteMenuRoom.tsx");
     expect(page).toContain("<NavEditor />");
     expect(page).toContain("Menu — the doors Love shapes");
   });
 
   it("/a/site/community-door renders T-162's card", async () => {
-    const page = await read("src/app/a/site/community-door/page.tsx");
+    // TASK-241: body moved to SiteCommunityDoorRoom.tsx.
+    const page = await read("src/app/a/site/community-door/SiteCommunityDoorRoom.tsx");
     expect(page).toContain("<CommunityDoorCard />");
     expect(page).toContain("Community door — what it needs before it opens");
   });
 
   it("/a/site/about-videos renders T-161's playlist card", async () => {
-    const page = await read("src/app/a/site/about-videos/page.tsx");
+    // TASK-241: body moved to SiteAboutVideosRoom.tsx.
+    const page = await read("src/app/a/site/about-videos/SiteAboutVideosRoom.tsx");
     expect(page).toContain("<AboutVideosCard />");
     expect(page).toContain("Videos on About — the playlist Love pastes");
     // the card itself moved verbatim — still self-contained through /api/admin/site

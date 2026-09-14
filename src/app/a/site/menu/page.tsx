@@ -1,24 +1,29 @@
-"use client";
-
-import { SectionHead } from "@/components/console/glass";
-import NavEditor from "@/components/console/NavEditor";
+import type { Metadata } from "next";
+import { headers } from "next/headers";
+import OperatorGate from "@/components/OperatorGate";
+import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
+import SiteMenuRoom from "./SiteMenuRoom";
 
 /**
- * /a/site/menu — THE MENU sub-room (TASK-188, 0018.06.18 a₿ · block
- * 966,112). The nav editor got its own room under the Site accordion ("maybe
- * it gets its own sub-menu under Site" — the Admiral). The card is the same
- * self-contained NavEditor that rode /a/site since TASK-137 — own
- * fetch/save, Save unchanged.
+ * /a/site/menu — THE MENU door (TASK-241, 0018.06.23 a₿). The room (the
+ * nav editor) is untouched — it moved to `SiteMenuRoom.tsx` verbatim so
+ * this file could become a SERVER component and carry the same
+ * key-is-the-operator gate as every other /a room: no operator cookie, the
+ * door renders.
  */
-export default function SiteMenuRoom() {
-  return (
-    <div className="p-6" style={{ maxWidth: 860 }}>
-      <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>The Menu</h1>
-      <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
-        The doors across the top of the site — rename them, drag them into order, nest a page under a header.
-      </p>
-      <SectionHead label="Menu — the doors Love shapes" />
-      <NavEditor />
-    </div>
-  );
+
+export const metadata: Metadata = {
+  title: "Menu — admin",
+  robots: { index: false, follow: false },
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function SiteMenuPage() {
+  const cookie = (await headers()).get("cookie");
+  const operator = operatorFromCookieHeader(cookie);
+  if (!operator) {
+    return <OperatorGate configured={operatorsConfigured()} />;
+  }
+  return <SiteMenuRoom />;
 }

@@ -1,23 +1,30 @@
-"use client";
-
-import { SectionHead } from "@/components/console/glass";
-import AboutVideosCard from "./AboutVideosCard";
+import type { Metadata } from "next";
+import { headers } from "next/headers";
+import OperatorGate from "@/components/OperatorGate";
+import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
+import SiteAboutVideosRoom from "./SiteAboutVideosRoom";
 
 /**
- * /a/site/about-videos — the VIDEOS ON ABOUT sub-room (TASK-188, 0018.06.18
- * a₿ · block 966,112). T-161's playlist card moved here from /a/site when
- * the Site room became an accordion; the card itself is untouched — paste a
- * YouTube link, the house keeps the 11-char id, /about shows her list.
+ * /a/site/about-videos — THE VIDEOS ON ABOUT door (TASK-241, 0018.06.23
+ * a₿). The room (T-161's playlist card) is untouched — it moved to
+ * `SiteAboutVideosRoom.tsx` verbatim so this file could become a SERVER
+ * component and carry the same key-is-the-operator gate as every other /a
+ * room: no operator cookie, the door renders (the Admiral opened this exact
+ * room signed out and saw a bare frame — 0018.06.23 a₿ sighting).
  */
-export default function SiteAboutVideosRoom() {
-  return (
-    <div className="p-6" style={{ maxWidth: 860 }}>
-      <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>Videos on About</h1>
-      <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
-        The playlist the About page shows — paste a YouTube link, order the rows, save.
-      </p>
-      <SectionHead label="Videos on About — the playlist Love pastes" />
-      <AboutVideosCard />
-    </div>
-  );
+
+export const metadata: Metadata = {
+  title: "Videos on About — admin",
+  robots: { index: false, follow: false },
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function SiteAboutVideosPage() {
+  const cookie = (await headers()).get("cookie");
+  const operator = operatorFromCookieHeader(cookie);
+  if (!operator) {
+    return <OperatorGate configured={operatorsConfigured()} />;
+  }
+  return <SiteAboutVideosRoom />;
 }
