@@ -1,11 +1,27 @@
 "use client";
 
-import { WeekRibbon } from "@/components/calendar";
+import type { CalendarDayCell } from "@/lib/calendar-view";
+import { WeekRibbon, type CalendarEventPill } from "@/components/calendar";
 import { bftWeek } from "@/lib/calendar-view";
 import MaterialsShelf from "./MaterialsShelf";
 import RosterPanel from "./RosterPanel";
 import { buildDeskMarks, civilKeyOf, timeLabel } from "./marks";
-import type { DeskFeed, DeskRoom } from "./types";
+import type { BookingChip, DeskFeed, DeskRoom } from "./types";
+
+/**
+ * T-248: the same "you're working this meeting" breadcrumb the Week
+ * altitude always showed for its own schedule-panel selection now also
+ * answers the Day altitude's booking-pill click — DERIVED here once and
+ * imported there, never a second card (the brief's own wording).
+ */
+export function BookingBreadcrumb({ altitude, selected }: { altitude: "Week" | "Day"; selected: BookingChip | null }) {
+  if (!selected) return null;
+  return (
+    <p className="desk-breadcrumb">
+      Desk › {altitude} › <b>{selected.title} · {timeLabel(selected.startUtc)}</b> — you&apos;re working this meeting
+    </p>
+  );
+}
 
 /**
  * Love's Desk — Week ("the plan"): the ribbon + three columns (Schedule /
@@ -30,6 +46,8 @@ export default function WeekAltitude({
   onSelectBooking,
   selectedRoomSlug,
   onSelectRoom,
+  onSelectDay,
+  onSelectPill,
 }: {
   bftYear: number;
   bftMonth: number;
@@ -42,6 +60,13 @@ export default function WeekAltitude({
   onSelectBooking: (id: string | null) => void;
   selectedRoomSlug: string | null;
   onSelectRoom: (slug: string) => void;
+  /** T-248: the week's day blocks were inert (WeekRibbon always accepted
+   *  onSelectDay; this altitude just never passed it on) — the Admiral's
+   *  "make the weekly buttons also clickable". Same jumpToDay(cell.bftDay)
+   *  the month grid already uses, wired one level up in LovesDesk. */
+  onSelectDay?: (cell: CalendarDayCell) => void;
+  /** T-248: a booking/live pill inside the ribbon — LovesDesk resolves it. */
+  onSelectPill?: (pill: CalendarEventPill, cell: CalendarDayCell) => void;
 }) {
   const marks = buildDeskMarks(feed, { todayCivilKey, liveNowRoomSlug });
 
@@ -60,12 +85,15 @@ export default function WeekAltitude({
 
   return (
     <div>
-      <WeekRibbon bftYear={bftYear} bftMonth={bftMonth} weekOfMonth={weekOfMonth} marks={marks} />
-      {selected && (
-        <p className="desk-breadcrumb">
-          Desk › Week › <b>{selected.title} · {timeLabel(selected.startUtc)}</b> — you&apos;re working this meeting
-        </p>
-      )}
+      <WeekRibbon
+        bftYear={bftYear}
+        bftMonth={bftMonth}
+        weekOfMonth={weekOfMonth}
+        marks={marks}
+        onSelectDay={onSelectDay}
+        onSelectPill={onSelectPill}
+      />
+      <BookingBreadcrumb altitude="Week" selected={selected} />
       <div className="desk-grid-3">
         <div className="desk-panel">
           <div className="desk-panel__head"><h3>Schedule</h3></div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   BftMonthGrid,
@@ -9,6 +10,8 @@ import {
   useCalendarPrefs,
   bftMonthGrid,
   bftToday,
+  type CalendarDayCell,
+  type CalendarEventPill,
 } from "@/components/calendar";
 import { ROOMS } from "@/lib/matrix-rooms";
 import WeekAltitude from "./desk/WeekAltitude";
@@ -47,6 +50,20 @@ function readAltitude(): Altitude {
 }
 function readServerAltitude(): Altitude {
   return "month"; // SSR has no localStorage; matches the fresh-visit default
+}
+
+/**
+ * T-248 — pure, tested handler: what a pill click MEANS. marks.ts's own
+ * ids are the contract (buildDeskMarks): the live pills are `"live-now"`
+ * (today, live right now) or `"live-<civilKey>"` (the Mon/Wed/Fri ~11:11
+ * projection) — everything else is a booking pill carrying the booking's
+ * own `bookingId` as its `id`. No DOM, no router, no state — a click
+ * handler just calls this and branches on the result.
+ */
+export type PillAction = { kind: "live" } | { kind: "booking"; bookingId: string };
+export function resolvePillAction(pill: CalendarEventPill): PillAction {
+  if (pill.id === "live-now" || pill.id.startsWith("live-")) return { kind: "live" };
+  return { kind: "booking", bookingId: pill.id };
 }
 
 const MONTH_WORDS = [
@@ -122,6 +139,7 @@ function LiveDoor({ roomSlug }: { roomSlug: string | null }) {
 }
 
 function DeskInner() {
+  const router = useRouter();
   const { primary, counts } = useCalendarPrefs();
 
   const today = useMemo(() => bftToday(), []);
@@ -193,6 +211,21 @@ function DeskInner() {
     chooseAltitude("day");
   }
 
+  /** T-248 — "if they select an item on the calendar it should go to that
+   *  item's details, for all the calendar views": a live pill is the
+   *  live room's own desk (`/a/live`); a booking pill jumps to that day
+   *  (same door as clicking the day block) and selects the booking so the
+   *  day altitude's breadcrumb names it. */
+  function handleSelectPill(pill: CalendarEventPill, cell: CalendarDayCell) {
+    const action = resolvePillAction(pill);
+    if (action.kind === "live") {
+      router.push("/a/live");
+      return;
+    }
+    jumpToDay(cell.bftDay);
+    setSelectedBookingId(action.bookingId);
+  }
+
   /** Day altitude's ‹ › — rolls across a month boundary rather than
    *  clamping, since a₿ months are always exactly 28 days (no day 29 to
    *  worry about either direction). */
@@ -229,6 +262,7 @@ function DeskInner() {
             bftMonth={bftMonth}
             marks={monthMarks}
             onSelectDay={(cell) => jumpToDay(cell.bftDay)}
+            onSelectPill={handleSelectPill}
           />
         </div>
       )}
@@ -246,6 +280,8 @@ function DeskInner() {
           onSelectBooking={setSelectedBookingId}
           selectedRoomSlug={selectedRoomSlug}
           onSelectRoom={setSelectedRoomSlug}
+          onSelectDay={(cell) => jumpToDay(cell.bftDay)}
+          onSelectPill={handleSelectPill}
         />
       )}
 
@@ -265,6 +301,7 @@ function DeskInner() {
             liveNowRoomSlug={liveNowRoomSlug}
             selectedRoomSlug={selectedRoomSlug}
             onSelectRoom={setSelectedRoomSlug}
+            selectedBookingId={selectedBookingId}
           />
         </div>
       )}

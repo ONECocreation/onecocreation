@@ -2,7 +2,7 @@
 
 import { bftMonthGrid, isTodayCell, type CalendarDayCell, type CalendarViewOptions } from "@/lib/calendar-view";
 import { useCalendarPrefs, type CalendarPrimary } from "./CalendarPrefs";
-import DayCell, { type CalendarDayMarksLookup } from "./DayCell";
+import DayCell, { type CalendarDayMarksLookup, type CalendarEventPill } from "./DayCell";
 import "./calendar-view.css";
 
 export interface BftMonthGridProps {
@@ -20,6 +20,8 @@ export interface BftMonthGridProps {
   /** the currently-selected day (by bftKey), if any */
   selectedBftKey?: string;
   onSelectDay?: (cell: CalendarDayCell) => void;
+  /** T-248: threaded straight to each DayCell — see DayCell's own doc. */
+  onSelectPill?: (pill: CalendarEventPill, cell: CalendarDayCell) => void;
   /** reference "now" — tests/stories only; production leaves this to Date.now() */
   nowMs?: number;
   /** the LIVE chain tip height when the surface already has one (fetched `cache: "no-store"`
@@ -51,7 +53,7 @@ export interface BftMonthGridProps {
  */
 export default function BftMonthGrid({
   bftYear, bftMonth, primary: primaryProp, counts: countsProp,
-  marks, selectedBftKey, onSelectDay, nowMs, todayHeight, legend = true, legendBlackout = true, className,
+  marks, selectedBftKey, onSelectDay, onSelectPill, nowMs, todayHeight, legend = true, legendBlackout = true, className,
 }: BftMonthGridProps) {
   const prefs = useCalendarPrefs();
   const primary = primaryProp ?? prefs.primary;
@@ -83,6 +85,7 @@ export default function BftMonthGrid({
             isSelected={selectedBftKey === cell.bftKey}
             marks={marks?.(cell)}
             onSelect={onSelectDay}
+            onSelectPill={onSelectPill}
           />
         ))}
       </div>

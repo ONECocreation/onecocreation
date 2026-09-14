@@ -5,6 +5,10 @@ import type { CalendarDayCell } from "@/lib/calendar-view";
 import { field, Chip } from "@/components/console/glass";
 import MaterialsShelf from "./MaterialsShelf";
 import RosterPanel from "./RosterPanel";
+// T-248: the SAME "you're working this meeting" breadcrumb the Week
+// altitude shows for its schedule-panel selection — derived from there,
+// never a second card (the brief's own wording).
+import { BookingBreadcrumb } from "./WeekAltitude";
 import { civilKeyOf, timeLabel } from "./marks";
 import type { DeskFeed, DeskRoom } from "./types";
 
@@ -107,6 +111,7 @@ export default function DayAltitude({
   liveNowRoomSlug,
   selectedRoomSlug,
   onSelectRoom,
+  selectedBookingId,
 }: {
   cell: CalendarDayCell;
   feed: DeskFeed | null;
@@ -114,12 +119,19 @@ export default function DayAltitude({
   liveNowRoomSlug: string | null;
   selectedRoomSlug: string | null;
   onSelectRoom: (slug: string) => void;
+  /** T-248: set by a booking-pill click (any altitude) via LovesDesk's
+   *  jumpToDay + setSelectedBookingId — this altitude renders that
+   *  booking's details through the SAME breadcrumb the Week altitude uses
+   *  (BookingBreadcrumb), never a second card. Optional so this altitude
+   *  still renders exactly as before when nothing is selected. */
+  selectedBookingId?: string | null;
 }) {
   const dayBookings = (feed?.bookings ?? [])
     .filter((b) => civilKeyOf(b.startUtc) === cell.civilKey)
     .sort((a, b) => (a.startUtc < b.startUtc ? -1 : 1));
   const featured = dayBookings[0] ?? null;
   const sessionKey = featured?.bookingId ?? cell.civilKey;
+  const selected = (feed?.bookings ?? []).find((b) => b.bookingId === selectedBookingId) ?? null;
 
   const override = feed?.overrides.find((o) => o.date === cell.civilKey);
   const isRetreat = !!override?.note?.toLowerCase().startsWith("retreat");
@@ -142,6 +154,8 @@ export default function DayAltitude({
         </select>
         {liveHere && <Chip tone="gold">● LIVE now</Chip>}
       </div>
+
+      <BookingBreadcrumb altitude="Day" selected={selected} />
 
       <div className="desk-day-grid">
       <div>
