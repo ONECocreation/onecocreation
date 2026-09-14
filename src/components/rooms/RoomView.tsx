@@ -136,6 +136,55 @@ export function canReact(mineForId: Set<string> | undefined, key: string): boole
   return !mineForId?.has(key);
 }
 
+/**
+ * The picker's own row of buttons — pulled out so its RENDERED shape (not
+ * just the REACTION_EMOJIS data array) is a direct pin: a test can render
+ * this in isolation (no fetch, no session, nothing RoomView's own effects
+ * need) and count the twelve `<button role="menuitem">`s straight out of
+ * the markup.
+ *
+ * TASK-247 second pass (re-shot, coordinator caught it): a fixed CSS grid
+ * of 6 columns — always two rows of six — instead of a one-row flex that
+ * measured its own width off whatever ancestor was nearest. That row's
+ * natural width (12 buttons wide) was wider than the message CARD it was
+ * anchored to, and the messages pane's `overflowY: "auto"` computes an
+ * implicit `overflow-x: auto` too (the CSS overflow spec's "the other axis
+ * becomes auto" rule) — so the row's tail (🙏 😊 🔥) was silently clipped
+ * at that ancestor's edge, off-screen, never reachable by any scroll a
+ * viewer could find. Two rows of six is roughly HALF as wide, which fits
+ * inside every message bubble in this room (even the shortest one-line
+ * message is wider than six emoji), so nothing is ever clipped again —
+ * verified by re-shooting all four picker-open shots after this fix (see
+ * the brief's SUMMARY.md for the exact count read off each one).
+ */
+export function ReactionPicker({ onPick }: { onPick: (key: string) => void }) {
+  return (
+    <div
+      role="menu"
+      aria-label="react with an emoji"
+      style={{
+        display: "grid", gridTemplateColumns: "repeat(6, auto)", gap: 4,
+        padding: "6px 8px", borderRadius: 12,
+        background: "var(--glass)", border: "1px solid var(--glass-edge)",
+        boxShadow: "0 8px 22px -12px rgba(5,3,16,.6)",
+      }}
+    >
+      {REACTION_EMOJIS.map(({ key, name }) => (
+        <button
+          key={key}
+          type="button"
+          role="menuitem"
+          onClick={() => onPick(key)}
+          aria-label={`react with ${name}`}
+          style={{ border: "none", background: "none", cursor: "pointer", fontSize: "1rem", lineHeight: 1, padding: 3 }}
+        >
+          {key}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function RoomView({ slug, alias, title, kind }: Props) {
   const [state, setState] = useState<"loading" | "signedout" | "locked" | "open" | "error">("loading");
   const [reason, setReason] = useState("");
@@ -390,46 +439,19 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
                       </button>
                     </div>
                   )}
-                  {/* the popover is a SIBLING of the corner, positioned off
-                      the CARD's own box (not the small corner strip) — a
-                      short one-line card still clears the popover above
-                      itself instead of the picker overlapping the text
-                      (data-reaction-corner on this one too, so a click
-                      inside it never counts as "outside" and self-closes) */}
+                  {/* the popover wrapper is a SIBLING of the corner, positioned
+                      off the CARD's own box (not the small corner strip) — a
+                      short one-line card still clears it above itself instead
+                      of overlapping the message text (data-reaction-corner on
+                      this one too, so a click inside it never counts as
+                      "outside" and self-closes). TWO ROWS OF SIX (ReactionPicker's
+                      fixed 6-column grid), not one row of 12 — a one-row
+                      12-wide row was wider than short message bubbles and got
+                      silently clipped by the messages pane's implicit
+                      overflow-x (re-shot and caught: see SUMMARY.md). */}
                   {!m.encrypted && openPicker === m.id && (
-                    <div
-                      data-reaction-corner
-                      role="menu"
-                      aria-label="react with an emoji"
-                      style={{
-                        /* left+right (not just right) so its own width is
-                           bounded by the CARD it shares an ancestor with —
-                           a lone `right` let the row's natural width push
-                           past the card's own left edge on a narrow phone
-                           card, clipped invisibly by the room's outer
-                           overflow:hidden instead of just scrolling */
-                        position: "absolute", left: 8, right: 8, bottom: "calc(100% + 8px)",
-                        display: "flex", gap: 4, padding: "6px 8px", borderRadius: 12,
-                        background: "var(--glass)", border: "1px solid var(--glass-edge)",
-                        boxShadow: "0 8px 22px -12px rgba(5,3,16,.6)", zIndex: 1,
-                        /* still ONE row (the brief's ask) — scrolls sideways
-                           if 12 emoji don't fit the card's own width rather
-                           than wrapping or clipping */
-                        overflowX: "auto", WebkitOverflowScrolling: "touch",
-                      }}
-                    >
-                      {REACTION_EMOJIS.map(({ key, name }) => (
-                        <button
-                          key={key}
-                          type="button"
-                          role="menuitem"
-                          onClick={() => react(m.id, key, Date.now())}
-                          aria-label={`react with ${name}`}
-                          style={{ border: "none", background: "none", cursor: "pointer", fontSize: "1rem", lineHeight: 1, padding: 3 }}
-                        >
-                          {key}
-                        </button>
-                      ))}
+                    <div data-reaction-corner style={{ position: "absolute", right: 8, bottom: "calc(100% + 8px)", zIndex: 1 }}>
+                      <ReactionPicker onPick={(key) => react(m.id, key, Date.now())} />
                     </div>
                   )}
                 </div>
