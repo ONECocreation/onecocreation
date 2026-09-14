@@ -5,12 +5,12 @@ import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-au
 import SiteAboutVideosRoom from "./SiteAboutVideosRoom";
 
 /**
- * /a/site/about-videos — THE VIDEOS ON ABOUT door (TASK-241, 0018.09.14
+ * /a/site/about-videos — THE VIDEOS ON ABOUT door (TASK-241, 0018.06.23
  * a₿). The room (T-161's playlist card) is untouched — it moved to
  * `SiteAboutVideosRoom.tsx` verbatim so this file could become a SERVER
  * component and carry the same key-is-the-operator gate as every other /a
  * room: no operator cookie, the door renders (the Admiral opened this exact
- * room signed out and saw a bare frame — 0018.09.14 a₿ sighting).
+ * room signed out and saw a bare frame — 0018.06.23 a₿ sighting).
  */
 
 export const metadata: Metadata = {

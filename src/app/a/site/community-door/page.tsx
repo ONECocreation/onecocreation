@@ -6,7 +6,7 @@ import SiteCommunityDoorRoom from "./SiteCommunityDoorRoom";
 
 /**
  * /a/site/community-door — THE COMMUNITY DOOR readiness room (TASK-241,
- * 0018.09.14 a₿). The room (T-162's card) is untouched — it moved to
+ * 0018.06.23 a₿). The room (T-162's card) is untouched — it moved to
  * `SiteCommunityDoorRoom.tsx` verbatim so this file could become a SERVER
  * component and carry the same key-is-the-operator gate as every other /a
  * room: no operator cookie, the door renders.

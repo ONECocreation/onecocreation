@@ -4,7 +4,7 @@ import path from "path";
 import { renderToStaticMarkup } from "react-dom/server";
 
 /**
- * TASK-241 (0018.09.14 a₿) — the Admiral opened /a/site/about-videos signed
+ * TASK-241 (0018.06.23 a₿) — the Admiral opened /a/site/about-videos signed
  * out and saw "a frame without the login items": the desk card drew with no
  * sign-in door, and Save answered 401. Every other /a room is a SERVER page
  * that reads the cookie and renders `<OperatorGate />` when there is no

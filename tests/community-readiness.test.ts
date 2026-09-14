@@ -263,7 +263,7 @@ describe("TASK-162 — the door + the card's words", () => {
   it("the card rides its own sub-room under the Site accordion (source pin)", async () => {
     // TASK-188 (0018.06.18 a₿): the card moved from beside the switches to
     // its own view at /a/site/community-door when the Site room became an
-    // accordion — same card, same words, new berth. TASK-241 (0018.09.14
+    // accordion — same card, same words, new berth. TASK-241 (0018.06.23
     // a₿): the room body itself moved again, from page.tsx (now the server
     // operator-gate wrapper) to SiteCommunityDoorRoom.tsx.
     const page = await read("src/app/a/site/community-door/SiteCommunityDoorRoom.tsx");

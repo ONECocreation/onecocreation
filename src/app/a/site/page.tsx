@@ -5,7 +5,7 @@ import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-au
 import SiteRoom from "./SiteRoom";
 
 /**
- * /a/site — THE SWITCHES door (TASK-241, 0018.09.14 a₿). The room itself
+ * /a/site — THE SWITCHES door (TASK-241, 0018.06.23 a₿). The room itself
  * (the switches, payment rails, meeting picker) is unchanged — it moved to
  * `SiteRoom.tsx` verbatim so this file could become a SERVER component and
  * carry the same key-is-the-operator gate as every other /a room

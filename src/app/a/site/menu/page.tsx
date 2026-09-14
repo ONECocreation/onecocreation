@@ -5,7 +5,7 @@ import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-au
 import SiteMenuRoom from "./SiteMenuRoom";
 
 /**
- * /a/site/menu — THE MENU door (TASK-241, 0018.09.14 a₿). The room (the
+ * /a/site/menu — THE MENU door (TASK-241, 0018.06.23 a₿). The room (the
  * nav editor) is untouched — it moved to `SiteMenuRoom.tsx` verbatim so
  * this file could become a SERVER component and carry the same
  * key-is-the-operator gate as every other /a room: no operator cookie, the
