@@ -7,6 +7,7 @@ import { ROOMS, type MatrixRoom } from "@/lib/matrix";
 import { listServices } from "@/lib/booking";
 import { listItems } from "@/lib/store";
 import { getSiteConfig } from "@/lib/site-config";
+import { tierRailsOn } from "@/lib/tier-offer";
 import { jarsOpen } from "@/lib/payments";
 import SubscribeForm from "./SubscribeForm";
 import TipJar from "./TipJar";
@@ -178,6 +179,14 @@ export function packageWaitlistProps(tier: "A" | "B" | "C", slug: string | undef
   };
 }
 
+/** TASK-229 (0018.06.23 a₿) — the package cards' closing words, ONE exported
+ *  const so T-232's later verbiage seed can find (and Love can overwrite)
+ *  this exact string without touching Packages() itself. REC only — the
+ *  Admiral's call (00:52–01:00): "your tier gently becomes your key" read
+ *  to Love as a bitcoin thing, not a doors thing; ":346" (NotOpenYet) already
+ *  carries the right idea — "your package opens the doors." */
+export const PACKAGE_DOORS_WORDS = "Your package opens its doors.";
+
 export async function Packages() {
   /* TASK-187 GATE (0018.06.18 a₿ · block 966,104) — the home hero's package
      doors follow the memberships switch, same visibility-only idiom as
@@ -186,6 +195,12 @@ export async function Packages() {
   const switches = await getSiteConfig();
   if (!switches.features.memberships) return null;
   /* end TASK-187 GATE */
+  /* TASK-229 (0018.06.23 a₿): the card's door reads the SAME switch the
+     tier page reads (tierRailsOn, lifted to src/lib/tier-offer.ts) — rails
+     ON means the tier pages are selling today, so the card's picture and
+     its door both walk straight to that sale instead of collecting another
+     waitlist signup. */
+  const railsOn = tierRailsOn(switches);
   const cards = [
     { tier: "A" as const, accent: "a", img: cartridge.tierArt.A, feats: ["Live weekly meetup in Love's room — 4× a month", "Explore your Clair Senses through breath", "Meditations, toning, light language", "A held energetic field, in community"] },
     { tier: "B" as const, accent: "b", img: cartridge.tierArt.B, feats: ["Everything in Weekly Intuitive", "Weekly recorded reading + affirmations", "Weekly live meetup in Love's room", "Movement, meditation & navigation"] },
@@ -193,10 +208,14 @@ export async function Packages() {
   ];
   return (
     <section id="packages" className="lions-gate">
+      {/* TASK-229: keyboard focus on the new picture-door link, scoped here
+          (this lane owns Packages() only, not house.css) — same "own-CSS
+          via a scoped <style>" idiom Contact() already uses above. */}
+      <style>{`#packages .thumb-link{display:block}#packages .thumb-link:focus-visible{outline:2px solid var(--rose,#c56e8b);outline-offset:3px;border-radius:16px}`}</style>
       <div className="wrap">
         <p className="kicker center">The Heart Field — Where Heaven and Earth Meet</p>
         <h2 className="center sec-h">Memberships</h2>
-        <p className="lead center">Three ways into the field — each includes everything before it. Pay monthly in dollars or in bitcoin; your tier gently becomes your key.</p>
+        <p className="lead center">Three ways into the field — each includes everything before it. Pay monthly in dollars or in bitcoin. {PACKAGE_DOORS_WORDS}</p>
         <nav className="tier-pills" aria-label="Membership plans">
           {TIER_PAGES.map((p) => (
             <Link key={p.slug} className="tier-pill" href={`/packages/${p.slug}`}>
@@ -210,7 +229,14 @@ export async function Packages() {
             const slug = TIER_PAGES.find((p) => p.tier === c.tier)?.slug;
             return (
               <div className="card shine-hover" key={c.tier}>
-                <img className="thumb" src={c.img} alt={t.name} />
+                {/* TASK-229 (0018.06.23 a₿, Love on the call: "I'd rather
+                    just the picture be a [button] instead of more words") —
+                    the picture itself is now the door to the tier's own
+                    page; the hover-scale on `.card .thumb` (house.css)
+                    still fires through the Link, unchanged. */}
+                <Link href={`/packages/${slug}`} className="thumb-link" aria-label={t.name}>
+                  <img className="thumb" src={c.img} alt={t.name} />
+                </Link>
                 <div className="body">
                   <Link href={`/packages/${slug}`} className={`tier-name-pill tier-pill--${c.accent}`} style={{ textDecoration: "none" }}>{t.name}</Link>
                   <div className="price">${t.priceUsd}<small>/mo</small></div>
@@ -225,9 +251,17 @@ export async function Packages() {
                       .btn-sm, never the giant full-sentence button — with
                       the "add me to the pre-list" honesty as its own small
                       note underneath, and the click walks to the tier's own
-                      page (view more) where the same door waits again. */}
+                      page (view more) where the same door waits again.
+                      TASK-229 (0018.06.23 a₿): the tier pages ARE selling
+                      today when the store rails are ON — the card's door
+                      follows the same switch, so it walks straight to that
+                      sale instead of collecting another waitlist signup. */}
                   <div className="push" style={{ width: "100%" }}>
-                    <SubscribeForm {...packageWaitlistProps(c.tier, slug)} />
+                    {railsOn ? (
+                      <Link href={`/packages/${slug}`} className="btn btn-sm">See the package</Link>
+                    ) : (
+                      <SubscribeForm {...packageWaitlistProps(c.tier, slug)} />
+                    )}
                   </div>
                 </div>
               </div>

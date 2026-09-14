@@ -10,12 +10,13 @@ import AddonActions from "@/components/store/AddonActions";
 import SubscribeForm from "@/components/SubscribeForm";
 import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES, TIER_ADDONS, tierPageBySlug, type TierPage } from "@/lib/tiers-content";
-import { getSiteConfig, type SiteConfig } from "@/lib/site-config";
+import { getSiteConfig } from "@/lib/site-config";
 import { getItem } from "@/lib/store";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 import { dollars, priceWords, satsWords, defaultPreferOf, type MoneyPrefer } from "@/lib/money-words";
 import { preferFromCookieHeader } from "@/lib/money-preference";
 import { cookies } from "next/headers";
+import { tierRailsOn, tierOfferMode, type TierOfferMode } from "@/lib/tier-offer";
 
 /** Admiral, 0018.06.17 a₿: nothing is offered or recommended whose store item is not live — a hidden
  *  item is off everywhere, not just off the shelf. */
@@ -39,24 +40,18 @@ async function itemLive(id: string | undefined): Promise<boolean> {
  * one NavMenu.tsx reads to hide the whole Store surface; Love's streamlined
  * default keeps it off). Flip it back on and the buy button returns — no
  * further code change, per the brief.
- */
-export function tierRailsOn(switches: Pick<SiteConfig, "features">): boolean {
-  return switches.features.store;
-}
+ *
+ * TASK-229 (0018.06.23 a₿): `tierRailsOn`/`tierOfferMode` now LIVE in
+ * `src/lib/tier-offer.ts` — the home cards (`Packages()` in sections.tsx)
+ * read the exact same switch without importing this route module.
+ * Re-exported here so every existing `@/app/packages/[slug]/page` import
+ * (this file's own use below, plus tests/package-waitlist.test.ts) keeps
+ * working unchanged. */
+export { tierRailsOn, tierOfferMode, type TierOfferMode };
 
 /** The banner's exact words when `?joined=1` lands after a waitlist join. */
 export function tierJoinedBanner(page: Pick<TierPage, "tier">): string {
   return `You're on the list for ${TIERS[page.tier].name}.`;
-}
-
-/** Which door the image card shows — pure, so the switch-gating is pinned
- *  without rendering the whole page (SiteHeader/NavMenu ride hooks that
- *  need a real app-router context). Rails ON always wins, even with a
- *  stale `?joined=1` left over from before the switch flipped. */
-export type TierOfferMode = "buy" | "banner" | "waitlist";
-export function tierOfferMode(switches: Pick<SiteConfig, "features">, joined: boolean): TierOfferMode {
-  if (tierRailsOn(switches)) return "buy";
-  return joined ? "banner" : "waitlist";
 }
 
 export function generateStaticParams() {
