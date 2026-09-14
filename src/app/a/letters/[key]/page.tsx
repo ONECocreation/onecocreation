@@ -2,6 +2,7 @@
 
 import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { glassCard, field, SectionHead } from "@/components/console/glass";
 
 /**
  * THE SEND PANEL (TASK-131, 0018.06.16 a₿): one letter, one page — pick the
@@ -139,108 +140,104 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
     }
   }
 
-  if (letter === undefined) return <div className="p-2 text-sm text-neutral-400">loading…</div>;
+  if (letter === undefined) return <div className="p-6 text-sm" style={{ color: "var(--muted)" }}>loading…</div>;
   if (letter === null) {
     return (
-      <div className="p-2 text-sm">
-        <p className="text-neutral-300">Unknown letter “{key}”.</p>
-        <Link href="/a/letters" className="text-yellow-400 underline">← back to the letters room</Link>
+      <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
+        <p style={{ color: "var(--ink-body)" }}>Unknown letter “{key}”.</p>
+        <Link href="/a/letters" style={{ color: "var(--info)", textDecoration: "underline" }}>← back to the letters room</Link>
       </div>
     );
   }
 
   return (
-    <div className="p-2 text-sm">
-      <Link href="/a/letters" className="text-xs text-yellow-400 underline">← the letters room</Link>
-      <div className="mt-2 border border-neutral-700 p-3">
+    <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
+      <Link href="/a/letters" style={{ fontSize: ".75rem", color: "var(--info)", textDecoration: "underline" }}>← the letters room</Link>
+      <div className="mt-2" style={glassCard}>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <b>{letter.title ?? letter.key}</b>
-          <span className="text-xs text-cyan-300">
+          <span style={{ fontSize: ".75rem", color: "var(--info)" }}>
             {letter.kind === "composed" ? "composed by Love" : "seeded"} ·{" "}
             {letter.audience === "public" ? "🌍 public (also on /news)" : "✉ the list"}
           </span>
         </div>
-        <p className="mt-1 text-neutral-300">&ldquo;{subject}&rdquo;</p>
+        <p className="mt-1" style={{ color: "var(--ink-body)" }}>&ldquo;{subject}&rdquo;</p>
         {/* derive-or-dash: a composed letter has no site page yet (the /news +
             /letters seam is flagged, outside this lane) — no preview door,
             and its emails carry no "view on the site" link */}
         {letter.kind === "seeded" ? (
-          <a href={`/letters/${letter.key}`} target="_blank" rel="noreferrer"
-            className="mt-1 inline-block border border-neutral-600 px-2 py-0.5 text-[10px] uppercase text-yellow-400">
+          <a href={`/letters/${letter.key}`} target="_blank" rel="noreferrer" className="mt-1 inline-block btn btn-ghost btn-sm">
             preview on the site
           </a>
         ) : (
-          <p className="mt-1 text-[10px] uppercase text-neutral-500">
+          <p className="mt-1" style={{ fontSize: ".62rem", textTransform: "uppercase", color: "var(--muted)" }}>
             composed letter — its site page arrives with the /news seam (flagged)
           </p>
         )}
         {!hasBody && (
-          <p className="mt-2 text-xs text-neutral-400">
-            This letter has no words yet — <Link href="/a/letters" className="underline text-yellow-400">write it in the room</Link> before sending.
+          <p className="mt-2" style={{ fontSize: ".75rem", color: "var(--muted)" }}>
+            This letter has no words yet — <Link href="/a/letters" style={{ textDecoration: "underline", color: "var(--info)" }}>write it in the room</Link> before sending.
           </p>
         )}
       </div>
 
-      <div className="mt-3 border border-neutral-700 p-3">
-        <b className="text-xs uppercase text-neutral-400">Send me a test</b>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <input value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="you@example.com" type="email"
-            className="border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
-          <button onClick={sendTest} disabled={sending || !testTo.includes("@") || !hasBody}
-            className="min-h-11 touch-manipulation border border-neutral-500 px-4 py-1 text-xs disabled:opacity-40">
+      <SectionHead label="Send me a test" />
+      <div style={glassCard}>
+        <div className="flex flex-wrap items-center gap-2">
+          <input value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="you@example.com" type="email" style={field} />
+          <button onClick={sendTest} disabled={sending || !testTo.includes("@") || !hasBody} className="btn btn-sm">
             {sending ? "SENDING…" : "SEND TEST COPY"}
           </button>
         </div>
       </div>
 
-      <div className="mt-3 border border-neutral-700 p-3">
-        <b className="text-xs uppercase text-neutral-400">Send to the list — pick the door</b>
-        <ul className="mt-2 space-y-1">
+      <SectionHead label="Send to the list — pick the door" />
+      <div style={glassCard}>
+        <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
           {segments.map((s) => (
             <li key={s.source}>
-              <label className="flex items-center gap-2 border border-neutral-700 px-2 py-2">
+              <label className="flex items-center gap-2" style={{ ...field, cursor: "pointer" }}>
                 <input type="radio" name="segment" checked={segment === s.source} onChange={() => pickSegment(s.source)} />
                 <span className="flex-1">{s.source === "all" ? "All — the whole list" : s.source}</span>
-                <span className="text-xs text-neutral-400">{s.count} {s.count === 1 ? "person" : "people"}</span>
+                <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>{s.count} {s.count === 1 ? "person" : "people"}</span>
               </label>
             </li>
           ))}
           {segments.length === 0 && (
-            <li className="text-xs text-neutral-500">no subscriber vault configured — the list is unreadable here</li>
+            <li style={{ fontSize: ".75rem", color: "var(--muted)" }}>no subscriber vault configured — the list is unreadable here</li>
           )}
         </ul>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <input type="datetime-local" value={sendAt} onChange={(e) => setSendAt(e.target.value)}
-            className="border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
-          <span className="text-[10px] uppercase text-neutral-500">{sendAt ? "scheduled" : "next tick"}</span>
+          <input type="datetime-local" value={sendAt} onChange={(e) => setSendAt(e.target.value)} style={field} />
+          <span style={{ fontSize: ".62rem", textTransform: "uppercase", color: "var(--muted)" }}>{sendAt ? "scheduled" : "next tick"}</span>
         </div>
 
         {count > 0 && (
           <div className="mt-3 space-y-2">
-            <label className="block text-xs text-neutral-400">
-              Type <b className="text-yellow-400">{count}</b> to send to {count} {count === 1 ? "person" : "people"}:
+            <label className="block" style={{ fontSize: ".75rem", color: "var(--muted)" }}>
+              Type <b style={{ color: "var(--gold-deep)" }}>{count}</b> to send to {count} {count === 1 ? "person" : "people"}:
               <input value={typed} onChange={(e) => setTyped(e.target.value)} inputMode="numeric" placeholder={String(count)}
-                className="ml-2 w-24 border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm" />
+                className="ml-2" style={{ ...field, width: 96 }} />
             </label>
-            <button onClick={sendList} disabled={sending || !confirmed || !hasBody}
-              className="min-h-11 touch-manipulation border border-yellow-500 px-4 py-1 text-xs font-bold text-yellow-400 disabled:opacity-40">
+            <button onClick={sendList} disabled={sending || !confirmed || !hasBody} className="btn btn-sm">
               {sending ? "SENDING…" : sendAt ? `SCHEDULE TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}` : `SEND TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}`}
             </button>
             {finish && (
-              <p className="text-xs text-neutral-400">
+              <p style={{ fontSize: ".75rem", color: "var(--muted)" }}>
                 ⏳ the hourly cap ({cap}/hour) drips this — done by ≈ {finish.toLocaleString()}
                 {sendAt ? " after the scheduled start" : ""}
               </p>
             )}
           </div>
         )}
-        {note && <p className="mt-2 text-xs text-neutral-400">{note}</p>}
+        {note && <p className="mt-2" style={{ fontSize: ".75rem", color: "var(--muted)" }}>{note}</p>}
 
         {deliveries.length > 0 && (
-          <ul className="mt-3 space-y-1 border-t border-neutral-800 pt-2">
+          <ul className="mt-3" style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: 4,
+            borderTop: "1px solid rgba(139,118,196,.18)", paddingTop: 8 }}>
             {deliveries.map((d) => (
-              <li key={d.to} className="text-xs text-neutral-300">
+              <li key={d.to} style={{ fontSize: ".75rem", color: "var(--ink-body)" }}>
                 ✉ {d.to} — {d.when === "next tick" ? "next tick" : `scheduled ${new Date(d.when).toLocaleString()}`} · remembered in their mailbox
               </li>
             ))}
