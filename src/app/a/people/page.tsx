@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { glassCard, field } from "@/components/console/glass";
 
 interface Person {
   member: string;
@@ -34,62 +35,63 @@ export default function PeopleRoom() {
 
   if (denied)
     return (
-      <p className="p-6 text-sm text-cyan-300">
-        operator session required — <a href="/a" className="underline">sign in at the door</a>
+      <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>
+        operator session required — <a href="/a" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>sign in at the door</a>
       </p>
     );
-  if (people === null) return <p className="p-6 text-sm text-neutral-400">reading the field…</p>;
+  if (people === null) return <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>reading the field…</p>;
 
   const shown = people.filter((p) => p.member.toLowerCase().includes(q.toLowerCase()));
 
+  const td: React.CSSProperties = {
+    background: "var(--glass)", padding: "8px 10px", verticalAlign: "middle",
+    borderTop: "1px solid rgba(255,255,255,.9)", borderBottom: "1px solid rgba(139,118,196,.16)",
+  };
+
   return (
-    <div className="p-2 text-sm">
+    <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="search members…"
-        className="mb-3 w-full max-w-sm border border-neutral-700 bg-black px-3 py-2 text-base sm:text-sm" />
+        className="mb-3 w-full max-w-sm" style={field} />
       {people.length === 0 ? (
-        <p className="text-neutral-400">No members known yet — signups and purchases land here.</p>
+        <p style={{ color: "var(--muted)" }}>No members known yet — signups and purchases land here.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] border-collapse text-xs">
+          <table className="w-full min-w-[560px]" style={{ borderCollapse: "separate", borderSpacing: "0 6px", fontSize: ".82rem" }}>
             <thead>
-              <tr className="text-left text-neutral-400">
-                <th className="border-b border-neutral-700 p-2">member</th>
-                <th className="border-b border-neutral-700 p-2">door</th>
-                <th className="border-b border-neutral-700 p-2">packages held</th>
-                <th className="border-b border-neutral-700 p-2">sessions</th>
-                <th className="border-b border-neutral-700 p-2">last purchase</th>
-                <th className="border-b border-neutral-700 p-2">last sign-in</th>
-                <th className="border-b border-neutral-700 p-2">class progress</th>
+              <tr>
+                {["member", "door", "packages held", "sessions", "last purchase", "last sign-in", "class progress"].map((h) => (
+                  <th key={h} style={{ fontSize: ".6rem", letterSpacing: ".1em", textTransform: "uppercase",
+                    color: "var(--muted)", textAlign: "left", padding: "0 10px", fontWeight: 600 }}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {shown.map((p) => (
                 <tr key={`${p.member}-${p.kind}`} onClick={() => setOpenRow(openRow === p.member ? null : p.member)} style={{ cursor: "pointer" }}>
-                  <td className="border-b border-neutral-800 p-2 font-bold">{p.member}</td>
-                  <td className="border-b border-neutral-800 p-2">{p.kind}</td>
-                  <td className="border-b border-neutral-800 p-2">
+                  <td style={{ ...td, borderRadius: "12px 0 0 12px", borderLeft: "1px solid rgba(139,118,196,.16)", fontWeight: 700, color: "var(--ink-strong)" }}>{p.member}</td>
+                  <td style={td}>{p.kind}</td>
+                  <td style={td}>
                     {p.packages.length ? p.packages.join(", ") : "—"}
                   </td>
-                  <td className="border-b border-neutral-800 p-2">{p.sessions || "—"}</td>
-                  <td className="border-b border-neutral-800 p-2">
+                  <td style={td}>{p.sessions || "—"}</td>
+                  <td style={td}>
                     {p.lastOrderMs ? new Date(p.lastOrderMs).toLocaleDateString() : "—"}
                   </td>
-                  <td className="border-b border-neutral-800 p-2 text-neutral-500">—</td>
-                  <td className="border-b border-neutral-800 p-2 text-neutral-500">—</td>
+                  <td style={{ ...td, color: "var(--muted)" }}>—</td>
+                  <td style={{ ...td, borderRadius: "0 12px 12px 0", borderRight: "1px solid rgba(139,118,196,.16)", color: "var(--muted)" }}>—</td>
                 </tr>
               ))}
             </tbody>
           </table>
           {openRow && (
-            <div className="mt-3 border border-neutral-700 p-3">
-              <b className="text-xs uppercase text-cyan-300">Merge accounts — {openRow}</b>
-              <p className="mt-1 text-xs text-neutral-400">
+            <div className="mt-3" style={glassCard}>
+              <b style={{ fontSize: ".75rem", textTransform: "uppercase", color: "var(--info)" }}>Merge accounts — {openRow}</b>
+              <p className="mt-1" style={{ fontSize: ".75rem", color: "var(--muted)" }}>
                 Tie this member to their other door (email + key = one soul). Purchases, bookings
                 and the member home unify; neither login is destroyed.
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <select value={mergeTarget} onChange={(e) => setMergeTarget(e.target.value)}
-                  className="border border-neutral-700 bg-black px-2 py-2 text-base sm:text-sm">
+                <select value={mergeTarget} onChange={(e) => setMergeTarget(e.target.value)} style={field}>
                   <option value="">merge with…</option>
                   {shown.filter((x) => x.member !== openRow).map((x) => (
                     <option key={subjectOf(x)} value={subjectOf(x)}>{x.member} ({x.kind})</option>
@@ -109,17 +111,17 @@ export default function PeopleRoom() {
                       ? "linked ✓ — both doors now see one member"
                       : "link failed");
                   }}
-                  className="min-h-11 touch-manipulation border border-yellow-500 px-4 py-1 text-xs font-bold text-yellow-400"
+                  className="btn btn-sm"
                 >
                   LINK ACCOUNTS
                 </button>
-                {mergeNote && <span className="text-xs text-neutral-400">{mergeNote}</span>}
+                {mergeNote && <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>{mergeNote}</span>}
               </div>
             </div>
           )}
         </div>
       )}
-      <p className="mt-3 text-xs text-neutral-400">
+      <p className="mt-3" style={{ fontSize: ".75rem", color: "var(--muted)" }}>
         Last sign-in and class progress are shown honestly as — until their rails exist (session
         tracking · Matrix rooms). The trainer grant and PWYC approvals will live on this desk.
       </p>
