@@ -26,7 +26,7 @@ export default async function AdminBriefsPage() {
     return <OperatorGate configured={operatorsConfigured()} />;
   }
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen p-6">
       <BriefsPanel />
     </main>
   );
