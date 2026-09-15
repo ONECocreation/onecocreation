@@ -9,7 +9,7 @@ import { renderToStaticMarkup } from "react-dom/server";
  * SITE KNOWS WHO IS SIGNED IN. Pins, model not render (the house idiom):
  *
  *   1. THE HOME PAGE READS THE SESSION — page.tsx reads the cookie the
- *      rooms' Stage reads (fren-auth over the raw header), asks the vault
+ *      rooms' Stage reads (member-auth over the raw header), asks the vault
  *      for the soul's package, and threads both to the hero (source pin —
  *      an async server component never renders in the node env).
  *   2. THE HERO DOOR FOLLOWS THE VISITOR — a known guest's door leads to
@@ -33,12 +33,12 @@ const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8")
 const src = (html: string, needle: string) => html.indexOf(needle);
 
 describe("TASK-210 — the home page reads the session (source pin)", () => {
-  it("page.tsx reads the RAW cookie header (never cookies() — it URL-encodes an email handle's @ and the token fails its own signature), parses it with fren-auth, reads the tier, and hands the hero a known visitor (null for a guest)", async () => {
+  it("page.tsx reads the RAW cookie header (never cookies() — it URL-encodes an email handle's @ and the token fails its own signature), parses it with member-auth, reads the tier, and hands the hero a known visitor (null for a guest)", async () => {
     const page = await read("src/app/page.tsx");
     expect(page).toContain("export default async function Home()");
     expect(page).toContain('(await headers()).get("cookie")');
     expect(page).not.toContain('import { cookies }'); // the encoding store stays out
-    expect(page).toContain('from "@/lib/fren-auth"');
+    expect(page).toContain('from "@/lib/member-auth"');
     expect(page).toContain("sessionsFromCookieHeader(");
     expect(page).toContain("tierForSubject(");
     expect(page).toContain("<Hero session={session} />");
