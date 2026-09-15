@@ -13,11 +13,11 @@ export default defineConfig({
      @pacsarcade/puck-config ships RAW tsx (its README: "hosts consume via
      transpilePackages"; next.config.ts's transpilePackages list covers
      `next build`/dev, but vitest had no equivalent). Inlining it here hands
-     it to vite's esbuild transform, and jsx:"automatic" (tsconfig already
-     says react-jsx; the bare dep never picked it up, which was T-153's
-     "React is not defined") gives it the runtime import — the real blocks
-     now render in tests, no more puck-config mock. */
-  esbuild: { jsx: "automatic" },
+     it to the transform — the real blocks render in tests, no more
+     puck-config mock. TASK-284 (0018.06.25 a₿): vitest 4 dropped `jsx`
+     from the esbuild option's types (vite 8 transforms via oxc, which
+     already honors tsconfig's react-jsx), so the explicit jsx:"automatic"
+     line is gone; the inline below is what still matters. */
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
