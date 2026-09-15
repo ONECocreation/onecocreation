@@ -1374,6 +1374,153 @@ const meditationContent: Block[] = [
   ]),
 ];
 
+/* ── contact — E.T. Phone Home: hero, doors, write-to-me, her FAQ ───────── */
+const ct = kit("ct");
+const contactContent: Block[] = [
+  /* TASK-295 wave A pair 4 (0018.06.25 a₿ · block 967,181): /contact becomes
+     a designer page. The words are transcribed VERBATIM from
+     src/app/contact/page.tsx (the fallback, NOT edited — the words law).
+     The hero's CosmicSky star field and the glass frames live beyond the
+     Band vocabulary (the about seed's documented approximation); the live
+     widgets take the sanctioned "stays code-side, said in the seed" path
+     (the T-293 home-seed idiom, pair 1's meditation precedent). The FAQ
+     section's sky-night band maps to the nearest vocabulary ground
+     (sky-glass — sky-night isn't one of the Band's six). The Faq block's
+     answer is ONE plain paragraph: the fallback's two paragraphs join with
+     a space and the bold on MST/PST and the days flattens — the words are
+     verbatim, the markup is the block's. */
+  ct.band("sky-veil", skyHold, [
+    ct.eyebrow("E.T. Phone Home", "center"),
+    ct.stacked("I'LL BE", "RIGHT HERE", "h1", "center"),
+    ct.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
+  ]),
+  ct.band("sky-glass", "theme", [
+    ct.note("── live contact doors stay code-side (the three doors shared with the homepage) ──"),
+  ]),
+  ct.band("sky-glass", "theme", [
+    ct.heading("Write to Me 💌", "h2", "center"),
+    ct.text("a note lands gently in Love's inbox — she writes back to your email.", "center", st({ color: "muted", size: 14, spaceBelow: 14 })),
+    ct.note("── live contact form stays code-side (a note lands gently in Love's inbox, on the house mail rails) ──"),
+  ]),
+  ct.band("sky-glass", "theme", [
+    ct.heading("FAQ", "h2", "center"),
+    ct.faq([
+      {
+        q: "What time zones are the YouTube “Live with Love”?",
+        a: "Time zones currently vary between MST (Mountain) and PST (Pacific) — Monday · Wednesday · Friday @ 11:11, or there abouts ;) 👍🏽🪶🛎️ To hear of any changes, Leap events, and random lives — a YouTube hint: if you haven't tapped a video or a thumbs-up 👍🏽 in a while, the lives and recent videos stop popping up in your feed until you're active with the channel again.",
+      },
+    ]),
+  ]),
+];
+
+/* ── services — the dark-first galaxy walk ──────────────────────────────── */
+const sv = kit("sv");
+const servicesContent: Block[] = [
+  /* TASK-295 wave A pair 4 (0018.06.25 a₿ · block 967,181): /services
+     becomes a designer page. The words are transcribed VERBATIM from
+     src/app/services/page.tsx (the fallback, NOT edited — the words law).
+     The custom keep-dark gradient grounds (the page's kd() literals) map to
+     the nearest named night bands — the Band's six grounds carry no custom
+     gradients, and bgColor's one flat colour reads further from the
+     gradients than the named veils do (the about seed's approximation
+     idiom). The scrollzoom/aurora/CosmicSky dressings are likewise beyond
+     the Band. THE LIVE PIECES take the sanctioned "stays code-side, said
+     in the seed" path (pair 1's meditation idiom) — the sessions shelf
+     (<Services/>, the real booking cards), the monthly membership cards
+     (names and prices read LIVE from TIERS × TIER_PAGES — never fossilised,
+     the T-232 law), the subscribe form, and the Retreats door (live only
+     while a retreat is live). The four portraits are decorative (alt="");
+     the Gallery block carries no circle crop or teal ring (documented). */
+  sv.band("sky-veil", "night", [
+    sv.eyebrow("Welcome To", "center"),
+    /* h1, not the hand-built page's h2: the publish rails require exactly
+       one h1 (one-h1 is an ERROR — the seed must publish clean); the
+       promotion is noted here, the house's archival-heading idiom (T-232) */
+    sv.heading("The Way of the Heart", "h1", "center"),
+    sv.rich("Mindfulness in action. Sessions where you don't have to keep up conversation. You get to choose… <b style=\"color:var(--gold-2)\">To BE Silent or Not to be Silent — that is the Question.</b>", "center", st({ size: 18 })),
+    sv.rich("We find out what your needs are — sometimes photos get us in the right direction. You get to sit back and enjoy the magic. Every session closes with an <b style=\"color:var(--rose)\">affirmations card</b> chosen for you — a message sent from The Universe to take with you into your day.", "center", st({ color: "muted", size: 15 })),
+  ]),
+  sv.band("sky-glass", "night", [
+    sv.stacked("BECOME A", "FREE MEMBER", "h2", "center"),
+    sv.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
+    /* the kit carries no gallery helper (only the about seed's top-level one)
+       — a literal Gallery block with an explicit unique id, the rt-list /
+       pk-grid idiom (T-231's collision lesson). The four portraits are
+       decorative (alt=""); the circle crop + teal ring are beyond the
+       Gallery block (documented). */
+    { type: "Gallery", props: { id: "sv-portraits", images: [
+      { src: "/images/consciouscuts/lady.webp", alt: "" },
+      { src: "/images/consciouscuts/men.webp", alt: "" },
+      { src: "/images/consciouscuts/lady3.webp", alt: "" },
+      { src: "/images/consciouscuts/men2.webp", alt: "" },
+    ], tilt: "no" } },
+    sv.threecol(
+      [sv.panel([
+        sv.text("🕊️", "center", st({ size: 27 })),
+        sv.text("A Discovery Call — credited toward your service", "center", st({ size: 15 })),
+      ])],
+      [sv.panel([
+        sv.text("🗓️", "center", st({ size: 27 })),
+        sv.text("Access to the booking calendar", "center", st({ size: 15 })),
+      ])],
+      [sv.panel([
+        sv.text("⭐", "center", st({ size: 27 })),
+        sv.text("One month free of The Weekly Intuitive", "center", st({ size: 15 })),
+      ])],
+    ),
+    /* rose, not gold — the account door (the about seed's "Create your
+       account ✨" variant); gold is money only (house law) */
+    sv.button("Create your membership ✨", "/welcome", "rose", "center"),
+  ]),
+  sv.band("sky-veil", "night", [
+    sv.stacked("HOW IT", "WORKS", "h2", "center"),
+    sv.text("Here's where the adventure begins!", "center", st({ color: "goldBright", kerning: 2, size: 14, font: "display", spaceAbove: 14 })),
+    sv.threecol(
+      [sv.panel([
+        sv.text("1", "left", st({ color: "teal", size: 29, font: "display" })),
+        sv.heading("Sign up — the doors open", "h3"),
+        sv.text("Your free membership brings the booking calendar and one month of The Weekly Intuitive.", "left", st({ color: "muted", size: 14 })),
+      ])],
+      [sv.panel([
+        sv.text("2", "left", st({ color: "teal", size: 29, font: "display" })),
+        sv.heading("Your Discovery Call", "h3"),
+        sv.text("15–20 minutes — or just book the appointment.", "left", st({ color: "muted", size: 14 })),
+      ])],
+      [sv.panel([
+        sv.text("3", "left", st({ color: "teal", size: 29, font: "display" })),
+        sv.heading("Your services", "h3"),
+        sv.text("Tell me what you're looking for — and what the session can unlock within you.", "left", st({ color: "muted", size: 14 })),
+      ])],
+    ),
+    sv.rich("🎁 $55 — as your session is booked, checkout hands you a <b>CODE taking $55 off</b> the total of your session (your Discovery Call, kept).", "center", st({ color: "goldBright", size: 15, spaceAbove: 16 })),
+    /* the fallback's door wears btn-shimmer — the Button block carries no
+       shimmer (documented approximation) */
+    sv.button("Get Started Today", "/welcome", "rose", "center"),
+  ]),
+  sv.band("sky-glass", "night", [
+    sv.note("── live sessions shelf stays code-side (the real booking cards, switch-gated exactly like today) ──"),
+  ]),
+  sv.band("sky-veil", "night", [
+    sv.stacked("MONTHLY PAID", "MEMBERSHIPS", "h2", "center"),
+    sv.note("── live membership cards stay code-side (names and prices read from the tiers — never fossilised) ──"),
+  ]),
+  sv.band("meteors", "night", [
+    sv.stacked("BE IN", "THE KNOW", "h2", "center"),
+    sv.rich("Sign up and receive a free recording — <b style=\"color:var(--gold-2)\">Unzip Into The New You!</b>", "center"),
+    sv.text("A once-a-week note: Spontaneous Lives, monthly events, and weekly inspirations — a way to tune in and tune up, expand your wings, and live life with intention. To Connect, Feel Alive — as the New Human you Are.", "center", st({ size: 14 })),
+    sv.note("── live subscribe form stays code-side ──"),
+  ]),
+  sv.band("plain", "theme", [
+    sv.eyebrow("More Doors", "center"),
+    sv.buttons([
+      { label: "Memberships", href: "/packages", variant: "quiet" },
+      { label: "The Store", href: "/store", variant: "quiet" },
+      { label: "Free Meditation 🎁", href: "/meditation", variant: "quiet" },
+    ], "center"),
+    sv.note("── the Retreats 🏜️ door appears only while a retreat is live — stays code-side ──"),
+  ]),
+];
+
 /* STUDIO P1: the new-site seeds carry honest root props (page title +
    description for SEO/social) so a publish is a real page from the first
    push — titles/descriptions mirror the hand-built pages they rebuild. The
@@ -1431,6 +1578,14 @@ export const SEEDS: Record<string, PuckPageData> = {
   terms: { content: termsContent, root: { props: {
     title: "Terms & Conditions — One Cocreation",
   } } },
+  /* T-295 pair 4: /contact mirrors its hand-built metadata verbatim;
+     /services carries NO metadata export today → the tolerated bare root
+     (nothing to mirror, nothing invented — /p falls back to cartridge.meta) */
+  contact: { content: contactContent, root: { props: {
+    title: "Contact — One Cocreation",
+    description: "E.T. Phone Home — I'll BE right here. Write to Love, catch the 11:11 lives, book a discovery call.",
+  } } },
+  services: { content: servicesContent, root: {} },
   /* STUDIO P2: the popup lane. THE ONE REAL POPUP — the rebuild of the
      original platform's only popup ("Free Guide"), retargeted to the Free
      Meditation door (/meditation). The copy is Love's own, quoted from the
