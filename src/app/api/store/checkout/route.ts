@@ -45,7 +45,7 @@ async function tryCharge(
  * Single-item checkout (no cart — v1 scope, said out loud). Two shapes:
  * - { itemId, contact?, shipping? }  → new order + first charge
  * - { orderId }                      → fresh charge for an expired order
- * Digital/package items require a fren session — the entitlement subject is
+ * Digital/package items require a member session — the entitlement subject is
  * captured HERE, because the paid webhook is server-to-server and the order
  * is the only identity source at grant time.
  *

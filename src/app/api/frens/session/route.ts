@@ -16,7 +16,7 @@ function sessionCookie(value: string, maxAge: number): HeadersInit {
 }
 
 /* Who am I — the header's FrenChip asks on every page load. npub rides
-   along so the chip can tune the fren's kind-0 picture; `accounts` lists
+   along so the chip can tune the member's kind-0 picture; `accounts` lists
    every door signed in on this browser (first = active). */
 export async function GET(request: Request) {
   const sessions = sessionsFromRequest(request);
@@ -85,7 +85,7 @@ export async function PUT(request: Request) {
 
   const sessions = sessionsFromRequest(request);
   if (!sessions.length) {
-    return Response.json({ ok: false, reason: "sign in first, fren" }, { status: 401 });
+    return Response.json({ ok: false, reason: "sign in first" }, { status: 401 });
   }
 
   let tokens: string[] | null = null;

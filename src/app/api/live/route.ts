@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
  * live-state read's own after-hours room and clock (already sanitised by
  * `getLiveState`, so `room` here always resolves and is never the free
  * Commons), resolved into words: `roomTitle` from ROOMS, `package` from
- * TIERS (the fren-facing package name), `packageSlug` from TIER_PAGES (the
+ * TIERS (the member-facing package name), `packageSlug` from TIER_PAGES (the
  * /packages/[slug] door). null when unset — never a half-built object.
  */
 export async function GET() {

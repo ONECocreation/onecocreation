@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * Release a QUEUED tag back to the pool — operator-only (test cleanup, a
- * fren's right of exit). Etched names stay permanent; releaseHandle itself
+ * member's right of exit). Etched names stay permanent; releaseHandle itself
  * refuses those, and this route just carries its honest answer back.
  */
 export async function POST(request: Request) {
