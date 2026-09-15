@@ -513,7 +513,10 @@ const packagesContent: Block[] = [
      continuous lion ground can't carry across separate blocks. */
   pk.band("sky-veil", skyHold, [
     pk.eyebrow("The Heart Field — Where Heaven and Earth Meet", "center"),
-    pk.heading("Memberships", "h2", "center"),
+    /* h1, not the hand-built page's h2: the publish rails require exactly
+       one h1 (one-h1 is an ERROR — the seed must publish clean); the
+       promotion is noted here, the house's archival-heading idiom */
+    pk.heading("Memberships", "h1", "center"),
     pk.text("Three ways into the field — each includes everything before it. Pay monthly in dollars or in bitcoin. Your package opens its doors.", "center"),
   ], { bgSrc: LION_GROUND }),
   /* a unique id (T-231's collision lesson): the kit consumed pk-0…pk-3 */

@@ -123,6 +123,25 @@ describe("the seed — /style/packages opens pre-populated with her words", () =
     expect(flat).not.toContain('"shelf"'); // the dynamic part never fossilises
   });
 
+  it("the seed carries exactly one h1 — the publish rails' one-h1 rule is an ERROR, the seed must publish clean", async () => {
+    const { SEEDS } = await import("@/lib/puck-seeds");
+    const flat: SeedBlock[] = [];
+    const walk = (v: unknown) => {
+      if (Array.isArray(v)) { v.forEach(walk); return; }
+      if (v && typeof v === "object") {
+        const o = v as Record<string, unknown>;
+        if (typeof o.type === "string" && o.props && typeof o.props === "object") flat.push(o as unknown as SeedBlock);
+        Object.values(o).forEach(walk);
+      }
+    };
+    walk(SEEDS.packages.content);
+    const h1s = flat.filter((b) =>
+      (b.type === "Heading" && b.props.level === "h1") ||
+      (b.type === "StackedHeading" && b.props.tag === "h1") ||
+      b.type === "Hero");
+    expect(h1s).toHaveLength(1);
+  });
+
   it("every block id in the seed is unique — slot children included (T-231's collision lesson)", async () => {
     const { SEEDS } = await import("@/lib/puck-seeds");
     const ids: string[] = [];
