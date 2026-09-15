@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState, type ComponentType } from "react";
+import { createPortal } from "react-dom";
 import { Puck, Render, Drawer, createUsePuck, useGetPuck, type Config, type Data } from "@puckeditor/core";
 import "@puckeditor/core/no-external.css";
 import type { BrandTokens } from "@pacsarcade/puck-config/tokens";
@@ -72,6 +73,15 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
   const applyRef = useRef<((next: Data, origin?: ChangeOrigin) => void) | null>(null);
 
   const [preview, setPreview] = useState(false);
+  /* TASK-233: the overlay's LIVE side — the published copy read back from
+     the store when the overlay opens (and re-read after a publish lands).
+     liveDoc === null with liveKnown means "never published" (honest state,
+     dashes); liveKnown === false means the read failed. */
+  const [liveDoc, setLiveDoc] = useState<Data | null>(null);
+  const [liveKnown, setLiveKnown] = useState(false);
+  /* the 422 rails hold, in her words (which page, why) — null on every
+     other error shape so the status pill stays honest about what it knows */
+  const [heldNote, setHeldNote] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [live, setLive] = useState<LiveState>("idle");
@@ -222,26 +232,56 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
     }
   }
 
+  /* the overlay's Live side reads the published copy from the store (the
+     route's {draft, live} pair) — fresh on every open, and after a publish
+     lands so the "live now" half never shows a stale page */
+  function refreshLiveDoc() {
+    fetch(`/api/puck?slug=${encodeURIComponent(slug)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        setLiveDoc(d && d.live ? (d.live as Data) : null);
+        setLiveKnown(Boolean(d && d.ok));
+      })
+      .catch(() => setLiveKnown(false));
+  }
+  useEffect(() => {
+    if (!preview) return;
+    refreshLiveDoc();
+    /* eslint-disable-next-line react-hooks/exhaustive-deps -- slug is the dep that matters; refreshLiveDoc re-reads it fresh */
+  }, [preview, slug]);
+
   async function publishLive() {
     setLive("publishing");
+    setHeldNote(null);
     try {
       const res = await fetch("/api/puck", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slug, data: liveRef.current, publish: true }),
       });
-      if (res.ok) { setLive("live"); setDirty(false); }
+      if (res.ok) { setLive("live"); setDirty(false); setLiveDoc(liveRef.current); setLiveKnown(true); }
       else if (res.status === 422) {
         const d = await res.json().catch(() => null);
-        if (Array.isArray(d?.findings)) { setFindings(d.findings); setShowFindings(true); }
+        if (Array.isArray(d?.findings)) {
+          setFindings(d.findings);
+          setShowFindings(true);
+          /* the hold must be SEEN: the preview overlay covers the findings
+             panel and the status pill, so the hold closes it — she lands
+             back in the editor with the guidelines list already open */
+          setPreview(false);
+          const errs = d.findings.filter((f: Finding) => f.severity === "error").length;
+          /* the rails hold, in her words: which page, why, and nothing was lost */
+          setHeldNote(`"${slug}" stayed a draft — ${errs || 1} ${errs === 1 ? "thing" : "things"} to fix in the brand guidelines (the list is open). The page on the site didn't change.`);
+        }
         setLive("error");
       } else setLive("error");
     } catch { setLive("error"); }
   }
 
   async function publishAll() {
-    if (!window.confirm("Publish every staged page to the live site now?")) return;
+    if (!window.confirm("Publish every page to the live site now?\n\nEach page is checked against your brand guidelines first — a page that doesn't pass stays a draft, and I'll tell you which.")) return;
     setLive("publishing");
+    setHeldNote(null);
     try {
       const res = await fetch("/api/puck", {
         method: "POST",
@@ -251,10 +291,15 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
       const d = await res.json();
       if (res.ok) {
         setLive("live"); setDirty(false);
-        const blocked = Array.isArray(d.blocked) && d.blocked.length
-          ? ` ${d.blocked.length} page(s) held by the rails: ${d.blocked.map((b: { slug: string }) => b.slug).join(", ")}.`
+        const n = (d.published || []).length;
+        const blocked: { slug: string; errors: number }[] = Array.isArray(d.blocked) ? d.blocked : [];
+        if ((d.published || []).includes(slug)) refreshLiveDoc();
+        const held = blocked.length
+          ? `\n\n${blocked.length} ${blocked.length === 1 ? "page stayed" : "pages stayed"} as ${blocked.length === 1 ? "a draft" : "drafts"} — the brand guidelines found things to fix: ${blocked.map((b) => `"${b.slug}" (${b.errors} to fix)`).join(", ")}.`
           : "";
-        window.alert(`Published ${(d.published || []).length} page(s) to live.${blocked}`);
+        window.alert(n
+          ? `Done — ${n} ${n === 1 ? "page is" : "pages are"} live on the site now.${held}`
+          : `Nothing went live.${held || "\n\nThere were no saved drafts to publish."}`);
       } else setLive("error");
     } catch { setLive("error"); }
   }
@@ -387,7 +432,7 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
 
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--puck-color-text-muted)", whiteSpace: "nowrap" }}>
             {live === "publishing" ? "publishing…"
-              : live === "error" ? <span style={{ color: "var(--err)" /* S2: pinned — the ruling landed (S21 dawn table B2): the literal WAS night --err byte-for-byte; the token flips at dawn */ }}>publish held — see rails</span>
+              : live === "error" ? <span style={{ color: "var(--err)" /* S2: pinned — the ruling landed (S21 dawn table B2): the literal WAS night --err byte-for-byte; the token flips at dawn */ }}>{heldNote ?? "publish didn't go through — try again"}</span>
               : dirty ? (draftSaved ? "● draft saved · not live" : "editing…")
               : live === "live" ? (
                 <a href={liveUrl} target="_blank" rel="noreferrer" style={{ color: "var(--oc-ok-text, var(--ok-soft))" /* S21 dawn twin var(--ok) (B4) */, textDecoration: "none" }}>
@@ -395,7 +440,7 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
                 </a>
               ) : "● draft"}
           </span>
-          <button onClick={() => setPreview(true)} style={{ ...pill, background: `linear-gradient(135deg, var(--gold-2), var(--gold, #D9B24E))`, color: "var(--gold-ink)" /* S2: gold law — decorative, reported; S33 family 6: the deep end rides --gold (was --gold-deep via GOLD) — night byte-value-identical (#D9B24E either way); at dawn the designed deep gold left the gold ink a hair under the bar (4.22). The D2-ruled publish button keeps GOLD untouched */ }} title="see it in both skins — publishing lives there (look before it goes live)">Preview & publish</button>
+          <button onClick={() => setPreview(true)} style={{ ...pill, background: `linear-gradient(135deg, var(--gold-2), var(--gold, #D9B24E))`, color: "var(--gold-ink)" /* S2: gold law — decorative, reported; S33 family 6: the deep end rides --gold (was --gold-deep via GOLD) — night byte-value-identical (#D9B24E either way); at dawn the designed deep gold left the gold ink a hair under the bar (4.22). The D2-ruled publish button keeps GOLD untouched */ }} title="look before it goes live — what's on the site now vs your draft, in both skins; publishing lives there">Preview & publish</button>
         </div>
 
         {/* ══ panes: library · canvas · style · Number One ══ */}
@@ -478,28 +523,161 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
         />
       )}
 
-      {/* both-skins preview overlay */}
+      {/* both-skins preview overlay (TASK-233): Live → Draft before/after
+          per theme. Each pane is a ThemePane — a real nested document whose
+          root wears the production theme attribute, so the cartridge's own
+          html[data-oc-theme] rules paint it (no twin selector list here).
+          The Live half is the store's published copy, re-read on open; the
+          Draft half is the working data — what publishing changes. */}
       {preview && (
         <div className="oc-preview-shell">
           <div className="oc-preview-bar">
-            <strong style={{ fontSize: 13 }}>Preview — this draft in both skins</strong>
+            <strong style={{ fontSize: 13 }}>Look before you publish — live now vs your draft, both skins</strong>
             <span style={{ flex: 1 }} />
           <PresenceChips client={presence} />
-            <button onClick={publishAll} style={{ ...pill, background: "var(--oc-gold-active-bg, rgba(217,178,78,.18))", color: "var(--oc-gold-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twins via tokens (B3/E3) */ }} title="push every staged page live (each is rails-checked)">Publish all</button>
-            <button onClick={publishLive} style={{ ...pill, background: GOLD, color: "#fff" /* D2 RULED (0018.06.01): white ink on gold stands in BOTH themes — the money-button brand moment; do not "fix" */ }}>Publish to live</button>
+            <button onClick={publishAll} style={{ ...pill, background: "var(--oc-gold-active-bg, rgba(217,178,78,.18))", color: "var(--oc-gold-text, var(--gold-2))" /* S2: gold law — decorative, reported; S21 dawn twins via tokens (B3/E3) */ }} title="publish every page to the live site — each page is checked against your brand guidelines first; a page that doesn't pass stays a draft">Publish every page</button>
+            <button onClick={publishLive} style={{ ...pill, background: GOLD, color: "#fff" /* D2 RULED (0018.06.01): white ink on gold stands in BOTH themes — the money-button brand moment; do not "fix" */ }} title="put this page on the live site (the brand guidelines check it first — the draft is never lost)">Publish this page</button>
             <button onClick={() => setPreview(false)} style={{ ...pill, background: "rgba(139,118,196,.22)", color: "var(--puck-color-text)" }}>← Back to editing</button>
           </div>
           <div className="oc-preview-panes">
-            <div className="oc-preview-pane oc-pv-light">
-              <div className="oc-pv-label">Light</div>
-              <div className="oc-pv-body"><Render config={config} data={liveData} /></div>
-            </div>
-            <div className="oc-preview-pane oc-pv-dark">
-              <div className="oc-pv-label">Dark</div>
-              <div className="oc-pv-body"><Render config={config} data={liveData} /></div>
-            </div>
+            <ThemePane theme="light" label="Light" config={config} draft={liveData} live={liveDoc} liveKnown={liveKnown} />
+            <ThemePane theme="dark" label="Dark" config={config} draft={liveData} live={liveDoc} liveKnown={liveKnown} />
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+/* ── TASK-233: one theme pane of the preview overlay. The pane is a REAL
+   nested document (a srcdoc iframe) whose root carries the same theme
+   attributes the live site's <html> carries — data-oc-theme="light" for
+   the light pane, nothing for the dark one (the cartridge is dark-first),
+   plus the host's font classes and cartridge pick. The cartridge's own
+   html[data-oc-theme="light"] rules (and every descendant repaint, and the
+   palette's dawn layer) then paint the pane DIRECTLY: the pane DERIVES
+   from production truth instead of riding the old .oc-pv-light twin
+   selector list, which only ever carried the token blocks and silently
+   skipped the section repaints. The host document's styles are mirrored
+   in (the same trick Puck's canvas iframe plays), kept in sync while the
+   overlay is open. */
+const PV_MIRROR = "data-oc-pv-mirror";
+
+function mirrorHostStyles(doc: Document) {
+  const sources = Array.from(document.head.querySelectorAll("style, link[rel='stylesheet']"));
+  const seen = new Set<number>();
+  sources.forEach((el, i) => {
+    seen.add(i);
+    const kind = el instanceof HTMLStyleElement ? "style" : "link";
+    let mirror = doc.head.querySelector(`[${PV_MIRROR}="${i}"]`) as HTMLElement | null;
+    if (mirror && mirror.getAttribute(`${PV_MIRROR}-kind`) !== kind) { mirror.remove(); mirror = null; }
+    if (kind === "style") {
+      if (!mirror) {
+        mirror = doc.createElement("style");
+        mirror.setAttribute(PV_MIRROR, String(i));
+        mirror.setAttribute(`${PV_MIRROR}-kind`, "style");
+        doc.head.appendChild(mirror);
+      }
+      if (mirror.textContent !== el.textContent) mirror.textContent = el.textContent;
+    } else if (!mirror) {
+      /* clone the link itself (href = the RESOLVED absolute URL): it
+         re-fetches from the HTTP cache, and relative urls inside the sheet
+         (next/font's ../media/*.woff2) resolve against the sheet's own
+         URL — inlining the cssText would strand them against the srcdoc
+         document's base */
+      const link = doc.createElement("link");
+      link.rel = "stylesheet";
+      link.href = (el as HTMLLinkElement).href;
+      link.setAttribute(PV_MIRROR, String(i));
+      link.setAttribute(`${PV_MIRROR}-kind`, "link");
+      mirror = link;
+      doc.head.appendChild(mirror);
+    }
+  });
+  /* drop mirrors whose source vanished (HMR swaps), then re-append in the
+     host's order so the cascade matches byte for byte */
+  Array.from(doc.head.querySelectorAll(`[${PV_MIRROR}]`)).forEach((m) => {
+    if (!seen.has(Number(m.getAttribute(PV_MIRROR)))) m.remove();
+  });
+  sources.forEach((_, i) => {
+    const m = doc.head.querySelector(`[${PV_MIRROR}="${i}"]`);
+    if (m) doc.head.appendChild(m);
+  });
+}
+
+function ThemePane({ theme, label, config, draft, live, liveKnown }: {
+  theme: "light" | "dark";
+  label: string;
+  config: Config;
+  draft: Data;
+  live: Data | null;
+  liveKnown: boolean;
+}) {
+  const observerRef = useRef<MutationObserver | null>(null);
+  const [mount, setMount] = useState<HTMLElement | null>(null);
+  useEffect(() => () => observerRef.current?.disconnect(), []);
+
+  /* onLoad (a React prop, attached at commit — no race) rather than an
+     effect: a fresh iframe's initial about:blank already reads
+     readyState "complete", so an effect-side check can stamp the WRONG
+     document moments before the srcdoc navigation replaces it. The
+     #oc-pv-root guard makes the real document the only one we touch. */
+  function onFrameLoad(e: React.SyntheticEvent<HTMLIFrameElement>) {
+    const doc = e.currentTarget.contentDocument;
+    if (!doc || !doc.getElementById("oc-pv-root")) return;
+    /* stamp the frame's root with the production theme chain BEFORE the
+       content portals in — the first paint is already the pane's theme */
+    doc.documentElement.className = document.documentElement.className;
+    const cartridge = document.documentElement.getAttribute("data-oc-cartridge");
+    if (cartridge) doc.documentElement.setAttribute("data-oc-cartridge", cartridge);
+    if (theme === "light") doc.documentElement.setAttribute("data-oc-theme", "light");
+    mirrorHostStyles(doc);
+    observerRef.current?.disconnect();
+    observerRef.current = new MutationObserver(() => mirrorHostStyles(doc));
+    observerRef.current.observe(document.head, { childList: true, characterData: true, subtree: true });
+    setMount(doc.getElementById("oc-pv-root"));
+  }
+
+  /* in-frame furniture: the Live/Draft chips. Pinned near-solid night +
+     gold ink like the J1-ruled pane label above — they float over one
+     always-dawn or always-night render and can never theme-flip cleanly */
+  const stateChip: React.CSSProperties = {
+    position: "sticky", top: 0, zIndex: 2, padding: "6px 12px",
+    fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase", fontWeight: 700,
+    background: "rgba(20, 16, 33, 0.85)", color: "var(--gold)", backdropFilter: "blur(4px)",
+    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+  };
+  const emptyNote: React.CSSProperties = {
+    padding: "28px 22px", fontSize: 14, lineHeight: 1.5,
+    color: "var(--muted)", fontFamily: "var(--font-body)",
+  };
+
+  return (
+    <div className="oc-preview-pane">
+      <div className="oc-pv-label">{label}</div>
+      <iframe
+        onLoad={onFrameLoad}
+        title={`${label} — live now vs your draft`}
+        srcDoc='<!DOCTYPE html><html><head></head><body><div id="oc-pv-root"></div></body></html>'
+        style={{ flex: 1, width: "100%", minHeight: 0, border: 0, display: "block" }}
+      />
+      {mount && createPortal(
+        <div style={{ paddingBottom: 60 }}>
+          <div style={stateChip}>Live on the site now</div>
+          {!liveKnown ? (
+            <p style={emptyNote}>— the live copy couldn&rsquo;t be read just now; your draft below is still safe.</p>
+          ) : live === null ? (
+            <p style={emptyNote}>— this page has never been published. Publishing puts it on the site for the first time.</p>
+          ) : (
+            /* <main> — the exact wrapper the published route gives Render
+               (src/app/p/[slug]/page.tsx), so the cartridge's
+               html[data-oc-theme] main section repaints match here too */
+            <main><Render config={config} data={live} /></main>
+          )}
+          <div style={stateChip}>Your draft — what &ldquo;Publish this page&rdquo; puts live</div>
+          <main><Render config={config} data={draft} /></main>
+        </div>,
+        mount,
       )}
     </div>
   );

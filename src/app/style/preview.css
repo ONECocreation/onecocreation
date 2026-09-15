@@ -2,13 +2,22 @@
  * Studio preview panes (the loop, Admiral-approved 2026-08-11: "we look at
  * both light and dark modes"). The site themes by flipping
  * html[data-oc-theme="light"] on the WHOLE document, so it can't show light
- * and dark at once. The wrapper classes below are SCOPES ONLY — they carry
- * no token values. The values live once in src/app/cartridge.css: its night
- * :root block also selects .oc-pv-dark, its dawn
- * html[data-oc-theme="light"] block also selects .oc-pv-light (S8 cartridge
- * hardening, 2026-08-19). A brand swap in the cartridge flows into both
- * panes with zero studio edits; the preview IS the real site, not an
- * approximation.
+ * and dark at once.
+ *
+ * TASK-233: the /style overlay's panes are no longer scopes at all — each
+ * is a real nested document (a srcdoc iframe, see ThemePane in
+ * PuckEditor.tsx) whose root wears the production data-oc-theme attribute,
+ * so the cartridge's own html[data-oc-theme="light"] chain paints it
+ * directly: the token blocks AND the descendant repaints, exactly the live
+ * site. No twin selectors here.
+ *
+ * The .oc-pv-dark/.oc-pv-light wrapper classes below remain for ONE caller:
+ * the brand board's palette swatch panes (BrandBoard.tsx's ThemePane, an
+ * inline element that can't carry a document root). Their values still live
+ * once in src/app/cartridge.css (night :root also selects .oc-pv-dark, the
+ * dawn block also selects .oc-pv-light — S8 cartridge hardening,
+ * 2026-08-19), so a brand swap still flows into the swatches with zero
+ * edits.
  */
 
 .oc-pv-dark,
@@ -29,12 +38,18 @@
 .oc-preview-bar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   padding: 10px 16px;
   background: var(--puck-color-surface);
   border-bottom: 1px solid rgba(139, 118, 196, 0.3);
   color: var(--puck-color-text);
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+/* narrow chrome: the title takes its own row, the buttons wrap under it */
+.oc-preview-bar > strong {
+  flex: 1 1 220px;
+  min-width: 0;
 }
 .oc-preview-panes {
   flex: 1;
@@ -43,8 +58,10 @@
   overflow: hidden;
 }
 .oc-preview-pane {
-  overflow: auto;
+  overflow: hidden;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 .oc-preview-pane > .oc-pv-label {
   position: sticky;
@@ -64,9 +81,11 @@
   color: var(--gold);
   backdrop-filter: blur(4px);
 }
-.oc-preview-pane .oc-pv-body {
-  padding: 28px 22px 60px;
-  min-height: 100%;
+/* the pane's iframe is the scroller — its document is the theme root, so
+   the label chip above stays overlay chrome and never repaints */
+.oc-preview-pane > iframe {
+  flex: 1;
+  min-height: 0;
 }
 @media (max-width: 720px) {
   .oc-preview-panes {
