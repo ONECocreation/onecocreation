@@ -1,12 +1,46 @@
 import type { Metadata } from "next";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import PaletteVars from "@/components/PaletteVars";
+import PopupHost from "@/components/PopupHost";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
+
+/* TASK-295 (0018.06.25 a₿ · block 967,178): this page now reads the Puck
+   store — without this Next would bake it at build time and a page Love
+   publishes would never land until the next deploy (the same line /about,
+   /packages and /store already carry). */
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Privacy Policy — One Cocreation" };
 
 /** Privacy, said plainly, v1 DRAFT — and honestly reflecting how the code
  *  actually behaves (PII purge, no trackers, non-custodial). */
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  // PUCK P4 (TASK-295 wave A pair 2), mirroring /about byte-for-byte: once
+  // Love publishes the Puck rebuild (/style/privacy -> Publish to live), the
+  // live /privacy serves it. Until then, the hand-built page below is
+  // untouched — nothing changes for visitors until she chooses it. No route
+  // gates on this page: it reads no site switches, so the T-232 gate-first
+  // idiom has nothing to put first.
+  const puck = await getPuckPage("privacy");
+  if (puck) {
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main><Render config={config} data={puck as Data} /></main>
+        <SiteFooter />
+        {/* STUDIO P2: the popup host rides the designer branch (the fallback
+            never had one — byte-identical law — so it is not added there) */}
+        <PopupHost />
+      </>
+    );
+  }
+
   return (
     <main className="mgmt-ground">
       <SiteHeader />

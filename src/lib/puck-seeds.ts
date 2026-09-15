@@ -722,6 +722,51 @@ const retreatsContent: Block[] = [
   { type: "RetreatsList", props: { id: "rt-list", emptyText: RETREATS_EMPTY_TEXT } },
 ];
 
+/* ── privacy — the legal page, said plainly (TASK-295 wave A pair 2) ────── */
+const pv = kit("pv");
+const privacyContent: Block[] = [
+  /* TASK-295 (0018.06.25 a₿ · block 967,178): /privacy becomes a designer
+     page. The words are transcribed VERBATIM from src/app/privacy/page.tsx
+     (the fallback, NOT edited — the words law: the legal pages' words are
+     never rewritten). Pure prose: no images, no doors, no forms, no live
+     data — so no new block, no Note. The mgmt chrome (the 720px column, the
+     small muted body) maps to one plain band: eyebrow, h1, muted blurb,
+     then the five bold-lead paragraphs as RichText (size 14 = text-sm,
+     spaceBelow 16 = space-y-4). The band's own wrap is wider than the
+     fallback's 720px column — a documented approximation, not a rewrite. */
+  pv.band("plain", "theme", [
+    pv.eyebrow("Your data, plainly"),
+    pv.heading("Privacy Policy", "h1"),
+    pv.text("Draft v1 — this page describes what the site actually does.", "left", st({ color: "muted", size: 15, spaceBelow: 10 })),
+    pv.rich("<b>What we collect.</b> Only what an order or letter needs: an email for receipts and sign-in codes; a name and address only when something ships; city/state/zip only for in-person visits; your nostr public key if you sign in with one. No ad trackers, no analytics beacons, no third-party cookies.", "left", st({ size: 14, spaceBelow: 16 })),
+    pv.rich("<b>What we forget.</b> Contact and shipping details on orders are automatically purged about 30 days after delivery — the returns window closes, and then we forget on purpose. Order records themselves (what was bought, for how much) remain for the books.", "left", st({ size: 14, spaceBelow: 16 })),
+    pv.rich("<b>Email.</b> The list is opt-in. Every newsletter carries a one-click unsubscribe. Sign-in codes expire in ten minutes.", "left", st({ size: 14, spaceBelow: 16 })),
+    pv.rich("<b>Payments.</b> Bitcoin invoices are processed by One Cocreation's own payment server. We never see card numbers (there are none) and never custody your keys.", "left", st({ size: 14, spaceBelow: 16 })),
+    pv.rich("<b>Your rights.</b> Ask and we'll show you what we hold about you, correct it, or delete what the law lets us delete. Write to the house at the addresses in the footer.", "left", st({ size: 14 })),
+  ]),
+];
+
+/* ── terms — the fine print, kindly (TASK-295 wave A pair 2) ────────────── */
+const tm = kit("tm");
+const termsContent: Block[] = [
+  /* TASK-295 (0018.06.25 a₿ · block 967,178): /terms becomes a designer
+     page — same transcription law as /privacy above: VERBATIM from
+     src/app/terms/page.tsx (the fallback, NOT edited), pure prose, no new
+     block. "Rescheduling & refunds." carries &amp; in the html field so the
+     RichText block emits the same glyph the JSX's &amp; entity does. */
+  tm.band("plain", "theme", [
+    tm.eyebrow("The fine print, kindly"),
+    tm.heading("Terms & Conditions", "h1"),
+    tm.text("Draft v1 — plain language; final wording with Love.", "left", st({ color: "muted", size: 15, spaceBelow: 10 })),
+    tm.rich("<b>What you're buying.</b> Digital offerings (meditations, affirmations, courses) unlock for the signed-in account that bought them. Memberships open their tier's rooms and content for the paid period. In-person sessions are booked for a specific time and place.", "left", st({ size: 14, spaceBelow: 16 })),
+    tm.rich("<b>Payment.</b> Prices are shown in dollars and sats. Bitcoin payments (lightning or on-chain) settle to One Cocreation's own wallet — non-custodial, no third parties holding funds. A payment is complete when the invoice settles.", "left", st({ size: 14, spaceBelow: 16 })),
+    tm.rich("<b>Rescheduling &amp; refunds.</b> Life happens — reach out and we'll work with you. Refunds of bitcoin payments are returned in sats to an address you provide. Pay-what-you-can offers are accepted or kindly declined by Love; declined offers are refunded in full.", "left", st({ size: 14, spaceBelow: 16 })),
+    tm.rich("<b>Sessions.</b> Booked times are held for you; unpaid holds release automatically. In-person visits depend on location — the mobile studio travels, and your city/state/zip at checkout tells us where.", "left", st({ size: 14, spaceBelow: 16 })),
+    tm.rich("<b>Not medical advice.</b> Sessions, meditations and classes are spiritual and wellness offerings, not medical or psychological treatment.", "left", st({ size: 14, spaceBelow: 16 })),
+    tm.rich("<b>Your account.</b> Keys are yours; we never hold them. Email sign-in codes are single-use and short-lived. Be kind in community rooms — Love may remove access for harm.", "left", st({ size: 14 })),
+  ]),
+];
+
 /*
  * ── the "(old)" seeds — Love's ORIGINAL ShinePages pages, transcribed from
  * the 0018.05.20 capture (docs/shinepages-capture-manifest.md, screenshots in
@@ -1345,6 +1390,14 @@ export const SEEDS: Record<string, PuckPageData> = {
   retreats: { content: retreatsContent, root: { props: {
     title: "Retreats — One Cocreation",
     description: "A journey, not an appointment — blocks of days with Love, sold by the seat, paid in bitcoin.",
+  } } },
+  /* TASK-295: the two legal pages mirror their hand-built metadata exactly —
+     title only (the pages carry no description today; none is invented) */
+  privacy: { content: privacyContent, root: { props: {
+    title: "Privacy Policy — One Cocreation",
+  } } },
+  terms: { content: termsContent, root: { props: {
+    title: "Terms & Conditions — One Cocreation",
   } } },
   /* STUDIO P2: the popup lane. THE ONE REAL POPUP — the rebuild of the
      original platform's only popup ("Free Guide"), retargeted to the Free
