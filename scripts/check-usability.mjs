@@ -375,7 +375,7 @@ for (const rel of [...SCOPE_FILES, ...STUDIO_TOKEN_FILES]) {
   }
 }
 
-const CARTRIDGE_IDS = ["love", "pacman", "earthside", "blank", "mono", "material", "eva"];
+const CARTRIDGE_IDS = ["love", "earthside", "blank", "mono", "material", "eva"];
 
 function compose(...maps) {
   const out = new Map();

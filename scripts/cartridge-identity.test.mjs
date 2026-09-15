@@ -113,7 +113,7 @@ t("the harness derives the cartridge ids from the real union", IDS.length >= 3, 
 const ASSET = "/images/dressing-room-$&-test.webp";
 const COPY = "Dressed $& anew $1";
 const GOOD = {
-  "cartridge.id": IDS[1] ?? "pacman",
+  "cartridge.id": IDS[1] ?? "earthside",
   "doors.timeTipUrl": "https://time.example.org/api/chain/tip?full=1",
   "nav.accent": "dawn",
   "meta.description": "A search snippet runs longer than a copy token — this one is a hundred and thirty characters on purpose, to prove the raised ceiling. $&",

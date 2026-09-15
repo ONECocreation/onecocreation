@@ -38,7 +38,6 @@
  * serve different rooms on purpose.
  */
 
-import { pacman } from "./cartridges/pacman";
 import { earthside } from "./cartridges/earthside";
 import { blank } from "./cartridges/blank";
 import { mono } from "./cartridges/mono";
@@ -216,7 +215,7 @@ const love = {
  *  MONO (TASK-22/S24), the terminal option, MATERIAL (TASK-35/S38
  *  lane 1), the design-language reading, and EVA (TASK-35/S38 lane 2),
  *  the northern-light reading. */
-export type CartridgeId = "love" | "pacman" | "earthside" | "blank" | "mono" | "material" | "eva";
+export type CartridgeId = "love" | "earthside" | "blank" | "mono" | "material" | "eva";
 
 /**
  * THE CARTRIDGE SHAPE — DERIVED from love's object, never hand-written in
@@ -245,7 +244,7 @@ type CartridgeShape<T> = T extends string
 export type Cartridge = CartridgeShape<typeof love>;
 
 /** THE REGISTRY (S9) — one entry per direction. */
-export const cartridges: Record<CartridgeId, Cartridge> = { love, pacman, earthside, blank, mono, material, eva };
+export const cartridges: Record<CartridgeId, Cartridge> = { love, earthside, blank, mono, material, eva };
 
 /**
  * THE SELECTION (S9) — the one line a fork flips, the nav.accent
