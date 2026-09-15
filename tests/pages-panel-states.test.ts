@@ -102,7 +102,9 @@ describe("TASK-230 — the manifest covers every public route exactly once (deri
   it("designer is derived: each designer route's page.tsx really reads getPuckPage — TASK-293: home too, now it's wired", async () => {
     const designers = PAGE_STATES.filter((e) => e.state === "designer");
     expect(designers.map((e) => e.slug).sort()).toEqual(
-      ["about", "book", "classes", "home", "memberships", "retreats", "store", "support"],
+      /* TASK-295 wave A pair 2: /privacy + /terms joined the designer
+         routes — the same pin-widening T-293 made when home wired up */
+      ["about", "book", "classes", "home", "memberships", "privacy", "retreats", "store", "support", "terms"],
     );
     for (const e of designers) {
       const page = await read(e.path === "/" ? "src/app/page.tsx" : `src/app/${e.path.slice(1)}/page.tsx`);
