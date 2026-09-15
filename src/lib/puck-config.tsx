@@ -7,6 +7,8 @@ import { createJoinSurface } from "@/lib/puck-blocks/join-surface";
 import { createFormDoors } from "@/lib/puck-blocks/form-doors";
 import { createRetreatsList } from "@/lib/puck-blocks/retreats-list";
 import { createPackagesGrid } from "@/lib/puck-blocks/packages-grid";
+import { createBbConsole } from "@/lib/puck-blocks/bb-console";
+import { createBftClock } from "@/lib/puck-blocks/bft-clock";
 import { NIP05_DOMAIN, SPACE_NAME } from "@/lib/identity-config";
 
 /**
@@ -114,6 +116,16 @@ components.RetreatsList = createRetreatsList() as unknown as (typeof components)
    LOCAL, like its siblings — the package stays vendored-untouched. */
 components.PackagesGrid = createPackagesGrid() as unknown as (typeof components)[string];
 
+/* TASK-296 wave B, pair bb-time (0018.06.25 a₿): BbConsole + BftClock — the
+   { id }-only data-bound blocks (the GO §2 rubric line 2): self-contained
+   CLIENT widgets (NIP-07/session/localStorage for the buddy console; the
+   client-live BFT read, live-or-dashes, for the clock), so nothing is
+   injected server-side and nothing fossilises — the stored docs carry only
+   the id. LOCAL, like their siblings — the package stays vendored-untouched.
+   Appended, never reordered (the wave B append-only law). */
+components.BbConsole = createBbConsole() as unknown as (typeof components)[string];
+components.BftClock = createBftClock() as unknown as (typeof components)[string];
+
 /* the library rail: ParallaxBand (and the data-bound blocks, TASK-231's
    RetreatsList + TASK-232's PackagesGrid) join the Layout group, appended
    at the end (after Divider — the package's array order is never reordered) */
@@ -128,7 +140,7 @@ export const config = {
   categories: {
     ...categories,
     layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid"] },
-    actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors"] },
+    actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors", "BbConsole", "BftClock"] },
   },
   /* STUDIO P1: page-level SEO lives on the Puck root — plain fields edited
      through Puck.Fields' root section; the registry's root RENDER stays the
