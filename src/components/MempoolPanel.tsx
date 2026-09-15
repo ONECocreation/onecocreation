@@ -7,7 +7,7 @@ import { bftDate, bftDateTime } from "@/lib/bb/bft";
  * The chain node — link this deployment to its OWN mempool instance. The
  * admiral's sovereignty fix (2026-07-11): the fleet reads the block tip + the
  * live mempool fill through /api/chain/tip, which reads THIS node. Point it at
- * Pac's Arcade's self-hosted mempool.space (bitcoind-backed) and the whole
+ * the house's self-hosted mempool.space (bitcoind-backed) and the whole
  * fleet stops phoning a third party; leave it empty and it falls back to the
  * public mempool.space so a fresh fork still ticks — honest about which.
  *

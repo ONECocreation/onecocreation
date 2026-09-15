@@ -3,9 +3,9 @@
 import { useRef, useState } from "react";
 
 /**
- * "Hosted on this ship" — pick an image, it lands in the fren art store
+ * "Hosted on this ship" — pick an image, it lands in the member art store
  * (/api/frens/upload, fren-session gated, 2 MB, images only), and the URL
- * flows back into the field the fren was editing. Exists so a newcomer
+ * flows back into the field the member was editing. Exists so a newcomer
  * doesn't need to find an image host before they can have a face.
  */
 export default function ArtUpload({
@@ -31,7 +31,7 @@ export default function ArtUpload({
       try {
         data = await res.json();
       } catch {
-        /* non-JSON = the server fell over, not the fren */
+        /* non-JSON = the server fell over, not the member */
       }
       if (!res.ok || !data?.ok || !data.url) {
         setError(data?.reason ?? `upload failed (HTTP ${res.status})`);

@@ -89,7 +89,7 @@ export default function SignerDoors({
     inv.signed
       .then((event) => handleSigned(event))
       .catch((e) => {
-        /* a cancel is the fren's call — only report real failures */
+        /* a cancel is the member's call — only report real failures */
         if (!(e instanceof Error && /abort/i.test(e.message))) {
           setError(e instanceof Error ? e.message : "your signer never answered");
         }

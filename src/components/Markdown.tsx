@@ -75,7 +75,7 @@ const BLOCK_START = /^(#{1,6}\s|```|>\s?|\s*[-*+]\s+|\s*\d+\.\s+)/;
 const RULE = /^(-{3,}|\*{3,}|_{3,})$/;
 
 /** Headings are demoted (the page already owns the h1); size steps down by
-    level, all in the pixel/arcade console type. */
+    level, all in the pixel/display console type. */
 function Heading({ level, children }: { level: number; children: ReactNode }) {
   const cls =
     level <= 1

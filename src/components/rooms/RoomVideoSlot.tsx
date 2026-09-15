@@ -61,7 +61,7 @@ import type { StudioSceneId } from "@/lib/studio/scenes";
  * the director herself, `stageMxids`: she IS the frame above, never a
  * watcher), a VDO view tile (`?view=<their handle>&room=<studioRoom>`) when
  * they're on camera — addressable ONLY once that guest published with
- * `&push=<their handle>`, else their fren picture (the site's ONE picture
+ * `&push=<their handle>`, else their member picture (the site's ONE picture
  * helper — useNostrProfile, same hook FrenChip/FrenMenu/FrenProfile
  * already share — PixelAvatar's seeded body standing in for an absent one,
  * never a broken image). The gallery hides entirely when the room is
@@ -154,7 +154,7 @@ function useHandleNpub(handle: string): string | null {
 }
 
 /** TASK-245: one gallery tile — the VDO view when this soul is on camera,
- *  else their own fren picture, else the house initial tile. Never a
+ *  else their own member picture, else the house initial tile. Never a
  *  broken image (PixelAvatar's seeded body always renders). */
 function GalleryTile({
   soul,
