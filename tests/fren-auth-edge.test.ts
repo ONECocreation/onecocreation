@@ -115,3 +115,18 @@ describe("hasValidSessionEdge — the middleware's own yes/no (TASK-259)", () =>
     expect(await hasValidSessionEdge(`${FREN_COOKIE}=${bad}~${good}`)).toBe(true);
   });
 });
+
+/* Number One follow-through (T-259 gate): no SEAT_SECRET on the edge = no
+   session, never a thrown error out of the middleware. */
+import { hasValidSessionEdge as hasValidSessionEdgeClosed } from "@/lib/fren-auth-edge";
+describe("edge verifier fails closed", () => {
+  it("a missing SEAT_SECRET reads as no session, not a throw", async () => {
+    const saved = process.env.SEAT_SECRET;
+    delete process.env.SEAT_SECRET;
+    try {
+      await expect(hasValidSessionEdgeClosed("pa-fren=a.email.9999999999999.deadbeef")).resolves.toBe(false);
+    } finally {
+      if (saved !== undefined) process.env.SEAT_SECRET = saved;
+    }
+  });
+});

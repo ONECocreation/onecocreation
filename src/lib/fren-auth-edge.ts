@@ -90,8 +90,15 @@ export async function hasValidSessionEdge(cookieHeader: string | null): Promise<
   const cookie = cookieHeader ?? "";
   const match = cookie.match(new RegExp(`${FREN_COOKIE}=([^;]+)`));
   if (!match) return false;
-  for (const raw of match[1].split(TOKEN_JOIN)) {
-    if (await verifySessionTokenEdge(raw)) return true;
+  /* Number One follow-through (T-259 gate): fail CLOSED. A missing
+     SEAT_SECRET on the edge must read as "no session" (the soul meets the
+     sign-in door), never a 500 on every room route. */
+  try {
+    for (const raw of match[1].split(TOKEN_JOIN)) {
+      if (await verifySessionTokenEdge(raw)) return true;
+    }
+  } catch {
+    return false;
   }
   return false;
 }
