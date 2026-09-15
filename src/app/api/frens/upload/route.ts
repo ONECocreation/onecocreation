@@ -8,9 +8,9 @@ import { blobStoreEnabled } from "@/lib/registry";
 export const dynamic = "force-dynamic";
 
 /**
- * Fren art upload — avatar and banner images for the profile card, hosted
- * on this ship so a new fren doesn't need an image host before they have a
- * face. FREN session is the gate (their own art, their own stakes); the
+ * Member art upload — avatar and banner images for the profile card, hosted
+ * on this ship so a new member doesn't need an image host before they have a
+ * face. Member session is the gate (their own art, their own stakes); the
  * operator store upload stays its own door.
  *
  * PUBLIC access is CORRECT: a kind-0 picture/banner URL is broadcast to
@@ -41,7 +41,7 @@ function safeBaseName(name: string): string {
 export async function POST(request: Request) {
   const fren = frenFromRequest(request);
   if (!fren) {
-    return NextResponse.json({ ok: false, reason: "sign in first, fren" }, { status: 401 });
+    return NextResponse.json({ ok: false, reason: "sign in first" }, { status: 401 });
   }
 
   let file: unknown;
