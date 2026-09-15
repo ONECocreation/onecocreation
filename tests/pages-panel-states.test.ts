@@ -99,10 +99,10 @@ describe("TASK-230 — the manifest covers every public route exactly once (deri
     expect(new Set(PAGE_STATES.map((e) => e.path)).size).toBe(PAGE_STATES.length);
   });
 
-  it("designer is derived: each designer route's page.tsx really reads getPuckPage — TASK-293: home too, now it's wired", async () => {
+  it("designer is derived: each designer route's page.tsx really reads getPuckPage — TASK-293: home too, now it's wired; TASK-295 pair 1: /meditation joins, and /packages' stale row catches up to T-232", async () => {
     const designers = PAGE_STATES.filter((e) => e.state === "designer");
     expect(designers.map((e) => e.slug).sort()).toEqual(
-      ["about", "book", "classes", "home", "memberships", "retreats", "store", "support"],
+      ["about", "book", "classes", "home", "meditation", "memberships", "packages", "retreats", "store", "support"],
     );
     for (const e of designers) {
       const page = await read(e.path === "/" ? "src/app/page.tsx" : `src/app/${e.path.slice(1)}/page.tsx`);
