@@ -106,8 +106,9 @@ describe("TASK-230 — the manifest covers every public route exactly once (deri
          meditation + the cured packages row, pair 2 brought privacy +
          terms, pair 3 brought artist + jewelry, pair 4 brought contact +
          services, pair 5 brought media + news, pair 6 brought bday
-         (/time flagged-and-stopped, stays words) */
-      ["about", "artist", "bday", "book", "classes", "contact", "home", "jewelry", "media", "meditation", "memberships", "news", "packages", "privacy", "retreats", "services", "store", "support", "terms"]
+         (/time flagged-and-stopped, stays words). T-296 wave B, me-login
+         pair: login + me join */
+      ["about", "artist", "bday", "book", "classes", "contact", "home", "jewelry", "login", "me", "media", "meditation", "memberships", "news", "packages", "privacy", "retreats", "services", "store", "support", "terms"]
     );
     for (const e of designers) {
       const page = await read(e.path === "/" ? "src/app/page.tsx" : `src/app/${e.path.slice(1)}/page.tsx`);
@@ -132,9 +133,10 @@ describe("TASK-230 — the manifest covers every public route exactly once (deri
     expect(pageStateEntryForSlug("about")?.state).toBe("designer");
     expect(pageStateEntryForSlug("home")?.state).toBe("designer"); // TASK-293: wired, the same badge every other designer route wears
     expect(pageStateEntryForSlug("home-old")?.state).toBe("reference");
-    /* the words sample moved off /jewelry when pair 3 flipped it — /login
-       is the manifest's own "not a designer candidate by default" route */
-    expect(pageStateEntryForSlug("login")?.state).toBe("words");
+    /* the words sample moved off /jewelry when pair 3 flipped it and off
+       /login when the T-296 me-login pair wired it — /welcome is the ruled
+       words route (pair 1's flag-and-stop stands; not in wave B's scope) */
+    expect(pageStateEntryForSlug("welcome")?.state).toBe("words");
     expect(pageStateEntryForSlug("some-page-love-made")).toBeNull();
     expect(pageStateEntryForPath("/time")?.state).toBe("words");
     expect(pageStateEntryForPath("/p/observer-old")?.state).toBe("reference");
@@ -172,9 +174,9 @@ describe("TASK-230 — the panel wears the manifest", () => {
   it("SITE MAP lists the words routes as read-only new-tab links to the designer", () => {
     const html = renderPanel();
     expect(html).toContain("SITE MAP · every public route still in words");
-    /* was href="/style/jewelry" — pair 3 flipped /jewelry; /login is the
-       words sample now */
-    expect(html).toContain('href="/style/login"');
+    /* was href="/style/jewelry" (pair 3 flipped it), then /style/login
+       (the T-296 me-login pair wired it) — /welcome is the words sample now */
+    expect(html).toContain('href="/style/welcome"');
     expect(html).toContain('target="_blank"');
     expect(html).toContain("/welcome");
   });
