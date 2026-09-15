@@ -64,10 +64,22 @@ import Link from "next/link";
 import { Chip, field, glassCard } from "@/components/console/glass";
 import { doorRoomGroups, type DoorRoom } from "@/components/console/LiveDoorCard";
 import type { TodaySession } from "@/lib/live";
+// TASK-261: the pure URL builders live in live-links.ts (no server
+// imports) so this client component can pull them in as VALUES, not just
+// types — a VALUE import from live.ts would drag its server-only
+// entitlement/mail-queue chain into the client bundle (the Turbopack
+// lesson recorded on matrix-rooms.ts). guestSlug/guestMeetingLink used to
+// be duplicated inline here for exactly that reason; this split removes
+// the duplication instead. Re-exported below so tests/go-live-door.test.ts's
+// existing `import { guestMeetingLink } from "@/app/a/live/go-live-room"`
+// keeps resolving.
+import { guestSlug, guestMeetingLink } from "@/lib/live-links";
 // TASK-235: scenes.ts is pure shape (no fs, no env) — StudioRoom.tsx
 // already imports it as a client component, so this stays inside the
 // client-bundle law the file's docblock states above.
 import type { StudioSceneId } from "@/lib/studio/scenes";
+
+export { guestSlug, guestMeetingLink };
 
 /* ── the pure model (exported for the tests — the house pins the model) ── */
 
@@ -77,39 +89,6 @@ export type GoLiveDoorId = "read" | "youtube" | "call" | "cocreate";
  *  open door closes it. */
 export function nextOpenDoor(current: GoLiveDoorId | null, next: GoLiveDoorId): GoLiveDoorId | null {
   return current === next ? null : next;
-}
-
-/** The guest-typed room name, slugged for either rail — never stored,
- *  derived fresh on every keystroke. */
-export function guestSlug(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 40);
-}
-
-/** The co-create guest link, derived from the meeting config: the Jitsi
- *  rail namespaces by the site's own space (live.ts's liveRoomPrefix, one
- *  derivation — a bare name would collide on the shared host); the VDO
- *  rail rooms by the config's prefix, the same shape as T-191's studio.
- *  A blank name is no link at all (derive-or-dash). */
-export function guestMeetingLink(
-  rail: "jitsi" | "vdo",
-  name: string,
-  cfg: { jitsiDomain: string; jitsiPrefix: string; vdoRoomPrefix: string; vdoHost: string },
-): string | null {
-  const slug = guestSlug(name);
-  if (!slug) return null;
-  // TASK-243: the config's own vdoHost, not the public vdo.ninja — built
-  // inline (not via live.ts's vdoBase) because this is a client component:
-  // a VALUE import from live.ts would drag its server-only entitlement/
-  // mail-queue chain into the client bundle (the Turbopack lesson recorded
-  // on matrix-rooms.ts; this file already only ever `import type`s from
-  // live.ts for that reason).
-  if (rail === "vdo") return `https://${cfg.vdoHost}/?room=${encodeURIComponent(`${cfg.vdoRoomPrefix}-${slug}`)}`;
-  return `https://${cfg.jitsiDomain}/${cfg.jitsiPrefix}${slug}`;
 }
 
 /* ── the feed shapes ───────────────────────────────────────────────────── */
@@ -171,6 +150,7 @@ function CopyDoor({ value, label }: { value: string; label: string }) {
 export default function GoLiveRoom({
   rooms,
   studioVdo,
+  studioDirector,
   sessions,
   meeting,
   youtube,
@@ -178,6 +158,11 @@ export default function GoLiveRoom({
 }: {
   rooms: DoorRoom[];
   studioVdo: { room: string; push: string; guest: string };
+  /** TASK-261: the director seat's own link (`studioDirectorLink`,
+   *  `?director=<room>&label=Love&muteallguests`) — a SEPARATE derivation
+   *  from `studioVdo.push` (the on-camera/publish link), so "on camera"
+   *  and "the director's desk" can never be conflated by a caller. */
+  studioDirector: string;
   sessions: TodaySession[];
   meeting: GoLiveMeeting;
   youtube: string;
@@ -396,8 +381,12 @@ export default function GoLiveRoom({
                     {meeting.rail === "vdo" && (
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                         <span style={fieldLabel}>Next</span>
-                        <a href={studioVdo.push} target="_blank" rel="noopener noreferrer" className="btn btn-sm" style={{ alignSelf: "flex-start" }}>
-                          Go to your studio
+                        <a href={studioDirector} target="_blank" rel="noopener noreferrer" className="btn btn-sm" style={{ alignSelf: "flex-start" }}>
+                          Open your director&apos;s desk
+                        </a>
+                        <p style={muted}>scene switching, mute-all, the room&apos;s own controls — opens in a new tab</p>
+                        <a href={studioVdo.push} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-ghost" style={{ alignSelf: "flex-start" }}>
+                          Step on camera
                         </a>
                         <p style={muted}>opens your camera in a new tab; the stage watches this seat</p>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>

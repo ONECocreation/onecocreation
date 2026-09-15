@@ -64,7 +64,11 @@ describe("studioVdoLinks / vdoBase — built from the host they're given, never 
     const vdo = studioVdoLinks("someartist", "vdo.example-studio.test");
     expect(vdo.room).toBe("someartist-studio");
     expect(vdo.push).toBe("https://vdo.example-studio.test/?room=someartist-studio&push=host");
-    expect(vdo.guest).toBe("https://vdo.example-studio.test/?room=someartist-studio");
+    // TASK-261: the guest door is now one-click (camera + mic, muted) —
+    // see tests/go-live-door.test.ts for the full builder pins.
+    expect(vdo.guest).toBe(
+      "https://vdo.example-studio.test/?room=someartist-studio&webcam&mute&label=Guest",
+    );
   });
 
   it("vdoBase is the one join point — a trailing slash, nothing more", () => {

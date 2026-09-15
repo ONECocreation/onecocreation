@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
-import { confirmedToday, studioVdoLinks, liveRoomPrefix, liveRoomName } from "@/lib/live";
+import { confirmedToday, studioVdoLinks, studioDirectorLink, studioGuestLink, liveRoomPrefix, liveRoomName } from "@/lib/live";
+import * as liveLinks from "@/lib/live-links";
 import { doorRoomGroups, type DoorRoom } from "@/components/console/LiveDoorCard";
 import GoLiveRoom, {
   nextOpenDoor,
@@ -50,6 +51,7 @@ const renderRoom = (props: Partial<Parameters<typeof GoLiveRoom>[0]> = {}) =>
     h(GoLiveRoom, {
       rooms: ROOM_FIXTURES,
       studioVdo: studioVdoLinks("onecocreation", "vdo.onecocreation.com"),
+      studioDirector: studioDirectorLink("vdo.onecocreation.com", "onecocreation-studio"),
       sessions: [],
       meeting: MEETING,
       youtube: "https://www.youtube.com/@Onecocreation",
@@ -121,11 +123,13 @@ describe("the Discovery card — today's confirmed bookings from the booking sto
 });
 
 describe("the YouTube card — T-191's studio links, the studio's honest state", () => {
-  it("studioVdoLinks is exactly the director's desk derivation", () => {
+  it("studioVdoLinks is exactly the studio's derivation — guest is TASK-261's one-click door", () => {
     const vdo = studioVdoLinks("onecocreation", "vdo.onecocreation.com");
     expect(vdo.room).toBe("onecocreation-studio");
     expect(vdo.push).toBe("https://vdo.onecocreation.com/?room=onecocreation-studio&push=host");
-    expect(vdo.guest).toBe("https://vdo.onecocreation.com/?room=onecocreation-studio");
+    expect(vdo.guest).toBe(
+      "https://vdo.onecocreation.com/?room=onecocreation-studio&webcam&mute&label=Guest",
+    );
   });
 
   it("the card carries the links and says the state comes with the kit — never invented", () => {
@@ -136,6 +140,49 @@ describe("the YouTube card — T-191's studio links, the studio's honest state",
     expect(html).toContain("Copy the guest link");
     expect(html).toContain('href="/a/studio"');
   });
+});
+
+describe("TASK-261 — the director's desk and the guest's one-click door", () => {
+  it("studioDirectorLink: ?director=<room>&label=Love&muteallguests — verified against the fork's own main.js (director :664, label :3533, muteallguests :2342) and its room-setup generator (studio/app.js buildDirectorUrl)", () => {
+    expect(studioDirectorLink("vdo.onecocreation.com", "onecocreation-studio")).toBe(
+      "https://vdo.onecocreation.com/?director=onecocreation-studio&label=Love&muteallguests",
+    );
+  });
+
+  it("studioDirectorLink never carries &cleanoutput — it fights &muteallguests (main.js:6080 re-hides #controlButtons, the parent of #muteAllGuests)", () => {
+    expect(studioDirectorLink("vdo.onecocreation.com", "onecocreation-studio")).not.toContain("cleanoutput");
+  });
+
+  it("studioGuestLink: ?room=<r>&webcam&mute&label=<handle> — verified against main.js (webcam :2037, mute :2229, label :3533) and the fork's own buildInviteUrl", () => {
+    expect(studioGuestLink("vdo.onecocreation.com", "onecocreation-studio")).toBe(
+      "https://vdo.onecocreation.com/?room=onecocreation-studio&webcam&mute&label=Guest",
+    );
+    expect(studioGuestLink("vdo.onecocreation.com", "onecocreation-studio", "Ada")).toBe(
+      "https://vdo.onecocreation.com/?room=onecocreation-studio&webcam&mute&label=Ada",
+    );
+  });
+
+  it("studioVdoLinks.guest calls studioGuestLink — one source, never a second hand-spelled shape", () => {
+    const vdo = studioVdoLinks("onecocreation", "vdo.onecocreation.com");
+    expect(vdo.guest).toBe(studioGuestLink("vdo.onecocreation.com", "onecocreation-studio"));
+  });
+
+  it("live.ts re-exports are the SAME functions live-links.ts defines — one source, not a copy", () => {
+    expect(studioDirectorLink).toBe(liveLinks.studioDirectorLink);
+    expect(studioGuestLink).toBe(liveLinks.studioGuestLink);
+    expect(studioVdoLinks).toBe(liveLinks.studioVdoLinks);
+    expect(guestMeetingLink).toBe(liveLinks.guestMeetingLink);
+  });
+
+  it("the Next row: Open your director's desk (primary, studioDirector) + Step on camera (secondary, studioVdo.push)", () => {
+    const src = read("src/app/a/live/go-live-room.tsx");
+    expect(src).toContain("href={studioDirector}");
+    expect(src).toContain("Open your director&apos;s desk");
+    expect(src).toContain("href={studioVdo.push}");
+    expect(src).toContain("Step on camera");
+    expect(src).toContain("btn-sm btn-ghost");
+  });
+
 });
 
 describe("the co-create card — the guest link derived from the meeting config", () => {

@@ -81,43 +81,21 @@ export function liveRoomPrefix(): string {
   return `${space}-`;
 }
 
-/** TASK-243: the one join point for a VDO.Ninja-shaped link — a bare host
- *  in, `https://<host>/` out — so a scheme is never pasted twice across the
- *  handful of call-sites that build a room URL from it. Pure. */
-export function vdoBase(host: string): string {
-  return `https://${host}/`;
-}
-
-/** TASK-192 (additive read), TASK-243 (own studio door): T-191's studio
- *  VDO derivation, one word further — the same `${prefix}-studio` room the
- *  /a/studio desk derives inline, shared so the Go-Live room's YouTube door
- *  can never drift from the director's desk. `host` is the meeting config's
- *  own VDO host (SiteConfig.meeting.vdoHost) — Love's own studio
- *  (vdo.onecocreation.com), never the public vdo.ninja by default. Pure:
- *  in, links out. */
-export function studioVdoLinks(roomPrefix: string, host: string): { room: string; push: string; guest: string } {
-  const room = `${roomPrefix}-studio`;
-  const base = vdoBase(host);
-  return {
-    room,
-    push: `${base}?room=${encodeURIComponent(room)}&push=host`,
-    guest: `${base}?room=${encodeURIComponent(room)}`,
-  };
-}
-
-/** TASK-249: a named guest's own camera door — the same `push=` shape
- *  T-243's studioVdoLinks uses for `host` (`push=host`), one word further:
- *  `push=<the guest's own handle>`, so the tile the gallery already
- *  addresses at `?view=<handle>&room=<studioRoom>` (RoomVideoSlot's
- *  GalleryTile) can actually find them once they open this door and
- *  publish. Deliberately NOT folded into studioVdoLinks — Love's own
- *  copyable off-site guest link (`.guest`, bare `?room=<room>`, VDO
- *  assigns a random id) on `/a/studio` and `/a/live` stays exactly as it
- *  was; this is a SECOND, narrower door for a soul the director already
- *  named. Pure: host/room/handle in, one link out. */
-export function studioGuestCameraLink(host: string, room: string, handle: string): string {
-  return `${vdoBase(host)}?room=${encodeURIComponent(room)}&push=${encodeURIComponent(handle)}`;
-}
+/** TASK-261: the pure VDO/Jitsi URL builders now live in `live-links.ts`
+ *  (no server imports — a client component can import them directly; see
+ *  that file's own docblock). Re-exported here so every existing
+ *  server-side call-site (`/a/live`, `/a/studio`, `/rooms/[slug]`) keeps
+ *  reading `@/lib/live` with no import-line change — one source, two
+ *  doors in. */
+export {
+  vdoBase,
+  studioVdoLinks,
+  studioGuestLink,
+  studioDirectorLink,
+  studioGuestCameraLink,
+  guestSlug,
+  guestMeetingLink,
+} from "./live-links";
 
 /** TASK-192 (additive read): one confirmed call, shaped for the Go-Live
  *  room's Discovery-call door. */
