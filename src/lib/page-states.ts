@@ -64,6 +64,8 @@ export const PAGE_STATES: PageStateEntry[] = [
   { path: "/classes", slug: "classes", state: "designer", note: DESIGNER_NOTE },
   { path: "/contact", slug: "contact", state: "designer", note: DESIGNER_NOTE },
   { path: "/jewelry", slug: "jewelry", state: "designer", note: DESIGNER_NOTE },
+  { path: "/login", slug: "login", state: "designer", note: DESIGNER_NOTE },
+  { path: "/me", slug: "me", state: "designer", note: DESIGNER_NOTE },
   { path: "/media", slug: "media", state: "designer", note: DESIGNER_NOTE },
   { path: "/meditation", slug: "meditation", state: "designer", note: DESIGNER_NOTE },
   { path: "/memberships", slug: "memberships", state: "designer", note: DESIGNER_NOTE },
@@ -80,8 +82,6 @@ export const PAGE_STATES: PageStateEntry[] = [
   { path: "/cart", state: "words", note: "words — the basket; copy lives in code (a checkout surface, not a designer candidate by default)" },
   { path: "/letters", state: "words", note: "words — Your Letters; copy lives in code" },
   { path: "/live", state: "words", note: "words — the live page; copy lives in code" },
-  { path: "/login", state: "words", note: "words — the sign-in door; copy lives in code (an app surface, not a designer candidate by default)" },
-  { path: "/me", state: "words", note: "words — the member's own room; copy lives in code (an app surface, not a designer candidate by default)" },
   { path: "/time", state: "words", note: "words — the clock (Bitcoin Federated Time); copy lives in code — T-295 pair 6 flagged-and-stopped on the live BFT read (the data-bound block lane lands it)" },
   { path: "/welcome", state: "words", note: "words — the welcome page; copy lives in code" },
 
