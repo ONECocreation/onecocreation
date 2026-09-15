@@ -1759,6 +1759,48 @@ const mediaContent: Block[] = [
   ]),
 ];
 
+/* ── T-296 wave B, me-login pair: /me — the member's own room ─────────────
+   src/app/me/page.tsx transcribed VERBATIM (the words law). The hero maps
+   to the Band vocabulary (sky-veil holding the night — the fallback's
+   keep-dark); CosmicSky's star field has no block twin (the declared
+   difference, pair 4's contact idiom — said in the SUMMARY, not invented).
+   The widget is NOT transcribed: the MeSwitch { id }-only block renders
+   the real session-aware room on the published page and the designer
+   canvas — nothing frozen (H116 A). The widget band holds the theme like
+   the fallback's bare sky-night (no keep-dark there). The literal block
+   carries an explicit unique id (the rt-list / pk-grid idiom, T-231). */
+const me = kit("me");
+const meContent: Block[] = [
+  me.band("sky-veil", "night", [
+    me.eyebrow("Members", "center"),
+    me.stacked("YOUR", "FIELD", "h1", "center"),
+    me.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
+    me.text("Your name, your sessions, your profile card — this room is yours.", "center", st({ color: "body", size: 15 })),
+  ]),
+  me.band("sky-night", "theme", [
+    { type: "MeSwitch", props: { id: "me-switch" } },
+  ]),
+];
+
+/* ── T-296 wave B, me-login pair: /login — the front door ─────────────────
+   src/app/login/page.tsx transcribed VERBATIM. The hero maps like /me's
+   (sky-veil holding the night; the login-galaxy veil and CosmicSky's star
+   field are beyond the Band — the declared difference). DoorSheet is NOT
+   transcribed: the LoginDoor { id }-only block renders the same sheet the
+   header mounts, page mount — the deep links (?next=) ride the component
+   itself, so a published /login serves the identical door. */
+const lg = kit("lg");
+const loginContent: Block[] = [
+  lg.band("sky-veil", "night", [
+    lg.eyebrow("Members", "center"),
+    lg.stacked("WELCOME", "HOME", "h1", "center"),
+    lg.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
+  ]),
+  lg.band("sky-night", "theme", [
+    { type: "LoginDoor", props: { id: "lg-door" } },
+  ]),
+];
+
 
 /* STUDIO P1: the new-site seeds carry honest root props (page title +
    description for SEO/social) so a publish is a real page from the first
@@ -1853,6 +1895,16 @@ export const SEEDS: Record<string, PuckPageData> = {
   time: { content: timeContent, root: { props: {
     title: "The Clock — Bitcoin Federated Time — One Cocreation",
     description: "Bitcoin Federated Time, plainly: the canonical date and the live block height — read from the chain, never estimated.",
+  } } },
+  /* T-296 wave B, me-login pair: /me + /login mirror their hand-built
+     metadata verbatim */
+  me: { content: meContent, root: { props: {
+    title: "My field — One Cocreation",
+    description: "Your name, your sessions, your profile card — a member's own room under the house sky.",
+  } } },
+  login: { content: loginContent, root: { props: {
+    title: "Sign in — One Cocreation",
+    description: "Sign in with your email or your key — no passwords, nothing stored. New here? The door turns to meet you.",
   } } },
   /* STUDIO P2: the popup lane. THE ONE REAL POPUP — the rebuild of the
      original platform's only popup ("Free Guide"), retargeted to the Free
