@@ -125,17 +125,17 @@ describe("the Discovery card — today's confirmed bookings from the booking sto
 describe("the YouTube card — T-191's studio links, the studio's honest state", () => {
   it("studioVdoLinks is exactly the studio's derivation — guest is TASK-261's one-click door", () => {
     const vdo = studioVdoLinks("onecocreation", "vdo.onecocreation.com");
-    expect(vdo.room).toBe("onecocreation-studio");
-    expect(vdo.push).toBe("https://vdo.onecocreation.com/?room=onecocreation-studio&push=host");
+    expect(vdo.room).toBe("onecocreation_studio"); // TASK-264: underscore-native, no VDO rewrite
+    expect(vdo.push).toBe("https://vdo.onecocreation.com/?room=onecocreation_studio&push=host");
     expect(vdo.guest).toBe(
-      "https://vdo.onecocreation.com/?room=onecocreation-studio&webcam&mute&label=Guest",
+      "https://vdo.onecocreation.com/?room=onecocreation_studio&webcam&mute&label=Guest",
     );
   });
 
   it("the card carries the links and says the state comes with the kit — never invented", () => {
     const html = renderRoom({ initialOpen: "youtube" });
     expect(html).toContain("the studio&#x27;s state comes with the kit");
-    expect(html).toContain("onecocreation-studio");
+    expect(html).toContain("onecocreation_studio");
     expect(html).toContain("Copy the push link");
     expect(html).toContain("Copy the guest link");
     expect(html).toContain('href="/a/studio"');
@@ -164,7 +164,7 @@ describe("TASK-261 — the director's desk and the guest's one-click door", () =
 
   it("studioVdoLinks.guest calls studioGuestLink — one source, never a second hand-spelled shape", () => {
     const vdo = studioVdoLinks("onecocreation", "vdo.onecocreation.com");
-    expect(vdo.guest).toBe(studioGuestLink("vdo.onecocreation.com", "onecocreation-studio"));
+    expect(vdo.guest).toBe(studioGuestLink("vdo.onecocreation.com", "onecocreation_studio"));
   });
 
   it("live.ts re-exports are the SAME functions live-links.ts defines — one source, not a copy", () => {
@@ -274,5 +274,14 @@ describe("the room itself — the gate and the desk pointer", () => {
     const src = read("src/app/a/page.tsx");
     expect(src).toContain('href="/a/live"');
     expect(src).not.toContain("LiveDoorCard");
+  });
+});
+
+/* TASK-264: the room id never carries a character VDO would rewrite. */
+describe("the studio room id is VDO-native (TASK-264)", () => {
+  it("has no hyphen — sanitizeRoomName would replace it and warn on every open", () => {
+    const { room } = studioVdoLinks("onecocreation", "vdo.onecocreation.com");
+    expect(room).toBe("onecocreation_studio");
+    expect(room).toMatch(/^[A-Za-z0-9_]+$/);
   });
 });

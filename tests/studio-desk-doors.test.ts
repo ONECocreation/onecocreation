@@ -61,7 +61,7 @@ describe("the VDO links card — three doors, each named and carrying the room",
     expect(html).toContain("step onto camera yourself");
     expect(html).toContain("camera + mic ready, muted until you unmute them");
     // the room's name rides all three lines
-    expect(html.split("onecocreation-studio").length - 1).toBeGreaterThanOrEqual(4); // the caption line + the 3 door names
+    expect(html.split("onecocreation_studio").length - 1).toBeGreaterThanOrEqual(4); // the caption line + the 3 door names
   });
 
   it("the director row's copy value is studioDirectorLink's own output", () => {

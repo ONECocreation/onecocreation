@@ -83,7 +83,12 @@ export function studioDirectorLink(host: string, room: string): string {
  *  vdo.ninja by default. `guest` now calls studioGuestLink (one source —
  *  see this lane's "one source" test pin). Pure: in, links out. */
 export function studioVdoLinks(roomPrefix: string, host: string): { room: string; push: string; guest: string } {
-  const room = `${roomPrefix}-studio`;
+  /* TASK-264 (Number One, 0018.06.24 a₿): the join is an UNDERSCORE. VDO's
+     sanitizeRoomName (lib.js:3747-3758) rewrites any hyphen to `_` and pops
+     "Only AlphaNumeric characters should be used for the room name" on every
+     open — Love saw it on her director's desk. Underscore-native = the same
+     room VDO always made, with no rewrite and no popup. */
+  const room = `${roomPrefix}_studio`;
   const base = vdoBase(host);
   return {
     room,
