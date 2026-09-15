@@ -1303,6 +1303,32 @@ const observerOldContent: Block[] = [
   ]),
 ];
 
+/* ── T-295 wave A pair 1: /meditation — the free meditation door ──────────
+   FreeMeditation (src/components/sections.tsx:517) transcribed verbatim —
+   her words, the real photograph, the real alt. The live SubscribeForm
+   stays code-side, said in the seed (the home seed's section-7 idiom): no
+   subscribe block exists in the registry, and none is needed to open the
+   page in the designer. The image is the section's REAL ground
+   (/images/dusk-lake-storm-light.webp — her own dusk-lake photograph), not
+   the newsletter.webp the home seed's twin band carries. */
+const md = kit("md");
+const meditationContent: Block[] = [
+  md.band("plain", "theme", [
+    md.twocol(
+      [md.img("/images/dusk-lake-storm-light.webp", "Love's own photograph: a still lake under mountains at dusk, orange light breaking through storm cloud", 420, "soft", "center")],
+      [
+        md.eyebrow("Be in the Know"),
+        md.heading("A Free Meditation, With Love", "h2"),
+        md.rich("Join the newsletter and receive <b style=\"color:var(--rose)\">“Unzip Into the New You”</b> — a free guided meditation, plus a weekly note of inspiration."),
+        md.text("Delivered straight to your inbox — on the house, from our 💞 to yours.", "left", st({ size: 15 })),
+        md.note("── live subscribe form stays code-side ──"),
+      ],
+      36,
+      "center",
+    ),
+  ]),
+];
+
 /* STUDIO P1: the new-site seeds carry honest root props (page title +
    description for SEO/social) so a publish is a real page from the first
    push — titles/descriptions mirror the hand-built pages they rebuild. The
@@ -1345,6 +1371,12 @@ export const SEEDS: Record<string, PuckPageData> = {
   retreats: { content: retreatsContent, root: { props: {
     title: "Retreats — One Cocreation",
     description: "A journey, not an appointment — blocks of days with Love, sold by the seat, paid in bitcoin.",
+  } } },
+  /* T-295 pair 1: /meditation's seed — title/description mirror the
+     hand-built page's metadata verbatim */
+  meditation: { content: meditationContent, root: { props: {
+    title: "Free Meditation — One Cocreation",
+    description: "A free guided meditation from Love — on the house, from our 💞 to yours.",
   } } },
   /* STUDIO P2: the popup lane. THE ONE REAL POPUP — the rebuild of the
      original platform's only popup ("Free Guide"), retargeted to the Free
