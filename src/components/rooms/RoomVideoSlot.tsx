@@ -106,6 +106,26 @@ import type { StudioSceneId } from "@/lib/studio/scenes";
  * today's `?view=host` iframe exactly as it was. The gallery, the camera
  * door and the "Join Live Session" pill below the frame are UNCHANGED —
  * this only swaps what fills the frame above them.
+ *
+ * TASK-260 (0018.06.24 a₿, from the Admiral's walk of the Heart Field
+ * stage) — three honesty fixes:
+ *  · the title (`<h3 className="cl-video-title">`) said the literal word
+ *    "Video" no matter what was on stage. It now reads the show's own name
+ *    (`fullSceneShowTitle || roomTitle`, the exact derive-or-dash pattern
+ *    `SceneFrame.tsx:94` already carries) — never blank, never "Video".
+ *  · the "● Join Live Session" pill always led to `joinHref`, which —
+ *    since this slot mounts ONLY on a room's OWN Stage — is always the
+ *    page already open. `selfLink` (below) names that: whenever the
+ *    component's own title resolves against the ROOMS registry (the only
+ *    way this component is ever actually called), the pill is a door back
+ *    to itself and is not rendered. The named guest's camera door (T-249's
+ *    "Step on camera") and the sign-in/package doors are untouched — this
+ *    only retires the self-referential gold pill.
+ *  · the vdo rail's iframes (the host frame here, and each `GalleryTile`
+ *    on-camera frame) now carry `&chat=0`, the fork's chat-suppress flag
+ *    (`chatbutton`/`chat`/`cb` aliases, `~/dev/apps/onecocreation-studio/
+ *    main.js:2393`, read-only reference clone) — the site's own Matrix
+ *    chat rides beside the stage; the VDO frame never grows a second one.
  */
 /** TASK-245: handle → npub, the one lookup this lane needs that no route
  *  yet exposes on its own — reused rather than reinvented from the public
@@ -156,7 +176,11 @@ function GalleryTile({
       {onCamera ? (
         <iframe
           className="cl-gallery-tile__frame"
-          src={`https://${vdoHost}/?view=${encodeURIComponent(handle)}&room=${encodeURIComponent(studioRoom)}&cleanoutput&autostart`}
+          /* TASK-260: &chat=0 — the fork's chat-off flag (main.js:2393,
+             `chatbutton`/`chat`/`cb` aliases, "0"/"false"/"no"/"off" all
+             hide the button); the site's own Matrix chat rides beside the
+             stage, so the VDO frame never grows a second one. */
+          src={`https://${vdoHost}/?view=${encodeURIComponent(handle)}&room=${encodeURIComponent(studioRoom)}&cleanoutput&autostart&chat=0`}
           allow="autoplay; fullscreen"
           title={soul.name}
         />
@@ -254,6 +278,17 @@ export default function RoomVideoSlot({
   const own = ROOMS.find((r) => r.title === roomTitle);
   const slug = own ? own.id.slice(1, own.id.indexOf(":")) : null;
   const joinHref = slug ? `/rooms/${slug}` : "/live";
+  /* TASK-260: the pill stops lying. RoomVideoSlot mounts ONLY on the room's
+     OWN Stage (StageView, only ever reached from /rooms/[slug]/page.tsx
+     with THIS room's own title) — so whenever `own` resolves, `joinHref`
+     is provably the page already rendering right now. A "Join Live
+     Session" door to the page you're already reading never goes anywhere;
+     it used to just sit there looking like a door. `slug` null (roomTitle
+     doesn't match a registered room — no caller does this today, but the
+     text-only fallback stays honest if one ever does) is the one case
+     `joinHref` might be a REAL door (`/live`), so the pill still renders
+     then. */
+  const selfLink = slug !== null;
   const gate: RoomGate = door ?? "open";
   /* TASK-245: the vdo rail's own embed gate — live + both halves of the
      studio address present. Checked AHEAD of `canEmbed` so a config that
@@ -268,7 +303,14 @@ export default function RoomVideoSlot({
 
   return (
     <div className="card cl-video-slot">
-      <h3 className="cl-video-title">Video</h3>
+      {/* TASK-260: the stage says the show's name, never the placeholder
+          "Video" — derive-or-dash, the same fallback SceneFrame.tsx:94
+          already performs (`showTitle || cartridge.copy.productName`):
+          the studio doc's own show title when threaded (fullSceneShowTitle,
+          set only while a full-frame interstitial is active — starting
+          soon/brb/ending, `src/app/rooms/[slug]/page.tsx`'s own gate),
+          else the room's own registered title, never blank. */}
+      <h3 className="cl-video-title">{fullSceneShowTitle || roomTitle}</h3>
       {live && gate === "signin" ? (
         /* the sign-in door — the SAME words the chat's door says */
         <div className="cl-video-stage">
@@ -311,7 +353,9 @@ export default function RoomVideoSlot({
             ) : (
               <iframe
                 style={{ width: "100%", height: "100%", border: 0 }}
-                src={`https://${vdoHost}/?view=host&room=${encodeURIComponent(studioRoom!)}&cleanoutput&autostart`}
+                /* TASK-260: &chat=0 — see GalleryTile's own note above; the
+                   host frame gets the same chat-off flag the tiles do. */
+                src={`https://${vdoHost}/?view=host&room=${encodeURIComponent(studioRoom!)}&cleanoutput&autostart&chat=0`}
                 allow="autoplay; camera; microphone; fullscreen"
                 title={`${roomTitle} — the studio`}
               />
@@ -344,9 +388,13 @@ export default function RoomVideoSlot({
           <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem" }}>
             Love is live in {roomTitle} now — the stage is lit.
           </p>
-          <Link href={joinHref} className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            ● Join Live Session
-          </Link>
+          {/* TASK-260: the pill stops lying — never a door back to the page
+              you're already on. See `selfLink`'s note above. */}
+          {!selfLink && (
+            <Link href={joinHref} className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              ● Join Live Session
+            </Link>
+          )}
         </div>
       ) : canEmbed ? (
         <div>
@@ -356,9 +404,11 @@ export default function RoomVideoSlot({
           <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem" }}>
             Love is live in {roomTitle} now — the stage is lit.
           </p>
-          <Link href={joinHref} className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            ● Join Live Session
-          </Link>
+          {!selfLink && (
+            <Link href={joinHref} className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              ● Join Live Session
+            </Link>
+          )}
         </div>
       ) : (
         <div className="cl-video-stage">
@@ -367,9 +417,11 @@ export default function RoomVideoSlot({
               <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem" }}>
                 Love is live in {roomTitle} now — the stage is lit.
               </p>
-              <Link href={joinHref} className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                ● Join Live Session
-              </Link>
+              {!selfLink && (
+                <Link href={joinHref} className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  ● Join Live Session
+                </Link>
+              )}
             </div>
           ) : (
             <p style={{ margin: 0, color: "var(--muted)", fontSize: ".86rem", maxWidth: 340 }}>

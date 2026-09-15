@@ -57,10 +57,15 @@ describe("RoomVideoSlot — rail vdo", () => {
       }),
     );
     expect(html).toContain("cl-stage-embed");
+    // TASK-260: &chat=0 — the fork's chat-suppress flag; the site's own
+    // Matrix chat rides beside the stage
     expect(html).toContain(
-      "https://vdo.onecocreation.com/?view=host&amp;room=onecocreation-studio&amp;cleanoutput&amp;autostart",
+      "https://vdo.onecocreation.com/?view=host&amp;room=onecocreation-studio&amp;cleanoutput&amp;autostart&amp;chat=0",
     );
-    expect(html).toContain("● Join Live Session");
+    // TASK-260: "The Heart Field" is this room's own registered title —
+    // the pill would only ever point back at the page already open, so it
+    // no longer renders
+    expect(html).not.toContain("● Join Live Session");
     // the Jitsi embed never mounts on this rail
     expect(html).not.toContain("meet.onecocreation.com");
   });
@@ -110,7 +115,7 @@ describe("RoomVideoSlot — rail vdo", () => {
     // ada is on camera — addressed by her own handle (the stream id a guest
     // publishes as `&push=<handle>`; the bare guest link is the next lane's seam)
     expect(html).toContain("cl-gallery-tile__frame");
-    expect(html).toContain("https://vdo.onecocreation.com/?view=ada&amp;room=onecocreation-studio&amp;cleanoutput&amp;autostart");
+    expect(html).toContain("https://vdo.onecocreation.com/?view=ada&amp;room=onecocreation-studio&amp;cleanoutput&amp;autostart&amp;chat=0");
     // bee stays camera-off — her tile is the picture branch, never a view iframe addressed to her
     expect(html).not.toContain("view=bee&amp;room=onecocreation-studio");
   });
@@ -171,7 +176,10 @@ describe("RoomVideoSlot — rail vdo", () => {
       createElement(RoomVideoSlot, { live: true, roomTitle: "The Heart Field", rail: "vdo" }),
     );
     expect(html).not.toContain("cl-stage-embed");
-    expect(html).toContain("● Join Live Session");
+    expect(html).toContain("Love is live in The Heart Field now");
+    // TASK-260: "The Heart Field" is this room's own registered title —
+    // the pill would only ever point back at the page already open
+    expect(html).not.toContain("● Join Live Session");
   });
 
   it("the sign-in and package doors still gate the vdo rail exactly as they gate Jitsi", async () => {
