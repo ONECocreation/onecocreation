@@ -2,7 +2,7 @@ import Link from "next/link";
 
 /* The /u segment's fallback 404 — only unplayable input lands here (real
    missing tags get GameOverTag with the press-start invitation instead). */
-export default function FrenNotFound() {
+export default function MemberNotFound() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-void px-6 text-center">
       <p className="font-display text-5xl text-ghost glow-ghost">Not Found</p>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SignerDoors from "@/components/SignerDoors";
-import useFrenSession from "@/hooks/useFrenSession";
+import useMemberSession from "@/hooks/useMemberSession";
 
 /**
  * The admin door — same trust model as everything else here: the operator IS
@@ -16,7 +16,7 @@ import useFrenSession from "@/hooks/useFrenSession";
 export default function OperatorGate({ configured }: { configured: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { accounts } = useFrenSession();
+  const { accounts } = useMemberSession();
   const [emailSeat, setEmailSeat] = useState<boolean | null>(null);
 
   /* The one honest line: an email door is signed in on this browser (any

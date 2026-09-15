@@ -141,10 +141,12 @@ describe("the door speaks as Love does — no arcade voice (source pin)", () => 
   });
 
   it("the door's components carry no arcade voice in their JSX copy", () => {
-    /* the legacy ROUTE names (/api/frens/*) and hook identifiers
-       (useFrenSession) are the server's own names — unowned, unchangeable
-       here, never rendered. Strip them; pin everything a visitor could
-       read. */
+    /* the legacy ROUTE names (/api/frens/*) are the server's own names —
+       unowned, unchangeable here, never rendered. TASK-278 renamed the old
+       hook identifier (and its property fren -> member) throughout, so
+       DoorSheet.tsx/DoorButton.tsx no longer carry that old string at all —
+       the strip below is now a route-only concern; its own line still
+       spells the retired name once, on purpose, as a no-op belt-and-braces. */
     for (const f of ["DoorSheet.tsx", "DoorButton.tsx"]) {
       const raw = readFileSync(join(__dirname, "..", "src", "components", "door", f), "utf8");
       const src = raw
@@ -152,8 +154,7 @@ describe("the door speaks as Love does — no arcade voice (source pin)", () => 
         .replace(/^\s*\/\/.*$/gm, "")     // line comments don't render
         .replace(/^import .*$/gm, "")
         .replace(/\/api\/frens\/[a-z-]+/g, "")
-        .replace(/\b(use|apply)FrenSession\b/g, "")
-        .replace(/\bfren:/g, ""); // the hook's own property name (unowned API)
+        .replace(/\b(use|apply)FrenSession\b/g, ""); // no-op post-rename; left in as a route-adjacent belt-and-braces strip
       for (const re of ARCADE) expect(src, `${f} matches ${re}`).not.toMatch(re);
     }
   });

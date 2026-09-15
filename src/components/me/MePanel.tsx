@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import useFrenSession from "@/hooks/useFrenSession";
+import useMemberSession from "@/hooks/useMemberSession";
 import useNostrProfile from "@/hooks/useNostrProfile";
 import ProfileEditor from "@/components/ProfileEditor";
 import { domainForSpace, SPACE_ROLES } from "@/lib/identity-config";
@@ -43,15 +43,15 @@ const tealLink: React.CSSProperties = { color: "var(--teal-bright, #8FD0D8)", te
 
 export default function MePanel() {
   const router = useRouter();
-  const { fren, accounts, checked, signOut, signOutOne, switchTo } = useFrenSession();
-  const { state: signal, raw, applyLocal } = useNostrProfile(fren?.npub);
+  const { member, accounts, checked, signOut, signOutOne, switchTo } = useMemberSession();
+  const { state: signal, raw, applyLocal } = useNostrProfile(member?.npub);
 
   /* every name the ACTIVE key holds, across known spaces — public whois data */
   const [holds, setHolds] = useState<{ handle: string; space: string }[] | null>(null);
   useEffect(() => {
-    if (!fren?.npub) return;
+    if (!member?.npub) return;
     let alive = true;
-    fetch(`/api/frens/whois?npub=${fren.npub}`)
+    fetch(`/api/frens/whois?npub=${member.npub}`)
       .then((r) => r.json())
       .then((d) => {
         if (alive && d?.ok) setHolds(d.holds);
@@ -62,7 +62,7 @@ export default function MePanel() {
     return () => {
       alive = false;
     };
-  }, [fren?.npub]);
+  }, [member?.npub]);
 
   const [confirmAllOut, setConfirmAllOut] = useState(false);
 
@@ -72,7 +72,7 @@ export default function MePanel() {
     );
   }
 
-  if (!fren) {
+  if (!member) {
     return (
       <div className="mx-auto mt-8 w-full max-w-md text-center" style={glassCard}>
         <p style={{ fontFamily: "var(--serif, sans-serif)", fontWeight: 400, fontSize: "1.25rem", color: "var(--ink-strong)", margin: "0 0 8px" }}>
@@ -94,9 +94,9 @@ export default function MePanel() {
     );
   }
 
-  const others = accounts.filter((a) => !(a.handle === fren.handle && a.space === fren.space));
+  const others = accounts.filter((a) => !(a.handle === member.handle && a.space === member.space));
   const heldElsewhere = (holds ?? []).filter(
-    (h) => !(h.handle === fren.handle && h.space === fren.space)
+    (h) => !(h.handle === member.handle && h.space === member.space)
   );
 
   return (
@@ -105,18 +105,18 @@ export default function MePanel() {
       <section className="text-center" style={glassCard}>
         <p style={{ ...secLabel, marginBottom: 8 }}>Your active name</p>
         <p className="break-all" style={{ fontFamily: "var(--serif, sans-serif)", fontSize: "clamp(1.6rem,7vw,2.5rem)", lineHeight: 1.15, color: "var(--ink-strong)", margin: 0 }}>
-          {fren.handle}
-          <span style={{ color: accentColor() }}>@{fren.space}</span>
+          {member.handle}
+          <span style={{ color: accentColor() }}>@{member.space}</span>
         </p>
         <p className="mt-1" style={{ fontSize: ".7rem", letterSpacing: ".08em", textTransform: "uppercase", color: "var(--muted)" }}>
-          {SPACE_ROLES[fren.space] ?? "verse"} space ·{" "}
-          <Link href={`/u/${fren.handle}@${fren.space}`} style={tealLink}>
+          {SPACE_ROLES[member.space] ?? "verse"} space ·{" "}
+          <Link href={`/u/${member.handle}@${member.space}`} style={tealLink}>
             public profile page
           </Link>
         </p>
-        {fren.npub ? (
+        {member.npub ? (
           <p className="mx-auto mt-4 max-w-md break-all" style={{ fontFamily: "monospace", fontSize: ".64rem", lineHeight: 1.6, color: "var(--muted)", opacity: .7 }}>
-            {fren.npub}
+            {member.npub}
           </p>
         ) : (
           <p className="mt-4" style={{ fontSize: ".74rem", textTransform: "uppercase", color: "var(--warn, #EBCB77)" }}>
@@ -139,7 +139,7 @@ export default function MePanel() {
             ) : (
               <ul className="space-y-1">
                 {holds.map((h) => {
-                  const active = h.handle === fren.handle && h.space === fren.space;
+                  const active = h.handle === member.handle && h.space === member.space;
                   return (
                     <li key={`${h.handle}@${h.space}`} className="flex items-center gap-2">
                       <span style={{ fontFamily: "monospace", fontSize: ".9rem", color: "var(--ink-strong)" }}>
@@ -184,7 +184,7 @@ export default function MePanel() {
         </p>
         <ul className="space-y-2">
           {accounts.map((a) => {
-            const active = a.handle === fren.handle && a.space === fren.space;
+            const active = a.handle === member.handle && a.space === member.space;
             return (
               <li
                 key={`${a.handle}@${a.space}`}
@@ -279,12 +279,12 @@ export default function MePanel() {
           {signal === "silent" &&
             "profile not found on the relays yet — publish your first card below and every nostr app learns your name."}
         </p>
-        {fren.npub ? (
+        {member.npub ? (
           <ProfileEditor
-            npub={fren.npub}
-            handle={fren.handle}
-            space={fren.space}
-            nip05Domain={domainForSpace(fren.space)}
+            npub={member.npub}
+            handle={member.handle}
+            space={member.space}
+            nip05Domain={domainForSpace(member.space)}
             raw={raw}
             signal={signal}
             onPublished={applyLocal}

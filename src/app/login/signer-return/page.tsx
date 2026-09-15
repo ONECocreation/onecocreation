@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { applyFrenSession } from "@/hooks/useFrenSession";
+import { applyMemberSession } from "@/hooks/useMemberSession";
 import { CHALLENGE_ENDPOINT } from "@/lib/signer-doors";
 
 /**
@@ -65,7 +65,7 @@ function SignerReturn() {
           window.location.replace(next ?? "/a");
           return;
         }
-        applyFrenSession({ handle: data.handle!, space: data.space!, npub: data.npub ?? null });
+        applyMemberSession({ handle: data.handle!, space: data.space!, npub: data.npub ?? null });
         router.replace(next ?? `/u/${data.handle}@${data.space}`);
       } catch {
         setError("couldn't reach the server — check your connection and try again");

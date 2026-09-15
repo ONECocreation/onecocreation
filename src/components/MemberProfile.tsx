@@ -80,7 +80,7 @@ function usePlayerSinceBlock(
  * tag as the network sees it (registry + live nostr signal) and hands the
  * member a controller for their next move into the nostr verse.
  */
-export default function FrenProfile({
+export default function MemberProfile({
   handle,
   npub,
   status,

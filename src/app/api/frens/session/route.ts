@@ -15,7 +15,7 @@ function sessionCookie(value: string, maxAge: number): HeadersInit {
   };
 }
 
-/* Who am I — the header's FrenChip asks on every page load. npub rides
+/* Who am I — the header's MemberChip asks on every page load. npub rides
    along so the chip can tune the member's kind-0 picture; `accounts` lists
    every door signed in on this browser (first = active). */
 export async function GET(request: Request) {

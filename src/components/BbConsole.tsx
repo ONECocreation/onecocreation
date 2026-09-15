@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { nip19 } from "nostr-tools";
 import { PixelAvatar } from "@pacsarcade/arcade-ui";
-import useFrenSession, { applyFrenSession } from "@/hooks/useFrenSession";
+import useMemberSession, { applyMemberSession } from "@/hooks/useMemberSession";
 import type { StoredBuddy } from "@/lib/bb/types";
 import { currentBlockInfo } from "@/lib/bb/bft";
 import { loadBuddies, upsertBuddy } from "@/lib/bb/store";
@@ -22,7 +22,7 @@ export const shortNpub = (n: string) => (n.length > 15 ? `${n.slice(0, 7)}…${n
  * maps onto the BUDDY_DEFINITION/BUDDY_STATE nostr events when that wiring lands.
  */
 export default function BbConsole() {
-  const { fren, checked } = useFrenSession();
+  const { member, checked } = useMemberSession();
   const [clientNpub, setClientNpub] = useState<string | null>(null);
   const [block, setBlock] = useState<number | null>(null);
   const [blockChecked, setBlockChecked] = useState(false);
@@ -31,7 +31,7 @@ export default function BbConsole() {
   const [hatching, setHatching] = useState(false);
   const [connectErr, setConnectErr] = useState("");
 
-  const npub = fren?.npub ?? clientNpub;
+  const npub = member?.npub ?? clientNpub;
 
   /* Live block, refreshed each minute (the BftClock cadence): the buddy's
      age, the scene's light and the block-break shimmer all ride the tip.
@@ -97,7 +97,7 @@ export default function BbConsole() {
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data?.ok) {
-        applyFrenSession({ handle: data.handle, space: data.space, npub: data.npub ?? null });
+        applyMemberSession({ handle: data.handle, space: data.space, npub: data.npub ?? null });
       }
     } catch {
       /* login declined or hiccuped — the key still plays bb-local */
@@ -156,18 +156,18 @@ export default function BbConsole() {
 
   /* Identity, tag-first: the npub is plumbing and only shows when the key
      holds NO tag on this board (Pac, 2026-07-11). */
-  const identityLine = fren ? `${fren.handle.toUpperCase()}@${fren.space.toUpperCase()}` : "KEY CONNECTED";
+  const identityLine = member ? `${member.handle.toUpperCase()}@${member.space.toUpperCase()}` : "KEY CONNECTED";
 
   return (
     <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center gap-6">
       {/* who's holding the collar — below xl: a slim inline strip */}
       <section className="flex w-full max-w-md flex-wrap items-center gap-3 rounded-2xl border border-neon/40 bg-panel px-4 py-2 xl:hidden">
-        <PixelAvatar variant="player" seed={fren?.handle ?? npub} size={32} />
+        <PixelAvatar variant="player" seed={member?.handle ?? npub} size={32} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-pixel text-[10px] text-neon glow-neon">✓ {identityLine}</p>
-          {!fren && <p className="mt-0.5 font-mono text-[10px] text-cyan">{shortNpub(npub)}</p>}
+          {!member && <p className="mt-0.5 font-mono text-[10px] text-cyan">{shortNpub(npub)}</p>}
         </div>
-        {!fren && (
+        {!member && (
           <Link href="/" className="font-mono text-[10px] uppercase tracking-wider text-pink hover:underline">
             Claim a tag </Link>
         )}
@@ -177,11 +177,11 @@ export default function BbConsole() {
           viewport, the ultrawide lesson), handle and @space stacked so long
           tags never shred. Minimal on purpose; the buddy is the star. */}
       <aside className="absolute left-full top-0 ml-6 hidden w-40 flex-col items-center gap-2 rounded-xl border border-edge/70 bg-panel/85 p-3 text-center backdrop-blur-sm xl:flex">
-        <PixelAvatar variant="player" seed={fren?.handle ?? npub} size={36} />
-        {fren ? (
+        <PixelAvatar variant="player" seed={member?.handle ?? npub} size={36} />
+        {member ? (
           <p className="w-full font-pixel text-[9px] leading-relaxed text-neon">
-            <span className="block truncate">{fren.handle.toUpperCase()}</span>
-            <span className="block truncate font-mono text-[9px] text-cyan">@{fren.space}</span>
+            <span className="block truncate">{member.handle.toUpperCase()}</span>
+            <span className="block truncate font-mono text-[9px] text-cyan">@{member.space}</span>
           </p>
         ) : (
           <p className="w-full font-pixel text-[9px] leading-relaxed text-neon">
@@ -189,9 +189,9 @@ export default function BbConsole() {
             <span className="block truncate font-mono text-[9px] text-cyan">{shortNpub(npub)}</span>
           </p>
         )}
-        {fren ? (
+        {member ? (
           <a
-            href={`/u/${fren.handle}@${fren.space}`}
+            href={`/u/${member.handle}@${member.space}`}
             className="font-pixel text-[8px] uppercase text-cyan hover:glow-cyan"
           >
             MY PROFILE </a>

@@ -85,10 +85,10 @@ describe("tenant redirects — /artist and /u/[handle] to /me", () => {
   it("/u/[handle] redirects to /me for tenant onecocreation", async () => {
     vi.resetModules();
     vi.stubEnv("TENANT", "");
-    const { default: FrenProfileRoute } = await import("@/app/u/[handle]/page");
+    const { default: MemberProfileRoute } = await import("@/app/u/[handle]/page");
     let caught: { digest?: string } | undefined;
     try {
-      await FrenProfileRoute({ params: Promise.resolve({ handle: "anyone" }) });
+      await MemberProfileRoute({ params: Promise.resolve({ handle: "anyone" }) });
     } catch (e) {
       caught = e as { digest?: string };
     }

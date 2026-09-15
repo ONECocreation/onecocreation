@@ -9,27 +9,27 @@ import { useCallback, useSyncExternalStore } from "react";
  * switch in one corner updates every subscriber, no stale "you're in".
  */
 
-export interface FrenSession {
+export interface MemberSession {
   handle: string;
   space: string;
   /** From the registry — lets the client tune this member's kind-0 signal. */
   npub: string | null;
 }
 
-export interface FrenAccount {
+export interface MemberAccount {
   handle: string;
   space: string;
 }
 
 interface SessionState {
-  fren: FrenSession | null;
+  member: MemberSession | null;
   /** Every door signed in on this browser (first = active). */
-  accounts: FrenAccount[];
+  accounts: MemberAccount[];
   /** false until the first answer lands — render nothing judgmental before it. */
   checked: boolean;
 }
 
-let state: SessionState = { fren: null, accounts: [], checked: false };
+let state: SessionState = { member: null, accounts: [], checked: false };
 let fetched = false;
 const listeners = new Set<() => void>();
 
@@ -40,11 +40,11 @@ function emit(next: SessionState) {
 
 /** LoginPanel (and the door switcher) call this after the server answers so
     the whole header flips without a hard navigation. */
-export function applyFrenSession(fren: FrenSession | null, accounts?: FrenAccount[]) {
+export function applyMemberSession(member: MemberSession | null, accounts?: MemberAccount[]) {
   fetched = true;
   emit({
-    fren,
-    accounts: accounts ?? (fren ? [{ handle: fren.handle, space: fren.space }] : []),
+    member,
+    accounts: accounts ?? (member ? [{ handle: member.handle, space: member.space }] : []),
     checked: true,
   });
 }
@@ -57,12 +57,12 @@ function subscribe(listener: () => void) {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) =>
         emit({
-          fren: d?.ok ? { handle: d.handle, space: d.space, npub: d.npub ?? null } : null,
+          member: d?.ok ? { handle: d.handle, space: d.space, npub: d.npub ?? null } : null,
           accounts: d?.ok ? (d.accounts ?? [{ handle: d.handle, space: d.space }]) : [],
           checked: true,
         })
       )
-      .catch(() => emit({ fren: null, accounts: [], checked: true }));
+      .catch(() => emit({ member: null, accounts: [], checked: true }));
   }
   return () => {
     listeners.delete(listener);
@@ -70,21 +70,21 @@ function subscribe(listener: () => void) {
 }
 
 const getSnapshot = () => state;
-const SERVER_STATE: SessionState = { fren: null, accounts: [], checked: false };
+const SERVER_STATE: SessionState = { member: null, accounts: [], checked: false };
 const getServerSnapshot = () => SERVER_STATE;
 
-export default function useFrenSession() {
-  const { fren, accounts, checked } = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+export default function useMemberSession() {
+  const { member, accounts, checked } = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const signOut = useCallback(async () => {
     await fetch("/api/frens/session", { method: "DELETE" });
-    applyFrenSession(null);
+    applyMemberSession(null);
   }, []);
 
   /** Close ONE door; the others stay signed in. Resolves the door left
       active (or null when the last door closed = fully signed out). */
   const signOutOne = useCallback(
-    async (handle: string, space: string): Promise<FrenSession | null> => {
+    async (handle: string, space: string): Promise<MemberSession | null> => {
       try {
         const res = await fetch("/api/frens/session", {
           method: "DELETE",
@@ -94,13 +94,13 @@ export default function useFrenSession() {
         const d = await res.json();
         if (d?.ok && d.handle) {
           const next = { handle: d.handle, space: d.space, npub: d.npub ?? null };
-          applyFrenSession(next, d.accounts);
+          applyMemberSession(next, d.accounts);
           return next;
         }
       } catch {
         /* fall through — treat as fully signed out */
       }
-      applyFrenSession(null);
+      applyMemberSession(null);
       return null;
     },
     []
@@ -116,12 +116,12 @@ export default function useFrenSession() {
       });
       const d = await res.json();
       if (!d.ok) return false;
-      applyFrenSession({ handle: d.handle, space: d.space, npub: d.npub ?? null }, d.accounts);
+      applyMemberSession({ handle: d.handle, space: d.space, npub: d.npub ?? null }, d.accounts);
       return true;
     } catch {
       return false;
     }
   }, []);
 
-  return { fren, accounts, checked, signOut, signOutOne, switchTo };
+  return { member, accounts, checked, signOut, signOutOne, switchTo };
 }
