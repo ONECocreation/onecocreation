@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import { SEEDS } from "@/lib/puck-seeds";
 import { slugProblem } from "@/lib/puck-slugs";
 import { RECON_PAGES, RECON_GROUP_HEADING } from "@/lib/shinepages-recon";
+import { PAGE_STATES, pageStateEntryForSlug, isArchiveSlug, type PageStateEntry } from "@/lib/page-states";
 
 /**
  * PagesPanel (STUDIO P1 — "a built page is a real page"): the top bar's
@@ -12,15 +13,83 @@ import { RECON_PAGES, RECON_GROUP_HEADING } from "@/lib/shinepages-recon";
  * canonical order as defaults, new pages append); each row offers rename,
  * duplicate, delete and up/down reorder, with a validated create row on top.
  *
+ * TASK-230 (0018.06.25 a₿ · block 967,125) — THE PANEL IS THE MAP OF THE
+ * WHOLE SITE: every row wears its state badge from the page-states manifest
+ * (designer / words / reference); the routes still in words get read-only
+ * SITE MAP rows that open the designer in a new tab; and the sixteen "-old"
+ * seeds sit under one ARCHIVE group at the bottom — collapsed by default,
+ * remembered in localStorage (the Site-room accordion idiom,
+ * SiteConsoleShell's SITE_SUBS precedent). Archive seeds keep today's
+ * protection semantics — editable and publishable; only the grouping
+ * changed. The recon REFERENCE group stays the panel's floor, fed by its
+ * own ONE-list manifest (TASK-105).
+ *
  * Honest states, house law: seed slugs show 🔒 protected (duplicate still
  * offered); with no KV (dev) every control renders disabled under a one-line
  * "pages store not connected" note — nothing pretends to have saved.
+ * Operator-made pages the manifest has never heard of wear no badge at
+ * all — never a guessed one.
  */
 
 const SANS = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 const MONO = "var(--font-mono)";
 
 const stylePath = (s: string) => (s === "home" ? "/style" : `/style/${s}`);
+
+/* the state badge — cyan for designer (time/info marks ride the teal-bright
+   family; gold is money only), muted for the not-yet lanes. The tooltip
+   speaks the manifest's own note verbatim. */
+function StateBadge({ entry }: { entry: PageStateEntry }) {
+  const on = entry.state === "designer";
+  return (
+    <span title={entry.note}
+      style={{ flex: "none", fontSize: 9, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase",
+        padding: "1px 6px", borderRadius: 999, whiteSpace: "nowrap",
+        color: on ? "var(--teal-bright)" : "var(--puck-color-text-muted)",
+        border: `1px solid ${on ? "var(--teal-bright)" : "var(--oc-structural-edge, rgba(139,118,196,.35))"}` }}>
+      {entry.state}
+    </span>
+  );
+}
+
+/* ARCHIVE open/closed, remembered in localStorage — the Site-room accordion
+   idiom (SiteConsoleShell): closed is the honest default, useSyncExternalStore
+   keeps the server paint and the remembered state from forking hydration,
+   and same-tab writes ring the accordion's own change bell. */
+const ARCHIVE_LS_KEY = "oc-studio-pages-archive-open";
+const ARCHIVE_LS_EVENT = "oc-studio-pages-archive-open-change";
+
+function readArchiveOpen(): boolean {
+  try {
+    return window.localStorage.getItem(ARCHIVE_LS_KEY) === "1";
+  } catch {
+    return false; /* storage can be denied — closed is the honest default */
+  }
+}
+
+function useArchiveOpen(): [boolean, () => void] {
+  const open = useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener("storage", onChange);
+      window.addEventListener(ARCHIVE_LS_EVENT, onChange);
+      return () => {
+        window.removeEventListener("storage", onChange);
+        window.removeEventListener(ARCHIVE_LS_EVENT, onChange);
+      };
+    },
+    readArchiveOpen,
+    () => false,
+  );
+  const toggle = useCallback(() => {
+    try {
+      window.localStorage.setItem(ARCHIVE_LS_KEY, readArchiveOpen() ? "0" : "1");
+    } catch {
+      /* storage denied — nothing to remember; the group stays closed */
+    }
+    window.dispatchEvent(new Event(ARCHIVE_LS_EVENT));
+  }, []);
+  return [open, toggle];
+}
 
 export default function PagesPanel({ slug, pages, order, storeReady, refresh, flushDraft, onClose }: {
   slug: string;
@@ -127,6 +196,75 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
   const off = !storeReady || busy;
   const offNote = "pages store not connected (dev: no KV_REST_API_*) — page management is off";
 
+  const [archiveOpen, toggleArchive] = useArchiveOpen();
+  /* one enumeration, two groups (TASK-230): the living pages keep the
+     panel's top, the sixteen "-old" seeds group under ARCHIVE below — the
+     global `ordered` index rides along so reorder/protection semantics
+     don't move, only the grouping does */
+  const mainRows = ordered.map((p, i) => ({ p, i })).filter(({ p }) => !isArchiveSlug(p));
+  const archiveRows = ordered.map((p, i) => ({ p, i })).filter(({ p }) => isArchiveSlug(p));
+  /* the manifest's words routes with no puck page of their own — the SITE
+     MAP rows (designer routes are all seeds, so they're always listed) */
+  const listed = new Set(ordered);
+  const wordsMapRows = PAGE_STATES.filter((e) => e.state === "words" && !listed.has(e.path.slice(1)));
+
+  /* one row renderer for BOTH groups — the archive rows are the same
+     rows with the same controls, just grouped */
+  function renderRow(p: string, i: number) {
+    const isSeed = Boolean(SEEDS[p]);
+    const isCurrent = p === slug;
+    const entry = pageStateEntryForSlug(p);
+    if (naming && naming.from === p) {
+      return (
+        <div key={p} style={{ display: "flex", gap: 6, alignItems: "center", padding: "5px 2px",
+          borderTop: "1px solid rgba(139,118,196,.15)" }}>
+          <span style={{ flex: "none", fontSize: 11, color: "var(--puck-color-text-muted)" }}>{naming.mode === "rename" ? "rename" : "copy as"}</span>
+          <input
+            value={naming.value}
+            onChange={(e) => setNaming({ ...naming, value: e.target.value })}
+            onKeyDown={(e) => { if (e.key === "Enter") void commitNaming(); if (e.key === "Escape") setNaming(null); }}
+            autoFocus
+            aria-label={naming.mode === "rename" ? `rename ${p}` : `duplicate ${p} as`}
+            style={{ flex: 1, minWidth: 0, background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)",
+              border: "1px solid var(--oc-input-edge, rgba(139,118,196,.45))", borderRadius: 8,
+              padding: "4px 8px", fontSize: 12, fontFamily: MONO }}
+          />
+          <button onClick={() => void commitNaming()} disabled={busy} style={btn(!busy)}>Save</button>
+          <button onClick={() => setNaming(null)} style={btn(true)}>Cancel</button>
+        </div>
+      );
+    }
+    return (
+      <div key={p} style={{ display: "flex", gap: 4, alignItems: "center", padding: "5px 2px",
+        borderTop: "1px solid rgba(139,118,196,.15)" }}>
+        <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis",
+          fontFamily: MONO, fontSize: 12, whiteSpace: "nowrap",
+          color: isCurrent ? "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */ : "var(--puck-color-text-secondary)" }}
+          title={isCurrent ? "the page you're editing" : stylePath(p)}>
+          {isCurrent ? "● " : ""}{p}
+        </span>
+        {entry && <StateBadge entry={entry} />}
+        {isSeed && (
+          <span title="seed page — canon, so it can't be renamed or deleted; duplicate it to make it yours"
+            style={{ flex: "none", fontSize: 10.5, color: "var(--puck-color-text-muted)", whiteSpace: "nowrap" }}>🔒 seed</span>
+        )}
+        <button onClick={() => void move(i, -1)} disabled={off || i === 0} title={storeReady ? "move up" : offNote} style={btn(!off && i > 0)}>↑</button>
+        <button onClick={() => void move(i, 1)} disabled={off || i === ordered.length - 1} title={storeReady ? "move down" : offNote} style={btn(!off && i < ordered.length - 1)}>↓</button>
+        {!isSeed && (
+          <button onClick={() => { setError(""); setNaming({ mode: "rename", from: p, value: p }); }} disabled={off}
+            title={storeReady ? `rename ${p}` : offNote} style={btn(!off)}>✎</button>
+        )}
+        <button onClick={() => { setError(""); setNaming({ mode: "duplicate", from: p, value: `${p}-copy` }); }} disabled={off}
+          title={storeReady ? `duplicate ${p} into a new draft` : offNote} style={btn(!off)}>⧉</button>
+        {!isSeed && (
+          <button onClick={() => void remove(p)} disabled={off}
+            title={storeReady ? `delete ${p} (draft and live)` : offNote}
+            style={{ ...btn(!off), color: off ? "var(--puck-color-text-disabled)" : "var(--err)" /* S2: pinned — the ruling landed (S22 B2): the literal WAS night --err */ }}>✕</button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div style={{ position: "fixed", left: 12, top: 52, zIndex: 1090, width: 380,
       maxWidth: "calc(100vw - 24px)", maxHeight: "70vh", display: "flex", flexDirection: "column",
@@ -164,83 +302,76 @@ export default function PagesPanel({ slug, pages, order, storeReady, refresh, fl
       </div>
 
       <div style={{ overflowY: "auto", minHeight: 0 }}>
-        {ordered.map((p, i) => {
-          const isSeed = Boolean(SEEDS[p]);
-          const isCurrent = p === slug;
-          if (naming && naming.from === p) {
-            return (
-              <div key={p} style={{ display: "flex", gap: 6, alignItems: "center", padding: "5px 2px",
-                borderTop: "1px solid rgba(139,118,196,.15)" }}>
-                <span style={{ flex: "none", fontSize: 11, color: "var(--puck-color-text-muted)" }}>{naming.mode === "rename" ? "rename" : "copy as"}</span>
-                <input
-                  value={naming.value}
-                  onChange={(e) => setNaming({ ...naming, value: e.target.value })}
-                  onKeyDown={(e) => { if (e.key === "Enter") void commitNaming(); if (e.key === "Escape") setNaming(null); }}
-                  autoFocus
-                  aria-label={naming.mode === "rename" ? `rename ${p}` : `duplicate ${p} as`}
-                  style={{ flex: 1, minWidth: 0, background: "var(--puck-color-surface-subtle)", color: "var(--puck-color-text)",
-                    border: "1px solid var(--oc-input-edge, rgba(139,118,196,.45))", borderRadius: 8,
-                    padding: "4px 8px", fontSize: 12, fontFamily: MONO }}
-                />
-                <button onClick={() => void commitNaming()} disabled={busy} style={btn(!busy)}>Save</button>
-                <button onClick={() => setNaming(null)} style={btn(true)}>Cancel</button>
-              </div>
-            );
-          }
-          return (
-            <div key={p} style={{ display: "flex", gap: 4, alignItems: "center", padding: "5px 2px",
-              borderTop: "1px solid rgba(139,118,196,.15)" }}>
-              <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis",
-                fontFamily: MONO, fontSize: 12, whiteSpace: "nowrap",
-                color: isCurrent ? "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */ : "var(--puck-color-text-secondary)" }}
-                title={isCurrent ? "the page you're editing" : stylePath(p)}>
-                {isCurrent ? "● " : ""}{p}
-              </span>
-              {isSeed && (
-                <span title="seed page — canon, so it can't be renamed or deleted; duplicate it to make it yours"
-                  style={{ flex: "none", fontSize: 10.5, color: "var(--puck-color-text-muted)", whiteSpace: "nowrap" }}>🔒 seed</span>
-              )}
-              <button onClick={() => void move(i, -1)} disabled={off || i === 0} title={storeReady ? "move up" : offNote} style={btn(!off && i > 0)}>↑</button>
-              <button onClick={() => void move(i, 1)} disabled={off || i === ordered.length - 1} title={storeReady ? "move down" : offNote} style={btn(!off && i < ordered.length - 1)}>↓</button>
-              {!isSeed && (
-                <button onClick={() => { setError(""); setNaming({ mode: "rename", from: p, value: p }); }} disabled={off}
-                  title={storeReady ? `rename ${p}` : offNote} style={btn(!off)}>✎</button>
-              )}
-              <button onClick={() => { setError(""); setNaming({ mode: "duplicate", from: p, value: `${p}-copy` }); }} disabled={off}
-                title={storeReady ? `duplicate ${p} into a new draft` : offNote} style={btn(!off)}>⧉</button>
-              {!isSeed && (
-                <button onClick={() => void remove(p)} disabled={off}
-                  title={storeReady ? `delete ${p} (draft and live)` : offNote}
-                  style={{ ...btn(!off), color: off ? "var(--puck-color-text-disabled)" : "var(--err)" /* S2: pinned — the ruling landed (S22 B2): the literal WAS night --err */ }}>✕</button>
-              )}
-            </div>
-          );
-        })}
-      </div>
+        {mainRows.map(({ p, i }) => renderRow(p, i))}
 
-      {/* TASK-105 (0018.06.12 a₿): the REFERENCE group — the ShinePages
-          capture, visually separated BELOW the site pages. Static rows from
-          the recon manifest, in the brief's own order: never from the
-          pages/KV props, never in the KV order, no rename/delete/reorder.
-          A plain <a target="_blank"> opens the viewer in a new tab so the
-          editor's unsaved state is never destroyed (judgment call, flagged
-          in the SUMMARY). Read-only law: nothing here writes. */}
-      <div style={{ marginTop: 12, borderTop: "2px solid var(--oc-structural-edge, rgba(139,118,196,.35))", paddingTop: 8 }}>
-        <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "var(--puck-color-text-muted)", marginBottom: 4 }}>
-          {RECON_GROUP_HEADING}
-        </div>
-        {RECON_PAGES.map((r) => (
-          <div key={r.slug} style={{ display: "flex", alignItems: "center", padding: "4px 2px",
-            borderTop: "1px solid rgba(139,118,196,.1)" }}>
-            <a href={`/style/reference/${r.slug}`} target="_blank" rel="noopener noreferrer"
-              title="read-only ShinePages capture — opens the reference viewer in a new tab"
-              style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                fontFamily: MONO, fontSize: 12, color: "var(--puck-color-text-secondary)", textDecoration: "none" }}>
-              {r.title}
-            </a>
-            <span style={{ flex: "none", fontSize: 10.5, color: "var(--puck-color-text-muted)" }}>↗</span>
+        {/* TASK-230 SITE MAP — the manifest's words routes that have no
+            puck page yet. Read-only rows: one click opens the designer at
+            that slug in a NEW TAB (the recon group's own judgment — the
+            editor's unsaved state is never destroyed by navigation) */}
+        <div style={{ marginTop: 12, borderTop: "2px solid var(--oc-structural-edge, rgba(139,118,196,.35))", paddingTop: 8 }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "var(--puck-color-text-muted)", marginBottom: 4 }}>
+            SITE MAP · every public route still in words
           </div>
-        ))}
+          {wordsMapRows.map((e) => (
+            <div key={e.path} style={{ display: "flex", gap: 4, alignItems: "center", padding: "4px 2px",
+              borderTop: "1px solid rgba(139,118,196,.1)" }}>
+              <a href={stylePath(e.path.slice(1))} target="_blank" rel="noopener noreferrer"
+                title={`${e.note} — opens the designer in a new tab`}
+                style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  fontFamily: MONO, fontSize: 12, color: "var(--puck-color-text-secondary)", textDecoration: "none" }}>
+                {e.path}
+              </a>
+              <StateBadge entry={e} />
+              <span style={{ flex: "none", fontSize: 10.5, color: "var(--puck-color-text-muted)" }}>↗</span>
+            </div>
+          ))}
+        </div>
+
+        {/* TASK-230 ARCHIVE — the sixteen "-old" seeds (Love's original
+            ShinePages pages), collapsed by default, remembered in
+            localStorage. Same rows, same controls: still editable and
+            publishable — only the grouping changed. */}
+        <div style={{ marginTop: 12, borderTop: "2px solid var(--oc-structural-edge, rgba(139,118,196,.35))", paddingTop: 8 }}>
+          <button onClick={toggleArchive} aria-expanded={archiveOpen}
+            title={archiveOpen ? "fold the archive away" : "the original ShinePages pages — still editable, kept for looking"}
+            style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", padding: "2px 0",
+              marginBottom: archiveOpen ? 4 : 0, background: "none", border: "none", cursor: "pointer",
+              textAlign: "left", fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em",
+              color: "var(--puck-color-text-muted)", fontFamily: SANS }}>
+            <span aria-hidden>{archiveOpen ? "▾" : "▸"}</span>
+            ARCHIVE · the original ShinePages pages · {archiveRows.length}
+          </button>
+          {archiveOpen && archiveRows.map(({ p, i }) => renderRow(p, i))}
+        </div>
+
+        {/* TASK-105 (0018.06.12 a₿): the REFERENCE group — the ShinePages
+            capture, visually separated BELOW the site pages. Static rows from
+            the recon manifest, in the brief's own order: never from the
+            pages/KV props, never in the KV order, no rename/delete/reorder.
+            A plain <a target="_blank"> opens the viewer in a new tab so the
+            editor's unsaved state is never destroyed (judgment call, flagged
+            in the SUMMARY). Read-only law: nothing here writes.
+            TASK-230: the group moved INSIDE the one scroller — with four
+            groups now, a fixed floor squeezed the pages list to nothing;
+            "below the site pages" is unchanged, the scroll just carries all
+            of them. */}
+        <div style={{ marginTop: 12, borderTop: "2px solid var(--oc-structural-edge, rgba(139,118,196,.35))", paddingTop: 8 }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "var(--puck-color-text-muted)", marginBottom: 4 }}>
+            {RECON_GROUP_HEADING}
+          </div>
+          {RECON_PAGES.map((r) => (
+            <div key={r.slug} style={{ display: "flex", alignItems: "center", padding: "4px 2px",
+              borderTop: "1px solid rgba(139,118,196,.1)" }}>
+              <a href={`/style/reference/${r.slug}`} target="_blank" rel="noopener noreferrer"
+                title="read-only ShinePages capture — opens the reference viewer in a new tab"
+                style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  fontFamily: MONO, fontSize: 12, color: "var(--puck-color-text-secondary)", textDecoration: "none" }}>
+                {r.title}
+              </a>
+              <span style={{ flex: "none", fontSize: 10.5, color: "var(--puck-color-text-muted)" }}>↗</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
