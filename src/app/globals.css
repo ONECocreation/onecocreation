@@ -216,7 +216,7 @@ h1, h2, h3, h4, h5, h6, .retro-text {
 /* Pixel fonts are wide, so multi-line headings and labels break in ugly
    spots ("USE IT / NOW"). Balance splits them into even lines; `pretty`
    keeps body paragraphs from stranding a single word on the last line. */
-h1, h2, h3, h4, h5, h6, .font-pixel, .font-arcade {
+h1, h2, h3, h4, h5, h6, .font-pixel, .font-display {
   text-wrap: balance;
 }
 p {
@@ -680,7 +680,7 @@ footer:not(.site-footer) {
   --acc: #8a7fb8;
   /* LCARS speaks condensed sans, not pixels */
   --font-pixel: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
-  --font-arcade: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
 
   background: #000000;
 }

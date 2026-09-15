@@ -166,7 +166,7 @@ export default function DecisionsPanel() {
       <p className="lcars-eyebrow mb-3" data-accent="pink">
         DECISIONS · NUMBER ONE RECOMMENDS, YOU RECORD
       </p>
-      <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">DECISION BOARD</h1>
+      <h1 className="mb-3 font-display text-4xl text-cyan glow-cyan">DECISION BOARD</h1>
       <p className="mb-8 font-body text-sm text-white/55">
         The pending rulings — each one a card, each one one click from done.
       </p>

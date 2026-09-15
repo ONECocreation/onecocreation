@@ -37,7 +37,7 @@ export default function BrandTester() {
         <p className="lcars-eyebrow mb-3" data-accent="pink">
           THE FITTING · ONE BRAND, ONE CARTRIDGE
         </p>
-        <h2 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">BRAND KIT</h2>
+        <h2 className="mb-3 font-display text-4xl text-cyan glow-cyan">BRAND KIT</h2>
         <p className="max-w-2xl font-body text-sm text-white/55">
           The sign-in kit&apos;s themes are retired — the brand lives in the cartridge now. These
           are its sign-in palette and faces, and below, the actual front door wearing them. Edit

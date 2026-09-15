@@ -90,7 +90,7 @@ export default function RankTrackPanel() {
           )}
           {read && read.tag && read.rank && (
             <div className="mt-2">
-              <p className="font-arcade text-2xl leading-tight text-pink">{read.rank.name}</p>
+              <p className="font-display text-2xl leading-tight text-pink">{read.rank.name}</p>
               <p className="mt-1 font-mono text-[11px] text-white/50">
                 {read.rank.grade} · {read.rank.abbrev} · {read.tag}
                 {read.rank.draft && (
@@ -171,7 +171,7 @@ export default function RankTrackPanel() {
                     {c.who}
                     {c.you && <span className="text-white/40"> · you</span>}
                   </span>
-                  <span className="font-arcade text-base text-neon">{c.n}</span>
+                  <span className="font-display text-base text-neon">{c.n}</span>
                 </li>
               ))}
             </ol>

@@ -350,7 +350,7 @@ export default function MediaKit() {
                 <p className="font-pixel text-[9px] tracking-widest text-white/40">
                   The wordmark
                 </p>
-                <p className="mt-3 font-arcade text-3xl text-white sm:text-4xl">One Cocreation</p>
+                <p className="mt-3 font-display text-3xl text-white sm:text-4xl">One Cocreation</p>
               </div>
               <div className="mt-5">
                 <CopyButton value="One Cocreation" label="COPY WORDMARK" />

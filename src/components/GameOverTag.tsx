@@ -28,7 +28,7 @@ export default function GameOverTag({
       <p className="font-pixel text-[10px] uppercase tracking-widest text-white/40">
         ONE COCREATION NAME NOT FOUND
       </p>
-      <p className="font-arcade text-5xl text-ghost glow-ghost">Unclaimed</p>
+      <p className="font-display text-5xl text-ghost glow-ghost">Unclaimed</p>
       <p className="font-pixel text-xs uppercase text-white/80">
         No one holds <span className="text-coin">{handle}{spaceTag}</span>
       </p>

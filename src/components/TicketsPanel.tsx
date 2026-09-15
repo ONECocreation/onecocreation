@@ -130,7 +130,7 @@ export default function TicketsPanel({ mode }: { mode: "support" | "crew" }) {
       <p className="lcars-eyebrow mb-3" data-accent="cyan">
         {isCrew ? "SCAR · ONE COCREATION" : "ONE COCREATION · SUPPORT"}
       </p>
-      <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">
+      <h1 className="mb-3 font-display text-4xl text-cyan glow-cyan">
         {isCrew ? "DUTY ROSTER" : "RAISE A TICKET"}
       </h1>
       <p className="mb-8 font-mono text-[11px] text-white/50">

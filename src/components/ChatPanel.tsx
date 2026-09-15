@@ -147,7 +147,7 @@ export default function ChatPanel() {
       <p className="lcars-eyebrow mb-3" data-accent="cyan">
         OPERATOR CONSOLE · ONE COCREATION
       </p>
-      <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">CHAT FLOOR</h1>
+      <h1 className="mb-3 font-display text-4xl text-cyan glow-cyan">CHAT FLOOR</h1>
       <p className="mb-8 font-mono text-[11px] text-white/50">
         ORBEE — THE FLOOR CHAT · POINT — SAVE — TEST — OPEN THE DOOR
       </p>

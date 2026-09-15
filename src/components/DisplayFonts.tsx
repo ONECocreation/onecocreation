@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
  * (Press Start 2P stays on the root layout for the PACMAN cartridge, which
  * adopted it as its display face — cartridges.css pours
  * var(--font-press-start), and next/font registers that variable on
- * <html>. Nothing celestial reads it: the kit's font-pixel / font-arcade
+ * <html>. Nothing celestial reads it: the kit's font-pixel / font-display
  * tokens are re-faced by cartridge.css, the console theme, or a cartridge
  * twin before they can ever reach PS2P.) Wrap any console-skin surface in
  * this and the variable cascades through its subtree.
@@ -19,6 +19,6 @@ const retronoid = localFont({
   variable: "--font-retronoid",
 });
 
-export default function ArcadeFonts({ children }: { children: ReactNode }) {
+export default function DisplayFonts({ children }: { children: ReactNode }) {
   return <div className={`${retronoid.variable} contents`}>{children}</div>;
 }

@@ -64,7 +64,7 @@ export default function BriefsConnectPanel() {
       <p className="lcars-eyebrow mb-3" data-accent="cyan">
         OPERATOR CONSOLE · ONE COCREATION
       </p>
-      <h2 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">BRIEFS</h2>
+      <h2 className="mb-3 font-display text-4xl text-cyan glow-cyan">BRIEFS</h2>
       <p className="mb-8 font-mono text-[11px] text-white/50">
         THE TWO SOURCES · POINT — SAVE · PULL FROM THE BRIEFS PAGE
       </p>

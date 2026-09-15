@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function FrenNotFound() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-void px-6 text-center">
-      <p className="font-arcade text-5xl text-ghost glow-ghost">Not Found</p>
+      <p className="font-display text-5xl text-ghost glow-ghost">Not Found</p>
       <p className="max-w-md font-body text-lg text-white/80">
         That&apos;s not a valid name — names are 3-20 characters, a-z, 0-9 and hyphens.
         Pick one that fits and claim it.

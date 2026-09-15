@@ -79,7 +79,7 @@ const RULE = /^(-{3,}|\*{3,}|_{3,})$/;
 function Heading({ level, children }: { level: number; children: ReactNode }) {
   const cls =
     level <= 1
-      ? "mt-5 font-arcade text-xl text-cyan glow-cyan"
+      ? "mt-5 font-display text-xl text-cyan glow-cyan"
       : level === 2
         ? "mt-5 font-pixel text-base uppercase leading-snug text-cyan"
         : level === 3

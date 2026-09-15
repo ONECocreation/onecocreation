@@ -398,7 +398,7 @@ html[data-oc-cartridge="blank"]{
   --font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   --font-body-app:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   --font-pixel:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-  --font-arcade:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-display:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
 }
 
 /* the ground under everything — plain paper, held still like the
@@ -477,7 +477,7 @@ html[data-oc-cartridge="mono"]{
   --font-body:ui-monospace,Menlo,Consolas,monospace;
   --font-body-app:ui-monospace,Menlo,Consolas,monospace;
   --font-pixel:ui-monospace,Menlo,Consolas,monospace;
-  --font-arcade:ui-monospace,Menlo,Consolas,monospace;
+  --font-display:ui-monospace,Menlo,Consolas,monospace;
   /* the effect tokens (TASK-42/S45) — the aurora in terminal light: the
      signal green, the technical cyan, the soft light rung. Alphas
      measured so the band's text keeps ≥4.5:1 ON TOP of a blob at full
@@ -751,7 +751,7 @@ html[data-oc-cartridge="material"]{
   --font-body:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
   --font-body-app:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
   --font-pixel:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
-  --font-arcade:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-display:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
   /* the effect tokens (TASK-42/S45) — the aurora in the primary family:
      primary80, tertiary80, the brightened info blue; measured ≥4.5:1
      for the band's inks over a blob at full token strength */
@@ -1037,7 +1037,7 @@ html[data-oc-cartridge="eva"]{
   --font-body:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   --font-body-app:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   --font-pixel:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-  --font-arcade:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --font-display:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   /* the effect tokens (TASK-42/S45) — the aurora in Eva's northern
      light: the primary 400, the danger rose, the light 300 rung;
      measured ≥4.5:1 for the band's inks over a blob at full strength */

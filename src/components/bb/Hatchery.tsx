@@ -64,7 +64,7 @@ export default function Hatchery({
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-5 rounded-2xl border-2 border-edge bg-panel p-6">
       <div>
-        <h3 className="font-arcade text-xl text-neon glow-neon">The Hatchery</h3>
+        <h3 className="font-display text-xl text-neon glow-neon">The Hatchery</h3>
         <p className="mt-1 font-body text-sm text-white/70">
           Bring something you own to life. Drop a photo — a mug, a pet, a sticker — and we&apos;ll
           pixel-hatch it into a Buddy born at the block. Or just name one and hatch the house critter.

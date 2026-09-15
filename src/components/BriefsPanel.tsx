@@ -377,7 +377,7 @@ export default function BriefsPanel() {
       <p className="lcars-eyebrow mb-3" data-accent="cyan">
         BRIEFS LIBRARY · READ · COMMENT · SIGN OFF
       </p>
-      <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">BRIEFS</h1>
+      <h1 className="mb-3 font-display text-4xl text-cyan glow-cyan">BRIEFS</h1>
       <p className="mb-6 font-body text-sm text-white/55">
         The design briefs as reviewable tickets — read the brief, leave a comment, sign it off or send
         it back. Two tiers: <span className="text-cyan">SHARED</span> (a public source) and{" "}
