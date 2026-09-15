@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import PaletteVars from "@/components/PaletteVars";
+import PopupHost from "@/components/PopupHost";
 import StackedHero from "@/components/StackedHero";
 import BeInTheKnow from "@/components/BeInTheKnow";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
 import { listPublicLetters } from "@/lib/letters";
 
 export const metadata: Metadata = {
@@ -17,6 +24,27 @@ export const dynamic = "force-dynamic";
  * 0018.05.15) — members' letters live in their own /letters reading room.
  * Love publishes in the Letters room and the shelf updates the same moment. */
 export default async function NewsPage() {
+  /* TASK-295 (0018.06.25 a₿) — PUCK first, mirroring /about (page.tsx:68-88)
+     byte-for-byte: once Love publishes the Puck rebuild (/style/news ->
+     Publish), the live /news serves it. Until then, the hand-built page
+     below is untouched — nothing changes for visitors until she chooses it.
+     No route gates on this page (no features.* switches read). The live
+     pieces (the public-letters shelf, the subscribe form) stay code-side —
+     the seed says so (never fossilised). */
+  const puck = await getPuckPage("news");
+  if (puck) {
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main><Render config={config} data={puck as Data} /></main>
+        <SiteFooter />
+        {/* STUDIO P2: popup host rides both branches of this page */}
+        <PopupHost />
+      </>
+    );
+  }
+
   const notes = [];
   // T-131 follow-through: seeded AND composed public letters, one shelf (listPublicLetters reads the registry)
   for (const n of await listPublicLetters()) notes.push(n);

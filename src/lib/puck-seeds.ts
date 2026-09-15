@@ -1574,6 +1574,143 @@ const servicesContent: Block[] = [
   ]),
 ];
 
+/* ── T-295 wave A pair 5: /news — From the Field ───────────────────────────
+   src/app/news/page.tsx transcribed VERBATIM (the fallback, NOT edited — the
+   words law). The StackedHero maps to the StackedHeading block (the about
+   seed's convention). TWO live pieces take the sanctioned "stays code-side,
+   said in the seed" path (pair 1's meditation idiom, pair 4's shelves): the
+   public-letters shelf (listPublicLetters — the Letters registry read live
+   every request; never fossilised) and the BeInTheKnow subscribe form. */
+const nw = kit("nw");
+const newsContent: Block[] = [
+  nw.band("plain", "theme", [
+    nw.eyebrow("From the Field", "center"),
+    nw.stacked("NEWS", "& LETTERS", "h1", "center"),
+    nw.text("Love's open notes — every public letter lives here after it lands in the inboxes.", "center"),
+    nw.note("── live public-letters shelf stays code-side (every 🌍 PUBLIC letter from the Letters registry, linked to its reading room — the honest “no public notes yet — the first is coming ✨” rides it) ──"),
+    nw.note("── live subscribe form (Be in the Know) stays code-side ──"),
+  ]),
+];
+
+/* ── T-295 wave A pair 5: /media — the emojipedia replacement, but ours ────
+   MediaKit (src/components/MediaKit.tsx) transcribed VERBATIM. Every WORD on
+   the page is static and honestly seedable — the glyph notes, the download
+   hrefs (real paths), the palette names/hexes/roles (the sign-in contract's
+   palette, src/brand/cartridge.ts), the press blurbs. What a static doc
+   can't hold is BEHAVIOUR, not data: the click-to-copy buttons (CopyButton,
+   SwatchButton — clipboard state machines) and the two code-drawn visuals
+   (the struck-ess SatMark, the palette's colour chips) stay code-side, said
+   in the seed per band (the sanctioned idiom). The mgmt console chrome
+   (pixel font, panel borders) maps to plain bands (pair 2/3's convention);
+   the intro line's coin/cyan/neon class colours approximate to the nearest
+   site vars, words untouched. */
+const mi = kit("mi");
+const mediaContent: Block[] = [
+  mi.band("plain", "theme", [
+    mi.eyebrow("Media & assets"),
+    mi.heading("Copy a ₿ without leaving home", "h1"),
+    mi.text("Bitcoin glyphs, the One Cocreation brand, and a press blurb — each one click to your clipboard. No trip to emojipedia required.", "left", st({ color: "muted" })),
+  ]),
+  mi.band("plain", "theme", [
+    mi.heading("Bitcoin glyphs", "h2"),
+    mi.rich("Click to copy. <b style=\"color:var(--gold-2)\">Gold is money</b> (the ₿ and the sat mark); <b style=\"color:var(--teal-bright)\">cyan is time</b> (the date markers); <b>neon is the rail</b>.", "left", st({ color: "muted", size: 14 })),
+    mi.threecol(
+      [mi.panel([
+        mi.text("₿", "center", st({ size: 40 })),
+        mi.text("MONEY", "center", st({ color: "muted", size: 11 })),
+        mi.text("Bitcoin sign — Unicode U+20BF. The whole coin; 1 ₿ = 100,000,000 sats.", "center", st({ color: "muted", size: 12 })),
+      ])],
+      [mi.panel([
+        /* the struck-ess SatMark is drawn in code (no codepoint exists) —
+           the honest copyable value stands in its panel, the note below
+           says the drawing stays code-side */
+        mi.text("sats", "center", st({ size: 30 })),
+        mi.text("MONEY · PROPOSAL", "center", st({ color: "muted", size: 11 })),
+        mi.text("Satoshi — the cent of bitcoin, 100,000,000 to the ₿. No Unicode exists; paste the word.", "center", st({ color: "muted", size: 12 })),
+      ])],
+      [mi.panel([
+        mi.text("a₿", "center", st({ size: 40 })),
+        mi.text("TIME", "center", st({ color: "muted", size: 11 })),
+        mi.text("After-bitcoin date marker — rides after a BFT date: 0018.04.15 a₿.", "center", st({ color: "muted", size: 12 })),
+      ])],
+    ),
+    mi.threecol(
+      [mi.panel([
+        mi.text("b₿", "center", st({ size: 40 })),
+        mi.text("TIME", "center", st({ color: "muted", size: 11 })),
+        mi.text("Before-bitcoin marker — pre-genesis dates wear it the same way, after the date.", "center", st({ color: "muted", size: 12 })),
+      ])],
+      [mi.panel([
+        mi.text("★", "center", st({ size: 40 })),
+        mi.text("TIME", "center", st({ color: "muted", size: 11 })),
+        mi.text("Star-in-a-box — every block height wears the boxed star in UI: ★ 957,661. Copy the star; the box is drawn by the component.", "center", st({ color: "muted", size: 12 })),
+      ])],
+      [mi.panel([
+        mi.text("⚡", "center", st({ size: 40 })),
+        mi.text("RAIL", "center", st({ color: "muted", size: 11 })),
+        mi.text("Lightning — the rail sats ride: instant, tiny, off-chain settlement.", "center", st({ color: "muted", size: 12 })),
+      ])],
+    ),
+    mi.note("── the click-to-copy buttons stay code-side (and the struck-ess sat mark is drawn in code — the word “sats” stands in its panel, as the note below explains) ──"),
+    mi.note("On the sat mark · The struck ess is the lead among four satoshi-mark candidates — a lowercase gold s wearing ₿'s two hash-bars. It's a proposal, not yet a settled standard, so the honest copyable value is the text fallback sats — the word wallets already print."),
+  ]),
+  mi.band("plain", "theme", [
+    mi.heading("Brand assets", "h2"),
+    mi.text("The mark, the lockup, the wordmark, and the celestial palette.", "left", st({ color: "muted", size: 14 })),
+    mi.threecol(
+      [mi.panel([
+        mi.img("/brand/onecocreation-mark.svg", "One Cocreation mark — the ring with the purple half", 160, "none", "left"),
+        mi.text("The mark", "left", st({ size: 13 })),
+        mi.text("The ring with the purple half — where heaven and earth meet.", "left", st({ color: "muted", size: 12 })),
+        mi.buttons([
+          { label: "DOWNLOAD SVG", href: "/brand/onecocreation-mark.svg", variant: "quiet" },
+          { label: "DOWNLOAD EMAIL PNG", href: "/brand/onecocreation-mark-email.png", variant: "quiet" },
+        ], "left"),
+      ])],
+      [mi.panel([
+        mi.img("/brand/onecocreation-lockup-raylit.svg", "One Cocreation lockup — the raylit ring and wordmark together", 160, "none", "left"),
+        mi.text("The lockup", "left", st({ size: 13 })),
+        mi.text("The raylit lockup — mark and wordmark together, lit from above.", "left", st({ color: "muted", size: 12 })),
+        mi.buttons([
+          { label: "DOWNLOAD SVG", href: "/brand/onecocreation-lockup-raylit.svg", variant: "quiet" },
+          { label: "DOWNLOAD EMAIL PNG", href: "/brand/onecocreation-lockup-email.png", variant: "quiet" },
+        ], "left"),
+      ])],
+      [mi.panel([
+        mi.text("The wordmark", "left", st({ color: "muted", size: 11 })),
+        mi.text("One Cocreation", "left", st({ size: 28, font: "display" })),
+      ])],
+    ),
+    mi.text("The palette — click a swatch to copy its hex", "left", st({ color: "muted", size: 11, spaceAbove: 14 })),
+    mi.list([
+      "space · #0A0A14 — surface",
+      "cream · #FBF6EF — text",
+      "gold · #D9B24E — money ONLY",
+      "purple · #9B26D6 — info · verify",
+      "lavender · #8B76C4 — live / success",
+      "rose · #C56E8B — danger — gentle",
+      "magenta · #C42EC9 — flair 💜",
+      "copper · #C77B4A — warmth",
+    ], "none"),
+    mi.note("── the palette's colour chips and its click-to-copy stay code-side (as does the wordmark's COPY WORDMARK button) ──"),
+    mi.note("Usage · Gold is money, and only money. The brand runs on the night sky — keep the mark on dark, at its natural aspect, never squeezed."),
+  ]),
+  mi.band("plain", "theme", [
+    mi.heading("For press", "h2"),
+    mi.text("Writing about us? Copy and paste — it's warm and it's true.", "left", st({ color: "muted", size: 14 })),
+    mi.panel([
+      mi.text("One-liner", "left", st({ color: "muted", size: 11 })),
+      mi.quote("One Cocreation is the way of the heart — sessions, meditations, and a community where heaven and earth meet, with a free, sovereign name@onecocreation tag: your name, your keys, verified on nostr and tied to Bitcoin.", "left"),
+    ]),
+    mi.panel([
+      mi.text("Short paragraph", "left", st({ color: "muted", size: 11 })),
+      mi.quote("One Cocreation is where heaven and earth meet — a home for sessions, meditations, and the community room, walked the way of the heart. Claim a free name@onecocreation tag and it's yours forever: a name bound to keys only you hold, verifiable on nostr and anchored to Bitcoin — no rent, no resets, nobody to ask. Everything gets tied to the block.", "left"),
+    ]),
+    mi.note("── the COPY ONE-LINER / COPY PARAGRAPH buttons stay code-side ──"),
+  ]),
+];
+
+
 /* STUDIO P1: the new-site seeds carry honest root props (page title +
    description for SEO/social) so a publish is a real page from the first
    push — titles/descriptions mirror the hand-built pages they rebuild. The
@@ -1647,6 +1784,15 @@ export const SEEDS: Record<string, PuckPageData> = {
     description: "E.T. Phone Home — I'll BE right here. Write to Love, catch the 11:11 lives, book a discovery call.",
   } } },
   services: { content: servicesContent, root: {} },
+  /* T-295 pair 5: /news + /media mirror their hand-built metadata verbatim */
+  news: { content: newsContent, root: { props: {
+    title: "News & Letters — One Cocreation",
+    description: "Love's public notes to the field.",
+  } } },
+  media: { content: mediaContent, root: { props: {
+    title: "Media & assets — One Cocreation",
+    description: "Copy bitcoin glyphs (₿, sats, a₿, ★, ⚡) and One Cocreation brand assets — the mark, wordmark, palette, and a press blurb. No trip to emojipedia required.",
+  } } },
   /* STUDIO P2: the popup lane. THE ONE REAL POPUP — the rebuild of the
      original platform's only popup ("Free Guide"), retargeted to the Free
      Meditation door (/meditation). The copy is Love's own, quoted from the
