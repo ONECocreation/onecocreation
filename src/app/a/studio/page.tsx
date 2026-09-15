@@ -4,6 +4,7 @@ import OperatorGate from "@/components/OperatorGate";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { cartridge } from "@/brand/cartridge";
 import { getSiteConfig } from "@/lib/site-config";
+import { studioVdoLinks, studioDirectorLink } from "@/lib/live";
 import { STUDIO_SCENES, type StudioSceneId } from "@/lib/studio/scenes";
 import { overlayConfigured, overlayQuery } from "@/lib/studio/overlay-token";
 import { getStudioDoc } from "@/lib/studio/roster";
@@ -58,14 +59,15 @@ export default async function StudioRoomPage() {
     }),
   ) as Record<StudioSceneId, string | null>;
 
-  /* the VDO room derives from the meeting config's prefix (T-137) — the
-     same derivation the booking flow uses, one word further */
-  const vdoRoom = `${config.meeting.vdoRoomPrefix}-studio`;
-  const vdo = {
-    room: vdoRoom,
-    push: `https://${config.meeting.vdoHost}/?room=${encodeURIComponent(vdoRoom)}&push=host`,
-    guest: `https://${config.meeting.vdoHost}/?room=${encodeURIComponent(vdoRoom)}`,
-  };
+  /* TASK-261: the VDO room derives from the meeting config's prefix
+     (T-137) via the ONE shared derivation (live.ts's studioVdoLinks) —
+     this page used to hand-build the same `{room, push, guest}` shape
+     inline (a second, driftable copy of T-243's derivation); now it
+     calls the shared builder like every other caller. `director` is the
+     director seat's own link (studioDirectorLink), the desk this lane
+     adds. */
+  const vdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost);
+  const director = studioDirectorLink(config.meeting.vdoHost, vdo.room);
 
   /* TASK-244: VDO.Ninja can load a web page as a room source with its own
      "&website=<url-encoded page>" parameter — VERIFIED present in Love's
@@ -91,6 +93,7 @@ export default async function StudioRoomPage() {
       overlayUrls={overlayUrls}
       overlayReady={overlayConfigured()}
       vdo={vdo}
+      director={director}
       showInStudioUrls={showInStudioUrls}
       showTitleFallback={cartridge.copy.productName}
     />

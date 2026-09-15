@@ -78,6 +78,7 @@ export default function StudioRoom({
   overlayUrls,
   overlayReady,
   vdo,
+  director,
   showInStudioUrls,
   showTitleFallback,
 }: {
@@ -85,6 +86,10 @@ export default function StudioRoom({
   overlayUrls: Record<StudioSceneId, string | null>;
   overlayReady: boolean;
   vdo: { room: string; push: string; guest: string };
+  /** TASK-261: the director seat's own link (`studioDirectorLink`), a
+   *  SEPARATE derivation from `vdo.push` — see go-live-room.tsx's same
+   *  prop for the full reasoning. */
+  director: string;
   /** TASK-244: null for the on-camera scenes and for a full scene with no minted overlay URL yet */
   showInStudioUrls: Record<StudioSceneId, string | null>;
   showTitleFallback: string;
@@ -329,20 +334,36 @@ export default function StudioRoom({
         room instead, via its own &amp;website source.
       </p>
 
-      {/* ── the VDO links ────────────────────────────────────────────── */}
+      {/* ── the VDO links (TASK-261: three doors, each names which one
+          it is and carries the room's name) ─────────────────────────── */}
       <SectionHead label="VDO links" />
       <p style={{ margin: "0 0 10px", fontSize: ".78rem", color: "var(--muted)" }}>
         the room name derives from the meeting config&apos;s prefix — <code>{vdo.room}</code>
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={card}>
-          <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>your camera (push)</b>
+          <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>your director&apos;s desk</b>
+          <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
+            scene switching, mute-all, the room&apos;s own controls — {vdo.room}
+          </p>
+          <div style={doorStack}>
+            <CopyDoor value={director} label="Copy the director link" />
+          </div>
+        </div>
+        <div style={card}>
+          <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>on camera</b>
+          <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
+            step onto camera yourself — {vdo.room}
+          </p>
           <div style={doorStack}>
             <CopyDoor value={vdo.push} label="Copy the push link" />
           </div>
         </div>
         <div style={card}>
           <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>a guest&apos;s door</b>
+          <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
+            camera + mic ready, muted until you unmute them — {vdo.room}
+          </p>
           <div style={doorStack}>
             <CopyDoor value={vdo.guest} label="Copy the guest link" />
           </div>

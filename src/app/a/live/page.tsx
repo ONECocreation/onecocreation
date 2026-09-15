@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import OperatorGate from "@/components/OperatorGate";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { ROOMS } from "@/lib/matrix-rooms";
-import { slugOfRoom, studioVdoLinks, confirmedToday, liveRoomPrefix, LIVE_YOUTUBE } from "@/lib/live";
+import { slugOfRoom, studioVdoLinks, studioDirectorLink, confirmedToday, liveRoomPrefix, LIVE_YOUTUBE } from "@/lib/live";
 import { listBookings } from "@/lib/booking-orders";
 import { getSiteConfig } from "@/lib/site-config";
 import GoLiveRoom from "./go-live-room";
@@ -35,11 +35,13 @@ export default async function GoLivePage() {
   }
 
   const [config, bookings] = await Promise.all([getSiteConfig(), listBookings()]);
+  const studioVdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost);
 
   return (
     <GoLiveRoom
       rooms={ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind, minTier: r.minTier }))}
-      studioVdo={studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost)}
+      studioVdo={studioVdo}
+      studioDirector={studioDirectorLink(config.meeting.vdoHost, studioVdo.room)}
       sessions={confirmedToday(bookings)}
       meeting={{
         rail: config.meeting.rail,
