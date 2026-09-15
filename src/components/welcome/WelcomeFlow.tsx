@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import useFrenSession from "@/hooks/useFrenSession";
 import { cartridge } from "@/brand/cartridge";
+import { continueLabel } from "@/components/door/door-machine";
 
 /**
  * /welcome — WHAT'S YOURS NOW (TASK-185 Phase B, the Admiral's ruling 1,
@@ -25,6 +26,17 @@ import { cartridge } from "@/brand/cartridge";
  * just fires it off a JS-cycled state instead of `:hover`). Love's picture
  * slot (her hands): an honest empty frame until her photo lands by email —
  * derive-or-dash, never a stock face.
+ *
+ * TASK-259 (0018.06.24 a₿): a brand-new soul now ALWAYS lands here first
+ * (door-machine.ts's `landingFor`, isNew wins) — a same-origin `next` that
+ * rode along (e.g. the reading room's own `?next=`) shows up as `?next=`
+ * on THIS url, so nothing is lost, it's just one short stop. A ONE door at
+ * the bottom of what's-yours-now carries it the rest of the way:
+ * "Continue to <room title>" (door-machine.ts's `continueLabel`, derived
+ * from the rooms config — never a guessed label). `next` is validated and
+ * read server-side (page.tsx's own `safeNextPath` over `searchParams`) and
+ * handed down as a plain prop — no client-only window read, no hydration
+ * seam.
  */
 
 /** Love's welcome photo — her hands, sent by email. `null` until it lands:
@@ -46,7 +58,7 @@ const DOORS = [
   { icon: "🌙", t: "Wander the store", w: "meditations, sessions, wares", href: "/store" },
 ] as const;
 
-export default function WelcomeFlow() {
+export default function WelcomeFlow({ next = null }: { next?: string | null }) {
   const { fren: session, checked } = useFrenSession();
   /* the known-by name (the door's own rule): an email member is greeted by
      who they ARE once the name is claimed, never by the mailbox */
@@ -163,6 +175,19 @@ export default function WelcomeFlow() {
               </Link>
             ))}
           </div>
+          {/* TASK-259: one door at the bottom of what's-yours-now, carrying
+              a same-origin `next` the rest of the way — a room's real
+              title when it names one, else the plain word (continueLabel,
+              derive-or-dash). Nothing here when there's no `next` at all;
+              the three doors above are already the whole page then. */}
+          {next && (
+            <div style={{ margin: "14px 0 0" }}>
+              <Link href={next} className="btn btn-rose"
+                style={{ display: "block", width: "100%", boxSizing: "border-box", textDecoration: "none" }}>
+                {continueLabel(next)}
+              </Link>
+            </div>
+          )}
           <p style={{ margin: "18px 0 0", fontSize: ".68rem", color: "var(--muted)" }}>
             after your call, Love may open a month of the Weekly Intuitive for you 💛 · finish your
             constellation anytime on <Link href="/me" style={{ color: "#EBCB77" }}>your page</Link>

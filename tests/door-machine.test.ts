@@ -8,6 +8,7 @@ import {
   DOOR_NAME_SUFFIX,
   DOOR_WALKS,
   MEMBER_MENU,
+  continueLabel,
   isUnnamedKeyReason,
   landingFor,
   proofFor,
@@ -72,10 +73,17 @@ describe("the door's state machine (TASK-185)", () => {
   });
 });
 
-describe("the door's landing rule", () => {
-  it("a same-origin ?next= wins on both mounts", () => {
+describe("the door's landing rule (TASK-259: isNew wins over next)", () => {
+  it("a new soul with a next rides it through /welcome, never straight into the gated room", () => {
+    expect(landingFor({ next: "/rooms/heart-field", isNew: true, mount: "sheet" }))
+      .toBe("/welcome?next=%2Frooms%2Fheart-field");
+    expect(landingFor({ next: "/rooms/heart-field", isNew: true, mount: "page" }))
+      .toBe("/welcome?next=%2Frooms%2Fheart-field");
+  });
+
+  it("a returning soul's next still wins on both mounts", () => {
     expect(landingFor({ next: "/rooms/weekly-reading", isNew: false, mount: "sheet" })).toBe("/rooms/weekly-reading");
-    expect(landingFor({ next: "/rooms/weekly-reading", isNew: true, mount: "page" })).toBe("/rooms/weekly-reading");
+    expect(landingFor({ next: "/rooms/weekly-reading", isNew: false, mount: "page" })).toBe("/rooms/weekly-reading");
   });
 
   it("a new soul with no next lands on what's theirs now; a returning soul on the page mount goes to their field", () => {
@@ -85,6 +93,19 @@ describe("the door's landing rule", () => {
 
   it("a returning soul in the sheet stays — the page behind never changed", () => {
     expect(landingFor({ next: null, isNew: false, mount: "sheet" })).toBeNull();
+  });
+});
+
+describe("continueLabel — /welcome's continue door (TASK-259)", () => {
+  it("a known room path names the room by its real title", () => {
+    expect(continueLabel("/rooms/heart-field")).toBe("Continue to The Heart Field");
+    expect(continueLabel("/rooms/weekly-reading")).toBe("Continue to Chronicles: Weekly Reading");
+  });
+
+  it("an unknown room slug, a non-room path, or no path falls back to the plain word", () => {
+    expect(continueLabel("/rooms/does-not-exist")).toBe("Continue");
+    expect(continueLabel("/store")).toBe("Continue");
+    expect(continueLabel(null)).toBe("Continue");
   });
 });
 
@@ -181,6 +202,29 @@ describe("ruling 1 — /welcome is the what's-yours-now page, never a second wal
   it("the URL keeps its place (the page still mounts the flow)", () => {
     const page = readSrc("app", "welcome", "page.tsx");
     expect(page).toContain('from "@/components/welcome/WelcomeFlow"');
+  });
+});
+
+describe("TASK-259 — /welcome's continue door (source pin)", () => {
+  const flow = () => readSrc("components", "welcome", "WelcomeFlow.tsx");
+
+  it("takes `next` as a plain prop (validated server-side by page.tsx) and derives its label from door-machine's continueLabel", () => {
+    const src = flow();
+    expect(src).toContain('from "@/components/door/door-machine"');
+    expect(src).toContain("continueLabel(next)");
+    expect(src).toMatch(/WelcomeFlow\(\{\s*next\s*=\s*null\s*\}/);
+  });
+
+  it("renders nothing extra when there's no next — the three doors above stay the whole page", () => {
+    const src = flow();
+    expect(src).toMatch(/\{next && \(/);
+  });
+
+  it("the page reads `next` server-side with the house's same-origin validation, never trusting the raw query", () => {
+    const page = readSrc("app", "welcome", "page.tsx");
+    expect(page).toContain('from "@/lib/next-path"');
+    expect(page).toContain("safeNextPath(sp.next");
+    expect(page).toContain('<WelcomeFlow next={next}');
   });
 });
 
