@@ -138,7 +138,7 @@ function useHandleNpub(handle: string): string | null {
   const [npub, setNpub] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
-    fetch(`/api/frens/availability?handle=${encodeURIComponent(handle)}&space=${encodeURIComponent(SPACE_NAME)}`, {
+    fetch(`/api/member/availability?handle=${encodeURIComponent(handle)}&space=${encodeURIComponent(SPACE_NAME)}`, {
       cache: "no-store",
     })
       .then((r) => (r.ok ? r.json() : null))

@@ -24,7 +24,7 @@ export default function ConstellationCard({ refreshKey }: { refreshKey?: number 
     Promise.all([
       fetch("/api/me/letters", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
       fetch("/api/member/profile").then((r) => (r.ok ? r.json() : null)).catch(() => null),
-      fetch("/api/frens/session").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch("/api/member/session").then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ]).then(([who, prof, ses]) => {
       if (!who?.signedIn) { setStars([]); return; }
       const emailMember = !!who.email;

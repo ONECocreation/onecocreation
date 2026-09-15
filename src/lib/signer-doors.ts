@@ -28,7 +28,7 @@ import {
 export type ChallengeKind = "login" | "console";
 
 export const CHALLENGE_ENDPOINT: Record<ChallengeKind, string> = {
-  login: "/api/frens/session",
+  login: "/api/member/session",
   console: "/api/admin/session",
 };
 

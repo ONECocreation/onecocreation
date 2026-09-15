@@ -27,6 +27,15 @@ import path from "node:path";
  * own `.replace(/\b(use|apply)FrenSession\b/g, "")` deliberately still
  * spells the retired name once as a documented no-op strip (brief step 5) —
  * neither belongs in this pin.
+ *
+ * TASK-280 follow-through (0018.06.25 a₿): the session route handler (and
+ * the "the header's MemberChip asks on every page load" docblock this pin
+ * checks) moved from `src/app/api/frens/session/route.ts` to
+ * `src/app/api/member/session/route.ts` — TASK-280 owns that move and left
+ * a dual-read re-export shim at the old path (no comment of its own, just
+ * `export { GET, POST, PUT, DELETE } from "@/app/api/member/session/route"`,
+ * so the retired-identifier grep-zero check still trivially holds there).
+ * The two checks below follow the docblock to its new home.
  */
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -50,7 +59,7 @@ const OWNED_FILES = [
   "src/components/ReleaseTag.tsx",
   "src/components/welcome/WelcomeFlow.tsx",
   "src/components/rooms/RoomVideoSlot.tsx",
-  "src/app/api/frens/session/route.ts",
+  "src/app/api/member/session/route.ts",
   "tests/console.test.ts",
   "tests/operator-gate-email-seat.test.ts",
 ];
@@ -102,7 +111,7 @@ describe("TASK-278 — Fren* -> Member* rename, grep-zero in this lane's OWNS", 
   it("the two minimal-forced-edit comments outside OWNS were reworded, not left stale", () => {
     const roomSlot = readFileSync(path.join(ROOT, "src/components/rooms/RoomVideoSlot.tsx"), "utf8");
     expect(roomSlot).toContain("MemberChip/MemberMenu/MemberProfile");
-    const sessionRoute = readFileSync(path.join(ROOT, "src/app/api/frens/session/route.ts"), "utf8");
+    const sessionRoute = readFileSync(path.join(ROOT, "src/app/api/member/session/route.ts"), "utf8");
     expect(sessionRoute).toContain("the header's MemberChip asks on every page load");
   });
 });

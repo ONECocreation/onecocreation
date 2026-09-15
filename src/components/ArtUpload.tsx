@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 /**
  * "Hosted on this ship" — pick an image, it lands in the member art store
- * (/api/frens/upload, fren-session gated, 2 MB, images only), and the URL
+ * (/api/member/upload, fren-session gated, 2 MB, images only), and the URL
  * flows back into the field the member was editing. Exists so a newcomer
  * doesn't need to find an image host before they can have a face.
  */
@@ -26,7 +26,7 @@ export default function ArtUpload({
     try {
       const form = new FormData();
       form.append("file", file);
-      const res = await fetch("/api/frens/upload", { method: "POST", body: form });
+      const res = await fetch("/api/member/upload", { method: "POST", body: form });
       let data: { ok?: boolean; url?: string; reason?: string } | null = null;
       try {
         data = await res.json();

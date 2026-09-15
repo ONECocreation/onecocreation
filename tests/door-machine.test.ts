@@ -141,19 +141,24 @@ describe("the door speaks as Love does — no arcade voice (source pin)", () => 
   });
 
   it("the door's components carry no arcade voice in their JSX copy", () => {
-    /* the legacy ROUTE names (/api/frens/*) are the server's own names —
-       unowned, unchangeable here, never rendered. TASK-278 renamed the old
-       hook identifier (and its property fren -> member) throughout, so
-       DoorSheet.tsx/DoorButton.tsx no longer carry that old string at all —
-       the strip below is now a route-only concern; its own line still
-       spells the retired name once, on purpose, as a no-op belt-and-braces. */
+    /* the ROUTE names (/api/frens/*, /api/member/*) are the server's own
+       names — unowned, unchangeable here, never rendered. TASK-280 moved the
+       six member-session routes from /api/frens/* to /api/member/*
+       (dual-read: the old URLs still answer via re-export shims, so the old
+       shape stays present elsewhere in the repo on purpose, not a leak) —
+       DoorSheet.tsx/DoorButton.tsx now carry the /api/member/* strings
+       instead. TASK-278 renamed the old hook identifier (and its property
+       fren -> member) throughout, so DoorSheet.tsx/DoorButton.tsx no longer
+       carry that old string at all — the strip below covers both route
+       shapes so neither the retired /api/frens/* form nor the current
+       /api/member/* form ever reaches the arcade-voice check below. */
     for (const f of ["DoorSheet.tsx", "DoorButton.tsx"]) {
       const raw = readFileSync(join(__dirname, "..", "src", "components", "door", f), "utf8");
       const src = raw
         .replace(/\/\*[\s\S]*?\*\//g, "") // block comments don't render
         .replace(/^\s*\/\/.*$/gm, "")     // line comments don't render
         .replace(/^import .*$/gm, "")
-        .replace(/\/api\/frens\/[a-z-]+/g, "")
+        .replace(/\/api\/(frens|member)\/[a-z-]+/g, "")
         .replace(/\b(use|apply)FrenSession\b/g, ""); // no-op post-rename; left in as a route-adjacent belt-and-braces strip
       for (const re of ARCADE) expect(src, `${f} matches ${re}`).not.toMatch(re);
     }
