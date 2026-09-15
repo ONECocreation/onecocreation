@@ -97,6 +97,12 @@ interface Props {
   rail?: "jitsi" | "vdo" | "static";
   vdoHost?: string;
   studioRoom?: string;
+  /** TASK-305 (Seam, flagged in work-claims/task-305.md — this file isn't
+   *  in the lane's OWNS, but is the only pass-through path to
+   *  RoomVideoSlot's view-link mint): pass-through only, same shape as
+   *  vdoHost/studioRoom above — the room's derived password
+   *  (`live.ts`'s studioRoomKey), or absent when SEAT_SECRET isn't set. */
+  roomKey?: string;
   /** TASK-245: pass-through only — the room page's own derivation off the
    *  director's guest roster, handed to the Stage's gallery. */
   onCameraMxids?: readonly string[];
@@ -124,7 +130,7 @@ interface Props {
   viewerTier?: Tier | null;
 }
 
-export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids, stageMxids, fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, signedIn, viewerTier, cameraDoor }: Props) {
+export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, roomKey, onCameraMxids, stageMxids, fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, signedIn, viewerTier, cameraDoor }: Props) {
   const [vantage] = useRoomVantage();
   const [feed, setFeed] = useState<RoomsFeed | null>(null);
   const [live, setLive] = useState<LiveFeed | null>(null);
@@ -165,7 +171,7 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
 
       {/* TASK-184: exactly three vantages, in the ruling's order */}
       {vantage === "stage" && (
-        <StageView slug={slug} alias={alias} title={title} kind={kind} pin={pin} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} roster={roster} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={activeFullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} afterHours={live?.afterHours ?? null} signedIn={signedIn} viewerTier={viewerTier} />
+        <StageView slug={slug} alias={alias} title={title} kind={kind} pin={pin} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} roster={roster} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roomKey={roomKey} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={activeFullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} afterHours={live?.afterHours ?? null} signedIn={signedIn} viewerTier={viewerTier} />
       )}
       {vantage === "lesson" && <LessonPathView slug={slug} alias={alias} title={title} kind={kind} door={door} doorPackage={doorPackage} />}
       {vantage === "circle" && <CircleView feed={feed} live={live} activeSlug={slug} slug={slug} title={title} door={door} doorPackage={doorPackage} />}

@@ -150,7 +150,11 @@ describe("RoomVideoSlot — the vdo branch's camera door", () => {
 
 describe("the room page — cameraDoor derives on the same gate as onCameraMxids, never a stray read", () => {
   it("imports studioGuestCameraLink from live.ts", () => {
-    expect(PAGE_SRC).toContain('import { liveRoomName, studioVdoLinks, studioGuestCameraLink } from "@/lib/live"');
+    // TASK-305: the import gains studioRoomKey — the string pin updates,
+    // the intent (this page reads its VDO builders from @/lib/live) holds.
+    expect(PAGE_SRC).toContain(
+      'import { liveRoomName, studioVdoLinks, studioGuestCameraLink, studioRoomKey } from "@/lib/live"',
+    );
   });
 
   it("derives cameraDoor inside the vdo/open/roster-ok gate, comparing the viewer's own handle", () => {

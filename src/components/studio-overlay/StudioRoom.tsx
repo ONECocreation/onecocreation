@@ -148,6 +148,7 @@ export default function StudioRoom({
   showInStudioUrls,
   showTitleFallback,
   roomTitle,
+  roomKeyed,
 }: {
   initial: StudioDoc;
   overlayUrls: Record<StudioSceneId, string | null>;
@@ -166,6 +167,11 @@ export default function StudioRoom({
    *  studio") so an older render call with no opinion on the name still
    *  type-checks — derive-or-dash, never invent a specific name here. */
   roomTitle?: string;
+  /** TASK-305: whether the links above carry `&password=<key>` — words
+   *  only, NEVER the key itself (the door links already carry it; this
+   *  line just says the room is locked). `undefined`/`false` reads as the
+   *  honest unkeyed state (no SEAT_SECRET configured), never a guess. */
+  roomKeyed?: boolean;
 }) {
   const [doc, setDoc] = useState<StudioDoc>(initial);
   const [busy, setBusy] = useState(false);
@@ -228,7 +234,7 @@ export default function StudioRoom({
         <div style={card}>
           <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>a guest&apos;s door</b>
           <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
-            camera + mic ready, muted until you unmute them — {vdo.room}
+            camera and mic off until they choose — you can unmute from the desk — {vdo.room}
           </p>
           <div style={doorStack}>
             <a href={vdo.guest} target="_blank" rel="noopener" className="btn btn-sm">
@@ -238,6 +244,11 @@ export default function StudioRoom({
           </div>
         </div>
       </div>
+      {/* TASK-305: words only, never the key itself — the doors above
+          already carry it. Honest either way: derive-or-dash. */}
+      <p style={{ margin: "8px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>
+        {roomKeyed ? "Room key: on · rotates with the seat secret" : "room unkeyed — SEAT_SECRET unset"}
+      </p>
       <p style={{ margin: "10px 0 0", fontSize: ".78rem", color: "var(--muted)" }}>
         Send this guest door to a member
       </p>

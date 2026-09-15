@@ -66,8 +66,9 @@ describe("studioVdoLinks / vdoBase — built from the host they're given, never 
     expect(vdo.push).toBe("https://vdo.example-studio.test/?room=someartist_studio&push=host");
     // TASK-261: the guest door is now one-click (camera + mic, muted) —
     // see tests/go-live-door.test.ts for the full builder pins.
+    // TASK-305: &videomute rides beside &mute (Love's both-off ruling)
     expect(vdo.guest).toBe(
-      "https://vdo.example-studio.test/?room=someartist_studio&webcam&mute&label=Guest",
+      "https://vdo.example-studio.test/?room=someartist_studio&webcam&mute&videomute&label=Guest",
     );
   });
 

@@ -7,6 +7,7 @@ import { PixelAvatar } from "@frens-earth/arcade-ui";
 import useNostrProfile from "@/hooks/useNostrProfile";
 import { SPACE_NAME } from "@/lib/identity-config";
 import { ROOMS } from "@/lib/matrix-rooms";
+import { studioViewLink } from "@/lib/live-links";
 import {
   signInDoorLine,
   signInDoorHref,
@@ -126,6 +127,17 @@ import type { StudioSceneId } from "@/lib/studio/scenes";
  *    (`chatbutton`/`chat`/`cb` aliases, `~/dev/apps/onecocreation-studio/
  *    main.js:2393`, read-only reference clone) — the site's own Matrix
  *    chat rides beside the stage; the VDO frame never grows a second one.
+ *
+ * TASK-305 (0018.06.25 a₿) — both view tiles (the host frame here and
+ * `GalleryTile`'s on-camera frame) now mint through `studioViewLink`
+ * (`@/lib/live-links`, a NEW pure builder pulling the previously
+ * hand-spelled `?view=<handle>&room=<r>&cleanoutput&autostart&chat=0`
+ * shape into one source) and carry `roomKey`, threaded down from the room
+ * page through `ClassroomView`/`StageView` (a Seam — flagged in
+ * work-claims/task-305.md). Room+password is a DISTINCT VDO room (fork
+ * `lib.js:27981-27989`), so once the room carries a key an unkeyed view
+ * link would watch nothing at all. Absent `roomKey` (no `SEAT_SECRET`) —
+ * every tile mints unkeyed, byte-identical to today.
  */
 /** TASK-245: handle → npub, the one lookup this lane needs that no route
  *  yet exposes on its own — reused rather than reinvented from the public
@@ -161,11 +173,13 @@ function GalleryTile({
   onCamera,
   vdoHost,
   studioRoom,
+  roomKey,
 }: {
   soul: Soul;
   onCamera: boolean;
   vdoHost: string;
   studioRoom: string;
+  roomKey?: string;
 }) {
   const handle = handleOf(soul.mxid);
   const npub = useHandleNpub(handle);
@@ -179,8 +193,12 @@ function GalleryTile({
           /* TASK-260: &chat=0 — the fork's chat-off flag (main.js:2393,
              `chatbutton`/`chat`/`cb` aliases, "0"/"false"/"no"/"off" all
              hide the button); the site's own Matrix chat rides beside the
-             stage, so the VDO frame never grows a second one. */
-          src={`https://${vdoHost}/?view=${encodeURIComponent(handle)}&room=${encodeURIComponent(studioRoom)}&cleanoutput&autostart&chat=0`}
+             stage, so the VDO frame never grows a second one. TASK-305:
+             studioViewLink (live-links.ts) mints this now, appending
+             `&password=<roomKey>` when the room is keyed — a view link
+             needs the RAW password, never `&hash` (see that builder's
+             docblock for the fork citations). */
+          src={studioViewLink(vdoHost, studioRoom, handle, roomKey)}
           allow="autoplay; fullscreen"
           title={soul.name}
         />
@@ -206,6 +224,7 @@ export default function RoomVideoSlot({
   rail,
   vdoHost,
   studioRoom,
+  roomKey,
   roster,
   onCameraMxids,
   stageMxids,
@@ -235,6 +254,13 @@ export default function RoomVideoSlot({
    *  more word than liveRoom — the studio is its own room, not this
    *  room's namespaced alias). */
   studioRoom?: string;
+  /** TASK-305: the room's derived password (live.ts's studioRoomKey),
+   *  threaded through so the view tiles below (host frame + gallery)
+   *  carry `&password=<key>` — a keyed room is a DIFFERENT VDO room, so
+   *  an unkeyed view link would watch nothing. Absent = SEAT_SECRET isn't
+   *  set (derive-or-dash) and every view tile mints unkeyed, exactly like
+   *  today. */
+  roomKey?: string;
   /** TASK-245: the room page's ONE roster/presence read (T-184's 429 hunt)
    *  — the gallery's source of WHO, the exact same read RoomPresence
    *  already renders from, never a second one. */
@@ -354,8 +380,10 @@ export default function RoomVideoSlot({
               <iframe
                 style={{ width: "100%", height: "100%", border: 0 }}
                 /* TASK-260: &chat=0 — see GalleryTile's own note above; the
-                   host frame gets the same chat-off flag the tiles do. */
-                src={`https://${vdoHost}/?view=host&room=${encodeURIComponent(studioRoom!)}&cleanoutput&autostart&chat=0`}
+                   host frame gets the same chat-off flag the tiles do.
+                   TASK-305: studioViewLink mints this now — see
+                   GalleryTile's note on why the raw password (not &hash). */
+                src={studioViewLink(vdoHost!, studioRoom!, "host", roomKey)}
                 allow="autoplay; camera; microphone; fullscreen"
                 title={`${roomTitle} — the studio`}
               />
@@ -370,6 +398,7 @@ export default function RoomVideoSlot({
                   onCamera={onCameraSet.has(s.mxid)}
                   vdoHost={vdoHost!}
                   studioRoom={studioRoom!}
+                  roomKey={roomKey}
                 />
               ))}
             </div>

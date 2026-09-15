@@ -4,7 +4,7 @@ import OperatorGate from "@/components/OperatorGate";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { cartridge } from "@/brand/cartridge";
 import { getSiteConfig } from "@/lib/site-config";
-import { studioVdoLinks, studioDirectorLink } from "@/lib/live";
+import { studioVdoLinks, studioDirectorLink, studioRoomKey } from "@/lib/live";
 import { STUDIO_SCENES, type StudioSceneId } from "@/lib/studio/scenes";
 import { overlayConfigured, overlayQuery } from "@/lib/studio/overlay-token";
 import { getStudioDoc } from "@/lib/studio/roster";
@@ -66,8 +66,15 @@ export default async function StudioRoomPage() {
      calls the shared builder like every other caller. `director` is the
      director seat's own link (studioDirectorLink), the desk this lane
      adds. */
-  const vdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost);
-  const director = studioDirectorLink(config.meeting.vdoHost, vdo.room);
+  /* TASK-305: the room name doesn't depend on the key, so it's derived
+     once (this SAME shared builder, never re-spelled) to compute the
+     key, then the real links are minted keyed — every door into the room
+     must carry the SAME password (T-292 DESIGN.md §4.1). No SEAT_SECRET
+     (local dev) → roomKey stays undefined and every link mints unkeyed
+     (derive-or-dash, live.ts's studioRoomKey docblock). */
+  const roomKey = studioRoomKey(studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost).room) ?? undefined;
+  const vdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost, roomKey);
+  const director = studioDirectorLink(config.meeting.vdoHost, vdo.room, roomKey);
 
   /* TASK-300: the room's plain human name — brand/rooms.json on the fork
      (~/dev/apps/onecocreation-studio/brand/rooms.json, TASK-262:
@@ -105,6 +112,7 @@ export default async function StudioRoomPage() {
       showInStudioUrls={showInStudioUrls}
       showTitleFallback={cartridge.copy.productName}
       roomTitle={roomTitle}
+      roomKeyed={roomKey !== undefined}
     />
   );
 }

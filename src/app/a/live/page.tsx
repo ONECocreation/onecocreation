@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import OperatorGate from "@/components/OperatorGate";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { ROOMS } from "@/lib/matrix-rooms";
-import { slugOfRoom, studioVdoLinks, studioDirectorLink, confirmedToday, liveRoomPrefix, LIVE_YOUTUBE } from "@/lib/live";
+import { slugOfRoom, studioVdoLinks, studioDirectorLink, studioRoomKey, confirmedToday, liveRoomPrefix, LIVE_YOUTUBE } from "@/lib/live";
 import { listBookings } from "@/lib/booking-orders";
 import { getSiteConfig } from "@/lib/site-config";
 import GoLiveRoom from "./go-live-room";
@@ -35,13 +35,17 @@ export default async function GoLivePage() {
   }
 
   const [config, bookings] = await Promise.all([getSiteConfig(), listBookings()]);
-  const studioVdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost);
+  /* TASK-305: same room, so the SAME key every other door into it carries
+     (T-292 DESIGN.md §4.1) — the room name is derived once (unkeyed) to
+     compute the key, then studioVdo is minted for real, keyed. */
+  const roomKey = studioRoomKey(studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost).room) ?? undefined;
+  const studioVdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost, roomKey);
 
   return (
     <GoLiveRoom
       rooms={ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind, minTier: r.minTier }))}
       studioVdo={studioVdo}
-      studioDirector={studioDirectorLink(config.meeting.vdoHost, studioVdo.room)}
+      studioDirector={studioDirectorLink(config.meeting.vdoHost, studioVdo.room, roomKey)}
       sessions={confirmedToday(bookings)}
       meeting={{
         rail: config.meeting.rail,
