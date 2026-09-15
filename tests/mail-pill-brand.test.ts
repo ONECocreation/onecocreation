@@ -7,44 +7,55 @@ import { describe, it, expect } from "vitest";
  * declaration from the primary pill (the `<a>`'s `color`, the `<font
  * color>`, even the `bgcolor` attribute) while leaving the muted pill's
  * WHITE ink alone — evidence saved at
- * briefings/mail/incoming/welcome-home-0018.06.23.html. Pinned here:
- *   1. the primary pill IS the site's own rose door (.btn-rose,
- *      house.css:90): the gradient + a solid midpoint fallback on both
- *      bgcolor and background-color, plum ink (--rose-btn-ink #2E0E1D)
- *      declared four redundant ways (td, a !important, font, span
- *      !important).
- *   2. the muted (Unsubscribe) pill is untouched.
- *   3. both mail shells' <head> now declare color-scheme/
+ * briefings/mail/incoming/welcome-home-0018.06.23.html. T-242 assumed
+ * redundant DECLARATIONS of a dark ink would survive; TASK-308
+ * (0018.06.25 a₿, briefings/mail/incoming/welcome-day-two-bad-button-
+ * 0018.06.25.png) showed the same client stripping all four dark
+ * declarations AT ONCE — the fix is the ink's LIGHTNESS, not more
+ * redundancy. Pinned here, post-T-308:
+ *   1. the primary pill's fill is a solid deep rose `#AD5470` (dawn rung,
+ *      src/brand/tokens.ts) on both bgcolor and background-color — no
+ *      gradient (the old gradient's dark stop, #C56E8B, fails contrast
+ *      with white ink at 3.51:1).
+ *   2. ink is WHITE `#ffffff` (4.908:1 on #AD5470), still declared four
+ *      redundant ways (td, a !important, font, span !important) — the
+ *      declaration redundancy stays for the client that strips only some
+ *      of them; the color choice is what survives the client that strips
+ *      all four by lightness.
+ *   3. the muted (Unsubscribe) pill is untouched.
+ *   4. both mail shells' <head> still declare color-scheme/
  *      supported-color-schemes "dark" so a well-behaved client treats our
  *      night ground as intentional.
- *   4. footer links ride the shell's own muted token #9a8fae (!important)
+ *   5. footer links ride the shell's own muted token #9a8fae (!important)
  *      instead of #6b6478.
- *   5. a "stripped client" simulation — remove every bare `color:#hex;`
+ *   6. a "stripped client" simulation — remove every bare `color:#hex;`
  *      style, every `<font color="...">` wrapper, and every `bgcolor="..."`
  *      attribute the way the forward did — still leaves the span's
- *      `!important` ink standing: the last line of defence.
+ *      `!important` WHITE ink standing: the last line of defence, and now
+ *      the surviving ink itself is readable on the fill, not just present.
  */
 
 const mail = () => import("@/lib/mail");
 
-describe("pill() primary variant wears the site's rose door (TASK-242)", () => {
-  it("carries the gradient AND a solid fallback on bgcolor + background-color", async () => {
+describe("pill() primary variant wears a deep-rose fill with white ink (TASK-308)", () => {
+  it("carries a solid deep-rose fill on bgcolor + background-color, no gradient", async () => {
     const html = (await mail()).pill("/x", "Open");
-    expect(html).toContain('bgcolor="#D890A7"');
-    expect(html).toContain("background:linear-gradient(135deg,#E7B2C3,#C56E8B)");
-    expect(html).toContain("background-color:#D890A7");
+    expect(html).toContain('bgcolor="#AD5470"');
+    expect(html).toContain("background:#AD5470");
+    expect(html).toContain("background-color:#AD5470");
+    expect(html).not.toContain("linear-gradient");
   });
 
-  it("declares the plum ink #2E0E1D four independent ways: td, a (!important), font, span (!important)", async () => {
+  it("declares the white ink #ffffff four independent ways: td, a (!important), font, span (!important)", async () => {
     const html = (await mail()).pill("/x", "Open");
     // td
-    expect(html).toMatch(/<td[^>]*color:#2E0E1D;[^>]*>/);
+    expect(html).toMatch(/<td[^>]*color:#ffffff;[^>]*>/);
     // a, !important
-    expect(html).toMatch(/<a[^>]*color:#2E0E1D !important;[^>]*>/);
+    expect(html).toMatch(/<a[^>]*color:#ffffff !important;[^>]*>/);
     // font
-    expect(html).toContain('<font color="#2E0E1D">');
+    expect(html).toContain('<font color="#ffffff">');
     // span, !important
-    expect(html).toContain('<span style="color:#2E0E1D !important;">Open</span>');
+    expect(html).toContain('<span style="color:#ffffff !important;">Open</span>');
   });
 
   it("the muted (Unsubscribe) variant is unchanged: #6b6478 fill, white ink, no gradient", async () => {
@@ -56,19 +67,19 @@ describe("pill() primary variant wears the site's rose door (TASK-242)", () => {
     expect(html).toMatch(/<a[^>]*color:#ffffff;[^>]*>/);
   });
 
-  it("stripped-client simulation: after removing every bare color:, <font color>, and bgcolor the way the forward did, the span's ink survives", async () => {
+  it("stripped-client simulation: after removing every bare color:, <font color>, and bgcolor the way the forward did, the span's WHITE ink survives", async () => {
     const raw = (await mail()).pill("/x", "Open");
     const stripped = raw
       .replace(/\sbgcolor="[^"]*"/g, "") // the forward dropped the bgcolor attribute entirely
       .replace(/<font color="[^"]*">/g, "<font>") // the forward emptied <font color> to a bare <font>
       .replace(/;color:#[0-9a-fA-F]{6};/g, ";"); // the forward stripped bare (non-!important) color: declarations
-    // the background gradient/fallback style property survives (never a color: match)
-    expect(stripped).toContain("background:linear-gradient(135deg,#E7B2C3,#C56E8B)");
+    // the background fill style property survives (never a color: match)
+    expect(stripped).toContain("background:#AD5470");
     // the bare td ink and the bare <font color> are gone, same as the evidence file
-    expect(stripped).not.toMatch(/color:#2E0E1D;/);
-    expect(stripped).not.toContain('<font color="#2E0E1D">');
-    // the last line of defence still stands
-    expect(stripped).toContain('<span style="color:#2E0E1D !important;">Open</span>');
+    expect(stripped).not.toMatch(/color:#ffffff;/);
+    expect(stripped).not.toContain('<font color="#ffffff">');
+    // the last line of defence still stands, and it's readable: white on rose
+    expect(stripped).toContain('<span style="color:#ffffff !important;">Open</span>');
   });
 });
 
