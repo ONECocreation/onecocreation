@@ -7,10 +7,10 @@ import { bftDate, bftTime, currentBlockInfo, type BlockInfo } from "@/lib/bb/bft
  * THE PLACEHOLDER FACE (0018.05.26 a₿, TASK-03 Part 3) — interim honest
  * clock for /time while Love's own face is undrawn.
  *
- * The full arcade time experience (the orrery, the half-wheel, the time
+ * The template's full time experience (the orrery, the half-wheel, the time
  * door, the converters, the strip clock, the flip-clock ring, the birthday
  * checker) MOVED OUT with the transplant — transplant/frens-earth-time/ at
- * the repo root, bound for frens.earth (template-leak cleanup; the arcade
+ * the repo root, bound for the old brand (template-leak cleanup; that
  * experience was never this site's to wear). What stays here is the plain
  * reading: the canonical BFT date + the boxed-star height, LIVE OR DASHES
  * (fleet ruling 0018.05.26 a₿ — no estimate ever renders; when the chain

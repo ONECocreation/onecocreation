@@ -6,6 +6,7 @@ import {
   type AboutVideo,
 } from "@/lib/about-content";
 import { renderCartridgeId, cartridge } from "@/brand/cartridge";
+import { RETREATS_EMPTY_TEXT } from "@/lib/puck-blocks/retreats-list";
 
 /**
  * Puck page seeds (PUCK P4, Admiral-approved 2026-08-11). A seed is the
@@ -595,6 +596,30 @@ const storeContent: Block[] = [
     sr.text("One-on-one time on Love’s real calendar — pick a session, choose an open time, you’re held.", "center"),
     sr.note("── live product grid stays code-side ──"),
   ]),
+];
+
+/* ── retreats — the journey page: hero + lead, then the LIVE shelf ─────── */
+const rt = kit("rt");
+const retreatsContent: Block[] = [
+  /* TASK-231 (0018.06.24 a₿ · block 967,070): /retreats becomes a designer
+     page. The words are transcribed from the hand-built page
+     (src/app/retreats/page.tsx) — kicker, stacked hero, lead. The card grid
+     is NOT seed prose: it is ONE RetreatsList entry where the grid sits
+     today, and the live shelf (booking config + order book seat math)
+     arrives at render time through applyRetreatsToPuck — the dynamic part
+     never fossilises here. The empty-shelf line rides the BLOCK as its
+     rewordable emptyText field, not a static Text block: it is conditional
+     on live data (only renders when no retreats are live), so static prose
+     would show it beside a full shelf. */
+  rt.band("plain", "theme", [
+    rt.eyebrow("A Journey, Not an Appointment", "center"),
+    rt.stacked("RETREATS", "& EXCURSIONS", "h1", "center"),
+    rt.text("Blocks of days at a place, held together — sold by the seat, paid in bitcoin, straight to the artist.", "center"),
+  ]),
+  /* the id must be UNIQUE across the whole page, slot children included —
+     the kit above consumed rt-0…rt-3; a colliding id makes the designer's
+     canvas render this block in both spots (React keys by props.id) */
+  { type: "RetreatsList", props: { id: "rt-list", emptyText: RETREATS_EMPTY_TEXT } },
 ];
 
 /*
@@ -1212,6 +1237,10 @@ export const SEEDS: Record<string, PuckPageData> = {
   store: { content: storeContent, root: { props: {
     title: "Store — One Cocreation",
     description: "Sessions, meditations, memberships, and wares from One Cocreation — paid in bitcoin, straight to the artist.",
+  } } },
+  retreats: { content: retreatsContent, root: { props: {
+    title: "Retreats — One Cocreation",
+    description: "A journey, not an appointment — blocks of days with Love, sold by the seat, paid in bitcoin.",
   } } },
   /* STUDIO P2: the popup lane. THE ONE REAL POPUP — the rebuild of the
      original platform's only popup ("Free Guide"), retargeted to the Free

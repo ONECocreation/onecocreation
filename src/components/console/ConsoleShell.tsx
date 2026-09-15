@@ -38,14 +38,16 @@ import ScarHud from "./ScarHud";
  * on every deck; it absorbed the old rank chip, so /api/admin/rank reads
  * once, in one place. ≤900px the bar wraps and the HUD takes its own line.
  *
- * The THEME seam is SCAR Console v2's, three positions deep: Pac's Arcade
- * (default) → LCARS tribute → the brand cartridge (this site's own
- * BrandTheme tokens — NIGHT GARDEN). Each is a token-level remap via
+ * The THEME seam is SCAR Console v2's, three positions deep: the default
+ * look → LCARS tribute → the brand cartridge (this site's own BrandTheme
+ * tokens — NIGHT GARDEN). Each is a token-level remap via
  * data-console-theme, never a markup fork; the key-resolved home-space
  * cartridge (docs/brand-cartridge.md) is the honest SOON on the seam.
  */
 
-const THEME_LABEL = { arcade: "ARCADE", lcars: "LCARS", cartridge: "CARTRIDGE" } as const;
+/* the "arcade" KEY is the wire value (localStorage + data-console-theme) —
+   HB-6, held; only the display WORD changes here (TASK-269). */
+const THEME_LABEL = { arcade: "DEFAULT", lcars: "LCARS", cartridge: "CARTRIDGE" } as const;
 
 export default function ConsoleShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -142,7 +144,7 @@ export default function ConsoleShell({ children }: { children: React.ReactNode }
                     setStoredTheme(next);
                     tabBleep();
                   }}
-                  title="theme — Pac's Arcade → LCARS tribute → the brand cartridge (frens.earth NIGHT GARDEN token remap; your key-resolved home-space cartridge lands SOON)"
+                  title="theme — the default look → LCARS tribute → the brand cartridge (a placeholder token remap for now; your key-resolved home-space cartridge lands SOON)"
                 >
                   THEME: {THEME_LABEL[theme]}
                 </button>

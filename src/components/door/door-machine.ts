@@ -122,7 +122,7 @@ export function proofFor(space: string | null | undefined): DoorProof | null {
 }
 
 /** The door speaks as Love does. Every rendered word in the door derives
- *  from this table — the arcade-voice pin tests THIS, once. */
+ *  from this table — the voice pin tests THIS, once. */
 export const DOOR_COPY: Record<Exclude<DoorState, "closed">, {
   title: string;
   note: string;

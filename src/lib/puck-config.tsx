@@ -5,6 +5,7 @@ import MediaField from "@/components/style/MediaField";
 import { createParallaxBand } from "@/lib/puck-blocks/parallax-band";
 import { createJoinSurface } from "@/lib/puck-blocks/join-surface";
 import { createFormDoors } from "@/lib/puck-blocks/form-doors";
+import { createRetreatsList } from "@/lib/puck-blocks/retreats-list";
 import { NIP05_DOMAIN, SPACE_NAME } from "@/lib/identity-config";
 
 /**
@@ -49,6 +50,7 @@ const base = createConfig({
           { label: "Book a session", path: "/book" },
           { label: "Classes & community", path: "/classes" },
           { label: "Memberships", path: "/memberships" },
+          { label: "Retreats", path: "/retreats" },
           { label: "Store", path: "/store" },
           { label: "Support", path: "/support" },
         ],
@@ -96,8 +98,16 @@ components.JoinSurface = createJoinSurface({
 }) as unknown as (typeof components)[string];
 components.FormDoors = createFormDoors() as unknown as (typeof components)[string];
 
-/* the library rail: ParallaxBand joins the Layout group, appended at the
-   end (after Divider — the package's array order is never reordered) */
+/* TASK-231 (0018.06.24 a₿ · block 967,070): RetreatsList — the house's
+   FIRST data-bound block (the live retreat shelf; the shelf itself is
+   injected at render time by applyRetreatsToPuck on the published page —
+   see the block's docblock for why it isn't an async server component).
+   LOCAL, like P2/P3 — the package stays vendored-untouched. */
+components.RetreatsList = createRetreatsList() as unknown as (typeof components)[string];
+
+/* the library rail: ParallaxBand (and TASK-231's RetreatsList) join the
+   Layout group, appended at the end (after Divider — the package's array
+   order is never reordered) */
 const categories = base.categories as Record<string, { title?: string; components?: string[]; defaultExpanded?: boolean }>;
 const layout = categories.layout ?? {};
 /* P3's binding blocks join the Actions group, appended the same way */
@@ -108,7 +118,7 @@ export const config = {
   components,
   categories: {
     ...categories,
-    layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand"] },
+    layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList"] },
     actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors"] },
   },
   /* STUDIO P1: page-level SEO lives on the Puck root — plain fields edited

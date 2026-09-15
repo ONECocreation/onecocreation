@@ -7,7 +7,7 @@ import { PROFILE_RELAYS } from "@/hooks/useNostrProfile";
 /**
  * Kind-0 broadcast with the truth kept: one attempt per relay, one result
  * per relay. The old Promise.any path ("one relay is enough") is still the
- * SUCCESS rule — the network gossips from a single accept — but the fren
+ * SUCCESS rule — the network gossips from a single accept — but the member
  * sees exactly which relays took the card and which didn't. Honest states,
  * house law: a screen never pretends.
  */

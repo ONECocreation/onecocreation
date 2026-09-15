@@ -13,12 +13,12 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return {
-      /* chat.frens.earth = the DOOR, and the door is GATED. The arcade
-         redirects chat.pacsarcade.org straight out to orbee; ours REWRITES
-         to /chat so the fren-session gate (src/app/chat/route.ts) runs
-         first — signed-in frens bounce on to the configured node, anonymous
-         visitors meet /login. DNS: chat.frens.earth must point at the
-         frens-earth Vercel project.
+      /* chat.frens.earth = the DOOR, and the door is GATED. It REWRITES
+         to /chat so the member-session gate (src/app/chat/route.ts) runs
+         first — signed-in members bounce on to the configured node,
+         anonymous visitors meet /login. DNS: chat.frens.earth must point
+         at the frens-earth Vercel project (the chat-host rename itself is
+         an open ops question — see ## Seams in TASK-268's SUMMARY.md).
 
          beforeFiles because "/" already has a page — the host check must
          win. Root only, deliberately: /login and /api must keep working on

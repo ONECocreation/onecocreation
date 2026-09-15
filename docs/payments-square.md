@@ -169,7 +169,7 @@ Vercel shows no input, since Vercel is the only place to fix it. The
 block from the card's earlier shape are gone — Square has no bitcoin
 purchase feature for a merchant's customers (the site's bitcoin rail is
 BTCPay, not Square), so that check could never verify anything true, and
-a Square-catalog admin surface is a Pac's Arcade feature, out of scope
+a Square-catalog admin surface is a template-fleet feature, out of scope
 here (separation law).
 
 **Stripe section.** The same two-key vault drawer as before (a restricted

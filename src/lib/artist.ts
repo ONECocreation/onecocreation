@@ -7,7 +7,7 @@ import { frenFromRequest } from "./fren-auth";
 import { spacesConfigured, spacesRpc, SpacesNodeError } from "./spaces";
 
 /**
- * The Artist Registry — the Pac's Arcade brand-kit module for artists
+ * The Artist Registry — the brand-kit module for artists
  * (docs/artist-registry.md). Three stores + the spaced auction lens:
  *
  *   - ROSTER   — the artist-training entitlement, v1: an operator-editable
@@ -163,7 +163,7 @@ export interface ArtistNameRequest {
   id: string; // e.g. SPC-0004
   name: string; // bare space name, e.g. "pak" (on-chain form = @pak)
   npub: string;
-  requestedBy: string; // "pak@frens" — the tag that asked
+  requestedBy: string; // "pak@onecocreation" — the tag that asked
   note: string;
   status: ArtistRequestStatus;
   createdAt: string;

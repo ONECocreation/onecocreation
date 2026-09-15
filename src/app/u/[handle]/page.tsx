@@ -8,7 +8,7 @@ import { getPokeProfile } from "@/lib/poke";
 import { spaceForHost, domainForSpace, KNOWN_SPACES } from "@/lib/identity-config";
 import { TENANT } from "@/lib/tenant";
 
-/* Where "press start" leads: frens.earth's root IS its registration page;
+/* Where "press start" leads: the old brand's root IS its registration page;
    everywhere else the route decides the space. */
 function registerHrefFor(host: string, space: string): string {
   const h = host.toLowerCase().split(":")[0];
@@ -16,9 +16,10 @@ function registerHrefFor(host: string, space: string): string {
   return space === "pacsarcade" ? "/register" : "/";
 }
 
-/* /u/pacster reads the HOST's space; /u/pacster@frens is explicit and works
-   on every host — the login redirect uses the explicit form so a fren never
-   lands behind the wrong door (the pacster GAME OVER bug, 2026-07-07). */
+/* /u/pacster reads the HOST's space; /u/pacster@frens is the explicit
+   @member-space form and works on every host — the login redirect uses the
+   explicit form so a member never lands behind the wrong door (the pacster
+   GAME OVER bug, 2026-07-07). */
 function parseTarget(raw: string, host: string): { handle: string; space: string; nip05Domain: string } {
   const decoded = decodeURIComponent(raw).trim().toLowerCase();
   const at = decoded.indexOf("@");
@@ -33,7 +34,7 @@ function parseTarget(raw: string, host: string): { handle: string; space: string
 }
 
 /* The registry changes with every registration — never serve a cached
-   "tag not found" to a fren who registered seconds ago. */
+   "tag not found" to a fresh member who registered seconds ago. */
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
@@ -56,7 +57,7 @@ export default async function FrenProfileRoute({
 }: {
   params: Promise<{ handle: string }>;
 }) {
-  /* TASK-135: the pacsarcade claim-a-tag network profile isn't a ONE
+  /* TASK-135: the template's claim-a-tag network profile isn't a ONE
      Cocreation feature — this tenant's real profile surface is /me.
      Registry/FrenProfile machinery stays (template heritage); only this
      tenant's door is gated. */
@@ -98,7 +99,7 @@ export default async function FrenProfileRoute({
     );
   }
   /* Registry and game node answer in parallel; the node is best-effort —
-     unreachable means the profile simply renders without the arcade panel. */
+     unreachable means the profile simply renders without the kit panel. */
   const [entry, poke] = await Promise.all([
     getEntry(valid.handle, space),
     getPokeProfile(valid.handle),

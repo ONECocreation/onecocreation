@@ -12,11 +12,11 @@ export type EmailDoorStep = "email" | "code" | "done";
 
 /* TASK-155 (0018.06.17 a₿, Love's meeting): "there isn't a button that says
  * already have a login". The door only makes sense while the card is still
- * ASKING for an email — once a code is in flight (or the fren is in),
+ * ASKING for an email — once a code is in flight (or the member is in),
  * jumping to the key door mid-verify would strand a pending code, so it
  * only shows on the "email" step, and only when a caller wired a handler
  * (LoginPanel does; the bare /welcome usage of this component does not,
- * since a brand-new fren has no key/login to switch to). */
+ * since a brand-new member has no key/login to switch to). */
 export function showSwitchDoor(step: EmailDoorStep, hasHandler: boolean): boolean {
   return step === "email" && hasHandler;
 }

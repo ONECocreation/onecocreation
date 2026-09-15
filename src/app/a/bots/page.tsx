@@ -75,7 +75,7 @@ export default async function AdminBotDeckPage() {
         <p className="lcars-eyebrow mb-3" data-accent="cyan">
           OPERATOR CONSOLE · {CONSOLE_SITE.domain.toUpperCase()} · DECK 04
         </p>
-        <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">BOT DECK</h1>
+        <h1 className="mb-3 mgmt-title">Bots</h1>
         <p className="max-w-2xl font-body text-sm text-white/55">
           Owner-toggled add-ons. Bots may read stats/events and act on your behalf —{" "}
           <b className="text-white/75">OFF by default, your call always</b>.

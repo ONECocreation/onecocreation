@@ -1,6 +1,6 @@
 /**
  * POKEMUD public profile hook — the game node's read-only window onto a
- * fren's arcade life (knowledge-engine `GET /u/<name>`, no token needed).
+ * member's MUD life (knowledge-engine `GET /u/<name>`, no token needed).
  * Fetched server-side so the browser never needs CORS or the node's address.
  *
  * Honest states, nothing hidden: the hook exposes level/xp/runes and the
@@ -69,7 +69,7 @@ export function rankFor(verse: string, level: number): string {
 }
 
 /**
- * Best-effort by design: the profile page renders fine without the arcade
+ * Best-effort by design: the profile page renders fine without the MUD
  * panel, so a dark node, a 404, or a slow answer all come back as null —
  * never a throw, never an error splash.
  */

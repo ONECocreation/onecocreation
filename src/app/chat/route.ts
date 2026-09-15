@@ -2,13 +2,13 @@ import { frenFromRequest } from "@/lib/fren-auth";
 import { effectiveChatNode, CHAT_URL_DEFAULT } from "@/lib/nodeconfig";
 
 /**
- * /chat — the fren gate in front of the floor. The chat node itself is never
- * exposed to the anonymous public: a signed-in fren bounces (307) on to the
+ * /chat — the member gate in front of the floor. The chat node itself is never
+ * exposed to the anonymous public: a signed-in member bounces (307) on to the
  * configured orbee door (`effectiveChatNode()` — stored config → env →
  * default), anyone else meets /login. chat.frens.earth points at THIS app
  * (next.config.ts rewrites the host's root here), so the gate runs before
- * any door opens — the arcade redirects its chat host straight out; ours
- * checks who's knocking first.
+ * any door opens — the old template redirected its chat host straight out;
+ * ours checks who's knocking first.
  */
 
 function hostOf(url: string): string | null {
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
 }
 
 /* The honest state, self-contained (a route handler carries no app CSS):
-   frens-earth theme colors, terminal type, no pretend shelf. */
+   the retired night-garden colors, terminal type, no pretend shelf. */
 function unpointedFloor(handle: string): string {
   const safe = handle.replace(/[^a-z0-9-]/gi, "");
   return `<!doctype html>

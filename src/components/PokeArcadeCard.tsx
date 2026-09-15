@@ -31,7 +31,7 @@ function useCountdown(leftS: number): number {
 }
 
 /**
- * The fren's live game-floor scoreboard, straight from their POKE node's
+ * The member's live scoreboard, straight from their POKE node's
  * public /u/ hook. Renders only when the node answered — a dark node means
  * the profile simply doesn't wear this card (no error splash).
  */
@@ -87,7 +87,7 @@ export default function PokeArcadeCard({
           )}
         </div>
 
-        {/* the scoreboard — three counters, arcade-cabinet style */}
+        {/* the scoreboard — three counters, cabinet style */}
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="border border-edge px-2 py-3">
             <p className="font-arcade text-2xl text-cyan glow-cyan">{poke.level}</p>

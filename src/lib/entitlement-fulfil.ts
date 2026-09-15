@@ -78,7 +78,7 @@ async function bestPackageGrant(order: OrderRecord): Promise<{ tier: Tier; days?
  * The gate's subject: the REGISTRY npub behind `handle@space`, captured on
  * the order at checkout. The webhook is server-to-server — the order is the
  * only identity source at grant time, which is exactly why checkout requires
- * a signed-in fren for packages.
+ * a signed-in member for packages.
  */
 async function npubOfOrder(order: OrderRecord): Promise<string | null> {
   const subject = order.entitlementSubject;

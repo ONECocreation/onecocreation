@@ -3,14 +3,14 @@ import { verifyEvent, nip19 } from "nostr-tools";
 import { findHandleByNpub } from "./registry";
 
 /**
- * Fren sessions — the arcade's persistent "you're in": sign a fresh
+ * Member sessions — the site's persistent "you're in": sign a fresh
  * challenge with the key bound to your tag, get an HMAC cookie, and every
  * page's header knows you. No passwords, no accounts — the tag IS the
  * identity, exactly like the seat claim and the operator console.
  */
 
 export const FREN_COOKIE = "pa-fren";
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // a month — it's an arcade, not a bank
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // a month — no bank-grade timeout needed here
 const CHALLENGE_WINDOW_MS = 5 * 60 * 1000;
 
 function secret(): string {
@@ -69,13 +69,13 @@ export function makeFrenToken(handle: string, space: string): string {
    char; tokens themselves only use [a-z0-9-.]). First token = the active
    door. One key, two tags, zero re-signing — the door switcher. */
 const TOKEN_JOIN = "~";
-/* 8 doors: real frens carry many tags (the admiral tests with 6–7). Tokens
+/* 8 doors: real members carry many tags (the admiral tests with 6–7). Tokens
    are ~100 bytes each — 8 stays comfortably under the 4KB cookie ceiling. */
 export const MAX_SESSIONS = 8;
 
 function parseToken(raw: string): { handle: string; space: string } | null {
   // parse from the END — the handle may itself carry dots (every email
-  // member: pac@pacsarcade.org.email.<exp>.<sig> — the Admiral's
+  // member: pac@onecocreation.com.email.<exp>.<sig> — the Admiral's
   // "didn't keep me signed in", 0018.05.17). Spaces never contain dots.
   const parts = raw.split(".");
   if (parts.length < 4) return null;
@@ -95,7 +95,7 @@ function parseToken(raw: string): { handle: string; space: string } | null {
 }
 
 /** Every valid session in a raw cookie header, in order (first = active) —
- *  split out so the operator gate can read the fren cookie too. */
+ *  split out so the operator gate can read the member cookie too. */
 export function sessionsFromCookieHeader(
   cookieHeader: string | null
 ): { token: string; handle: string; space: string }[] {

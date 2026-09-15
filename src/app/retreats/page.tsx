@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import PaletteVars from "@/components/PaletteVars";
+import PopupHost from "@/components/PopupHost";
 import { readConfig } from "@/lib/booking";
 import StackedHero from "@/components/StackedHero";
 import { listLiveRetreats, refreshRetreatSoldOut } from "@/lib/retreats";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
+import { applyRetreatsToPuck } from "@/lib/puck-blocks/retreats-list";
 
 export const metadata: Metadata = {
   title: "Retreats — One Cocreation",
@@ -21,6 +29,34 @@ function prettySpan(start: string, end: string): string {
 }
 
 export default async function RetreatsPage() {
+  /* TASK-231 (0018.06.24 a₿ · block 967,070) — PUCK P4, mirroring
+     /about/page.tsx byte-for-byte: once Love publishes the Puck rebuild
+     (/style/retreats -> Publish to live), the live /retreats serves it.
+     Until then, the hand-built page below is untouched — nothing changes
+     for visitors until she chooses it. No route gate here: /retreats has
+     none today and this lane does not invent one. */
+  const puck = await getPuckPage("retreats");
+  if (puck) {
+    /* the shelf reads LIVE on the designer branch too — the very read the
+       fallback runs below, resolved on the server and injected into the
+       RetreatsList block's props at render time (applyRetreatsToPuck; the
+       injection is never written back to the store, so a published snapshot
+       can't fossilise seat counts) */
+    const liveRetreats = await listLiveRetreats(await readConfig());
+    // keep the seat items' sold-out truth fresh while we're here
+    await Promise.all(liveRetreats.map((r) => refreshRetreatSoldOut(r).catch(() => {})));
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main><Render config={config} data={applyRetreatsToPuck(puck as Data, liveRetreats)} /></main>
+        <SiteFooter />
+        {/* STUDIO P2: popup host rides both branches of this page */}
+        <PopupHost />
+      </>
+    );
+  }
+
   const retreats = await listLiveRetreats(await readConfig());
   // keep the seat items' sold-out truth fresh while we're here
   await Promise.all(retreats.map((r) => refreshRetreatSoldOut(r).catch(() => {})));

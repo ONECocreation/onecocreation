@@ -13,8 +13,8 @@ import {
 export const dynamic = "force-dynamic";
 
 /**
- * Step two of the email door: right code → a REAL member session (the fren
- * cookie, space "email"), so every signed-in check on the site just works.
+ * Step two of the email door: right code → a REAL member session (the member
+ * session cookie, space "email"), so every signed-in check on the site just works.
  * The member also lands on the list (doctrine: members are opted in, the
  * off switch lives in their profile).
  *

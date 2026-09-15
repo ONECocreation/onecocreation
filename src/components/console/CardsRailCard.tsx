@@ -32,7 +32,7 @@ import { Chip, field } from "@/components/console/glass";
  * GONE per the same walk: the "Bitcoin on this Square location" check
  * (Square has no bitcoin purchase feature for a merchant's customers — the
  * site's bitcoin rail is BTCPay; the check could never verify) and the
- * "Square catalog display" block (a Pac's Arcade feature — separation law).
+ * "Square catalog display" block (a house feature — separation law).
  *
  * The row/chip derivations below are PURE and exported — tests pin them
  * from fixture states (the T-148 storeCardModel idiom), the component only
