@@ -3,15 +3,24 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { bftDateTime, currentBlockInfo, type BlockInfo } from "@/lib/bb/bft";
 
+/* nodeconfig.ts's CHAT_URL_DEFAULT is the one true source for this domain,
+   but the module itself is server-only (node `fs`/`path`/@vercel/blob at
+   its top) — importing it here would drag that chain into this "use
+   client" bundle (confirmed: `next build` fails module-not-found on `fs`
+   through nodeconfig → registry.ts). This mirrors that constant's CURRENT
+   value; a client-safe re-export is a Seams item for whoever owns
+   nodeconfig.ts next (TASK-269). */
+const CHAT_URL_DEFAULT_DISPLAY = "chat.frens.earth";
+
 /**
- * The chat floor — link this deployment to its orbee door (chat.frens.earth
- * by default). Mirrors the arcade's pattern for chat.pacsarcade.org: orbee is
+ * The chat floor — link this deployment to its orbee door (the house
+ * default lands on chat.frens.earth until you point your own). orbee is
  * the nostr NIP-29 group-chat floor and its domain is a DOOR, not an embed —
  * fabric-web resolves tags live, nothing to provision. Same node-link rail as
  * Spaces/MUD: POINT · SAVE · TEST, then OPEN THE CHAT in a new tab (links off
  * the console never steal your place). The door goes through /chat — the
- * fren-session gate — never the raw node URL: the floor is for signed-in
- * frens, and the gate is the one that checks.
+ * member-session gate — never the raw node URL: the floor is for signed-in
+ * members, and the gate is the one that checks.
  */
 
 interface ChatStatus {
@@ -152,7 +161,7 @@ export default function ChatPanel() {
             </p>
             <p>
               The door falls back to the house floor at{" "}
-              <span className="font-mono text-cyan">chat.frens.earth</span>. Orbee needs no write —
+              <span className="font-mono text-cyan">{CHAT_URL_DEFAULT_DISPLAY}</span>. Orbee needs no write —
               the floor resolves tags live — so the default already works; point your own orbee
               here when you run one.
             </p>
@@ -171,7 +180,7 @@ export default function ChatPanel() {
             <input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://chat.frens.earth"
+              placeholder={`https://${CHAT_URL_DEFAULT_DISPLAY}`}
               className="mt-1 w-full rounded-lg border-2 border-edge bg-void px-3 py-2 font-mono text-xs text-cyan placeholder:text-white/25 focus:border-cyan focus:outline-none"
             />
           </label>
@@ -230,8 +239,8 @@ export default function ChatPanel() {
           </div>
         </div>
 
-        {/* the door itself — through /chat, the fren-session gate: signed-in
-            frens bounce on to the node above, anonymous visitors meet /login.
+        {/* the door itself — through /chat, the member-session gate: signed-in
+            members bounce on to the node above, anonymous visitors meet /login.
             Never the raw node URL. A new tab; links off the console never
             steal your place. */}
         <a
@@ -243,7 +252,7 @@ export default function ChatPanel() {
         >
           OPEN THE CHAT </a>
         <p className="text-center font-pixel text-[9px] uppercase text-white/40">
-          THE DOOR IS /chat — THE FREN GATE. THE NODE ITSELF IS NEVER LINKED RAW.
+          THE DOOR IS /chat — THE SIGN-IN GATE. THE NODE ITSELF IS NEVER LINKED RAW.
         </p>
       </div>
     </div>

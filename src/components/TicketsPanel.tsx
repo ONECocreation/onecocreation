@@ -5,7 +5,7 @@ import Link from "next/link";
 
 /**
  * The Duty Roster, two doors from one panel:
- *   mode="support" — a fren RAISES tickets and watches their own.
+ *   mode="support" — a member RAISES tickets and watches their own.
  *   mode="crew"    — the admiral + crew WORK every ticket (claim / resolve).
  * Types are inlined on purpose: the ticket store pulls server-only modules, so
  * a client component must not import it.
@@ -135,7 +135,7 @@ export default function TicketsPanel({ mode }: { mode: "support" | "crew" }) {
       </h1>
       <p className="mb-8 font-mono text-[11px] text-white/50">
         {isCrew
-          ? "EVERY TICKET FROM THE FRENS — CLAIM IT, WORK IT, RESOLVE IT"
+          ? "EVERY TICKET FROM THE MEMBERS — CLAIM IT, WORK IT, RESOLVE IT"
           : "SOMETHING BROKEN, MISSING, OR A SPARK OF AN IDEA? TELL THE CREW"}
       </p>
 
@@ -145,7 +145,7 @@ export default function TicketsPanel({ mode }: { mode: "support" | "crew" }) {
         <div className="console-card p-4 font-body text-sm text-white/80" data-accent="cyan">
           <p className="mb-2 font-pixel text-[10px] uppercase text-cyan">SIGN IN FIRST</p>
           <p>
-            Tickets ride your <span className="text-pink">@frens</span> tag. Sign in with your key
+            Tickets ride your <span className="text-pink">@onecocreation</span> tag. Sign in with your key
             (or <Link href="/" className="text-cyan hover:glow-cyan underline">claim a tag</Link>)
             and this is where you&apos;ll raise and track them.
           </p>

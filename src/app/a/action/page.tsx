@@ -35,7 +35,7 @@ export default async function AdminActionItemsPage() {
      rail's filter can't stop a direct URL hit. This room's page is the one
      OWNS lists for the fix, so the guard lives here rather than in the
      shared /a layout: under `site` chrome, bounce to the console front
-     page instead of rendering the arcade's duty desk. */
+     page instead of rendering the template's duty desk. */
   if (CONSOLE_CHROME === "site") {
     redirect("/a");
   }
@@ -45,7 +45,7 @@ export default async function AdminActionItemsPage() {
         <p className="lcars-eyebrow mb-3" data-accent="pink">
           OPERATOR CONSOLE · {CONSOLE_SITE.domain.toUpperCase()} · DECK 02
         </p>
-        <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">DUTY ROSTER</h1>
+        <h1 className="mb-3 mgmt-title">Actions</h1>
         <p className="max-w-2xl font-body text-sm text-white/55">
           Everything that needs your signature — cross-project sign-offs up top, then merge a
           proposal and ship it live from the same card, then the decision board. The{" "}
