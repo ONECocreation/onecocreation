@@ -495,6 +495,34 @@ const membershipsContent: Block[] = [
   ], { bgSrc: LION_GROUND }),
 ];
 
+/* ── packages — the memberships INDEX: her words, the LIVE tier grid ────── */
+const pk = kit("pk");
+const packagesContent: Block[] = [
+  /* TASK-232 (0018.06.25 a₿ · block 967,125): /packages becomes a designer
+     page. The words are transcribed from Packages() (src/components/
+     sections.tsx — the fallback, NOT edited; two pins source-grep it):
+     the kicker, the "Memberships" heading, the lead closing on T-229's
+     PACKAGE_DOORS_WORDS verbatim, and the gate-explainer footnote.
+     Names and prices NEVER enter the seed — they live in TIERS and render
+     through the PackagesGrid block below (rails-ON sale door / rails-OFF
+     waitlist, switch-live at render time via applyPackagesToPuck). The
+     lion: the words band carries it as its ground (bgSrc, the memberships
+     seed's idiom — the vendored Band's veil is dark, documented package
+     limitation) and the grid block's own section wears .lions-gate exactly
+     like today's; the plain-band footnote is the one stretch the
+     continuous lion ground can't carry across separate blocks. */
+  pk.band("sky-veil", skyHold, [
+    pk.eyebrow("The Heart Field — Where Heaven and Earth Meet", "center"),
+    pk.heading("Memberships", "h2", "center"),
+    pk.text("Three ways into the field — each includes everything before it. Pay monthly in dollars or in bitcoin. Your package opens its doors.", "center"),
+  ], { bgSrc: LION_GROUND }),
+  /* a unique id (T-231's collision lesson): the kit consumed pk-0…pk-3 */
+  { type: "PackagesGrid", props: { id: "pk-grid" } },
+  pk.band("plain", "theme", [
+    pk.note("How the gate works: pay in bitcoin (or dollars) → your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing."),
+  ]),
+];
+
 /* ── support — the full room: hero, jars, wild doors, more ways ─────────── */
 const su = kit("su");
 const supportContent: Block[] = [
@@ -1225,6 +1253,10 @@ export const SEEDS: Record<string, PuckPageData> = {
   memberships: { content: membershipsContent, root: { props: {
     title: "Memberships — One Cocreation",
     description: "Welcome to The Heart Field, where Heaven and Earth Meet.",
+  } } },
+  packages: { content: packagesContent, root: { props: {
+    title: "Memberships — One Cocreation",
+    description: "Three ways into the field — each includes everything before it. Pay monthly in dollars or in bitcoin.",
   } } },
   support: { content: supportContent, root: { props: {
     title: "Support — One Cocreation",

@@ -128,6 +128,16 @@ const COMPONENTS: CompDef[] = [
       },
     },
   },
+  /* TASK-232 (0018.06.25 a₿ · block 967,125): the lockstep law
+     (puck-config.tsx) — Number One may place the live packages grid. It is
+     DATA-BOUND: names, prices, art and the switch-driven doors render live
+     on the published page (never stored in the page doc); it carries no
+     copy fields at all. */
+  {
+    type: "PackagesGrid",
+    desc: "The live memberships grid — the three tier cards (names, prices, art, and the buy-or-waitlist doors) rendered from the house's tier registry when the page is published. Use on the packages page; never freeze tier names or prices into copy around it.",
+    fields: {},
+  },
 ];
 
 /** The component reference Love's request is built against, as prompt text. */
