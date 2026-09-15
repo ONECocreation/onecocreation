@@ -1374,6 +1374,59 @@ const meditationContent: Block[] = [
   ]),
 ];
 
+/* ── T-295 wave A pair 3: /jewelry — The Adornments ────────────────────────
+   Jewelry() (src/components/sections.tsx:301) transcribed VERBATIM — her
+   words, her four pieces, her prices. Fully static: no forms, no switches,
+   no live data. The one piece a seed can't hold: the pendant art is an
+   inline-SVG gradient drawn in code (there is no image file) — it stays
+   JSX-only, said in the seed; the page's own closing note already tells
+   visitors the real photos are coming. The jgrid's four cards map to two
+   TwoColumns of Panels (the block vocabulary's nearest honest grid). */
+const jw = kit("jw");
+const jewelryCard = (name: string, story: string, usd: string, sats: string): Block[] => [
+  jw.heading(name, "h3", "center"),
+  jw.text(story, "center", st({ color: "muted", size: 14 })),
+  jw.text(`$${usd}`, "center", st({ size: 19, spaceAbove: 8 })),
+  jw.text(`⚡ ≈ ${sats} sats`, "center", st({ size: 14 })),
+  jw.text("Handmade · ships in 3–5 days", "center", st({ color: "muted", size: 12, spaceAbove: 6 })),
+];
+const jewelryContent: Block[] = [
+  jw.band("plain", "theme", [
+    jw.eyebrow("Handmade by Love", "center"),
+    jw.heading("The Adornments", "h2", "center"),
+    jw.text("Wire-wrapped pendants, made one at a time — copper and rose-gold spirals holding stones that chose you. Pay in bitcoin or dollars; shipped to your door.", "center"),
+    jw.twocol(
+      [jw.panel(jewelryCard("Rose Quartz Spiral", "Divine feminine — soft heart-opening.", "88", "88,000"))],
+      [jw.panel(jewelryCard("Amethyst Ascension", "Crown-chakra clarity, held in wire.", "111", "111,000"))],
+    ),
+    jw.twocol(
+      [jw.panel(jewelryCard("Amazonite Waters", "Throat-song truth — for speaking your knowing.", "77", "77,000"))],
+      [jw.panel(jewelryCard("Citrine Sun", "Divine masculine — warmth and the golden spiral.", "99", "99,000"))],
+    ),
+    jw.note("── the pendant stand-in art stays code-side (inline-SVG pendants drawn in code — real photos of the pieces are coming soon, as the note below says) ──"),
+    jw.note("Physical goods — each piece is handmade and posted to you. Checkout is bitcoin/lightning (or dollars), non-custodial to Love's own node; shipping & address collected at checkout. These are stand-in images — photos of the real pieces are coming soon."),
+  ]),
+];
+
+/* ── T-295 wave A pair 3: /artist — the registry door ──────────────────────
+   On this tenant the live route REDIRECTS to /me (TASK-135; the gate stays
+   FIRST on the page, before the Puck read — the T-232 idiom). Behind the
+   gate, ArtistRegistry is a session-gated, API-backed app (entitlement,
+   requests, watches, the auction board — /api/artist/*): per-soul state a
+   static doc can never hold, so the app stays code-side, said in the seed.
+   What IS honestly seedable is its header — eyebrow, title, blurb render
+   unconditionally atop every gated state; transcribed VERBATIM from
+   src/components/ArtistRegistry.tsx (the header's own words). */
+const ar = kit("ar");
+const artistContent: Block[] = [
+  ar.band("plain", "theme", [
+    ar.eyebrow("Artist training"),
+    ar.heading("Artist Registry", "h1"),
+    ar.text("Your name on the Spaces protocol — request it, watch the auction, anchor it to Bitcoin.", "left", st({ color: "muted" })),
+    ar.note("── the live Artist Registry stays code-side (session-gated: the sign-in nudge, the level-locked screen, and the REQUEST / AUCTION BOARD / WATCHLIST tabs reading /api/artist/*) ──"),
+  ]),
+];
+
 /* STUDIO P1: the new-site seeds carry honest root props (page title +
    description for SEO/social) so a publish is a real page from the first
    push — titles/descriptions mirror the hand-built pages they rebuild. The
@@ -1430,6 +1483,14 @@ export const SEEDS: Record<string, PuckPageData> = {
   } } },
   terms: { content: termsContent, root: { props: {
     title: "Terms & Conditions — One Cocreation",
+  } } },
+  /* T-295 pair 3: /jewelry carries NO metadata export today — root: {}
+     mirrors that honestly (pair 2's law: nothing invented). /artist mirrors
+     its hand-built metadata verbatim */
+  jewelry: { content: jewelryContent, root: {} },
+  artist: { content: artistContent, root: { props: {
+    title: "Artist Registry — One Cocreation",
+    description: "Request your name on the Spaces protocol, watch the auction board, keep your names in sight — the artist door of One Cocreation.",
   } } },
   /* STUDIO P2: the popup lane. THE ONE REAL POPUP — the rebuild of the
      original platform's only popup ("Free Guide"), retargeted to the Free

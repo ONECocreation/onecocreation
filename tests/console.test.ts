@@ -73,7 +73,9 @@ describe("tenant redirects — /artist and /u/[handle] to /me", () => {
     const { default: ArtistPage } = await import("@/app/artist/page");
     let caught: { digest?: string } | undefined;
     try {
-      ArtistPage();
+      /* TASK-295 pair 3: the page is async now (it awaits getPuckPage after
+         the gate, like every wired route) — the redirect rides a rejection */
+      await ArtistPage();
     } catch (e) {
       caught = e as { digest?: string };
     }

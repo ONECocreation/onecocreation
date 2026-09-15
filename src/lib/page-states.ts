@@ -59,8 +59,10 @@ export const PAGE_STATES: PageStateEntry[] = [
      order, then the reference shelf in seed order */
   { path: "/", slug: "home", state: "designer", note: DESIGNER_NOTE },
   { path: "/about", slug: "about", state: "designer", note: DESIGNER_NOTE },
+  { path: "/artist", slug: "artist", state: "designer", note: DESIGNER_NOTE },
   { path: "/book", slug: "book", state: "designer", note: DESIGNER_NOTE },
   { path: "/classes", slug: "classes", state: "designer", note: DESIGNER_NOTE },
+  { path: "/jewelry", slug: "jewelry", state: "designer", note: DESIGNER_NOTE },
   { path: "/meditation", slug: "meditation", state: "designer", note: DESIGNER_NOTE },
   { path: "/memberships", slug: "memberships", state: "designer", note: DESIGNER_NOTE },
   { path: "/packages", slug: "packages", state: "designer", note: DESIGNER_NOTE },
@@ -70,12 +72,10 @@ export const PAGE_STATES: PageStateEntry[] = [
   { path: "/support", slug: "support", state: "designer", note: DESIGNER_NOTE },
   { path: "/terms", slug: "terms", state: "designer", note: DESIGNER_NOTE },
 
-  { path: "/artist", state: "words", note: "words — the artist registry; copy lives in code" },
   { path: "/bb", state: "words", note: "words — Bitcoin Buddy; copy lives in code" },
   { path: "/bday", state: "words", note: "words — the bitcoin birthday page; copy lives in code" },
   { path: "/cart", state: "words", note: "words — the basket; copy lives in code (a checkout surface, not a designer candidate by default)" },
   { path: "/contact", state: "words", note: WORDS_NOTE },
-  { path: "/jewelry", state: "words", note: WORDS_NOTE },
   { path: "/letters", state: "words", note: "words — Your Letters; copy lives in code" },
   { path: "/live", state: "words", note: "words — the live page; copy lives in code" },
   { path: "/login", state: "words", note: "words — the sign-in door; copy lives in code (an app surface, not a designer candidate by default)" },
