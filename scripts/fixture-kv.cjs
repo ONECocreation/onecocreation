@@ -9,10 +9,11 @@
  *   POST /  body: ["GET",k] | ["SET",k,v,...] | ["DEL",k] | ["SADD",k,m] | ["SMEMBERS",k]
  *   → { result: … }
  *
- * ONE deviation from the archived copies: the port fallback (`|| 3311`)
- * is gone. TASK-282's law is "ports come ONLY from --ports" — a silent
- * default port is exactly the kind of hardcoded value that rule exists to
- * end (T-232 lost a shot run to a port collision from a value like that).
+ * ONE deviation from the archived copies: the silent numeric port
+ * fallback they all shipped is gone. TASK-282's law is "ports come ONLY
+ * from --ports" — a silent default port is exactly the kind of hardcoded
+ * value that rule exists to end (T-232 lost a shot run to a port
+ * collision from a value like that).
  * scripts/shots-fixture.sh always sets FIXTURE_KV_PORT explicitly; if it's
  * ever missing, this fails loud instead of quietly binding a stray port.
  */
