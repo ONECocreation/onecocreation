@@ -114,6 +114,20 @@ const COMPONENTS: CompDef[] = [
       who: { schema: { type: "string" }, desc: "attribution, e.g. '— Sarah'" },
     },
   },
+  /* TASK-231 (0018.06.24 a₿ · block 967,070): the lockstep law
+     (puck-config.tsx) — Number One may place the live retreats shelf. It is
+     DATA-BOUND: the cards and seat counts render live on the published page
+     (never stored in the page doc); only its empty-shelf line is copy. */
+  {
+    type: "RetreatsList",
+    desc: "The live retreats shelf — real retreat cards with live seat counts, rendered from the booking calendar when the page is published. Use on the retreats page (or any page that should list Love's retreats); it shows its empty-shelf line when no retreats are live.",
+    fields: {
+      emptyText: {
+        schema: { type: "string" },
+        desc: "the line shown when no retreats are live, e.g. 'No retreats on the horizon just now — the next one will be announced in' (a link to the letters is added automatically)",
+      },
+    },
+  },
 ];
 
 /** The component reference Love's request is built against, as prompt text. */
