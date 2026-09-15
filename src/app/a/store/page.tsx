@@ -6,6 +6,7 @@ import { upload as blobDirectUpload } from "@vercel/blob/client";
 import type { Price, StoreItem } from "@/lib/store";
 import { dollars } from "@/lib/money-words";
 import { KIND_WORD, categoryOptionsFor } from "@/lib/store-category-words";
+import DeliverablesPanel from "@/components/store/DeliverablesPanel";
 
 // entitlement.ts is server-only (fs/redis) — a "use client" screen must never
 // import it directly, so the tier names ride the /api/admin/store response
@@ -620,6 +621,10 @@ export default function StoreRoom() {
           </div>
         </>
       )}
+
+      {/* TASK-291 (0018.06.25 a₿) — the deliverables check: does the file
+          really answer, for every digital good on the shelf */}
+      <DeliverablesPanel />
 
       <p style={{ marginTop: 22, fontSize: ".76rem", color: "var(--muted)" }}>
         money rails, discount codes, and the order book live in{" "}
