@@ -69,6 +69,14 @@ export default async function StudioRoomPage() {
   const vdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost);
   const director = studioDirectorLink(config.meeting.vdoHost, vdo.room);
 
+  /* TASK-300: the room's plain human name — brand/rooms.json on the fork
+     (~/dev/apps/onecocreation-studio/brand/rooms.json, TASK-262:
+     "onecocreation-studio": { title: "Heart Field · the studio" }) — a
+     separate repo/deployment this app has no route to, so it rides down
+     as a small hardcoded constant, the same way showTitleFallback
+     already does for cartridge.copy.productName below. */
+  const roomTitle = "Heart Field · the studio";
+
   /* TASK-244: VDO.Ninja can load a web page as a room source with its own
      "&website=<url-encoded page>" parameter — VERIFIED present in Love's
      fork (ONECocreation/studio, main.js: the non-director AND director
@@ -96,6 +104,7 @@ export default async function StudioRoomPage() {
       director={director}
       showInStudioUrls={showInStudioUrls}
       showTitleFallback={cartridge.copy.productName}
+      roomTitle={roomTitle}
     />
   );
 }

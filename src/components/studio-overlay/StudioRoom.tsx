@@ -18,7 +18,7 @@
  * stacked and uniform.
  */
 
-import { useState } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import { Chip, SectionHead, field, glassCard } from "@/components/console/glass";
 import { STUDIO_SCENES, type StudioSceneId } from "@/lib/studio/scenes";
 import { GUEST_LIMIT, type StudioDoc } from "@/lib/studio/doc";
@@ -73,6 +73,72 @@ function CopyDoor({ value, label }: { value: string; label: string }) {
   );
 }
 
+/** TASK-300: an OPEN anchor's own copy-to-clipboard sibling — the ghost
+ *  secondary beside the primary OPEN button. Same clipboard logic as
+ *  CopyDoor above, without the visible read-only input field (OPEN
+ *  replaces the need to read the raw URL by eye). */
+function CopyGhost({ value, label }: { value: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      className="btn btn-sm btn-ghost"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(value);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1600);
+        } catch {
+          /* the OPEN button beside this one always works */
+        }
+      }}
+    >
+      {copied ? "copied ✓" : label}
+    </button>
+  );
+}
+
+/* TASK-300 (Love call #4 item 1): "For the director's desk" open/closed,
+   remembered in localStorage — the Site-room accordion idiom PagesPanel's
+   Archive group uses (T-230): closed is the honest default (this IS the
+   clutter Love asked to have out from under her links), useSyncExternalStore
+   keeps the server paint and the remembered state from forking hydration,
+   and same-tab writes ring the accordion's own change bell. */
+const DESK_LS_KEY = "oc-studio-desk-section-open";
+const DESK_LS_EVENT = "oc-studio-desk-section-open-change";
+
+function readDeskOpen(): boolean {
+  try {
+    return window.localStorage.getItem(DESK_LS_KEY) === "1";
+  } catch {
+    return false; /* storage can be denied — closed is the honest default */
+  }
+}
+
+function useDeskOpen(): [boolean, () => void] {
+  const open = useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener("storage", onChange);
+      window.addEventListener(DESK_LS_EVENT, onChange);
+      return () => {
+        window.removeEventListener("storage", onChange);
+        window.removeEventListener(DESK_LS_EVENT, onChange);
+      };
+    },
+    readDeskOpen,
+    () => false,
+  );
+  const toggle = useCallback(() => {
+    try {
+      window.localStorage.setItem(DESK_LS_KEY, readDeskOpen() ? "0" : "1");
+    } catch {
+      /* storage denied — nothing to remember; the section stays closed */
+    }
+    window.dispatchEvent(new Event(DESK_LS_EVENT));
+  }, []);
+  return [open, toggle];
+}
+
 export default function StudioRoom({
   initial,
   overlayUrls,
@@ -81,6 +147,7 @@ export default function StudioRoom({
   director,
   showInStudioUrls,
   showTitleFallback,
+  roomTitle,
 }: {
   initial: StudioDoc;
   overlayUrls: Record<StudioSceneId, string | null>;
@@ -93,11 +160,18 @@ export default function StudioRoom({
   /** TASK-244: null for the on-camera scenes and for a full scene with no minted overlay URL yet */
   showInStudioUrls: Record<StudioSceneId, string | null>;
   showTitleFallback: string;
+  /** TASK-300: the room's plain human name (brand/rooms.json on the
+   *  fork, TASK-262) — page.tsx carries it, this component only titles
+   *  the links card with it. Optional (falls back to the generic "the
+   *  studio") so an older render call with no opinion on the name still
+   *  type-checks — derive-or-dash, never invent a specific name here. */
+  roomTitle?: string;
 }) {
   const [doc, setDoc] = useState<StudioDoc>(initial);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deskOpen, toggleDesk] = useDeskOpen();
 
   const setGuest = (i: number, patch: Partial<{ name: string; specialty: string }>) =>
     setDoc({ ...doc, guests: doc.guests.map((g, j) => (j === i ? { ...g, ...patch } : g)) });
@@ -121,25 +195,99 @@ export default function StudioRoom({
 
   return (
     <div className="p-2 text-sm" style={{ color: "var(--ink)" }}>
-      <p style={{ margin: "0 0 4px", fontSize: ".85rem", color: "var(--muted)" }}>
-        the broadcast studio&apos;s desk — pick the scene, type the names, paste the overlay URL into OBS.
+      {/* ── TASK-300 (Love call #4 items 1-2): the links card, FIRST on
+          the page — was "VDO links" at the bottom (T-261); moved up,
+          nothing removed. Each row keeps its heading, blurb, and Copy
+          button; OPEN (new tab) is the new primary door. ─────────────── */}
+      <SectionHead label={`${roomTitle ?? "the studio"} — ${vdo.room}`} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={card}>
+          <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>your director&apos;s desk</b>
+          <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
+            scene switching, mute-all, the room&apos;s own controls — {vdo.room}
+          </p>
+          <div style={doorStack}>
+            <a href={director} target="_blank" rel="noopener" className="btn btn-sm">
+              Open your director&apos;s desk
+            </a>
+            <CopyGhost value={director} label="Copy the director link" />
+          </div>
+        </div>
+        <div style={card}>
+          <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>on camera</b>
+          <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
+            step onto camera yourself — {vdo.room}
+          </p>
+          <div style={doorStack}>
+            <a href={vdo.push} target="_blank" rel="noopener" className="btn btn-sm">
+              Step on camera
+            </a>
+            <CopyGhost value={vdo.push} label="Copy the push link" />
+          </div>
+        </div>
+        <div style={card}>
+          <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>a guest&apos;s door</b>
+          <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
+            camera + mic ready, muted until you unmute them — {vdo.room}
+          </p>
+          <div style={doorStack}>
+            <a href={vdo.guest} target="_blank" rel="noopener" className="btn btn-sm">
+              Guest door
+            </a>
+            <CopyGhost value={vdo.guest} label="Copy the guest link" />
+          </div>
+        </div>
+      </div>
+      <p style={{ margin: "10px 0 0", fontSize: ".78rem", color: "var(--muted)" }}>
+        Send this guest door to a member
       </p>
-      <p style={{ margin: "0 0 4px", fontSize: ".78rem", color: "var(--muted)" }}>
-        the cameras&apos; live state comes with the studio kit — this room is the scenes, the names, and the links.
-      </p>
-      {error && (
-        <p style={{ margin: "10px 0 0", padding: "8px 14px", borderRadius: 10, fontSize: ".82rem",
-          color: "var(--err)", background: "rgba(197,110,139,.04)", border: "1px solid rgba(197,110,139,.4)" }}>
-          ◌ {error}
-        </p>
-      )}
-      {note && (
-        <p style={{ margin: "10px 0 0", fontSize: ".82rem", color: "var(--ok)" }}>{note}</p>
-      )}
+      <div style={{ marginTop: 6 }}>
+        <button type="button" className="btn btn-sm btn-ghost" disabled aria-disabled="true">
+          Send to user — coming with T-304
+        </button>
+      </div>
 
-      {/* ── the scene picker — six chips, grouped ────────────────────── */}
-      <SectionHead label="Scene" />
-      {(
+      {/* ── TASK-300: everything else — guest-panel setup, timers, the
+          scene/overlay URL list — collapses under one section until
+          T-292 moves it to the director view (Love call #4 item 1).
+          Same accordion idiom as PagesPanel's Archive group (T-230):
+          closed by default, remembered per-browser in localStorage.
+          Nothing below was deleted or renamed — only regrouped. ─────── */}
+      <div style={{ marginTop: 16, borderTop: "2px solid rgba(139,118,196,.35)", paddingTop: 10 }}>
+        <button
+          type="button"
+          onClick={toggleDesk}
+          aria-expanded={deskOpen}
+          title={deskOpen ? "fold this away" : "guest-panel setup, timers, the scene/overlay URL list — moving to the director view"}
+          style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", padding: "2px 0",
+            marginBottom: deskOpen ? 10 : 0, background: "none", border: "none", cursor: "pointer",
+            textAlign: "left", fontSize: ".78rem", fontWeight: 700, letterSpacing: ".04em",
+            color: "var(--muted)" }}
+        >
+          <span aria-hidden>{deskOpen ? "▾" : "▸"}</span>
+          For the director&apos;s desk (moving to the director view)
+        </button>
+        {deskOpen && (
+          <>
+            <p style={{ margin: "0 0 4px", fontSize: ".85rem", color: "var(--muted)" }}>
+              the broadcast studio&apos;s desk — pick the scene, type the names, paste the overlay URL into OBS.
+            </p>
+            <p style={{ margin: "0 0 4px", fontSize: ".78rem", color: "var(--muted)" }}>
+              the cameras&apos; live state comes with the studio kit — this room is the scenes, the names, and the links.
+            </p>
+            {error && (
+              <p style={{ margin: "10px 0 0", padding: "8px 14px", borderRadius: 10, fontSize: ".82rem",
+                color: "var(--err)", background: "rgba(197,110,139,.04)", border: "1px solid rgba(197,110,139,.4)" }}>
+                ◌ {error}
+              </p>
+            )}
+            {note && (
+              <p style={{ margin: "10px 0 0", fontSize: ".82rem", color: "var(--ok)" }}>{note}</p>
+            )}
+
+            {/* ── the scene picker — six chips, grouped ──────────────── */}
+            <SectionHead label="Scene" />
+            {(
         [
           { kind: "overlay" as const, heading: "On camera" },
           { kind: "full" as const, heading: "Full screen" },
@@ -333,41 +481,8 @@ export default function StudioRoom({
         full-screen scenes are opaque; &ldquo;Show … in the studio&rdquo; pushes a full scene straight into the VDO
         room instead, via its own &amp;website source.
       </p>
-
-      {/* ── the VDO links (TASK-261: three doors, each names which one
-          it is and carries the room's name) ─────────────────────────── */}
-      <SectionHead label="VDO links" />
-      <p style={{ margin: "0 0 10px", fontSize: ".78rem", color: "var(--muted)" }}>
-        the room name derives from the meeting config&apos;s prefix — <code>{vdo.room}</code>
-      </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <div style={card}>
-          <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>your director&apos;s desk</b>
-          <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
-            scene switching, mute-all, the room&apos;s own controls — {vdo.room}
-          </p>
-          <div style={doorStack}>
-            <CopyDoor value={director} label="Copy the director link" />
-          </div>
-        </div>
-        <div style={card}>
-          <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>on camera</b>
-          <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
-            step onto camera yourself — {vdo.room}
-          </p>
-          <div style={doorStack}>
-            <CopyDoor value={vdo.push} label="Copy the push link" />
-          </div>
-        </div>
-        <div style={card}>
-          <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>a guest&apos;s door</b>
-          <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
-            camera + mic ready, muted until you unmute them — {vdo.room}
-          </p>
-          <div style={doorStack}>
-            <CopyDoor value={vdo.guest} label="Copy the guest link" />
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
