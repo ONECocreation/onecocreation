@@ -15,9 +15,10 @@ Cocreation's own node, never held by anyone else.
 - **The store** — catalog, cart and checkout under `/store` + `/cart`,
   with money rails for Square (dollars) and BTCPay (bitcoin), and
   print/fulfilment rails (Printful, Fourthwall) behind the catalog.
-- **The studio rails** — the puck page editor at `/studio`, the cartridge
-  brand system (`src/brand/cartridge.ts` + `cartridge.css` tokens), the
-  page store (`packages/page-store`), and the studio copilot.
+- **The studio rails** — the live-studio overlay at `/studio/overlay`, the
+  cartridge brand system (`src/brand/cartridge.ts` + `cartridge.css`
+  tokens), the page store (`packages/page-store`) behind the `/style`
+  designer, and the designer's copilot.
 - **The desks** — the operator console at `/a` (site, store, money,
   people, bookings, mail, nodes — houseOnly, gated by `OPERATOR_NPUBS` /
   `OPERATOR_EMAILS`) and the designer at `/style` (brand tokens, page
