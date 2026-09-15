@@ -7,7 +7,7 @@ import {
   hasOperatorEmailSeat,
   OPERATOR_COOKIE,
 } from "@/lib/operator-auth";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { getEntry } from "@/lib/registry";
 
 /* Who am I — the admin pages check this on load. `eligible` says the signed-in
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   const operator = operatorFromCookieHeader(request.headers.get("cookie"));
   if (!operator) {
     let eligible = false;
-    const fren = frenFromRequest(request);
+    const fren = memberFromRequest(request);
     if (fren) {
       const entry = await getEntry(fren.handle, fren.space);
       if (entry?.npub) eligible = isOperatorNpub(entry.npub);

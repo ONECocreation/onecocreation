@@ -1,4 +1,4 @@
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { getEntry } from "@/lib/registry";
 import { isArtistNpub } from "@/lib/artist";
 
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
  * artist:true (the training package opened the door). Never lies about why.
  */
 export async function GET(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (!fren) {
     return Response.json({ ok: false, reason: "sign in with your tag first" }, { status: 401 });
   }

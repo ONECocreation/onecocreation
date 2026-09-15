@@ -1,4 +1,4 @@
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { claimTicket, resolveTicket, reopenTicket, addTicketNote } from "@/lib/tickets";
 
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const operator = operatorFromCookieHeader(request.headers.get("cookie"));
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
 
   let body: { action?: string; note?: string };
   try {

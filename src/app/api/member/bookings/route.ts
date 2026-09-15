@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { memberGroup } from "@/lib/member-links";
 import { listOrders, ordersConfigured } from "@/lib/store";
 import { getBooking } from "@/lib/booking-orders";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
  * first; the .ics for each lives on the receipt.
  */
 export async function GET(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (!fren) return NextResponse.json({ ok: false }, { status: 401 });
   if (!ordersConfigured()) return NextResponse.json({ ok: true, bookings: [] });
 

@@ -12,7 +12,7 @@ import {
 } from "@/lib/booking-orders";
 import { createOrder, attachCharge, newOrderId, ordersConfigured, type OrderRecord, type PriceSnapshot } from "@/lib/store";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleBookingFromOrder } from "@/lib/booking-fulfil";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
@@ -153,7 +153,7 @@ export async function POST(request: Request) {
 
   // From here on, any failure must give the slot back.
   try {
-    const fren = frenFromRequest(request);
+    const fren = memberFromRequest(request);
     const orderId = newOrderId();
 
     const booking: BookingRecord = {

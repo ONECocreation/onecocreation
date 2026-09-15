@@ -20,7 +20,7 @@ describe("the rooms are for signed-in souls (middleware door)", () => {
     expect(src).toContain('"/rooms/:path*"');
     expect(src).toContain('"/live"');
     expect(src).toContain('"pa-fren"');
-    const auth = readFileSync("src/lib/fren-auth.ts", "utf8");
-    expect(auth).toContain('FREN_COOKIE = "pa-fren"');
+    const auth = readFileSync("src/lib/member-auth.ts", "utf8");
+    expect(auth).toContain('MEMBER_COOKIE = "pa-fren"');
   });
 });

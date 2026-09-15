@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createHmac } from "crypto";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import {
   mxidForSubject,
   mxidForKeyedMember,
@@ -45,7 +45,7 @@ function mintJwt(localpart: string, secret: string): string {
 }
 
 export async function POST(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (!fren) return NextResponse.json({ ok: false, reason: "sign in first (email or key)" }, { status: 401 });
 
   const secret = process.env.MATRIX_OCC_JWT_SECRET;

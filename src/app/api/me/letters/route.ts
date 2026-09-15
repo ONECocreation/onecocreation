@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { listMailbox } from "@/lib/mailbox";
 
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
  * page. This endpoint is the cure: the page asks fresh every time).
  */
 export async function GET(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   const operator = !!operatorFromCookieHeader(request.headers.get("cookie"));
   const email = fren && fren.space === "email" && fren.handle.includes("@") ? fren.handle : null;
   const letters = email ? await listMailbox(email) : [];

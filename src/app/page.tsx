@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { sessionsFromCookieHeader } from "@/lib/fren-auth";
+import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { tierForSubject } from "@/lib/member-tier";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";

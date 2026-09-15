@@ -1,4 +1,4 @@
-import { frenFromRequest, FREN_COOKIE } from "@/lib/fren-auth";
+import { memberFromRequest, MEMBER_COOKIE } from "@/lib/member-auth";
 import { releaseHandle } from "@/lib/registry";
 
 /* The right of exit: while the anchor is pending, a signed-in member can free
@@ -6,7 +6,7 @@ import { releaseHandle } from "@/lib/registry";
    goes back in the pool. Their key and their nostr posts are untouched;
    we never owned those. Etched names are refused: permanent is permanent. */
 export async function POST(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (!fren) {
     return Response.json({ ok: false, reason: "sign in first" }, { status: 401 });
   }
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     { ok: true },
     {
       headers: {
-        "Set-Cookie": `${FREN_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+        "Set-Cookie": `${MEMBER_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
       },
     }
   );

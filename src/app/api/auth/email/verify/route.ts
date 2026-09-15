@@ -3,12 +3,12 @@ import { verifyCode, emailAuthConfigured, claimFirstSignIn } from "@/lib/email-a
 import { validEmail, addSubscriber } from "@/lib/subscribers";
 import { sendLeadMagnetLetter, enqueueWelcomeLetter, enqueueDayTwoWelcome } from "@/lib/lead-magnet";
 import {
-  makeFrenToken,
+  makeMemberToken,
   sessionsFromRequest,
   joinSessionTokens,
-  FREN_COOKIE,
+  MEMBER_COOKIE,
   MAX_SESSIONS,
-} from "@/lib/fren-auth";
+} from "@/lib/member-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -65,13 +65,13 @@ export async function POST(request: Request) {
   const prior = sessionsFromRequest(request)
     .filter((s) => !(s.space === "email" && s.handle === email))
     .map((s) => s.token);
-  const tokens = [makeFrenToken(email, "email"), ...prior].slice(0, MAX_SESSIONS);
+  const tokens = [makeMemberToken(email, "email"), ...prior].slice(0, MAX_SESSIONS);
 
   return NextResponse.json(
     { ok: true, handle: email, space: "email" },
     {
       headers: {
-        "Set-Cookie": `${FREN_COOKIE}=${joinSessionTokens(tokens)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`,
+        "Set-Cookie": `${MEMBER_COOKIE}=${joinSessionTokens(tokens)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`,
       },
     },
   );

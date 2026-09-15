@@ -14,7 +14,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 import { orderDoorUrl, sendOrderReceipt } from "@/lib/order-receipt";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -176,7 +176,7 @@ export async function POST(request: Request) {
   // subject shape as /api/cart/checkout, 0018.05.18). Only a guest with NO email is stopped.
   let entitlementSubject: string | undefined;
   if (item.kind === "digital" || item.kind === "package") {
-    const fren = frenFromRequest(request);
+    const fren = memberFromRequest(request);
     const guestEmail = (body.contact?.email ?? "").trim().toLowerCase();
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail);
     if (!fren && !emailOk) {

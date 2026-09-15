@@ -3,7 +3,7 @@ import { nip19 } from "nostr-tools";
 import { claimHandle } from "@/lib/registry";
 import { spaceForHost } from "@/lib/identity-config";
 import { effectiveMempoolNode, MEMPOOL_URL_DEFAULT } from "@/lib/nodeconfig";
-import { makeFrenToken, FREN_COOKIE } from "@/lib/fren-auth";
+import { makeMemberToken, MEMBER_COOKIE } from "@/lib/member-auth";
 
 /* Bitcoin time for the entry — "player since block N". Best-effort with a
    short leash: a slow or down explorer must never block a claim. Server-side,
@@ -72,12 +72,12 @@ export async function POST(request: Request) {
     const sameKey = signed && nip19.npubEncode(body.event.pubkey!) === body.npub;
     if (sameKey) {
       const handle = body.handle.trim().toLowerCase();
-      const token = makeFrenToken(handle, space);
+      const token = makeMemberToken(handle, space);
       return Response.json(
         { ...result, session: { handle, space, npub: body.npub } },
         {
           headers: {
-            "Set-Cookie": `${FREN_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`,
+            "Set-Cookie": `${MEMBER_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`,
           },
         },
       );

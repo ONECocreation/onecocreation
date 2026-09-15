@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { getOrder, getItem, recordChargeEvent } from "@/lib/store";
 import {
   sessionsFromRequest,
-  makeFrenToken,
+  makeMemberToken,
   joinSessionTokens,
-  FREN_COOKIE,
+  MEMBER_COOKIE,
   MAX_SESSIONS,
-} from "@/lib/fren-auth";
+} from "@/lib/member-auth";
 import { verifyOrderKey } from "@/lib/order-receipt";
 import { getAdapter } from "@/lib/payments";
 
@@ -45,12 +45,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   let sessions = sessionsFromRequest(request);
   let setCookie: string | null = null;
   if (unlocked.ok && !sessions.some((s) => s.handle === unlocked.email && s.space === "email")) {
-    const fresh = makeFrenToken(unlocked.email, "email");
+    const fresh = makeMemberToken(unlocked.email, "email");
     const prior = sessions
       .filter((s) => !(s.space === "email" && s.handle === unlocked.email))
       .map((s) => s.token);
     const tokens = [fresh, ...prior].slice(0, MAX_SESSIONS);
-    setCookie = `${FREN_COOKIE}=${joinSessionTokens(tokens)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
+    setCookie = `${MEMBER_COOKIE}=${joinSessionTokens(tokens)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
     // this very answer already reads unlocked — the cookie lands after it
     sessions = [{ token: fresh, handle: unlocked.email, space: "email" }, ...sessions];
   }

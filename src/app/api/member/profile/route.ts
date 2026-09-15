@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +43,7 @@ const normPrefer = (v: unknown): "fiat" | "sats" | undefined =>
   v === "fiat" || v === "sats" ? v : undefined;
 
 export async function GET(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (!fren || fren.space !== "email") return NextResponse.json({ ok: false }, { status: 401 });
   const raw = (await kv(["GET", key(fren.handle)])) as string | null;
   const profile: ProfileDoc = raw ? JSON.parse(raw) : {};
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (!fren || fren.space !== "email") return NextResponse.json({ ok: false }, { status: 401 });
   const body = (await request.json().catch(() => ({}))) as {
     displayName?: string;

@@ -1,4 +1,4 @@
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { effectiveChatNode, CHAT_URL_DEFAULT } from "@/lib/nodeconfig";
 
 /**
@@ -20,7 +20,7 @@ function hostOf(url: string): string | null {
 }
 
 export async function GET(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (!fren) {
     return Response.redirect(new URL("/login", request.url), 307);
   }

@@ -20,7 +20,7 @@ import {
   type BookingRecord,
 } from "@/lib/booking-orders";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 import { settleBookingFromOrder } from "@/lib/booking-fulfil";
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   }
   if (!ordersConfigured()) return NextResponse.json({ ok: false, reason: "order store not configured" }, { status: 503 });
 
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   const { id: rawId, anon } = cartIdFromRequest(request);
   if (!rawId) return NextResponse.json({ ok: false, reason: "your basket is empty" }, { status: 400 });
 

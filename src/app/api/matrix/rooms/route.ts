@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { tierForSubject } from "@/lib/member-tier";
 import { ROOMS } from "@/lib/matrix-rooms";
 import { roomsLive } from "@/lib/community-readiness";
@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
  * the shelf paints nothing (derive-or-dash — never an invented marker).
  */
 export async function GET(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   const [tier, live] = await Promise.all([
     fren ? tierForSubject(`${fren.handle}@${fren.space}`) : Promise.resolve(null),
     roomsLive(),
