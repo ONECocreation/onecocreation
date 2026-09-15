@@ -4,12 +4,12 @@ import { join } from "node:path";
 
 /**
  * TASK-269 — the /a headline fix. Every /a room used to render its own h1
- * in `font-arcade` + `glow-cyan` (SCAR·LET OVERVIEW, BRIDGE, DUTY ROSTER,
+ * in `font-display` + `glow-cyan` (SCAR·LET OVERVIEW, BRIDGE, DUTY ROSTER,
  * CREW BOARD, SIMULATOR, BOT DECK, FLEET MAP) regardless of console chrome,
  * and `house.css`'s `.mgmt-body` neutralisation stripped `font-pixel` /
- * `glow-*` but not `font-arcade` — so Love could still meet the template's
+ * `glow-*` but not `font-display` — so Love could still meet the template's
  * display face and room names by URL. This pins the fix at the source
- * level: no `/a/**` page h1 carries `font-arcade`, the matching house.css
+ * level: no `/a/**` page h1 carries `font-display`, the matching house.css
  * rule exists, and the four operator panels' old template-brand strings
  * are gone (bin A words only — no identifier/class/key renamed, HB-7 held).
  */
@@ -25,25 +25,25 @@ function findPageFiles(dir: string): string[] {
   return out;
 }
 
-describe("no /a room h1 carries font-arcade", () => {
+describe("no /a room h1 carries font-display", () => {
   const pages = findPageFiles("src/app/a");
   expect(pages.length).toBeGreaterThan(20); // sanity: the walk found the tree
 
   for (const p of pages) {
-    it(`${p}: every <h1 ...> line is free of font-arcade`, () => {
+    it(`${p}: every <h1 ...> line is free of font-display`, () => {
       const src = readFileSync(p, "utf8");
       const h1Lines = src.split("\n").filter((l) => l.includes("<h1"));
       for (const line of h1Lines) {
-        expect(line).not.toContain("font-arcade");
+        expect(line).not.toContain("font-display");
       }
     });
   }
 });
 
-describe("house.css neutralises font-arcade under .mgmt-body (the ONE forced line)", () => {
-  it('the .mgmt-body [class*="font-arcade"] rule exists, matching the font-pixel rule it rides beside', () => {
+describe("house.css neutralises font-display under .mgmt-body (the ONE forced line)", () => {
+  it('the .mgmt-body [class*="font-display"] rule exists, matching the font-pixel rule it rides beside', () => {
     const css = readFileSync("src/app/house.css", "utf8");
-    expect(css).toContain('.mgmt-body [class*="font-arcade"]{font-family:var(--sans)!important;letter-spacing:.04em}');
+    expect(css).toContain('.mgmt-body [class*="font-display"]{font-family:var(--sans)!important;letter-spacing:.04em}');
     expect(css).toContain('.mgmt-body [class*="font-pixel"]{font-family:var(--sans)!important;letter-spacing:.04em}');
   });
 });
