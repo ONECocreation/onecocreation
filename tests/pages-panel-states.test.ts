@@ -99,18 +99,18 @@ describe("TASK-230 — the manifest covers every public route exactly once (deri
     expect(new Set(PAGE_STATES.map((e) => e.path)).size).toBe(PAGE_STATES.length);
   });
 
-  it("designer is derived: each designer route's page.tsx really reads getPuckPage — and home really doesn't (seeded but unwired)", async () => {
+  it("designer is derived: each designer route's page.tsx really reads getPuckPage — TASK-293: home too, now it's wired", async () => {
     const designers = PAGE_STATES.filter((e) => e.state === "designer");
     expect(designers.map((e) => e.slug).sort()).toEqual(
       ["about", "book", "classes", "home", "memberships", "retreats", "store", "support"],
     );
     for (const e of designers) {
       const page = await read(e.path === "/" ? "src/app/page.tsx" : `src/app/${e.path.slice(1)}/page.tsx`);
+      expect(page, `${e.path} claims designer but never reads the designer's page`).toContain("getPuckPage");
       if (e.slug === "home") {
-        expect(page, "home got wired — flip its note, the badge says unwired").not.toContain("getPuckPage");
-        expect(e.note).toContain("seeded but unwired");
+        // home's path ("/") isn't its slug's own path — the one deliberate exception
+        expect(e.path).toBe("/");
       } else {
-        expect(page, `${e.path} claims designer but never reads the designer's page`).toContain("getPuckPage");
         expect(e.slug).toBe(e.path.slice(1));
       }
     }
@@ -125,7 +125,7 @@ describe("TASK-230 — the manifest covers every public route exactly once (deri
 
   it("the slug/path lookups answer honestly — badge or nothing, never a guess", () => {
     expect(pageStateEntryForSlug("about")?.state).toBe("designer");
-    expect(pageStateEntryForSlug("home")?.note).toContain("seeded but unwired");
+    expect(pageStateEntryForSlug("home")?.state).toBe("designer"); // TASK-293: wired, the same badge every other designer route wears
     expect(pageStateEntryForSlug("home-old")?.state).toBe("reference");
     expect(pageStateEntryForSlug("jewelry")?.state).toBe("words");
     expect(pageStateEntryForSlug("some-page-love-made")).toBeNull();
@@ -152,9 +152,12 @@ describe("TASK-230 — the panel wears the manifest", () => {
     const html = renderPanel();
     expect(html).toContain(">designer</span>");
     expect(html).toContain(">words</span>");
-    /* the tooltip speaks the manifest's note verbatim — home's unwired
-       truth rides the badge */
-    expect(html).toContain("seeded but unwired");
+    /* the tooltip speaks the manifest's note verbatim (html-escaped
+       apostrophe and all — so the substring below stops short of one) —
+       TASK-293: home wears the same designer note every other wired route
+       does now */
+    expect(html).toContain("designer — the live route reads the designer");
+    expect(pageStateEntryForSlug("home")!.note).toBe(pageStateEntryForSlug("about")!.note);
     /* the no-KV honest note still stands */
     expect(html).toContain("pages store not connected");
   });

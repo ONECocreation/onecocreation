@@ -50,10 +50,17 @@ describe("TASK-216 — the free-meditation pop-up's trigger condition, named and
     expect(Array.isArray(doc.content) && doc.content.length).toBeTruthy();
   });
 
-  it("the home page mounts PopupHost unconditionally — not behind a branch that can silently skip it", async () => {
+  it("the home page mounts PopupHost unconditionally — every return path carries it, Puck branch and fallback alike", async () => {
     const src = await read("src/app/page.tsx");
-    // exactly one JSX return in this file's single code path
-    expect((src.match(/<PopupHost\s*\/>/g) ?? []).length).toBe(1);
+    // TASK-293: the page grew its second return (Puck first, the hand-built
+    // sections as fallback — the /about-/retreats-/packages shape); PopupHost
+    // rides BOTH, so the true invariant is "every return carries it", not
+    // "exactly one JSX return" (that was this single-branch file's proxy for
+    // it, before this lane existed).
+    const returns = src.split(/\breturn \(/).slice(1);
+    expect(returns.length).toBeGreaterThan(1); // the branch really exists — this pin isn't vacuous
+    for (const r of returns) expect(r).toMatch(/<PopupHost\s*\/>/);
+    expect((src.match(/<PopupHost\s*\/>/g) ?? []).length).toBe(returns.length);
   });
 
   it("PopupHost reads the match condition through the pure helper — the exact place the brief asked to be tested", async () => {
