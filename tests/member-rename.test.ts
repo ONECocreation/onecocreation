@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -41,9 +41,6 @@ import path from "node:path";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 const OWNED_FILES = [
-  "src/components/MemberChip.tsx",
-  "src/components/MemberMenu.tsx",
-  "src/components/MemberMenuFooter.tsx",
   "src/components/MemberProfile.tsx",
   "src/hooks/useMemberSession.ts",
   "src/app/u/[handle]/page.tsx",
@@ -85,19 +82,13 @@ describe("TASK-278 — Fren* -> Member* rename, grep-zero in this lane's OWNS", 
     expect(src).toContain("return { member, accounts, checked, signOut, signOutOne, switchTo };");
   });
 
-  it("the renamed components carry the new default export names", () => {
-    expect(readFileSync(path.join(ROOT, "src/components/MemberChip.tsx"), "utf8")).toContain(
-      "export default function MemberChip()"
-    );
-    expect(readFileSync(path.join(ROOT, "src/components/MemberMenu.tsx"), "utf8")).toContain(
-      "export default function MemberMenu()"
-    );
-    expect(readFileSync(path.join(ROOT, "src/components/MemberMenuFooter.tsx"), "utf8")).toContain(
-      "export default function MemberMenuFooter()"
-    );
+  it("the renamed profile component carries the new default export name (MemberChip/MemberMenu/MemberMenuFooter left the tree in TASK-286 — never rendered)", () => {
     expect(readFileSync(path.join(ROOT, "src/components/MemberProfile.tsx"), "utf8")).toContain(
       "export default function MemberProfile("
     );
+    for (const gone of ["MemberChip", "MemberMenu", "MemberMenuFooter"]) {
+      expect(existsSync(path.join(ROOT, `src/components/${gone}.tsx`))).toBe(false);
+    }
   });
 
   it("the /u/[handle] route carries the renamed route function + not-found", () => {
@@ -110,8 +101,8 @@ describe("TASK-278 — Fren* -> Member* rename, grep-zero in this lane's OWNS", 
 
   it("the two minimal-forced-edit comments outside OWNS were reworded, not left stale", () => {
     const roomSlot = readFileSync(path.join(ROOT, "src/components/rooms/RoomVideoSlot.tsx"), "utf8");
-    expect(roomSlot).toContain("MemberChip/MemberMenu/MemberProfile");
+    expect(roomSlot).toContain("DoorButton/MemberProfile");
     const sessionRoute = readFileSync(path.join(ROOT, "src/app/api/member/session/route.ts"), "utf8");
-    expect(sessionRoute).toContain("the header's MemberChip asks on every page load");
+    expect(sessionRoute).toContain("the header's DoorButton asks on every page load");
   });
 });
