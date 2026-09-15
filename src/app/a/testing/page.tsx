@@ -13,7 +13,7 @@ import { CONSOLE_SITE } from "@/lib/console";
 /**
  * CREW BOARD — the crew's side of the DUTY ROSTER deck, after a signature
  * lands. The IN FLIGHT section (signed → deployed → test-now, with FEEDBACK /
- * SUBMIT A BUG / CLOSE OUT) up top, the TICKETS board (frens' tickets —
+ * SUBMIT A BUG / CLOSE OUT) up top, the TICKETS board (members' tickets —
  * claim/work/resolve) in the middle, the restored RANK TRACK (rank · points ·
  * commendations — honor only), and the SHIP'S LOG of what shipped below.
  * Same key-is-the-operator gate as every /a tab.
@@ -38,7 +38,7 @@ export default async function AdminTestingPage() {
         <p className="lcars-eyebrow mb-3" data-accent="neon">
           OPERATOR CONSOLE · {CONSOLE_SITE.domain.toUpperCase()} · DECK 02 · THE CREW&apos;S SIDE
         </p>
-        <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">CREW BOARD</h1>
+        <h1 className="mb-3 mgmt-title">Testing</h1>
         <p className="max-w-2xl font-body text-sm text-white/55">
           Signed &amp; shipped — test it live, work the tickets, climb the ladder, and read what
           the crew shipped.

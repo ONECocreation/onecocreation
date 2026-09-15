@@ -13,21 +13,22 @@ import { SiteChromeHeader, SiteChromeFooter } from "./site-chrome";
  *
  * This is a real ALTERNATIVE SHELL, not a token remap. The SCAR·LET shell's
  * theme switch can only recolour — the LCARS elbow ribbon is markup, so a
- * recolour leaves the arcade's geometry in place wearing someone else's
- * palette. A wellness practice is a different design language from an arcade:
- * rounded cards, a serif, cream ground, air. That needs different markup.
+ * recolour leaves the SCAR shell's geometry in place wearing someone else's
+ * palette. A wellness practice is a different design language from a game
+ * console: rounded cards, a serif, cream ground, air. That needs different
+ * markup.
  *
  * Every ROOM is untouched — same pages, same APIs, same gate. Only the chrome
  * around them changes. Rooms come from the same console registry, so adding a
  * room still means one entry and both shells get it.
  *
  * Styling reads the SITE's own brand tokens (--serif, --cream, --ink, --gold…)
- * with arcade-safe fallbacks, so a clone that defines those in its globals.css
+ * with console-safe fallbacks, so a clone that defines those in its globals.css
  * — as onecocreation already does — gets its own look with no edits here.
  */
 /**
- * The house names its front page "SCAR·LET Overview" — that's the arcade's
- * bridge talking. In an artist's own site the same room is just their
+ * The house names its front page "SCAR·LET Overview" — that's the old
+ * house's bridge talking. In an artist's own site the same room is just their
  * dashboard, so the site chrome renames the few labels that carry house
  * branding. The registry is untouched; only the presentation changes.
  */

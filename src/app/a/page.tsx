@@ -60,11 +60,11 @@ async function TipJarsCard({ banner = false }: { banner?: boolean }) {
 /**
  * The console FRONT PAGE — two faces, one gate.
  *
- * - `scar` chrome: SCAR·LET OVERVIEW, the arcade bridge (boards, sign-offs,
+ * - `scar` chrome: SCAR·LET OVERVIEW, the LCARS bridge (boards, sign-offs,
  *   the captain's onboarding) — house furniture, houseOnly rooms included.
  * - `site` chrome: the ARTIST's landing — only the rooms the clone actually
  *   ships (registry entries without houseOnly), spoken in the site's own
- *   voice. An artist managing their shop should never meet the arcade's
+ *   voice. An artist managing their shop should never meet the template's
  *   duty roster. (Admiral's catch, 0018.05.10 — sign-offs were leaking.)
  */
 export const metadata: Metadata = {
@@ -129,7 +129,7 @@ export default async function ConsoleOverviewPage() {
         <p className="lcars-eyebrow mb-3" data-accent="cyan">
           ◗ CONSOLE FRONT PAGE · {CONSOLE_SITE.domain.toUpperCase()}
         </p>
-        <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">SCAR·LET OVERVIEW</h1>
+        <h1 className="mb-3 mgmt-title">Overview</h1>
         <p className="max-w-2xl font-body text-sm text-white/55">
           The console&apos;s front page — how <b className="text-white/75">{CONSOLE_SITE.domain}</b>{" "}
           is doing at a glance, and where a first captain begins. The rooms live in the ribbon.

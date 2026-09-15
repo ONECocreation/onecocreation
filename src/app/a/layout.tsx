@@ -16,7 +16,7 @@ import "../scar.css";
  * no shell — the page renders its own OperatorGate bare, so the door stays a
  * door and the bridge stays behind it. Room registry + site identity come
  * from src/lib/console.ts (the console is a module, not furniture).
- * ArcadeFonts scopes the arcade skin's display face to these routes (QW9).
+ * ArcadeFonts scopes the template display face to these routes (QW9).
  */
 export const dynamic = "force-dynamic";
 

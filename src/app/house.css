@@ -462,6 +462,11 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
 .mgmt-body [class*="shadow-["]{box-shadow:var(--soft)!important}
 .mgmt-body [class*="glow-"]{text-shadow:none!important}
 .mgmt-body [class*="font-pixel"]{font-family:var(--sans)!important;letter-spacing:.04em}
+/* TASK-269: the /a headline fix — font-pixel above neutralised the pixel
+   face, but font-arcade (the display face's OTHER token) rode through:
+   every /a room h1 carries it, so Love could still meet Press Start 2P
+   inside her own site chrome. One matching rule closes the gap. */
+.mgmt-body [class*="font-arcade"]{font-family:var(--sans)!important;letter-spacing:.04em}
 .mgmt-body [class*="border-2"],.mgmt-body [class*="border-4"]{border-width:1.5px!important;border-color:rgba(139,118,196,.35)!important;border-radius:20px}
 .mgmt-body [class*="text-neon"]{color:var(--rose)!important}
 .mgmt-body [class*="text-pink"]{color:var(--magenta)!important}

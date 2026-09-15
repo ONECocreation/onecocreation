@@ -3,11 +3,20 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { bftDateTime, currentBlockInfo, type BlockInfo } from "@/lib/bb/bft";
 
+/* nodeconfig.ts's CHAT_URL_DEFAULT is the one true source for this domain,
+   but the module itself is server-only (node `fs`/`path`/@vercel/blob at
+   its top) — importing it here would drag that chain into this "use
+   client" bundle (confirmed: `next build` fails module-not-found on `fs`
+   through nodeconfig → registry.ts). This mirrors that constant's CURRENT
+   value; a client-safe re-export is a Seams item for whoever owns
+   nodeconfig.ts next (TASK-269). */
+/* Number One (T-269 ∧ T-270 merge): no house default any more — the lib's
+   CHAT_URL_DEFAULT is "" since T-270; the panel shows an example host only. */
+const CHAT_URL_EXAMPLE = "chat.your-domain.com";
+
 /**
- * The chat floor — link this deployment to its orbee door (chat.frens.earth
- * by default; the default URL itself changes only with a house-domain
- * ruling). Mirrors the same door-not-embed pattern the old template used
- * for its own chat host: orbee is
+ * The chat floor — link this deployment to its orbee door (no house default:
+ * an unset chat URL shows the empty state until you point your own). orbee is
  * the nostr NIP-29 group-chat floor and its domain is a DOOR, not an embed —
  * fabric-web resolves tags live, nothing to provision. Same node-link rail as
  * Spaces/MUD: POINT · SAVE · TEST, then OPEN THE CHAT in a new tab (links off
@@ -153,10 +162,9 @@ export default function ChatPanel() {
               CHAT NODE NOT LINKED YET — POINT IT BELOW
             </p>
             <p>
-              The door falls back to the house floor at{" "}
-              <span className="font-mono text-cyan">chat.frens.earth</span>. Orbee needs no write —
-              the floor resolves tags live — so the default already works; point your own orbee
-              here when you run one.
+              No chat door is set yet — the site shows its empty state until you point one.
+              Orbee needs no write (the floor resolves tags live), so pointing your own orbee
+              here is all it takes.
             </p>
           </div>
         )}
@@ -173,7 +181,7 @@ export default function ChatPanel() {
             <input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://chat.frens.earth"
+              placeholder={`https://${CHAT_URL_EXAMPLE}`}
               className="mt-1 w-full rounded-lg border-2 border-edge bg-void px-3 py-2 font-mono text-xs text-cyan placeholder:text-white/25 focus:border-cyan focus:outline-none"
             />
           </label>
