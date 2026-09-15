@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createOperatorAuth, type OperatorFrenSession } from "@pacsarcade/operator-auth";
+import { createOperatorAuth, type OperatorFrenSession } from "@onecocreation/operator-auth";
 import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
 
 /**

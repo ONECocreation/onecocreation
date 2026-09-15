@@ -1,4 +1,4 @@
-import { createOperatorAuth } from "@pacsarcade/operator-auth";
+import { createOperatorAuth } from "@onecocreation/operator-auth";
 import { sessionsFromCookieHeader } from "./fren-auth";
 
 /**

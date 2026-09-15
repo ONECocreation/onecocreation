@@ -1,5 +1,5 @@
 /**
- * Puck store — this site's binding of @pacsarcade/page-store (the machinery
+ * Puck store — this site's binding of @onecocreation/page-store (the machinery
  * that used to live in this file, extracted behind sovereign storage
  * drivers). The contract is unchanged: DRAFT/LIVE staging, publish, page
  * management, the popup registry, and honest no-ops when the backend isn't
@@ -25,7 +25,7 @@
 import {
   createPageStore,
   type PageStoreDriverName,
-} from "@pacsarcade/page-store";
+} from "@onecocreation/page-store";
 
 const store = createPageStore({
   driver: (process.env.PUCK_STORE_DRIVER || undefined) as PageStoreDriverName | undefined,
@@ -33,7 +33,7 @@ const store = createPageStore({
   fs: { dir: process.env.PUCK_STORE_FS_DIR || undefined },
 });
 
-export type { PuckPageData, PopupTrigger } from "@pacsarcade/page-store";
+export type { PuckPageData, PopupTrigger } from "@onecocreation/page-store";
 
 /** False in dev when KV_REST_API_* aren't set — every helper below then
  *  quietly no-ops/returns null, and the pages panel shows its controls

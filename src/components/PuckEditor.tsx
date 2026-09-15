@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Puck, Render, Drawer, createUsePuck, useGetPuck, type Config, type Data } from "@puckeditor/core";
 import "@puckeditor/core/no-external.css";
 import type { BrandTokens } from "@pacsarcade/puck-config/tokens";
-import type { PuckPageData } from "@pacsarcade/page-store";
+import type { PuckPageData } from "@onecocreation/page-store";
 import { lintPage, type Finding } from "@pacsarcade/plugin-rails";
 import { createChangelog, type ChangeOrigin, type Changelog } from "@pacsarcade/puck-changelog";
 import { ChangelogBridge, useApplyData } from "@pacsarcade/puck-changelog/react";
