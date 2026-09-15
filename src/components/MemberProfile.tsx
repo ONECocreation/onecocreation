@@ -6,7 +6,7 @@ import { bftDate } from "@/lib/bb/bft";
 import type { HandleStatus } from "@/lib/registry";
 import { ANCHOR_BLOCKS_OUT, SPACE_ROLES } from "@/lib/identity-config";
 import { ARTIST_GATE_CERT_COUNT, CLASSES_URL } from "@/lib/classes";
-import { PixelAvatar, useTipHeight } from "@pacsarcade/arcade-ui";
+import { PixelAvatar, useTipHeight } from "@frens-earth/arcade-ui";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PokeArcadeCard from "@/components/PokeArcadeCard";

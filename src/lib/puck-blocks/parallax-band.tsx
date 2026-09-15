@@ -4,7 +4,7 @@ import "./parallax.css";
 
 /**
  * ParallaxBand (STUDIO P2, ALT-2A ruled): the original platform's signature
- * moving-ground band, as a LOCAL block — the vendored @pacsarcade/puck-config
+ * moving-ground band, as a LOCAL block — the vendored @frens-earth/puck-config
  * stays untouched, so this is a faithful Band-equivalent (same grounds, same
  * hold-the-night trick, same .wrap content slot) plus the opt-in parallax
  * layer (ParallaxImg does the measured IO + rAF dance).

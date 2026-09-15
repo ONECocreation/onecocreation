@@ -10,9 +10,9 @@ import path from "path";
  * T-263 census rules it bin D, keep verbatim, description already leads
  * with the house name). Every OTHER field — name, scripts, dependency
  * keys, overrides, browserslist — must be clean of that old-brand language.
- * This does NOT pin the `@pacsarcade/*` dependency package names/tarball
- * URLs themselves: those are bin B (HOLD, cards HB-1…HB-10) and out of
- * this lane's scope.
+ * This does NOT pin the `@frens-earth/*` dependency package names/tarball
+ * URLs themselves: those were bin B (HOLD, cards HB-1…HB-10, executed by
+ * TASK-285-C) and are out of this lane's scope.
  */
 describe("package.json meta voice — ONE Cocreation, not frens.earth", () => {
   it("names ONE Cocreation in the description, and keeps the lineage line as the one sanctioned exception", async () => {
@@ -29,8 +29,8 @@ describe("package.json meta voice — ONE Cocreation, not frens.earth", () => {
     expect(pkg.description).toBe(lineageLine);
 
     // Walk every field EXCEPT `description` (the sanctioned lineage line
-    // lives there) and EXCEPT `dependencies` (the @pacsarcade/* names/URLs
-    // are bin B, HOLD — a separate lane's card, not this one's).
+    // lives there) and EXCEPT `dependencies` (the @frens-earth/* names/URLs
+    // are a separate lane's card, not this one's).
     for (const [key, value] of Object.entries(pkg)) {
       if (key === "description" || key === "dependencies") continue;
       const serialized = JSON.stringify(value);

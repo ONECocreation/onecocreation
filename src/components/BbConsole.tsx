@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { nip19 } from "nostr-tools";
-import { PixelAvatar } from "@pacsarcade/arcade-ui";
+import { PixelAvatar } from "@frens-earth/arcade-ui";
 import useMemberSession, { applyMemberSession } from "@/hooks/useMemberSession";
 import type { StoredBuddy } from "@/lib/bb/types";
 import { currentBlockInfo } from "@/lib/bb/bft";

@@ -1,10 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SignerDoors from "@/components/SignerDoors";
 import useMemberSession from "@/hooks/useMemberSession";
+
+/* hydration-safe one-shot read — the useHasSigner pattern (Kind0Doors,
+   SignerDoors). TASK-301: Love pressed "Verify operator key" on her iPad
+   (no NIP-07 extension) and nothing happened — the button lied about what
+   it could do. This tells the truth before the click, not after it. */
+const noopSubscribe = () => () => {};
+function useHasSigner(): boolean | null {
+  return useSyncExternalStore(noopSubscribe, () => !!window.nostr, () => null);
+}
 
 /**
  * The admin door — same trust model as everything else here: the operator IS
@@ -18,6 +27,11 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const { accounts } = useMemberSession();
   const [emailSeat, setEmailSeat] = useState<boolean | null>(null);
+  const hasSigner = useHasSigner();
+  /* only the confirmed-absent case changes the button — the transient
+     server-snapshot null (pre-hydration) reads as "unchanged", same
+     treatment emailSeat gets below */
+  const noSigner = hasSigner === false;
 
   /* The one honest line: an email door is signed in on this browser (any
      slot — the door switcher, a key login or an order claim can move it),
@@ -105,12 +119,22 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
           {configured ? (
             <>
               <button
-                onClick={verify}
+                onClick={noSigner ? undefined : verify}
                 disabled={busy}
-                className="btn min-h-11 w-full touch-manipulation"
+                aria-disabled={noSigner}
+                className={`btn min-h-11 w-full touch-manipulation${noSigner ? " opacity-60" : ""}`}
               >
-                {busy ? "Reading your signature…" : "Verify operator key"}
+                {busy
+                  ? "Reading your signature…"
+                  : noSigner
+                    ? "Needs a signer extension"
+                    : "Verify operator key"}
               </button>
+              {noSigner && (
+                <p className="mt-3 font-body text-xs" style={{ color: "var(--muted)" }} data-testid="operator-gate-no-signer">
+                  Install a Nostr signer (Sidecar, Alby, nos2x) or sign in with email below.
+                </p>
+              )}
               <details className="mt-4 text-left">
                 <summary className="cursor-pointer list-none rounded-lg border px-4 py-2.5 text-center font-body text-xs uppercase tracking-wider"
                   style={{ borderColor: "rgba(139,118,196,.45)", color: "var(--ink, #E9E2F2)", letterSpacing: ".08em" }}>

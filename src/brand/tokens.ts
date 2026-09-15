@@ -2,9 +2,9 @@
  * ONE COCREATION -- Love's brand cartridge. LIVES HERE, in her repo,
  * per the separation law (Admiral, 2026-08-13): fleet packages ship
  * brand-neutral; a brand arrives only as a cartridge the host passes
- * into createConfig. Moved verbatim from @pacsarcade/puck-config 0.5.x.
+ * into createConfig. Moved verbatim from @frens-earth/puck-config 0.5.x.
  */
-import type { BrandTokens } from "@pacsarcade/puck-config/tokens";
+import type { BrandTokens } from "@frens-earth/puck-config/tokens";
 
 /**
  * One Cocreation -- the first brand cartridge (Love's site).
