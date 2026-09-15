@@ -684,8 +684,9 @@
   .scar-main [id] { scroll-margin-top: 122px; }
 }
 
-/* the scar token family — verbatim from cartridge.css's dark-first block,
-   same selector (:root,.oc-pv-dark), same values, same order */
+/* the scar token family — lifted out of cartridge.css's dark-first block
+   in S19 lane 3 (see the head of this file); this file is their home now.
+   Selector (:root,.oc-pv-dark), values and order kept from the lift. */
 :root,.oc-pv-dark{
   /* SCAR/console greens — the console's pale inks, dims, nodes, sheets */
   --scar-ink:#cfe0d6; /* pale console green ink */

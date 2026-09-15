@@ -128,6 +128,10 @@ export function createPageStore(config: PageStoreConfig = {}): PageStore {
     }
   }
 
+  /* ungated bulk publish — every draft straight to live. The operator-facing
+     path is the api/puck route's own loop ({publishAll:true}), which
+     re-implements this with the lint gate inserted (errors block that page);
+     this method stays the plain store primitive. */
   async function publishAll(): Promise<string[]> {
     const slugs = await listPuckPages();
     const done: string[] = [];
