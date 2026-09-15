@@ -49,7 +49,7 @@ export async function GET(request: Request) {
      client-side NavMenu/SiteFooter read them here (SiteHeader is client-
      reachable via MemberProfile/OperatorGate, so no server import may enter its
      graph — the booleans can't be passed down; same fetch idiom as
-     FrenBadge → /api/frens/session). The rail/env STATUS stays behind the
+     FrenBadge → /api/member/session). The rail/env STATUS stays behind the
      operator gate: env-configured state is the house's business, not the
      page's. Writes (PUT below) are always operator-only. */
   if (!operator) return NextResponse.json({ ok: true, config: await getSiteConfig() });

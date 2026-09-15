@@ -3,7 +3,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 
 /**
- * The member session, shared: one /api/frens/session fetch per page load,
+ * The member session, shared: one /api/member/session fetch per page load,
  * one source of truth for every header piece (chip, menu, footer) and the
  * profile editor. A module-level external store — sign-out or a door
  * switch in one corner updates every subscriber, no stale "you're in".
@@ -53,7 +53,7 @@ function subscribe(listener: () => void) {
   listeners.add(listener);
   if (!fetched) {
     fetched = true;
-    fetch("/api/frens/session")
+    fetch("/api/member/session")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) =>
         emit({
@@ -77,7 +77,7 @@ export default function useMemberSession() {
   const { member, accounts, checked } = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const signOut = useCallback(async () => {
-    await fetch("/api/frens/session", { method: "DELETE" });
+    await fetch("/api/member/session", { method: "DELETE" });
     applyMemberSession(null);
   }, []);
 
@@ -86,7 +86,7 @@ export default function useMemberSession() {
   const signOutOne = useCallback(
     async (handle: string, space: string): Promise<MemberSession | null> => {
       try {
-        const res = await fetch("/api/frens/session", {
+        const res = await fetch("/api/member/session", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ handle, space }),
@@ -109,7 +109,7 @@ export default function useMemberSession() {
   /** Switch to another signed-in door (or a same-key tag) — no re-signing. */
   const switchTo = useCallback(async (handle: string, space: string): Promise<boolean> => {
     try {
-      const res = await fetch("/api/frens/session", {
+      const res = await fetch("/api/member/session", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ handle, space }),

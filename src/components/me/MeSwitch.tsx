@@ -14,7 +14,7 @@ export default function MeSwitch() {
   const [kind, setKind] = useState<"loading" | "email" | "key">("loading");
 
   useEffect(() => {
-    fetch("/api/frens/session")
+    fetch("/api/member/session")
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { ok?: boolean; space?: string } | null) => {
         setKind(d?.ok && d.space === "email" ? "email" : "key");

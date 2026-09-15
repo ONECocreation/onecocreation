@@ -37,7 +37,7 @@ export function buyDoorLabel(
 
 /**
  * TASK-177 (0018.06.18 a₿) — the gated line KNOWS the visitor. Signed in
- * (the same /api/frens/session read the header's FrenBadge makes, wrapped
+ * (the same /api/member/session read the header's FrenBadge makes, wrapped
  * in lib/session-read.ts): no email field, no second ceremony — the line
  * says whose account. A guest keeps TASK-173's basket-rule words VERBATIM.
  * Pure + exported for tests/item-page.test.ts.

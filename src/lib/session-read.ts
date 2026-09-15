@@ -1,7 +1,7 @@
 /**
  * TASK-177 (0018.06.18 a₿) — THE ONE SESSION READ the site chrome already
  * makes. The header's who-am-I (FrenBadge.tsx) reads the session inline:
- * GET /api/frens/session → { ok, handle, space }, and for an email member a
+ * GET /api/member/session → { ok, handle, space }, and for an email member a
  * follow-up GET /api/member/profile → the known-by name (displayName ||
  * accountName — Love's ask: the chip says who they ARE, "firefly", never
  * the mailbox). No shared helper module existed — FrenBadge carries the
@@ -18,7 +18,7 @@ export interface MemberSession {
 }
 
 export async function readSession(): Promise<MemberSession | null> {
-  const r = await fetch("/api/frens/session").catch(() => null);
+  const r = await fetch("/api/member/session").catch(() => null);
   const d: { ok?: boolean; handle?: string; space?: string } | null =
     r && r.ok ? await r.json().catch(() => null) : null;
   if (!d?.ok || !d.handle) return null;

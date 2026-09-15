@@ -51,7 +51,7 @@ export default function MePanel() {
   useEffect(() => {
     if (!member?.npub) return;
     let alive = true;
-    fetch(`/api/frens/whois?npub=${member.npub}`)
+    fetch(`/api/member/whois?npub=${member.npub}`)
       .then((r) => r.json())
       .then((d) => {
         if (alive && d?.ok) setHolds(d.holds);

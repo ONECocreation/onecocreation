@@ -82,7 +82,7 @@ export default function BbConsole() {
     setClientNpub(connectedNpub);
 
     try {
-      const who = await fetch(`/api/frens/whois?npub=${connectedNpub}`).then((r) => r.json());
+      const who = await fetch(`/api/member/whois?npub=${connectedNpub}`).then((r) => r.json());
       if (!who.ok || !who.holds?.length || !window.nostr.signEvent) return; // tagless — play local
       const event = await window.nostr.signEvent({
         kind: 22242,
@@ -90,7 +90,7 @@ export default function BbConsole() {
         tags: [],
         content: `PACS-LOGIN-${Date.now()}`,
       });
-      const res = await fetch("/api/frens/session", {
+      const res = await fetch("/api/member/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ event }),

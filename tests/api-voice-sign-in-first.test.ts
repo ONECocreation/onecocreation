@@ -6,9 +6,54 @@ import { describe, it, expect } from "vitest";
  * matching the house's existing sibling gates (member/link-email, already
  * clean). Route paths, symbols and the frens/media/ blob prefix are
  * untouched (bin B stays HOLD) — this pins the wire string only.
+ *
+ * TASK-280 moved these three routes to /api/member/*; the old /api/frens/*
+ * URLs still answer via a re-export shim (dual-read, no end date yet) — one
+ * implementation, so both describe blocks below exercise the SAME handler
+ * function and must (and do) read the same "sign in first" string.
  */
 
-describe("POST /api/frens/release — signed-out reason", () => {
+describe("POST /api/member/release — signed-out reason", () => {
+  it("reads 'sign in first', never 'fren'", async () => {
+    const { POST } = await import("@/app/api/member/release/route");
+    const res = await POST(new Request("http://localhost/api/member/release", { method: "POST" }));
+    const body = await res.json();
+    expect(res.status).toBe(401);
+    expect(body.reason).toBe("sign in first");
+  });
+});
+
+describe("PUT /api/member/session — signed-out reason", () => {
+  it("reads 'sign in first', never 'fren'", async () => {
+    const { PUT } = await import("@/app/api/member/session/route");
+    const res = await PUT(
+      new Request("http://localhost/api/member/session", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ handle: "someone", space: "email" }),
+      })
+    );
+    const body = await res.json();
+    expect(res.status).toBe(401);
+    expect(body.reason).toBe("sign in first");
+  });
+});
+
+describe("POST /api/member/upload — signed-out reason", () => {
+  it("reads 'sign in first', never 'fren'", async () => {
+    const { POST } = await import("@/app/api/member/upload/route");
+    const res = await POST(new Request("http://localhost/api/member/upload", { method: "POST" }));
+    const body = await res.json();
+    expect(res.status).toBe(401);
+    expect(body.reason).toBe("sign in first");
+  });
+});
+
+/* TASK-280 dual-read — the OLD /api/frens/* URLs still answer, same words,
+   via the re-export shims. Not a duplicate: this proves the old path is
+   still alive, not just that the words are right. */
+
+describe("POST /api/frens/release — dual-read, old URL still answers", () => {
   it("reads 'sign in first', never 'fren'", async () => {
     const { POST } = await import("@/app/api/frens/release/route");
     const res = await POST(new Request("http://localhost/api/frens/release", { method: "POST" }));
@@ -18,7 +63,7 @@ describe("POST /api/frens/release — signed-out reason", () => {
   });
 });
 
-describe("PUT /api/frens/session — signed-out reason", () => {
+describe("PUT /api/frens/session — dual-read, old URL still answers", () => {
   it("reads 'sign in first', never 'fren'", async () => {
     const { PUT } = await import("@/app/api/frens/session/route");
     const res = await PUT(
@@ -34,7 +79,7 @@ describe("PUT /api/frens/session — signed-out reason", () => {
   });
 });
 
-describe("POST /api/frens/upload — signed-out reason", () => {
+describe("POST /api/frens/upload — dual-read, old URL still answers", () => {
   it("reads 'sign in first', never 'fren'", async () => {
     const { POST } = await import("@/app/api/frens/upload/route");
     const res = await POST(new Request("http://localhost/api/frens/upload", { method: "POST" }));

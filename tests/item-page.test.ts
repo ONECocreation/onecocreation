@@ -11,7 +11,7 @@ import type { StoreItem } from "@/lib/store";
  * TASK-177 (0018.06.18 a₿, block 966,098) — the item page wears the
  * ShinePages product layout (recon 03/04: two columns ≥900px, breadcrumb,
  * struck sale price, "Related" as a row of three) and the BuyPanel knows
- * you are signed in (the header's own /api/frens/session read, wrapped in
+ * you are signed in (the header's own /api/member/session read, wrapped in
  * lib/session-read.ts — no shared helper module existed; FrenBadge carries
  * the same two fetches inline and is outside this lane's OWNS).
  *
@@ -153,7 +153,7 @@ describe("readSession — the header's own session read, as one helper", () => {
 
   it("a frens-space member is known by their handle", async () => {
     vi.stubGlobal("fetch", async (url: unknown) => {
-      if (String(url) === "/api/frens/session") {
+      if (String(url) === "/api/member/session") {
         return new Response(JSON.stringify({ ok: true, handle: "adminpacman", space: "frens" }), { status: 200 });
       }
       throw new Error(`unexpected fetch: ${url}`);
@@ -164,7 +164,7 @@ describe("readSession — the header's own session read, as one helper", () => {
 
   it("an email member's known-by name wins (displayName || accountName), never the mailbox", async () => {
     vi.stubGlobal("fetch", async (url: unknown) => {
-      if (String(url) === "/api/frens/session") {
+      if (String(url) === "/api/member/session") {
         return new Response(JSON.stringify({ ok: true, handle: "firefly@example.com", space: "email" }), { status: 200 });
       }
       if (String(url) === "/api/member/profile") {
@@ -178,7 +178,7 @@ describe("readSession — the header's own session read, as one helper", () => {
 
   it("an email member without a claimed name falls back to the mailbox prefix", async () => {
     vi.stubGlobal("fetch", async (url: unknown) => {
-      if (String(url) === "/api/frens/session") {
+      if (String(url) === "/api/member/session") {
         return new Response(JSON.stringify({ ok: true, handle: "guest@example.com", space: "email" }), { status: 200 });
       }
       return new Response(JSON.stringify({ ok: false }), { status: 404 });

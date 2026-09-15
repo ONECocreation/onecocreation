@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 export default function FreeMeditationLink() {
   const [signedIn, setSignedIn] = useState(false);
   useEffect(() => {
-    fetch("/api/frens/session")
+    fetch("/api/member/session")
       .then((r) => setSignedIn(r.ok))
       .catch(() => {});
   }, []);

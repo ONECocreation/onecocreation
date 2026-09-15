@@ -5,7 +5,7 @@ import { releaseHandle } from "@/lib/registry";
  * Operator release — the trash button on the anchor queue: a name that got
  * registered incorrectly goes back to the pool. Queued names only —
  * releaseHandle refuses anything already etched (permanent is permanent).
- * Operator-gated; the member-facing right-of-exit stays at /api/frens/release.
+ * Operator-gated; the member-facing right-of-exit stays at /api/member/release.
  */
 export async function POST(request: Request) {
   if (!operatorFromCookieHeader(request.headers.get("cookie"))) {

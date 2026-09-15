@@ -23,7 +23,10 @@ import { isolateCwd } from "./helpers/isolate-cwd";
  *     "● Join Live Session" pill does not render. A title that doesn't
  *     match any registered room (the honest fallback, `/live`) still
  *     draws the pill — that door leads somewhere real.
- *  3. REAL FACES — `/api/frens/availability` validates SHAPE first, then
+ *  3. REAL FACES — `/api/member/availability` (TASK-280 moved this from
+ *     `/api/frens/availability`; the old URL still answers, dual-read,
+ *     via a re-export shim — see the sibling describe below) validates
+ *     SHAPE first, then
  *     asks the registry; a RESERVED name that is genuinely SEATED
  *     (`registry.ts`'s new `reservedSeat()`, additive/read-only) answers
  *     `available:false, reason:"reserved", npub:<real npub>` so the Stage
@@ -115,7 +118,7 @@ describe("RoomVideoSlot — the join pill stops lying (TASK-260)", () => {
   });
 });
 
-describe("frens/availability — real faces: a seated reserved name reads its real npub (TASK-260)", () => {
+describe("member/availability — real faces: a seated reserved name reads its real npub (TASK-260, TASK-280 moved path)", () => {
   /* own isolated cwd — never touches the shared data/ dir, never races
      any other suite's registry file (worktrees share one .git but each
      vitest file already owns its own OS process under the `forks` pool) */
@@ -163,8 +166,8 @@ describe("frens/availability — real faces: a seated reserved name reads its re
         requestedAt: new Date().toISOString(),
       },
     ]);
-    const { GET } = await import("@/app/api/frens/availability/route");
-    const res = await GET(new Request("http://localhost/api/frens/availability?handle=adminpacman"));
+    const { GET } = await import("@/app/api/member/availability/route");
+    const res = await GET(new Request("http://localhost/api/member/availability?handle=adminpacman"));
     const json = await res.json();
     expect(json).toEqual({
       handle: "adminpacman",
@@ -177,8 +180,8 @@ describe("frens/availability — real faces: a seated reserved name reads its re
 
   it("a reserved name with NO seat in the fixture falls through to the original answer, unchanged", async () => {
     await seedRegistry([]); // no row for any reserved name — the honest state this repo ships
-    const { GET } = await import("@/app/api/frens/availability/route");
-    const res = await GET(new Request("http://localhost/api/frens/availability?handle=adminpacman"));
+    const { GET } = await import("@/app/api/member/availability/route");
+    const res = await GET(new Request("http://localhost/api/member/availability?handle=adminpacman"));
     const json = await res.json();
     expect(json).toEqual({ handle: "adminpacman", available: false, reason: "reserved name" });
     expect(json.npub).toBeUndefined();
@@ -195,9 +198,33 @@ describe("frens/availability — real faces: a seated reserved name reads its re
 
   it("an ordinary unclaimed handle is unaffected by the reserved-seat path", async () => {
     await seedRegistry([]);
-    const { GET } = await import("@/app/api/frens/availability/route");
-    const res = await GET(new Request("http://localhost/api/frens/availability?handle=someone-new"));
+    const { GET } = await import("@/app/api/member/availability/route");
+    const res = await GET(new Request("http://localhost/api/member/availability?handle=someone-new"));
     const json = await res.json();
     expect(json).toEqual({ handle: "someone-new", space, available: true, reason: null });
+  });
+
+  /* TASK-280 dual-read: the OLD /api/frens/availability URL still answers
+     via a re-export shim — same behavior, same implementation, no drift. */
+  it("dual-read: the old /api/frens/availability URL answers identically via the re-export shim", async () => {
+    await seedRegistry([
+      {
+        handle: "adminpacman",
+        npub: SEATED_NPUB,
+        status: "committed",
+        batchId: "fixture-batch",
+        requestedAt: new Date().toISOString(),
+      },
+    ]);
+    const { GET } = await import("@/app/api/frens/availability/route");
+    const res = await GET(new Request("http://localhost/api/frens/availability?handle=adminpacman"));
+    const json = await res.json();
+    expect(json).toEqual({
+      handle: "adminpacman",
+      space,
+      available: false,
+      reason: "reserved",
+      npub: SEATED_NPUB,
+    });
   });
 });

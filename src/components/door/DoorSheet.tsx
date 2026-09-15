@@ -28,8 +28,8 @@ import {
  * yet, parks on the new-name step — never an error, never a second door.
  *
  * Every call below is a REAL route (`/api/auth/email/*`,
- * `/api/frens/session`, `/api/frens/claim`, `/api/member/profile`,
- * `/api/frens/availability`) — against the dev vault in dev, never the
+ * `/api/member/session`, `/api/member/claim`, `/api/member/profile`,
+ * `/api/member/availability`) — against the dev vault in dev, never the
  * live site. Nothing here mocks a route shape the server doesn't answer.
  */
 export default function DoorSheet({
@@ -143,7 +143,7 @@ export default function DoorSheet({
       return;
     }
     try {
-      const res = await fetch("/api/frens/session", {
+      const res = await fetch("/api/member/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ event }),
@@ -182,7 +182,7 @@ export default function DoorSheet({
     setAvail("checking");
     availTimer.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/frens/availability?handle=${encodeURIComponent(name)}`);
+        const res = await fetch(`/api/member/availability?handle=${encodeURIComponent(name)}`);
         const d = (await res.json()) as { handle?: string; available?: boolean; reason?: string | null };
         if (d.handle !== name && (d.handle == null || !name.startsWith(d.handle))) return;
         setAvail(d.available ? "free" : "taken");
@@ -200,7 +200,7 @@ export default function DoorSheet({
       if (keyEvent.current && keyNpub.current) {
         /* a KEY soul: claim + session in one atomic call, the signed event
            rides along as proof of key (today's claim route, unchanged) */
-        const res = await fetch("/api/frens/claim", {
+        const res = await fetch("/api/member/claim", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ handle: wish.trim(), npub: keyNpub.current, event: keyEvent.current }),

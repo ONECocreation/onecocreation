@@ -47,7 +47,7 @@ export default function ReleaseTag({
     setError(null);
     setBusy(true);
     try {
-      const res = await fetch("/api/frens/release", { method: "POST" });
+      const res = await fetch("/api/member/release", { method: "POST" });
       const data = await res.json();
       if (!data.ok) {
         setError(data.reason ?? "the registry didn't answer");
