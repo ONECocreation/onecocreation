@@ -241,36 +241,46 @@ const abs = (u: string) => (u.startsWith("http") ? u : `${site()}${u}`);
 /** The bulletproof pill: a real table cell with bgcolor — survives clients
  *  that strip <a> styling (the Admiral's "just words" report, 0018.05.18).
  *  TASK-242 (0018.06.23 a₿, the Admiral's forward "the color on the buttons
- *  here is not on onecocreation brand"): the evidence
- *  (briefings/mail/incoming/welcome-home-0018.06.23.html, a Thunderbird
- *  "adapt message colours" dark-mode pass) had stripped every DARK ink
- *  declaration from the primary pill — the `<a>`'s `color`, the `<font
- *  color>`, even the `bgcolor` attribute — while leaving the muted pill's
- *  WHITE ink alone, because a "make dark mail readable" pass keeps light
- *  inks and removes dark ones on the theory the client will supply its own
- *  background. Two independent fixes, since either alone leaves a hole:
- *   1. the primary pill now IS the site's own `.btn-rose` door
- *      (house.css:90) instead of a flat swatch — the gradient
- *      `linear-gradient(135deg,#E7B2C3,#C56E8B)` plus a solid `#D890A7`
- *      fallback (the gradient's own midpoint) on both `bgcolor` and
- *      `background-color`, so a client that drops the gradient still shows
- *      a rose fill, not the browser's white default. Ink is
- *      `--rose-btn-ink` #2E0E1D (cartridge.css:63, ≥4.99:1 on every stop of
- *      the gradient) declared FOUR redundant ways so a client that strips
- *      three of them still leaves one standing: on the `<td>` (`color`),
- *      on the `<a>` with `!important`, in a `<font color>` wrapper, and in
- *      a `<span style="color:...!important">` around the label — the
- *      stripped-client regression test below proves the span survives even
- *      when every other ink declaration is torn out the way Thunderbird's
- *      pass tore them.
- *   2. richShell/brandShell's `<head>` now tells dark-mode clients this
+ *  here is not on onecocreation brand") assumed the fix was REDUNDANCY: keep
+ *  a DARK plum ink (`#2E0E1D`, `--rose-btn-ink`) but declare it four
+ *  independent ways (`<td>` `color`, `<a>` `!important`, `<font color>`, a
+ *  `<span style="...!important">`) so a client that strips three still
+ *  leaves one standing. That assumption was wrong: the 0018.06.25 evidence
+ *  (briefings/mail/incoming/welcome-day-two-bad-button-0018.06.25.png) shows
+ *  the SAME client stripping all four dark declarations at once — the pill's
+ *  rose fill survived but its ink rendered as the client's own link-blue,
+ *  unreadable against the fill — while the muted Unsubscribe pill right
+ *  below it (`#6b6478` fill, WHITE `#ffffff` ink) survived clean, exactly as
+ *  it did the first time. Redundancy in the ink's DECLARATION doesn't help
+ *  when a "make dark mail readable" pass strips by ink LIGHTNESS, not by
+ *  which of the four places it's declared — it keeps light inks (readable
+ *  on a client-painted dark background) and removes dark ones (the theory:
+ *  a dark ink was meant for a light background the client just repainted).
+ *  So the real fix is the ink's lightness, not more redundancy:
+ *   1. the primary pill's fill is now a solid deep rose, `#AD5470` (the
+ *      brand's "dawn" deep-rose rung, `src/brand/tokens.ts`), on both
+ *      `bgcolor` and `background-color` — solid, not a gradient, because a
+ *      gradient may only run between stops that ALL pass contrast with
+ *      white ink and the old gradient's dark stop (`#C56E8B`, 3.51:1 with
+ *      white) does not; a flat `#AD5470` sidesteps that trap entirely.
+ *      White (`#ffffff`) on `#AD5470` computes to **4.908:1** (WCAG
+ *      relative-luminance formula) — passes the 4.5:1 floor.
+ *   2. ink is now `#ffffff`, kept declared the same FOUR redundant ways
+ *      (`<td>` `color`, `<a>` `!important`, `<font color>`, `<span>`
+ *      `!important`) — the structure still protects against a client that
+ *      strips only SOME declarations, but the color choice itself is what
+ *      protects against a client that strips by lightness and takes all
+ *      four: white is exactly the ink such a pass leaves alone, which is
+ *      why the muted pill below never needed fixing.
+ *   3. richShell/brandShell's `<head>` still tells dark-mode clients this
  *      night ground is INTENTIONAL (`color-scheme`/`supported-color-schemes:
- *      dark`) so a client that behaves shouldn't feel the need to repaint
- *      us at all — the ink redundancy above is the line of defence for the
- *      ones that still do.
+ *      dark`, T-242 fix 2, unchanged here) so a client that behaves
+ *      shouldn't feel the need to repaint us at all — the ink choice above
+ *      is the line of defence for the ones that still do.
  *  `variant: "muted"` (the Unsubscribe pill, `--mail-muted-2` #6b6478 fill,
- *  white ink, 5.65:1) is unchanged — it already survived the strip because
- *  white is exactly the ink a "make it dark-mode safe" pass leaves alone. */
+ *  white ink, 5.65:1) is unchanged — it was never broken; white was always
+ *  the ink a "make it dark-mode safe" pass leaves alone, which is the whole
+ *  lesson this pill's ink now follows too. */
 export function pill(href: string, label: string, size: "sm" | "lg" = "sm", variant: "primary" | "muted" = "primary"): string {
   const pad = size === "lg" ? "13px 30px" : "10px 24px";
   const fs = size === "lg" ? "15px" : "13px";
@@ -282,13 +292,14 @@ export function pill(href: string, label: string, size: "sm" | "lg" = "sm", vari
       <a href="${abs(href)}" style="display:inline-block;padding:${pad};font-family:Arial,sans-serif;font-size:${fs};color:${ink};text-decoration:none;border-radius:999px;"><font color="${ink}">${label}</font></a>
     </td></tr></table>`;
   }
-  // primary — the site's own rose door (.btn-rose, house.css:90), ink
-  // (--rose-btn-ink #2E0E1D, cartridge.css:63) declared four ways.
-  const gradient = "linear-gradient(135deg,#E7B2C3,#C56E8B)";
-  const solidFallback = "#D890A7"; // the gradient's midpoint, for clients that drop gradients
-  const ink = "#2E0E1D";
+  // primary — deep rose fill, WHITE ink (TASK-308, 0018.06.25 a₿): a dark
+  // ink declared four redundant ways still lost to a client that strips by
+  // lightness, not by declaration site (see docblock above). Solid fill
+  // avoids a gradient stop that could fail contrast on its own.
+  const bg = "#AD5470"; // dawn deep rose (src/brand/tokens.ts) — 4.908:1 with white ink
+  const ink = "#ffffff";
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-table;"><tr>
-    <td bgcolor="${solidFallback}" style="border-radius:999px;background:${gradient};background-color:${solidFallback};color:${ink};">
+    <td bgcolor="${bg}" style="border-radius:999px;background:${bg};background-color:${bg};color:${ink};">
       <a href="${abs(href)}" style="display:inline-block;padding:${pad};font-family:Arial,sans-serif;font-size:${fs};color:${ink} !important;text-decoration:none;border-radius:999px;"><font color="${ink}"><span style="color:${ink} !important;">${label}</span></font></a>
     </td></tr></table>`;
 }
