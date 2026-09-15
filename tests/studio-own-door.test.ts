@@ -62,12 +62,12 @@ afterAll(async () => {
 describe("studioVdoLinks / vdoBase — built from the host they're given, never hardcoded", () => {
   it("a fictional host proves the derivation isn't pinned to vdo.ninja or vdo.onecocreation.com", () => {
     const vdo = studioVdoLinks("someartist", "vdo.example-studio.test");
-    expect(vdo.room).toBe("someartist-studio");
-    expect(vdo.push).toBe("https://vdo.example-studio.test/?room=someartist-studio&push=host");
+    expect(vdo.room).toBe("someartist_studio");
+    expect(vdo.push).toBe("https://vdo.example-studio.test/?room=someartist_studio&push=host");
     // TASK-261: the guest door is now one-click (camera + mic, muted) —
     // see tests/go-live-door.test.ts for the full builder pins.
     expect(vdo.guest).toBe(
-      "https://vdo.example-studio.test/?room=someartist-studio&webcam&mute&label=Guest",
+      "https://vdo.example-studio.test/?room=someartist_studio&webcam&mute&label=Guest",
     );
   });
 
