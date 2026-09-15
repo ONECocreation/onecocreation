@@ -39,7 +39,11 @@ describe("one-row desktop header (TASK-257)", () => {
     const block = house.slice(i, house.indexOf("\n}", i));
     expect(block).toMatch(/\.site-header \.bar\{flex-wrap:nowrap\}/);
     expect(block).toMatch(/\.site-nav \.nav-link\{font-size:\.9rem;letter-spacing:\.02em;white-space:nowrap\}/);
-    expect(block).toMatch(/\.nav-tail>\*\{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap\}/);
+    /* TASK-258: the clip sits on the leaf, never on the DoorButton wrapper —
+       overflow:hidden on `.nav-tail>*` clipped the open member menu. */
+    expect(block).toMatch(/\.nav-tail>\*\{max-width:180px;min-width:0\}/);
+    expect(block).not.toMatch(/\.nav-tail>\*\{[^}]*overflow:hidden/);
+    expect(block).toMatch(/\.nav-tail>button,\.nav-tail>a,\.nav-tail>\*>button\{[^}]*overflow:hidden;text-overflow:ellipsis;white-space:nowrap/);
   });
   it("the burger begins at 1000px (six links + a signed-in name overflowed the row between 920 and 1000)", () => {
     expect(house.split("@media(max-width:1000px){").length - 1).toBe(2);

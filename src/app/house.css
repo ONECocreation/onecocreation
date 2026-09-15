@@ -558,7 +558,14 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
   .nav-items{gap:14px}
   .site-nav .nav-link{font-size:.9rem;letter-spacing:.02em;white-space:nowrap}
   .nav-tail{min-width:0}
-  .nav-tail>*{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* TASK-258 (Admiral, 0018.06.24 a₿, "user menu is no longer opening"): the
+     clip lives on the tail's LEAF (the lantern, the basket, the name button),
+     never on `.nav-tail>*` — DoorButton's direct child is the positioning
+     wrapper that holds the member menu, and overflow:hidden there clipped the
+     open menu to the button's own line box. The wrapper keeps max-width so
+     the name still ellipsises; the popup escapes it. */
+  .nav-tail>*{max-width:180px;min-width:0}
+  .nav-tail>button,.nav-tail>a,.nav-tail>*>button{display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
 }
 
 /* ── the console's left rail (wireframe v2) ── */
