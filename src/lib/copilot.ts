@@ -153,6 +153,20 @@ const COMPONENTS: CompDef[] = [
     desc: "The sign-in door (/login) — the same DoorSheet the header mounts, in its full-page mount: email code or key, no passwords, turning into sign-up on its own. Use on the login page; ?next= deep links ride the door itself.",
     fields: {},
   },
+  /* TASK-296 wave B, pair bb-time (0018.06.25 a₿): the lockstep law
+     (puck-config.tsx) — Number One may place the two client-live widgets.
+     Both are DATA-BOUND and { id }-only: they render live on the published
+     page (never stored in the page doc) and carry no copy fields at all. */
+  {
+    type: "BbConsole",
+    desc: "The live Bitcoin Buddy console — the NIP-07 connect door, the hatchery, and a member's own buddies, rendered live from the visitor's key and session when the page is published. Use on the bb page; the widget shows its own honest states (no key, no buddies, a dark node) — never freeze a buddy or a block height into copy around it.",
+    fields: {},
+  },
+  {
+    type: "BftClock",
+    desc: "The live Bitcoin Federated Time reading — the canonical BFT date and the boxed-star block height, read from the chain live-or-dashes (never an estimate, never stored). Use on the time page.",
+    fields: {},
+  },
 ];
 
 /** The component reference Love's request is built against, as prompt text. */
