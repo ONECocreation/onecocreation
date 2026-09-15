@@ -1,4 +1,5 @@
 import { READING_ROOM_PATH } from "@/lib/reading-room";
+import { ROOMS } from "@/lib/matrix-rooms";
 /**
  * TASK-185 Phase B — THE DOOR's state machine, as ruled (the Admiral,
  * 0018.06.18 a₿: the design stands).
@@ -67,13 +68,30 @@ export function isUnnamedKeyReason(reason: string | null | undefined): boolean {
   return !!reason && /doesn't own a tag/i.test(reason);
 }
 
-/** Where the walk lands after "in": a `?next=` wins (validated same-origin
- *  by the caller), a brand-new soul sees what's theirs now, a returning
- *  soul in the SHEET simply stays — the page behind never changed. */
+/** Where the walk lands after "in": a brand-new soul ALWAYS sees what's
+ *  theirs now first (TASK-259, the Admiral's walk 0018.06.24 a₿: "after I
+ *  choose my name it goes to a Continue screen that took me nowhere" — the
+ *  old order checked `next` before `isNew`, so a new soul who arrived via
+ *  `/login?next=/rooms/heart-field` skipped `/welcome` entirely and landed
+ *  straight in a gated room with no session the room page could see yet).
+ *  A same-origin `next` (validated by the caller) rides along as a query
+ *  param so `/welcome` can offer ONE door onward. A returning soul keeps
+ *  today's behaviour: `next` wins, else `/me` on the page mount, else the
+ *  sheet just closes — the page behind never changed. */
 export function landingFor(opts: { next: string | null; isNew: boolean; mount: "sheet" | "page" }): string | null {
+  if (opts.isNew) return opts.next ? `/welcome?next=${encodeURIComponent(opts.next)}` : "/welcome";
   if (opts.next) return opts.next;
-  if (opts.isNew) return "/welcome";
   return opts.mount === "page" ? "/me" : null; // null = close the sheet, stay put
+}
+
+/** TASK-259 — `/welcome`'s own continue-door words: a known `/rooms/<slug>`
+ *  names the room by its real title (the rooms config, the one source of
+ *  truth); anything else is the plain word, never a guessed label built
+ *  from the raw path (derive-or-dash). */
+export function continueLabel(path: string | null): string {
+  const slug = path ? /^\/rooms\/([^/?]+)/.exec(path)?.[1] : null;
+  const room = slug ? ROOMS.find((r) => r.id.slice(1, r.id.indexOf(":")) === slug) : null;
+  return room ? `Continue to ${room.title}` : "Continue";
 }
 
 /** The member menu — the whole of it (Number One, from the Admiral's words).
