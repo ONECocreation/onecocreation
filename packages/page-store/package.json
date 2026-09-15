@@ -1,5 +1,5 @@
 {
-  "name": "@pacsarcade/page-store",
+  "name": "@onecocreation/page-store",
   "version": "0.1.0",
   "description": "The puck-studio document store — KV draft/live staging, publish, page management and the popup registry behind sovereign storage drivers: Upstash-REST KV (the shipping default, byte-identical to the host file it was extracted from), JSON files for zero-infrastructure local dev, and a scoped (deliberately unimplemented) git driver. Optional site-namespaced keys with a legacy compat read, so two sites can share one KV without colliding.",
   "license": "MIT",
