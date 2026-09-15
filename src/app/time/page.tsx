@@ -1,7 +1,20 @@
 import type { Metadata } from "next";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import PaletteVars from "@/components/PaletteVars";
+import PopupHost from "@/components/PopupHost";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
 import TimeClock from "./TimeClock";
+
+/* TASK-296 (0018.06.25 a₿): the page reads its Puck doc from KV now, so it
+   carries the same force-dynamic line /about got under TASK-239 — without
+   it `next build` would prerender a static snapshot and a published rebuild
+   would never reach a real visitor until the next deploy. */
+export const dynamic = "force-dynamic";
 
 /**
  * /time — THE PLACEHOLDER PAGE (0018.05.26 a₿, TASK-03 Part 3).
@@ -27,7 +40,31 @@ export const metadata: Metadata = {
     "Bitcoin Federated Time, plainly: the canonical date and the live block height — read from the chain, never estimated.",
 };
 
-export default function TimePage() {
+export default async function TimePage() {
+  /* TASK-296 wave B, pair bb-time — PUCK first, mirroring /about
+     (page.tsx:68-88) byte-for-byte: once Love publishes the Puck rebuild
+     (/style/time -> Publish), the live /time serves it. Until then, the
+     hand-built page below is untouched — nothing changes for visitors
+     until she chooses it. No route gates on this page (no features.*
+     switches read). The clock is never frozen either way: the designer
+     branch renders it through the { id }-only BftClock block, client-live
+     and live-or-dashes exactly like the fallback's — T-295 pair 6's ruled
+     flag-and-stop lands here. */
+  const puck = await getPuckPage("time");
+  if (puck) {
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main><Render config={config} data={puck as Data} /></main>
+        <SiteFooter />
+        {/* STUDIO P2: the popup host rides the designer branch (the fallback
+            never had one — byte-identical law — so it is not added there) */}
+        <PopupHost />
+      </>
+    );
+  }
+
   return (
     /* the same shell as every page on the site (the mgmt-ground/mgmt-body
        cartridge — see globals.css "SITE CONSOLE CHROME"). */
