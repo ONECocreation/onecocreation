@@ -25,7 +25,7 @@ export const FREE_MEDITATION = {
   title: "Unzip Into the New You",
   /* the /meditation page's own promise, tightened to the card's one line */
   blurb: "A free guided meditation — plus a weekly note of inspiration, with love.",
-  story: "Join the newsletter and this free guided meditation is yours — delivered straight to your inbox, no strings, only love.",
+  story: "Join the newsletter and this free guided meditation is yours — delivered straight to your inbox — on the house, from our 💞 to yours.",
   img: "/images/dusk-lake-storm-light.webp",
   href: "/meditation",
   priceLabel: "free · a gift",

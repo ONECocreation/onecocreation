@@ -438,7 +438,7 @@ const homeContent: Block[] = [
         hm.eyebrow("Be in the Know"),
         hm.heading("A Free Meditation, With Love", "h2"),
         hm.rich("Join the newsletter and receive <b style=\"color:var(--rose)\">“Unzip Into the New You”</b> — a free guided meditation, plus a weekly note of inspiration."),
-        hm.text("Delivered straight to your inbox — no strings, only love.", "left", st({ size: 15 })),
+        hm.text("Delivered straight to your inbox — on the house, from our 💞 to yours.", "left", st({ size: 15 })),
         hm.note("── live subscribe form stays code-side ──"),
       ],
       36,
@@ -1282,14 +1282,14 @@ export const SEEDS: Record<string, PuckPageData> = {
      Meditation door (/meditation). The copy is Love's own, quoted from the
      /meditation section (src/components/sections.tsx FreeMeditation):
      "A Free Meditation, With Love" / "Unzip Into the New You" /
-     "no strings, only love". The Image restores the original popup's
+     "on the house, from our 💞 to yours" (Love's words, 0018.06.25). The Image restores the original popup's
      light-body graphic (gate punch-list 0018.05.25 a₿ — the text-only
      rebuild read thinner than Love's original; same asset the home-old
      seed references). The Button wears rose, not gold — gold is
      MONEY ONLY (house law, cartridge.ts). Seed protection applies: the
      panels and the API treat popup:* keys here as protected. */
   "popup:free-guide": { content: [
-    blk("Eyebrow", { text: "A gift, no strings", align: "center", style: st() }),
+    blk("Eyebrow", { text: "On the house", align: "center", style: st() }),
     blk("Heading", { text: "A Free Meditation, With Love", level: "h2", align: "center", style: st() }),
     blk("Image", {
       src: `${RAW}/popup-free-guide/unzip-9141826.png`,
@@ -1297,7 +1297,7 @@ export const SEEDS: Record<string, PuckPageData> = {
       width: 320, radius: "soft", align: "center",
     }),
     blk("Text", {
-      text: "Receive \u201cUnzip Into the New You\u201d — a free guided meditation, plus a weekly note of inspiration. No strings, only love.",
+      text: "Receive \u201cUnzip Into the New You\u201d — a free guided meditation, plus a weekly note of inspiration. On the house, from our 💞 to yours.",
       align: "center", style: st(),
     }),
     blk("Button", { label: "Receive the meditation", href: "/meditation", variant: "rose", align: "center", style: st() }),

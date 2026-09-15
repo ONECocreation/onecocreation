@@ -5,7 +5,7 @@ import { FreeMeditation } from "@/components/sections";
 
 export const metadata: Metadata = {
   title: "Free Meditation — One Cocreation",
-  description: "A free guided meditation from Love — a gift, no strings.",
+  description: "A free guided meditation from Love — on the house, from our 💞 to yours.",
 };
 
 /* The free meditation wears two doors (Admiral, 0018.05.16): a section on

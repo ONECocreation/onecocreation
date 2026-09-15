@@ -524,7 +524,7 @@ export function FreeMeditation() {
             <p className="kicker">Be in the Know</p>
             <h2 className="sec-h">A Free Meditation, With Love</h2>
             <p style={{ color: "var(--ink-body)", fontSize: "1.02rem" }}>Join the newsletter and receive <strong style={{ color: "var(--rose)" }}>&ldquo;Unzip Into the New You&rdquo;</strong> — a free guided meditation, plus a weekly note of inspiration.</p>
-            <p style={{ fontSize: ".85rem", color: "var(--muted)", margin: "0 0 26px" }}>Delivered straight to your inbox — no strings, only love.</p>
+            <p style={{ fontSize: ".85rem", color: "var(--muted)", margin: "0 0 26px" }}>Delivered straight to your inbox — on the house, from our 💞 to yours.</p>
             <SubscribeForm source="meditation" />
           </div>
         </div>
