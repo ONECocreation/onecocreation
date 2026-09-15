@@ -67,7 +67,7 @@ const RETREAT = {
   priceSats: 444000,
   depositSats: 111000,
   blurb: "Five fixture days under the red rocks.",
-  status: "live",
+  status: "live" as const,
   createdAtMs: 1,
 };
 
@@ -129,6 +129,22 @@ describe("the seed — /style/retreats opens pre-populated", () => {
     expect(flat).toContain("Blocks of days at a place, held together");
   });
 
+  it("every block id in the seed is unique — slot children included (a collision double-renders the canvas)", async () => {
+    const { SEEDS } = await import("@/lib/puck-seeds");
+    const ids: string[] = [];
+    const walk = (v: unknown) => {
+      if (Array.isArray(v)) { v.forEach(walk); return; }
+      if (v && typeof v === "object") {
+        const o = v as Record<string, unknown>;
+        if (typeof o.id === "string") ids.push(o.id);
+        Object.values(o).forEach(walk);
+      }
+    };
+    walk(SEEDS.retreats.content);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids).toContain("rt-list");
+  });
+
   it("the seed stores NO shelf — the dynamic part never fossilises (no `retreats` prop anywhere)", async () => {
     const { SEEDS } = await import("@/lib/puck-seeds");
     expect(JSON.stringify(SEEDS.retreats.content)).not.toContain('"retreats"');
@@ -150,7 +166,7 @@ describe("the registry — puck-config + the copilot mirror (the lockstep law)",
 
   it("the block renders its honest placeholder without an injected shelf (the designer side)", async () => {
     const { config } = await import("@/lib/puck-config");
-    const block = (config.components as Record<string, { render: (p: Record<string, unknown>) => ReactElement }>).RetreatsList;
+    const block = (config.components as unknown as Record<string, { render: (p: Record<string, unknown>) => ReactElement }>).RetreatsList;
     const html = renderToStaticMarkup(block.render({ emptyText: "No retreats yet" }));
     expect(html).toContain("live retreats shelf");
     expect(html).not.toContain("seats left");
@@ -158,7 +174,7 @@ describe("the registry — puck-config + the copilot mirror (the lockstep law)",
 
   it("the block renders the same cards as the hand-built page (markup-verbatim transcription)", async () => {
     const { config } = await import("@/lib/puck-config");
-    const block = (config.components as Record<string, { render: (p: Record<string, unknown>) => ReactElement }>).RetreatsList;
+    const block = (config.components as unknown as Record<string, { render: (p: Record<string, unknown>) => ReactElement }>).RetreatsList;
     const html = renderToStaticMarkup(block.render({ emptyText: "No retreats yet", retreats: [{ ...RETREAT, seatsLeft: 6 }] }));
     expect(html).toContain("Fixture Desert Days");
     expect(html).toContain("Sedona");
@@ -171,7 +187,7 @@ describe("the registry — puck-config + the copilot mirror (the lockstep law)",
 
   it("the empty shelf renders the rewordable line plus the fixed letters door", async () => {
     const { config } = await import("@/lib/puck-config");
-    const block = (config.components as Record<string, { render: (p: Record<string, unknown>) => ReactElement }>).RetreatsList;
+    const block = (config.components as unknown as Record<string, { render: (p: Record<string, unknown>) => ReactElement }>).RetreatsList;
     const html = renderToStaticMarkup(block.render({ emptyText: "The desert is resting", retreats: [] }));
     expect(html).toContain("The desert is resting");
     expect(html).toContain('href="/news"');

@@ -616,7 +616,10 @@ const retreatsContent: Block[] = [
     rt.stacked("RETREATS", "& EXCURSIONS", "h1", "center"),
     rt.text("Blocks of days at a place, held together — sold by the seat, paid in bitcoin, straight to the artist.", "center"),
   ]),
-  { type: "RetreatsList", props: { id: "rt-1", emptyText: RETREATS_EMPTY_TEXT } },
+  /* the id must be UNIQUE across the whole page, slot children included —
+     the kit above consumed rt-0…rt-3; a colliding id makes the designer's
+     canvas render this block in both spots (React keys by props.id) */
+  { type: "RetreatsList", props: { id: "rt-list", emptyText: RETREATS_EMPTY_TEXT } },
 ];
 
 /*
