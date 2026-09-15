@@ -4,7 +4,7 @@
  * Console tweaks — the SCAR Console v2 header trio's client state:
  *   • THEME — three positions on one seam, each a token-level remap
  *     ([data-console-theme] in globals.css), never a markup fork:
- *       arcade    — the SCAR·LET LCARS bridge (default)
+ *       default   — the SCAR·LET LCARS bridge (default)
  *       lcars     — the LCARS tribute
  *       cartridge — the brand cartridge: this site's own BrandTheme tokens.
  *                   Today it's the house cartridge; the key-resolved
@@ -17,10 +17,10 @@
  * piece (top bar, rail) stays in step without prop-drilling.
  */
 
-export type ConsoleTheme = "arcade" | "lcars" | "cartridge";
+export type ConsoleTheme = "default" | "lcars" | "cartridge";
 
 /** the THEME button's cycle order — the default theme is home, so it's first */
-export const THEME_ORDER: ConsoleTheme[] = ["arcade", "lcars", "cartridge"];
+export const THEME_ORDER: ConsoleTheme[] = ["default", "lcars", "cartridge"];
 
 const THEME_KEY = "scarlet:theme";
 const SOUND_KEY = "scarlet:sound";
@@ -29,9 +29,10 @@ export const TWEAKS_EVENT = "scarlet:tweaks";
 export function storedTheme(): ConsoleTheme {
   try {
     const t = localStorage.getItem(THEME_KEY);
-    return t === "lcars" || t === "cartridge" ? t : "arcade";
+    if (t === "arcade") localStorage.setItem(THEME_KEY, "default"); // migrate the old stored key
+    return t === "lcars" || t === "cartridge" ? t : "default";
   } catch {
-    return "arcade";
+    return "default";
   }
 }
 
