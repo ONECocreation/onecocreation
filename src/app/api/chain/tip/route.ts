@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
  * The fleet's one door to chain data — the block tip and the live mempool fill,
  * read from the configured mempool node (the admiral's own instance) instead of
  * every client phoning mempool.space directly. Sovereignty fix (the admiral,
- * 2026-07-11): point mempoolUrl at Pac's Arcade's own node and the whole fleet
+ * 2026-07-11): point mempoolUrl at the house's own node and the whole fleet
  * follows through this route.
  *
  * OWNER RULING (0018.04.22, binding): OUR NODE first, mempool.space next, and
@@ -21,8 +21,8 @@ export const dynamic = "force-dynamic";
  * throws; short leash so a slow node doesn't hang the page.
  *
  * `?full=1` — the living clock's richer reading (same node, same seam): adds
- * the tip block's chain TIMESTAMP (the honest block age — drives Pac's laps and
- * the struggling digit) and the difficulty adjustment (the arcade LEVEL arrow).
+ * the tip block's chain TIMESTAMP (the honest block age — drives the clock's laps
+ * and the struggling digit) and the difficulty adjustment (the LEVEL arrow).
  * Both optional niceties: nulls never sink a good height.
  */
 
