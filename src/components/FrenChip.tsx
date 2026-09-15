@@ -10,7 +10,7 @@ import useNostrProfile from "@/hooks/useNostrProfile";
  * opens the menu, and navigation lives in the menu rows.
  *
  * Signed out: the vacant ghost — nobody's home, press to find the door.
- * Signed in: the fren's kind-0 picture, or their seeded pixel body.
+ * Signed in: the member's kind-0 picture, or their seeded pixel body.
  */
 export default function FrenChip() {
   const { fren, checked } = useFrenSession();

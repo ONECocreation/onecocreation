@@ -12,7 +12,7 @@ import { blobStoreEnabled } from "./registry";
  * `ceremony` rides here too: what a batch ceremony SENDS (certificate
  * template + the welcome letter) is configurable per POKE node standup.
  * Sparks parked: the ceremony doubles as the newsletter welcome letter, and
- * gets posted to the @frens nostr profile with hashtags.
+ * gets posted to this site's own nostr profile with hashtags.
  */
 
 export interface CeremonyConfig {
@@ -25,9 +25,10 @@ export interface NodeConfig {
   spacesToken: string;
   mudUrl: string;
   mudToken: string;
-  /** The chat floor — an orbee (nostr NIP-29 group chat) door. No token:
-      orbee needs no write, the floor resolves tags live. Unset falls through
-      env to the house floor at chat.frens.earth. */
+  /** The chat floor — an orbee (nostr NIP-29 group chat) door, or any door
+      an operator points here from the GUI. No token: orbee needs no write,
+      the floor resolves tags live. Unset stays honestly empty until one is
+      configured (derive-or-dash — never invent a stranger's door). */
   chatUrl: string;
   /** GitHub link for the SCAR merge queue — paste-in from the GUI, so the
       admiral never has to touch deployment env (Pac, 2026-07-11). */
@@ -56,8 +57,8 @@ export interface NodeConfig {
   sharedBriefsBranch: string;
   /** Chain-data node — the mempool.space REST API the fleet reads block tip +
       mempool fill from. Sovereignty fix (the admiral, 2026-07-11): don't
-      hardcode a third party. Point this at Pac's Arcade's OWN self-hosted
-      mempool instance; unset falls through env to the public mempool.space so
+      hardcode a third party. Point this at your own self-hosted mempool
+      instance; unset falls through env to the public mempool.space so
       a fresh fork still ticks. No token — read-only public chain data. */
   mempoolUrl: string;
   /** Vercel Deploy Hook URL for shipping main → production from SCAR. Stored
@@ -85,9 +86,12 @@ const EMPTY: NodeConfig = {
   ceremony: { certTemplate: "bft-auto", welcomeMessage: "" },
 };
 
-/** The house floor — where the chat door opens when nothing is pointed.
-    Mirrors the arcade: chat.pacsarcade.org is orbee's door there, chat.frens.earth here. */
-export const CHAT_URL_DEFAULT = "https://chat.frens.earth";
+/** No house floor to fall back to on this clone — ONE Cocreation runs
+    Matrix (matrix.onecocreation.com), not the template's orbee door, and
+    has no equivalent stand-alone chat door of its own recorded here yet.
+    Honestly empty (derive-or-dash) until an operator points chatUrl from
+    the GUI; the /chat gate's own honest empty state takes it from there. */
+export const CHAT_URL_DEFAULT = "";
 
 /** The public fallback for chain data — the fleet still ticks on a fresh fork
     that hasn't stood up its own node. The whole point of mempoolUrl is to stop

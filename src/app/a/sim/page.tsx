@@ -42,7 +42,7 @@ export default async function AdminSimulatorPage() {
         <p className="lcars-eyebrow mb-3" data-accent="neon">
           OPERATOR CONSOLE · {CONSOLE_SITE.domain.toUpperCase()} · DECK 03
         </p>
-        <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">SIMULATOR</h1>
+        <h1 className="mb-3 mgmt-title">Simulator</h1>
         <p className="max-w-2xl font-body text-sm text-white/55">
           The sim runs on <b className="text-white/75">play money</b> — swing hard, break things.
           Nothing on this deck can spend real sats.

@@ -3,7 +3,7 @@ import { createOperatorAuth, type OperatorFrenSession } from "@pacsarcade/operat
 import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
 
 /**
- * TASK-226 — the email seat is found in ANY slot of the fren cookie, not
+ * TASK-226 — the email seat is found in ANY slot of the member cookie, not
  * just the active one (slot 0). A door switch, a key login, or a store-
  * order claim can all re-order the cookie's up-to-8 tokens; before this
  * fix `operatorFromCookieHeader` only ever read
@@ -90,7 +90,7 @@ describe("operator-auth — the email seat, in any slot", () => {
     expect(auth.hasOperatorEmailSeat("irrelevant=1")).toBe(false);
   });
 
-  it("hasOperatorEmailSeat reports false with no fren sessions at all", () => {
+  it("hasOperatorEmailSeat reports false with no member sessions at all", () => {
     const auth = makeAuth([]);
     expect(auth.hasOperatorEmailSeat("irrelevant=1")).toBe(false);
   });

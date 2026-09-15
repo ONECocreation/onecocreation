@@ -35,7 +35,7 @@ export default async function AdminStatusPage() {
         <p className="lcars-eyebrow mb-3" data-accent="cyan">
           OPERATOR CONSOLE · {CONSOLE_SITE.domain.toUpperCase()} · DECK 01
         </p>
-        <h1 className="mb-3 font-arcade text-4xl text-cyan glow-cyan">BRIDGE</h1>
+        <h1 className="mb-3 mgmt-title">Status</h1>
         <p className="max-w-2xl font-body text-sm text-white/55">
           Where everything stands, the moment you land — the in-flight work and everything that
           needs you (sign · review · vote), each report one select from its reader.{" "}

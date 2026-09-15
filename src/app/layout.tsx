@@ -18,8 +18,8 @@ import "./house.css";
    selection flips and <html> wears data-oc-cartridge (layout below). */
 import "./cartridges.css";
 
-/* Retronoid (the arcade skin's display face) moved OFF the root (QW9,
-   ~0018.05.24 a₿) — it ships only to arcade-skin routes via
+/* Retronoid (the template's display face) moved OFF the root (QW9,
+   ~0018.05.24 a₿) — it ships only to console-skin routes via
    components/ArcadeFonts. Press Start 2P stays here for the PACMAN
    cartridge, which adopted it as its display face: the twin in
    cartridges.css pours var(--font-press-start) over the display tokens,
@@ -99,8 +99,8 @@ export const viewport: Viewport = {
 
 /**
  * De-housed (design punch list, 0018.05.10): the clone wears ONLY Love's
- * face at the root. The arcade's CRT scan lines and the BFT clock are
- * frens.earth furniture and do not ship here; the easy-mode boot script
+ * face at the root. The template's CRT scan lines and the BFT clock are
+ * the old brand's furniture and do not ship here; the easy-mode boot script
  * stays — accessibility is house law, not house branding.
  */
 export default function RootLayout({

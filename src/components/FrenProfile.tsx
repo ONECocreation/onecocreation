@@ -46,7 +46,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /* Bitcoin time, not calendar time: entries claimed after round 2 carry the
-   tip height; older frens get it backfilled from mempool.space's
+   tip height; older members get it backfilled from mempool.space's
    closest-block-to-timestamp lookup. Best-effort — an honest dash is the
    fallback (fleet ruling 0018.05.26 a₿: dashes over estimates). */
 function usePlayerSinceBlock(
@@ -76,9 +76,9 @@ function usePlayerSinceBlock(
 }
 
 /**
- * A fren's public profile page — where every registration lands. Shows the
+ * A member's public profile page — where every registration lands. Shows the
  * tag as the network sees it (registry + live nostr signal) and hands the
- * fren a controller for their next move into the nostr verse.
+ * member a controller for their next move into the nostr verse.
  */
 export default function FrenProfile({
   handle,
@@ -100,7 +100,7 @@ export default function FrenProfile({
   nip05Domain: string;
   /** From the registry — set when the tag's Matrix door has been cut. */
   matrixProvisioned?: boolean;
-  /** Live stats from the fren's POKE node — null when the node is dark. */
+  /** Live stats from the member's POKE node — null when the node is dark. */
   poke?: PokeProfile | null;
 }) {
   const spaceTag = `@${space}`;
@@ -124,7 +124,7 @@ export default function FrenProfile({
           ONE COCREATION MEMBER PROFILE
         </p>
 
-        {/* The fren's own sky — banner straight from their kind-0 */}
+        {/* The member's own sky — banner straight from their kind-0 */}
         {profile?.banner && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -135,7 +135,7 @@ export default function FrenProfile({
           />
         )}
 
-        {/* Identity header — the arcade marquee version of "this is you":
+        {/* Identity header — the marquee version of "this is you":
             the network's picture and display name lead; the tag is the
             anchor underneath. py-0/border-b-0 beat legacy section styles. */}
         <section className="flex flex-wrap items-center gap-5 border-b-0 py-0">
@@ -204,7 +204,7 @@ export default function FrenProfile({
         </section>
 
         {/* Badges — verified only because the checks actually hold. The
-            space chip answers "which profile am I in?" — two doors, one arcade. */}
+            space chip answers "which profile am I in?" — two doors, one house. */}
         <section className="flex flex-wrap gap-3 border-b-0 py-0">
           {/* the floor banner — a full row under the profile box; the accent
               says which door this identity lives behind (pink school, cyan
@@ -236,14 +236,14 @@ export default function FrenProfile({
           )}
         </section>
 
-        {/* The game floor — live stats from the fren's POKE node; the card
+        {/* The game floor — live stats from the member's POKE node; the card
             only exists while the node answers (graceful dark-node fallback) */}
         {poke && <PokeArcadeCard poke={poke} handle={handle} />}
 
         {/* Artist mode — compact milestone rail in the enrollment order
             (nostr → matrix → classes → wallet). LOCKED lives in the header,
-            the border burns ghost-red until every light is on. @frens
-            accounts get the honest blurb instead: play-and-support here,
+            the border burns ghost-red until every light is on. @onecocreation
+            guest accounts get the honest blurb instead: play-and-support here,
             campaigns are school business. */}
         <section className="border-b-0 py-0">
           <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
@@ -274,7 +274,7 @@ export default function FrenProfile({
                   {
                     label: "MATRIX",
                     done: matrixProvisioned,
-                    href: matrixProvisioned ? null : "https://pacsarcade.org/login",
+                    href: matrixProvisioned ? null : "/login",
                   },
                   { label: `CERTS 0/${ARTIST_GATE_CERT_COUNT}`, done: false, href: CLASSES_URL },
                   { label: "WALLET", done: false, href: null },
@@ -379,8 +379,9 @@ export default function FrenProfile({
           </div>
         </section>
 
-        {/* Matrix doors are @tag:pacsarcade.org school hardware — cut from
-            the pacsarcade.org profile, not here */}
+        {/* Matrix doors are @tag:<space> school hardware — cut from
+            the member's own profile, not here (exact MXID pattern: ruling
+            needed separately) */}
 
         {/* Certs — proof you showed up, etched not printed. The shelf renders
             each cert as NES-era box art (CertCase) once the rune index lands;
@@ -466,7 +467,7 @@ export default function FrenProfile({
           </div>
         </section>
 
-        {/* The controller — now a pull-cord: it opens when a fren wants to
+        {/* The controller — now a pull-cord: it opens when a member wants to
             know what nostr can DO (the ON AIR card above already shows the
             profile itself). The levels stay inside as the fun on-ramp. */}
         <section className="border-4 border-neon bg-panel shadow-[8px_8px_0_var(--color-pink)]">

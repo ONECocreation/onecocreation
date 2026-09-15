@@ -5,6 +5,7 @@ import { verifyEvent } from "nostr-tools";
 import { blobStoreEnabled } from "./registry";
 import { isOperatorHex } from "./operator-auth";
 import { serverBlockInfo } from "./chain-tip-server";
+import { HOUSE_SEEDS_ENABLED } from "./house-seeds";
 
 /**
  * Sign-offs — the cross-project approval tickets on the Action Items board.
@@ -13,6 +14,11 @@ import { serverBlockInfo } from "./chain-tip-server";
  * ONE console. Each ticket carries a project tag, "what you're signing off"
  * in plain words, the change list, Number One's read, a comment box, and its
  * OWN gesture button (the sign string the key actually signs).
+ *
+ * SEED_SIGNOFFS is per-site config (T-270, HB-10): the fleet's own
+ * cross-project tickets render only when this deployment opts in
+ * (NEXT_PUBLIC_HOUSE_SEEDS=1); every clone ships empty rather than showing
+ * someone else's open tickets on Love's Action Items board.
  *
  * The colour law is STRICT here: gold/coin = MONEY ONLY, so no sign-off ever
  * wears coin — ghost = danger, cyan = info/systems, pink = flair, neon = live.
@@ -36,7 +42,7 @@ export type SignoffStatus = "open" | "signed";
 
 export interface Signoff {
   id: string; // e.g. SEC-0001
-  project: string; // the project tag (SECURITY · PAC'S ARCADE · KNOWLEDGE-ENGINE)
+  project: string; // the project tag (SECURITY · STUDIO · SUPPORT)
   area: string;
   title: string;
   /** one-line card summary */
@@ -69,11 +75,12 @@ export interface Signoff {
 }
 
 /**
- * SEED_SIGNOFFS — the cross-project sign-offs currently awaiting the key
- * (pulled into SCAR·LET 2026-07-13). Committed on purpose, like the decision
- * seeds: the board is the record and stands up with no store behind it.
+ * HOUSE_SIGNOFFS — the fleet's own cross-project sign-offs (pulled into
+ * SCAR·LET 2026-07-13). Committed on purpose, like the decision seeds: the
+ * board is the record and stands up with no store behind it. Rendered only
+ * when this deployment opts into the house seeds (see SEED_SIGNOFFS below).
  */
-export const SEED_SIGNOFFS: Signoff[] = [
+const HOUSE_SIGNOFFS: Signoff[] = [
   {
     id: "SEC-0001",
     project: "SECURITY (HIGH)",
@@ -168,6 +175,10 @@ export const SEED_SIGNOFFS: Signoff[] = [
     status: "open",
   },
 ];
+
+/** The board's committed seeds — empty on every clone unless
+    NEXT_PUBLIC_HOUSE_SEEDS=1 asks for the fleet's own tickets. */
+export const SEED_SIGNOFFS: Signoff[] = HOUSE_SEEDS_ENABLED ? HOUSE_SIGNOFFS : [];
 
 interface SignRecord {
   id: string;

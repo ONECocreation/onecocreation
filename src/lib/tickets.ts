@@ -4,9 +4,9 @@ import { put, get } from "@vercel/blob";
 import { blobStoreEnabled } from "./registry";
 
 /**
- * Tickets — the Duty Roster, bundled into frens.earth so it works with OR
+ * Tickets — the Duty Roster, bundled into the template so it works with OR
  * without the MUD game running. Two roles (enforced in the API routes):
- *   - a `user@frens` RAISES tickets — the customer-facing side.
+ *   - a `user@onecocreation` RAISES tickets — the customer-facing side.
  *   - the admiral + crew (operators) WORK them — claim, note, resolve.
  * Storage mirrors the registry's dual driver: a single board doc in Vercel
  * Blob (prod) or data/tickets.json (dev). Low-volume by nature; last write
@@ -36,7 +36,7 @@ export interface Ticket {
   title: string;
   detail: string;
   status: TicketStatus;
-  raisedBy: string; // "alice@frens" — the customer-facing side
+  raisedBy: string; // "alice@onecocreation" — the customer-facing side
   claimedBy: string | null; // operator (short npub) working it
   createdAt: string;
   updatedAt: string;

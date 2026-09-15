@@ -1,24 +1,25 @@
 import { NIP05_DOMAIN, SPACE_NAME } from "./identity-config";
+import { HOUSE_SEEDS_ENABLED } from "./house-seeds";
 
 /**
- * The operator console manifest — the console is a MODULE, not frens.earth
- * furniture (Pac, 0018.04.11 a₿). Sites templated from this repo (pacsarcade-org,
- * onecocreation, every fork) get the same console as CONFIGURATION: the site
- * identity and the room registry live here, and the SCAR·LET shell (elbow
- * ribbon + mobile bottom bar) renders from it. Adding a room = one entry;
- * rebranding the console = the theme.
+ * The operator console manifest — the console is a MODULE, not one site's
+ * own furniture (Pac, 0018.04.11 a₿). Sites templated from this repo (every
+ * fork, house and client alike) get the same console as CONFIGURATION: the
+ * site identity and the room registry live here, and the SCAR·LET shell
+ * (elbow ribbon + mobile bottom bar) renders from it. Adding a room = one
+ * entry; rebranding the console = the theme.
  *
  * SCAR Console v2 alignment: the five rooms are the canonical v2 decks —
  * BRIDGE · DUTY ROSTER · SIMULATOR · BOT DECK · FLEET MAP — laid over the
  * existing boards (nothing lost, everything re-berthed). The v2 theme seam
- * (Pac's Arcade ↔ LCARS tribute) lives in the shell as a token remap, never
- * a markup fork.
+ * (the house's own bridge ↔ LCARS tribute) lives in the shell as a token
+ * remap, never a markup fork.
  */
 
 /**
  * WHICH CHROME wraps the rooms — the per-clone console look.
  *
- * - `scar`  the SCAR·LET LCARS bridge (this ship; the arcade's own furniture)
+ * - `scar`  the SCAR·LET LCARS bridge (this ship; the house's own furniture)
  * - `site`  the rooms inside the artist's OWN header and footer, so managing
  *           the shop is an extension of their site rather than a visit to a
  *           spaceship (the captain's call for onecocreation, ~0018.05.03)
@@ -88,10 +89,11 @@ export const CONSOLE_NODE = {
 };
 
 /**
- * Pac's identity ruling (binding): pacster@pacsarcade is THE ADMIN;
- * pacster@frens.earth is THE CAPTAIN. Display / copy / role-labels ONLY —
- * never auth logic (the key is the operator; OPERATOR_NPUBS stays the gate).
- * The v2 prototype's old ops alias is NOT owned and must never appear.
+ * Pac's identity ruling (binding, until officers are reseated): pacster@
+ * pacsarcade is THE ADMIN; pacster@frens.earth is THE CAPTAIN. Display /
+ * copy / role-labels ONLY — never auth logic (the key is the operator;
+ * OPERATOR_NPUBS stays the gate). The v2 prototype's old ops alias is NOT
+ * owned and must never appear.
  */
 export interface ConsoleOfficer {
   role: string; // the office as the console names it
@@ -99,10 +101,20 @@ export interface ConsoleOfficer {
   space: string; // registry space (matching only)
   display: string; // the tag exactly as the ruling writes it
 }
-export const CONSOLE_OFFICERS: ConsoleOfficer[] = [
+
+const HOUSE_OFFICERS: ConsoleOfficer[] = [
   { role: "THE CAPTAIN", handle: "pacster", space: "frens", display: "pacster@frens.earth" },
   { role: "THE ADMIN", handle: "pacster", space: "pacsarcade", display: "pacster@pacsarcade" },
 ];
+
+/**
+ * The house's own officer roster — per-site config (T-270, HB-10): empty on
+ * every clone unless NEXT_PUBLIC_HOUSE_SEEDS=1 asks for it, so the fleet's
+ * crew never renders on someone else's bridge. Never rename-in-place — a
+ * client's own officers are a site-config field of their own, not a
+ * relabeling of this house roster.
+ */
+export const CONSOLE_OFFICERS: ConsoleOfficer[] = HOUSE_SEEDS_ENABLED ? HOUSE_OFFICERS : [];
 
 /**
  * The console FRONT PAGE — the room the ◗ SCAR·LET brand block opens. Not a
@@ -265,7 +277,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
   },
   /* ── the artist-console rooms (wireframe v2, Admiral-blessed 0018.05.12).
      Site chrome renders these in its left rail; the scar shell ignores them
-     (houseOnly false but arcade keeps its own decks — additive, no berth
+     (houseOnly false but the house keeps its own decks — additive, no berth
      stolen). */
   {
     key: "letters",
@@ -295,7 +307,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     /* the DRESSING ROOM, promoted to a top-level berth: it reached the nav
        only as a child of fleet, which is houseOnly — so under `site` chrome
        /a/brand was unreachable (SITE_LABELS already anticipated key "brand").
-       The fleet sub stays — the arcade's accordion is unchanged. */
+       The fleet sub stays — the house's accordion is unchanged. */
     key: "brand",
     href: "/a/brand",
     label: "DRESSING ROOM",

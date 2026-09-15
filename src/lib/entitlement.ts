@@ -10,11 +10,11 @@ import { nip19 } from "nostr-tools";
  * 1. CONTENT (One Cocreation's own) — TIERS, the names and prices Love sells.
  * 2. MECHANISM (framework-shaped) — grant, revoke, look up a paid tier.
  *    Nothing below knows anything about Love specifically; it reads TIERS as
- *    config. When S2 is promoted upstream to frens.earth this half moves as a
+ *    config. When S2 is promoted upstream to the template this half moves as a
  *    file, not a rewrite, and each clone brings only its own TIERS.
  *
  * THE GATE LAW (storefront-framework.md): the API is the gate, screens are
- * courtesy. The subject is the fren's REGISTRY npub — the mutable record,
+ * courtesy. The subject is the member's REGISTRY npub — the mutable record,
  * never an on-chain anchor — so a lost nsec loses the key, not the paid
  * tiers: the operator rebinds the record and the tier follows it.
  *

@@ -10,7 +10,7 @@ import { bftDate, bftDateTime } from "@/lib/bb/bft";
  *              batch commit. One tab: the queue IS the ceremony's input.
  *   CEREMONY — what a batch SENDS: cert template + the welcome letter,
  *              configurable per POKE node. (Sparks parked: the welcome
- *              letter rides the newsletter and posts to @frens on nostr.)
+ *              letter rides the newsletter and posts to @onecocreation on nostr.)
  * All dates are Bitcoin Federated Time — the old calendar is burned; rows
  * without a recorded block wear an honest dash (fleet ruling 0018.05.26 a₿:
  * dashes over estimates — the estimate rung is DELETED, not gated).
@@ -567,9 +567,9 @@ function CeremonyTab({
       <p className="font-body text-sm text-white/70">
         What a batch ceremony <span className="text-cyan">sends</span> — configurable per POKE
         node. The certificate ships as box art (the block decides the case), and the welcome
-        letter greets every fren etched in the batch.{" "}
+        letter greets every member etched in the batch.{" "}
         <span className="text-white/40">
-          Parked sparks: the letter rides the newsletter, and posts to the @frens nostr profile
+          Parked sparks: the letter rides the newsletter, and posts to the @onecocreation nostr profile
           with hashtags.
         </span>
       </p>
@@ -593,7 +593,7 @@ function CeremonyTab({
           value={welcomeMessage}
           onChange={(e) => setWelcomeMessage(e.target.value)}
           rows={6}
-          placeholder="Welcome home, fren — your name is on the block now…"
+          placeholder="Welcome home — your name is on the block now…"
           className="mt-1 w-full rounded-lg border-2 border-edge bg-void px-3 py-2 font-body text-sm text-white/80 placeholder:text-white/25 focus:border-cyan focus:outline-none"
         />
       </label>

@@ -88,7 +88,7 @@ function assetPath(v: string): string | null {
   return null;
 }
 
-/** the arcade's time door: "" empties the ladder rung, else an https URL */
+/** the time door: "" empties the ladder rung, else an https URL */
 function timeTip(v: string): string | null {
   if (v === "") return null;
   if (!NO_BREAK.test(v)) return `the time door cannot contain " \\ or a line break`;

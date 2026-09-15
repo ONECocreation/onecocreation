@@ -3,7 +3,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 
 /**
- * The fren session, shared: one /api/frens/session fetch per page load,
+ * The member session, shared: one /api/frens/session fetch per page load,
  * one source of truth for every header piece (chip, menu, footer) and the
  * profile editor. A module-level external store — sign-out or a door
  * switch in one corner updates every subscriber, no stale "you're in".
@@ -12,7 +12,7 @@ import { useCallback, useSyncExternalStore } from "react";
 export interface FrenSession {
   handle: string;
   space: string;
-  /** From the registry — lets the client tune this fren's kind-0 signal. */
+  /** From the registry — lets the client tune this member's kind-0 signal. */
   npub: string | null;
 }
 

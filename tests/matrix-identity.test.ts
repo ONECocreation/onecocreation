@@ -3,7 +3,7 @@ import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 /**
  * TASK-133 (0018.06.17 a₿): a member's chat message must carry the MEMBER's
  * identity. The Admiral signed in as adminpacman and his Heart Field post
- * came out wearing "Love" — his fren handle derived straight onto the BOT
+ * came out wearing "Love" — his member handle derived straight onto the BOT
  * SEAT's localpart, and the room guessed the label. Pins:
  *
  *   · an operator/house-handle subject derives an mxid DISTINCT from the

@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { nip19, SimplePool } from "nostr-tools";
 
 /**
- * The fren's live signal: their kind-0 profile as the nostr network sees it
- * right now. Read-only, best-effort — callers never block on relays.
+ * The member's live signal: their kind-0 profile as the nostr network sees
+ * it right now. Read-only, best-effort — callers never block on relays.
  * Lifted out of FrenProfile so the header chip and the profile editor share
  * one implementation (and one cache: the chip rides on every page, and must
  * not open three websockets per navigation).
@@ -37,7 +37,7 @@ export interface RawKind0 {
 export type SignalState = "tuning" | "found" | "silent";
 
 /* sessionStorage cache: {at, event|null}. Negative results cache too —
-   a silent fren shouldn't cost three websockets per page either. */
+   a silent member shouldn't cost three websockets per page either. */
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const cacheKey = (npub: string) => `pa-k0-${npub}`;
 

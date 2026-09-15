@@ -6,7 +6,7 @@ import { ScarConsole, type ReaderContent } from "@/components/console/ReaderDraw
 
 /**
  * SIGN-OFFS — the cross-project approval tickets on the Action Items board.
- * Work raised across the fleet (pacsarcade, knowledge-engine, the shared-
+ * Work raised across projects (pacsarcade, knowledge-engine, the shared-
  * secrets rotation) lands here so the admiral signs everything from one desk.
  * The board is a list of ticket cards; selecting one opens the READER DRAWER
  * (closed by default, ⤢ expand-full, ✕/Escape closes) with the project tag,

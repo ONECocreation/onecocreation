@@ -6,7 +6,7 @@ import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-au
 
 /**
  * /a/brand — TASK-135: the DRESSING ROOM (cert foundry + the retired
- * multi-theme tester, both Pac's Arcade furniture) is replaced by
+ * multi-theme tester, both template furniture) is replaced by
  * BrandDesk, a real colour desk for the five brand-palette slots; TASK-182
  * (0018.06.18 a₿) gave the desk WORKING colour and font pickers (the top
  * half of /style/brand's board, one shared rail). See

@@ -1,7 +1,7 @@
 /**
  * WHAT AM I SIGNING? — the education Pac asked for after his first nos2x
  * prompt. Lives beside every sign button so the extension popup is never
- * a mystery. Rule of the arcade: never sign what you can't read.
+ * a mystery. The house rule: never sign what you can't read.
  */
 export default function SigningExplainer({ kind }: { kind: "login" | "seat" | "profile" }) {
   return (

@@ -8,7 +8,7 @@ import useNostrProfile from "@/hooks/useNostrProfile";
 import useIsOperator from "@/hooks/useIsOperator";
 import { SPACE_ROLES } from "@/lib/identity-config";
 
-/* The admin deck row — for a live operator session OR a fren whose key is on
+/* The admin deck row — for a live operator session or a member whose key is on
    the operator allowlist (`eligible`: the door shows, the gate still takes a
    fresh signature). Cookies are httpOnly, so the menu asks the whoami
    endpoint (useIsOperator); everyone else never sees the row. */
@@ -25,7 +25,7 @@ function AdminDeckRow() {
 }
 
 /* Floor accents: pink = school/artist, cyan = play. The same colors the
-   profile banner wears — a fren always knows which door they're behind. */
+   profile banner wears — a member always knows which door they're behind. */
 function accentText(space: string): string {
   return space === "pacsarcade" ? "text-pink" : "text-cyan";
 }

@@ -81,7 +81,7 @@ export default function RankTrackPanel() {
             <div className="mt-3">
               <p className="font-body text-sm text-white/60">
                 This key holds no tag on this ship yet. The ladder starts at the claim — every
-                fren is enlisted the block their tag lands.
+                member is enlisted the block their tag lands.
               </p>
               <Link href="/" className="btn-pill mt-4" data-accent="pink">
                 Claim your @tag

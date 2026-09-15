@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
  * commendations), restored with REAL reads only:
  *   • rank    — the SCAR fleet ladder (src/lib/ranks.ts) walked by Bitcoin-
  *     time tenure since the operator's tag claim (registry blockHeight →
- *     current tip). No per-fren cert store exists yet, so certs=0 — honest.
+ *     current tip). No per-member cert store exists yet, so certs=0 — honest.
  *   • office  — Pac's identity ruling, display only (THE CAPTAIN / THE
  *     ADMIN); never auth (the key stays the operator).
  *   • points  — resolutions the operator logged on the duty roster.

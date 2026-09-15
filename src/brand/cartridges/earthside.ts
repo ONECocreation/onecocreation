@@ -90,7 +90,7 @@ export const earthside: Cartridge = {
   /** the house clock's time door, unchanged — the view doesn't move the
    *  server */
   doors: {
-    timeTipUrl: "https://time.pacsarcade.org/api/chain/tip?full=1",
+    timeTipUrl: "https://onecocreation.com/api/chain/tip?full=1",
   },
 
   /** "gold" tells CartridgeVars to pour nothing — EARTHSIDE's nav is

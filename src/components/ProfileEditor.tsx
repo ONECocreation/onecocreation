@@ -12,8 +12,8 @@ import ArtUpload from "@/components/ArtUpload";
 import RelayResults from "@/components/RelayResults";
 import { anyAccepted, publishKind0, type RelayResult } from "@/lib/kind0-publish";
 
-/** The eight fields the form edits — Primal parity, arcade dress. These are
-    all NOSTR profile-card fields: none of them touch the etched arcade tag. */
+/** The eight fields the form edits — Primal parity, console dress. These are
+    all NOSTR profile-card fields: none of them touch the etched tag. */
 const FIELDS = [
   { key: "name", label: "NOSTR USERNAME", hint: "what nostr apps show — not your tag" },
   { key: "display_name", label: "DISPLAY NAME", hint: "the marquee version — change it any time; only your tag is etched" },
@@ -78,7 +78,7 @@ function validate(draft: Draft): string | null {
  * Signing rides the signer doors (Kind0Doors): NIP-07 extension when
  * present, NIP-46 remote signer always. Publish results are shown per
  * relay, truthfully — one accepting relay is success (the network gossips),
- * but the fren sees exactly who took the card.
+ * but the member sees exactly who took the card.
  */
 export default function ProfileEditor({
   npub,
@@ -94,7 +94,7 @@ export default function ProfileEditor({
   space: string;
   nip05Domain: string;
   /** The full current kind-0 (content object + created_at + tags) from
-      useNostrProfile — null while tuning or when the fren is silent. */
+      useNostrProfile — null while tuning or when the member is silent. */
   raw: RawKind0 | null;
   signal: "tuning" | "found" | "silent";
   /** FrenProfile's applyLocal — flips the page (and cache) optimistically. */

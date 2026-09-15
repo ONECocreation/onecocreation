@@ -16,7 +16,7 @@
  *   1. --dir <path>           (explicit)
  *   2. $BRIEFS_DIR            (env)
  *   3. a `design-briefs` folder found walking up from this repo — i.e.
- *      C:\dev\pacsarcade\design-briefs when the repo is C:\dev\pacsarcade\frens.earth
+ *      ~/dev/design-briefs when the repo is ~/dev/onecocreation
  *
  * Target:
  *   • dev (default): data/briefs/<slug>.json   (gitignored)

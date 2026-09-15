@@ -204,7 +204,7 @@ function ConnectDeployHook({ onConnected }: { onConnected: () => void }) {
         CONNECT THE DEPLOY HOOK — ONE-TIME SETUP
       </p>
       <p className="mb-3 font-body text-xs leading-relaxed text-white/70">
-        Vercel → <span className="text-neon">frens-earth</span> → Settings → Git: connect this repo,
+        Vercel → <span className="text-neon">onecocreation</span> → Settings → Git: connect this repo,
         then turn <span className="text-neon">OFF</span> automatic production deployments (pushes
         won&apos;t deploy — you stay in control). Settings → Git → Deploy Hooks: create one for
         branch <span className="font-mono text-neon">main</span>, copy the URL, paste it here. It&apos;s

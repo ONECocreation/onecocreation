@@ -11,7 +11,7 @@ import { frenFromRequest } from "@/lib/fren-auth";
 import { getEntry } from "@/lib/registry";
 
 /* Who am I — the admin pages check this on load. `eligible` says the signed-in
-   fren's KEY is on the operator allowlist even when no operator session exists
+   member's KEY is on the operator allowlist even when no operator session exists
    yet — the menu shows the admiral their door; the gate still takes a fresh
    signature to open it. */
 export async function GET(request: Request) {

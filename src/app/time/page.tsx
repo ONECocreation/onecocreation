@@ -6,9 +6,9 @@ import TimeClock from "./TimeClock";
 /**
  * /time — THE PLACEHOLDER PAGE (0018.05.26 a₿, TASK-03 Part 3).
  *
- * The arcade time experience that used to live here (the orrery, the
+ * The template's time experience that used to live here (the orrery, the
  * half-wheel, the time door, the converters) was a template leak — it
- * belongs to frens.earth and moved out as a transplant package
+ * belongs to the old brand and moved out as a transplant package
  * (transplant/frens-earth-time/ at the repo root, with its TRANSPLANT.md).
  * This page is the reduced, honest interim: the canonical BFT date + the
  * boxed-star height, live-or-dashes, in the house cartridge. A future

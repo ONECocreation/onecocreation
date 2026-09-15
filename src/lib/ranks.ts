@@ -1,7 +1,7 @@
 /**
  * The SCAR Fleet — arcader ranks. Structure from the admiral's two source
  * charts (Federation officer insignia + Starfleet duty/dress ladder):
- * CADET tiers (T-01…T-04, the fren ladder) below COMMISSIONED tiers
+ * CADET tiers (T-01…T-04, the member ladder) below COMMISSIONED tiers
  * (O-1…O-11, the crew ladder), each with duty + dress insignia slots.
  *
  * NAMES ARE DRAFT and the insignia are GLYPH's canvas — this file is the
@@ -31,7 +31,7 @@ const r = (
 ): ScarRank => ({ grade, name, abbrev, tier, draft, insignia: { duty: null, dress: null } });
 
 export const SCAR_FLEET: ScarRank[] = [
-  // ── the fren ladder — every player is already enlisted ──
+  // ── the member ladder — every player is already enlisted ──
   r("T-01", "COIN CADET", "C1", "cadet"),
   r("T-02", "PIXEL CADET", "C2", "cadet"),
   r("T-03", "SPRITE CADET", "C3", "cadet"),

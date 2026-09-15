@@ -53,7 +53,7 @@ export interface AfterHoursFeed {
    *  Commons (the write route and the read-side sanitise both refuse it) */
   room: string;
   roomTitle: string;
-  /** TIERS' own package name (the fren-facing word — "Weekly Intuitive") */
+  /** TIERS' own package name (the member-facing word — "Weekly Intuitive") */
   package: string;
   /** the /packages/[slug] door; null only if the config ever drifts —
    *  derive-or-dash, never a broken link */

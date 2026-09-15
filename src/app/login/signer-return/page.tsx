@@ -51,7 +51,7 @@ function SignerReturn() {
         try {
           data = await res.json();
         } catch {
-          /* non-JSON = the server fell over, not the fren */
+          /* non-JSON = the server fell over, not the member */
         }
         if (!res.ok || !data?.ok) {
           setError(
