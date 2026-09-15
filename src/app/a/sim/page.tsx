@@ -43,8 +43,8 @@ export default async function AdminSimulatorPage() {
           OPERATOR CONSOLE · {CONSOLE_SITE.domain.toUpperCase()} · DECK 03
         </p>
         <h1 className="mb-3 mgmt-title">Simulator</h1>
-        <p className="max-w-2xl font-body text-sm text-white/55">
-          The sim runs on <b className="text-white/75">play money</b> — swing hard, break things.
+        <p className="max-w-2xl font-body text-sm mgmt-lede">
+          The sim runs on <b>play money</b> — swing hard, break things.
           Nothing on this deck can spend real sats.
         </p>
       </div>
