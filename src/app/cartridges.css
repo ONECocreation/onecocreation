@@ -3,7 +3,7 @@
    0018.05.28 a₿).
 
    cartridge.css is LOVE's file and stays it. The other voices pour
-   HERE, gated on html[data-oc-cartridge="pacman"|"earthside"|"blank"|"mono"|"material"|"eva"] —
+   HERE, gated on html[data-oc-cartridge="earthside"|"blank"|"mono"|"material"|"eva"] —
    the one attribute the root layout sets, and only when the selection
    flips off the default (src/brand/cartridge.ts, one line). With LOVE active the
    attribute never renders: every rule below is inert, and Love's output
@@ -11,55 +11,6 @@
    token pours, no stylesheet fork, no rule overrides of Love's
    selectors, no specificity debt.
    ════════════════════════════════════════════════════════════════════ */
-
-/* ── NUMBER ONE × PACMAN — the Screen. Pac's ruling: the design IS the
-   dark celestial build deployed at onecocreation.vercel.app, so the
-   palette tokens stay Love's night and the pour is thin. What the
-   cartridge adds is a VOICE and a MOTION BUDGET:
-
-   1. Press Start 2P leads the display layer — ADOPTED as this
-      cartridge's display face (the next/font registration on <html>
-      finally has a live reader: --serif/--disp/--font-h1 carry the
-      hero stacks and prices, --font-pixel carries .button + h5/h6, and
-      --font-arcade answers any arcade-kit surface). PS2P is furniture
-      here, not dead weight.
-   2. The template motion budget (Pac, S9: "feel free to enhance this
-      design with visual things like the parralax so it's not flat.
-      should feel interactive warm. easy to understand.") — ADDITIVE,
-      non-default only, static by default: everything sits inside
-      prefers-reduced-motion: no-preference, so reduced-motion users get
-      the still page, fully composed. The pan is the CSS scroll-timeline
-      rendering of the live-extracted parallax mechanism
-      (onecocreation-live-capture §0.1: the ground moves slower than the
-      page as the section crosses the viewport) — no JS, no
-      background-attachment:fixed; authored pages already have the real
-      IO+rAF parallax via the studio's ParallaxBand/ParallaxImg. ── */
-html[data-oc-cartridge="pacman"]{
-  --serif:var(--font-press-start),'Press Start 2P',monospace;
-  --disp:var(--font-press-start),'Press Start 2P',monospace;
-  --font-h1:var(--font-press-start),'Press Start 2P',monospace;
-  --font-pixel:var(--font-press-start),'Press Start 2P',monospace;
-  --font-arcade:var(--font-press-start),'Press Start 2P',monospace;
-  /* the effect tokens (TASK-42/S45): deliberately NOT poured — pacman's
-     colors ride Love's pour (this twin re-tones type only), so the
-     aurora inherits Love's blobs with them, both themes */
-}
-
-@media (prefers-reduced-motion: no-preference){
-  /* the cabinet breath — the hero's glow swells and settles, slow */
-  html[data-oc-cartridge="pacman"] .hero::before{
-    animation:nebula-drift 70s ease-in-out infinite alternate,pac-breath 9s ease-in-out infinite}
-  @supports (animation-timeline: view()){
-    /* the nebula pans against the scroll — depth, not flatness. The pan
-       rides the `translate` property so it composes with the drift's
-       `transform` instead of fighting it */
-    html[data-oc-cartridge="pacman"] .hero::before{
-      animation:nebula-drift 70s ease-in-out infinite alternate,pac-breath 9s ease-in-out infinite,pac-hero-pan linear both;
-      animation-timeline:auto,auto,view()}
-  }
-}
-@keyframes pac-breath{0%,100%{opacity:.14}50%{opacity:.2}}
-@keyframes pac-hero-pan{from{translate:0 -4%}to{translate:0 4%}}
 
 /* ── EARTHSIDE — the Earth. K3's authored direction, Pac's verdict
    0018.05.25 a₿: kept ("i like the layout structure and square buttons").
