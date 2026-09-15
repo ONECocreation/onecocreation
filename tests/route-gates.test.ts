@@ -264,6 +264,30 @@ describe("TASK-187 — the memberships switch gates its two routes", () => {
       expect(await read(rel), rel).toContain('from "@/components/NotOpenYet"');
     }
   });
+
+  /* TASK-232 (0018.06.25 a₿ · block 967,125): the memberships INDEX route
+     joins the gate — the switch lived INSIDE Packages() (sections.tsx, the
+     home section's own guard, still there) so a direct /packages URL was
+     covered, but this lane's new Puck-first read had to sit BELOW a
+     route-level gate or publishing would have bypassed the switch. Same
+     T-187 idiom, same shared panel, same order contract. */
+  it("/packages: memberships OFF → NotOpenYet inside the site chrome, the page's FIRST branch", async () => {
+    const src = await read("src/app/packages/page.tsx");
+    const gate = gateBlock(src, "TASK-187 GATE");
+    expect(gate).toContain("getSiteConfig");
+    expect(gate).toContain("!switches.features.memberships");
+    expect(gate).toContain("NotOpenYet");
+    expect(gate).toContain("<SiteHeader />");
+    expect(gate).toContain("<SiteFooter />");
+  });
+
+  it("/packages: the order is 1 gate → 2 Puck → 3 hand-built fallback", async () => {
+    const src = await read("src/app/packages/page.tsx");
+    expect(src).toContain("export default async function PackagesPage()");
+    expect(src.indexOf("TASK-187 GATE")).toBeLessThan(src.indexOf('await getPuckPage("packages")'));
+    expect(src.indexOf('await getPuckPage("packages")')).toBeLessThan(src.indexOf("<Packages />"));
+    expect(src).toContain('from "@/components/NotOpenYet"');
+  });
 });
 
 

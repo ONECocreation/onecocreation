@@ -6,6 +6,7 @@ import { createParallaxBand } from "@/lib/puck-blocks/parallax-band";
 import { createJoinSurface } from "@/lib/puck-blocks/join-surface";
 import { createFormDoors } from "@/lib/puck-blocks/form-doors";
 import { createRetreatsList } from "@/lib/puck-blocks/retreats-list";
+import { createPackagesGrid } from "@/lib/puck-blocks/packages-grid";
 import { NIP05_DOMAIN, SPACE_NAME } from "@/lib/identity-config";
 
 /**
@@ -50,6 +51,7 @@ const base = createConfig({
           { label: "Book a session", path: "/book" },
           { label: "Classes & community", path: "/classes" },
           { label: "Memberships", path: "/memberships" },
+          { label: "Packages", path: "/packages" },
           { label: "Retreats", path: "/retreats" },
           { label: "Store", path: "/store" },
           { label: "Support", path: "/support" },
@@ -105,9 +107,16 @@ components.FormDoors = createFormDoors() as unknown as (typeof components)[strin
    LOCAL, like P2/P3 — the package stays vendored-untouched. */
 components.RetreatsList = createRetreatsList() as unknown as (typeof components)[string];
 
-/* the library rail: ParallaxBand (and TASK-231's RetreatsList) join the
-   Layout group, appended at the end (after Divider — the package's array
-   order is never reordered) */
+/* TASK-232 (0018.06.25 a₿ · block 967,125): PackagesGrid — the second
+   data-bound block, riding T-231's pattern (the live tier grid; the shelf —
+   TIERS × TIER_PAGES × the store switch — is injected at render time by
+   applyPackagesToPuck on the published page; see the block's docblock).
+   LOCAL, like its siblings — the package stays vendored-untouched. */
+components.PackagesGrid = createPackagesGrid() as unknown as (typeof components)[string];
+
+/* the library rail: ParallaxBand (and the data-bound blocks, TASK-231's
+   RetreatsList + TASK-232's PackagesGrid) join the Layout group, appended
+   at the end (after Divider — the package's array order is never reordered) */
 const categories = base.categories as Record<string, { title?: string; components?: string[]; defaultExpanded?: boolean }>;
 const layout = categories.layout ?? {};
 /* P3's binding blocks join the Actions group, appended the same way */
@@ -118,7 +127,7 @@ export const config = {
   components,
   categories: {
     ...categories,
-    layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList"] },
+    layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid"] },
     actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors"] },
   },
   /* STUDIO P1: page-level SEO lives on the Puck root — plain fields edited
