@@ -1,17 +1,17 @@
 import {
-  verifyFrenLogin,
-  makeFrenToken,
+  verifyMemberLogin,
+  makeMemberToken,
   sessionsFromRequest,
   joinSessionTokens,
-  FREN_COOKIE,
-} from "@/lib/fren-auth";
+  MEMBER_COOKIE,
+} from "@/lib/member-auth";
 import { getEntry } from "@/lib/registry";
 import { OPERATOR_COOKIE } from "@/lib/operator-auth";
 import { spaceForHost } from "@/lib/identity-config";
 
 function sessionCookie(value: string, maxAge: number): HeadersInit {
   return {
-    "Set-Cookie": `${FREN_COOKIE}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`,
+    "Set-Cookie": `${MEMBER_COOKIE}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`,
   };
 }
 
@@ -46,11 +46,11 @@ export async function POST(request: Request) {
      school tag when a key holds both */
   const preferred = spaceForHost(request.headers.get("host")).space;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = await verifyFrenLogin(body.event as any, preferred);
+  const result = await verifyMemberLogin(body.event as any, preferred);
   if (!result.ok) {
     return Response.json(result, { status: 403 });
   }
-  const token = makeFrenToken(result.handle, result.space);
+  const token = makeMemberToken(result.handle, result.space);
   const others = sessionsFromRequest(request)
     .filter((s) => !(s.handle === result.handle && s.space === result.space))
     .map((s) => s.token);
@@ -101,7 +101,7 @@ export async function PUT(request: Request) {
       for (const s of sessions) {
         const owned = await getEntry(s.handle, s.space);
         if (owned?.npub && owned.npub === target.npub) {
-          tokens = [makeFrenToken(handle, space), ...sessions.map((x) => x.token)];
+          tokens = [makeMemberToken(handle, space), ...sessions.map((x) => x.token)];
           break;
         }
       }
@@ -171,7 +171,7 @@ export async function DELETE(request: Request) {
   const headers = new Headers();
   headers.append(
     "Set-Cookie",
-    `${FREN_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`
+    `${MEMBER_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`
   );
   headers.append(
     "Set-Cookie",

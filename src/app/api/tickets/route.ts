@@ -1,4 +1,4 @@
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { listTickets, raiseTicket, type TicketKind } from "@/lib/tickets";
 
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   if (operator) {
     return Response.json({ ok: true, role: "crew", tickets: await listTickets() });
   }
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (fren) {
     const who = `${fren.handle}@${fren.space}`;
     return Response.json({ ok: true, role: "fren", tickets: await listTickets({ raisedBy: who }) });
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
  * it's stamped with their tag.
  */
 export async function POST(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (!fren) {
     return Response.json(
       { ok: false, reason: "claim your tag and sign in to raise a ticket" },

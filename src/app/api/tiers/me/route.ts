@@ -1,4 +1,4 @@
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { getEntry } from "@/lib/registry";
 import { getEntitlement, TIERS, entitlementsConfigured } from "@/lib/entitlement";
 import { roomsForTier, matrixConfigured } from "@/lib/matrix";
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
  * door — it says plainly that nothing is held.
  */
 export async function GET(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (!fren) {
     return Response.json(
       { ok: false, reason: "sign in with your tag first" },

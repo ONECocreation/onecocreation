@@ -12,7 +12,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { liveRoomName, studioVdoLinks, studioGuestCameraLink } from "@/lib/live";
 import { getStudioDoc } from "@/lib/studio/roster";
 import { studioSceneKind, type StudioSceneId } from "@/lib/studio/scenes";
-import { sessionsFromCookieHeader } from "@/lib/fren-auth";
+import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { tierForSubject } from "@/lib/member-tier";
 import { TIERS } from "@/lib/entitlement";
 import { roomGate } from "@/lib/room-access";

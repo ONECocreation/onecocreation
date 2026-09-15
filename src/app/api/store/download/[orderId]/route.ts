@@ -4,7 +4,7 @@ import path from "path";
 import { Readable } from "stream";
 import { head } from "@vercel/blob";
 import { getOrder, getItem } from "@/lib/store";
-import { sessionsFromRequest } from "@/lib/fren-auth";
+import { sessionsFromRequest } from "@/lib/member-auth";
 import { blobStoreEnabled } from "@/lib/registry";
 
 export const dynamic = "force-dynamic";

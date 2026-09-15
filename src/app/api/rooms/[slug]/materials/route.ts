@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { tierForSubject } from "@/lib/member-tier";
 import { ROOMS } from "@/lib/matrix-rooms";
 import { tierSatisfies } from "@/lib/entitlement";
@@ -20,7 +20,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
   const room = ROOMS.find((r) => r.id.slice(1, r.id.indexOf(":")) === slug);
   if (!room) return NextResponse.json({ ok: false, reason: "unknown room" }, { status: 404 });
 
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   const tier = fren ? await tierForSubject(`${fren.handle}@${fren.space}`) : null;
   const open = room.minTier === "all" ? !!fren : !!tier && tierSatisfies(tier, room.minTier);
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { verifyCode, emailAuthConfigured } from "@/lib/email-auth";
 import { validEmail, addSubscriber } from "@/lib/subscribers";
 import { linkMembers } from "@/lib/member-links";
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
  * them, the session stays the key's. Same code machine, no session switch.
  */
 export async function POST(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (!fren) return NextResponse.json({ ok: false, reason: "sign in first" }, { status: 401 });
   if (!emailAuthConfigured()) {
     return NextResponse.json({ ok: false, reason: "email isn't wired yet" }, { status: 503 });

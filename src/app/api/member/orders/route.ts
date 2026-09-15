@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { memberGroup } from "@/lib/member-links";
 import { listOrders, ordersConfigured } from "@/lib/store";
 
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
  * PII purge — contact email does not, by design (privacy call #3).
  */
 export async function GET(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (!fren) return NextResponse.json({ ok: false }, { status: 401 });
   if (!ordersConfigured()) return NextResponse.json({ ok: true, orders: [] });
 

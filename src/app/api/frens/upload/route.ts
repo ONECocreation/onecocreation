@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import { put } from "@vercel/blob";
-import { frenFromRequest } from "@/lib/fren-auth";
+import { memberFromRequest } from "@/lib/member-auth";
 import { blobStoreEnabled } from "@/lib/registry";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +39,7 @@ function safeBaseName(name: string): string {
 }
 
 export async function POST(request: Request) {
-  const fren = frenFromRequest(request);
+  const fren = memberFromRequest(request);
   if (!fren) {
     return NextResponse.json({ ok: false, reason: "sign in first" }, { status: 401 });
   }
