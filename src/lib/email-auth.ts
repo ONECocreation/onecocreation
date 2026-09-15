@@ -3,7 +3,7 @@ import { createHmac, randomInt } from "node:crypto";
 /**
  * EMAIL SIGN-IN (the Admiral's ask, 0018.05.15): a code to your inbox, no
  * keys needed — the reach door beside the sovereign one. The code lives in
- * the vault for ten minutes; the session that follows is a normal fren
+ * the vault for ten minutes; the session that follows is a normal member
  * session in the special space "email", so every "signed in?" check on the
  * site just works. Bitcoin-native identity stays the first door; this one
  * is for the soul who only has an inbox.

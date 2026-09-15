@@ -4,10 +4,9 @@
  * Console tweaks — the SCAR Console v2 header trio's client state:
  *   • THEME — three positions on one seam, each a token-level remap
  *     ([data-console-theme] in globals.css), never a markup fork:
- *       arcade    — Pac's Arcade (default)
+ *       arcade    — the SCAR·LET LCARS bridge (default)
  *       lcars     — the LCARS tribute
- *       cartridge — the brand cartridge: this site's own BrandTheme tokens
- *                   (src/lib/brand/themes/frens-earth.ts — NIGHT GARDEN).
+ *       cartridge — the brand cartridge: this site's own BrandTheme tokens.
  *                   Today it's the house cartridge; the key-resolved
  *                   home-space cartridge (wardrobe → signed nostr note,
  *                   docs/brand-cartridge.md) lands SOON.
@@ -20,7 +19,7 @@
 
 export type ConsoleTheme = "arcade" | "lcars" | "cartridge";
 
-/** the THEME button's cycle order — arcade is home, so it's first */
+/** the THEME button's cycle order — the default theme is home, so it's first */
 export const THEME_ORDER: ConsoleTheme[] = ["arcade", "lcars", "cartridge"];
 
 const THEME_KEY = "scarlet:theme";
@@ -62,7 +61,7 @@ export function setSoundOn(on: boolean): void {
   window.dispatchEvent(new CustomEvent(TWEAKS_EVENT));
 }
 
-/* ── the bleeps (v2 prototype voices, square-wave arcade) ────────────────── */
+/* ── the bleeps (v2 prototype voices, square-wave synth) ────────────────── */
 
 let ctx: AudioContext | null | undefined;
 

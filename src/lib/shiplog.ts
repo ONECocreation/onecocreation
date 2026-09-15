@@ -1,9 +1,16 @@
+import { HOUSE_SEEDS_ENABLED } from "./house-seeds";
+
 /**
  * The ship's log — the daily work summaries, bulleted, riding the SCAR duty
  * roster (Pac, 2026-07-11: "send the logs like you do now, but added to the
  * roster"). Static and committed on purpose: every deploy carries its log,
  * the log survives every store, and the repo IS the record. Newest first.
  * Stamps are block heights — rendered in the BFT standard, marker assumed.
+ *
+ * SHIP_LOG is per-site config (T-270, HB-10): this is the fleet's own log,
+ * rendered only when this deployment opts in (NEXT_PUBLIC_HOUSE_SEEDS=1) —
+ * every clone ships empty rather than showing someone else's war stories on
+ * Love's duty roster.
  */
 
 export interface ShipLogEntry {
@@ -12,7 +19,7 @@ export interface ShipLogEntry {
   bullets: string[];
 }
 
-export const SHIP_LOG: ShipLogEntry[] = [
+const HOUSE_LOG: ShipLogEntry[] = [
   {
     height: 963084,
     title: "THE ESTIMATE RUNG FALLS",
@@ -137,3 +144,7 @@ export const SHIP_LOG: ShipLogEntry[] = [
     ],
   },
 ];
+
+/** The rendered log — empty on every clone unless NEXT_PUBLIC_HOUSE_SEEDS=1
+    asks for the fleet's own history. */
+export const SHIP_LOG: ShipLogEntry[] = HOUSE_SEEDS_ENABLED ? HOUSE_LOG : [];

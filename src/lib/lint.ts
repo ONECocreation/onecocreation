@@ -11,7 +11,7 @@ import { getPalette, getPaletteDawn } from "./brand-palette";
  */
 
 /** Which lane a page slug lives in. Everything on Love's site is the brand
- *  lane except the practice sandbox and (future) /u/ fren pages. */
+ *  lane except the practice sandbox and (future) /u/ member pages. */
 export function laneForSlug(slug: string): Lane {
   if (slug === "practice" || slug.startsWith("practice/") || slug.startsWith("u/")) {
     return "play";

@@ -72,7 +72,7 @@ function config(): { base: string; token: string } | null {
 }
 
 /** The member's matrix id, derived — never asked for. Email members read as
- *  pac.at.pacsarcade.org; key members keep their handle. */
+ *  pac.at.onecocreation.com; key members keep their handle. */
 export function mxidForSubject(subject: string): string {
   const [handle, space] = subject.includes("@")
     ? [subject.slice(0, subject.lastIndexOf("@")), subject.slice(subject.lastIndexOf("@") + 1)]
@@ -98,7 +98,7 @@ export function localpartOf(mxid: string): string {
 /**
  * The bot seat's own user id on the homeserver, asked once (whoami, bot
  * token) and cached for the process. This is the one account no member
- * session may ever land on — the T-133 collision (0018.06.17 a₿): a fren
+ * session may ever land on — the T-133 collision (0018.06.17 a₿): a member
  * handle equal to the bot's localpart minted a JWT straight INTO the bot
  * account, and the room read the Admiral's words as the house's voice.
  */

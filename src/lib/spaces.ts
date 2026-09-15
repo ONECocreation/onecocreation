@@ -1,7 +1,7 @@
 import { effectiveSpacesNode } from "./nodeconfig";
 
 /**
- * Spaces node client — the frens.earth backend's link to THIS deployment's own
+ * Spaces node client — the template backend's link to THIS deployment's own
  * `spaced` node (each space runs its own; see docs/spaces-anchoring.md). All
  * on-chain work — owning @<space>, committing a subspace batch — lives on the
  * node with its wallet; this app only speaks to the node's JSON-RPC and never

@@ -14,10 +14,10 @@ import {
  *
  * - NIP-07: the desktop extension (window.nostr) — the existing door.
  * - NIP-46: a remote signer / bunker — works on iOS and any browser. The
- *   fren's key lives in the bunker; we hold only a throwaway CLIENT key for
+ *   member's key lives in the bunker; we hold only a throwaway CLIENT key for
  *   the encrypted conversation, generated per sign-in and dropped after.
  * - NIP-55: Android signer apps (Amber-class) via the nostrsigner: scheme —
- *   the browser bounces to the signer app, the fren approves, the app
+ *   the browser bounces to the signer app, the member approves, the app
  *   bounces back with the signed event.
  *
  * Every door produces the same signed 22242 challenge and submits to the
@@ -33,7 +33,7 @@ export const CHALLENGE_ENDPOINT: Record<ChallengeKind, string> = {
 };
 
 /** The SAME challenge the NIP-07 path signs — built at sign time so the
-    5-minute freshness window starts when the fren acts, not when the page
+    5-minute freshness window starts when the member acts, not when the page
     loaded. */
 export function challengeTemplate(kind: ChallengeKind): EventTemplate {
   const label = kind === "console" ? "PACS-CONSOLE" : "PACS-LOGIN";
@@ -87,7 +87,7 @@ export async function signTemplateViaBunker(
   if (!bp) {
     throw new Error("that doesn't read as a bunker:// address or a name@domain signer");
   }
-  const clientKey = generateSecretKey(); // throwaway conversation key — never the fren's
+  const clientKey = generateSecretKey(); // throwaway conversation key — never the member's
   const params: BunkerSignerParams = onauth ? { onauth } : {};
   const signer = BunkerSigner.fromBunker(clientKey, bp, params);
   try {
@@ -112,7 +112,7 @@ export interface NostrConnectInvite {
   uri: string;
   /** Resolves with the signed challenge once a signer answers and signs. */
   signed: Promise<VerifiedEvent>;
-  /** Stop waiting (door closed, fren changed their mind). */
+  /** Stop waiting (door closed, member changed their mind). */
   cancel: () => void;
 }
 
