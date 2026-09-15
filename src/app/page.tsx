@@ -1,9 +1,17 @@
 import { headers } from "next/headers";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { tierForSubject } from "@/lib/member-tier";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PopupHost from "@/components/PopupHost";
+import PaletteVars from "@/components/PaletteVars";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
+import { getSiteConfig } from "@/lib/site-config";
+import { applyHomeSwitchesToPuck } from "@/lib/puck-seeds";
 import {
   Hero, About, Packages, Services, Classes, Affirmations, Donations, FreeMeditation, Contact,
 } from "@/components/sections";
@@ -22,11 +30,45 @@ export default async function Home() {
      every email member reads as a guest (found on the shot bench). The
      soul's package comes from the same vault truth; both ride to the hero
      as plain props. A signed-out visitor is null (a known guest), never
-     undefined. */
+     undefined. This ONE read is shared by BOTH branches below (TASK-293). */
   const active = sessionsFromCookieHeader((await headers()).get("cookie"))[0] ?? null;
   const session = active
     ? { handle: active.handle, space: active.space, tier: await tierForSubject(`${active.handle}@${active.space}`) }
     : null;
+
+  /* TASK-293 (0018.06.25 a₿ · block 967,144) — PUCK P4, mirroring
+     /about-/retreats-/packages byte-for-byte: once the Admiral publishes
+     the Puck rebuild (/style/home -> Publish to live), the live / serves
+     it. Until then, today's hand-built sections below are untouched —
+     nothing changes for visitors until he chooses it.
+
+     The hero keeps rendering from CODE on both branches — <Hero
+     session={session}/> carries the signed-in visitor's own weekly-reading
+     door (T-210), per-request per-soul state no static Puck doc can hold;
+     puck-seeds.ts's homeContent carries no Hero block for exactly this
+     reason. The memberships/classes-community/affirmations/services bands
+     follow the SAME site-config switches their sections.tsx twins read —
+     applyHomeSwitchesToPuck resolves them fresh every request, never
+     fossilised into the stored doc (puck-seeds.ts). */
+  const puck = await getPuckPage("home");
+  if (puck) {
+    const switches = await getSiteConfig();
+    const data = applyHomeSwitchesToPuck(puck as Data, switches.features);
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main>
+          <Hero session={session} />
+          <Render config={config} data={data} />
+        </main>
+        <SiteFooter />
+        {/* STUDIO P2: popup host rides both branches of this page */}
+        <PopupHost />
+      </>
+    );
+  }
+
   return (
     <>
       <SiteHeader />

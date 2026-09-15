@@ -16,10 +16,11 @@
  *               /p/<slug> — still editable/publishable as seeds, grouped
  *               under the panel's Archive).
  *
- * HOME IS SEEDED BUT UNWIRED, plainly: src/app/page.tsx never reads the
- * "home" seed — / renders from code today. The manifest still records home
- * as designer (its seed exists and the panel opens it) with the unwired
- * note riding the badge. Do NOT wire it in this lane.
+ * HOME IS WIRED (TASK-293, 0018.06.25 a₿ · block 967,144): src/app/page.tsx
+ * now calls getPuckPage("home") first, today's hand-built sections as the
+ * fallback — the /about-/retreats-/packages shape. Home wears the same
+ * DESIGNER_NOTE every other wired route does; its row stays first (the
+ * front door) for that reason alone, not because it's still a special case.
  *
  * The ShinePages recon's own list stays in src/lib/shinepages-recon.ts
  * (TASK-105's ONE-list law) — the panel's REFERENCE group reads it
@@ -56,8 +57,7 @@ const REFERENCE_NOTE = "reference — Love's original ShinePages page, kept as a
 export const PAGE_STATES: PageStateEntry[] = [
   /* the front door first, then designer + words in route-alphabetical
      order, then the reference shelf in seed order */
-  { path: "/", slug: "home", state: "designer",
-    note: "designer — seeded but unwired: / renders from code today (src/app/page.tsx never reads the home seed); the seed is staged for its own wiring lane" },
+  { path: "/", slug: "home", state: "designer", note: DESIGNER_NOTE },
   { path: "/about", slug: "about", state: "designer", note: DESIGNER_NOTE },
   { path: "/book", slug: "book", state: "designer", note: DESIGNER_NOTE },
   { path: "/classes", slug: "classes", state: "designer", note: DESIGNER_NOTE },

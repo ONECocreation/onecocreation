@@ -276,15 +276,23 @@ const kit = (prefix: string) => {
 
 /* ── home — the whole front walk, section by section ───────────────────── */
 const hm = kit("hm");
-const homeContent: Block[] = [
-  // 1 - the hero (the living sky + light-drawn glyph stay code-side)
-  hm.hero("5 Days", "Leap of Faith", "A Fresh Step Into a New Mindset"),
-  hm.buttons([
-    { label: "Begin the Journey", href: "/packages", variant: "rose" },
-    { label: "Receive the Free Meditation", href: "/#free", variant: "quiet" },
-  ], "center"),
+/** an explicit, stable id override — the switch-visibility filter below
+ *  (applyHomeSwitchesToPuck) finds a band by this id, reorder-safe, the
+ *  same reason retreats/packages inject by block TYPE rather than array
+ *  position. */
+const withId = (b: Block, id: string): Block => { b.props.id = id; return b; };
 
-  // 2 - My Story, the short version (the whole journey lives on /about)
+/* TASK-293 (0018.06.25 a₿ · block 967,144) — NO Hero content block here on
+   purpose: the home hero carries the signed-in visitor's OWN weekly-
+   reading door (weeklyReadingDoor, T-210) — per-request, per-soul state a
+   static Puck seed can never hold honestly. src/app/page.tsx renders the
+   real <Hero session={session}/> from sections.tsx on BOTH branches,
+   always, above whatever this content renders. The seed's earlier
+   Hero+Buttons pair (stale "5 Days / Leap of Faith" copy, pre-T-119's
+   "Welcome to the Heart Field" rewrite) is retired here rather than kept
+   stale — never fossilised. */
+const homeContent: Block[] = [
+  // 1 - My Story, the short version (the whole journey lives on /about)
   hm.band("plain", "theme", [
     hm.eyebrow("Smiles, Love", "center"),
     hm.heading("My Story", "h2", "center"),
@@ -292,19 +300,23 @@ const homeContent: Block[] = [
       [hm.img(cartridge.portraits.headshot, "Love — founder of One Cocreation", 320, "round", "center")],
       [
         hm.text("I have been a solo adventurer for a while now — like most, on the hero’s journey. Over time I found none of us are here to shrink, but to standout. Not here to separate, but to gather together — to bring kindness to the world, to be unapologetically US."),
-        hm.quote("“To those drawn by the energy of the soul, Welcome Home. You Are the Bridge, Where Heaven and Earth Meet.”", "left"),
-        hm.button("Read my full story →", "/about", "quiet", "left"),
+        hm.quote("“To those drawn by the energy of the soul, Welcome Home. You Are the Bridge, Where Heaven and Earth Meet”", "left"),
+        // TASK-119 [AMBER] rose line, sections.tsx:160 — carried verbatim
+        hm.text("It will all be right here.", "left", st({ color: "rose" })),
+        hm.button("Read my full story", "/about", "quiet", "left"),
       ],
       40,
       "center",
     ),
   ]),
 
-  // 3 - the memberships shelf (prices/sats single-sourced in entitlement.ts)
-  hm.band("plain", "theme", [
+  // 2 - the memberships shelf (prices/sats single-sourced in entitlement.ts)
+  withId(hm.band("plain", "theme", [
     hm.eyebrow("The Heart Field — Where Heaven and Earth Meet", "center"),
     hm.heading("Memberships", "h2", "center"),
-    hm.text("Three ways into the field — each includes everything before it. Pay monthly in dollars or in bitcoin; your tier gently becomes your key.", "center"),
+    // PACKAGE_DOORS_WORDS (sections.tsx) carried verbatim, not imported —
+    // this seed's own convention keeps every other number/word a literal too
+    hm.text("Three ways into the field — each includes everything before it. Pay monthly in dollars or in bitcoin. Your package opens its doors.", "center"),
     hm.threecol(
       [hm.panel([
         hm.img(cartridge.tierArt.A, "Weekly Intuitive", 300, "soft", "center"),
@@ -316,7 +328,12 @@ const homeContent: Block[] = [
           "Meditations, toning, light language",
           "A held energetic field, in community",
         ]),
-        hm.button("YES! →", "/packages/weekly-intuitive", "gold", "center"),
+        // Seam (not blocking): the live card's door swaps between this
+        // direct link (rails ON, tierRailsOn) and a waitlist form (rails
+        // OFF) — a live switch a generic Button block can't reproduce; the
+        // about page's own "YES!" tier link carries the same simplification
+        // (always a direct link, never gated). This door always works.
+        hm.button("See the package", "/packages/weekly-intuitive", "gold", "center"),
       ])],
       [hm.panel([
         hm.img(cartridge.tierArt.B, "Observer", 300, "soft", "center"),
@@ -328,7 +345,7 @@ const homeContent: Block[] = [
           "Weekly live meetup in Love's room",
           "Movement, meditation & navigation",
         ]),
-        hm.button("YES! →", "/packages/observer", "gold", "center"),
+        hm.button("See the package", "/packages/observer", "gold", "center"),
       ])],
       [hm.panel([
         hm.img(cartridge.tierArt.C, "Evening Star", 300, "soft", "center"),
@@ -340,14 +357,14 @@ const homeContent: Block[] = [
           "Quantum healing & reference tools",
           "All classes + full community",
         ]),
-        hm.button("YES! →", "/packages/evening-star", "gold", "center"),
+        hm.button("See the package", "/packages/evening-star", "gold", "center"),
       ])],
     ),
     hm.note("How the gate works: pay in bitcoin (or dollars) → your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing."),
-  ]),
+  ]), "home-memberships"),
 
-  // 4 - the Heart Field — rooms, tier-gated
-  hm.band("plain", "theme", [
+  // 3 - the Heart Field — rooms, tier-gated
+  withId(hm.band("plain", "theme", [
     hm.eyebrow("The Heart Field", "center"),
     hm.heading("Classes & Community", "h2", "center"),
     hm.text("Your own luminous rooms — powered by Matrix — an open protocol; your rooms, your keys. Tier-gated: your package opens the doors.", "center"),
@@ -370,12 +387,12 @@ const homeContent: Block[] = [
         ], "none"),
       ])],
     ),
-    hm.button("Enter your rooms →", "/classes", "gold", "center"),
+    hm.button("Enter your rooms", "/classes", "gold", "center"),
     hm.note("Matrix-powered — paying for a package sends your invite automatically, One Cocreation-branded (replacing Patreon / Mighty Networks / Kajabi). Your rooms, your keys."),
-  ]),
+  ]), "home-classes-community"),
 
-  // 5 - the recorded affirmations
-  hm.band("plain", "theme", [
+  // 4 - the recorded affirmations
+  withId(hm.band("plain", "theme", [
     hm.eyebrow("With Love, Recorded", "center"),
     hm.heading("Guided Affirmations", "h2", "center"),
     hm.text("Recorded meditations to nurture the New You. Each payable in bitcoin.", "center"),
@@ -402,35 +419,37 @@ const homeContent: Block[] = [
         hm.button("Add ⚡", "/store", "quiet", "center"),
       ])],
     ),
-  ]),
+  ]), "home-affirmations"),
 
-  // 6 - ConsciousCuts, LAST among the offerings (Love's meeting, 0018.05.11)
-  hm.band("sky-veil", skyHold, [
-    hm.heading("ConsciousCuts & Waxing 🦋", "h2", "center", st({ color: "ink" })),
+  // 5 - ConsciousCuts/Sessions, LAST among the offerings (Love's meeting,
+  // 0018.05.11) — the heading text itself follows `cuts` on the live JSX
+  // (Services(), sections.tsx:356); the seed's literal default is the
+  // switches' OWN default (cuts off ⇒ "Sessions with Love"),
+  // applyHomeSwitchesToPuck swaps it at render time, matching the fallback.
+  withId(hm.band("sky-veil", skyHold, [
+    hm.heading("Sessions with Love", "h2", "center", st({ color: "ink" })),
     hm.text("The Way of the Heart, one-on-one. Sessions where you don’t have to keep up conversation. Pick a time — you’re held.", "center", st({ color: "muted" })),
     hm.note("── live sessions shelf stays code-side (the real booking cards) ──"),
     hm.text("Pick a session → choose a real open time → pay in sats or dollars → confirmed with a calendar file, held with love.", "center", st({ color: "muted", size: 15 })),
-  ]),
+  ]), "home-services"),
 
-  // 7 - tend the field
+  // 6 - tend the field
   hm.band("sky-warm", "theme", [
     hm.panel([
       hm.eyebrow("Support This Work — Gently ⚡"),
       hm.heading("Tend the Field", "h2"),
       hm.rich("A gift lands with Love <b style=\"color:var(--gold-deep)\">whole</b> — no platform between, no cut taken. Give in bitcoin over lightning or simply in dollars; bitcoin is an option here, never a demand."),
       hm.note("── live tip jar stays code-side ──"),
-      hm.eyebrow("Where Pay It Forward Flows 🎁"),
-      hm.text("The Pay-It-Forward jar doesn’t stop here — Love passes it onward to the beings holding this Earth together."),
+      hm.heading("Three Doors", "h3"),
+      hm.text("Give forward, follow along, read with me."),
       hm.note("── live wild doors stay code-side ──"),
       hm.buttons([
-        { label: "Book a Session", href: "/book", variant: "quiet" },
-        { label: "Visit the Store", href: "/store", variant: "quiet" },
-        { label: "The Full Support Room →", href: "/support", variant: "quiet" },
+        { label: "The Full Support Room", href: "/support", variant: "quiet" },
       ], "left"),
     ]),
   ]),
 
-  // 8 - the free meditation
+  // 7 - the free meditation
   hm.band("plain", "theme", [
     hm.twocol(
       [hm.img("/images/newsletter.webp", "Free guided meditation", 420, "soft", "center")],
@@ -446,13 +465,63 @@ const homeContent: Block[] = [
     ),
   ]),
 
-  // 9 - connect & book
+  // 8 - connect & book
   hm.band("plain", "theme", [
     hm.eyebrow("E.T. Phone Home", "center"),
-    hm.heading("Connect & Book", "h2", "center"),
+    hm.heading("Connect", "h2", "center"),
     hm.note("── live contact doors stay code-side ──"),
   ]),
 ];
+
+/** TASK-293 (0018.06.25 a₿ · block 967,144) — the render-time switch filter:
+ *  four of the bands above stand behind the SAME site-config switches their
+ *  sections.tsx twins read (Packages()/Classes()/Affirmations()/Services())
+ *  — never fossilised into the stored doc, resolved fresh on every request
+ *  exactly like applyRetreatsToPuck/applyPackagesToPuck's live injection.
+ *  No new Puck block, no puck-config.tsx change: this only removes/edits
+ *  the seed's own generic Band/Heading blocks by their stable ids.
+ *
+ *  KNOWN SIMPLIFICATION (Seam, not blocking — see SUMMARY.md): the live
+ *  Classes()/Community JSX hides EACH card independently when only one of
+ *  `classes`/`community` is on; this filter hides the whole band only when
+ *  BOTH are off (today's actual default), leaving both cards showing
+ *  whenever either switch is on. Untouched-path law: no switch changes
+ *  anything ⇒ the same `data` reference comes back. */
+export function applyHomeSwitchesToPuck<T extends { content?: unknown[] }>(
+  data: T,
+  switches: { memberships: boolean; classes: boolean; community: boolean; store: boolean; sessions: boolean; cuts: boolean },
+): T {
+  const current = Array.isArray(data.content) ? (data.content as Block[]) : [];
+  const hideIds = new Set<string>();
+  if (!switches.memberships) hideIds.add("home-memberships");
+  if (!switches.classes && !switches.community) hideIds.add("home-classes-community");
+  if (!switches.store) hideIds.add("home-affirmations");
+  if (!switches.sessions && !switches.cuts) hideIds.add("home-services");
+
+  let touched = false;
+  const content = current
+    .filter((b) => {
+      const id = b.props?.id as string | undefined;
+      if (id && hideIds.has(id)) { touched = true; return false; }
+      return true;
+    })
+    .map((b) => {
+      if (b.props?.id !== "home-services" || hideIds.has("home-services")) return b;
+      const inner = Array.isArray(b.props.content) ? (b.props.content as Block[]) : [];
+      const wantText = switches.cuts ? "ConsciousCuts & Waxing 🦋" : "Sessions with Love";
+      let headingTouched = false;
+      const nextInner = inner.map((c) => {
+        if (c.type !== "Heading" || c.props.text === wantText) return c;
+        headingTouched = true;
+        return { ...c, props: { ...c.props, text: wantText } };
+      });
+      if (!headingTouched) return b;
+      touched = true;
+      return { ...b, props: { ...b.props, content: nextInner } };
+    });
+
+  return touched ? ({ ...data, content } as T) : data;
+}
 
 /* ── book — the Sessions door: night hero + the living 2×2 ──────────────── */
 const bk = kit("bk");
