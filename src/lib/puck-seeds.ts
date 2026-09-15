@@ -767,6 +767,55 @@ const termsContent: Block[] = [
   ]),
 ];
 
+/* ── bday — the Bitcoin Birthday door, an honest placeholder ────────────── */
+const bd = kit("bd");
+const bdayContent: Block[] = [
+  /* TASK-295 wave A pair 6 (0018.06.25 a₿ · block 967,188): /bday becomes a
+     designer page. The words are transcribed VERBATIM from
+     src/app/bday/page.tsx (the fallback, NOT edited — the words law). Pure
+     prose: no images, no buttons, no forms, no live data (the page exists
+     BECAUSE the modeled birth-block reading stays off this site — the
+     0018.05.26 a₿ dashes-over-estimates ruling). Two documented
+     approximations: the fallback wraps the page in <DisplayFonts> (the Puck
+     blocks wear the site fonts — nothing to transcribe), and the blurb's
+     inline /time link rides the RichText html field as a real anchor — a
+     small stretch of the package's documented inline set (b/i/br/span),
+     same dangerouslySetInnerHTML render path, noted here. */
+  bd.band("plain", "theme", [
+    bd.eyebrow("One Cocreation The Bitcoin Birthday checker"),
+    bd.heading("When were you born, in bitcoin time?", "h1"),
+    bd.rich("The checker that answered this has moved with the time kit to its own world — it reads a modeled birth block, and this site only shows what the chain can vouch for. It returns with this door's new face. The plain live reading keeps ticking at <a href=\"/time\">/time</a>.", "left", st({ color: "muted", size: 15 })),
+  ]),
+];
+
+/* ── time — the clock door: static words + the LIVE read, said ───────────── */
+const tc = kit("tc");
+const timeContent: Block[] = [
+  /* TASK-295 wave A pair 6 (0018.06.25 a₿ · block 967,188): /time's seed is
+     written but the ROUTE STAYS WORDS — the expected flag-and-stop (K36).
+     The page's live BFT read (block height → 00YY.MM.DD a₿, live-or-dashes)
+     is live data: it must NEVER fossilise into a stored doc, and the
+     designer branch needs a data-bound block to hold its place honestly.
+     That block does not exist yet — the proposed diff (a local
+     src/lib/puck-blocks/ block + registry + copilot mirror) is in this
+     lane's SUMMARY; puck-config.tsx/copilot.ts are untouched, and
+     src/app/time/page.tsx is NOT wired. Until the block lane lands, the
+     note below says where the clock stands. The static words are transcribed
+     VERBATIM from src/app/time/page.tsx (the fallback, NOT edited). The
+     paper link rides the RichText html field as a real anchor (the same
+     documented inline-set stretch as /bday's, noted there); the mono
+     small-caps styling of the link and the "tick tock" line is the mgmt
+     chrome, beyond the block vocabulary (documented). */
+  tc.band("plain", "theme", [
+    tc.eyebrow("The time door"),
+    tc.heading("The clock that syncs to the block, not the sun", "h1"),
+    tc.text("Bitcoin Federated Time, plainly: the canonical date and the live block height. The orrery that used to perform here has gone home to its own world — a new face for this door is being drawn.", "left", st({ color: "muted", size: 15, spaceBelow: 10 })),
+    tc.note("── the live BFT clock stays code-side (the canonical date + the boxed-star height, live-or-dashes — never fossilised; the data-bound block lane is proposed in this pair's SUMMARY) ──"),
+    tc.rich("<a href=\"https://github.com/PacsArcade/bitcoin-federated-time\">read the paper on GitHub</a>", "left", st({ size: 13 })),
+    tc.text("tick tock, it all comes back to the block", "center", st({ color: "muted", size: 12, kerning: 4, spaceAbove: 40 })),
+  ]),
+];
+
 /*
  * ── the "(old)" seeds — Love's ORIGINAL ShinePages pages, transcribed from
  * the 0018.05.20 capture (docs/shinepages-capture-manifest.md, screenshots in
@@ -1792,6 +1841,18 @@ export const SEEDS: Record<string, PuckPageData> = {
   media: { content: mediaContent, root: { props: {
     title: "Media & assets — One Cocreation",
     description: "Copy bitcoin glyphs (₿, sats, a₿, ★, ⚡) and One Cocreation brand assets — the mark, wordmark, palette, and a press blurb. No trip to emojipedia required.",
+  } } },
+  /* T-295 pair 6: /bday mirrors its hand-built metadata verbatim. /time's
+     seed exists (the static words + the code-side note) but the ROUTE
+     STAYS WORDS — the flag-and-stop until the data-bound clock block lane
+     lands; its metadata mirrors verbatim too. */
+  bday: { content: bdayContent, root: { props: {
+    title: "Bitcoin Birthday — One Cocreation",
+    description: "The Bitcoin Birthday checker has moved with the time kit — it returns with this door's new face.",
+  } } },
+  time: { content: timeContent, root: { props: {
+    title: "The Clock — Bitcoin Federated Time — One Cocreation",
+    description: "Bitcoin Federated Time, plainly: the canonical date and the live block height — read from the chain, never estimated.",
   } } },
   /* STUDIO P2: the popup lane. THE ONE REAL POPUP — the rebuild of the
      original platform's only popup ("Free Guide"), retargeted to the Free
