@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   title: "Page not found — One Cocreation",
 };
 
-/** The lost page, in Love's voice — de-housed 0018.05.15 (the arcade
- *  cabinet 404 was the last frens residue the live sweep could find). */
+/** The lost page, in Love's voice — de-housed 0018.05.15 (the old template
+ *  cabinet 404 was the last template-brand residue the live sweep could find). */
 export default function NotFound() {
   return (
     <main className="mgmt-ground">

@@ -7,7 +7,7 @@ import useFrenSession, { applyFrenSession } from "@/hooks/useFrenSession";
 /**
  * FREE THE NAME — the right of exit, own profile only, and only while the
  * anchor is pending. Releasing puts the name back in the pool and removes
- * the verified nostr address; the fren's key and posts are untouched (we
+ * the verified nostr address; the member's key and posts are untouched (we
  * never owned those). Once etched, names are permanent — this section
  * simply doesn't render for committed entries.
  */

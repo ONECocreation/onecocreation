@@ -15,7 +15,7 @@ export const metadata: Metadata = {
  * (transplant/frens-earth-time/ — it was the "full ceremony" of the time
  * kit's converters, and its birth-block reading is a modeled estimate,
  * which the fleet ruling (0018.05.26 a₿: dashes over estimates) keeps off
- * this site's surfaces). The checker lives on under the arcade's own laws
+ * this site's surfaces). The checker lives on under the template's own laws
  * in the kit; this page stays as an honest door until Love's new time face
  * is drawn. Nothing here renders a synthetic height.
  */

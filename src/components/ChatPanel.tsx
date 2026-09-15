@@ -5,13 +5,15 @@ import { bftDateTime, currentBlockInfo, type BlockInfo } from "@/lib/bb/bft";
 
 /**
  * The chat floor — link this deployment to its orbee door (chat.frens.earth
- * by default). Mirrors the arcade's pattern for chat.pacsarcade.org: orbee is
+ * by default; the default URL itself changes only with a house-domain
+ * ruling). Mirrors the same door-not-embed pattern the old template used
+ * for its own chat host: orbee is
  * the nostr NIP-29 group-chat floor and its domain is a DOOR, not an embed —
  * fabric-web resolves tags live, nothing to provision. Same node-link rail as
  * Spaces/MUD: POINT · SAVE · TEST, then OPEN THE CHAT in a new tab (links off
  * the console never steal your place). The door goes through /chat — the
- * fren-session gate — never the raw node URL: the floor is for signed-in
- * frens, and the gate is the one that checks.
+ * member-session gate — never the raw node URL: the floor is for signed-in
+ * members, and the gate is the one that checks.
  */
 
 interface ChatStatus {
@@ -230,8 +232,8 @@ export default function ChatPanel() {
           </div>
         </div>
 
-        {/* the door itself — through /chat, the fren-session gate: signed-in
-            frens bounce on to the node above, anonymous visitors meet /login.
+        {/* the door itself — through /chat, the member-session gate: signed-in
+            members bounce on to the node above, anonymous visitors meet /login.
             Never the raw node URL. A new tab; links off the console never
             steal your place. */}
         <a
@@ -243,7 +245,7 @@ export default function ChatPanel() {
         >
           OPEN THE CHAT </a>
         <p className="text-center font-pixel text-[9px] uppercase text-white/40">
-          THE DOOR IS /chat — THE FREN GATE. THE NODE ITSELF IS NEVER LINKED RAW.
+          THE DOOR IS /chat — THE SIGN-IN GATE. THE NODE ITSELF IS NEVER LINKED RAW.
         </p>
       </div>
     </div>

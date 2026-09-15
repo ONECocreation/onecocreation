@@ -16,9 +16,9 @@ export const shortNpub = (n: string) => (n.length > 15 ? `${n.slice(0, 7)}…${n
 
 /**
  * The /bb front door + hatchery. Bitcoin Buddies work with ANY nostr key
- * (Pac, 2026-07-10): a fren session npub is used when present, otherwise a
+ * (Pac, 2026-07-10): a member session npub is used when present, otherwise a
  * one-tap NIP-07 connect (window.nostr) lets any key in. Non-tag-holders get a
- * "claim a @frens tag" upsell. Buddies persist per npub (localStorage v1), which
+ * "claim a @onecocreation tag" upsell. Buddies persist per npub (localStorage v1), which
  * maps onto the BUDDY_DEFINITION/BUDDY_STATE nostr events when that wiring lands.
  */
 export default function BbConsole() {
@@ -126,7 +126,7 @@ export default function BbConsole() {
     );
   }
 
-  // ── no key yet → connect any nostr key (or claim a @frens tag) ──
+  // ── no key yet → connect any nostr key (or claim a @onecocreation tag) ──
   if (!npub) {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-6 text-center">

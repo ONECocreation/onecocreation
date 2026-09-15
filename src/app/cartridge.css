@@ -2,7 +2,7 @@
    THE BRAND CARTRIDGE — One Cocreation (celestial + luminous).
    TASK-121 THE PINK PASS (0018.06.16 a₿): the gold family pours ROSE
    values now — Love: "all buttons and pages like that popup." The
-   arcade law "gold = money only" never applied to Love's cartridge
+   template's law "gold = money only" never applied to Love's cartridge
    (spec note); the token NAMES stay, the values are the popup's pink.
 
    Split from onecocreation.css (cartridge walk step 8, Admiral's walk,
@@ -209,7 +209,7 @@
   --color-void:#0a0a14; --color-panel:rgba(22,18,40,.66); --color-edge:rgba(168,130,240,.22);
   --color-coin:#D9B24E; --color-neon:#8B76C4; --color-cyan:#9B26D6;
   --color-ghost:#C56E8B; --color-pink:#C42EC9;
-  /* the arcade legacy base (globals.css links / .button / header edge) —
+  /* the template legacy base (globals.css links / .button / header edge) —
      --secondary and --foreground have no live readers left (house.css owns
      .card and body) but ride along verbatim, as the provider emitted them */
   --background:#0a0a14; --foreground:#FBF6EF; --primary:#D9B24E;

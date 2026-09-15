@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 /**
- * GAME OVER as an invitation, not an ending: no fren holds this tag, so it
+ * GAME OVER as an invitation, not an ending: no member holds this tag, so it
  * might be free — press start and take it. The registration link pre-fills
  * the searched tag. Reserved names get the honest version instead of a
  * "might be free" promise the claim API would immediately break.

@@ -22,7 +22,7 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
   /* The one honest line: an email door is signed in on this browser (any
      slot — the door switcher, a key login or an order claim can move it),
      but it isn't on the operator allowlist. Never names the env or shows
-     any value but the fren's own address, which the browser already knows. */
+     any value but the member's own address, which the browser already knows. */
   useEffect(() => {
     fetch("/api/admin/session")
       .then((r) => r.json())

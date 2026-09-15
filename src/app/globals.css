@@ -1,5 +1,5 @@
 @import "tailwindcss";
-/* One brand, every cabinet: tokens, glows, motion, easy mode, and arcade
+/* One brand, every cabinet: tokens, glows, motion, easy mode, and console
    themes come from the shared kit. App-specific ceremony effects stay below. */
 @import "@pacsarcade/arcade-ui/tailwind";
 /* Tailwind v4 does not scan node_modules — without this, utilities used
@@ -11,7 +11,7 @@
   --foreground: #ffffff;
   --primary: #FFD700; /* Pacman yellow */
   --secondary: #1a1a1a;
-  --accent: #E91E63; /* Arcade pink */
+  --accent: #E91E63; /* magenta accent */
   --border: #333333;
 }
 
@@ -105,9 +105,9 @@ header > div.border-t-2 { display: none; }
 .nsec-reveal { animation: unblur-blocky 1.3s steps(6, end) forwards; }
 
 /* ── THE CREW ENTRANCE — the velvet rope on the homepage ──────────────────
-   An arcade-marquee doorway to the operator console (/a): chase bulbs across
+   A marquee doorway to the operator console (/a): chase bulbs across
    the lintel, heartlight rope colours, deep-loam ground — the night-garden
-   palette of the old house brand theme (the frens-earth set, retired with
+   palette of the retired house palette (retired with
    the sign-in kit S8 0018.05.26; the values live here now). Honest by
    design: the card itself says the door is a sign-in gate. Bulbs hold still
    under prefers-reduced-motion. */
@@ -223,6 +223,24 @@ p {
   text-wrap: pretty;
 }
 
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Header & Nav — scoped against template-chrome collisions (T-271, L4 close
+   of §4b). The old template's bare `header{}`/`footer{}` selectors used to
+   paint every <header>/<footer> in the tree (the black band over the menu,
+   a T-121-era incident); `header.site-header` and `header.mgmt-head`
+   already win on specificity in house.css (kept below as defense-in-depth),
+   but excluding those chrome classes here closes the collision at its
+   source instead of only patching each known casualty. `a{}`/`a:hover{}`
+   are the same bare-element species — audited in the same pass, no
+   collision on record, kept as the site's base link color. The dead
+   `.nav-links`/`.nav-toggle`/`header nav` block that used to sit here
+   rendered nowhere (zero JSX uses those classes, grep-verified 0018.06.24)
+   and is gone. */
 a {
   color: var(--primary);
   text-decoration: none;
@@ -233,14 +251,7 @@ a:hover {
   color: var(--accent);
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-}
-
-/* Header & Nav */
-header {
+header:not(.site-header):not(.mgmt-head) {
   padding: 1.5rem 0;
   border-bottom: 2px solid var(--border);
   background-color: rgba(0, 0, 0, 0.8);
@@ -248,84 +259,6 @@ header {
   top: 0;
   z-index: 100;
   backdrop-filter: blur(10px);
-}
-
-.nav-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.5rem;
-}
-
-.nav-logo {
-  font-size: 1.2rem;
-  color: var(--primary);
-}
-
-.nav-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 2rem;
-  list-style: none;
-}
-
-.nav-links a {
-  font-size: 0.9rem;
-  color: var(--foreground);
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.nav-links a:hover {
-  color: var(--primary);
-}
-
-/* Mobile nav: the link row collapses into a hamburger dropdown */
-.nav-toggle {
-  display: none;
-  background: none;
-  border: 2px solid var(--border);
-  color: var(--foreground);
-  font-size: 1.1rem;
-  line-height: 1;
-  padding: 0.4rem 0.65rem;
-  cursor: pointer;
-}
-
-.nav-toggle:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
-@media (max-width: 720px) {
-  .nav-toggle {
-    display: block;
-  }
-
-  header nav {
-    width: 100%;
-  }
-
-  .nav-links {
-    display: none;
-    flex-direction: column;
-    gap: 0;
-    width: 100%;
-  }
-
-  .nav-links.open {
-    display: flex;
-  }
-
-  .nav-links li {
-    border-top: 1px dashed var(--border);
-  }
-
-  .nav-links a {
-    display: block;
-    padding: 0.85rem 0;
-  }
 }
 
 /* Sections */
@@ -345,7 +278,7 @@ section {
 }
 
 .hero h1 {
-  /* scales down so the nowrap "Pac's Arcade!" line fits small screens */
+  /* scales down so the nowrap brandmark line fits small screens */
   font-size: clamp(1.15rem, 5.5vw, 3rem);
   color: var(--primary);
   margin-bottom: 1.5rem;
@@ -443,8 +376,10 @@ section {
   min-height: 150px;
 }
 
-/* Footer */
-footer {
+/* Footer — same collision scoping as the header above (T-271, L4 §4b
+   close); `.site-footer` already wins on specificity in house.css, kept as
+   defense-in-depth. */
+footer:not(.site-footer) {
   padding: 3rem 0;
   text-align: center;
   background-color: #050505;
@@ -722,10 +657,10 @@ footer {
    A TOKEN-LEVEL remap only ([data-console-theme="lcars"] on the shell root),
    never a markup fork (design-team law): the LCARS palette rides the same
    semantic slots (coin=money, neon=live, cyan=info, ghost=danger, pink=flair),
-   the pixel/arcade faces swap to the condensed sans LCARS speaks, glows go
+   the display faces swap to the condensed sans LCARS speaks, glows go
    quiet, corners go round, and the tiny pixel-font sizes step up because the
-   condensed face needs the room. Pac's Arcade (no attribute / "arcade")
-   stays the default skin.
+   condensed face needs the room. The default console skin stays (no
+   attribute / "arcade").
    ========================================================================== */
 
 [data-console-theme="lcars"] {
@@ -808,7 +743,7 @@ footer {
    THE BRAND CARTRIDGE — the theme seam's THIRD position (the dressing room's
    "insert a cartridge" made real on the shell). A TOKEN-LEVEL remap only,
    same law as the LCARS tribute: the values are this site's old house brand
-   theme — the NIGHT GARDEN (the frens-earth BrandTheme set, retired with
+   theme — the NIGHT GARDEN (the retired house BrandTheme set, retired with
    the sign-in kit S8 0018.05.26; the hexes live below now) — mapped onto the
    house semantic slots (harvest gold = money ONLY, sprout = live,
    verification teal = info, ember = danger, 💜 heartlight = flair). Fonts
@@ -819,7 +754,7 @@ footer {
    ========================================================================== */
 
 [data-console-theme="cartridge"] {
-  /* the night-garden tokens, verbatim (the retired frens-earth set) */
+  /* the night-garden tokens, verbatim (the retired house set) */
   --color-void: #0d1210;
   --color-panel: #151d18;
   --color-edge: #2f4033;
@@ -860,17 +795,19 @@ footer {
 }
 
 /* The split-flap FLIP CLOCK (.fclk-*) and the pac-lap badge (.bft-pac) styles
-   moved OUT with the time-experience transplant (0018.05.26 a₿) —
-   transplant/frens-earth-time/components/time/flip-clock.css. Nothing in
+   moved OUT with the time-experience transplant (0018.05.26 a₿) — the
+   old-brand time kit's transplant/frens-earth-time/components/time/flip-clock.css
+   (real path, kept verbatim). Nothing in
    src/ wears those classes anymore. */
 
 /* ═══════════════════════════════════════════════════════════════════════
    SITE CONSOLE CHROME  —  the operator rooms inside the artist's own site
-   (SiteConsoleShell; CONSOLE_CHROME=site). Deliberately NOT arcade: rounded
-   cards, a serif, cream ground, air. A wellness practice is a different
-   design language from an arcade, and a recolour of LCARS can't get there.
+   (SiteConsoleShell; CONSOLE_CHROME=site). Deliberately not the template
+   look: rounded cards, a serif, cream ground, air. A wellness practice is a
+   different design language from a game-skin console, and a recolour of
+   LCARS can't get there.
 
-   Every value reads the SITE's OWN brand token first with an arcade-safe
+   Every value reads the SITE's OWN brand token first with a kit-safe
    fallback, so a clone that defines --serif / --cream / --ink / --gold in
    its globals.css — as onecocreation already does — wears its own face here
    with no edits to this file.
@@ -963,7 +900,7 @@ footer {
 .mgmt-body { font-family: var(--sans, inherit); }
 
 /* Soften the rooms themselves. The room pages are shared with the SCAR
-   shell and carry arcade utility classes; rather than fork every page, the
+   shell and carry kit utility classes; rather than fork every page, the
    site chrome restyles the few primitives they use. Scoped under
    .mgmt-body so the LCARS bridge is untouched. */
 /* FONT TRIO split (0018.05.17) — was one blanket var(--serif) rule; now
@@ -989,7 +926,7 @@ footer {
 
 .mgmt-body [class*="text-cyan"] { color: var(--purple, #9B26D6) !important; }
 .mgmt-body [class*="text-amber"] { color: var(--rose, #C56E8B) !important; }
-/* arcade rooms speak white-on-void; on the site's cream ground that's
+/* kit rooms speak white-on-void; on the site's cream ground that's
    invisible ink and charcoal boxes. Repaint both, scoped as ever. */
 .mgmt-body [class*="text-white"] { color: var(--ink, #E9E2F2) !important; }
 .mgmt-body [class*="bg-black"],

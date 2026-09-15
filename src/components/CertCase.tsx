@@ -1,4 +1,5 @@
 import { certCase, type Cert } from "@/lib/certs";
+import { cartridge } from "@/brand/cartridge";
 
 /**
  * CertCase — a cert as NES-era box art. Most certs ship in the grey cart;
@@ -66,7 +67,7 @@ export default function CertCase({ cert }: { cert: Cert }) {
       )}
       {/* brand strip, like the old top-of-box publisher band */}
       <p className={`mb-1 font-pixel text-[7px] uppercase tracking-widest ${s.text}`}>
-        PAC&apos;S ARCADE · CERT
+        {cartridge.copy.productName.toUpperCase()} · CERT
       </p>
       {/* label window — the box art */}
       <div className={`border-2 px-2 py-4 text-center ${s.label}`}>
