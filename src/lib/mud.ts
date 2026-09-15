@@ -1,5 +1,5 @@
 /**
- * MUD node client — the frens.earth backend's link to THIS deployment's own
+ * MUD node client — the template backend's link to THIS deployment's own
  * P.O.K.E. MUD node (knowledge-engine). Like the `spaced` node, the MUD runs
  * as a companion daemon (its admin API on :4001); the app only points at it,
  * tests the link, and reads status — the heavy engine + LLM hookups stay on

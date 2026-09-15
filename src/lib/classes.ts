@@ -1,13 +1,13 @@
 /**
- * The Foundation Series seed — the arcade's front door. One cert rune per
- * completed class; ALL of them together open the artist gate on the profile.
- * The live course records live in the course store (lib/courses.ts, written
- * by the operator console); this file seeds it and pins the artist-gate
- * requirement so the two can never drift.
+ * The Foundation Series seed — the front door into the classes. One cert
+ * rune per completed class; ALL of them together open the artist gate on
+ * the profile. The live course records live in the course store
+ * (lib/courses.ts, written by the operator console); this file seeds it and
+ * pins the artist-gate requirement so the two can never drift.
  *
  * Round 4.1 curriculum: level 2 is THE SOCIAL LAYER (nostr keys + Matrix
- * rooms + frens.earth) — rune renamed NOSTR101 → SOCIAL101 before anything
- * etched, so no on-chain history breaks.
+ * rooms + onecocreation.com) — rune renamed NOSTR101 → SOCIAL101 before
+ * anything etched, so no on-chain history breaks.
  */
 
 /** The registration on/off switch, per class — the page never lies about
@@ -46,9 +46,9 @@ export const FOUNDATION_COURSES: Course[] = [
     bullets: [
       "+ What money is — and where it leaks",
       "+ Keys, blocks, and the 21M cap",
-      "+ Sats: the arcade's coin of the realm",
+      "+ Sats: bitcoin's coin of the realm",
     ],
-    format: "LIVE WITH PACMAN · ARCADE FLOOR · 4 SESSIONS",
+    format: "LIVE WITH LOVE · 4 SESSIONS",
     capacity: 24,
     schedule: [],
     registration: "soon",
@@ -63,9 +63,9 @@ export const FOUNDATION_COURSES: Course[] = [
       "+ The signing popup, decoded — never sign what you can't read",
       "+ Relays: many doors, no landlord",
       "+ Matrix rooms: where the classes live",
-      "+ Your verified address on frens.earth",
+      "+ Your verified address on onecocreation.com",
     ],
-    format: "LIVE WITH PACMAN · FLOOR + ONLINE · 3 SESSIONS",
+    format: "LIVE WITH LOVE · ONLINE · 3 SESSIONS",
     capacity: 24,
     schedule: [],
     registration: "soon",
@@ -81,7 +81,7 @@ export const FOUNDATION_COURSES: Course[] = [
       "+ Cert care: where etched certs live and stay safe",
       "+ Level up: multisig — two keys to open the chest (Nunchuk)",
     ],
-    format: "LIVE WITH PACMAN · ARCADE FLOOR · 3 SESSIONS",
+    format: "LIVE WITH LOVE · 3 SESSIONS",
     capacity: 24,
     schedule: [],
     registration: "soon",
@@ -92,5 +92,5 @@ export const FOUNDATION_COURSES: Course[] = [
 /** Every foundation cert = the artist gate requirement. */
 export const ARTIST_GATE_CERT_COUNT = FOUNDATION_COURSES.length;
 
-/** The classes live on the arcade site — absolute so frens.earth can link it. */
+/** Where the classes live on this site. */
 export const CLASSES_URL = "/classes";

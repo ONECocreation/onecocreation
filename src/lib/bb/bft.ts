@@ -340,7 +340,7 @@ export const CHAIN_ANCHORS: ReadonlyArray<readonly [number, number]> = [
  * WHO THIS RIDES FOR (fleet ruling 0018.05.26 a₿ — dashes over estimates on
  * onecocreation surfaces): the estimate model (estimateHeightAt /
  * estimateHeight / estimatedBlockAtMs) stays exported as KIT CORE — the
- * transplant package (transplant/frens-earth-time, the arcade's own clocks)
+ * transplant package (transplant/frens-earth-time, the template's own clocks)
  * and canonical-package parity want it. Nothing in src/ may RENDER from it.
  */
 export function estimateHeightAt(

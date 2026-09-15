@@ -159,7 +159,7 @@ export interface MergeAuth {
 }
 
 /** The admiral's close-out — the signature OPENS a change; only the close
-    ends it (merge → deploy → test → bug-or-close; ITSM, arcade style). */
+    ends it (merge → deploy → test → bug-or-close; a plain ITSM cycle). */
 export async function closeAuthorization(pr: number): Promise<boolean> {
   const log = await readLog();
   let hit = false;
@@ -351,12 +351,12 @@ export async function postNote(event: {
   }
 
   /* the footer ties the comment back to the signature — SIGNER FIRST (the
-     admiral's order): who (fren tag, short-npub fallback), then "signed via
+     admiral's order): who (member tag, short-npub fallback), then "signed via
      SCAR·LET at" the true-block BFT stamp (the old calendar is burned), then
      the sig's leading bytes, checkable against this log's full record. */
   const npub = nip19.npubEncode(event.pubkey);
   const shortNpub = `${npub.slice(0, 7)}…${npub.slice(-4)}`;
-  // prefer the captain's fren tag (name@space) + the npub's last four in parens;
+  // prefer the captain's member tag (name@space) + the npub's last four in parens;
   // fall back to the short npub if they hold no tag yet.
   const owner = await findHandleByNpub(npub).catch(() => null);
   const who = owner ? `${owner.handle}@${owner.space} (${npub.slice(-4)})` : shortNpub;

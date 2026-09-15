@@ -30,7 +30,7 @@ export interface HandleEntry {
   batchId: string | null; // on-chain batch that committed it (R2)
   requestedAt: string; // ISO timestamp
   blockHeight?: number | null; // bitcoin tip when the claim entered the queue — bitcoin time, not calendar time (absent on pre-R2 entries; profile backfills via mempool.space)
-  matrix?: boolean; // matrix door cut for this tag (@handle:pacsarcade.org)
+  matrix?: boolean; // matrix door cut for this tag (@handle:onecocreation.com)
   proof?: string | null; // Spaces subspace inclusion proof — opaque string from the node, set at commit
   committedAt?: string; // ISO timestamp of the queued->committed batch flip (absent while queued)
 }
@@ -536,7 +536,7 @@ export async function updateEntry(
   }
 }
 
-/** Release a PENDING name back to the pool — the fren's right of exit while
+/** Release a PENDING name back to the pool — the member's right of exit while
     the anchor hasn't etched. Etched entries are permanent by design. */
 export async function releaseHandle(
   handle: string,
@@ -575,8 +575,8 @@ export async function releaseHandle(
    space; positive results cached briefly. Two lessons from the pacster
    double-door sign-in (2026-07-07): NEVER cache a miss (one transient read
    hiccup made "no tag" sticky for a minute), and when a key holds tags in
-   more than one space, the HOST's door wins — signing in on pacsarcade.org
-   should land the school tag, not whichever space scans first. */
+   more than one space, the HOST's door wins — signing in on the host's own
+   domain should land its own tag, not whichever space scans first. */
 const npubCache = new Map<string, { at: number; value: { handle: string; space: string } }>();
 const NPUB_CACHE_TTL_MS = 60_000;
 

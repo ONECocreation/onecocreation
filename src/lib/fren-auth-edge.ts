@@ -1,5 +1,5 @@
 /**
- * TASK-259 (0018.06.24 a₿) — the fren session, verified the ONLY way the
+ * TASK-259 (0018.06.24 a₿) — the member session, verified the ONLY way the
  * Edge runtime can: Web Crypto, zero node:crypto, zero filesystem.
  *
  * `src/middleware.ts` runs in Next's Edge runtime. The scout's plan (the

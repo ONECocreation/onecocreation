@@ -1,9 +1,9 @@
 /**
  * Bitcoin Buddy (BB) — core types.
  *
- * BB is a token-based virtual pet that lives at frens.earth/bb (design notes:
+ * BB is a token-based virtual pet that lives at onecocreation.com/bb (design notes:
  * C:\dev\pet-game-design-notes.md). A Buddy is CO-OWNED by a SET of nostr
- * pubkeys (the "dog collar", Part 6) — any fren on the collar can care for it,
+ * pubkeys (the "dog collar", Part 6) — any member on the collar can care for it,
  * and care actions are signed nostr events (NIP-07). Nothing here needs a
  * backend; the on-chain/nostr wiring comes later.
  *
@@ -15,7 +15,7 @@
  *   • BUDDY_DEFINITION — addressable/replaceable (`d` = buddy id): the birth
  *     certificate. owners[] (npubs), name, bornBlock, on-chain biology traits.
  *   • BUDDY_STATE      — addressable/replaceable (`d` = buddy id): live vitals
- *     + last-fed block. Every fren's client recomputes the SAME stats
+ *     + last-fed block. Every member's client recomputes the SAME stats
  *     deterministically from current block height — no trusted server.
  *   • CARE_ACTION      — regular event that a-tags the buddy: feed / play /
  *     talk, signed by ANY owner npub via NIP-07 (co-custody, Part 6).
@@ -41,7 +41,7 @@ export interface BuddyVitals {
 export interface Buddy {
   /** Stable id — the ordinal inscription id once minted; a local id before. */
   id: string;
-  /** The minted collar name, e.g. `petname.bb@frens.earth` (design notes Part 6). */
+  /** The minted collar name, e.g. `petname.bb@onecocreation.com` (design notes Part 6). */
   name: string;
   /**
    * Co-custody: the SET of nostr pubkeys allowed to care for this buddy.
@@ -88,7 +88,7 @@ export interface StoredBuddy extends Buddy {
   cause?: string;
 }
 
-/** A care action a fren can take on a buddy (design notes Part 1). */
+/** A care action a member can take on a buddy (design notes Part 1). */
 export type BuddyCareAction = "feed" | "play" | "sleep" | "talk";
 
 /**

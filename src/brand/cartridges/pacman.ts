@@ -1,5 +1,8 @@
 import type { Cartridge } from "../cartridge";
 
+// template lineage: this cartridge is the arcade's own voice, carried in
+// the registry as one of the starter directions (T-270, HB-8 — keep/drop
+// is the Admiral's call; the rest of this file rides that ruling).
 /**
  * NUMBER ONE × PACMAN (S9 — the cartridges become real, 0018.05.28 a₿) —
  * the second cartridge. Pac's ruling, verbatim: "the design is the dark

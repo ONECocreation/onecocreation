@@ -2,14 +2,38 @@
  * Identity domain configuration.
  *
  * The registration page is one shareable machine that adapts to the domain
- * serving it: players claim @frens tags on frens.earth, campaign artists claim
- * @pacsarcade tags on pacsarcade.org. Add a row here for every space we own.
- * Env vars remain as fallbacks for local dev and one-off deployments.
+ * serving it: a template deployment's players claim their own @space tag on
+ * their own domain — here, One Cocreation's souls claim @onecocreation on
+ * onecocreation.com. Add a row here for every space we own. Env vars remain
+ * as fallbacks for local dev and one-off deployments.
  */
-export const NIP05_DOMAIN =
-  process.env.NEXT_PUBLIC_NIP05_DOMAIN ?? "frens.earth";
 
-export const SPACE_NAME = process.env.NEXT_PUBLIC_SPACE_NAME ?? "frens";
+export interface SpaceConfig {
+  space: string;
+  nip05Domain: string;
+}
+
+// DEHOUSED 0018.05.17 (the eat6 walk found it): Love's clone hosts ONE
+// board — hers. The template's other spaces (frens/pacsarcade/degen) were
+// leftover residue; leaving them in KNOWN_SPACES let foreign registries
+// answer sign-ins on her site. A fleet clone lists only its own doors.
+export const SPACE_HOSTS: Record<string, SpaceConfig> = {
+  "onecocreation.com": { space: "onecocreation", nip05Domain: "onecocreation.com" },
+  "www.onecocreation.com": { space: "onecocreation", nip05Domain: "onecocreation.com" },
+};
+
+/** This deployment's own default — the first of its own SPACE_HOSTS rows,
+    so an unset env var falls through to OC's own domain/space, never a
+    template default. */
+const OC_DEFAULT: SpaceConfig = Object.values(SPACE_HOSTS)[0] ?? {
+  space: "onecocreation",
+  nip05Domain: "onecocreation.com",
+};
+
+export const NIP05_DOMAIN =
+  process.env.NEXT_PUBLIC_NIP05_DOMAIN ?? OC_DEFAULT.nip05Domain;
+
+export const SPACE_NAME = process.env.NEXT_PUBLIC_SPACE_NAME ?? OC_DEFAULT.space;
 export const SPACE_TAG = `@${SPACE_NAME}`;
 
 /**
@@ -18,20 +42,6 @@ export const SPACE_TAG = `@${SPACE_NAME}`;
  * estimated anchor block = current tip + ANCHOR_BLOCKS_OUT.
  */
 export const ANCHOR_BLOCKS_OUT = 6789;
-
-export interface SpaceConfig {
-  space: string;
-  nip05Domain: string;
-}
-
-// DEHOUSED 0018.05.17 (the eat6 walk found it): Love's clone hosts ONE
-// board — hers. The arcade's spaces (frens/pacsarcade/degen) were template
-// residue; leaving them in KNOWN_SPACES let foreign registries answer
-// sign-ins on her site. A fleet clone lists only its own doors.
-export const SPACE_HOSTS: Record<string, SpaceConfig> = {
-  "onecocreation.com": { space: "onecocreation", nip05Domain: "onecocreation.com" },
-  "www.onecocreation.com": { space: "onecocreation", nip05Domain: "onecocreation.com" },
-};
 
 /**
  * Every space that may have a claim registry on this deployment: the spaces

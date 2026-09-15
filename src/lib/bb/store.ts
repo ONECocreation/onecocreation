@@ -2,7 +2,7 @@
  * Bitcoin Buddy — local persistence (v1).
  *
  * Buddies are stored in localStorage keyed by the owner's npub, so a signed-in
- * fren's buddies survive reloads and are private to their browser. This is the
+ * member's buddies survive reloads and are private to their browser. This is the
  * stand-in for the nostr BUDDY_DEFINITION/BUDDY_STATE events (see types.ts):
  * same shape, so swapping this store for signed nostr reads/writes is a drop-in.
  */

@@ -3,8 +3,8 @@ import { cartridge } from "@/brand/cartridge";
 /**
  * One Cocreation — BrandTheme.
  *
- * Same PATTERN as the frens.earth brand kit (a theme object → CSS custom
- * properties), but this wears ONE COCREATION's own identity, not the arcade's
+ * Same PATTERN as the template's brand kit (a theme object → CSS custom
+ * properties), but this wears ONE COCREATION's own identity, not the template's
  * night-garden. Celestial + luminous: golden sun, purple/magenta, periwinkle
  * lavender, soft rose. House rule still holds — GOLD is money only (the sats /
  * bitcoin surfaces); everything else stays soft and warm.
@@ -57,7 +57,7 @@ export const oneCocreationTheme: BrandTheme = {
   copy: { ...cartridge.copy },
 };
 
-/** Emit the theme as CSS custom properties (mirrors frens.earth brandCssVars). */
+/** Emit the theme as CSS custom properties (mirrors the template's brandCssVars). */
 export function brandCssVars(t: BrandTokens = oneCocreationTheme.tokens): Record<string, string> {
   return {
     "--space": t.space,
