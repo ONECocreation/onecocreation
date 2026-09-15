@@ -26,7 +26,7 @@ import ScarHud from "./ScarHud";
  * Desktop ≥901px: two columns — the sticky elbow RIBBON (rooms + accordion +
  * SCAR readout + the ship-node block + BFT tray-clock) beside the main column,
  * whose sticky top bar carries the breadcrumb + the v2 header controls
- * (THEME arcade↔lcars · SND on/off · the operator's rank chip) + SCAR readout.
+ * (THEME default↔lcars · SND on/off · the operator's rank chip) + SCAR readout.
  *
  * Mobile ≤900px (Option B): the ribbon hides into a bottom SHEET raised by
  * the ▲ MENU sweep on a persistent bottom elbow bar (current room ·
@@ -45,9 +45,10 @@ import ScarHud from "./ScarHud";
  * cartridge (docs/brand-cartridge.md) is the honest SOON on the seam.
  */
 
-/* the "arcade" KEY is the wire value (localStorage + data-console-theme) —
-   HB-6, held; only the display WORD changes here (TASK-269). */
-const THEME_LABEL = { arcade: "DEFAULT", lcars: "LCARS", cartridge: "CARTRIDGE" } as const;
+/* the "default" KEY is the wire value (localStorage + data-console-theme) —
+   HB-6, renamed from the old arcade key (TASK-275); the display WORD already
+   said DEFAULT (TASK-269). */
+const THEME_LABEL = { default: "DEFAULT", lcars: "LCARS", cartridge: "CARTRIDGE" } as const;
 
 export default function ConsoleShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -55,13 +56,13 @@ export default function ConsoleShell({ children }: { children: React.ReactNode }
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   /* v2 header tweaks — localStorage is the external store; the server
-     snapshot renders the defaults (arcade, snd off) so hydration never
-     disagrees, then the client snapshot takes over after mount */
+     snapshot renders the defaults (default theme, snd off) so hydration
+     never disagrees, then the client snapshot takes over after mount */
   const subscribeTweaks = useCallback((onChange: () => void) => {
     window.addEventListener(TWEAKS_EVENT, onChange);
     return () => window.removeEventListener(TWEAKS_EVENT, onChange);
   }, []);
-  const theme = useSyncExternalStore(subscribeTweaks, storedTheme, () => "arcade" as const);
+  const theme = useSyncExternalStore(subscribeTweaks, storedTheme, () => "default" as const);
   const snd = useSyncExternalStore(subscribeTweaks, soundOn, () => false);
 
   const room = roomForPath(pathname);
