@@ -130,8 +130,8 @@ export default async function ConsoleOverviewPage() {
           ◗ CONSOLE FRONT PAGE · {CONSOLE_SITE.domain.toUpperCase()}
         </p>
         <h1 className="mb-3 mgmt-title">Overview</h1>
-        <p className="max-w-2xl font-body text-sm text-white/55">
-          The console&apos;s front page — how <b className="text-white/75">{CONSOLE_SITE.domain}</b>{" "}
+        <p className="max-w-2xl font-body text-sm mgmt-lede">
+          The console&apos;s front page — how <b>{CONSOLE_SITE.domain}</b>{" "}
           is doing at a glance, and where a first captain begins. The rooms live in the ribbon.
         </p>
       </div>

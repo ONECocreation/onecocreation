@@ -46,10 +46,10 @@ export default async function AdminActionItemsPage() {
           OPERATOR CONSOLE · {CONSOLE_SITE.domain.toUpperCase()} · DECK 02
         </p>
         <h1 className="mb-3 mgmt-title">Actions</h1>
-        <p className="max-w-2xl font-body text-sm text-white/55">
+        <p className="max-w-2xl font-body text-sm mgmt-lede">
           Everything that needs your signature — cross-project sign-offs up top, then merge a
           proposal and ship it live from the same card, then the decision board. The{" "}
-          <b className="text-white/75">crew board</b> (tickets · rank track · ship&apos;s log)
+          <b>crew board</b> (tickets · rank track · ship&apos;s log)
           berths beside this desk in the ribbon.
         </p>
       </div>

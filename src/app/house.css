@@ -467,6 +467,15 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
    every /a room h1 carries it, so Love could still meet Press Start 2P
    inside her own site chrome. One matching rule closes the gap. */
 .mgmt-body [class*="font-display"]{font-family:var(--sans)!important;letter-spacing:.04em}
+/* TASK-287 (minimal forced edit — the lane owns the /a page ledes; this
+   ONE shared rule rides along): the room description lines were night-only
+   Tailwind inks (text-white/55 · /50) — grey on the night console ground,
+   invisible when cartridge.css's dawn blanket repaints the room <main>
+   cream. The token resolves both themes: --muted is the site's own muted
+   ink (#9a8fae night / #6F6885 dawn — the S21 D6 pair, 4.93 on cream).
+   Unscoped on purpose: the /a rooms mount under EITHER console chrome
+   (scar shell or .mgmt-body), and the lede must resolve under both. */
+.mgmt-lede{color:var(--muted)}
 .mgmt-body [class*="border-2"],.mgmt-body [class*="border-4"]{border-width:1.5px!important;border-color:rgba(139,118,196,.35)!important;border-radius:20px}
 .mgmt-body [class*="text-neon"]{color:var(--rose)!important}
 .mgmt-body [class*="text-pink"]{color:var(--magenta)!important}

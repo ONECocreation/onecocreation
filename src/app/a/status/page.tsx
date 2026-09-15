@@ -36,10 +36,10 @@ export default async function AdminStatusPage() {
           OPERATOR CONSOLE · {CONSOLE_SITE.domain.toUpperCase()} · DECK 01
         </p>
         <h1 className="mb-3 mgmt-title">Status</h1>
-        <p className="max-w-2xl font-body text-sm text-white/55">
+        <p className="max-w-2xl font-body text-sm mgmt-lede">
           Where everything stands, the moment you land — the in-flight work and everything that
           needs you (sign · review · vote), each report one select from its reader.{" "}
-          <b className="text-white/75">Briefs</b> sits beside it in the ribbon.
+          <b>Briefs</b> sits beside it in the ribbon.
         </p>
       </div>
       <StatusReportsPanel />
