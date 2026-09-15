@@ -24,6 +24,11 @@
  *  - task-276/shoot-276.cjs — a second base URL (`--tenant-base`) for
  *    `/u/*` routes, so a TENANT override doesn't collide with the default
  *    tenant's `/u/[handle]` → `/me` redirect eating the profile route.
+ *
+ * TASK-294 adds `--full-page 1` (the Admiral's standing wish for full-page
+ * shots): `fullPage: true` on every screenshot, filenames gain a "-full"
+ * suffix so a viewport run and a full-page run of the same route never
+ * collide in the same --out dir.
  */
 "use strict";
 
@@ -54,6 +59,12 @@ const WIDTHS = (args.widths || "1440,390").split(",").map((w) => Number(w.trim()
 const COOKIE_NAME = args["cookie-name"] || null;
 const COOKIE_VALUE = args["cookie-value"] || null;
 const CLICK_SEL = args.click || null;
+/* TASK-294 Build 3: fullPage:true on every screenshot, filenames gain
+   "-full". shots-fixture.sh always passes an explicit value ("--full-page
+   1") rather than a bare boolean flag, matching parseArgs' existing
+   "every --x takes the next token" contract above instead of adding a
+   second flag-parsing shape for one option. */
+const FULL_PAGE = args["full-page"] === "1";
 
 if (!BASE || !OUT || !ROUTES.length || !WIDTHS.length) {
   console.error("shots-fixture.cjs: --base, --out and --routes (with a non-empty --widths) are required");
@@ -115,9 +126,10 @@ async function shootOne(ctx, base, route, theme, width, cookie) {
   const h1 = await page
     .evaluate(() => document.querySelector("h1")?.textContent?.trim() || "")
     .catch(() => "");
-  const file = `${slug}-${theme}-${width}.png`;
+  const fullSuffix = FULL_PAGE ? "-full" : "";
+  const file = `${slug}-${theme}-${width}${fullSuffix}.png`;
   console.log(`shot ${file} — status ${resp ? resp.status() : "?"} — title "${title}" — h1 "${h1}"`);
-  await page.screenshot({ path: path.join(OUT, file), fullPage: false });
+  await page.screenshot({ path: path.join(OUT, file), fullPage: FULL_PAGE });
 
   if (CLICK_SEL) {
     const clicked = await page.evaluate((sel) => {
@@ -133,11 +145,11 @@ async function shootOne(ctx, base, route, theme, width, cookie) {
     const clickH1 = await page
       .evaluate(() => document.querySelector("h1")?.textContent?.trim() || "")
       .catch(() => "");
-    const clickFile = `${slug}-${theme}-${width}-click.png`;
+    const clickFile = `${slug}-${theme}-${width}${fullSuffix}-click.png`;
     console.log(
       `shot ${clickFile} — status ${resp ? resp.status() : "?"} — clicked "${CLICK_SEL}": ${clicked} — title "${clickTitle}" — h1 "${clickH1}"`
     );
-    await page.screenshot({ path: path.join(OUT, clickFile), fullPage: false });
+    await page.screenshot({ path: path.join(OUT, clickFile), fullPage: FULL_PAGE });
   }
 
   await page.close();
