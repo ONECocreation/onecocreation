@@ -39,7 +39,7 @@
  *                               panel has something to toggle
  *
  * Every block type + prop below is spelled against the ACTUAL puck config
- * (node_modules/@pacsarcade/puck-config/src/index.tsx) — a seed that names a
+ * (node_modules/@frens-earth/puck-config/src/index.tsx) — a seed that names a
  * nonexistent block breaks the editor. THE NEUTRALITY LAW (S29 — the
  * Admiral's ruling: a clean template carries no branding): no wordmarks,
  * no Love's copy, no Love's art. Every image is a labeled ASSET SLOT under

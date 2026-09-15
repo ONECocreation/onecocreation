@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow, Open_Sans, Press_Start_2P, Roboto } from "next/font/google";
 import localFont from "next/font/local";
-import { EASY_MODE_BOOT_SCRIPT } from "@pacsarcade/arcade-ui";
+import { EASY_MODE_BOOT_SCRIPT } from "@frens-earth/arcade-ui";
 import { renderCartridgeId, cartridge } from "@/brand/cartridge";
 import ScrollFix from "@/components/ScrollFix";
 import AliveEffects from "@/components/AliveEffects";

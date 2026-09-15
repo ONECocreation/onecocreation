@@ -7,7 +7,7 @@ import { TENANT } from "@/lib/tenant";
  * live in KV so Love can re-roll and SAVE a palette; the root layout exposes
  * them as --p1..--p5, and any block whose colour picked a slot follows the
  * new palette instantly. Defaults come from the brand cartridge
- * (@pacsarcade/puck-config/tokens).
+ * (@frens-earth/puck-config/tokens).
  *
  * Same bare Upstash-REST kv() helper as puck-store.ts (each lib file
  * carries its own, per the house pattern).

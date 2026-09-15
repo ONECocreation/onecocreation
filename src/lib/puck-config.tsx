@@ -1,4 +1,4 @@
-import { createConfig, LinkPickerField } from "@pacsarcade/puck-config";
+import { createConfig, LinkPickerField } from "@frens-earth/puck-config";
 import { cartridge } from "@/brand/cartridge";
 import { ONECOCREATION } from "@/brand/tokens";
 import MediaField from "@/components/style/MediaField";
@@ -11,7 +11,7 @@ import { NIP05_DOMAIN, SPACE_NAME } from "@/lib/identity-config";
 
 /**
  * Puck config — now a thin shim over the fleet's shared registry
- * (@pacsarcade/puck-config, extracted in Puck Fork Robustness Plan Phase 0
+ * (@frens-earth/puck-config, extracted in Puck Fork Robustness Plan Phase 0
  * Task 3; source of truth: puck-studio/packages/puck-config). The house
  * blocks, Style Inspector fields, and ColorField all live in the package;
  * this file only injects One Cocreation's brand assets. Every existing

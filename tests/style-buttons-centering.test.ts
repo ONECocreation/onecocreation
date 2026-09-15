@@ -4,7 +4,7 @@ import { BOARD_SAMPLE } from "@/lib/board-sample";
 /**
  * TASK-216 (0018.06.23 a₿, #15 — "/style: the 'book a reading' centering
  * did not update"). NOT a CSS specificity fight: the Buttons block's align
- * renderer lives in the vendored @pacsarcade/puck-config (a dependency
+ * renderer lives in the vendored @frens-earth/puck-config (a dependency
  * repo — Seams, not OWNS), and it reads its prop honestly. The sample DATA
  * itself said `align: "left"` on the Buttons block carrying "Solid — book
  * a reading" / "Quiet — learn more" — the one line that diverged from the

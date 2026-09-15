@@ -1,10 +1,10 @@
 @import "tailwindcss";
 /* One brand, every cabinet: tokens, glows, motion, easy mode, and console
    themes come from the shared kit. App-specific ceremony effects stay below. */
-@import "@pacsarcade/arcade-ui/tailwind";
+@import "@frens-earth/arcade-ui/tailwind";
 /* Tailwind v4 does not scan node_modules — without this, utilities used
    only by the packaged components never get generated (the giant-coin bug) */
-@source "../../node_modules/@pacsarcade/arcade-ui/react";
+@source "../../node_modules/@frens-earth/arcade-ui/react";
 
 :root {
   --background: #000000;
