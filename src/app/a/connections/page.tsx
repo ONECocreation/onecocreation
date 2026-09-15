@@ -55,7 +55,7 @@ export default async function AdminConnectionsPage() {
           OPERATOR CONSOLE · {CONSOLE_SITE.domain.toUpperCase()} · DECK 05
         </p>
         <h1 className="mb-3 mgmt-title">Connections</h1>
-        <p className="mb-5 max-w-2xl font-body text-sm text-white/55">
+        <p className="mb-5 max-w-2xl font-body text-sm mgmt-lede">
           Your nodes and doors — point each one at your own server, save, and test. Leave one
           empty and it falls back honestly. Nothing here is hardwired.
         </p>
@@ -88,7 +88,7 @@ export default async function AdminConnectionsPage() {
             OPERATOR CONSOLE · {CONSOLE_SITE.domain.toUpperCase()}
           </p>
           <h2 className="mb-3 font-display text-4xl text-cyan glow-cyan">SEAT A RESERVED NAME</h2>
-          <p className="mb-8 font-mono text-[11px] text-white/50">
+          <p className="mb-8 font-mono text-[11px] mgmt-lede">
             RESERVED NAMES ONLY MOVE BY THE CAPTAIN&apos;S HAND
           </p>
           <SeatReservedPanel space={SPACE_NAME} />
@@ -123,7 +123,7 @@ export default async function AdminConnectionsPage() {
             OPERATOR CONSOLE · {CONSOLE_SITE.domain.toUpperCase()}
           </p>
           <h2 className="mb-3 font-display text-4xl text-cyan glow-cyan">SHIP</h2>
-          <p className="mb-2 font-mono text-[11px] text-white/50">
+          <p className="mb-2 font-mono text-[11px] mgmt-lede">
             THE DOOR TO PRODUCTION · CONNECT — SIGN — DEPLOY
           </p>
         </div>
@@ -136,7 +136,7 @@ export default async function AdminConnectionsPage() {
             OPERATOR CONSOLE · {CONSOLE_SITE.domain.toUpperCase()}
           </p>
           <h2 className="mb-3 font-display text-4xl text-cyan glow-cyan">TORRENTS</h2>
-          <p className="mb-8 font-mono text-[11px] text-white/50">
+          <p className="mb-8 font-mono text-[11px] mgmt-lede">
             SEED THE KNOWLEDGE · POINT — SAVE — TEST
           </p>
           <div className="max-w-2xl">
