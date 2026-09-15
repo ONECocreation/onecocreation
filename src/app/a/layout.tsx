@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import ConsoleShell from "@/components/console/ConsoleShell";
 import SiteConsoleShell from "@/components/console/SiteConsoleShell";
-import ArcadeFonts from "@/components/ArcadeFonts";
+import DisplayFonts from "@/components/DisplayFonts";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { CONSOLE_CHROME } from "@/lib/console";
 /* The console's own wall (S19 lane 3): every scar-* rule + the scar token
@@ -16,7 +16,7 @@ import "../scar.css";
  * no shell — the page renders its own OperatorGate bare, so the door stays a
  * door and the bridge stays behind it. Room registry + site identity come
  * from src/lib/console.ts (the console is a module, not furniture).
- * ArcadeFonts scopes the template display face to these routes (QW9).
+ * DisplayFonts scopes the template display face to these routes (QW9).
  */
 export const dynamic = "force-dynamic";
 
@@ -25,12 +25,12 @@ export default async function ConsoleLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const cookie = (await headers()).get("cookie");
   const operator = operatorFromCookieHeader(cookie);
-  if (!operator) return <ArcadeFonts>{children}</ArcadeFonts>;
+  if (!operator) return <DisplayFonts>{children}</DisplayFonts>;
   // Same gate, same rooms — only the chrome differs per clone (console.ts).
   const Shell = CONSOLE_CHROME === "site" ? SiteConsoleShell : ConsoleShell;
   return (
-    <ArcadeFonts>
+    <DisplayFonts>
       <Shell>{children}</Shell>
-    </ArcadeFonts>
+    </DisplayFonts>
   );
 }

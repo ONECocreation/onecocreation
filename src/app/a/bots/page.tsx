@@ -87,7 +87,7 @@ export default async function AdminBotDeckPage() {
           {BOTS.map((b) => (
             <div key={b.name} className="console-card p-5" data-accent={b.accent}>
               <div className="flex items-center justify-between gap-3">
-                <span className={`font-arcade text-xl ${NAME_TINT[b.accent]}`}>{b.name}</span>
+                <span className={`font-display text-xl ${NAME_TINT[b.accent]}`}>{b.name}</span>
                 <span className="pill pill--muted">OFF — NOT WIRED</span>
               </div>
               <p className="mt-1.5 font-pixel text-[10px] uppercase tracking-widest text-white/40">

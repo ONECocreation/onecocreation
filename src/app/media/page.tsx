@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import MediaKit from "@/components/MediaKit";
-import ArcadeFonts from "@/components/ArcadeFonts";
+import DisplayFonts from "@/components/DisplayFonts";
 
 /**
  * /media — the MEDIA / ASSETS page: copy-to-clipboard bitcoin glyphs
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function MediaPage() {
   return (
-    <ArcadeFonts>
+    <DisplayFonts>
       <main className="mgmt-ground">
       <SiteHeader />
       <section className="mgmt-wrap mgmt-body" style={{ maxWidth: 880 }}>
@@ -26,6 +26,6 @@ export default function MediaPage() {
       </section>
       <SiteFooter />
     </main>
-    </ArcadeFonts>
+    </DisplayFonts>
   );
 }

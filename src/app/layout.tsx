@@ -20,11 +20,11 @@ import "./cartridges.css";
 
 /* Retronoid (the template's display face) moved OFF the root (QW9,
    ~0018.05.24 a₿) — it ships only to console-skin routes via
-   components/ArcadeFonts. Press Start 2P stays here for the PACMAN
-   cartridge, which adopted it as its display face: the twin in
-   cartridges.css pours var(--font-press-start) over the display tokens,
-   and next/font must register that variable on <html> for the pour to
-   resolve. LOVE reads nothing from it — the kit's font-pixel/font-arcade
+   components/DisplayFonts. Press Start 2P still loads here and still
+   registers --font-press-start on <html>, but T-274 struck the PACMAN
+   cartridge's twin out of cartridges.css — nothing pours that variable
+   over the display tokens any more (a T-274 follow-up, not this sweep's
+   scope). LOVE reads nothing from it — the kit's font-pixel/font-display
    tokens are re-faced in cartridge.css, and S10 struck globals' last dead
    PS2P declarations. Montserrat dropped: --disp leads with Barlow and
    never fell back to it. */

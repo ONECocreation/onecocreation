@@ -57,7 +57,7 @@ export default function PokeArcadeCard({
       <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
         HIGH SCORES FROM THE GAME FLOOR — {poke.world}
       </p>
-      <h2 className="mb-4 font-arcade text-2xl text-coin glow-coin">STATS</h2>
+      <h2 className="mb-4 font-display text-2xl text-coin glow-coin">STATS</h2>
       <div className="border-2 border-edge bg-panel p-5">
         {/* status strip: presence first, then the honest asterisks */}
         <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -90,7 +90,7 @@ export default function PokeArcadeCard({
         {/* the scoreboard — three counters, cabinet style */}
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="border border-edge px-2 py-3">
-            <p className="font-arcade text-2xl text-cyan glow-cyan">{poke.level}</p>
+            <p className="font-display text-2xl text-cyan glow-cyan">{poke.level}</p>
             <p className="mt-1 font-pixel text-[9px] uppercase text-white/40">
               LEVEL
               {rank && (
@@ -101,13 +101,13 @@ export default function PokeArcadeCard({
             </p>
           </div>
           <div className="border border-edge px-2 py-3">
-            <p className="font-arcade text-2xl text-coin glow-coin">
+            <p className="font-display text-2xl text-coin glow-coin">
               {poke.xp.toLocaleString()}
             </p>
             <p className="mt-1 font-pixel text-[9px] uppercase text-white/40">XP</p>
           </div>
           <div className="border border-edge px-2 py-3">
-            <p className="font-arcade text-2xl text-neon glow-neon">{poke.runes}</p>
+            <p className="font-display text-2xl text-neon glow-neon">{poke.runes}</p>
             <p className="mt-1 font-pixel text-[9px] uppercase text-white/40">
               {poke.demo_mode ? "PRACTICE RUNES" : "RUNES"}
             </p>

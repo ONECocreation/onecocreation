@@ -220,7 +220,7 @@
      order isn't ours to bet on. S10 struck its last declarations from
      globals.css — every one provably dead — so no celestial surface reads
      it; the faces it once pretended to set are held below. */
-  --font-arcade:var(--font-barlow,'Barlow'),'Barlow',-apple-system,sans-serif;
+  --font-display:var(--font-barlow,'Barlow'),'Barlow',-apple-system,sans-serif;
   --font-pixel:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   /* the kit's body face, kept SPLIT from the trio's --font-body above:
      body{} sat outside the old wrapper and always read the trio's Helvetica,

@@ -420,7 +420,7 @@ function RequestTab({
       <div className="border-2 border-edge bg-panel p-6">
         <p className="mb-4 font-pixel text-xs text-cyan">REQUEST YOUR NAME</p>
         <div className="flex items-center border-4 border-edge bg-void px-3 py-3 focus-within:border-cyan sm:px-4">
-          <span className="shrink-0 font-arcade text-xl text-pink glow-pink select-none sm:text-2xl">@</span>
+          <span className="shrink-0 font-display text-xl text-pink glow-pink select-none sm:text-2xl">@</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value.toLowerCase())}
@@ -428,7 +428,7 @@ function RequestTab({
             spellCheck={false}
             autoComplete="off"
             placeholder="yourname"
-            className="min-w-0 flex-1 bg-transparent font-arcade text-xl text-cyan outline-none placeholder:text-white/20 sm:text-2xl"
+            className="min-w-0 flex-1 bg-transparent font-display text-xl text-cyan outline-none placeholder:text-white/20 sm:text-2xl"
             aria-label="The space name you want"
           />
         </div>
@@ -497,7 +497,7 @@ function RequestTab({
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-xs text-white/40">{r.id}</span>
-                    <span className="font-arcade text-lg text-cyan">@{r.name}</span>
+                    <span className="font-display text-lg text-cyan">@{r.name}</span>
                     <StatusPill s={r.status} />
                   </div>
                   <span className="font-mono text-[11px] text-white/40">
@@ -609,7 +609,7 @@ function BoardTab({
                   key={a.name}
                   className="flex flex-wrap items-center justify-between gap-2 border-b border-edge px-4 py-2 font-mono text-xs last:border-b-0"
                 >
-                  <span className="font-arcade text-base text-cyan">@{a.name}</span>
+                  <span className="font-display text-base text-cyan">@{a.name}</span>
                   <span className={a.bid != null ? "text-coin glow-coin" : "text-white/40"}>
                     {a.bid != null ? `${a.bid.toLocaleString()} sats` : "bid —"}
                   </span>
@@ -730,7 +730,7 @@ function WatchTab({
             return (
               <div key={w.name} className="border-b border-edge px-4 py-3 last:border-b-0">
                 <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
-                  <span className="font-arcade text-base text-cyan">@{w.name}</span>
+                  <span className="font-display text-base text-cyan">@{w.name}</span>
                   <span className="text-white/40"><BftStamp at={w.addedAt} blockHeight={w.blockHeight} /></span>
                   <div className="flex gap-2">
                     <button

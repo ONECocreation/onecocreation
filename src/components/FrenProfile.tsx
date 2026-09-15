@@ -151,7 +151,7 @@ export default function FrenProfile({
             <PixelAvatar variant="player" seed={handle} size={72} />
           )}
           <div className="min-w-0 flex-1">
-            <h1 className="break-all font-arcade text-[clamp(1.6rem,6vw,2.6rem)] leading-tight text-coin glow-coin">
+            <h1 className="break-all font-display text-[clamp(1.6rem,6vw,2.6rem)] leading-tight text-coin glow-coin">
               {profile?.display_name || profile?.name || `${handle}${spaceTag}`}
             </h1>
             {(profile?.display_name || profile?.name) && (
@@ -249,7 +249,7 @@ export default function FrenProfile({
           <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
             RUNNING CAMPAIGNS IS EARNED, NOT BOUGHT
           </p>
-          <h2 className="mb-4 font-arcade text-2xl text-ghost glow-ghost">
+          <h2 className="mb-4 font-display text-2xl text-ghost glow-ghost">
             ARTIST MODE — 🔒 LOCKED
           </h2>
           {space === "frens" ? (
@@ -340,7 +340,7 @@ export default function FrenProfile({
               <div className="min-w-0">
                 {/* same treatment as the H1 up top — the name is always coin,
                     so the reader knows what to look at (not just what's pretty) */}
-                <p className="break-words font-arcade text-xl text-coin glow-coin">
+                <p className="break-words font-display text-xl text-coin glow-coin">
                   {profile.display_name || profile.name || handle}
                 </p>
                 {/* the full network they're attached to, a step smaller */}
@@ -391,7 +391,7 @@ export default function FrenProfile({
           <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
             PROOF YOU SHOWED UP — ETCHED, NOT PRINTED
           </p>
-          <h2 className="mb-4 font-arcade text-2xl text-cyan glow-cyan">CERTS</h2>
+          <h2 className="mb-4 font-display text-2xl text-cyan glow-cyan">CERTS</h2>
           <div className="border-2 border-edge bg-panel p-6">
             <p className="mb-2 font-pixel text-xs text-white/60">THE SHELF IS EMPTY — FOR NOW</p>
             <div className="flex flex-wrap items-center gap-5">
@@ -432,7 +432,7 @@ export default function FrenProfile({
           <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
             WHAT YOU MINTED ALONG THE WAY
           </p>
-          <h2 className="mb-4 font-arcade text-2xl text-cyan glow-cyan">THE SHOWCASE</h2>
+          <h2 className="mb-4 font-display text-2xl text-cyan glow-cyan">THE SHOWCASE</h2>
           <div className="border-2 border-edge bg-panel p-6">
             <p className="mb-2 font-pixel text-xs text-white/60">NO MINTS YET</p>
             <div className="flex flex-wrap items-center gap-5">
@@ -455,7 +455,7 @@ export default function FrenProfile({
           <p className="mb-2 font-pixel text-[10px] uppercase tracking-widest text-white/40">
             PAYING IT FORWARD, ON THE RECORD
           </p>
-          <h2 className="mb-4 font-arcade text-2xl text-coin glow-coin">SUPPORTERS</h2>
+          <h2 className="mb-4 font-display text-2xl text-coin glow-coin">SUPPORTERS</h2>
           <div className="border-2 border-coin/40 bg-panel p-6">
             <p className="mb-2 font-pixel text-xs text-white/60">THE SHELF IS WAITING</p>
             <p className="font-body text-sm text-white/80">
@@ -474,7 +474,7 @@ export default function FrenProfile({
           <details>
             <summary className="cursor-pointer p-6 sm:p-8">
               <span className="mb-1 block font-pixel text-xs text-neon glow-neon">NEXT LEVEL</span>
-              <span className="font-arcade text-2xl text-cyan glow-cyan">
+              <span className="font-display text-2xl text-cyan glow-cyan">
                 WHAT CAN NOSTR DO? </span>
             </summary>
             <div className="px-6 pb-6 sm:px-8 sm:pb-8">
