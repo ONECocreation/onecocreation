@@ -64,9 +64,11 @@ export const PAGE_STATES: PageStateEntry[] = [
   { path: "/meditation", slug: "meditation", state: "designer", note: DESIGNER_NOTE },
   { path: "/memberships", slug: "memberships", state: "designer", note: DESIGNER_NOTE },
   { path: "/packages", slug: "packages", state: "designer", note: DESIGNER_NOTE },
+  { path: "/privacy", slug: "privacy", state: "designer", note: DESIGNER_NOTE },
   { path: "/retreats", slug: "retreats", state: "designer", note: DESIGNER_NOTE },
   { path: "/store", slug: "store", state: "designer", note: DESIGNER_NOTE },
   { path: "/support", slug: "support", state: "designer", note: DESIGNER_NOTE },
+  { path: "/terms", slug: "terms", state: "designer", note: DESIGNER_NOTE },
 
   { path: "/artist", state: "words", note: "words — the artist registry; copy lives in code" },
   { path: "/bb", state: "words", note: "words — Bitcoin Buddy; copy lives in code" },
@@ -80,9 +82,7 @@ export const PAGE_STATES: PageStateEntry[] = [
   { path: "/me", state: "words", note: "words — the member's own room; copy lives in code (an app surface, not a designer candidate by default)" },
   { path: "/media", state: "words", note: "words — media & assets; copy lives in code" },
   { path: "/news", state: "words", note: "words — news & letters; copy lives in code" },
-  { path: "/privacy", state: "words", note: "words — the privacy policy; copy lives in code" },
   { path: "/services", state: "words", note: WORDS_NOTE },
-  { path: "/terms", state: "words", note: "words — the terms; copy lives in code" },
   { path: "/time", state: "words", note: "words — the clock (Bitcoin Federated Time); copy lives in code" },
   { path: "/welcome", state: "words", note: "words — the welcome page; copy lives in code" },
 
