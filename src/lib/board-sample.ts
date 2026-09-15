@@ -72,7 +72,7 @@ export const BOARD_SAMPLE: Data = {
         /* TASK-216 (0018.06.23 a₿, #15 — "the 'book a reading' centering
            did not update"): NOT a CSS specificity fight — the Buttons
            block's align renderer lives in the vendored
-           @pacsarcade/puck-config (Seams, not OWNS) and reads this prop
+           @frens-earth/puck-config (Seams, not OWNS) and reads this prop
            honestly; the sample data itself said "left". Root cause, not a
            stronger rule: the one line that named the wrong alignment. */
         align: "center" as const,

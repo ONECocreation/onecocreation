@@ -43,14 +43,14 @@ const cwd = isolateCwd("oc-puck-publish-159-");
  * tree's props is the honest, narrow way to pin it.
  *
  * TASK-153 pinned the fix with "@/lib/puck-config" MOCKED OUT: it
- * re-exports @pacsarcade/puck-config, which ships raw .tsx (the package's
+ * re-exports @frens-earth/puck-config, which ships raw .tsx (the package's
  * own README: "hosts consume via transpilePackages") — Next's
  * transpilePackages covered it for `next build` and the dev server, but
  * vitest.config.ts had no equivalent include, so importing it hit a bare
  * JSX file with no automatic-runtime import ("React is not defined").
  *
  * TASK-159 (0018.06.17 a₿ · block 966,055) closed that second seam:
- * vitest.config.ts now inlines @pacsarcade/puck-config with
+ * vitest.config.ts now inlines @frens-earth/puck-config with
  * esbuild jsx:"automatic", so this suite rides the REAL config — the
  * published-branch pins below go one step further than T-153's tree walk
  * and render the page's own <Render> element to static markup, proving the

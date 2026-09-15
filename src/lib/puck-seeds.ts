@@ -61,7 +61,7 @@ const band = (background: string, hold: string, content: Block[]) => blk("Band",
    cartridge in app/cartridges.css (S10 lane 3). Bands over a PHOTO or
    colour ground (nebula, meteors, bgSrc, bgColor) keep their literal
    "night" under EVERY cartridge: the vendored Band veil is dark
-   (@pacsarcade/puck-config), so their ink must stay light — re-toning that
+   (@frens-earth/puck-config), so their ink must stay light — re-toning that
    veil is package territory, not seed territory. S29: reads the RENDER
    selection (renderCartridgeId) so the bench override resolves the same
    way the cartridge it wears would. */

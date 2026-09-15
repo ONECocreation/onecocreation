@@ -13,7 +13,7 @@ import {
 } from "@/lib/use-brand-palette";
 import type { Faces } from "@/lib/brand-palette"; /* type-only — the module itself is server-side (KV) and never enters this bundle; the shelf itself rides down from /api/brand */
 import type { IdentityField, VoiceRow } from "@/lib/cartridge-identity"; /* type-only — the module itself is server-side (fs) and never enters this bundle */
-import { effectivePalette, contrastRatio } from "@pacsarcade/puck-config/tokens";
+import { effectivePalette, contrastRatio } from "@frens-earth/puck-config/tokens";
 import { ONECOCREATION } from "@/brand/tokens";
 import { cartridge } from "@/brand/cartridge";
 
