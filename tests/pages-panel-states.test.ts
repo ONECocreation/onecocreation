@@ -104,8 +104,9 @@ describe("TASK-230 — the manifest covers every public route exactly once (deri
     expect(designers.map((e) => e.slug).sort()).toEqual(
       /* the union of the T-295 wave A pairs so far: pair 1 brought
          meditation + the cured packages row, pair 2 brought privacy +
-         terms, pair 3 brings artist + jewelry */
-      ["about", "artist", "book", "classes", "home", "jewelry", "meditation", "memberships", "packages", "privacy", "retreats", "store", "support", "terms"],
+         terms, pair 3 brought artist + jewelry, pair 4 brought contact +
+         services */
+      ["about", "artist", "book", "classes", "contact", "home", "jewelry", "meditation", "memberships", "packages", "privacy", "retreats", "services", "store", "support", "terms"]
     );
     for (const e of designers) {
       const page = await read(e.path === "/" ? "src/app/page.tsx" : `src/app/${e.path.slice(1)}/page.tsx`);

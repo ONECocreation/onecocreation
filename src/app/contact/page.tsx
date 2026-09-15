@@ -1,10 +1,24 @@
 import type { Metadata } from "next";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
 import ContactForm from "@/components/ContactForm";
 import ContactDoors from "@/components/ContactDoors";
 import StackedHero from "@/components/StackedHero";
+import PaletteVars from "@/components/PaletteVars";
+import PopupHost from "@/components/PopupHost";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
+
+/* TASK-295 (0018.06.25 a₿ · block 967,181): the page reads its Puck doc
+   from KV now, so it carries the same force-dynamic line /about got under
+   TASK-239 — without it `next build` would prerender a static snapshot and
+   a published rebuild would never reach a real visitor until the next
+   deploy. */
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Contact — One Cocreation",
@@ -22,7 +36,27 @@ const glass: React.CSSProperties = {
   borderRadius: 28, border: "1.5px solid rgba(217,178,78,.4)",
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  /* TASK-295 wave A pair 4 — PUCK first, mirroring /about (page.tsx:68-88)
+     byte-for-byte: once Love publishes the Puck rebuild (/style/contact ->
+     Publish), the live /contact serves it. Until then, the hand-built page
+     below is untouched — nothing changes for visitors until she chooses it.
+     No route gates on this page (no features.* switches read). */
+  const puck = await getPuckPage("contact");
+  if (puck) {
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main><Render config={config} data={puck as Data} /></main>
+        <SiteFooter />
+        {/* STUDIO P2: the popup host rides the designer branch (the fallback
+            never had one — byte-identical law — so it is not added there) */}
+        <PopupHost />
+      </>
+    );
+  }
+
   return (
     <>
       <SiteHeader />

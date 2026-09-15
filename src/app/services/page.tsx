@@ -1,9 +1,16 @@
 import Link from "next/link";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CosmicSky from "@/components/CosmicSky";
 import SubscribeForm from "@/components/SubscribeForm";
 import { Services } from "@/components/sections";
+import PaletteVars from "@/components/PaletteVars";
+import PopupHost from "@/components/PopupHost";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
 import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { readConfig } from "@/lib/booking";
@@ -49,6 +56,31 @@ const darkGlass: React.CSSProperties = {
 };
 
 export default async function ServicesPage() {
+  /* TASK-295 wave A pair 4 — PUCK first, mirroring /about (page.tsx:68-88)
+     byte-for-byte: once Love publishes the Puck rebuild (/style/services ->
+     Publish), the live /services serves it. Until then, the hand-built page
+     below is untouched — nothing changes for visitors until she chooses it.
+     No route gates to lift here: the page reads no features.* switches
+     itself — the gated pieces (<Services/>, the live shelf) stay code-side
+     on the fallback and are SAID, not shown, on the designer branch (the
+     seed's notes), so a naive Puck branch bypasses no gate. The booking-
+     config read (anyRetreat) belongs to the fallback's conditional Retreats
+     door only, so it stays on the fallback path. */
+  const puck = await getPuckPage("services");
+  if (puck) {
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main><Render config={config} data={puck as Data} /></main>
+        <SiteFooter />
+        {/* STUDIO P2: the popup host rides the designer branch (the fallback
+            never had one — byte-identical law — so it is not added there) */}
+        <PopupHost />
+      </>
+    );
+  }
+
   const anyRetreat = ((await readConfig()).retreats ?? []).some((r) => r.status === "live");
   return (
     <>

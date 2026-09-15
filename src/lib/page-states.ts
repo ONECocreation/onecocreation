@@ -51,7 +51,6 @@ export interface PageStateEntry {
 }
 
 const DESIGNER_NOTE = "designer — the live route reads the designer's page; the copy lives in the designer";
-const WORDS_NOTE = "words — hand-built; the copy lives in code until its designer lane lands";
 const REFERENCE_NOTE = "reference — Love's original ShinePages page, kept as a seed under Archive; still editable and publishable, not the live face";
 
 export const PAGE_STATES: PageStateEntry[] = [
@@ -62,12 +61,14 @@ export const PAGE_STATES: PageStateEntry[] = [
   { path: "/artist", slug: "artist", state: "designer", note: DESIGNER_NOTE },
   { path: "/book", slug: "book", state: "designer", note: DESIGNER_NOTE },
   { path: "/classes", slug: "classes", state: "designer", note: DESIGNER_NOTE },
+  { path: "/contact", slug: "contact", state: "designer", note: DESIGNER_NOTE },
   { path: "/jewelry", slug: "jewelry", state: "designer", note: DESIGNER_NOTE },
   { path: "/meditation", slug: "meditation", state: "designer", note: DESIGNER_NOTE },
   { path: "/memberships", slug: "memberships", state: "designer", note: DESIGNER_NOTE },
   { path: "/packages", slug: "packages", state: "designer", note: DESIGNER_NOTE },
   { path: "/privacy", slug: "privacy", state: "designer", note: DESIGNER_NOTE },
   { path: "/retreats", slug: "retreats", state: "designer", note: DESIGNER_NOTE },
+  { path: "/services", slug: "services", state: "designer", note: DESIGNER_NOTE },
   { path: "/store", slug: "store", state: "designer", note: DESIGNER_NOTE },
   { path: "/support", slug: "support", state: "designer", note: DESIGNER_NOTE },
   { path: "/terms", slug: "terms", state: "designer", note: DESIGNER_NOTE },
@@ -75,14 +76,12 @@ export const PAGE_STATES: PageStateEntry[] = [
   { path: "/bb", state: "words", note: "words — Bitcoin Buddy; copy lives in code" },
   { path: "/bday", state: "words", note: "words — the bitcoin birthday page; copy lives in code" },
   { path: "/cart", state: "words", note: "words — the basket; copy lives in code (a checkout surface, not a designer candidate by default)" },
-  { path: "/contact", state: "words", note: WORDS_NOTE },
   { path: "/letters", state: "words", note: "words — Your Letters; copy lives in code" },
   { path: "/live", state: "words", note: "words — the live page; copy lives in code" },
   { path: "/login", state: "words", note: "words — the sign-in door; copy lives in code (an app surface, not a designer candidate by default)" },
   { path: "/me", state: "words", note: "words — the member's own room; copy lives in code (an app surface, not a designer candidate by default)" },
   { path: "/media", state: "words", note: "words — media & assets; copy lives in code" },
   { path: "/news", state: "words", note: "words — news & letters; copy lives in code" },
-  { path: "/services", state: "words", note: WORDS_NOTE },
   { path: "/time", state: "words", note: "words — the clock (Bitcoin Federated Time); copy lives in code" },
   { path: "/welcome", state: "words", note: "words — the welcome page; copy lives in code" },
 
