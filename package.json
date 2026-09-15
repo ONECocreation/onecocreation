@@ -37,8 +37,8 @@
     "@types/nodemailer": "^8.0.1",
     "@vercel/blob": "^2.5.0",
     "heic2any": "^0.0.4",
-    "next": "16.2.11",
-    "nodemailer": "^9.0.3",
+    "next": "16.3.5",
+    "nodemailer": "^9.1.1",
     "nostr-tools": "^2.23.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -58,7 +58,30 @@
   "overrides": {
     "postcss": "8.5.26",
     "next": {
-      "sharp": "0.35.3"
+      "sharp": "0.35.4"
+    },
+    "@puckeditor/core": {
+      "@tiptap/core": "3.30.5",
+      "@tiptap/extension-blockquote": "3.30.5",
+      "@tiptap/extension-bold": "3.30.5",
+      "@tiptap/extension-bubble-menu": "3.30.5",
+      "@tiptap/extension-code": "3.30.5",
+      "@tiptap/extension-code-block": "3.30.5",
+      "@tiptap/extension-document": "3.30.5",
+      "@tiptap/extension-floating-menu": "3.30.5",
+      "@tiptap/extension-hard-break": "3.30.5",
+      "@tiptap/extension-heading": "3.30.5",
+      "@tiptap/extension-horizontal-rule": "3.30.5",
+      "@tiptap/extension-italic": "3.30.5",
+      "@tiptap/extension-link": "3.30.5",
+      "@tiptap/extension-list": "3.30.5",
+      "@tiptap/extension-paragraph": "3.30.5",
+      "@tiptap/extension-strike": "3.30.5",
+      "@tiptap/extension-text": "3.30.5",
+      "@tiptap/extension-text-align": "3.30.5",
+      "@tiptap/extension-underline": "3.30.5",
+      "@tiptap/html": "3.30.5",
+      "@tiptap/react": "3.30.5"
     }
   },
   "description": "One Cocreation — Love's site, cloned from the frens.earth store framework."
