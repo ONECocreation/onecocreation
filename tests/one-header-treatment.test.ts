@@ -38,7 +38,7 @@ describe("TASK-216 — the nav header is already the ONE component (pinned, not 
     const pages = await findPageFiles();
     const EXCLUDE_PREFIXES = ["src/app/a/", "src/app/style/"];
     const EXCLUDE_EXACT = new Set([
-      // frens.earth cross-tenant profile card — its own chrome, not this site's
+      // the old brand's cross-tenant profile card — its own chrome, not this site's
       "src/app/u/[handle]/page.tsx",
       // a pure OAuth-callback courier; transient, no chrome by design
       "src/app/login/signer-return/page.tsx",

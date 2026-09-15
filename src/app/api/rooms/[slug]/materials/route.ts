@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * The member's tier-gated read on one room's materials shelf — same gate
- * shape as /api/matrix/rooms (fren session → tier → tierSatisfies), the
+ * shape as /api/matrix/rooms (member session → tier → tierSatisfies), the
  * gate this brief asked for. Signed out or under-tier both read as "no
  * shelf" (an empty list + `open: false`), never a 403 that would confirm
  * a room exists to someone who can't see it — matching /api/matrix/rooms'

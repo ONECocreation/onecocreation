@@ -20,7 +20,7 @@ describe("EmailDoor — the 'already have a login' door (T-155)", () => {
     expect(showSwitchDoor("email", true)).toBe(true);
   });
 
-  it("hides once a caller wired no handler (the bare /welcome usage — a brand-new fren has no login to switch to)", () => {
+  it("hides once a caller wired no handler (the bare /welcome usage — a brand-new member has no login to switch to)", () => {
     expect(showSwitchDoor("email", false)).toBe(false);
   });
 
@@ -28,7 +28,7 @@ describe("EmailDoor — the 'already have a login' door (T-155)", () => {
     expect(showSwitchDoor("code", true)).toBe(false);
   });
 
-  it("hides once the fren is already in", () => {
+  it("hides once the member is already in", () => {
     expect(showSwitchDoor("done", true)).toBe(false);
   });
 

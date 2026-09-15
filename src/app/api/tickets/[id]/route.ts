@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 /**
  * POST an action on one ticket.
  *   claim / resolve / reopen — WORK actions, admiral + crew (operators) only.
- *   note — the crew, or the fren who raised it, may comment.
+ *   note — the crew, or the member who raised it, may comment.
  */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

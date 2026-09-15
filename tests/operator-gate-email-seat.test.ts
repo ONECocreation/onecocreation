@@ -30,7 +30,7 @@ describe("OperatorGate — the email-seat honest line", () => {
     expect(src).toContain('a.space === "email"');
   });
 
-  it("shows the exact honest line, naming no env and no value but the fren's own address", () => {
+  it("shows the exact honest line, naming no env and no value but the member's own address", () => {
     expect(src).toContain("Signed in as {emailDoor?.handle}, but this address is not on the operator list.");
     // never leaks the allowlist env's name inside that line's own paragraph
     const line = src.slice(
