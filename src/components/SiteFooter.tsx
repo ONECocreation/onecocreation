@@ -9,7 +9,7 @@ import type { SiteConfig } from "@/lib/site-config";
  * TASK-129 (0018.06.16 a₿): the footer doors read THE SWITCHES like the nav
  * — Sessions only when `sessions`, Community only when `community`; Home ·
  * About · Memberships · Support stand in every config. Same public-switches
- * fetch as NavMenu (the footer is client-reachable via FrenProfile/
+ * fetch as NavMenu (the footer is client-reachable via MemberProfile/
  * OperatorGate, so the doc can't be passed down from a server parent); until
  * the answer lands only the always-on doors render.
  */

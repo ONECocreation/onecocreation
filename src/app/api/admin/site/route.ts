@@ -47,7 +47,7 @@ export async function GET(request: Request) {
   /* Dual-mode read (TASK-129): the SWITCHES THEMSELVES are public — they only
      ever say what the site's own nav/footer/shelf already shows, and the
      client-side NavMenu/SiteFooter read them here (SiteHeader is client-
-     reachable via FrenProfile/OperatorGate, so no server import may enter its
+     reachable via MemberProfile/OperatorGate, so no server import may enter its
      graph — the booleans can't be passed down; same fetch idiom as
      FrenBadge → /api/frens/session). The rail/env STATUS stays behind the
      operator gate: env-configured state is the house's business, not the
