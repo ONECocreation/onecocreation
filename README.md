@@ -43,8 +43,9 @@ private KV / order vault is Upstash REST (`KV_REST_API_URL` /
 reference — every var in it is real and read in `src/` or `packages/`.
 
 Two deploy lessons, learned the hard way: **env vars only apply to builds
-made after they exist** (set one → redeploy), and this project **deploys
-by CLI push** (`npx vercel deploy --prod`), not on git merge.
+made after they exist** (set one → redeploy), and **every push to `main`
+deploys to production** (Vercel git integration, `vercel.json`) — gates
+green before the push, never after.
 
 ## Test gates
 
