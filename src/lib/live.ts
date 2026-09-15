@@ -1,3 +1,4 @@
+import { createHmac } from "crypto";
 import { ROOMS, type MatrixRoom } from "./matrix-rooms";
 import { listEntitlements, tierSatisfies, type Tier } from "./entitlement";
 import { enqueue } from "./mail-queue";
@@ -93,9 +94,43 @@ export {
   studioGuestLink,
   studioDirectorLink,
   studioGuestCameraLink,
+  studioViewLink,
   guestSlug,
   guestMeetingLink,
 } from "./live-links";
+
+/**
+ * THE STUDIO ROOM'S KEY (TASK-305, 0018.06.25 a₿) — T-292 DESIGN.md §4.1's
+ * SECURITY finding: today's studio links carry no password, so any holder
+ * of the bare guest URL joins Love's room, and the first stranger to open
+ * a director-shaped URL claims her desk (fork `main.js:664-665`). VDO's
+ * fix is native: `&password=<key>` makes room+password a DISTINCT room
+ * (fork `lib.js:27981-27989` folds `session.password` into the signaling
+ * topic hash) — so every link into the room must carry the SAME key, and
+ * this is its one derivation.
+ *
+ * NO NEW ENV — the key rides the secret every member session already
+ * does: the same HMAC idiom as `member-auth.ts`'s `secret()`/`hmac()`,
+ * `subscribers.ts`'s `unsubscribeToken`, and this exact file's own
+ * neighbor `studio/overlay-token.ts`'s `overlayToken` (its closest
+ * precedent — `createHmac("sha256", s).update(\`studio-overlay:${scene}\`
+ * ).digest("hex").slice(0, 40)`). Rotating `SEAT_SECRET` rotates the room
+ * key the same lever that already evicts an ex-operator.
+ *
+ * Deterministic per room name, lowercase hex, 12 characters — a strict
+ * subset of what the fork's `sanitizePassword` (`lib.js:3770-3790`, a bare
+ * `encodeURIComponent`) leaves untouched, so the key never gets rewritten
+ * or truncated on the way in.
+ *
+ * DERIVE-OR-DASH: no `SEAT_SECRET` (local dev, or the shots fixture before
+ * it mints one) → `null`. Every call-site mints its links UNKEYED in that
+ * case — never a fabricated key, never a link that silently can't reach
+ * the room a real key would have made. */
+export function studioRoomKey(room: string): string | null {
+  const s = process.env.SEAT_SECRET;
+  if (!s || !s.trim()) return null;
+  return createHmac("sha256", s).update(`studio-room-key:${room}`).digest("hex").slice(0, 12);
+}
 
 /** TASK-192 (additive read): one confirmed call, shaped for the Go-Live
  *  room's Discovery-call door. */

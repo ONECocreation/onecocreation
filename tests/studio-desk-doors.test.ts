@@ -59,7 +59,10 @@ describe("the VDO links card — three doors, each named and carrying the room",
     const html = renderRoom();
     expect(html).toContain("scene switching, mute-all, the room&#x27;s own controls");
     expect(html).toContain("step onto camera yourself");
-    expect(html).toContain("camera + mic ready, muted until you unmute them");
+    // TASK-305: the guest-door blurb changed (Love's both-off ruling,
+    // call #4 item 6) — the words moved, the intent (a guest's door row)
+    // this test pins is unchanged.
+    expect(html).toContain("camera and mic off until they choose — you can unmute from the desk");
     // the room's name rides all three lines
     expect(html.split("onecocreation_studio").length - 1).toBeGreaterThanOrEqual(4); // the caption line + the 3 door names
   });
@@ -81,9 +84,12 @@ describe("/a/studio/page.tsx — one source, not a second hand-built shape", () 
   const src = read("src/app/a/studio/page.tsx");
 
   it("imports studioVdoLinks and studioDirectorLink from @/lib/live, never re-spells the link shape", () => {
-    expect(src).toContain('import { studioVdoLinks, studioDirectorLink } from "@/lib/live"');
+    expect(src).toContain('import { studioVdoLinks, studioDirectorLink, studioRoomKey } from "@/lib/live"');
+    // TASK-305: the room name is derived once (this SAME builder, never
+    // re-spelled) to compute the key before the real, keyed links mint —
+    // the substring below still names the one true builder call.
     expect(src).toContain("studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost)");
-    expect(src).toContain("studioDirectorLink(config.meeting.vdoHost, vdo.room)");
+    expect(src).toContain("studioDirectorLink(config.meeting.vdoHost, vdo.room, roomKey)");
     // the old inline hand-built shape is gone
     expect(src).not.toMatch(/push:\s*`https:\/\/\$\{config\.meeting\.vdoHost\}/);
   });

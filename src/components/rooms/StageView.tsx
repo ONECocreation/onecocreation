@@ -44,7 +44,7 @@ import type { Tier } from "@/lib/entitlement";
  * this is a sibling region instead of a rewrite.
  */
 export default function StageView({
-  slug, alias, title, kind, pin, live, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, onCameraMxids, stageMxids, cameraDoor,
+  slug, alias, title, kind, pin, live, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, roomKey, onCameraMxids, stageMxids, cameraDoor,
   fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, afterHours, signedIn, viewerTier,
 }: {
   slug: string;
@@ -73,6 +73,10 @@ export default function StageView({
   rail?: "jitsi" | "vdo" | "static";
   vdoHost?: string;
   studioRoom?: string;
+  /** TASK-305 (Seam, flagged in work-claims/task-305.md): pass-through
+   *  only, same shape as vdoHost/studioRoom — the room's derived password,
+   *  handed to the video slot's view-link mint. */
+  roomKey?: string;
   /** TASK-245: pass-through only — the room page's own derivation off the
    *  director's guest roster (who Love actually arranged to be on camera
    *  today), handed to the video slot's gallery. */
@@ -128,7 +132,7 @@ export default function StageView({
       )}
       <div className="cl-grid-stage">
         <div role="region" className="cl-region cl-area-video" data-region="video" aria-label="Video">
-          <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={fullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} />
+          <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roomKey={roomKey} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={fullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} />
         </div>
         <AfterHoursDoor afterHours={afterHours ?? null} signedIn={signedIn} viewerTier={viewerTier} />
         {resources.length > 0 && (

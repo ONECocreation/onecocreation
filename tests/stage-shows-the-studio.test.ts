@@ -201,7 +201,11 @@ describe("RoomVideoSlot — rail vdo", () => {
 
 describe("the room page — onCameraMxids derives from the director's OWN guest roster, never a guessed live signal", () => {
   it("passes rail, vdoHost, studioRoom and onCameraMxids down, all from real config/store reads", () => {
-    expect(PAGE_SRC).toContain('import { liveRoomName, studioVdoLinks, studioGuestCameraLink } from "@/lib/live"');
+    // TASK-305: the import gains studioRoomKey — the string pin updates,
+    // the intent (this page reads its VDO builders from @/lib/live) holds.
+    expect(PAGE_SRC).toContain(
+      'import { liveRoomName, studioVdoLinks, studioGuestCameraLink, studioRoomKey } from "@/lib/live"',
+    );
     expect(PAGE_SRC).toContain('import { getStudioDoc } from "@/lib/studio/roster"');
     expect(PAGE_SRC).toMatch(/studioVdoLinks\(switches\.meeting\.vdoRoomPrefix, switches\.meeting\.vdoHost\)/);
     expect(PAGE_SRC).toContain("rail={switches.meeting.rail}");

@@ -53,15 +53,38 @@ export function vdoBase(host: string): string {
   return `https://${host}/`;
 }
 
+/** TASK-305 (0018.06.25 a₿) — the one place a key gets appended: room+
+ *  password is a DISTINCT VDO room (fork `lib.js:27981-27989`'s
+ *  `checkToken`/`registerToken` fold `session.password` straight into the
+ *  signaling topic hash), so every door into a keyed room must carry the
+ *  SAME `&password` or it lands in a different room entirely. `undefined`
+ *  passes through untouched (derive-or-dash: no key minted, no query
+ *  param added) — every builder below stays byte-identical to its
+ *  pre-T-305 output when called without a key, which is exactly what
+ *  every existing pin (built by calling these SAME functions) already
+ *  expects. Not exported — an implementation seam, not a new public shape. */
+function withRoomKey(url: string, key?: string): string {
+  return key ? `${url}&password=${encodeURIComponent(key)}` : url;
+}
+
 /** TASK-261: a guest's one-click door — camera + mic ready, muted until
  *  the director unmutes (see this file's docblock for the param-by-param
  *  citations). `handle` labels the join (skips VDO's name prompt); a
  *  blank/absent handle reads as the honest default "Guest", never an
  *  empty label VDO would have to re-prompt for. Pure: host/room/handle
- *  in, one link out. */
-export function studioGuestLink(host: string, room: string, handle?: string): string {
+ *  in, one link out.
+ *
+ *  TASK-305 — two additions: `&videomute` rides beside the existing
+ *  `&mute` (fork `main.js:2237`, `urlParams.has("videomute")` →
+ *  `session.videoMutedFlag = true`) — Love's call #4 item 6 ruling: guests
+ *  arrive with BOTH camera and mic off and choose for themselves, never
+ *  camera-hot by default. `key`, the room's derived password
+ *  (`live.ts`'s `studioRoomKey`), appends `&password=<key>` when given —
+ *  see this file's `withRoomKey`. */
+export function studioGuestLink(host: string, room: string, handle?: string, key?: string): string {
   const label = handle?.trim() || "Guest";
-  return `${vdoBase(host)}?room=${encodeURIComponent(room)}&webcam&mute&label=${encodeURIComponent(label)}`;
+  const url = `${vdoBase(host)}?room=${encodeURIComponent(room)}&webcam&mute&videomute&label=${encodeURIComponent(label)}`;
+  return withRoomKey(url, key);
 }
 
 /** TASK-261: the director's own seat — the room's controls (scene/layout
@@ -69,9 +92,29 @@ export function studioGuestLink(host: string, room: string, handle?: string): st
  *  surfaces the desk's mute-all button explicitly). `&label=Love` so the
  *  desk never stops to ask who's joining. See this file's docblock for
  *  why `&cleanoutput` is deliberately NOT here. Pure: host/room in, one
- *  link out. */
-export function studioDirectorLink(host: string, room: string): string {
-  return `${vdoBase(host)}?director=${encodeURIComponent(room)}&label=Love&muteallguests`;
+ *  link out. TASK-305: `key` appends `&password=<key>` — the SAME key
+ *  every other door into this room carries, closing the "first stranger
+ *  to open this URL claims the desk" hole (fork `main.js:664-665`). */
+export function studioDirectorLink(host: string, room: string, key?: string): string {
+  return withRoomKey(`${vdoBase(host)}?director=${encodeURIComponent(room)}&label=Love&muteallguests`, key);
+}
+
+/** TASK-305: the Stage's own read-only view tile — one publisher watched,
+ *  never joined. The SAME shape `RoomVideoSlot.tsx` minted inline for
+ *  both the host frame (`view=host`) and each on-camera gallery tile
+ *  (`view=<handle>`) before this lane; pulled into one builder so the
+ *  key threads through a single source instead of two hand-spelled
+ *  strings. `&cleanoutput&autostart&chat=0` — cleaned, auto-starts, the
+ *  site's own Matrix chat rides beside the stage (T-260). A view link
+ *  needs the RAW `&password`, not `&hash`: the fork's `&hash` is an
+ *  invite-link convenience that still prompts a HUMAN for the real
+ *  password (`main.js:3455-3459`, `promptAlt`) — an unattended iframe has
+ *  no human to prompt, and the room's real signaling topic only ever
+ *  folds in the raw `session.password` (`lib.js:27981-27989`). Pure:
+ *  host/room/handle in, one link out. */
+export function studioViewLink(host: string, room: string, handle: string, key?: string): string {
+  const url = `${vdoBase(host)}?view=${encodeURIComponent(handle)}&room=${encodeURIComponent(room)}&cleanoutput&autostart&chat=0`;
+  return withRoomKey(url, key);
 }
 
 /** TASK-192 (additive read), TASK-243 (own studio door), TASK-261 (guest
@@ -81,8 +124,17 @@ export function studioDirectorLink(host: string, room: string): string {
  *  `host` is the meeting config's own VDO host (SiteConfig.meeting.
  *  vdoHost) — Love's own studio (vdo.onecocreation.com), never the public
  *  vdo.ninja by default. `guest` now calls studioGuestLink (one source —
- *  see this lane's "one source" test pin). Pure: in, links out. */
-export function studioVdoLinks(roomPrefix: string, host: string): { room: string; push: string; guest: string } {
+ *  see this lane's "one source" test pin). Pure: in, links out.
+ *
+ *  TASK-305: `key` (the room's derived password) threads into BOTH `push`
+ *  and `guest` — the same key, since room+password is one distinct room
+ *  and every door into it must agree. `undefined` = every field stays
+ *  exactly the pre-T-305 output (derive-or-dash upstream in `live.ts`). */
+export function studioVdoLinks(
+  roomPrefix: string,
+  host: string,
+  key?: string,
+): { room: string; push: string; guest: string } {
   /* TASK-264 (Number One, 0018.06.24 a₿): the join is an UNDERSCORE. VDO's
      sanitizeRoomName (lib.js:3747-3758) rewrites any hyphen to `_` and pops
      "Only AlphaNumeric characters should be used for the room name" on every
@@ -92,8 +144,8 @@ export function studioVdoLinks(roomPrefix: string, host: string): { room: string
   const base = vdoBase(host);
   return {
     room,
-    push: `${base}?room=${encodeURIComponent(room)}&push=host`,
-    guest: studioGuestLink(host, room),
+    push: withRoomKey(`${base}?room=${encodeURIComponent(room)}&push=host`, key),
+    guest: studioGuestLink(host, room, undefined, key),
   };
 }
 
@@ -106,10 +158,11 @@ export function studioVdoLinks(roomPrefix: string, host: string): { room: string
  *  copyable off-site guest link (`.guest`, T-261's one-click shape) on
  *  `/a/studio` and `/a/live` stays as its own thing; this is a SECOND,
  *  narrower door for a soul the director already named. T-260 owns its
- *  render (RoomVideoSlot.tsx); this builder's signature is unchanged.
- *  Pure: host/room/handle in, one link out. */
-export function studioGuestCameraLink(host: string, room: string, handle: string): string {
-  return `${vdoBase(host)}?room=${encodeURIComponent(room)}&push=${encodeURIComponent(handle)}`;
+ *  render (RoomVideoSlot.tsx); this builder's signature only grows the
+ *  trailing `key` TASK-305 adds everywhere else. Pure: host/room/handle
+ *  in, one link out. */
+export function studioGuestCameraLink(host: string, room: string, handle: string, key?: string): string {
+  return withRoomKey(`${vdoBase(host)}?room=${encodeURIComponent(room)}&push=${encodeURIComponent(handle)}`, key);
 }
 
 /** TASK-192: the guest-typed room name, slugged for either rail — never

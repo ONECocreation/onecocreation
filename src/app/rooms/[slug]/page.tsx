@@ -9,7 +9,7 @@ import { ROOMS } from "@/lib/matrix-rooms";
 import { rosterForRequest } from "@/lib/matrix";
 import { getPin } from "@/lib/room-pins";
 import { getSiteConfig } from "@/lib/site-config";
-import { liveRoomName, studioVdoLinks, studioGuestCameraLink } from "@/lib/live";
+import { liveRoomName, studioVdoLinks, studioGuestCameraLink, studioRoomKey } from "@/lib/live";
 import { getStudioDoc } from "@/lib/studio/roster";
 import { studioSceneKind, type StudioSceneId } from "@/lib/studio/scenes";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
@@ -81,6 +81,14 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
    * derivation (studioVdoLinks), never re-spelled here. */
   const studioVdo = studioVdoLinks(switches.meeting.vdoRoomPrefix, switches.meeting.vdoHost);
 
+  /* TASK-305: the SAME key every other door into this room carries (T-292
+     DESIGN.md §4.1) — `studioVdo.room` above never itself needs a key
+     (it's a bare room name, not a link), but the camera door and the
+     Stage's view tiles below both mint links into the room and must. No
+     SEAT_SECRET (local dev) → undefined, every link mints unkeyed
+     (derive-or-dash, live.ts's studioRoomKey docblock). */
+  const roomKey = studioRoomKey(studioVdo.room) ?? undefined;
+
   /* TASK-245: the gallery's on-camera set — derived, never fabricated. No
    * signal anywhere answers "is this soul's camera on right now" (the
    * studio kit's live state is Phase 2), so this reads the ONE real
@@ -139,7 +147,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
       const viewerHandle = norm(session.handle);
       const mine = onCameraMxids.find((mxid) => norm(mxid.slice(1, mxid.indexOf(":"))) === viewerHandle);
       if (mine) {
-        cameraDoor = studioGuestCameraLink(switches.meeting.vdoHost, studioVdo.room, mine.slice(1, mine.indexOf(":")));
+        cameraDoor = studioGuestCameraLink(switches.meeting.vdoHost, studioVdo.room, mine.slice(1, mine.indexOf(":")), roomKey);
       }
     }
   }
@@ -168,6 +176,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           rail={switches.meeting.rail}
           vdoHost={switches.meeting.vdoHost}
           studioRoom={studioVdo.room}
+          roomKey={roomKey}
           onCameraMxids={onCameraMxids}
           stageMxids={stageMxids}
           cameraDoor={cameraDoor}

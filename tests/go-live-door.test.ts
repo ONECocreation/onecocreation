@@ -127,8 +127,9 @@ describe("the YouTube card — T-191's studio links, the studio's honest state",
     const vdo = studioVdoLinks("onecocreation", "vdo.onecocreation.com");
     expect(vdo.room).toBe("onecocreation_studio"); // TASK-264: underscore-native, no VDO rewrite
     expect(vdo.push).toBe("https://vdo.onecocreation.com/?room=onecocreation_studio&push=host");
+    // TASK-305: &videomute rides beside &mute (Love's both-off ruling)
     expect(vdo.guest).toBe(
-      "https://vdo.onecocreation.com/?room=onecocreation_studio&webcam&mute&label=Guest",
+      "https://vdo.onecocreation.com/?room=onecocreation_studio&webcam&mute&videomute&label=Guest",
     );
   });
 
@@ -153,12 +154,21 @@ describe("TASK-261 — the director's desk and the guest's one-click door", () =
     expect(studioDirectorLink("vdo.onecocreation.com", "onecocreation-studio")).not.toContain("cleanoutput");
   });
 
-  it("studioGuestLink: ?room=<r>&webcam&mute&label=<handle> — verified against main.js (webcam :2037, mute :2229, label :3533) and the fork's own buildInviteUrl", () => {
+  it("studioGuestLink: ?room=<r>&webcam&mute&videomute&label=<handle> — verified against main.js (webcam :2037, mute :2229, videomute :2237, label :3533) and the fork's own buildInviteUrl", () => {
     expect(studioGuestLink("vdo.onecocreation.com", "onecocreation-studio")).toBe(
-      "https://vdo.onecocreation.com/?room=onecocreation-studio&webcam&mute&label=Guest",
+      "https://vdo.onecocreation.com/?room=onecocreation-studio&webcam&mute&videomute&label=Guest",
     );
     expect(studioGuestLink("vdo.onecocreation.com", "onecocreation-studio", "Ada")).toBe(
-      "https://vdo.onecocreation.com/?room=onecocreation-studio&webcam&mute&label=Ada",
+      "https://vdo.onecocreation.com/?room=onecocreation-studio&webcam&mute&videomute&label=Ada",
+    );
+  });
+
+  it("studioGuestLink/studioDirectorLink append &password=<key> only when a key is given (TASK-305)", () => {
+    expect(studioGuestLink("vdo.onecocreation.com", "onecocreation-studio", "Ada", "abc123")).toBe(
+      "https://vdo.onecocreation.com/?room=onecocreation-studio&webcam&mute&videomute&label=Ada&password=abc123",
+    );
+    expect(studioDirectorLink("vdo.onecocreation.com", "onecocreation-studio", "abc123")).toBe(
+      "https://vdo.onecocreation.com/?director=onecocreation-studio&label=Love&muteallguests&password=abc123",
     );
   });
 
