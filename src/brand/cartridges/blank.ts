@@ -15,7 +15,7 @@ import type { Cartridge } from "../cartridge";
  *  - every ART path points into /brand/blank/ and /images/blank/, where
  *    nothing exists yet — the slots are labeled, the 404s are the truth;
  *  - VOICES is an empty shelf: testimonials are real words of real people
- *    or they are nothing (the pacman precedent);
+ *    or they are nothing (the template's own rule);
  *  - the TIME DOOR is "" — the cartridge's own documented way to sail on
  *    its own seam until the community stands up a clock;
  *  - the PALETTE is neutral paper-and-ink; gold stays money (fleet
