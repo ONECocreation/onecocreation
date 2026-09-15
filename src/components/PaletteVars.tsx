@@ -1,4 +1,4 @@
-import { emitTokenVars } from "@pacsarcade/puck-config/tokens";
+import { emitTokenVars } from "@frens-earth/puck-config/tokens";
 import { getPalette, getPaletteDawn, getFaces, FACE_KEYS, FACE_CHOICES, FACE_CSS_VAR } from "@/lib/brand-palette";
 import { ONECOCREATION } from "@/brand/tokens";
 

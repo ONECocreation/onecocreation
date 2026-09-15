@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { emitTokenVars } from "@pacsarcade/puck-config/tokens";
+import { emitTokenVars } from "@frens-earth/puck-config/tokens";
 import { ONECOCREATION } from "@/brand/tokens";
 
 /**

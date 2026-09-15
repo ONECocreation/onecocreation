@@ -1,4 +1,4 @@
-import { lintPage, type Finding, type Lane, type LintData } from "@pacsarcade/plugin-rails";
+import { lintPage, type Finding, type Lane, type LintData } from "@frens-earth/plugin-rails";
 import { ONECOCREATION } from "@/brand/tokens";
 import { getPalette, getPaletteDawn } from "./brand-palette";
 
@@ -34,4 +34,4 @@ export async function lintForPublish(
   });
 }
 
-export { hasErrors, summarize, type Finding } from "@pacsarcade/plugin-rails";
+export { hasErrors, summarize, type Finding } from "@frens-earth/plugin-rails";

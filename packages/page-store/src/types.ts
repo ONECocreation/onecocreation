@@ -1,5 +1,5 @@
 /**
- * Shared types + the driver contract for @pacsarcade/page-store.
+ * Shared types + the driver contract for @onecocreation/page-store.
  *
  * A driver is a string-valued key/value store with native string SETS — the
  * exact six-op surface the studio's document store needs (GET/SET/DEL plus

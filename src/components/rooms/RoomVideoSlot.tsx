@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import JitsiRoom from "@/components/booking/JitsiRoom";
-import { PixelAvatar } from "@pacsarcade/arcade-ui";
+import { PixelAvatar } from "@frens-earth/arcade-ui";
 import useNostrProfile from "@/hooks/useNostrProfile";
 import { SPACE_NAME } from "@/lib/identity-config";
 import { ROOMS } from "@/lib/matrix-rooms";
