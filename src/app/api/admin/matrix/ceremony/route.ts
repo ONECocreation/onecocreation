@@ -102,8 +102,8 @@ export async function POST(request: Request) {
   // room (encryption is a one-way door; the room itself can never go back).
   // The old room is left, alias-less and orphaned — history preserved, doors
   // closed. Ruling 0018.05.17: Love's rooms are plaintext; privacy lives in
-  // invite-only + her own server + federation off. E2EE is tabled as a
-  // frens.earth TEMPLATE option, not a Love default.
+  // invite-only + her own server + federation off. E2EE is tabled as the
+  // upstream template option, not a Love default.
   const body = (await request.json().catch(() => ({}))) as { action?: string; subject?: string };
   const remint = body.action === "remint";
 
