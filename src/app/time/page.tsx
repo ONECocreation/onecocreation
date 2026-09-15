@@ -52,11 +52,17 @@ export default async function TimePage() {
      flag-and-stop lands here. */
   const puck = await getPuckPage("time");
   if (puck) {
+    /* the ONE deviation from the /about precedent's plain <main>: this
+       branch wears mgmt-ground/mgmt-body because the BftClock block embeds
+       the app widget, whose utility classes (text-white/70, text-neon)
+       assume the mgmt chrome's remapping — without it the clock's reading
+       is illegible on the dawn ground (found on the lane's shots; the
+       fallback's own environment, no src/components change needed) */
     return (
       <>
         <SiteHeader />
         <PaletteVars />
-        <main><Render config={config} data={puck as Data} /></main>
+        <main className="mgmt-ground mgmt-body"><Render config={config} data={puck as Data} /></main>
         <SiteFooter />
         {/* STUDIO P2: the popup host rides the designer branch (the fallback
             never had one — byte-identical law — so it is not added there) */}
