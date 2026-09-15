@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { HandleStatus } from "@/lib/registry";
-import useFrenSession, { applyFrenSession } from "@/hooks/useFrenSession";
+import useMemberSession, { applyMemberSession } from "@/hooks/useMemberSession";
 
 /**
  * FREE THE NAME — the right of exit, own profile only, and only while the
@@ -22,7 +22,7 @@ export default function ReleaseTag({
   status: HandleStatus;
   nip05Domain: string;
 }) {
-  const { fren } = useFrenSession();
+  const { member } = useMemberSession();
   const [arming, setArming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +40,7 @@ export default function ReleaseTag({
     );
   }
 
-  const own = fren && fren.handle === handle && fren.space === space;
+  const own = member && member.handle === handle && member.space === space;
   if (!own || status !== "queued") return null;
 
   async function release() {
@@ -53,7 +53,7 @@ export default function ReleaseTag({
         setError(data.reason ?? "the registry didn't answer");
         return;
       }
-      applyFrenSession(null);
+      applyMemberSession(null);
       setFreed(true);
       /* back to the door — the profile page under this URL no longer exists */
       setTimeout(() => {

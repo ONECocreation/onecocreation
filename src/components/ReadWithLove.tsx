@@ -1,6 +1,6 @@
 "use client";
 
-import useFrenSession from "@/hooks/useFrenSession";
+import useMemberSession from "@/hooks/useMemberSession";
 import { readingDoorHref } from "@/lib/reading-room";
 
 /* eslint-disable @next/next/no-img-element -- the habitat's own art, not an
@@ -23,8 +23,8 @@ import { readingDoorHref } from "@/lib/reading-room";
 export { READING_ROOM_SLUG, READING_ROOM_PATH, readingDoorHref } from "@/lib/reading-room";
 
 export default function ReadWithLove() {
-  const { fren } = useFrenSession();
-  const href = readingDoorHref(!!fren);
+  const { member } = useMemberSession();
+  const href = readingDoorHref(!!member);
   const body = (
     <>
       <div className="habitat">
@@ -49,7 +49,7 @@ export default function ReadWithLove() {
         <p>Join me weekly for a live book reading in my own room.</p>
         {href && (
           <span className="wild-cta">
-            {fren ? "Enter the reading room" : "Sign in — the reading is free"}
+            {member ? "Enter the reading room" : "Sign in — the reading is free"}
           </span>
         )}
       </div>

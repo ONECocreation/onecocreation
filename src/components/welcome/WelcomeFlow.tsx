@@ -7,7 +7,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import useFrenSession from "@/hooks/useFrenSession";
+import useMemberSession from "@/hooks/useMemberSession";
 import { cartridge } from "@/brand/cartridge";
 import { continueLabel } from "@/components/door/door-machine";
 
@@ -59,7 +59,7 @@ const DOORS = [
 ] as const;
 
 export default function WelcomeFlow({ next = null }: { next?: string | null }) {
-  const { fren: session, checked } = useFrenSession();
+  const { member: session, checked } = useMemberSession();
   /* the known-by name (the door's own rule): an email member is greeted by
      who they ARE once the name is claimed, never by the mailbox */
   const [knownBy, setKnownBy] = useState<string | null>(null);

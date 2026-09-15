@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import useFrenSession from "@/hooks/useFrenSession";
+import useMemberSession from "@/hooks/useMemberSession";
 import DoorSheet from "./DoorSheet";
 import { MEMBER_MENU, proofFor } from "./door-machine";
 
@@ -25,7 +25,7 @@ import { MEMBER_MENU, proofFor } from "./door-machine";
 let lastKnownBy: string | null = null;
 
 export default function DoorButton() {
-  const { fren: session, checked, signOut } = useFrenSession();
+  const { member: session, checked, signOut } = useMemberSession();
   const [open, setOpen] = useState<"sheet" | "menu" | null>(null);
   /* the known-by name (Love's ask, carried over from FrenBadge): an email
      member's chip says who they ARE once the names are claimed */

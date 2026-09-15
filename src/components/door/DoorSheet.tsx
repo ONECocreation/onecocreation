@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { nip19 } from "nostr-tools";
-import { applyFrenSession } from "@/hooks/useFrenSession";
+import { applyMemberSession } from "@/hooks/useMemberSession";
 import { nextPathFromLocation } from "@/lib/next-path";
 import {
   DOOR_BACK,
@@ -103,7 +103,7 @@ export default function DoorSheet({
         setNote(data?.reason ?? "that code didn't match — try again");
         return;
       }
-      applyFrenSession({ handle: data.handle!, space: data.space!, npub: null });
+      applyMemberSession({ handle: data.handle!, space: data.space!, npub: null });
       window.dispatchEvent(new Event("oc-cart-changed"));
       /* new or returning? the member profile answers — no profile, no name:
          the sheet turns into the sign-up's one extra step on its own */
@@ -152,7 +152,7 @@ export default function DoorSheet({
         | { ok?: boolean; reason?: string; handle?: string; space?: string; npub?: string | null }
         | null;
       if (res.ok && data?.ok) {
-        applyFrenSession({ handle: data.handle!, space: data.space!, npub: data.npub ?? null });
+        applyMemberSession({ handle: data.handle!, space: data.space!, npub: data.npub ?? null });
         window.dispatchEvent(new Event("oc-cart-changed"));
         isNew.current = false;
         onIn?.(data.handle!);
@@ -212,7 +212,7 @@ export default function DoorSheet({
           setNote(data?.reason ?? "that name couldn't be claimed — try another");
           return;
         }
-        if (data.session) applyFrenSession(data.session);
+        if (data.session) applyMemberSession(data.session);
       } else {
         /* an EMAIL soul: the name lands on the member profile (additive
            read/write of the existing route — nothing new server-side) */

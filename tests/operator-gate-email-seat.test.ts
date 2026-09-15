@@ -4,7 +4,7 @@ import path from "node:path";
 
 /**
  * TASK-226 — OperatorGate's one honest line: when an email door is signed
- * in on this browser (from useFrenSession's `accounts`, which sees every
+ * in on this browser (from useMemberSession's `accounts`, which sees every
  * door, not just the active one) but /api/admin/session's `emailSeat` says
  * it isn't allowlisted, the gate says so by name instead of just repeating
  * the generic "sign in with your key" copy. Environment is `node` (no
@@ -24,8 +24,8 @@ describe("OperatorGate — the email-seat honest line", () => {
     expect(src).toContain("emailSeat");
   });
 
-  it("reads every signed-in door via useFrenSession, not just the active one", () => {
-    expect(src).toContain('from "@/hooks/useFrenSession"');
+  it("reads every signed-in door via useMemberSession, not just the active one", () => {
+    expect(src).toContain('from "@/hooks/useMemberSession"');
     expect(src).toContain("accounts.find");
     expect(src).toContain('a.space === "email"');
   });

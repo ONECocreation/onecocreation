@@ -62,7 +62,7 @@ import type { StudioSceneId } from "@/lib/studio/scenes";
  * watcher), a VDO view tile (`?view=<their handle>&room=<studioRoom>`) when
  * they're on camera — addressable ONLY once that guest published with
  * `&push=<their handle>`, else their member picture (the site's ONE picture
- * helper — useNostrProfile, same hook FrenChip/FrenMenu/FrenProfile
+ * helper — useNostrProfile, same hook MemberChip/MemberMenu/MemberProfile
  * already share — PixelAvatar's seeded body standing in for an absent one,
  * never a broken image). The gallery hides entirely when the room is
  * otherwise empty (only Love — the stage, never a "watcher" — is here).

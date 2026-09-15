@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import FrenProfile from "@/components/FrenProfile";
+import MemberProfile from "@/components/MemberProfile";
 import GameOverTag from "@/components/GameOverTag";
 import { getEntry, validateHandle } from "@/lib/registry";
 import { getPokeProfile } from "@/lib/poke";
@@ -52,14 +52,14 @@ export async function generateMetadata({
   };
 }
 
-export default async function FrenProfileRoute({
+export default async function MemberProfileRoute({
   params,
 }: {
   params: Promise<{ handle: string }>;
 }) {
   /* TASK-135: the template's claim-a-tag network profile isn't a ONE
      Cocreation feature — this tenant's real profile surface is /me.
-     Registry/FrenProfile machinery stays (template heritage); only this
+     Registry/MemberProfile machinery stays (template heritage); only this
      tenant's door is gated. */
   if (TENANT === "onecocreation") {
     redirect("/me");
@@ -85,7 +85,7 @@ export default async function FrenProfileRoute({
     }
     const poke = await getPokeProfile(handle);
     return (
-      <FrenProfile
+      <MemberProfile
         handle={seated.handle}
         npub={seated.npub}
         status={seated.status}
@@ -125,7 +125,7 @@ export default async function FrenProfileRoute({
     );
   }
   return (
-    <FrenProfile
+    <MemberProfile
       handle={entry.handle}
       npub={entry.npub}
       status={entry.status}

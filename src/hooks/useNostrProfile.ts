@@ -6,7 +6,7 @@ import { nip19, SimplePool } from "nostr-tools";
 /**
  * The member's live signal: their kind-0 profile as the nostr network sees
  * it right now. Read-only, best-effort — callers never block on relays.
- * Lifted out of FrenProfile so the header chip and the profile editor share
+ * Lifted out of MemberProfile so the header chip and the profile editor share
  * one implementation (and one cache: the chip rides on every page, and must
  * not open three websockets per navigation).
  */

@@ -14,7 +14,7 @@ import { READING_ROOM_PATH } from "@/lib/reading-room";
  * TASK-129 (0018.06.16 a₿): the MENU is built from THE SWITCHES
  * (site-config.ts) — Sessions only when `sessions`, Store only when `store`.
  * SiteHeader can't pass the doc down (it's client-reachable via
- * FrenProfile/OperatorGate, so no server import may enter its graph), so the
+ * MemberProfile/OperatorGate, so no server import may enter its graph), so the
  * switches ride the public half of /api/admin/site — same fetch idiom as
  * FrenBadge. Until the answer lands only the doors every config carries
  * render, so a hidden feature never flashes on.

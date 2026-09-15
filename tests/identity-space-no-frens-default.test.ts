@@ -15,7 +15,7 @@ import path from "node:path";
  *
  * Scope note: this file does NOT flag `src/lib/console.ts:106` (a named
  * historical officer SEED entry `space: "frens"`, T-270's voice lane) nor
- * `src/components/FrenProfile.tsx:255`'s `space === "frens"` branch (a live
+ * `src/components/MemberProfile.tsx:255`'s `space === "frens"` branch (a live
  * per-visitor comparison, not a default/fallback — T-278's rename lane owns
  * that file). Only the unambiguous nullish-coalescing default shape
  * `?? "frens"` is swept, since a bare `: "frens"` also matches ordinary

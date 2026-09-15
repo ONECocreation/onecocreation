@@ -1,7 +1,7 @@
 "use client";
 
 import { PixelAvatar } from "@pacsarcade/arcade-ui";
-import useFrenSession from "@/hooks/useFrenSession";
+import useMemberSession from "@/hooks/useMemberSession";
 import useNostrProfile from "@/hooks/useNostrProfile";
 
 /**
@@ -12,13 +12,13 @@ import useNostrProfile from "@/hooks/useNostrProfile";
  * Signed out: the vacant ghost — nobody's home, press to find the door.
  * Signed in: the member's kind-0 picture, or their seeded pixel body.
  */
-export default function FrenChip() {
-  const { fren, checked } = useFrenSession();
-  const { profile } = useNostrProfile(fren?.npub);
+export default function MemberChip() {
+  const { member, checked } = useMemberSession();
+  const { profile } = useNostrProfile(member?.npub);
 
   if (!checked) return <span className="w-8" aria-hidden />;
 
-  if (!fren) {
+  if (!member) {
     return (
       <span className="flex min-w-0 items-center gap-2">
         <PixelAvatar variant="ghost" size={32} />
@@ -39,14 +39,14 @@ export default function FrenChip() {
           className="h-8 w-8 flex-none border-2 border-cyan object-cover"
         />
       ) : (
-        <PixelAvatar variant="player" seed={fren.handle} size={32} />
+        <PixelAvatar variant="player" seed={member.handle} size={32} />
       )}
       <span
         className={`hidden max-w-28 truncate font-pixel text-[10px] md:block ${
-          fren.space === "pacsarcade" ? "text-pink" : "text-cyan"
+          member.space === "pacsarcade" ? "text-pink" : "text-cyan"
         }`}
       >
-        {fren.handle.toUpperCase()}
+        {member.handle.toUpperCase()}
       </span>
     </span>
   );

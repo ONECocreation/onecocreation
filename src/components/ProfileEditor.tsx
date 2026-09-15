@@ -5,7 +5,7 @@ import { nip19 } from "nostr-tools";
 import type { Event as NostrEvent } from "nostr-tools";
 import type { EventTemplate, VerifiedEvent } from "nostr-tools/pure";
 import { type RawKind0 } from "@/hooks/useNostrProfile";
-import useFrenSession from "@/hooks/useFrenSession";
+import useMemberSession from "@/hooks/useMemberSession";
 import SigningExplainer from "@/components/SigningExplainer";
 import Kind0Doors from "@/components/Kind0Doors";
 import ArtUpload from "@/components/ArtUpload";
@@ -97,10 +97,10 @@ export default function ProfileEditor({
       useNostrProfile — null while tuning or when the member is silent. */
   raw: RawKind0 | null;
   signal: "tuning" | "found" | "silent";
-  /** FrenProfile's applyLocal — flips the page (and cache) optimistically. */
+  /** MemberProfile's applyLocal — flips the page (and cache) optimistically. */
   onPublished: (content: Record<string, unknown>, created_at: number) => void;
 }) {
-  const { fren } = useFrenSession();
+  const { member } = useMemberSession();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -110,7 +110,7 @@ export default function ProfileEditor({
 
   /* the editor exists only on your own profile — UX gate; the real security
      is that publishing requires YOUR key in the signer anyway */
-  if (!fren || fren.handle !== handle || fren.space !== space) return null;
+  if (!member || member.handle !== handle || member.space !== space) return null;
 
   const defaultNip05 = `${handle}@${nip05Domain}`;
 

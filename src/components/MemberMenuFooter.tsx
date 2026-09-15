@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { EasyModeToggle } from "@pacsarcade/arcade-ui";
-import useFrenSession from "@/hooks/useFrenSession";
+import useMemberSession from "@/hooks/useMemberSession";
 
 /**
  * The menu's bottom row (SiteHeader menuFooterSlot — deliberately outside
@@ -19,9 +19,9 @@ const SIGN_OUT_WARNING =
   "key, so YOU choose which sites, networks, and relays carry your name. " +
   "Sign back in any time with your signer.";
 
-export default function FrenMenuFooter() {
+export default function MemberMenuFooter() {
   const router = useRouter();
-  const { fren, signOut } = useFrenSession();
+  const { member, signOut } = useMemberSession();
 
   const easy = (
     <span
@@ -32,7 +32,7 @@ export default function FrenMenuFooter() {
     </span>
   );
 
-  if (!fren) {
+  if (!member) {
     return <div className="grid min-h-11 place-items-center px-4 py-2">{easy}</div>;
   }
 

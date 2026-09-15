@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PixelAvatar } from "@pacsarcade/arcade-ui";
-import useFrenSession from "@/hooks/useFrenSession";
+import useMemberSession from "@/hooks/useMemberSession";
 import useNostrProfile from "@/hooks/useNostrProfile";
 import useIsOperator from "@/hooks/useIsOperator";
 import { SPACE_ROLES } from "@/lib/identity-config";
@@ -36,13 +36,13 @@ function accentText(space: string): string {
  * for every other door signed in on this browser. Signed out: the LOGIN
  * door. SIGN OUT lives in the menu footer (split with easy-eyes).
  */
-export default function FrenMenu() {
+export default function MemberMenu() {
   const router = useRouter();
-  const { fren, accounts, switchTo } = useFrenSession();
-  const { profile } = useNostrProfile(fren?.npub);
+  const { member, accounts, switchTo } = useMemberSession();
+  const { profile } = useNostrProfile(member?.npub);
   const isOperator = useIsOperator();
 
-  if (!fren) {
+  if (!member) {
     return (
       <>
         <Link
@@ -56,14 +56,14 @@ export default function FrenMenu() {
     );
   }
 
-  const others = accounts.filter((a) => !(a.handle === fren.handle && a.space === fren.space));
+  const others = accounts.filter((a) => !(a.handle === member.handle && a.space === member.space));
 
   return (
     <>
       {/* who you are — full identity, striped with the floor's accent */}
       <div
         className={`flex items-center gap-3 border-b-2 border-l-4 border-edge bg-void px-4 py-3 ${
-          fren.space === "pacsarcade" ? "border-l-pink" : "border-l-cyan"
+          member.space === "pacsarcade" ? "border-l-pink" : "border-l-cyan"
         }`}
       >
         {profile?.picture ? (
@@ -74,19 +74,19 @@ export default function FrenMenu() {
             className="h-10 w-10 flex-none border-2 border-cyan object-cover"
           />
         ) : (
-          <PixelAvatar variant="player" seed={fren.handle} size={40} />
+          <PixelAvatar variant="player" seed={member.handle} size={40} />
         )}
         <span className="min-w-0">
           <span className="block truncate font-pixel text-[10px] text-cyan">
-            {fren.handle.toUpperCase()}
+            {member.handle.toUpperCase()}
           </span>
-          <span className={`block font-mono text-[10px] ${accentText(fren.space)}`}>
-            @{fren.space} · {(SPACE_ROLES[fren.space] ?? "verse").toLowerCase()}
+          <span className={`block font-mono text-[10px] ${accentText(member.space)}`}>
+            @{member.space} · {(SPACE_ROLES[member.space] ?? "verse").toLowerCase()}
           </span>
         </span>
       </div>
       <Link
-        href={`/u/${fren.handle}@${fren.space}`}
+        href={`/u/${member.handle}@${member.space}`}
         className="flex min-h-11 items-center border-b-2 border-edge px-4 font-pixel text-[10px] text-cyan"
       >
         MY PROFILE
