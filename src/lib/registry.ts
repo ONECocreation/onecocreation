@@ -313,6 +313,31 @@ async function blobFindByNpub(space: string, npub: string): Promise<HandleEntry 
 // Public interface
 // ---------------------------------------------------------------------------
 
+/**
+ * TASK-260 (0018.06.24 a₿) — a second, READ-only door onto a reserved name.
+ * `validateHandle()` above stays byte-identical: a reserved name can never
+ * be CLAIMED through the public queue, full stop. But some reserved names
+ * ARE seated — the operator's own account (adminpacman), placed by the
+ * captain's seat / OPERATOR_NPUBS, never by the public queue — and the
+ * site's nostr profile reads (the Stage gallery's real-face tiles, "is
+ * this already yours?") need that seat's npub the same honest way
+ * `getEntry()` already hands back a claimed handle's npub elsewhere in
+ * this file. `checkHandleFormat` alone (never `validateHandle`, which
+ * would refuse the reserved name before this even runs) decides SHAPE;
+ * only a format-valid AND reserved AND actually-seated name resolves here
+ * — an unseated reserved name (format valid, nobody has claimed or been
+ * seated at it yet) returns null, same as any other unclaimed handle.
+ */
+export async function reservedSeat(
+  raw: string,
+  space?: string
+): Promise<{ handle: string; npub: string } | null> {
+  const fmt = checkHandleFormat(raw);
+  if (!fmt.ok || !RESERVED.has(fmt.handle)) return null;
+  const entry = await getEntry(fmt.handle, space);
+  return entry ? { handle: fmt.handle, npub: entry.npub } : null;
+}
+
 export async function isAvailable(handle: string, space?: string): Promise<boolean> {
   const s = normalizeSpace(space);
   if (blobStoreEnabled()) {

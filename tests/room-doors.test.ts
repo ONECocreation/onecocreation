@@ -114,21 +114,25 @@ describe("the Stage's video slot follows the SAME gate as the chat", () => {
     expect(html).not.toContain("Join Live Session");
   });
 
-  it("allowed → the embed mounts, and the join door leads to the room's OWN Stage", async () => {
+  it("allowed → the embed mounts; TASK-260: no self-link pill — the join door would only ever return here", async () => {
     const RoomVideoSlot = (await import("@/components/rooms/RoomVideoSlot")).default;
     const html = renderToStaticMarkup(
       createElement(RoomVideoSlot, { ...PROPS, door: "open" as const, doorPackage: "Observer" }),
     );
     expect(html).toContain("opening the room");
-    expect(html).toContain('href="/rooms/weekly-reading"'); // never /live
+    expect(html).not.toContain("Join Live Session");
+    expect(html).not.toContain('href="/rooms/weekly-reading"');
     expect(html).not.toContain('href="/live"');
   });
 
-  it("no door prop (the unthreaded vantages) → the pre-gate behavior, byte-identical", async () => {
+  it("no door prop (the unthreaded vantages) → the pre-gate behavior, byte-identical except TASK-260's self-link pill fix", async () => {
     const RoomVideoSlot = (await import("@/components/rooms/RoomVideoSlot")).default;
     const html = renderToStaticMarkup(createElement(RoomVideoSlot, PROPS));
     expect(html).toContain("opening the room");
-    expect(html).toContain("Join Live Session");
+    // "Chronicles: Weekly Reading" is a real registered room — its own
+    // Stage is the only place this component ever mounts, so the pill
+    // would always have pointed back at the page already open
+    expect(html).not.toContain("Join Live Session");
   });
 });
 

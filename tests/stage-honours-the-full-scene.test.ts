@@ -98,8 +98,10 @@ describe("RoomVideoSlot — vdo rail, fullScene swaps the host iframe for the in
     expect(html).toContain("The Evening Show");
     // the host iframe never mounts once a full scene is active
     expect(html).not.toContain("view=host&amp;room=onecocreation-studio");
-    // the gallery/camera-door/pill below the frame stay exactly as they are
-    expect(html).toContain("● Join Live Session");
+    // the gallery/camera-door below the frame stay exactly as they are;
+    // TASK-260: the pill itself is a self-link on this room's own Stage
+    // ("The Heart Field" is registered) and no longer renders
+    expect(html).not.toContain("● Join Live Session");
   });
 
   it("fullScene null (absent): the ?view=host iframe exactly as today", async () => {
