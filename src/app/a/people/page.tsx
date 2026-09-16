@@ -50,7 +50,10 @@ export default function PeopleRoom() {
 
   return (
     <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="search members…"
+      <label htmlFor="people-search" style={{ display: "block", margin: "0 0 4px 2px", fontSize: ".72rem", color: "var(--muted)" }}>
+        Search members
+      </label>
+      <input id="people-search" aria-label="Search members" value={q} onChange={(e) => setQ(e.target.value)} placeholder="search members…"
         className="mb-3 w-full max-w-sm console-field" style={field} />
       {people.length === 0 ? (
         <p style={{ color: "var(--muted)" }}>No members known yet — signups and purchases land here.</p>
