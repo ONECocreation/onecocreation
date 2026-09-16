@@ -9,6 +9,10 @@ import { createRetreatsList } from "@/lib/puck-blocks/retreats-list";
 import { createPackagesGrid } from "@/lib/puck-blocks/packages-grid";
 import { createLettersRoom } from "@/lib/puck-blocks/letters-room";
 import { createCartPanel } from "@/lib/puck-blocks/cart-panel";
+import { createMeSwitch } from "@/lib/puck-blocks/me-switch";
+import { createLoginDoor } from "@/lib/puck-blocks/login-door";
+import { createBbConsole } from "@/lib/puck-blocks/bb-console";
+import { createBftClock } from "@/lib/puck-blocks/bft-clock";
 import { NIP05_DOMAIN, SPACE_NAME } from "@/lib/identity-config";
 
 /**
@@ -125,6 +129,23 @@ components.PackagesGrid = createPackagesGrid() as unknown as (typeof components)
    siblings — appended, never reordered (the wave B union-merge law). */
 components.LettersRoom = createLettersRoom() as unknown as (typeof components)[string];
 components.CartPanel = createCartPanel() as unknown as (typeof components)[string];
+/* TASK-296 wave B, me-login pair (0018.06.25 a₿ · block ~967,192): MeSwitch
+   + LoginDoor — the { id }-only blocks (the JoinSurface/FormDoors shape):
+   the stored doc holds only the id, the block renders the real session-
+   aware widget on the published page AND the designer canvas (see each
+   block's docblock). LOCAL, like their siblings — appended, never reordered
+   (the wave B union-merge law). */
+components.MeSwitch = createMeSwitch() as unknown as (typeof components)[string];
+components.LoginDoor = createLoginDoor() as unknown as (typeof components)[string];
+/* TASK-296 wave B, pair bb-time (0018.06.25 a₿): BbConsole + BftClock — the
+   { id }-only data-bound blocks (the GO §2 rubric line 2): self-contained
+   CLIENT widgets (NIP-07/session/localStorage for the buddy console; the
+   client-live BFT read, live-or-dashes, for the clock), so nothing is
+   injected server-side and nothing fossilises — the stored docs carry only
+   the id. LOCAL, like their siblings — the package stays vendored-untouched.
+   Appended, never reordered (the wave B append-only law). */
+components.BbConsole = createBbConsole() as unknown as (typeof components)[string];
+components.BftClock = createBftClock() as unknown as (typeof components)[string];
 
 /* the library rail: ParallaxBand (and the data-bound blocks, TASK-231's
    RetreatsList + TASK-232's PackagesGrid) join the Layout group, appended
@@ -140,7 +161,7 @@ export const config = {
   categories: {
     ...categories,
     layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid", "LettersRoom", "CartPanel"] },
-    actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors"] },
+    actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors", "MeSwitch", "LoginDoor", "BbConsole", "BftClock"] },
   },
   /* STUDIO P1: page-level SEO lives on the Puck root — plain fields edited
      through Puck.Fields' root section; the registry's root RENDER stays the

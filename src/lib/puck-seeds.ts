@@ -791,28 +791,51 @@ const bdayContent: Block[] = [
 /* ── time — the clock door: static words + the LIVE read, said ───────────── */
 const tc = kit("tc");
 const timeContent: Block[] = [
-  /* TASK-295 wave A pair 6 (0018.06.25 a₿ · block 967,188): /time's seed is
-     written but the ROUTE STAYS WORDS — the expected flag-and-stop (K36).
-     The page's live BFT read (block height → 00YY.MM.DD a₿, live-or-dashes)
-     is live data: it must NEVER fossilise into a stored doc, and the
-     designer branch needs a data-bound block to hold its place honestly.
-     That block does not exist yet — the proposed diff (a local
-     src/lib/puck-blocks/ block + registry + copilot mirror) is in this
-     lane's SUMMARY; puck-config.tsx/copilot.ts are untouched, and
-     src/app/time/page.tsx is NOT wired. Until the block lane lands, the
-     note below says where the clock stands. The static words are transcribed
-     VERBATIM from src/app/time/page.tsx (the fallback, NOT edited). The
-     paper link rides the RichText html field as a real anchor (the same
-     documented inline-set stretch as /bday's, noted there); the mono
-     small-caps styling of the link and the "tick tock" line is the mgmt
-     chrome, beyond the block vocabulary (documented). */
+  /* TASK-295 wave A pair 6 (0018.06.25 a₿ · block 967,188): /time's seed was
+     written while the ROUTE stayed words — the ruled flag-and-stop (K36):
+     the page's live BFT read (block height → 00YY.MM.DD a₿, live-or-dashes)
+     is live data and must NEVER fossilise into a stored doc. TASK-296 wave
+     B, pair bb-time: the stop LANDS — the BftClock block (client-live, the
+     stored doc carries only its id) now holds the clock's place where the
+     interim code-side note stood, and the route wires up. The static words
+     are transcribed VERBATIM from src/app/time/page.tsx (the fallback, NOT
+     edited). The paper link rides the RichText html field as a real anchor
+     (the same documented inline-set stretch as /bday's, noted there); the
+     mono small-caps styling of the link and the "tick tock" line is the
+     mgmt chrome, beyond the block vocabulary (documented). */
   tc.band("plain", "theme", [
     tc.eyebrow("The time door"),
     tc.heading("The clock that syncs to the block, not the sun", "h1"),
     tc.text("Bitcoin Federated Time, plainly: the canonical date and the live block height. The orrery that used to perform here has gone home to its own world — a new face for this door is being drawn.", "left", st({ color: "muted", size: 15, spaceBelow: 10 })),
-    tc.note("── the live BFT clock stays code-side (the canonical date + the boxed-star height, live-or-dashes — never fossilised; the data-bound block lane is proposed in this pair's SUMMARY) ──"),
+    /* TASK-296 wave B, pair bb-time (0018.06.25 a₿): the flag-and-stop LANDS
+       — the pair-6 note becomes the real data-bound block (BftClock renders
+       the client-live TimeClock; the stored doc carries only this id, never
+       a reading). A unique id, the rt-list/pk-grid idiom: the kit consumed
+       tc-0…tc-2 below and tc-3…tc-5 after. */
+    { type: "BftClock", props: { id: "tc-clock" } },
     tc.rich("<a href=\"https://github.com/PacsArcade/bitcoin-federated-time\">read the paper on GitHub</a>", "left", st({ size: 13 })),
     tc.text("tick tock, it all comes back to the block", "center", st({ color: "muted", size: 12, kerning: 4, spaceAbove: 40 })),
+  ]),
+];
+
+/* ── bb — the Bitcoin Buddy door: header words + the LIVE console ────────── */
+const bb = kit("bb");
+const bbContent: Block[] = [
+  /* TASK-296 wave B, pair bb-time (0018.06.25 a₿): /bb becomes a designer
+     page. The header words are transcribed VERBATIM from
+     src/app/bb/page.tsx (the fallback, NOT edited — the words law). The
+     console is the { id }-only BbConsole block (GO §2 rubric line 2 — the
+     widget is self-contained client machinery, nothing to inject, nothing
+     to fossilise): a literal block with an explicit unique id, the
+     rt-list/pk-grid idiom (the kit consumed bb-0…bb-2). The fallback wraps
+     the page in <DisplayFonts> — the published branch wears the site fonts
+     (the declared font difference, pair 6's bday precedent, said in the
+     lane's SUMMARY). */
+  bb.band("plain", "theme", [
+    bb.eyebrow("One Cocreation"),
+    bb.heading("Bitcoin Buddy", "h1"),
+    bb.text("A lil buddy tied to the block — co-owned with your friends, kept alive with your key.", "left", st({ color: "muted", size: 15, spaceBelow: 24 })),
+    { type: "BbConsole", props: { id: "bb-console" } },
   ]),
 ];
 
@@ -1796,6 +1819,48 @@ const cartContent: Block[] = [
   { type: "CartPanel", props: { id: "ca-panel" } },
 ];
 
+/* ── T-296 wave B, me-login pair: /me — the member's own room ─────────────
+   src/app/me/page.tsx transcribed VERBATIM (the words law). The hero maps
+   to the Band vocabulary (sky-veil holding the night — the fallback's
+   keep-dark); CosmicSky's star field has no block twin (the declared
+   difference, pair 4's contact idiom — said in the SUMMARY, not invented).
+   The widget is NOT transcribed: the MeSwitch { id }-only block renders
+   the real session-aware room on the published page and the designer
+   canvas — nothing frozen (H116 A). The widget band holds the theme like
+   the fallback's bare sky-night (no keep-dark there). The literal block
+   carries an explicit unique id (the rt-list / pk-grid idiom, T-231). */
+const me = kit("me");
+const meContent: Block[] = [
+  me.band("sky-veil", "night", [
+    me.eyebrow("Members", "center"),
+    me.stacked("YOUR", "FIELD", "h1", "center"),
+    me.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
+    me.text("Your name, your sessions, your profile card — this room is yours.", "center", st({ color: "body", size: 15 })),
+  ]),
+  me.band("sky-night", "theme", [
+    { type: "MeSwitch", props: { id: "me-switch" } },
+  ]),
+];
+
+/* ── T-296 wave B, me-login pair: /login — the front door ─────────────────
+   src/app/login/page.tsx transcribed VERBATIM. The hero maps like /me's
+   (sky-veil holding the night; the login-galaxy veil and CosmicSky's star
+   field are beyond the Band — the declared difference). DoorSheet is NOT
+   transcribed: the LoginDoor { id }-only block renders the same sheet the
+   header mounts, page mount — the deep links (?next=) ride the component
+   itself, so a published /login serves the identical door. */
+const lg = kit("lg");
+const loginContent: Block[] = [
+  lg.band("sky-veil", "night", [
+    lg.eyebrow("Members", "center"),
+    lg.stacked("WELCOME", "HOME", "h1", "center"),
+    lg.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
+  ]),
+  lg.band("sky-night", "theme", [
+    { type: "LoginDoor", props: { id: "lg-door" } },
+  ]),
+];
+
 
 /* STUDIO P1: the new-site seeds carry honest root props (page title +
    description for SEO/social) so a publish is a real page from the first
@@ -1879,10 +1944,10 @@ export const SEEDS: Record<string, PuckPageData> = {
     title: "Media & assets — One Cocreation",
     description: "Copy bitcoin glyphs (₿, sats, a₿, ★, ⚡) and One Cocreation brand assets — the mark, wordmark, palette, and a press blurb. No trip to emojipedia required.",
   } } },
-  /* T-295 pair 6: /bday mirrors its hand-built metadata verbatim. /time's
-     seed exists (the static words + the code-side note) but the ROUTE
-     STAYS WORDS — the flag-and-stop until the data-bound clock block lane
-     lands; its metadata mirrors verbatim too. */
+  /* T-295 pair 6: /bday and /time mirror their hand-built metadata
+     verbatim. T-296 pair bb-time: /time's flag-and-stop LANDED (the
+     BftClock block holds the live read), and /bb joins with its own
+     verbatim metadata. */
   bday: { content: bdayContent, root: { props: {
     title: "Bitcoin Birthday — One Cocreation",
     description: "The Bitcoin Birthday checker has moved with the time kit — it returns with this door's new face.",
@@ -1900,6 +1965,20 @@ export const SEEDS: Record<string, PuckPageData> = {
   } } },
   cart: { content: cartContent, root: { props: {
     title: "Your basket — One Cocreation",
+  } } },
+  /* T-296 wave B, me-login pair: /me + /login mirror their hand-built
+     metadata verbatim */
+  me: { content: meContent, root: { props: {
+    title: "My field — One Cocreation",
+    description: "Your name, your sessions, your profile card — a member's own room under the house sky.",
+  } } },
+  login: { content: loginContent, root: { props: {
+    title: "Sign in — One Cocreation",
+    description: "Sign in with your email or your key — no passwords, nothing stored. New here? The door turns to meet you.",
+  } } },
+  bb: { content: bbContent, root: { props: {
+    title: "Bitcoin Buddy — One Cocreation",
+    description: "Meet your Bitcoin Buddy — a co-owned virtual pet born at a block and cared for with your key. Sign in with nostr to start.",
   } } },
   /* STUDIO P2: the popup lane. THE ONE REAL POPUP — the rebuild of the
      original platform's only popup ("Free Guide"), retargeted to the Free

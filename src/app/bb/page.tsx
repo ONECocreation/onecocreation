@@ -1,8 +1,21 @@
 import type { Metadata } from "next";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BbConsole from "@/components/BbConsole";
 import DisplayFonts from "@/components/DisplayFonts";
+import PaletteVars from "@/components/PaletteVars";
+import PopupHost from "@/components/PopupHost";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
+
+/* TASK-296 (0018.06.25 a₿): the page reads its Puck doc from KV now, so it
+   carries the same force-dynamic line /about got under TASK-239 — without
+   it `next build` would prerender a static snapshot and a published rebuild
+   would never reach a real visitor until the next deploy. */
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Bitcoin Buddy — One Cocreation",
@@ -15,7 +28,36 @@ export const metadata: Metadata = {
  * mgmt-ground/mgmt-body cartridge as every page); BbConsole gates the
  * content on the existing NIP-07 sign-in.
  */
-export default function BbPage() {
+export default async function BbPage() {
+  /* TASK-296 wave B, pair bb-time — PUCK first, mirroring /about
+     (page.tsx:68-88) byte-for-byte: once Love publishes the Puck rebuild
+     (/style/bb -> Publish), the live /bb serves it. Until then, the
+     hand-built page below is untouched — nothing changes for visitors
+     until she chooses it. No route gates on this page (no features.*
+     switches read). The console is never frozen either way: the designer
+     branch renders it through the { id }-only BbConsole block, client-live
+     exactly like the fallback's. */
+  const puck = await getPuckPage("bb");
+  if (puck) {
+    /* the ONE deviation from the /about precedent's plain <main>: this
+       branch wears mgmt-ground/mgmt-body because the BbConsole block embeds
+       the app widget, whose utility classes (text-white/70, .button) assume
+       the mgmt chrome's remapping — without it the widget's dark-ground
+       text is illegible on the dawn ground (found on the lane's shots; the
+       fallback's own environment, no src/components change needed) */
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main className="mgmt-ground mgmt-body"><Render config={config} data={puck as Data} /></main>
+        <SiteFooter />
+        {/* STUDIO P2: the popup host rides the designer branch (the fallback
+            never had one — byte-identical law — so it is not added there) */}
+        <PopupHost />
+      </>
+    );
+  }
+
   return (
     <DisplayFonts>
       <main className="mgmt-ground">

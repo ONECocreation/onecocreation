@@ -102,13 +102,13 @@ describe("TASK-230 — the manifest covers every public route exactly once (deri
   it("designer is derived: each designer route's page.tsx really reads getPuckPage — TASK-293: home too, now it's wired; TASK-295 pair 1: /meditation joins, and /packages' stale row catches up to T-232", async () => {
     const designers = PAGE_STATES.filter((e) => e.state === "designer");
     expect(designers.map((e) => e.slug).sort()).toEqual(
-      /* the union of the T-295 wave A pairs so far: pair 1 brought
-         meditation + the cured packages row, pair 2 brought privacy +
-         terms, pair 3 brought artist + jewelry, pair 4 brought contact +
-         services, pair 5 brought media + news, pair 6 brought bday
-         (/time flagged-and-stopped, stays words). T-296 wave B,
-         letters-cart pair: cart + letters join */
-      ["about", "artist", "bday", "book", "cart", "classes", "contact", "home", "jewelry", "letters", "media", "meditation", "memberships", "news", "packages", "privacy", "retreats", "services", "store", "support", "terms"]
+      /* the union of the T-295 wave A pairs (pair 1 meditation + the cured
+         packages row, pair 2 privacy + terms, pair 3 artist + jewelry,
+         pair 4 contact + services, pair 5 media + news, pair 6 bday) and
+         T-296 wave B so far: me-login brought login + me, bb-time brought
+         bb + time (pair 6's ruled flag-and-stop landing), letters-cart
+         brings cart + letters */
+      ["about", "artist", "bb", "bday", "book", "cart", "classes", "contact", "home", "jewelry", "letters", "login", "me", "media", "meditation", "memberships", "news", "packages", "privacy", "retreats", "services", "store", "support", "terms", "time"]
     );
     for (const e of designers) {
       const page = await read(e.path === "/" ? "src/app/page.tsx" : `src/app/${e.path.slice(1)}/page.tsx`);
@@ -133,11 +133,15 @@ describe("TASK-230 — the manifest covers every public route exactly once (deri
     expect(pageStateEntryForSlug("about")?.state).toBe("designer");
     expect(pageStateEntryForSlug("home")?.state).toBe("designer"); // TASK-293: wired, the same badge every other designer route wears
     expect(pageStateEntryForSlug("home-old")?.state).toBe("reference");
-    /* the words sample moved off /jewelry when pair 3 flipped it — /login
-       is the manifest's own "not a designer candidate by default" route */
-    expect(pageStateEntryForSlug("login")?.state).toBe("words");
+    /* the words sample moved off /jewelry when pair 3 flipped it and off
+       /login when the T-296 me-login pair wired it — /welcome is the ruled
+       words route (pair 1's flag-and-stop stands; not in wave B's scope) */
+    expect(pageStateEntryForSlug("welcome")?.state).toBe("words");
     expect(pageStateEntryForSlug("some-page-love-made")).toBeNull();
-    expect(pageStateEntryForPath("/time")?.state).toBe("words");
+    /* the /time words pin moved when T-296 pair bb-time landed pair 6's
+       flag-and-stop — /welcome is the wave's remaining plain-words route */
+    expect(pageStateEntryForPath("/time")?.state).toBe("designer");
+    expect(pageStateEntryForPath("/welcome")?.state).toBe("words");
     expect(pageStateEntryForPath("/p/observer-old")?.state).toBe("reference");
     expect(isArchiveSlug("links-old")).toBe(true);
     expect(isArchiveSlug("links")).toBe(false);
@@ -173,9 +177,9 @@ describe("TASK-230 — the panel wears the manifest", () => {
   it("SITE MAP lists the words routes as read-only new-tab links to the designer", () => {
     const html = renderPanel();
     expect(html).toContain("SITE MAP · every public route still in words");
-    /* was href="/style/jewelry" — pair 3 flipped /jewelry; /login is the
-       words sample now */
-    expect(html).toContain('href="/style/login"');
+    /* was href="/style/jewelry" (pair 3 flipped it), then /style/login
+       (the T-296 me-login pair wired it) — /welcome is the words sample now */
+    expect(html).toContain('href="/style/welcome"');
     expect(html).toContain('target="_blank"');
     expect(html).toContain("/welcome");
   });
