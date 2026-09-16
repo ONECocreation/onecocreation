@@ -32,9 +32,13 @@ import { studioGuestLink, isStudioNamespaceRoom, vdoBase } from "@/lib/live-link
  *
  * `mintStudioFrameTarget` is the ONLY mint of the keyed studio URL on
  * this route tree — the key (`studioRoomKey`, live.ts) rides this one
- * string into the frame route's 302 Location and nowhere else: never in
- * the page's HTML, never in the URL we hand out (T-292 §4's posture,
- * pinned in tests/meet-studio.test.ts).
+ * string into the iframe src the page renders when the pre-join form
+ * comes back with `?join=1`, and nowhere else: never as bare text,
+ * never in a copy field, never in the URL we hand out (T-292 §4's
+ * posture, pinned in tests/meet-studio.test.ts). It must be mounted
+ * DIRECTLY as the iframe src — never behind a same-origin redirect:
+ * Chromium does not delegate camera/mic permissions through a 302
+ * inside an iframe (A/B proven this lane, 0018.06.25).
  */
 
 export interface StudioRoomAccess {
@@ -101,7 +105,8 @@ export async function resolveStudioRoom(room: string): Promise<StudioRoomAccess 
   return null;
 }
 
-/** The keyed studio URL the frame route 302s to. Built on the SHARED
+/** The keyed studio URL the page mounts when the pre-join form returns
+ *  with `?join=1`. Built on the SHARED
  *  `studioGuestLink` (both-off arrival baked in: `&mute&videomute`,
  *  Love's call #4 item 6 ruling), then:
  *   · the pre-join card's toggles HONOURED — camera/mic flipped on before

@@ -12,13 +12,18 @@ import { useEffect, useRef, useState } from "react";
  * meet.onecocreation.com — it was in the site and we never left", the
  * Admiral, T-292's brief).
  *
- * `src` is ALWAYS our own same-origin frame route
- * (`/meet/studio/frame/<room>?…`), whose 302 carries the keyed studio
- * URL — so the room key never appears in this page's HTML at all, not
- * even inside a client prop's flight serialization (T-292 §4's posture:
- * the key rides only inside the iframe src our server mints). The Stage
+ * `src` is the SERVER-MINTED keyed studio URL (the page's
+ * mintStudioFrameTarget — room key, both-off arrival unless the
+ * pre-join card's toggles flipped a half on, `&hangupbutton`,
+ * `&iframetarget=<the visitor's origin>`). The key appears in the page's
+ * HTML ONLY inside this iframe src — never as bare text, never in a copy
+ * field (T-292 §4's posture, pinned in tests/meet-studio.test.ts); the
+ * page is force-dynamic, so the minted HTML is `no-store`. The Stage
  * already iframes the studio cross-origin (RoomVideoSlot.tsx, T-245) —
- * this is the same embed, wrapped in the meeting's chrome.
+ * this is the same embed, wrapped in the meeting's chrome. The src
+ * must be DIRECT, never a same-origin route that 302s to the studio:
+ * Chromium does not delegate camera/mic permissions through a redirect
+ * inside an iframe (A/B proven this lane, 0018.06.25).
  *
  * The end card fires on the fork's own iframe-API event: hangupComplete()
  * emits `{action:"hungup", value:true}` (fork `lib.js:20545`, delivered
@@ -58,8 +63,8 @@ export default function VdoRoom({
   title = "the meeting room",
   height = "72vh",
 }: {
-  /** our SAME-ORIGIN frame route (`/meet/studio/frame/<room>?…`) — never
-   *  a keyed studio URL; see this file's docblock */
+  /** the SERVER-MINTED keyed studio URL (mintStudioFrameTarget) —
+   *  appears in the page's HTML only inside this iframe's src */
   src: string;
   /** the studio's own host (config.meeting.vdoHost) — the expected
    *  postMessage origin after the frame's 302 lands; public knowledge,

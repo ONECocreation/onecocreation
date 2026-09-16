@@ -1,20 +1,17 @@
-"use client";
-
-import { useState } from "react";
-import VdoRoom from "@/components/booking/VdoRoom";
-
 /**
  * THE PRE-JOIN CARD (TASK-297, 0018.06.25 a₿ · block ~967,218) — the one
  * beat before the room opens: your name (prefilled from the member
  * session when the site knows you, a field otherwise), camera and mic
- * BOTH OFF by default with a toggle each (Love's call #4 item 6 ruling:
- * "video and mic off when people join… guests choose"), and the one
- * honest line from item 9: allow camera and microphone when your browser
- * asks. Joining mounts the room itself (VdoRoom) addressed by our OWN
- * same-origin frame route — the toggles ride its query, and the frame
- * route's server mint honours them (room-access.ts's
- * mintStudioFrameTarget). No key, no secret, no vdo host in any prop —
- * this island never touches one.
+ * BOTH OFF by default with a checkbox each (Love's call #4 item 6
+ * ruling: guests arrive with both off and choose for themselves), and
+ * the one honest line from item 9: allow camera and microphone when your
+ * browser asks.
+ *
+ * A plain GET form, a SERVER component — no client JS on the door at
+ * all. Submitting reloads this same page with `?join=1`, and the server
+ * mounts the room with the toggles honoured in the minted frame URL
+ * (mintStudioFrameTarget). Unchecked boxes simply ride absent — absent
+ * reads as off, the honest default.
  */
 
 const wrap: React.CSSProperties = {
@@ -28,41 +25,25 @@ const wrap: React.CSSProperties = {
 
 const toggleRow: React.CSSProperties = {
   display: "flex",
-  gap: 10,
+  gap: 18,
   justifyContent: "center",
   flexWrap: "wrap",
   margin: "14px 0 4px",
 };
 
-export default function PreJoin({
-  room,
-  vdoHost,
-  roomTitle,
-  initialName,
-}: {
-  room: string;
-  vdoHost: string;
-  roomTitle: string;
-  initialName: string;
-}) {
-  const [name, setName] = useState(initialName);
-  const [camera, setCamera] = useState(false);
-  const [mic, setMic] = useState(false);
-  const [joined, setJoined] = useState(false);
+const checkLabel: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  fontSize: ".88rem",
+  color: "var(--ink-body)",
+  cursor: "pointer",
+};
 
-  if (joined) {
-    const q = `label=${encodeURIComponent(name.trim() || "Guest")}&camera=${camera ? 1 : 0}&mic=${mic ? 1 : 0}`;
-    return (
-      <VdoRoom
-        src={`/meet/studio/frame/${encodeURIComponent(room)}?${q}`}
-        vdoHost={vdoHost}
-        title={roomTitle}
-      />
-    );
-  }
-
+export default function PreJoin({ room, initialName }: { room: string; initialName: string }) {
   return (
-    <div style={wrap}>
+    <form method="GET" action={`/meet/studio/${encodeURIComponent(room)}`} style={wrap}>
+      <input type="hidden" name="join" value="1" />
       <p style={{ margin: "0 0 14px", color: "var(--ink-body)", fontSize: ".92rem" }}>
         the room opens right here, inside the site — you never leave home for it.
       </p>
@@ -71,40 +52,32 @@ export default function PreJoin({
           the name the room sees
         </span>
         <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          name="label"
+          defaultValue={initialName}
           placeholder="Guest"
           maxLength={48}
           style={{ width: "100%", textAlign: "center" }}
         />
       </label>
       <div style={toggleRow}>
-        <button
-          type="button"
-          aria-pressed={camera}
-          onClick={() => setCamera((v) => !v)}
-          className={`btn btn-sm ${camera ? "btn-on" : "btn-ghost"}`}
-        >
-          camera {camera ? "on" : "off"}
-        </button>
-        <button
-          type="button"
-          aria-pressed={mic}
-          onClick={() => setMic((v) => !v)}
-          className={`btn btn-sm ${mic ? "btn-on" : "btn-ghost"}`}
-        >
-          mic {mic ? "on" : "off"}
-        </button>
+        <label style={checkLabel}>
+          <input type="checkbox" name="camera" value="1" />
+          arrive on camera
+        </label>
+        <label style={checkLabel}>
+          <input type="checkbox" name="mic" value="1" />
+          arrive on mic
+        </label>
       </div>
       <p style={{ margin: "0 0 16px", fontSize: ".78rem", color: "var(--muted)" }}>
-        you arrive with both off unless you flip them here — and you can change your mind inside the room, too.
+        you arrive with both off unless you tick one here — and you can change your mind inside the room, too.
       </p>
-      <button type="button" className="btn" onClick={() => setJoined(true)}>
+      <button type="submit" id="meet-studio-join" className="btn">
         Join the room
       </button>
       <p style={{ margin: "14px 0 0", fontSize: ".78rem", color: "var(--muted)" }}>
         allow camera and microphone when your browser asks.
       </p>
-    </div>
+    </form>
   );
 }

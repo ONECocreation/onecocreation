@@ -6,6 +6,10 @@ import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { isolateCwd } from "./helpers/isolate-cwd";
 
+/* the page reads next/headers (cookie + request origin); a no-cookie,
+ *  localhost mock keeps the render honest without a request scope */
+vi.mock("next/headers", () => ({ headers: async () => ({ get: () => null }) }));
+
 /**
  * TASK-297 (0018.06.25 a₿ · block ~967,218) — THE MEETING ROOM LIVES IN
  * THE SITE. `/meet/studio/<room>` wraps the studio guest door in the site
@@ -201,54 +205,79 @@ describe("mintStudioFrameTarget — the ONLY keyed mint on the route tree", () =
   });
 });
 
-describe("the frame route — 302 with the keyed Location for a known room, 404 for an unknown one", () => {
-  const call = (room: string, query = "") =>
-    import("@/app/meet/studio/frame/[room]/route").then(({ GET }) =>
-      GET(new Request(`http://localhost:3000/meet/studio/frame/${room}${query}`), {
-        params: Promise.resolve({ room }),
+describe("the page render — the key appears ONLY inside the iframe src", () => {
+  const renderPage = async (searchParams: Record<string, string>) => {
+    const { default: MeetStudioPage } = await import("@/app/meet/studio/[room]/page");
+    return renderToStaticMarkup(
+      await MeetStudioPage({
+        params: Promise.resolve({ room: "onecocreation_studio" }),
+        searchParams: Promise.resolve(searchParams),
       }),
     );
+  };
 
-  it("a known room: 302, Location carries key + hangupbutton + iframetarget, no-store", async () => {
+  it("?join=1 mounts the room with the server-minted keyed src — both-off arrival, hangupbutton, iframetarget", async () => {
     stubRoomsJson(null, false);
     process.env.SEAT_SECRET = "task-297-test-seat-secret";
-    const res = await call("onecocreation_studio", "?label=Ada&camera=1&mic=0");
-    expect(res.status).toBe(302);
-    expect(res.headers.get("Cache-Control")).toContain("no-store");
-    const loc = res.headers.get("Location") ?? "";
-    expect(loc).toContain("https://vdo.onecocreation.com/?room=onecocreation_studio");
-    expect(loc).toContain("label=Ada");
-    expect(loc).not.toContain("&videomute"); // camera flipped on at the card
-    expect(loc).toContain("&mute&"); // mic stays off
-    expect(loc).toMatch(/&password=[0-9a-f]{12}&/);
-    expect(loc).toContain("&hangupbutton");
-    expect(loc).toContain(`&iframetarget=${encodeURIComponent("http://localhost:3000")}`);
+    const html = await renderPage({ join: "1", label: "Ada" });
+    const srcVal = (html.match(/<iframe[^>]*src="([^"]+)"/) ?? [])[1]?.replace(/&amp;/g, "&") ?? "";
+    expect(srcVal).toContain("https://vdo.onecocreation.com/?room=onecocreation_studio");
+    expect(srcVal).toContain("&webcam&mute&videomute&label=Ada");
+    expect(srcVal).toMatch(/&password=[0-9a-f]{12}&/);
+    expect(srcVal).toContain("&hangupbutton");
+    expect(srcVal).toContain("&iframetarget=");
   });
 
-  it("an unknown room: 404, and NOTHING is minted", async () => {
+  it("the key is in the iframe src and NOWHERE else in the document (T-292 §4's pin)", async () => {
     stubRoomsJson(null, false);
-    const res = await call("somebody_else");
-    expect(res.status).toBe(404);
-    expect(res.headers.get("Location")).toBeNull();
+    process.env.SEAT_SECRET = "task-297-test-seat-secret";
+    const { studioRoomKey } = await import("@/lib/live");
+    const key = studioRoomKey("onecocreation_studio")!;
+    const html = await renderPage({ join: "1", label: "Ada" });
+    const rawSrc = (html.match(/<iframe[^>]*src="([^"]+)"/) ?? [])[1] ?? "";
+    expect(rawSrc).toContain(key); // the one legitimate place
+    expect(html.replaceAll(rawSrc, "")).not.toContain(key); // and no other
+  });
+
+  it("the card's toggles ride the query into the mint — camera=1&mic=1 strips both off-params", async () => {
+    stubRoomsJson(null, false);
+    const html = await renderPage({ join: "1", label: "Ada", camera: "1", mic: "1" });
+    const srcVal = (html.match(/<iframe[^>]*src="([^"]+)"/) ?? [])[1]?.replace(/&amp;/g, "&") ?? "";
+    expect(srcVal).not.toContain("&videomute");
+    expect(srcVal).not.toContain("&mute&");
+  });
+
+  it("no join: the pre-join card (a plain GET form) — both boxes UNCHECKED, the allow line, the prefill", async () => {
+    stubRoomsJson({
+      "onecocreation-studio": { title: "Heart Field · the studio", note: "Love's weekly reading room" },
+    });
+    const html = await renderPage({});
+    expect(html).toContain("Heart Field · the studio");
+    expect(html).toContain("Love&#x27;s weekly reading room");
+    expect(html).toContain('method="GET"');
+    expect(html).toContain('action="/meet/studio/onecocreation_studio"');
+    expect(html).toContain('name="join" value="1"');
+    expect(html).toContain('type="checkbox" name="camera"');
+    expect(html).toContain('type="checkbox" name="mic"');
+    expect(html).not.toContain("checked");
+    expect(html).toContain("allow camera and microphone when your browser asks.");
+    expect(html).toContain("Join the room");
   });
 });
 
-describe("the key NEVER in the page's HTML outside the frame src (source pins)", () => {
-  it("page.tsx / pre-join.tsx / VdoRoom.tsx mint nothing keyed — the frame route is the only minter", () => {
-    for (const rel of [
-      "src/app/meet/studio/[room]/page.tsx",
-      "src/app/meet/studio/[room]/pre-join.tsx",
-      "src/components/booking/VdoRoom.tsx",
-    ]) {
+describe("the key appears only inside the iframe src (source pins)", () => {
+  it("pre-join.tsx and VdoRoom.tsx mint nothing keyed — page.tsx's mintStudioFrameTarget is the one minter", () => {
+    for (const rel of ["src/app/meet/studio/[room]/pre-join.tsx", "src/components/booking/VdoRoom.tsx"]) {
       const src = read(rel);
       expect(src).not.toContain("studioRoomKey");
       expect(src).not.toContain("studioGuestLink");
       expect(src).not.toContain("&password");
     }
-    const route = read("src/app/meet/studio/frame/[room]/route.ts");
-    expect(route).toContain("mintStudioFrameTarget");
-    const access = read("src/app/meet/studio/room-access.ts");
-    expect(access).toContain("studioRoomKey");
+    expect(read("src/app/meet/studio/[room]/page.tsx")).toContain("mintStudioFrameTarget");
+  });
+
+  it("the same-origin frame route is GONE — Chromium does not delegate camera/mic through a 302 inside an iframe (A/B-proven this lane, 0018.06.25)", () => {
+    expect(() => read("src/app/meet/studio/frame/[room]/route.ts")).toThrow();
   });
 
   it("VdoRoom carries the right allow=, the hungup listener — and no &api=, no eval (T-292 §4.6)", () => {
@@ -290,25 +319,20 @@ describe("every handed-out guest link is the SITE url (source pins on the three 
 });
 
 describe("the pre-join card and the end card", () => {
-  it("the card: name prefilled when given, both toggles OFF by default, the allow line, the join door", async () => {
+  it("the card: name prefilled when given, both boxes unchecked, the allow line, the join door", async () => {
     const PreJoin = (await import("@/app/meet/studio/[room]/pre-join")).default;
-    const html = renderToStaticMarkup(
-      h(PreJoin, { room: "onecocreation_studio", vdoHost: "vdo.onecocreation.com", roomTitle: "Heart Field · the studio", initialName: "Ada" }),
-    );
+    const html = renderToStaticMarkup(h(PreJoin, { room: "onecocreation_studio", initialName: "Ada" }));
     expect(html).toContain('value="Ada"');
-    expect(html).toContain('aria-pressed="false"');
-    expect(html).not.toContain('aria-pressed="true"');
-    expect(html).toContain("camera off");
-    expect(html).toContain("mic off");
+    expect(html).toContain('type="checkbox" name="camera"');
+    expect(html).toContain('type="checkbox" name="mic"');
+    expect(html).not.toContain("checked");
     expect(html).toContain("allow camera and microphone when your browser asks.");
     expect(html).toContain("Join the room");
   });
 
   it("an unsigned visitor gets the empty field, never a fabricated name", async () => {
     const PreJoin = (await import("@/app/meet/studio/[room]/pre-join")).default;
-    const html = renderToStaticMarkup(
-      h(PreJoin, { room: "onecocreation_studio", vdoHost: "vdo.onecocreation.com", roomTitle: "Heart Field · the studio", initialName: "" }),
-    );
+    const html = renderToStaticMarkup(h(PreJoin, { room: "onecocreation_studio", initialName: "" }));
     expect(html).toContain('value=""');
     expect(html).toContain('placeholder="Guest"');
   });
