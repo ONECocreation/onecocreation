@@ -90,7 +90,11 @@ export default async function ConsoleOverviewPage() {
       <div className="p-6">
         <LovesDesk />
         {/* the day's actions live WITH the calendar (Admiral, 0018.05.15) —
-            goods to ship + offers waiting; sessions close out in their popups */}
+            revisited T-319 (0018.06.26 a₿, the Admiral: the mark-fulfilled
+            area is "kind of a nunsance… not sure if that is the best
+            place"): fulfilment moved to the Money room's order popup; what
+            stays here is one compact counted pointer (Astra's K48 option
+            (b)). Sessions still close out in their calendar popups */}
         <AttentionStrip />
         {/* TASK-192 — the class door folded into the Go-Live room (one door
             on Love's desk, four ways in); this pointer is all that stays here */}
@@ -110,7 +114,7 @@ export default async function ConsoleOverviewPage() {
             <li>⚑ <b>Daily</b> — tap a flagged session on the calendar above; saving notes closes it out</li>
             <li>✉️ <b>Weekly</b> — write &amp; publish the news: <Link href="/a/letters" style={{ color: "var(--info)", textDecoration: "underline" }}>Letters</Link> (it lands on <Link href="/news" style={{ color: "var(--info)", textDecoration: "underline" }}>/news</Link> + every inbox)</li>
             <li>🎁 <b>Every visit</b> — give-what-you-can offers waiting: <Link href="/a/money" style={{ color: "var(--info)", textDecoration: "underline" }}>Money Jars · offers desk</Link></li>
-            <li>📅 <b>Weekly</b> — hours &amp; days off ring true: the calendar above</li>
+            <li>📅 <b>Weekly</b> — hours &amp; days off ring true: <Link href="/a/booking" style={{ color: "var(--info)", textDecoration: "underline" }}>Sessions &amp; hours</Link></li>
             <li>👥 <b>Monthly</b> — who&apos;s new, who needs a hand: <Link href="/a/people" style={{ color: "var(--info)", textDecoration: "underline" }}>People</Link></li>
           </ul>
         </div>
