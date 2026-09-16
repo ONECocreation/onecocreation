@@ -522,6 +522,10 @@ const CONTRACT = [
   { name: "body copy on panel", fg: "var(--ink-body)", bg: "var(--panel)", need: 4.5 },
   { name: "muted on panel", fg: "var(--muted)", bg: "var(--panel)", need: 4.5 },
   { name: "field ink on field", fg: "var(--field-ink)", bg: "var(--field-bg)", need: 4.5 },
+  /* T-324 — the console-field placeholder: a literal by design (the field
+     tokens are theme-invariant; .console-field::placeholder in globals.css
+     pours exactly this value — keep the two in step) */
+  { name: "field placeholder on field", fg: "#6B6580", bg: "var(--field-bg)", need: 4.5 },
   { name: "ghost button ink", fg: "var(--ghost-ink)", bg: "var(--ghost-bg)", need: 4.5 },
   { name: "money ink on gold", fg: "var(--gold-ink)", bg: "var(--gold)", need: 4.5 },
   { name: "money ink on gold light end", fg: "var(--gold-ink)", bg: "var(--gold-2)", need: 4.5 },
