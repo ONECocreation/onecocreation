@@ -14,7 +14,14 @@
 
 /* ── the month grid ───────────────────────────────────────────────── */
 .cal-month-grid{display:grid;grid-template-columns:repeat(7,minmax(84px,1fr));gap:6px;min-width:588px}
-.cal-week-ribbon{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+/* T-319 (0018.06.26 a₿): the ribbon now rides the SAME 84px cell floor
+   as the month grid and scrolls inside .cal-scroll the same way on a
+   phone. It used to squeeze to minmax(0,1fr) — at 390px that is a ~45px
+   cell, where even the two-line pill cannot hold "~11:11" whole and the
+   time broke mid-token, the exact unreadability this lane was cut to
+   kill. One lattice, one floor: the time never ellipsizes AND never
+   splits, at any width. */
+.cal-week-ribbon{display:grid;grid-template-columns:repeat(7,minmax(84px,1fr));gap:6px;min-width:588px}
 .cal-week-ribbon > *{min-width:0}
 
 /* ── the day cell ──────────────────────────────────────────────────── */
@@ -39,19 +46,45 @@
 .cal-cell--boundary .cal-cell__month-abbr{opacity:1}
 
 .cal-cell__head{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+/* T-319: a civil-month-boundary cell speaks BOTH dates with the month
+   named ("D23" + "AUG 23") — more than the 84px column can hold on one
+   line. Let the head wrap (the corner value drops to its own line and
+   stays right) instead of crowding the two labels into each other.
+   Scoped to the boundary cells only, per the brief; ordinary cells keep
+   the one-line head. */
+.cal-cell--boundary .cal-cell__head{flex-wrap:wrap;row-gap:0}
+.cal-cell--boundary .cal-cell__corner{margin-left:auto}
 .cal-cell__primary{font-family:var(--font-mono);font-weight:700;font-size:1.05rem;color:var(--ink-strong)}
 .cal-cell__corner{font-family:var(--font-mono);font-size:.68rem;color:var(--muted);white-space:nowrap}
 .cal-cell__month-abbr{opacity:.72;margin-right:2px;text-transform:uppercase;letter-spacing:.04em}
 
 .cal-cell__mark{align-self:flex-start;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
   color:var(--err);font-weight:700}
-.cal-cell__doy{position:absolute;bottom:5px;right:8px;font-family:var(--font-mono);font-size:.6rem;color:var(--muted);opacity:.75}
+/* T-319 (0018.06.26 a₿): the day-of-year numeral rides the normal flow
+   now — the last child of the cell's column, tucked to the right edge.
+   It was position:absolute;bottom:5px;right:8px and floated OVER the
+   pill row (the AUG 17 overlap the Admiral shot). The pills keep their
+   margin-top:auto below, so the pills+day-of-year pair still pins to the
+   bottom of the cell as one stack — nothing overlays anything. */
+.cal-cell__doy{align-self:flex-end;font-family:var(--font-mono);font-size:.6rem;color:var(--muted);opacity:.75}
 .cal-cell__week-label{position:absolute;top:-1.4em;left:0;font-family:var(--font-mono);font-size:.6rem;
   color:var(--muted);letter-spacing:.05em}
 
-.cal-cell__pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto}
-.cal-pill{display:inline-block;border-radius:999px;padding:2px 8px;font-size:.62rem;font-weight:700;
-  letter-spacing:.03em;line-height:1.5;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* T-319: one pill per row, full cell width — the row the pill shares
+   with no other pill is the only width a long label ever needed. The
+   Circle's own override (.circle-cal .cal-cell__pills, classroom.css)
+   still centres its pill TEXT via text-align; its justify-content is a
+   harmless no-op on a column axis. */
+.cal-cell__pills{display:flex;flex-direction:column;align-items:stretch;gap:3px;margin-top:auto}
+/* T-319: the label may take TWO lines, then an honest ellipsis — the
+   pill labels lead with the time (marks.ts), so the time never
+   ellipsizes even when the title must. Was white-space:nowrap with
+   text-overflow:ellipsis, which truncated every pill to an unreadable
+   "~1…"/"12:…" prefix inside the 84px column. */
+.cal-pill{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
+  border-radius:999px;padding:2px 8px;font-size:.62rem;font-weight:700;
+  letter-spacing:.03em;line-height:1.5;max-width:100%;overflow:hidden;white-space:normal;overflow-wrap:break-word}
+.cal-cell__more{font-size:.6rem;font-weight:700;letter-spacing:.03em;color:var(--muted);padding:0 8px}
 .cal-pill--plain{background:var(--glass);border:1px solid var(--glass-edge);color:var(--ink-body)}
 .cal-pill--gold{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink)}
 .cal-pill--lav{background:rgba(139,118,196,.28);color:var(--ink-strong)}
@@ -62,8 +95,15 @@
    colour alone. Scoped to `button.cal-pill` only: the plain <span> pills
    (MemberCalendar and anywhere else that never wires onSelectPill) must
    never appear to be a door they aren't. */
-button.cal-pill{cursor:pointer;font:inherit;appearance:none;-webkit-appearance:none;
-  border:1px solid var(--glass-edge)}
+/* T-319 note on the rule below: `font:inherit` used to drag the pill
+   back up to the cell's own font size, undoing `.cal-pill`'s .62rem on
+   the desk (the only surface that wires onSelectPill — MemberCalendar
+   and the Circle render span pills, so their sizing was never broken).
+   Buttons now inherit only the FAMILY; the pill's own size/weight stand.
+   text-align:left keeps the wrapped two-line label reading like the
+   span pills do; the Circle's centred pills are spans, untouched. */
+button.cal-pill{cursor:pointer;font-family:inherit;appearance:none;-webkit-appearance:none;
+  border:1px solid var(--glass-edge);text-align:left}
 button.cal-pill:hover{border-color:var(--info);text-decoration:underline}
 button.cal-pill:focus-visible{outline:2px solid var(--info);outline-offset:2px}
 
