@@ -9,8 +9,8 @@ import { HOUSE_SEEDS_ENABLED } from "./house-seeds";
  * (elbow ribbon + mobile bottom bar) renders from it. Adding a room = one
  * entry; rebranding the console = the theme.
  *
- * SCAR Console v2 alignment: the five rooms are the canonical v2 decks —
- * BRIDGE · DUTY ROSTER · SIMULATOR · BOT DECK · FLEET MAP — laid over the
+ * SCAR Console v2 alignment: the house rooms are the canonical v2 decks —
+ * BRIDGE · SIMULATOR · BOT DECK · FLEET MAP — laid over the
  * existing boards (nothing lost, everything re-berthed). The v2 theme seam
  * (the house's own bridge ↔ LCARS tribute) lives in the shell as a token
  * remap, never a markup fork.
