@@ -110,7 +110,7 @@ export default async function ConsoleOverviewPage() {
             <li>⚑ <b>Daily</b> — tap a flagged session on the calendar above; saving notes closes it out</li>
             <li>✉️ <b>Weekly</b> — write &amp; publish the news: <Link href="/a/letters" style={{ color: "var(--info)", textDecoration: "underline" }}>Letters</Link> (it lands on <Link href="/news" style={{ color: "var(--info)", textDecoration: "underline" }}>/news</Link> + every inbox)</li>
             <li>🎁 <b>Every visit</b> — give-what-you-can offers waiting: <Link href="/a/money" style={{ color: "var(--info)", textDecoration: "underline" }}>Money Jars · offers desk</Link></li>
-            <li>📅 <b>Weekly</b> — hours &amp; days off ring true: the calendar above</li>
+            <li>📅 <b>Weekly</b> — hours &amp; days off ring true: <Link href="/a/booking" style={{ color: "var(--info)", textDecoration: "underline" }}>Sessions &amp; hours</Link></li>
             <li>👥 <b>Monthly</b> — who&apos;s new, who needs a hand: <Link href="/a/people" style={{ color: "var(--info)", textDecoration: "underline" }}>People</Link></li>
           </ul>
         </div>
