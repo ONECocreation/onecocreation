@@ -80,6 +80,14 @@
 #                   the fixture KV's `store:catalog` key (src/lib/store.ts:261
 #                   CATALOG_KV) from a JSON file, so the /a/store
 #                   deliverables panel and catalog pages have wares to shoot.
+#   --seed-kv F     TASK-326: seeds ARBITRARY keys — F is a JSON array of
+#                   command arrays, each already in fixture-kv.cjs's wire
+#                   shape (["SET",k,v] / ["SADD",k,m]); a record value is
+#                   the stringified JSON document, the same shape
+#                   --seed-store builds below. Repeatable. This is how a
+#                   lane seeds bookings (booking:index + booking:rec:<id>)
+#                   or orders (store:orders:index + store:order:<id>) —
+#                   --seed-store only ever SETs store:catalog.
 #   --full-page     TASK-294: `fullPage: true` on every screenshot; filenames
 #                   gain a "-full" suffix. Default stays viewport-only.
 #
@@ -119,7 +127,7 @@ cd "$REPO_ROOT"
 
 usage() {
   cat >&2 <<'USAGE'
-usage: scripts/shots-fixture.sh --ports A-B --out <dir> --routes <file|list> [--themes dark,dawn] [--widths 1440,390] [--cookie member|operator|none] [--tenant <name>] [--click "<selector>"] [--no-build] [--seed-puck <slug>[,<slug>|<slug>:<json-file>...]] [--seed-store <json-file>] [--full-page]
+usage: scripts/shots-fixture.sh --ports A-B --out <dir> --routes <file|list> [--themes dark,dawn] [--widths 1440,390] [--cookie member|operator|none] [--tenant <name>] [--click "<selector>"] [--no-build] [--seed-puck <slug>[,<slug>|<slug>:<json-file>...]] [--seed-store <json-file>] [--seed-kv <cmds-json-file>] [--full-page]
 USAGE
 }
 
@@ -134,6 +142,7 @@ CLICK_SEL=""
 NO_BUILD=0
 SEED_PUCK=""
 SEED_STORE=""
+SEED_KV=()
 FULL_PAGE=0
 
 while [ $# -gt 0 ]; do
@@ -149,6 +158,7 @@ while [ $# -gt 0 ]; do
     --no-build) NO_BUILD=1; shift ;;
     --seed-puck) SEED_PUCK="${2:-}"; shift 2 ;;
     --seed-store) SEED_STORE="${2:-}"; shift 2 ;;
+    --seed-kv) SEED_KV+=("${2:-}"); shift 2 ;;
     --full-page) FULL_PAGE=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "shots-fixture.sh: unrecognized argument: $1" >&2; usage; exit 2 ;;
@@ -354,6 +364,42 @@ if [ -n "$SEED_STORE" ]; then
     *'"result":"OK"'*) echo "shots-fixture.sh: seeded store:catalog from $SEED_STORE" ;;
     *) echo "shots-fixture.sh: store:catalog seed did not answer OK: $SEED_RES" >&2; exit 1 ;;
   esac
+fi
+
+# ---- TASK-326: seed arbitrary keys (--seed-kv) ----------------------------
+# Bookings (booking:index + booking:rec:<id>) and orders (store:orders:index
+# + store:order:<id>) are sets + stringified records — --seed-store's one
+# SET can't build them. The file is a JSON array of command arrays, each
+# already fixture-kv.cjs's POST body; one POST per command, every command
+# must answer a non-null result (null = the KV didn't take it).
+if [ "${#SEED_KV[@]}" -gt 0 ]; then
+  for seed_file in "${SEED_KV[@]}"; do
+    if [ ! -f "$seed_file" ]; then
+      echo "shots-fixture.sh: --seed-kv file not found: $seed_file" >&2
+      exit 2
+    fi
+    SEED_CMDS=$(node -e '
+      const fs = require("fs");
+      const cmds = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+      if (!Array.isArray(cmds) || !cmds.every((c) => Array.isArray(c))) {
+        console.error("shots-fixture.sh: --seed-kv file must be a JSON array of command arrays");
+        process.exit(2);
+      }
+      for (const c of cmds) console.log(JSON.stringify(c));
+    ' "$seed_file") || exit 2
+    while IFS= read -r SEED_CMD; do
+      [ -z "$SEED_CMD" ] && continue
+      SEED_RES=$(curl -s -X POST -d "$SEED_CMD" "http://127.0.0.1:$KV_PORT/")
+      case "$SEED_RES" in
+        *'"result":null'*|*"error"*)
+          echo "shots-fixture.sh: --seed-kv command did not land: $SEED_CMD -> $SEED_RES" >&2; exit 1 ;;
+        *'"result"'*) : ;;
+        *)
+          echo "shots-fixture.sh: --seed-kv got no result envelope: $SEED_CMD -> $SEED_RES" >&2; exit 1 ;;
+      esac
+    done <<< "$SEED_CMDS"
+    echo "shots-fixture.sh: seeded $seed_file into the fixture KV"
+  done
 fi
 
 # ---- build once if .next looks stale -----------------------------------
