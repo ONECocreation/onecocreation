@@ -1771,8 +1771,11 @@ const lettersContent: Block[] = [
   lt.band("plain", "theme", [
     lt.eyebrow("From Love, To You", "center"),
     lt.stacked("YOUR", "LETTERS", "h1", "center"),
-    { type: "LettersRoom", props: { id: "lt-room" } },
   ]),
+  /* the block sits at the ROOT, where the room sits today — the injector
+     (applyLettersToPuck) is top-level only, the PackagesGrid law: an entry
+     nested into a slot keeps the designer placeholder */
+  { type: "LettersRoom", props: { id: "lt-room" } },
 ];
 
 /* ── T-296 wave B, letters-cart pair: /cart — the basket ──────────────────
@@ -1787,8 +1790,10 @@ const cartContent: Block[] = [
     ca.eyebrow("The Store", "center"),
     ca.stacked("YOUR", "BASKET 🧺", "h1", "center"),
     ca.text("one checkout — everything settles together, by lightning or by card.", "center", st({ color: "muted", size: 14 })),
-    { type: "CartPanel", props: { id: "ca-panel" } },
   ]),
+  /* the block sits at the ROOT, where the basket sits today — the injector
+     (applyCartRailsToPuck) is top-level only, the PackagesGrid law */
+  { type: "CartPanel", props: { id: "ca-panel" } },
 ];
 
 
