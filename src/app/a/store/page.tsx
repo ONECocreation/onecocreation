@@ -435,7 +435,7 @@ export default function StoreRoom() {
               placeholder="🔍 search the shelf…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ ...field, borderRadius: 999, padding: "9px 18px", flex: 1, minWidth: 170 }}
+              className="console-field" style={{ ...field, borderRadius: 999, padding: "9px 18px", flex: 1, minWidth: 170 }}
             />
             <a className="btn btn-ghost btn-sm" href="/store" target="_blank" rel="noreferrer">
               Preview store
@@ -568,7 +568,7 @@ export default function StoreRoom() {
                     <input value={renameText} autoFocus
                       onChange={(e) => setRenameText(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") void renameCategory(c.name, renameText); }}
-                      style={{ ...field, width: "100%" }} />
+                      className="console-field" style={{ ...field, width: "100%" }} />
                     <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                       <button className="btn btn-sm" onClick={() => void renameCategory(c.name, renameText)}>
                         Rename
@@ -653,11 +653,11 @@ export default function StoreRoom() {
                   <label style={{ ...fieldLabel, marginTop: 0 }}>name</label>
                   <input value={draft.title} placeholder="what is it called?"
                     onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-                    style={{ ...field, width: "100%" }} />
+                    className="console-field" style={{ ...field, width: "100%" }} />
                   <label style={fieldLabel}>the words</label>
                   <textarea value={draft.blurb} placeholder="a line or two in Love's voice"
                     onChange={(e) => setDraft({ ...draft, blurb: e.target.value })}
-                    style={{ ...field, width: "100%", minHeight: 64, resize: "vertical" }} />
+                    className="console-field" style={{ ...field, width: "100%", minHeight: 64, resize: "vertical" }} />
                   {/* TASK-253 (ADDENDUM, 0018.06.24 a₿ — the Admiral: "we
                       needed a short description for the back of the card,
                       and a long description for the full view") */}
@@ -670,7 +670,7 @@ export default function StoreRoom() {
                   <label style={fieldLabel}>Full description (the full view)</label>
                   <textarea value={draft.description ?? ""} placeholder="the long story — the item's own page tells it in full"
                     onChange={(e) => setDraft({ ...draft, description: e.target.value || undefined })}
-                    style={{ ...field, width: "100%", minHeight: 120, resize: "vertical" }} />
+                    className="console-field" style={{ ...field, width: "100%", minHeight: 120, resize: "vertical" }} />
                   <label style={fieldLabel}>category</label>
                   {/* TASK-215 (0018.06.23 a₿, Love's call #8/#30) — a DROPDOWN
                       of the real categories, not free text: every item's
@@ -680,7 +680,7 @@ export default function StoreRoom() {
                       item already carries one (categoryOptionsFor). */}
                   <select value={draft.category?.trim() || KIND_WORD[draft.kind]}
                     onChange={(e) => setDraft({ ...draft, category: e.target.value })}
-                    style={{ ...field, width: "100%" }}>
+                    className="console-field" style={{ ...field, width: "100%" }}>
                     {categoryOptionsFor(draft.kind, draft.category).map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                   <p style={fieldHint}>
@@ -690,7 +690,7 @@ export default function StoreRoom() {
                   <input value={draft.bundle ?? ""} list="oc-shelf-bundles"
                     placeholder="hair together, soul conversations together…"
                     onChange={(e) => setDraft({ ...draft, bundle: e.target.value || undefined })}
-                    style={{ ...field, width: "100%" }} />
+                    className="console-field" style={{ ...field, width: "100%" }} />
                   <datalist id="oc-shelf-bundles">
                     {bundles.map((b) => <option key={b.name} value={b.name} />)}
                   </datalist>
@@ -702,13 +702,13 @@ export default function StoreRoom() {
                       <label style={fieldLabel}>item № (optional)</label>
                       <input value={draft.sku ?? ""} placeholder="sku"
                         onChange={(e) => setDraft({ ...draft, sku: e.target.value || undefined })}
-                        style={{ ...field, width: "100%" }} />
+                        className="console-field" style={{ ...field, width: "100%" }} />
                     </span>
                     <span style={{ flex: 2, minWidth: 160 }}>
                       <label style={fieldLabel}>sizes, comma-separated</label>
                       <input value={sizesText} placeholder="S, M, L, XL"
                         onChange={(e) => setSizesText(e.target.value)}
-                        style={{ ...field, width: "100%" }} />
+                        className="console-field" style={{ ...field, width: "100%" }} />
                     </span>
                   </div>
                 </div>
@@ -769,7 +769,7 @@ export default function StoreRoom() {
                       <input type="number" value={draft.price.sats ?? ""} placeholder="111111"
                         onChange={(e) =>
                           setDraft({ ...draft, price: { ...draft.price, sats: e.target.value ? Number(e.target.value) : undefined } })}
-                        style={{ ...field, width: "100%" }} />
+                        className="console-field" style={{ ...field, width: "100%" }} />
                       <p style={fieldHint}>sats as a whole number</p>
                     </span>
                     <span style={{ flex: 1, minWidth: 120 }}>
@@ -781,7 +781,7 @@ export default function StoreRoom() {
                         onChange={(e) =>
                           setDraft({ ...draft, price: { ...draft.price,
                             fiat: e.target.value === "" ? undefined : { amount: Math.round(Number(e.target.value) * 100), currency: "USD" } } })}
-                        style={{ ...field, width: "100%" }} />
+                        className="console-field" style={{ ...field, width: "100%" }} />
                       <p style={fieldHint}>USD as dollars and cents — 33.33 means $33.33</p>
                     </span>
                   </div>
@@ -796,7 +796,7 @@ export default function StoreRoom() {
                         onChange={(e) =>
                           setDraft({ ...draft, sale: saleWith({ ...draft.sale,
                             fiat: e.target.value === "" ? undefined : { amount: Math.round(Number(e.target.value) * 100), currency: "USD" } }) })}
-                        style={{ ...field, width: "100%" }} />
+                        className="console-field" style={{ ...field, width: "100%" }} />
                       <p style={fieldHint}>USD as dollars and cents</p>
                     </span>
                     <span style={{ flex: 1, minWidth: 120 }}>
@@ -805,7 +805,7 @@ export default function StoreRoom() {
                         onChange={(e) =>
                           setDraft({ ...draft, sale: saleWith({ ...draft.sale,
                             sats: e.target.value ? Number(e.target.value) : undefined }) })}
-                        style={{ ...field, width: "100%" }} />
+                        className="console-field" style={{ ...field, width: "100%" }} />
                       <p style={fieldHint}>sats as a whole number</p>
                     </span>
                     <span style={{ flex: 1, minWidth: 120 }}>
@@ -813,7 +813,7 @@ export default function StoreRoom() {
                       <input type="number" min="0" step="1" value={draft.inventory ?? ""} placeholder="blank = unlimited"
                         onChange={(e) =>
                           setDraft({ ...draft, inventory: e.target.value === "" ? undefined : Number(e.target.value) })}
-                        style={{ ...field, width: "100%" }} />
+                        className="console-field" style={{ ...field, width: "100%" }} />
                       <p style={fieldHint}>
                         how many are on the shelf — each paid order counts it down and 0 marks it sold out; blank = unlimited
                       </p>
@@ -822,7 +822,7 @@ export default function StoreRoom() {
                   <label style={fieldLabel}>status</label>
                   <select value={draft.status}
                     onChange={(e) => setDraft({ ...draft, status: e.target.value as StoreItem["status"] })}
-                    style={{ ...field, width: "100%" }}>
+                    className="console-field" style={{ ...field, width: "100%" }}>
                     <option value="live">● live on the shelf</option>
                     <option value="hidden">○ hidden</option>
                     <option value="soldout">◌ sold out</option>
@@ -836,7 +836,7 @@ export default function StoreRoom() {
                     value={draft.kind}
                     onChange={(e) =>
                       setDraft({ ...draft, kind: e.target.value as StoreItem["kind"], fulfillment: e.target.value as StoreItem["kind"] })}
-                    style={{ ...field, width: "100%" }}
+                    className="console-field" style={{ ...field, width: "100%" }}
                   >
                     <option value="self">ware — merch Love packs &amp; ships</option>
                     <option value="digital">meditation / digital — instant download</option>
@@ -854,7 +854,7 @@ export default function StoreRoom() {
                         value={draft.partner ?? ""}
                         onChange={(e) =>
                           setDraft({ ...draft, partner: (e.target.value || undefined) as StoreItem["partner"] })}
-                        style={{ ...field, width: "100%" }}
+                        className="console-field" style={{ ...field, width: "100%" }}
                       >
                         <option value="">no partner — as above</option>
                         {partners.printful && <option value="printful">Printful — printed &amp; shipped on demand</option>}
@@ -874,7 +874,7 @@ export default function StoreRoom() {
                     <select
                       value={draft.entitlementTier ?? ""}
                       onChange={(e) => setDraft({ ...draft, entitlementTier: e.target.value || undefined })}
-                      style={{ ...field, width: "100%" }}
+                      className="console-field" style={{ ...field, width: "100%" }}
                     >
                       <option value="">— no tier (this item won&apos;t unlock anything) —</option>
                       {(["A", "B", "C"] as Tier[]).map((t) => (
@@ -888,7 +888,7 @@ export default function StoreRoom() {
                       placeholder="leave blank for the ordinary open-ended membership"
                       onChange={(e) =>
                         setDraft({ ...draft, entitlementDays: e.target.value ? Number(e.target.value) : undefined })}
-                      style={{ ...field, width: "100%" }}
+                      className="console-field" style={{ ...field, width: "100%" }}
                     />
                     <p style={{ margin: "8px 0 0", fontSize: ".72rem", color: "var(--muted)" }}>
                       set this for a one-week taster (weekly-one-week, observer-one-week, …) — the grant
@@ -918,7 +918,7 @@ export default function StoreRoom() {
                           },
                         })
                       }
-                      style={{ ...field, minWidth: 110 }}
+                      className="console-field" style={{ ...field, minWidth: 110 }}
                     >
                       <option value="">none</option>
                       <option value="audio">audio</option>
@@ -939,7 +939,7 @@ export default function StoreRoom() {
                               : d
                           )
                         }
-                        style={{ ...field, flex: 1, minWidth: 150 }}
+                        className="console-field" style={{ ...field, flex: 1, minWidth: 150 }}
                       />
                     )}
                   </div>
@@ -1000,7 +1000,7 @@ export default function StoreRoom() {
                         media: { ...(draft.media ?? { images: [] }), preview: e.target.value || undefined },
                       })
                     }
-                    style={{ ...field, width: "100%" }}
+                    className="console-field" style={{ ...field, width: "100%" }}
                   />
                 </div>
 

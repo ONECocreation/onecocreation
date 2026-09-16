@@ -133,44 +133,44 @@ export default function RetreatsDesk() {
           </h4>
           <label style={fieldLabel}>name</label>
           <input value={draft.title} placeholder="Way of the Heart · Sedona"
-            onChange={(e) => setDraft({ ...draft, title: e.target.value })} style={{ ...field, width: "100%" }} />
+            onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="console-field" style={{ ...field, width: "100%" }} />
           <label style={fieldLabel}>location</label>
           <input value={draft.location} placeholder="Sedona, Arizona — exact address shared after booking"
-            onChange={(e) => setDraft({ ...draft, location: e.target.value })} style={{ ...field, width: "100%" }} />
+            onChange={(e) => setDraft({ ...draft, location: e.target.value })} className="console-field" style={{ ...field, width: "100%" }} />
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <span style={{ flex: 1, minWidth: 130 }}>
               <label style={fieldLabel}>first day</label>
               <input type="date" value={draft.startDate}
-                onChange={(e) => setDraft({ ...draft, startDate: e.target.value })} style={{ ...field, width: "100%" }} />
+                onChange={(e) => setDraft({ ...draft, startDate: e.target.value })} className="console-field" style={{ ...field, width: "100%" }} />
             </span>
             <span style={{ flex: 1, minWidth: 130 }}>
               <label style={fieldLabel}>last day</label>
               <input type="date" value={draft.endDate}
-                onChange={(e) => setDraft({ ...draft, endDate: e.target.value })} style={{ ...field, width: "100%" }} />
+                onChange={(e) => setDraft({ ...draft, endDate: e.target.value })} className="console-field" style={{ ...field, width: "100%" }} />
             </span>
             <span style={{ width: 90 }}>
               <label style={fieldLabel}>seats</label>
               <input type="number" value={draft.seats || ""}
-                onChange={(e) => setDraft({ ...draft, seats: Number(e.target.value) })} style={{ ...field, width: "100%" }} />
+                onChange={(e) => setDraft({ ...draft, seats: Number(e.target.value) })} className="console-field" style={{ ...field, width: "100%" }} />
             </span>
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <span style={{ flex: 1, minWidth: 140 }}>
               <label style={fieldLabel}>seat price (sats)</label>
               <input type="number" value={draft.priceSats || ""} placeholder="1111111"
-                onChange={(e) => setDraft({ ...draft, priceSats: Number(e.target.value) })} style={{ ...field, width: "100%" }} />
+                onChange={(e) => setDraft({ ...draft, priceSats: Number(e.target.value) })} className="console-field" style={{ ...field, width: "100%" }} />
             </span>
             <span style={{ flex: 1, minWidth: 140 }}>
               <label style={fieldLabel}>deposit (sats, optional)</label>
               <input type="number" value={draft.depositSats ?? ""} placeholder="holds a seat"
                 onChange={(e) => setDraft({ ...draft, depositSats: e.target.value ? Number(e.target.value) : undefined })}
-                style={{ ...field, width: "100%" }} />
+                className="console-field" style={{ ...field, width: "100%" }} />
             </span>
             <span style={{ minWidth: 140 }}>
               <label style={fieldLabel}>status</label>
               <select value={draft.status}
                 onChange={(e) => setDraft({ ...draft, status: e.target.value as Retreat["status"] })}
-                style={{ ...field, width: "100%" }}>
+                className="console-field" style={{ ...field, width: "100%" }}>
                 <option value="hidden">○ hidden — still shaping it</option>
                 <option value="live">● live — doors open</option>
               </select>
@@ -179,7 +179,7 @@ export default function RetreatsDesk() {
           <label style={fieldLabel}>the words</label>
           <textarea value={draft.blurb} placeholder="what these days hold…"
             onChange={(e) => setDraft({ ...draft, blurb: e.target.value })}
-            style={{ ...field, width: "100%", minHeight: 64, resize: "vertical" }} />
+            className="console-field" style={{ ...field, width: "100%", minHeight: 64, resize: "vertical" }} />
           {err && <p style={{ color: "var(--err)", fontSize: ".8rem", margin: "8px 0 0" }}>{err}</p>}
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <button className="btn btn-sm" onClick={save} disabled={busy}>

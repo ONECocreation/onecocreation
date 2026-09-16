@@ -278,7 +278,7 @@ export default function LettersRoom() {
       <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-start">
         <div className="min-w-0 flex-1 space-y-2">
           <input value={subj} onChange={(e) => setSubj(e.target.value)} placeholder="subject"
-            className="w-full" style={field} />
+            className="w-full console-field" style={field} />
           <div className="flex flex-wrap items-center gap-1">
             <button onClick={() => applyToggle("**")} className="btn btn-ghost btn-sm" style={{ fontWeight: 700 }}>B</button>
             <button onClick={() => applyToggle("*")} className="btn btn-ghost btn-sm" style={{ fontStyle: "italic" }}>I</button>
@@ -294,7 +294,7 @@ export default function LettersRoom() {
           </div>
           <textarea id={`ta-${key}`} ref={textareaRef} value={bodyTxt} onChange={(e) => setBodyTxt(e.target.value)} rows={10}
             placeholder="the letter body — blank line makes a new paragraph; the brand shell wraps it"
-            className="w-full" style={field} />
+            className="w-full console-field" style={field} />
           <div className="flex flex-wrap items-center gap-2">
             <button onClick={() => save(key)} className="btn btn-sm">SAVE</button>
             {note && <span style={{ alignSelf: "center", fontSize: ".75rem", color: "var(--muted)" }}>{note}</span>}
@@ -321,9 +321,9 @@ export default function LettersRoom() {
         {composing ? (
           <div className="space-y-2">
             <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="letter title — e.g. Lions Gate Gathering"
-              className="w-full" style={field} />
+              className="w-full console-field" style={field} />
             <input value={newKey} onChange={(e) => setNewKey(e.target.value)} placeholder="key (optional — derived from the title)"
-              className="w-full" style={field} />
+              className="w-full console-field" style={field} />
             <div className="flex flex-wrap items-center gap-3" style={{ fontSize: ".78rem" }}>
               <label className="flex items-center gap-1">
                 <input type="radio" checked={newAudience === "list"} onChange={() => setNewAudience("list")} />

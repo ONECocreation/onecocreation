@@ -214,14 +214,14 @@ export default function AboutVideosCard() {
             value={featLink}
             onChange={(e) => { setFeatLink(e.target.value); setFeatErr(null); }}
             placeholder="paste the YouTube link or the video id…"
-            style={{ ...field, width: "100%" }}
+            className="console-field" style={{ ...field, width: "100%" }}
             aria-label="Top of About — YouTube link or video id"
           />
           <input
             value={featTitle}
             onChange={(e) => setFeatTitle(e.target.value)}
             placeholder="the title visitors see under it…"
-            style={{ ...field, width: "100%" }}
+            className="console-field" style={{ ...field, width: "100%" }}
             aria-label="Top of About — video title"
           />
           <span style={{ fontSize: ".74rem", color: featParsed ? "var(--ok)" : "var(--muted)" }}>
@@ -290,14 +290,14 @@ export default function AboutVideosCard() {
             value={link}
             onChange={(e) => onLinkChange(e.target.value)}
             placeholder="paste the YouTube link or the video id…"
-            style={{ ...field, width: "100%" }}
+            className="console-field" style={{ ...field, width: "100%" }}
             aria-label="YouTube link or video id"
           />
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="the title visitors see…"
-            style={{ ...field, width: "100%" }}
+            className="console-field" style={{ ...field, width: "100%" }}
             aria-label="video title"
           />
           <span style={{ fontSize: ".74rem", color: parsed ? "var(--ok)" : "var(--muted)" }}>

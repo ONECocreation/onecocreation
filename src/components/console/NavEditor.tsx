@@ -362,7 +362,7 @@ export default function NavEditor() {
               <input
                 value={item.label}
                 onChange={(e) => renameTop(i, e.target.value)}
-                style={{ ...field, minWidth: 180, fontWeight: 700 }}
+                className="console-field" style={{ ...field, minWidth: 180, fontWeight: 700 }}
                 aria-label={`label for ${item.label}`}
               />
               {item.children?.length ? (
@@ -379,7 +379,7 @@ export default function NavEditor() {
                     if (!Number.isNaN(idx)) nestUnder(i, idx);
                     e.target.value = "";
                   }}
-                  style={{ ...field, fontSize: ".76rem" }}
+                  className="console-field" style={{ ...field, fontSize: ".76rem" }}
                   aria-label={`nest ${item.label} under…`}
                 >
                   <option value="" disabled>nest under…</option>
@@ -421,7 +421,7 @@ export default function NavEditor() {
                     <input
                       value={child.label}
                       onChange={(e) => renameChild(i, j, e.target.value)}
-                      style={{ ...field, minWidth: 180 }}
+                      className="console-field" style={{ ...field, minWidth: 180 }}
                       aria-label={`label for ${child.label}`}
                     />
                     <Chip tone="grey">{child.href}</Chip>
@@ -447,7 +447,7 @@ export default function NavEditor() {
                     addChildPage(i, e.target.value);
                     e.target.value = "";
                   }}
-                  style={field}
+                  className="console-field" style={field}
                   aria-label={`add a page under ${item.label}`}
                 >
                   <option value="" disabled>+ add a page under {item.label}…</option>
@@ -475,7 +475,7 @@ export default function NavEditor() {
             addTopPage(e.target.value);
             e.target.value = "";
           }}
-          style={field}
+          className="console-field" style={field}
           aria-label="add a top-level page"
         >
           <option value="" disabled>+ add a page to the menu…</option>

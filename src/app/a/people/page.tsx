@@ -51,7 +51,7 @@ export default function PeopleRoom() {
   return (
     <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="search members…"
-        className="mb-3 w-full max-w-sm" style={field} />
+        className="mb-3 w-full max-w-sm console-field" style={field} />
       {people.length === 0 ? (
         <p style={{ color: "var(--muted)" }}>No members known yet — signups and purchases land here.</p>
       ) : (
@@ -91,7 +91,7 @@ export default function PeopleRoom() {
                 and the member home unify; neither login is destroyed.
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <select value={mergeTarget} onChange={(e) => setMergeTarget(e.target.value)} style={field}>
+                <select value={mergeTarget} onChange={(e) => setMergeTarget(e.target.value)} className="console-field" style={field}>
                   <option value="">merge with…</option>
                   {shown.filter((x) => x.member !== openRow).map((x) => (
                     <option key={subjectOf(x)} value={subjectOf(x)}>{x.member} ({x.kind})</option>
