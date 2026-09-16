@@ -3,20 +3,33 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { nip19 } from "nostr-tools";
 import { applyMemberSession } from "@/hooks/useMemberSession";
 import { CHALLENGE_ENDPOINT } from "@/lib/signer-doors";
+import DoorSheet from "@/components/door/DoorSheet";
+import { isUnnamedKeyReason } from "@/components/door/door-machine";
 
 /**
  * The NIP-55 landing strip — an Android signer app (Amber-class) signed our
  * challenge and bounced the browser back here with the event in the query.
  * We submit it to the SAME endpoint the other doors use and walk through.
  * The signed challenge is the auth; this page is just the courier.
+ *
+ * TASK-316 item 2: a good key that owns no tag yet is NOT an error — the
+ * strip hands the visitor to the door's own new-name step with the signed
+ * key (the event stays in MEMORY, never back into a URL — the claim route
+ * expects exactly this event + npub, and no query-param stash exists
+ * today). `next` survives: the door's own finish() reads it from this very
+ * URL (landingFor walks a new soul to /welcome?next=…).
  */
 
 function SignerReturn() {
   const router = useRouter();
   const params = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  /* a new key returning from the signer app: the door mounts in new-name
+     with the signed key, in place of this strip */
+  const [claimKey, setClaimKey] = useState<{ event: unknown; npub: string } | null>(null);
   const ran = useRef(false);
 
   const door = params.get("door") === "console" ? "console" : "login";
@@ -54,6 +67,13 @@ function SignerReturn() {
           /* non-JSON = the server fell over, not the member */
         }
         if (!res.ok || !data?.ok) {
+          /* TASK-316: the unnamed-key answer is the new-name walk, never an
+             error — the door opens on its new-name step with the signed key */
+          const pubkey = (event as { pubkey?: string }).pubkey;
+          if (door === "login" && isUnnamedKeyReason(data?.reason) && pubkey) {
+            setClaimKey({ event, npub: nip19.npubEncode(pubkey) });
+            return;
+          }
           setError(
             data?.reason ??
               `the server hiccuped (HTTP ${res.status}) — your signature was fine; tell the operator`
@@ -73,6 +93,12 @@ function SignerReturn() {
     }
     void deliver();
   }, [door, next, rawEvent, router]);
+
+  /* the new-name walk: the door itself, full-page, with the signed key in
+     memory — `next` rides this URL's own query, the door's finish() reads it */
+  if (claimKey) {
+    return <DoorSheet mount="page" initialKey={claimKey} />;
+  }
 
   return (
     <div className="mx-auto w-full max-w-md text-center" style={{ background: "var(--glass)", backdropFilter: "blur(9px)", borderRadius: 24, border: "1px solid var(--glass-edge)", padding: "26px 24px", boxShadow: "0 26px 60px -30px rgba(5,3,16,.7)" }}>
