@@ -14,7 +14,6 @@ function masked(c: NodeConfig) {
     mudUrl: c.mudUrl,
     mudTokenSet: !!c.mudToken,
     chatUrl: c.chatUrl,
-    githubRepo: c.githubRepo,
     githubTokenSet: !!c.githubToken || !!process.env.GITHUB_TOKEN?.trim(),
     briefsRepo: c.briefsRepo, // owner/name, not a secret — no masking
     briefsBranch: c.briefsBranch,
@@ -57,7 +56,6 @@ export async function PUT(request: Request) {
   if (typeof body.mudToken === "string") patch.mudToken = body.mudToken.trim();
   if (typeof body.chatUrl === "string") patch.chatUrl = body.chatUrl.trim();
   if (typeof body.githubToken === "string") patch.githubToken = body.githubToken.trim();
-  if (typeof body.githubRepo === "string") patch.githubRepo = body.githubRepo.trim();
   if (typeof body.briefsRepo === "string") patch.briefsRepo = body.briefsRepo.trim();
   if (typeof body.briefsBranch === "string") patch.briefsBranch = body.briefsBranch.trim();
   if (typeof body.briefsToken === "string") patch.briefsToken = body.briefsToken.trim();
