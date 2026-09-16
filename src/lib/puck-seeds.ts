@@ -1782,6 +1782,43 @@ const mediaContent: Block[] = [
   ]),
 ];
 
+/* ── T-296 wave B, letters-cart pair: /letters — the reading room ─────────
+   src/app/letters/page.tsx transcribed VERBATIM (the words law) — the hero
+   only; the page carries no blurb today. The room itself is NOT
+   transcribed: the LettersRoom block carries only its id, and the page
+   injects the live public shelf at render time (applyLettersToPuck — the
+   shelf is data, never copy; never seed a letter's words). The literal
+   block carries an explicit unique id (the rt-list / pk-grid idiom, T-231). */
+const lt = kit("lt");
+const lettersContent: Block[] = [
+  lt.band("plain", "theme", [
+    lt.eyebrow("From Love, To You", "center"),
+    lt.stacked("YOUR", "LETTERS", "h1", "center"),
+  ]),
+  /* the block sits at the ROOT, where the room sits today — the injector
+     (applyLettersToPuck) is top-level only, the PackagesGrid law: an entry
+     nested into a slot keeps the designer placeholder */
+  { type: "LettersRoom", props: { id: "lt-room" } },
+];
+
+/* ── T-296 wave B, letters-cart pair: /cart — the basket ──────────────────
+   src/app/cart/page.tsx transcribed VERBATIM — the hero and the one blurb.
+   The basket is NOT transcribed: the CartPanel block carries only its id,
+   and the page injects the server-judged rails at render time
+   (applyCartRailsToPuck — TASK-186's warm-before-you-judge order preserved
+   on the page, verbatim). */
+const ca = kit("ca");
+const cartContent: Block[] = [
+  ca.band("plain", "theme", [
+    ca.eyebrow("The Store", "center"),
+    ca.stacked("YOUR", "BASKET 🧺", "h1", "center"),
+    ca.text("one checkout — everything settles together, by lightning or by card.", "center", st({ color: "muted", size: 14 })),
+  ]),
+  /* the block sits at the ROOT, where the basket sits today — the injector
+     (applyCartRailsToPuck) is top-level only, the PackagesGrid law */
+  { type: "CartPanel", props: { id: "ca-panel" } },
+];
+
 /* ── T-296 wave B, me-login pair: /me — the member's own room ─────────────
    src/app/me/page.tsx transcribed VERBATIM (the words law). The hero maps
    to the Band vocabulary (sky-veil holding the night — the fallback's
@@ -1918,6 +1955,16 @@ export const SEEDS: Record<string, PuckPageData> = {
   time: { content: timeContent, root: { props: {
     title: "The Clock — Bitcoin Federated Time — One Cocreation",
     description: "Bitcoin Federated Time, plainly: the canonical date and the live block height — read from the chain, never estimated.",
+  } } },
+  /* T-296 wave B, letters-cart pair: /letters mirrors its metadata
+     verbatim; /cart carries NO description today — title only, none
+     invented (pair 2's law) */
+  letters: { content: lettersContent, root: { props: {
+    title: "Your Letters — One Cocreation",
+    description: "The letters Love has sent you, in one reading room.",
+  } } },
+  cart: { content: cartContent, root: { props: {
+    title: "Your basket — One Cocreation",
   } } },
   /* T-296 wave B, me-login pair: /me + /login mirror their hand-built
      metadata verbatim */
