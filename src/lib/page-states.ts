@@ -62,9 +62,11 @@ export const PAGE_STATES: PageStateEntry[] = [
   { path: "/bb", slug: "bb", state: "designer", note: DESIGNER_NOTE },
   { path: "/bday", slug: "bday", state: "designer", note: DESIGNER_NOTE },
   { path: "/book", slug: "book", state: "designer", note: DESIGNER_NOTE },
+  { path: "/cart", slug: "cart", state: "designer", note: DESIGNER_NOTE },
   { path: "/classes", slug: "classes", state: "designer", note: DESIGNER_NOTE },
   { path: "/contact", slug: "contact", state: "designer", note: DESIGNER_NOTE },
   { path: "/jewelry", slug: "jewelry", state: "designer", note: DESIGNER_NOTE },
+  { path: "/letters", slug: "letters", state: "designer", note: DESIGNER_NOTE },
   { path: "/login", slug: "login", state: "designer", note: DESIGNER_NOTE },
   { path: "/me", slug: "me", state: "designer", note: DESIGNER_NOTE },
   { path: "/media", slug: "media", state: "designer", note: DESIGNER_NOTE },
@@ -80,8 +82,6 @@ export const PAGE_STATES: PageStateEntry[] = [
   { path: "/terms", slug: "terms", state: "designer", note: DESIGNER_NOTE },
   { path: "/time", slug: "time", state: "designer", note: DESIGNER_NOTE },
 
-  { path: "/cart", state: "words", note: "words — the basket; copy lives in code (a checkout surface, not a designer candidate by default)" },
-  { path: "/letters", state: "words", note: "words — Your Letters; copy lives in code" },
   { path: "/live", state: "words", note: "words — the live page; copy lives in code" },
   { path: "/welcome", state: "words", note: "words — the welcome page; copy lives in code" },
 

@@ -106,8 +106,9 @@ describe("TASK-230 — the manifest covers every public route exactly once (deri
          packages row, pair 2 privacy + terms, pair 3 artist + jewelry,
          pair 4 contact + services, pair 5 media + news, pair 6 bday) and
          T-296 wave B so far: me-login brought login + me, bb-time brought
-         bb + time (pair 6's ruled flag-and-stop landing) */
-      ["about", "artist", "bb", "bday", "book", "classes", "contact", "home", "jewelry", "login", "me", "media", "meditation", "memberships", "news", "packages", "privacy", "retreats", "services", "store", "support", "terms", "time"]
+         bb + time (pair 6's ruled flag-and-stop landing), letters-cart
+         brings cart + letters */
+      ["about", "artist", "bb", "bday", "book", "cart", "classes", "contact", "home", "jewelry", "letters", "login", "me", "media", "meditation", "memberships", "news", "packages", "privacy", "retreats", "services", "store", "support", "terms", "time"]
     );
     for (const e of designers) {
       const page = await read(e.path === "/" ? "src/app/page.tsx" : `src/app/${e.path.slice(1)}/page.tsx`);
