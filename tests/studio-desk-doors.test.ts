@@ -25,6 +25,9 @@ const read = (rel: string) => readFileSync(rel, "utf8");
 
 const VDO = studioVdoLinks("onecocreation", "vdo.onecocreation.com");
 const DIRECTOR = studioDirectorLink("vdo.onecocreation.com", VDO.room);
+/* TASK-297: the guest door is the SITE url now (T-292 Page B) — what
+   page.tsx mints via meetStudioUrl on the request origin. */
+const GUEST_DOOR = "https://onecocreation.test/meet/studio/onecocreation_studio";
 
 const overlayUrls = Object.fromEntries(STUDIO_SCENES.map((s) => [s.id, null])) as Record<StudioSceneId, string | null>;
 const showInStudioUrls = Object.fromEntries(STUDIO_SCENES.map((s) => [s.id, null])) as Record<StudioSceneId, string | null>;
@@ -39,6 +42,7 @@ const renderRoom = () =>
       director: DIRECTOR,
       showInStudioUrls,
       showTitleFallback: "One Cocreation",
+      guestDoor: GUEST_DOOR,
     }),
   );
 
@@ -73,10 +77,14 @@ describe("the VDO links card — three doors, each named and carrying the room",
     expect(html).toContain("Copy the director link");
   });
 
-  it("the push/guest rows still carry the exact builder outputs", () => {
+  it("the push row carries the exact builder output; the guest row carries the SITE door (TASK-297)", () => {
     const html = renderRoom();
     expect(html).toContain(VDO.push.replace(/&/g, "&amp;"));
-    expect(html).toContain(VDO.guest.replace(/&/g, "&amp;"));
+    /* TASK-297: the guest door is the SITE url /meet/studio/<room> — the
+       keyed vdo-host guest link is no longer handed out anywhere on this
+       card (T-292 DESIGN.md §2 Page B: the URL we hand out is OURS). */
+    expect(html).toContain(`href="${GUEST_DOOR}"`);
+    expect(html).not.toContain(VDO.guest.replace(/&/g, "&amp;"));
   });
 });
 

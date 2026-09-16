@@ -44,6 +44,7 @@ const MEETING: GoLiveMeeting = {
   jitsiPrefix: "onecocreation-",
   vdoRoomPrefix: "onecocreation",
   vdoHost: "vdo.onecocreation.com",
+  siteOrigin: "https://onecocreation.test",
 };
 
 const renderRoom = (props: Partial<Parameters<typeof GoLiveRoom>[0]> = {}) =>
@@ -209,9 +210,14 @@ describe("the co-create card — the guest link derived from the meeting config"
     );
   });
 
-  it("the VDO rail rooms by the config's prefix and host, T-191/T-243's shape", () => {
+  it("the VDO rail's handed-out link is the SITE url /meet/studio/<room>, underscore-native (TASK-297)", () => {
+    /* T-292 DESIGN.md §2 Page B: the URL the site hands out is OURS, never
+       the vdo host. The room id folds the slug's hyphens to underscores —
+       byte-identical to the room VDO's sanitizeRoomName always made of the
+       old `onecocreation-reading-with-ada` spelling (lib.js:3747-3758), so
+       nobody's room changes; the native warning modal just never fires. */
     expect(guestMeetingLink("vdo", "reading with ada", MEETING)).toBe(
-      "https://vdo.onecocreation.com/?room=onecocreation-reading-with-ada",
+      "https://onecocreation.test/meet/studio/onecocreation_reading_with_ada",
     );
   });
 

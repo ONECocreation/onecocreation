@@ -8,7 +8,8 @@ import { getBooking } from "@/lib/booking-orders";
 import { getService } from "@/lib/booking";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { getSiteConfig } from "@/lib/site-config";
-import { vdoBase } from "@/lib/live";
+import { studioDirectorLink, studioRoomKey } from "@/lib/live";
+import { meetStudioPath } from "@/lib/live-links";
 
 export const metadata: Metadata = { title: "Your session — One Cocreation" };
 export const dynamic = "force-dynamic";
@@ -57,10 +58,20 @@ export default async function MeetPage({ params }: { params: Promise<{ bookingId
   }
 
   if (rail?.kind === "vdo") {
-    const room = encodeURIComponent(bookingId);
     const operator = operatorFromCookieHeader((await headers()).get("cookie"));
-    // TASK-243: her own studio door, not the public vdo.ninja.
-    const vdo = vdoBase((await getSiteConfig()).meeting.vdoHost);
+    /* TASK-297 (0018.06.25 a₿): the guest door flips IN-SITE — the member
+       opens `/meet/studio/<bookingId>` (the booking id is the room id, this
+       branch's own derivation, and that page's booking capability check is
+       the same read this page just made), never the studio's address
+       (T-292 DESIGN.md §2 Page B: "the URL the site hands out is OURS").
+       The director's own link STAYS the studio director URL — now keyed
+       with the SAME room key the in-site frame route mints for guests
+       (room+password is one distinct room, live.ts's studioRoomKey: every
+       door into a keyed room must carry the SAME key, or the director
+       lands in a DIFFERENT room than her guests). No SEAT_SECRET → both
+       sides mint unkeyed, exactly the pre-key behavior (derive-or-dash). */
+    const vdoHost = (await getSiteConfig()).meeting.vdoHost;
+    const director = studioDirectorLink(vdoHost, bookingId, studioRoomKey(bookingId) ?? undefined);
     return (
       <main className="mgmt-ground">
         <SiteHeader />
@@ -71,14 +82,14 @@ export default async function MeetPage({ params }: { params: Promise<{ bookingId
           </header>
           <div style={{ textAlign: "center", padding: "30px 0 10px" }}>
             <p style={{ color: "var(--muted)", maxWidth: 520, margin: "0 auto 18px" }}>
-              Your room opens on VDO.Ninja — camera and mic, peer to peer. Keep
+              Your room opens right here on the site — camera and mic, peer to peer. Keep
               this page; the link is yours alone.
             </p>
             <a
               className="btn btn-gold"
-              href={`${vdo}?room=${room}`}
+              href={meetStudioPath(bookingId)}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener"
             >
               Join your session →
             </a>
@@ -89,7 +100,7 @@ export default async function MeetPage({ params }: { params: Promise<{ bookingId
                 </p>
                 <a
                   className="btn btn-ghost btn-sm"
-                  href={`${vdo}?director=${room}`}
+                  href={director}
                   target="_blank"
                   rel="noreferrer"
                 >

@@ -37,6 +37,9 @@ const read = (rel: string) => readFileSync(rel, "utf8");
 const VDO = studioVdoLinks("onecocreation", "vdo.onecocreation.com");
 const DIRECTOR = studioDirectorLink("vdo.onecocreation.com", VDO.room);
 const ROOM_TITLE = "Heart Field · the studio";
+/* TASK-297: the guest door is the SITE url (T-292 Page B) — what
+   /a/studio/page.tsx mints via meetStudioUrl on the request origin. */
+const GUEST_DOOR = "https://onecocreation.test/meet/studio/onecocreation_studio";
 
 const overlayUrls = Object.fromEntries(STUDIO_SCENES.map((s) => [s.id, null])) as Record<StudioSceneId, string | null>;
 const showInStudioUrls = Object.fromEntries(STUDIO_SCENES.map((s) => [s.id, null])) as Record<StudioSceneId, string | null>;
@@ -52,6 +55,7 @@ const renderRoom = () =>
       showInStudioUrls,
       showTitleFallback: "One Cocreation",
       roomTitle: ROOM_TITLE,
+      guestDoor: GUEST_DOOR,
     }),
   );
 
@@ -86,18 +90,22 @@ describe("the links card — moved to the top, OPEN + Copy, the room's plain nam
         director: DIRECTOR,
         showInStudioUrls,
         showTitleFallback: "One Cocreation",
+        guestDoor: GUEST_DOOR,
       }),
     );
     expect(html).toContain(`the studio — ${VDO.room}`);
   });
 
-  it("three OPEN anchors carry target=\"_blank\" rel=\"noopener\" and the exact builder URLs", () => {
+  it("three OPEN anchors carry target=\"_blank\" rel=\"noopener\" and their exact door URLs", () => {
     const html = renderRoom();
     expect((html.match(/target="_blank"/g) ?? []).length).toBeGreaterThanOrEqual(3);
     expect((html.match(/rel="noopener"/g) ?? []).length).toBeGreaterThanOrEqual(3);
     expect(html).toContain(`href="${DIRECTOR.replace(/&/g, "&amp;")}"`);
     expect(html).toContain(`href="${VDO.push.replace(/&/g, "&amp;")}"`);
-    expect(html).toContain(`href="${VDO.guest.replace(/&/g, "&amp;")}"`);
+    /* TASK-297: the guest OPEN anchor is the SITE door, never the keyed
+       vdo-host guest link (T-292 DESIGN.md §2 Page B + §4). */
+    expect(html).toContain(`href="${GUEST_DOOR}"`);
+    expect(html).not.toContain(VDO.guest.replace(/&/g, "&amp;"));
     expect(html).toContain("Open your director&#x27;s desk");
     expect(html).toContain("Step on camera");
     expect(html).toContain("Guest door");
