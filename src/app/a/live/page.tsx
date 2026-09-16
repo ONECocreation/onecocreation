@@ -41,6 +41,12 @@ export default async function GoLivePage() {
   const roomKey = studioRoomKey(studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost).room) ?? undefined;
   const studioVdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost, roomKey);
 
+  /* TASK-297: the request's own origin — the base for every SITE guest
+     url this desk hands out (/meet/studio/<room>, T-292 DESIGN.md §2
+     Page B). Same derivation /a/studio already runs for its overlay URLs. */
+  const h = await headers();
+  const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host") ?? "localhost"}`;
+
   return (
     <GoLiveRoom
       rooms={ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind, minTier: r.minTier }))}
@@ -53,6 +59,7 @@ export default async function GoLivePage() {
         jitsiPrefix: liveRoomPrefix(),
         vdoRoomPrefix: config.meeting.vdoRoomPrefix,
         vdoHost: config.meeting.vdoHost,
+        siteOrigin: origin,
       }}
       youtube={LIVE_YOUTUBE}
     />

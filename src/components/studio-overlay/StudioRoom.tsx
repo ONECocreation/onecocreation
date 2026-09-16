@@ -149,6 +149,7 @@ export default function StudioRoom({
   showTitleFallback,
   roomTitle,
   roomKeyed,
+  guestDoor,
 }: {
   initial: StudioDoc;
   overlayUrls: Record<StudioSceneId, string | null>;
@@ -172,6 +173,13 @@ export default function StudioRoom({
    *  line just says the room is locked). `undefined`/`false` reads as the
    *  honest unkeyed state (no SEAT_SECRET configured), never a guess. */
   roomKeyed?: boolean;
+  /** TASK-297: the guest door Love hands out — the SITE url
+   *  (`/meet/studio/<room>` on the request's own origin, page.tsx's
+   *  derivation via live-links.ts's meetStudioUrl), never the studio
+   *  host's address (T-292 DESIGN.md §2 Page B). Keyless by posture: the
+   *  key rides only inside the iframe src that page's own frame route
+   *  mints. Required — the one true door, never re-derived here. */
+  guestDoor: string;
 }) {
   const [doc, setDoc] = useState<StudioDoc>(initial);
   const [busy, setBusy] = useState(false);
@@ -234,13 +242,13 @@ export default function StudioRoom({
         <div style={card}>
           <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>a guest&apos;s door</b>
           <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
-            camera and mic off until they choose — you can unmute from the desk — {vdo.room}
+            camera and mic off until they choose — you can unmute from the desk — opens on the site, {vdo.room}
           </p>
           <div style={doorStack}>
-            <a href={vdo.guest} target="_blank" rel="noopener" className="btn btn-sm">
+            <a href={guestDoor} target="_blank" rel="noopener" className="btn btn-sm">
               Guest door
             </a>
-            <CopyGhost value={vdo.guest} label="Copy the guest link" />
+            <CopyGhost value={guestDoor} label="Copy the guest link" />
           </div>
         </div>
       </div>

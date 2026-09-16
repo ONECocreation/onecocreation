@@ -174,6 +174,7 @@ describe("the desk's honest key line (StudioRoom.tsx) — never prints the key i
           showInStudioUrls,
           showTitleFallback: "One Cocreation",
           roomKeyed,
+          guestDoor: "https://onecocreation.test/meet/studio/onecocreation_studio",
         }),
       );
 

@@ -73,7 +73,7 @@ import type { TodaySession } from "@/lib/live";
 // the duplication instead. Re-exported below so tests/go-live-door.test.ts's
 // existing `import { guestMeetingLink } from "@/app/a/live/go-live-room"`
 // keeps resolving.
-import { guestSlug, guestMeetingLink } from "@/lib/live-links";
+import { guestSlug, guestMeetingLink, meetStudioUrl } from "@/lib/live-links";
 // TASK-235: scenes.ts is pure shape (no fs, no env) — StudioRoom.tsx
 // already imports it as a client component, so this stays inside the
 // client-bundle law the file's docblock states above.
@@ -115,6 +115,11 @@ export interface GoLiveMeeting {
   jitsiPrefix: string;
   vdoRoomPrefix: string;
   vdoHost: string;
+  /** TASK-297: the request's own origin (page.tsx's derivation) — the base
+   *  every SITE guest url mints from (`/meet/studio/<room>`, T-292 Page B);
+   *  the vdo host now appears only inside the iframe src that page's frame
+   *  route mints. */
+  siteOrigin: string;
 }
 
 /* every card: the buttons hug the bottom, stacked, uniform */
@@ -313,6 +318,10 @@ export default function GoLiveRoom({
   const railsDark = feed ? !feed.matrixConfigured || !feed.vaultConfigured : false;
   const vaultDark = feed ? !feed.vaultConfigured : false; // TASK-236: after-hours never needs the matrix bot
   const guestLink = guestMeetingLink(guestRail, guestName, meeting);
+  /* TASK-297: the studio's guest door, ONE derivation for both surfaces
+     on the YouTube card — the SITE url, never the studio host (T-292
+     DESIGN.md §2 Page B). */
+  const studioGuestDoor = meetStudioUrl(meeting.siteOrigin, studioVdo.room);
   const afterHours = feed?.state.afterHours ?? null;
   const afterHoursRoomTitle = afterHours
     ? afterHoursRooms.find((r) => r.slug === afterHours.room)?.title ?? afterHours.room
@@ -527,8 +536,8 @@ export default function GoLiveRoom({
                   <input readOnly value={studioVdo.push} onFocus={(e) => e.target.select()} style={{ ...field, width: "100%", fontSize: ".74rem" }} />
                 </label>
                 <label style={{ display: "block" }}>
-                  <span style={fieldLabel}>a guest&apos;s door</span>
-                  <input readOnly value={studioVdo.guest} onFocus={(e) => e.target.select()} style={{ ...field, width: "100%", fontSize: ".74rem" }} />
+                  <span style={fieldLabel}>a guest&apos;s door — opens on the site</span>
+                  <input readOnly value={studioGuestDoor} onFocus={(e) => e.target.select()} style={{ ...field, width: "100%", fontSize: ".74rem" }} />
                 </label>
               </>
             )}
@@ -602,7 +611,13 @@ export default function GoLiveRoom({
               {d.id === "youtube" && open === "youtube" && (
                 <>
                   <CopyDoor value={studioVdo.push} label="Copy the push link" />
-                  <CopyDoor value={studioVdo.guest} label="Copy the guest link" />
+                  {/* TASK-297: the guest link Love hands out is the SITE url
+                      (/meet/studio/<the studio room> on the request's own
+                      origin) — the same door /a/studio's guest card carries,
+                      never the studio host's address (T-292 DESIGN.md §2
+                      Page B). The push link above stays a studio URL: that
+                      one is HER camera seat, not a link anyone is handed. */}
+                  <CopyDoor value={studioGuestDoor} label="Copy the guest link" />
                 </>
               )}
               {d.id === "call" && open === "call" &&

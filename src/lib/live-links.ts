@@ -176,6 +176,35 @@ export function guestSlug(name: string): string {
     .slice(0, 40);
 }
 
+/** TASK-297 (0018.06.25 a₿) — the in-site room's ONE path join point: the
+ *  guest link the site hands out is OURS, never the vdo host (T-292
+ *  DESIGN.md §2 Page B). A bare room id in, the site path out — the same
+ *  discipline as `vdoBase` above, one level up (a path, not a host). The
+ *  key NEVER rides this URL: `/meet/studio/<room>`'s own server mints it
+ *  into the iframe src at request time (src/app/meet/studio/frame/). Pure. */
+export function meetStudioPath(room: string): string {
+  return `/meet/studio/${encodeURIComponent(room)}`;
+}
+
+/** TASK-297: the absolute form, for copy fields and letters — the request
+ *  origin (or any honest base) in, the full site URL out. Pure. */
+export function meetStudioUrl(origin: string, room: string): string {
+  return `${origin}${meetStudioPath(room)}`;
+}
+
+/** TASK-297: is this room id inside the site's own studio namespace —
+ *  `<prefix>_<word>` with VDO-safe characters only (the fork's
+ *  `sanitizeRoomName`, lib.js:3747-3758, rewrites everything else to `_`,
+ *  so an id already in this shape is the same room VDO would make, with no
+ *  rewrite and no popup — T-264's ruling, this file's studioVdoLinks note).
+ *  This is the co-create door's legitimacy check for `/meet/studio/<room>`
+ *  (the namespace is the site's own; rooms outside it are not ours to
+ *  mint). Pure. */
+export function isStudioNamespaceRoom(room: string, prefix: string): boolean {
+  if (!prefix.trim()) return false;
+  return room.startsWith(`${prefix}_`) && /^[a-zA-Z0-9_]+$/.test(room.slice(prefix.length + 1));
+}
+
 /** TASK-192, moved here TASK-261 (go-live-room.tsx no longer duplicates
  *  it — see that file's docblock for why it couldn't import `live.ts`
  *  directly before this split). The co-create guest link, derived from
@@ -184,14 +213,29 @@ export function guestSlug(name: string): string {
  *  prefix is threaded down as `cfg.jitsiPrefix` — a bare name would
  *  collide on the shared host); the VDO rail rooms by the config's
  *  prefix, the same shape as T-191's studio. A blank name is no link at
- *  all (derive-or-dash). Pure. */
+ *  all (derive-or-dash). Pure.
+ *
+ *  TASK-297 — the VDO rail's handed-out link becomes the SITE url
+ *  `/meet/studio/<room>` (T-292 DESIGN.md §2 Page B: "the URL the site
+ *  hands out is OURS, never the vdo host"; the vdo host now appears only
+ *  inside the iframe src that page's own server mints, key included —
+ *  this URL carries none). Two honest moves in the same stroke:
+ *   · `cfg.siteOrigin` (new, required) is the base — the request's own
+ *     origin, so dev/preview/prod each mint their own honest absolute;
+ *   · the room id goes UNDERSCORE-NATIVE: `${prefix}_${slug}` with the
+ *     slug's hyphens folded to underscores — byte-identical to the room
+ *     VDO's `sanitizeRoomName` always made of the old `<prefix>-<slug>`
+ *     spelling (lib.js:3747-3758 folds every non-word char to `_`), so
+ *     nobody's room changes; the native "Only AlphaNumeric" warning modal
+ *     just never fires (T-264's ruling, this file's studioVdoLinks note).
+ *  The Jitsi branch is byte-identical to its pre-T-297 output. */
 export function guestMeetingLink(
   rail: "jitsi" | "vdo",
   name: string,
-  cfg: { jitsiDomain: string; jitsiPrefix: string; vdoRoomPrefix: string; vdoHost: string },
+  cfg: { jitsiDomain: string; jitsiPrefix: string; vdoRoomPrefix: string; vdoHost: string; siteOrigin: string },
 ): string | null {
   const slug = guestSlug(name);
   if (!slug) return null;
-  if (rail === "vdo") return `https://${cfg.vdoHost}/?room=${encodeURIComponent(`${cfg.vdoRoomPrefix}-${slug}`)}`;
+  if (rail === "vdo") return meetStudioUrl(cfg.siteOrigin, `${cfg.vdoRoomPrefix}_${slug.replace(/-/g, "_")}`);
   return `https://${cfg.jitsiDomain}/${cfg.jitsiPrefix}${slug}`;
 }
