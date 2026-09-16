@@ -5,6 +5,7 @@ import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
 import { isolateCwd } from "./helpers/isolate-cwd";
+import type { StudioSceneId } from "@/lib/studio/scenes";
 
 /**
  * TASK-306 (0018.06.25 a₿ · block ~967,218) — THE DIRECTOR'S DESK LIVES
@@ -169,6 +170,66 @@ describe("the route — independent gate, capability, keyed src", () => {
     expect(src).toContain("if (!access) notFound()");
     expect(src).toContain("mintStudioDirectorTarget");
     expect(src).not.toContain("studioGuestLink");
+  });
+});
+
+describe("the three call-sites render the in-site path, never a studio-host director URL", () => {
+  it("/a/studio/page.tsx derives the desk door via directorDeskUrl on the request origin", () => {
+    const src = read("src/app/a/studio/page.tsx");
+    expect(src).toContain("directorDeskUrl(origin, vdo.room)");
+    expect(src).not.toContain("studioDirectorLink(");
+    expect(src).toContain("director={director}");
+  });
+
+  it("StudioRoom.tsx's director card renders the in-site href and NOT a keyed studio URL", async () => {
+    const StudioRoom = (await import("@/components/studio-overlay/StudioRoom")).default;
+    const { defaultStudioDoc } = await import("@/lib/studio/doc");
+    const { STUDIO_SCENES } = await import("@/lib/studio/scenes");
+    const { studioVdoLinks, studioDirectorLink } = await import("@/lib/live");
+    const VDO = studioVdoLinks("onecocreation", "vdo.onecocreation.com", "keyabc123x00");
+    const DIRECTOR_DESK = "https://onecocreation.test/a/studio/room/onecocreation_studio";
+    const overlayUrls = Object.fromEntries(STUDIO_SCENES.map((s) => [s.id, null])) as Record<StudioSceneId, string | null>;
+    const showInStudioUrls = { ...overlayUrls };
+    const html = renderToStaticMarkup(
+      h(StudioRoom, {
+        initial: defaultStudioDoc(),
+        overlayUrls,
+        overlayReady: false,
+        vdo: VDO,
+        director: DIRECTOR_DESK,
+        showInStudioUrls,
+        showTitleFallback: "One Cocreation",
+        roomKeyed: true,
+        guestDoor: "https://onecocreation.test/meet/studio/onecocreation_studio",
+      }),
+    );
+    expect(html).toContain(`href="${DIRECTOR_DESK}"`);
+    expect(html).toContain("Open your director&#x27;s desk");
+    // the director door no longer carries the key; the push door still
+    // legitimately does (her own camera seat)
+    expect(html).not.toContain(
+      studioDirectorLink("vdo.onecocreation.com", "onecocreation_studio", "keyabc123x00").replace(/&/g, "&amp;"),
+    );
+  });
+
+  it("/a/live/page.tsx derives studioDirector via directorDeskUrl", () => {
+    const src = read("src/app/a/live/page.tsx");
+    expect(src).toContain("directorDeskUrl(origin, studioVdo.room)");
+    expect(src).not.toContain("studioDirectorLink(");
+  });
+
+  it("go-live-room.tsx still wires the door to the studioDirector prop (the value changed, the wiring didn't)", () => {
+    const src = read("src/app/a/live/go-live-room.tsx");
+    expect(src).toContain("href={studioDirector}");
+    expect(src).toContain("Open your director&apos;s desk");
+  });
+
+  it("/meet/[bookingId]: the operator-only director door is the in-site route for the booking's room", () => {
+    const src = read("src/app/meet/[bookingId]/page.tsx");
+    expect(src).toContain("directorDeskPath(bookingId)");
+    expect(src).not.toContain("studioDirectorLink(");
+    expect(src).not.toContain("studioRoomKey(");
+    expect(src).toContain("meetStudioPath(bookingId)"); // the guest side is untouched
   });
 });
 

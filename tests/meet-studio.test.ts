@@ -309,10 +309,16 @@ describe("every handed-out guest link is the SITE url (source pins on the three 
     expect(src).toContain("siteOrigin: origin");
   });
 
-  it("/meet/[bookingId]: the guest anchor is /meet/studio/<bookingId>; the director link stays a studio URL, keyed the same", () => {
+  it("/meet/[bookingId]: the guest anchor is /meet/studio/<bookingId>; the director door is the in-site desk route (TASK-306 — was \"stays a studio URL, keyed the same\" before the desk route existed)", () => {
+    /* T-297 ruled this door "stays the studio director URL, keyed the
+       same" — correct at the time, because /a/studio/room/<room> did not
+       exist yet. T-306 flips it: the operator's director door is now the
+       in-site route, and the key lives in THAT route's own iframe mint —
+       never in this page's href. This pin asserts the NEW true thing. */
     const src = read("src/app/meet/[bookingId]/page.tsx");
     expect(src).toContain("meetStudioPath(bookingId)");
-    expect(src).toContain("studioDirectorLink(vdoHost, bookingId, studioRoomKey(bookingId) ?? undefined)");
+    expect(src).toContain("directorDeskPath(bookingId)");
+    expect(src).not.toContain("studioDirectorLink(");
     expect(src).not.toContain("`${vdo}?room=${room}`");
     expect(src).not.toContain("`${vdo}?director=${room}`");
   });

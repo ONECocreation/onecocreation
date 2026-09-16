@@ -4,8 +4,8 @@ import OperatorGate from "@/components/OperatorGate";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { cartridge } from "@/brand/cartridge";
 import { getSiteConfig } from "@/lib/site-config";
-import { studioVdoLinks, studioDirectorLink, studioRoomKey } from "@/lib/live";
-import { meetStudioUrl } from "@/lib/live-links";
+import { studioVdoLinks, studioRoomKey } from "@/lib/live";
+import { meetStudioUrl, directorDeskUrl } from "@/lib/live-links";
 import { STUDIO_SCENES, type StudioSceneId } from "@/lib/studio/scenes";
 import { overlayConfigured, overlayQuery } from "@/lib/studio/overlay-token";
 import { getStudioDoc } from "@/lib/studio/roster";
@@ -75,15 +75,24 @@ export default async function StudioRoomPage() {
      (derive-or-dash, live.ts's studioRoomKey docblock). */
   const roomKey = studioRoomKey(studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost).room) ?? undefined;
   const vdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost, roomKey);
-  const director = studioDirectorLink(config.meeting.vdoHost, vdo.room, roomKey);
+
+  /* TASK-306 (0018.06.25 a₿): the director's desk door is the SITE route
+     /a/studio/room/<room> on the request's own origin (T-292 DESIGN.md §2
+     Page A) — the keyed studio URL leaves this href and the CopyGhost
+     beside it: the desk route's own server mints the key into its iframe
+     src at request time, so nothing keyed ever sits in this page's HTML
+     (the residual exposure T-306's brief names). The PUSH door above
+     stays a studio URL — that's HER camera seat, not a room she manages. */
+  const director = directorDeskUrl(origin, vdo.room);
 
   /* TASK-297 (0018.06.25 a₿): the guest door Love hands out is the SITE
      url — /meet/studio/<room> on the request's own origin (T-292 DESIGN.md
      §2 Page B: "the URL the site hands out is OURS, never the vdo host";
      the studio host now appears only inside the iframe src that page's
-     own frame route mints, key included — this URL carries none). The
-     push and director doors above stay studio URLs: those are HER seats,
-     not links anyone is handed. */
+     own frame route mints, key included — this URL carries none). TASK-306:
+     the director door follows the same law (the SITE route below). The
+     PUSH door alone stays a studio URL — that's HER camera seat, not a
+     link anyone is handed. */
   const guestDoor = meetStudioUrl(origin, vdo.room);
 
   /* TASK-300: the room's plain human name — brand/rooms.json on the fork
