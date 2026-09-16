@@ -7,6 +7,7 @@ import { createJoinSurface } from "@/lib/puck-blocks/join-surface";
 import { createFormDoors } from "@/lib/puck-blocks/form-doors";
 import { createRetreatsList } from "@/lib/puck-blocks/retreats-list";
 import { createPackagesGrid } from "@/lib/puck-blocks/packages-grid";
+import { createLiveDoor } from "@/lib/puck-blocks/live-door";
 import { NIP05_DOMAIN, SPACE_NAME } from "@/lib/identity-config";
 
 /**
@@ -114,6 +115,15 @@ components.RetreatsList = createRetreatsList() as unknown as (typeof components)
    LOCAL, like its siblings — the package stays vendored-untouched. */
 components.PackagesGrid = createPackagesGrid() as unknown as (typeof components)[string];
 
+/* TASK-296 wave B, pair live (0018.06.25 a₿ · block 967,201): LiveDoor —
+   the third data-bound block riding T-231's pattern (the whole /live state
+   machine: the h1 flip, the Jitsi embed, the live room card, the editable
+   idle voice; the server-judged props are injected at render time by
+   applyLiveToPuck on the published page — see the block's docblock).
+   LOCAL, like its siblings — the package stays vendored-untouched.
+   Appended, never reordered (the wave B append-only law). */
+components.LiveDoor = createLiveDoor() as unknown as (typeof components)[string];
+
 /* the library rail: ParallaxBand (and the data-bound blocks, TASK-231's
    RetreatsList + TASK-232's PackagesGrid) join the Layout group, appended
    at the end (after Divider — the package's array order is never reordered) */
@@ -127,7 +137,7 @@ export const config = {
   components,
   categories: {
     ...categories,
-    layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid"] },
+    layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid", "LiveDoor"] },
     actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors"] },
   },
   /* STUDIO P1: page-level SEO lives on the Puck root — plain fields edited
