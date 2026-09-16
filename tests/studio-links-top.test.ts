@@ -116,11 +116,15 @@ describe("the links card — moved to the top, OPEN + Copy, the room's plain nam
     expect(html).toContain("Guest door");
   });
 
-  it("the 'Send to user' placeholder is a real, disabled, honest button — no fake action", () => {
+  it("the 'Send to user' door is LIVE (TASK-304) — the chooser's opener, no disabled placeholder", () => {
     const html = renderRoom();
     expect(html).toContain("Send this guest door to a member");
-    const btnMatch = html.match(/<button[^>]*disabled[^>]*>\s*Send to user — coming with T-304\s*<\/button>/);
+    expect(html).not.toContain("coming with T-304");
+    /* the stub became the chooser: a real, enabled button with the stable
+       id the shots harness clicks */
+    const btnMatch = html.match(/<button[^>]*id="send-to-user-open"[^>]*>\s*Send to user\s*<\/button>/);
     expect(btnMatch).not.toBeNull();
+    expect(btnMatch?.[0]).not.toContain("disabled");
   });
 });
 
