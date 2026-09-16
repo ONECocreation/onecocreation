@@ -184,7 +184,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
       <SectionHead label="Send me a test" />
       <div style={glassCard}>
         <div className="flex flex-wrap items-center gap-2">
-          <input value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="you@example.com" type="email" style={field} />
+          <input value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="you@example.com" type="email" className="console-field" style={field} />
           <button onClick={sendTest} disabled={sending || !testTo.includes("@") || !hasBody} className="btn btn-sm">
             {sending ? "SENDING…" : "SEND TEST COPY"}
           </button>
@@ -209,7 +209,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         </ul>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <input type="datetime-local" value={sendAt} onChange={(e) => setSendAt(e.target.value)} style={field} />
+          <input type="datetime-local" value={sendAt} onChange={(e) => setSendAt(e.target.value)} className="console-field" style={field} />
           <span style={{ fontSize: ".62rem", textTransform: "uppercase", color: "var(--muted)" }}>{sendAt ? "scheduled" : "next tick"}</span>
         </div>
 
@@ -218,7 +218,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
             <label className="block" style={{ fontSize: ".75rem", color: "var(--muted)" }}>
               Type <b style={{ color: "var(--gold-deep)" }}>{count}</b> to send to {count} {count === 1 ? "person" : "people"}:
               <input value={typed} onChange={(e) => setTyped(e.target.value)} inputMode="numeric" placeholder={String(count)}
-                className="ml-2" style={{ ...field, width: 96 }} />
+                className="ml-2 console-field" style={{ ...field, width: 96 }} />
             </label>
             <button onClick={sendList} disabled={sending || !confirmed || !hasBody} className="btn btn-sm">
               {sending ? "SENDING…" : sendAt ? `SCHEDULE TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}` : `SEND TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}`}

@@ -141,14 +141,14 @@ export default function BookingRoom() {
         <input
           value={draft.title}
           onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-          style={{ ...field, width: "100%" }}
+          className="console-field" style={{ ...field, width: "100%" }}
         />
       </Field>
       <Field label="timezone (yours)">
         <input
           value={draft.artistTz}
           onChange={(e) => setDraft({ ...draft, artistTz: e.target.value })}
-          style={{ ...field, width: "100%" }}
+          className="console-field" style={{ ...field, width: "100%" }}
           placeholder="America/Los_Angeles"
         />
       </Field>
@@ -156,7 +156,7 @@ export default function BookingRoom() {
         <input
           value={draft.blurb}
           onChange={(e) => setDraft({ ...draft, blurb: e.target.value })}
-          style={{ ...field, width: "100%" }}
+          className="console-field" style={{ ...field, width: "100%" }}
         />
       </Field>
       <Field label="duration (min)">
@@ -164,7 +164,7 @@ export default function BookingRoom() {
           type="number"
           value={draft.durationMin}
           onChange={(e) => setDraft({ ...draft, durationMin: Number(e.target.value) })}
-          style={{ ...field, width: "100%" }}
+          className="console-field" style={{ ...field, width: "100%" }}
         />
       </Field>
       <Field label="buffer after (min)">
@@ -172,7 +172,7 @@ export default function BookingRoom() {
           type="number"
           value={draft.bufferMin}
           onChange={(e) => setDraft({ ...draft, bufferMin: Number(e.target.value) })}
-          style={{ ...field, width: "100%" }}
+          className="console-field" style={{ ...field, width: "100%" }}
         />
       </Field>
       <Field label="min lead (hours)">
@@ -180,7 +180,7 @@ export default function BookingRoom() {
           type="number"
           value={draft.minLeadHours}
           onChange={(e) => setDraft({ ...draft, minLeadHours: Number(e.target.value) })}
-          style={{ ...field, width: "100%" }}
+          className="console-field" style={{ ...field, width: "100%" }}
         />
       </Field>
       <Field label="book up to (days ahead)">
@@ -188,14 +188,14 @@ export default function BookingRoom() {
           type="number"
           value={draft.maxAdvanceDays}
           onChange={(e) => setDraft({ ...draft, maxAdvanceDays: Number(e.target.value) })}
-          style={{ ...field, width: "100%" }}
+          className="console-field" style={{ ...field, width: "100%" }}
         />
       </Field>
       <Field label="pricing">
         <select
           value={draft.pricingMode}
           onChange={(e) => setDraft({ ...draft, pricingMode: e.target.value as Service["pricingMode"] })}
-          style={{ ...field, width: "100%" }}
+          className="console-field" style={{ ...field, width: "100%" }}
         >
           <option value="fixed">fixed</option>
           <option value="pwyc">give what you can</option>
@@ -211,7 +211,7 @@ export default function BookingRoom() {
               price: { ...draft.price, sats: e.target.value ? Number(e.target.value) : undefined },
             })
           }
-          style={{ ...field, width: "100%", opacity: draft.pricingMode === "pwyc" ? 0.5 : 1 }}
+          className="console-field" style={{ ...field, width: "100%", opacity: draft.pricingMode === "pwyc" ? 0.5 : 1 }}
           disabled={draft.pricingMode === "pwyc"}
         />
       </Field>
@@ -256,7 +256,7 @@ export default function BookingRoom() {
           <input
             value={draft.meetingRail.url}
             onChange={(e) => setDraft({ ...draft, meetingRail: { kind: "static", url: e.target.value } })}
-            style={{ ...field, width: "100%" }}
+            className="console-field" style={{ ...field, width: "100%" }}
             placeholder="https://zoom.us/j/…"
           />
         </Field>
@@ -266,7 +266,7 @@ export default function BookingRoom() {
           <input
             value={draft.meetingRail.domain}
             onChange={(e) => setDraft({ ...draft, meetingRail: { kind: "jitsi", domain: e.target.value } })}
-            style={{ ...field, width: "100%" }}
+            className="console-field" style={{ ...field, width: "100%" }}
             placeholder={siteMeeting?.jitsiDomain ?? "meet.jit.si"}
           />
         </Field>
@@ -276,7 +276,7 @@ export default function BookingRoom() {
           <input
             value={draft.meetingRail.roomId}
             onChange={(e) => setDraft({ ...draft, meetingRail: { kind: "matrix", roomId: e.target.value } })}
-            style={{ ...field, width: "100%" }}
+            className="console-field" style={{ ...field, width: "100%" }}
             placeholder="!room:onecocreation.com"
           />
         </Field>
@@ -287,7 +287,7 @@ export default function BookingRoom() {
             <input
               value={draft.meetingRail.address ?? ""}
               onChange={(e) => setDraft({ ...draft, meetingRail: { ...draft.meetingRail, kind: "inPerson", address: e.target.value } })}
-              style={{ ...field, width: "100%" }}
+              className="console-field" style={{ ...field, width: "100%" }}
               placeholder="where the RV parks — street, city, state"
             />
           </Field>
@@ -295,7 +295,7 @@ export default function BookingRoom() {
             <input
               value={draft.meetingRail.geo ?? ""}
               onChange={(e) => setDraft({ ...draft, meetingRail: { ...draft.meetingRail, kind: "inPerson", geo: e.target.value } })}
-              style={{ ...field, width: "100%" }}
+              className="console-field" style={{ ...field, width: "100%" }}
               placeholder="https://maps.app.goo.gl/… or geo:39.7,-104.9"
             />
           </Field>
@@ -305,7 +305,7 @@ export default function BookingRoom() {
         <select
           value={draft.status}
           onChange={(e) => setDraft({ ...draft, status: e.target.value as Service["status"] })}
-          style={{ ...field, width: "100%" }}
+          className="console-field" style={{ ...field, width: "100%" }}
         >
           <option value="hidden">○ hidden</option>
           <option value="live">● live</option>
@@ -469,16 +469,16 @@ function RuleAdder({
 
   return (
     <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-      <select value={weekday} onChange={(e) => setWeekday(Number(e.target.value))} style={field}>
+      <select value={weekday} onChange={(e) => setWeekday(Number(e.target.value))} className="console-field" style={field}>
         {WEEKDAYS.map((d, i) => (
           <option key={d} value={i}>
             {d}
           </option>
         ))}
       </select>
-      <input type="time" value={start} onChange={(e) => setStart(e.target.value)} style={field} />
-      <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} style={field} />
-      <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} style={field}>
+      <input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="console-field" style={field} />
+      <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className="console-field" style={field} />
+      <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className="console-field" style={field}>
         <option value="">all sessions</option>
         {services.map((s) => (
           <option key={s.id} value={s.id}>
@@ -508,17 +508,17 @@ function OverrideAdder({ onAdd, busy }: { onAdd: (o: DateOverride) => void; busy
 
   return (
     <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={field} />
+      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="console-field" style={field} />
       <select
         value={kind}
         onChange={(e) => setKind(e.target.value as DateOverride["kind"])}
-        style={field}
+        className="console-field" style={field}
       >
         <option value="blocked">blocked</option>
         <option value="extra">extra window</option>
       </select>
-      <input type="time" value={start} onChange={(e) => setStart(e.target.value)} style={field} />
-      <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} style={field} />
+      <input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="console-field" style={field} />
+      <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className="console-field" style={field} />
       <button
         type="button"
         disabled={busy || !date}

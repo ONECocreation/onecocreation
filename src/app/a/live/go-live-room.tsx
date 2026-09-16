@@ -450,7 +450,7 @@ export default function GoLiveRoom({
                     )}
                     <input
                       type="text"
-                      style={{ ...field, width: "100%", fontSize: ".82rem" }}
+                      className="console-field" style={{ ...field, width: "100%", fontSize: ".82rem" }}
                       placeholder="Opening word (optional — blank carries the house words)"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
@@ -479,14 +479,14 @@ export default function GoLiveRoom({
                       max={240}
                       value={afterHoursMinutes}
                       onChange={(e) => setAfterHoursMinutes(Number(e.target.value) || 1)}
-                      style={{ ...field, width: 64 }}
+                      className="console-field" style={{ ...field, width: 64 }}
                       disabled={!!afterHours}
                     />
                     <span style={{ fontSize: ".82rem", color: "var(--ink)" }}>minutes:</span>
                     <select
                       value={afterHours ? afterHours.room : afterHoursRoomSlug}
                       onChange={(e) => setAfterHoursRoomSlug(e.target.value)}
-                      style={field}
+                      className="console-field" style={field}
                       disabled={!!afterHours || afterHoursRooms.length === 0}
                     >
                       {afterHoursRooms.map((r) => (
@@ -535,11 +535,11 @@ export default function GoLiveRoom({
                 </p>
                 <label style={{ display: "block" }}>
                   <span style={fieldLabel}>your camera (push)</span>
-                  <input readOnly value={studioVdo.push} onFocus={(e) => e.target.select()} style={{ ...field, width: "100%", fontSize: ".74rem" }} />
+                  <input readOnly value={studioVdo.push} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".74rem" }} />
                 </label>
                 <label style={{ display: "block" }}>
                   <span style={fieldLabel}>a guest&apos;s door — opens on the site</span>
-                  <input readOnly value={studioGuestDoor} onFocus={(e) => e.target.select()} style={{ ...field, width: "100%", fontSize: ".74rem" }} />
+                  <input readOnly value={studioGuestDoor} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".74rem" }} />
                 </label>
               </>
             )}
@@ -569,7 +569,7 @@ export default function GoLiveRoom({
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     placeholder="e.g. reading-with-ada"
-                    style={{ ...field, width: "100%" }}
+                    className="console-field" style={{ ...field, width: "100%" }}
                   />
                 </label>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -589,7 +589,7 @@ export default function GoLiveRoom({
                 {guestLink ? (
                   <label style={{ display: "block" }}>
                     <span style={fieldLabel}>the guest link (derived, never stored)</span>
-                    <input readOnly value={guestLink} onFocus={(e) => e.target.select()} style={{ ...field, width: "100%", fontSize: ".74rem" }} />
+                    <input readOnly value={guestLink} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".74rem" }} />
                   </label>
                 ) : (
                   <p style={muted}>— type a room name and the guest link derives here</p>

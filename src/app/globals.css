@@ -637,9 +637,22 @@ footer:not(.site-footer) {
   .btn-pill:focus-visible,
   .lcars-tab:focus-visible,
   .lcars-cap:focus-visible,
-  .console-card:focus-visible {
+  .console-card:focus-visible,
+  .console-field:focus-visible {
     outline: 2px solid var(--color-cyan);
     outline-offset: 2px;
+  }
+
+  /* T-324 — the console `field` grammar's missing pair: glass.tsx's field
+     is a React.CSSProperties object and cannot carry pseudo-selectors, so
+     the placeholder ink and the focus ring (above) live here. #6B6580
+     measures 4.84:1 on --field-bg's darkest composite (94% white over
+     black) and 5.53:1 on dawn's — the field tokens are theme-invariant,
+     so one value serves both themes; opacity:1 overrides the browser's
+     own reduced-opacity placeholder default. */
+  .console-field::placeholder {
+    color: #6B6580;
+    opacity: 1;
   }
 }
 

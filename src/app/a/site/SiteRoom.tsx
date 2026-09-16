@@ -225,7 +225,7 @@ export default function SiteRoom() {
           <input
             value={config.meeting.jitsiDomain}
             onChange={(e) => setConfig({ ...config, meeting: { ...config.meeting, jitsiDomain: e.target.value } })}
-            style={{ ...field, minWidth: 260 }}
+            className="console-field" style={{ ...field, minWidth: 260 }}
             aria-label="Jitsi domain"
           />
         </div>
@@ -242,7 +242,7 @@ export default function SiteRoom() {
           <input
             value={config.meeting.vdoRoomPrefix}
             onChange={(e) => setConfig({ ...config, meeting: { ...config.meeting, vdoRoomPrefix: e.target.value } })}
-            style={{ ...field, minWidth: 260 }}
+            className="console-field" style={{ ...field, minWidth: 260 }}
             aria-label="Studio room prefix"
           />
         </div>
@@ -260,7 +260,7 @@ export default function SiteRoom() {
           <input
             value={config.meeting.vdoHost}
             onChange={(e) => setConfig({ ...config, meeting: { ...config.meeting, vdoHost: e.target.value } })}
-            style={{ ...field, minWidth: 260 }}
+            className="console-field" style={{ ...field, minWidth: 260 }}
             placeholder="vdo.onecocreation.com"
             aria-label="Studio host"
           />
@@ -278,7 +278,7 @@ export default function SiteRoom() {
           <input
             value={config.meeting.staticUrl}
             onChange={(e) => setConfig({ ...config, meeting: { ...config.meeting, staticUrl: e.target.value } })}
-            style={{ ...field, minWidth: 260 }}
+            className="console-field" style={{ ...field, minWidth: 260 }}
             placeholder="https://zoom.us/j/…"
             aria-label="Standing meeting link"
           />

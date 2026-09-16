@@ -337,14 +337,14 @@ function blockDecl(body, key) {
 /* ── the scopes: 5 cartridges × 2 themes, plus the studio overlays ───── */
 
 const SCOPE_FILES = ["src/app/cartridge.css", "src/app/cartridges.css"];
-const STUDIO_TOKEN_FILES = ["src/app/studio/puck-theme.css", "src/app/studio/studio-tokens.css"];
+const STUDIO_TOKEN_FILES = ["src/app/style/puck-theme.css", "src/app/style/studio-tokens.css"];
 
 /* every stylesheet the sweep reads — token scopes AND pair sources AND the
    override census (a scoped rule in ANY of them can re-declare a pair) */
 const CSS_SWEEP_FILES = [
   "src/app/globals.css", "src/app/cartridge.css", "src/app/cartridges.css",
   "src/app/house.css", "src/app/scar.css",
-  "src/app/studio/preview.css", "src/app/studio/puck-theme.css", "src/app/studio/studio-tokens.css",
+  "src/app/style/preview.css", "src/app/style/puck-theme.css", "src/app/style/studio-tokens.css",
   "src/lib/puck-blocks/parallax.css",
 ];
 
@@ -522,6 +522,10 @@ const CONTRACT = [
   { name: "body copy on panel", fg: "var(--ink-body)", bg: "var(--panel)", need: 4.5 },
   { name: "muted on panel", fg: "var(--muted)", bg: "var(--panel)", need: 4.5 },
   { name: "field ink on field", fg: "var(--field-ink)", bg: "var(--field-bg)", need: 4.5 },
+  /* T-324 — the console-field placeholder: a literal by design (the field
+     tokens are theme-invariant; .console-field::placeholder in globals.css
+     pours exactly this value — keep the two in step) */
+  { name: "field placeholder on field", fg: "#6B6580", bg: "var(--field-bg)", need: 4.5 },
   { name: "ghost button ink", fg: "var(--ghost-ink)", bg: "var(--ghost-bg)", need: 4.5 },
   { name: "money ink on gold", fg: "var(--gold-ink)", bg: "var(--gold)", need: 4.5 },
   { name: "money ink on gold light end", fg: "var(--gold-ink)", bg: "var(--gold-2)", need: 4.5 },
@@ -570,7 +574,7 @@ for (const pair of STUDIO_CONTRACT) {
 }
 
 /* co-declared CSS pairs */
-const isStudioCss = (rel) => rel.startsWith("src/app/studio/");
+const isStudioCss = (rel) => rel.startsWith("src/app/studio/") || rel.startsWith("src/app/style/");
 let cssPairs = 0;
 
 for (const rel of CSS_SWEEP_FILES) {
@@ -631,6 +635,7 @@ function* walkSrc(dir) {
 
 const STUDIO_TSX = (rel) =>
   rel.startsWith("src/components/studio/") || rel.startsWith("src/app/studio/") ||
+  rel.startsWith("src/app/style/") ||
   ["src/components/PuckEditor.tsx", "src/components/Copilot.tsx", "src/components/BenchNotes.tsx"].includes(rel);
 
 let tsxPairs = 0;

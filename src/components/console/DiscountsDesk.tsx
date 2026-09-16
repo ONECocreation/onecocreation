@@ -94,12 +94,12 @@ export default function DiscountsDesk() {
           value={draft.code}
           onChange={(e) => setDraft({ ...draft, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") })}
           placeholder="CODE"
-          style={{ ...field, width: 130, textTransform: "uppercase" }}
+          className="console-field" style={{ ...field, width: 130, textTransform: "uppercase" }}
         />
         <select
           value={draft.kind}
           onChange={(e) => setDraft({ ...draft, kind: e.target.value as Code["kind"] })}
-          style={field}
+          className="console-field" style={field}
         >
           <option value="percent">% off</option>
           <option value="flat">sats off</option>
@@ -107,14 +107,14 @@ export default function DiscountsDesk() {
         <input
           value={String(draft.value)}
           onChange={(e) => setDraft({ ...draft, value: Number(e.target.value.replace(/[^0-9]/g, "")) || 0 })}
-          style={{ ...field, width: 90 }}
+          className="console-field" style={{ ...field, width: 90 }}
         />
         <input
           type="date"
           title="expires (optional)"
           value={draft.expiresAt ?? ""}
           onChange={(e) => setDraft({ ...draft, expiresAt: e.target.value || undefined })}
-          style={field}
+          className="console-field" style={field}
         />
         <button
           className="btn btn-sm"

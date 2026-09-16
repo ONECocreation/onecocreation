@@ -288,7 +288,7 @@ function SquareVaultForm({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder={defaultValue || SQUARE_PLACEHOLDER[name]}
-            style={{ ...field, flex: "1 1 260px", fontFamily: "monospace" }}
+            className="console-field" style={{ ...field, flex: "1 1 260px", fontFamily: "monospace" }}
           />
           <button
             className="btn btn-sm"
@@ -542,7 +542,7 @@ function StripeRow({
               value={value}
               onChange={(e) => setValue(e.target.value)}
               placeholder={placeholder}
-              style={{ ...field, flex: "1 1 220px", fontFamily: "monospace" }}
+              className="console-field" style={{ ...field, flex: "1 1 220px", fontFamily: "monospace" }}
             />
             <button className="btn btn-sm" onClick={save} disabled={busy || !value.trim()}>
               {busy ? "Saving…" : "Save to the vault"}
