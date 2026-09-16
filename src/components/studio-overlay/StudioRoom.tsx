@@ -23,6 +23,7 @@ import { Chip, SectionHead, field, glassCard } from "@/components/console/glass"
 import { STUDIO_SCENES, type StudioSceneId } from "@/lib/studio/scenes";
 import { GUEST_LIMIT, type StudioDoc } from "@/lib/studio/doc";
 import { saveStudio } from "@/app/a/studio/actions";
+import SendToUserChooser from "./SendToUserChooser";
 
 /* datetime-local speaks LOCAL wall-clock words with no timezone — the
    doc stores an instant (ISO), so the field's value is a round-trip
@@ -261,14 +262,9 @@ export default function StudioRoom({
       <p style={{ margin: "8px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>
         {roomKeyed ? "Room key: on · rotates with the seat secret" : "room unkeyed — SEAT_SECRET unset"}
       </p>
-      <p style={{ margin: "10px 0 0", fontSize: ".78rem", color: "var(--muted)" }}>
-        Send this guest door to a member
-      </p>
-      <div style={{ marginTop: 6 }}>
-        <button type="button" className="btn btn-sm btn-ghost" disabled aria-disabled="true">
-          Send to user — coming with T-304
-        </button>
-      </div>
+      {/* TASK-304: the stub grew teeth — pick one member, confirm, and the
+          site mails them the guest door (never the keyed director link). */}
+      <SendToUserChooser roomTitle={roomTitle} />
 
       {/* ── TASK-300: everything else — guest-panel setup, timers, the
           scene/overlay URL list — collapses under one section until
