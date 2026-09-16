@@ -274,7 +274,7 @@ export default function DoorSheet({
           <p style={bodyNote}>{copy.note}</p>
           <form onSubmit={sendCode} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <input
-              type="email" required autoFocus value={email}
+              type="email" required value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com" aria-label="Email address" style={field}
             />
