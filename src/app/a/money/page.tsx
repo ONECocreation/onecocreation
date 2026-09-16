@@ -78,6 +78,10 @@ export default function MoneyRoom() {
   const [denied, setDenied] = useState(false);
   const [railBtcpay, setRailBtcpay] = useState<boolean | null>(null);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
+  /* T-319 (0018.06.26 a₿) — fulfilment lives HERE now (Home's strip is a
+     counted pointer into this table); the rows waiting on Love's hand wear
+     the same ⚑ the pointer counts, so landing from Home finds them */
+  const [attentionIds, setAttentionIds] = useState<string[]>([]);
   const [window_, setWindow_] = useState<"moon" | "week" | "all">("moon");
   const [kind, setKind] = useState<"all" | "sessions" | "goods" | "tips">("all");
   const [detail, setDetail] = useState<OrderRecord | null>(null);
@@ -93,6 +97,7 @@ export default function MoneyRoom() {
       .then((d) => {
         if (!d?.ok) return;
         setOrders(d.orders ?? []);
+        setAttentionIds(d.needsAttention ?? []);
         setNowMs(Date.now());
       })
       .catch(() => {});
@@ -304,6 +309,10 @@ export default function MoneyRoom() {
                     {orderSats(o)}
                   </td>
                   <td style={{ ...td, borderRadius: "0 12px 12px 0", borderRight: "1px solid rgba(139,118,196,.16)" }}>
+                    {attentionIds.includes(o.id) && (
+                      <span title="waiting on your hand — tap for the popup, mark fulfilled there"
+                        style={{ marginRight: 6, cursor: "default" }}>⚑</span>
+                    )}
                     <Chip tone={stateTone(o.state)}>{o.state}</Chip>
                   </td>
                 </tr>
