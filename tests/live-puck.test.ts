@@ -337,7 +337,6 @@ describe("LivePage published — the SAME widget with the server props injected,
       await store.publishDraft("live");
 
       const LivePage = (await import("@/app/live/page")).default;
-      const { default: JitsiRoom } = await import("@/components/booking/JitsiRoom");
       const el = await LivePage();
 
       const { Render } = await import("@puckeditor/core");
