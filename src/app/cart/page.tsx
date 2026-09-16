@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import PaletteVars from "@/components/PaletteVars";
+import PopupHost from "@/components/PopupHost";
 import CartPanel from "@/components/store/CartPanel";
 import StackedHero from "@/components/StackedHero";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
+import { applyCartRailsToPuck } from "@/lib/puck-blocks/cart-panel";
 import { getSiteConfig } from "@/lib/site-config";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 
@@ -18,10 +26,34 @@ export default async function CartPage() {
      T-147 pattern: the basket's price words and its "$ · sats" toggle follow
      the LIVE rails (fiat default only when the card rail can actually
      charge), so the truth is judged once here, server-side, and handed down
-     — CartPanel is a client component and can't judge adapters itself. */
+     — CartPanel is a client component and can't judge adapters itself.
+     TASK-296: the judging stays AHEAD of the Puck read, verbatim (the
+     route-gate-first idiom) — both branches ride the same rails. */
   await getSiteConfig();
   await ensureSquareVault();
   const rails = { btc: liveAdapter() !== null, card: liveAdapter("square") !== null };
+
+  /* TASK-296 (0018.06.25 a₿ · block ~967,200) — PUCK first, mirroring
+     /about (page.tsx:68-88) byte-for-byte: once the Puck rebuild is
+     published (/style/cart -> Publish), the live /cart serves it — with
+     the SAME rails injected into the CartPanel block's props at render
+     time (applyCartRailsToPuck; the injection is never written back to
+     the store, so no rail state can fossilise). Until then, the
+     hand-built page below is untouched. */
+  const puck = await getPuckPage("cart");
+  if (puck) {
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main><Render config={config} data={applyCartRailsToPuck(puck as Data, rails)} /></main>
+        <SiteFooter />
+        {/* STUDIO P2: popup host rides both branches of this page */}
+        <PopupHost />
+      </>
+    );
+  }
+
   return (
     <main>
       <SiteHeader />
