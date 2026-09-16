@@ -52,7 +52,10 @@ const renderRoom = (props: Partial<Parameters<typeof GoLiveRoom>[0]> = {}) =>
     h(GoLiveRoom, {
       rooms: ROOM_FIXTURES,
       studioVdo: studioVdoLinks("onecocreation", "vdo.onecocreation.com"),
-      studioDirector: studioDirectorLink("vdo.onecocreation.com", "onecocreation-studio"),
+      /* TASK-306: the desk door is the SITE route now (T-292 Page A);
+         studioDirectorLink stays pinned below at the builder level — the
+         builder is not retired, only its call-sites' handling changed. */
+      studioDirector: "https://onecocreation.test/a/studio/room/onecocreation-studio",
       sessions: [],
       meeting: MEETING,
       youtube: "https://www.youtube.com/@Onecocreation",

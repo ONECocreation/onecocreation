@@ -205,6 +205,23 @@ export function isStudioNamespaceRoom(room: string, prefix: string): boolean {
   return room.startsWith(`${prefix}_`) && /^[a-zA-Z0-9_]+$/.test(room.slice(prefix.length + 1));
 }
 
+/** TASK-306 (0018.06.25 a₿) — the director's desk's ONE path join point,
+ *  the console twin of `meetStudioPath`: the door the OPERATOR opens is
+ *  OURS (`/a/studio/room/<room>`, behind the operator gate), never the
+ *  keyed studio URL bare in an href or a copy button (T-292 DESIGN.md §2
+ *  Page A; the residual-exposure note in T-306's brief). The key NEVER
+ *  rides this path: the desk route's own server mints it into the iframe
+ *  src at request time, the T-297 posture exactly. Pure. */
+export function directorDeskPath(room: string): string {
+  return `/a/studio/room/${encodeURIComponent(room)}`;
+}
+
+/** TASK-306: the absolute form — the request origin (or any honest base)
+ *  in, the full site URL out, for the console's copy affordances. Pure. */
+export function directorDeskUrl(origin: string, room: string): string {
+  return `${origin}${directorDeskPath(room)}`;
+}
+
 /** TASK-192, moved here TASK-261 (go-live-room.tsx no longer duplicates
  *  it — see that file's docblock for why it couldn't import `live.ts`
  *  directly before this split). The co-create guest link, derived from

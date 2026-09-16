@@ -155,9 +155,13 @@ export default function StudioRoom({
   overlayUrls: Record<StudioSceneId, string | null>;
   overlayReady: boolean;
   vdo: { room: string; push: string; guest: string };
-  /** TASK-261: the director seat's own link (`studioDirectorLink`), a
-   *  SEPARATE derivation from `vdo.push` — see go-live-room.tsx's same
-   *  prop for the full reasoning. */
+  /** TASK-261: the director seat's own door — TASK-306: the SITE route
+   *  (`/a/studio/room/<room>` on the request's own origin, page.tsx's
+   *  derivation via live-links.ts's directorDeskUrl), never the keyed
+   *  studio URL bare in an href again: the desk route's own server mints
+   *  the key into its iframe src. The CopyGhost beside it now copies an
+   *  UNKEYED in-site URL — harmless to paste, kept on purpose (T-306
+   *  SUMMARY's documented call). */
   director: string;
   /** TASK-244: null for the on-camera scenes and for a full scene with no minted overlay URL yet */
   showInStudioUrls: Record<StudioSceneId, string | null>;

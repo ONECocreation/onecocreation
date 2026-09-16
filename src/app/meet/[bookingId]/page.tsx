@@ -8,8 +8,7 @@ import { getBooking } from "@/lib/booking-orders";
 import { getService } from "@/lib/booking";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { getSiteConfig } from "@/lib/site-config";
-import { studioDirectorLink, studioRoomKey } from "@/lib/live";
-import { meetStudioPath } from "@/lib/live-links";
+import { meetStudioPath, directorDeskPath } from "@/lib/live-links";
 
 export const metadata: Metadata = { title: "Your session — One Cocreation" };
 export const dynamic = "force-dynamic";
@@ -64,14 +63,12 @@ export default async function MeetPage({ params }: { params: Promise<{ bookingId
        branch's own derivation, and that page's booking capability check is
        the same read this page just made), never the studio's address
        (T-292 DESIGN.md §2 Page B: "the URL the site hands out is OURS").
-       The director's own link STAYS the studio director URL — now keyed
-       with the SAME room key the in-site frame route mints for guests
-       (room+password is one distinct room, live.ts's studioRoomKey: every
-       door into a keyed room must carry the SAME key, or the director
-       lands in a DIFFERENT room than her guests). No SEAT_SECRET → both
-       sides mint unkeyed, exactly the pre-key behavior (derive-or-dash). */
-    const vdoHost = (await getSiteConfig()).meeting.vdoHost;
-    const director = studioDirectorLink(vdoHost, bookingId, studioRoomKey(bookingId) ?? undefined);
+       TASK-306: the operator's director door follows — the SITE route
+       `/a/studio/room/<bookingId>` (T-292 §2 Page A), whose own server
+       mints the keyed director src at request time. The keyed studio URL
+       no longer sits in this href at all: the same key the guest frame
+       carries is derived THERE (live.ts's one-derivation-per-room law),
+       so director and guests still land in ONE room. */
     return (
       <main className="mgmt-ground">
         <SiteHeader />
@@ -100,7 +97,7 @@ export default async function MeetPage({ params }: { params: Promise<{ bookingId
                 </p>
                 <a
                   className="btn btn-ghost btn-sm"
-                  href={director}
+                  href={directorDeskPath(bookingId)}
                   target="_blank"
                   rel="noreferrer"
                 >
