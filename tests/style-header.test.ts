@@ -103,7 +103,7 @@ describe("TASK-327 — the height/offset contract", () => {
 
   it("the preview overlay is absolute against the body region, never fixed over the admin door", async () => {
     const css = await read("src/app/style/preview.css");
-    const shell = css.match(/\.oc-preview-shell\s*\{[^}]*\}/s)?.[0] ?? "";
+    const shell = css.match(/\.oc-preview-shell\s*\{[^}]*\}/)?.[0] ?? "";
     expect(shell).toContain("position: absolute");
     expect(shell).not.toContain("position: fixed");
   });
