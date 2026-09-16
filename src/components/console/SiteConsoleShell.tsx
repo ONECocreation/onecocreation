@@ -35,7 +35,7 @@ import { SiteChromeHeader, SiteChromeFooter } from "./site-chrome";
 export const SITE_LABELS: Record<string, string> = {
   overview: "Home",
   store: "Items",
-  booking: "Services",
+  booking: "Sessions & hours",
   letters: "Letters",
   people: "People",
   money: "Money",
@@ -49,7 +49,32 @@ export const SITE_LABELS: Record<string, string> = {
     onboarding voice, not an artist's dashboard. */
 const SITE_BLURBS: Record<string, string> = {
   overview: "today's sessions, the jars, and your week at a glance",
+  studio: "the broadcast desk — scenes, overlays, and guest links",
 };
+
+/* TASK-323 (0018.06.26 a₿) — the rail follows Love's day, not the registry.
+   Presentation-only: CONSOLE_ROOMS itself keeps its order (the registry
+   drives the SCAR·LET house shell too); only what this shell renders sorts. */
+export const SITE_NAV_ORDER = [
+  "overview",
+  "booking",
+  "live",
+  "studio",
+  "letters",
+  "people",
+  "money",
+  "store",
+  "site",
+  "brand",
+];
+
+/** Sort rooms into the site rail's working order (TASK-323). Exported so the
+    order pin in tests/console.test.ts applies the same real logic. */
+export function siteRoomOrder<T extends { key: string }>(rooms: T[]): T[] {
+  return [...rooms].sort(
+    (a, b) => SITE_NAV_ORDER.indexOf(a.key) - SITE_NAV_ORDER.indexOf(b.key),
+  );
+}
 
 const label = (key: string, fallback: string) => SITE_LABELS[key] ?? fallback;
 const blurb = (key: string, fallback?: string) => SITE_BLURBS[key] ?? fallback;
@@ -176,7 +201,7 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
   // House furniture stays on the house's bridge. An artist running their own
   // shop has no use for a SIMULATOR or a FLEET MAP, and showing them would
   // make their admin feel like someone else's software.
-  const rooms = [CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly);
+  const rooms = siteRoomOrder([CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly));
 
   return (
     <div className="mgmt-ground">
