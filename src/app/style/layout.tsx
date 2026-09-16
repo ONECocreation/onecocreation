@@ -11,8 +11,7 @@ import StyleRoomStrip from "./StyleRoomStrip";
  * — escape the console chrome) moved the route out from under /a,
  * where the console shell had squeezed Puck's full-app editor into the
  * console's locked content strip; this layout became the ONLY chrome around
- * the editor — no SiteHeader, no console sidebar/header, just full-bleed
- * viewport. TASK-327 (cut 0018.06.26 a₿ · block 967255) PARTIALLY REVERSES
+ * the editor — the site header deliberately absent, full-bleed viewport. TASK-327 (cut 0018.06.26 a₿ · block 967255) PARTIALLY REVERSES
  * that ruling on the Admiral's own instruction this cut ("make sure they
  * have a unified header so we can get back easily to the admin area"): the
  * route now wears the console's own site header (SiteChromeHeader — the

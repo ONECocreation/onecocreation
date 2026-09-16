@@ -34,8 +34,13 @@ describe("TASK-216 — the nav header is already the ONE component (pinned, not 
     expect(src).toMatch(/export default function SiteHeader/);
   });
 
-  it("every PUBLIC page route imports SiteHeader — the console (/a), the studio canvas (/style), and the three documented standalone couriers are the only exceptions", async () => {
+  it("every PUBLIC page route imports SiteHeader — the console (/a) and the Style canvas (/style) wear it via their layouts instead; the three documented standalone couriers are the only true exceptions", async () => {
     const pages = await findPageFiles();
+    /* TASK-327 (0018.06.26 a₿): /style is no longer a header exception —
+       the shared header OWNS the route via src/app/style/layout.tsx
+       (SiteChromeHeader + the room strip), so the pages stay free of
+       per-page duplicate headers by design. /a's console pages wear the
+       same header through src/app/a/layout.tsx's shell. */
     const EXCLUDE_PREFIXES = ["src/app/a/", "src/app/style/"];
     const EXCLUDE_EXACT = new Set([
       // the old brand's cross-tenant profile card — its own chrome, not this site's
@@ -55,6 +60,19 @@ describe("TASK-216 — the nav header is already the ONE component (pinned, not 
     }
     expect(checked.length, "the census found no public pages to check — the glob is wrong").toBeGreaterThan(30);
     expect(missing, `pages missing SiteHeader: ${missing.join(", ")}`).toEqual([]);
+  });
+
+  it("the /style layout carries the shared header for every Style route — ownership once, no per-page duplicates (TASK-327)", async () => {
+    const layout = await read("src/app/style/layout.tsx");
+    expect(layout).toContain("SiteChromeHeader");
+    const stylePages = (await findPageFiles()).filter((p) => p.startsWith("src/app/style/"));
+    expect(stylePages.length, "the census found no /style pages — the glob is wrong").toBeGreaterThan(0);
+    for (const p of stylePages) {
+      const src = await read(p);
+      /* docblocks may NAME the header in prose — the pin targets import and
+         JSX positions only */
+      expect(/import[^\n]*SiteChromeHeader|<SiteChromeHeader|<SiteHeader/.test(src), `${p} hand-mounts the header — the layout owns it`).toBe(false);
+    }
   });
 
   it("/a's console layout carries its own documented chrome (LCARS or the site shell, CONSOLE_CHROME), never a third header", async () => {

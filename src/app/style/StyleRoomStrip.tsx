@@ -63,9 +63,7 @@ export default function StyleRoomStrip() {
       <Link href="/a" style={door} title="back to the admin area">
         ← Back to admin
       </Link>
-      <span style={{ color: CREAM, fontWeight: 800, fontSize: 14, letterSpacing: ".06em", whiteSpace: "nowrap" }}>
-        Style
-      </span>
+      <span style={{ color: CREAM, fontWeight: 800, fontSize: 14, letterSpacing: ".06em", whiteSpace: "nowrap" }}>Style</span>
       <span style={{ color: "rgba(236,227,201,.62)" /* the door cream, muted */, fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
         {styleRoomLabel(pathname)}
       </span>
