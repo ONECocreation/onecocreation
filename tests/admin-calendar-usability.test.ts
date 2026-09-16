@@ -83,6 +83,13 @@ describe("the day cell — the overlap's three root causes stay fixed", () => {
     expect(css).toMatch(/\.cal-cell--boundary \.cal-cell__head\{[^}]*flex-wrap\s*:\s*wrap/);
   });
 
+  it("the week ribbon rides the SAME 84px cell floor as the month grid — a ~45px cell splits the time mid-token", async () => {
+    const css = await read("src/components/calendar/calendar-view.css");
+    const ribbonRule = css.match(/\.cal-week-ribbon\{[^}]*\}/)?.[0] ?? "";
+    expect(ribbonRule).toMatch(/minmax\(84px,1fr\)/);
+    expect(ribbonRule).toMatch(/min-width:588px/);
+  });
+
   it("pill labels lead with the time, so the time never ellipsizes (marks.ts's contract)", () => {
     const cell = makeCell();
     const marks = buildDeskMarks(

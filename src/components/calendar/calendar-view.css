@@ -14,7 +14,14 @@
 
 /* ── the month grid ───────────────────────────────────────────────── */
 .cal-month-grid{display:grid;grid-template-columns:repeat(7,minmax(84px,1fr));gap:6px;min-width:588px}
-.cal-week-ribbon{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+/* T-319 (0018.06.26 a₿): the ribbon now rides the SAME 84px cell floor
+   as the month grid and scrolls inside .cal-scroll the same way on a
+   phone. It used to squeeze to minmax(0,1fr) — at 390px that is a ~45px
+   cell, where even the two-line pill cannot hold "~11:11" whole and the
+   time broke mid-token, the exact unreadability this lane was cut to
+   kill. One lattice, one floor: the time never ellipsizes AND never
+   splits, at any width. */
+.cal-week-ribbon{display:grid;grid-template-columns:repeat(7,minmax(84px,1fr));gap:6px;min-width:588px}
 .cal-week-ribbon > *{min-width:0}
 
 /* ── the day cell ──────────────────────────────────────────────────── */
@@ -76,7 +83,7 @@
    "~1…"/"12:…" prefix inside the 84px column. */
 .cal-pill{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
   border-radius:999px;padding:2px 8px;font-size:.62rem;font-weight:700;
-  letter-spacing:.03em;line-height:1.5;max-width:100%;overflow:hidden;white-space:normal;overflow-wrap:anywhere}
+  letter-spacing:.03em;line-height:1.5;max-width:100%;overflow:hidden;white-space:normal;overflow-wrap:break-word}
 .cal-cell__more{font-size:.6rem;font-weight:700;letter-spacing:.03em;color:var(--muted);padding:0 8px}
 .cal-pill--plain{background:var(--glass);border:1px solid var(--glass-edge);color:var(--ink-body)}
 .cal-pill--gold{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink)}
