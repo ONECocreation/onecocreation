@@ -138,6 +138,21 @@ const COMPONENTS: CompDef[] = [
     desc: "The live memberships grid — the three tier cards (names, prices, art, and the buy-or-waitlist doors) rendered from the house's tier registry when the page is published. Use on the packages page; never freeze tier names or prices into copy around it.",
     fields: {},
   },
+  /* TASK-296 wave B, letters-cart pair (0018.06.25 a₿ · block ~967,200):
+     the lockstep law (puck-config.tsx) — Number One may place the reading
+     room and the basket. Both are DATA-BOUND (the rubric-3 shape): the
+     server-judged props render live on the published page and are never
+     stored in the doc; neither carries copy fields. */
+  {
+    type: "LettersRoom",
+    desc: "The reading room (/letters) — the member's own mailbox (read live, per request) and the recent public letters shelf (injected live when the page is published; in the designer it shows its honest placeholder). Use on the letters page; never freeze a letter's words into copy.",
+    fields: {},
+  },
+  {
+    type: "CartPanel",
+    desc: "The basket (/cart) — the visitor's cart and its checkout, priced on the live payment rails (rails judged server-side and injected when the page is published; in the designer it shows its honest placeholder). Use on the cart page; never freeze prices or rail states into copy.",
+    fields: {},
+  },
 ];
 
 /** The component reference Love's request is built against, as prompt text. */
