@@ -59,7 +59,15 @@ export function createCartPanel() {
           </div>
         );
       }
-      return <CartPanel rails={rails} />;
+      return (
+        /* the fallback's own container (src/app/cart/page.tsx's .wrap 720
+           column) — with a filled basket the panel's layout assumes it;
+           the widget's own chrome travels WITH the block (the bb-time
+           lesson) */
+        <div className="wrap" style={{ maxWidth: 720, margin: "0 auto" }}>
+          <CartPanel rails={rails} />
+        </div>
+      );
     },
   };
 }

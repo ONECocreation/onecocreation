@@ -58,7 +58,16 @@ export function createLettersRoom() {
           </div>
         );
       }
-      return <LettersRoom recent={recent} />;
+      return (
+        /* the fallback's own container (src/app/letters/page.tsx's .wrap
+           center 640 column) — the room's markup assumes it; at the doc
+           root there is no band around the block (the bb-time lesson:
+           the widget's own chrome travels WITH the block, so the
+           published page and the designer canvas both wear it) */
+        <div className="wrap center" style={{ maxWidth: 640, margin: "0 auto" }}>
+          <LettersRoom recent={recent} />
+        </div>
+      );
     },
   };
 }

@@ -144,14 +144,20 @@ describe("applyCartRailsToPuck — the injector puts the rails into the block an
 });
 
 describe("the CartPanel block — the real widget with the injected rails, an honest placeholder without", () => {
-  it("render() with rails mounts the REAL CartPanel carrying them", async () => {
+  it("render() with rails mounts the REAL CartPanel carrying them, inside the fallback's own wrap", async () => {
     const { createCartPanel } = await import("@/lib/puck-blocks/cart-panel");
     const CartPanel = (await import("@/components/store/CartPanel")).default;
     const block = createCartPanel();
     const el = block.render({ rails: { btc: true, card: false } }) as ReactElement;
     expect(isElement(el)).toBe(true);
-    expect(el.type).toBe(CartPanel);
-    expect((el.props as { rails?: unknown }).rails).toEqual({ btc: true, card: false });
+    /* the fallback's own container travels with the block (the bb-time
+       lesson — a filled basket's layout assumes the 720 column) */
+    expect(el.type).toBe("div");
+    expect((el.props as { className?: string }).className).toContain("wrap");
+    const inner = (el.props as { children?: ReactNode }).children;
+    expect(isElement(inner)).toBe(true);
+    expect((inner as ReactElement).type).toBe(CartPanel);
+    expect(((inner as ReactElement).props as { rails?: unknown }).rails).toEqual({ btc: true, card: false });
   });
 
   it("render() without rails is the honest designer placeholder — never a faked rail state", async () => {

@@ -150,14 +150,20 @@ describe("applyLettersToPuck — the injector puts the shelf into the block and 
 });
 
 describe("the LettersRoom block — the real widget with the injected shelf, an honest placeholder without", () => {
-  it("render() with recent mounts the REAL LettersRoom carrying the shelf", async () => {
+  it("render() with recent mounts the REAL LettersRoom carrying the shelf, inside the fallback's own wrap", async () => {
     const { createLettersRoom } = await import("@/lib/puck-blocks/letters-room");
     const LettersRoom = (await import("@/components/LettersRoom")).default;
     const block = createLettersRoom();
     const el = block.render({ recent: [{ key: "k1", subject: "Fixture letter one" }] }) as ReactElement;
     expect(isElement(el)).toBe(true);
-    expect(el.type).toBe(LettersRoom);
-    expect((el.props as { recent?: unknown[] }).recent).toHaveLength(1);
+    /* the fallback's own container travels with the block (the bb-time
+       lesson — the room's markup assumes the centered 640 column) */
+    expect(el.type).toBe("div");
+    expect((el.props as { className?: string }).className).toContain("wrap");
+    const inner = (el.props as { children?: ReactNode }).children;
+    expect(isElement(inner)).toBe(true);
+    expect((inner as ReactElement).type).toBe(LettersRoom);
+    expect(((inner as ReactElement).props as { recent?: unknown[] }).recent).toHaveLength(1);
   });
 
   it("render() without recent is the honest designer placeholder — never fake letters", async () => {
