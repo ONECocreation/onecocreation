@@ -26,9 +26,14 @@
   color: var(--ink);
 }
 
-/* the preview shell: two panes, each its own theme, scrolling independently */
+/* the preview shell: two panes, each its own theme, scrolling independently.
+   TASK-327 (offset rule only): absolute, not fixed — the shell renders inside
+   the editor root, and the route layout's body region is now a positioning
+   context, so the overlay covers exactly the editor below the shared header
+   and can never cover the "← Back to admin" door (the K51 header contract:
+   the preview must never cover the admin door). */
 .oc-preview-shell {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 1200;
   display: flex;
