@@ -38,7 +38,7 @@ const A_DIR = path.join(ROOT, "src", "app", "a");
 describe("the console ledes derive their ink per theme", () => {
   it("no text-white/[0-9]+ className remains on a <p> under .mgmt-title — every room lede wears mgmt-lede", async () => {
     const files = await pageFiles(A_DIR);
-    expect(files.length).toBeGreaterThanOrEqual(7); // overview, action, bots, connections, sim, status, testing
+    expect(files.length).toBeGreaterThanOrEqual(5); // overview, bots, connections, sim, status (action + testing retired, T-320)
     let titles = 0;
     for (const file of files) {
       const rel = path.relative(ROOT, file);
@@ -58,7 +58,7 @@ describe("the console ledes derive their ink per theme", () => {
         expect(lede, `${rel}:${ledeIdx + 1} the lede does not wear mgmt-lede`).toContain("mgmt-lede");
       });
     }
-    expect(titles).toBeGreaterThanOrEqual(7);
+    expect(titles).toBeGreaterThanOrEqual(5);
   });
 
   it("the ONE shared rule lives in house.css and derives from the site token (no invented hex)", async () => {

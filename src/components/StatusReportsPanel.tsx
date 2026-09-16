@@ -9,9 +9,9 @@ import { ScarConsole, type ReaderContent } from "@/components/console/ReaderDraw
  * STATUS REPORTS — where everything stands, the moment you land. One board,
  * four gesture buckets, all REAL reads from the console's own stores:
  *   • IN FLIGHT — the committed now/next/later work (src/lib/status-flight).
- *   • SIGN     — the open cross-project sign-offs (their board: Action Items).
+ *   • SIGN     — the open cross-project sign-offs.
  *   • REVIEW   — the briefs awaiting review (their board: the Briefs library).
- *   • VOTE     — the open decisions (their board: the decision board).
+ *   • VOTE     — the open decisions.
  * The STAT CARDS up top ARE the filters — one taxonomy, the counts match the
  * list — and they mirror the ribbon's level-2 filter rail through the URL
  * hash. Selecting a row opens the READER DRAWER (closed by default, expand-
@@ -162,7 +162,6 @@ export default function StatusReportsPanel() {
             title: s.title,
             meta: `${s.id} · ${s.project}`,
             detail: [s.sum, ...s.detail],
-            gesture: { label: "Open on the board", href: "/a/action#signoffs" },
           });
         }
         for (const b of ((br?.briefs ?? []) as ApiBrief[]).filter((x) => x.status === "unreviewed")) {
@@ -187,7 +186,6 @@ export default function StatusReportsPanel() {
             title: d.question,
             meta: `✦ Number One recommends “${rec?.label ?? d.recommendation}”`,
             detail: [d.context, `✦ Recommended — ${rec?.label ?? d.recommendation}: ${d.recommendationWhy}`],
-            gesture: { label: "Record ruling", href: "/a/action#decisions" },
           });
         }
         setRows(built);
