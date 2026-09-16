@@ -8,7 +8,9 @@ import {
 
 /**
  * TASK-135 — the console cleanup lane's own tests:
- *   1. the site rail's eight one-word labels, in order, with /a/site on it.
+ *   1. the site rail's ten labels, in the shell's working order, with
+ *      /a/site on it (TASK-323: the order is the shell's own siteRoomOrder,
+ *      not raw registry order).
  *   2. houseOnly rooms never surface a real label under the site chrome,
  *      whichever path resolved to them (the Admiral's "DUTY ROSTER
  *      reappeared" catch) — siteChromeTitle is the choke point.
@@ -18,17 +20,19 @@ import {
  *      /api/brand contract the Studio uses.
  */
 
-describe("the site rail — one word each", () => {
+describe("the site rail — the rooms, in Love's working order", () => {
   it("filters houseOnly rooms out of the site chrome's rail", () => {
     const rail = [CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly);
     for (const r of rail) expect(r.houseOnly).toBeFalsy();
   });
 
-  it("carries the ten one-word labels, in order, ending with Site", async () => {
-    const { SITE_LABELS } = await import("@/components/console/SiteConsoleShell");
-    const rail = [CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly);
+  it("carries the ten labels in the shell's working order, sorted the same real way", async () => {
+    const { SITE_LABELS, SITE_NAV_ORDER, siteRoomOrder } = await import("@/components/console/SiteConsoleShell");
+    const rail = siteRoomOrder([CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly));
+    expect(rail.map((r) => r.key)).toEqual(SITE_NAV_ORDER);
+    expect(SITE_NAV_ORDER).toEqual(["overview", "booking", "live", "studio", "letters", "people", "money", "store", "site", "brand"]);
     const labels = rail.map((r) => SITE_LABELS[r.key] ?? r.label);
-    expect(labels).toEqual(["Home", "Items", "Services", "Letters", "People", "Money", "Brand", "Live", "Studio", "Site"]);
+    expect(labels).toEqual(["Home", "Sessions & hours", "Live", "Studio", "Letters", "People", "Money", "Items", "Site", "Brand"]);
   });
 
   it("registers /a/site, reachable and not house furniture", () => {
