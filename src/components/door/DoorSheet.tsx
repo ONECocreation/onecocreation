@@ -228,7 +228,9 @@ export default function DoorSheet({
       setBusy(false);
       return;
     }
-    const reason = await submitSignedKey(event as VerifiedEvent);
+    /* the extension's own type is narrower than VerifiedEvent (its declare
+       carries only id/pubkey/sig) — the signed event is whole at runtime */
+    const reason = await submitSignedKey(event as unknown as VerifiedEvent);
     if (reason) setNote(reason);
   }
 
