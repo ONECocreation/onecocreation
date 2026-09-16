@@ -13,6 +13,7 @@ import { createMeSwitch } from "@/lib/puck-blocks/me-switch";
 import { createLoginDoor } from "@/lib/puck-blocks/login-door";
 import { createBbConsole } from "@/lib/puck-blocks/bb-console";
 import { createBftClock } from "@/lib/puck-blocks/bft-clock";
+import { createLiveDoor } from "@/lib/puck-blocks/live-door";
 import { NIP05_DOMAIN, SPACE_NAME } from "@/lib/identity-config";
 
 /**
@@ -147,6 +148,15 @@ components.LoginDoor = createLoginDoor() as unknown as (typeof components)[strin
 components.BbConsole = createBbConsole() as unknown as (typeof components)[string];
 components.BftClock = createBftClock() as unknown as (typeof components)[string];
 
+/* TASK-296 wave B, pair live (0018.06.25 a₿ · block 967,201): LiveDoor —
+   the third data-bound block riding T-231's pattern (the whole /live state
+   machine: the h1 flip, the Jitsi embed, the live room card, the editable
+   idle voice; the server-judged props are injected at render time by
+   applyLiveToPuck on the published page — see the block's docblock).
+   LOCAL, like its siblings — the package stays vendored-untouched.
+   Appended, never reordered (the wave B append-only law). */
+components.LiveDoor = createLiveDoor() as unknown as (typeof components)[string];
+
 /* the library rail: ParallaxBand (and the data-bound blocks, TASK-231's
    RetreatsList + TASK-232's PackagesGrid) join the Layout group, appended
    at the end (after Divider — the package's array order is never reordered) */
@@ -160,7 +170,7 @@ export const config = {
   components,
   categories: {
     ...categories,
-    layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid", "LettersRoom", "CartPanel"] },
+    layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid", "LettersRoom", "CartPanel", "LiveDoor"] },
     actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors", "MeSwitch", "LoginDoor", "BbConsole", "BftClock"] },
   },
   /* STUDIO P1: page-level SEO lives on the Puck root — plain fields edited

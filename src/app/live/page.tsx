@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { Data } from "@puckeditor/core";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import PaletteVars from "@/components/PaletteVars";
+import PopupHost from "@/components/PopupHost";
+import { config } from "@/lib/puck-config";
+import { getPuckPage } from "@/lib/puck-store";
 import { TIERS } from "@/lib/entitlement";
 import { getLiveState, roomForSlug, LIVE_SCHEDULE, LIVE_YOUTUBE, liveRoomName } from "@/lib/live";
 import { getSiteConfig } from "@/lib/site-config";
 import JitsiRoom from "@/components/booking/JitsiRoom";
+import { applyLiveToPuck, type LiveDoorLiveProps } from "@/lib/puck-blocks/live-door";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +34,10 @@ export const metadata: Metadata = {
  * the door below led nowhere that could show it).
  */
 export default async function LivePage() {
+  /* the server work stays FIRST (the route-gate-first idiom): the live
+     flag is judged here on the server for BOTH branches — the fallback
+     reads it below, the designer branch gets it injected into the LiveDoor
+     block at render time (never stored) */
   const state = await getLiveState();
   const room = state.live && state.room ? roomForSlug(state.room) : undefined;
   /* TASK-146: the live door's video embed — same domain/room derivation
@@ -34,6 +46,41 @@ export default async function LivePage() {
   const embed = state.live && room
     ? { jitsiDomain: (await getSiteConfig()).meeting.jitsiDomain, liveRoom: liveRoomName(state.room!) }
     : null;
+
+  /* TASK-296 wave B, pair live — PUCK first, mirroring /about
+     (page.tsx:68-88): once Love publishes the Puck rebuild (/style/live ->
+     Publish), the live /live serves it. Until then, the hand-built page
+     below is untouched — nothing changes for visitors until she chooses
+     it. The flag is never frozen either way: the designer branch resolves
+     it fresh on every request and applyLiveToPuck puts it into the block
+     and NOWHERE else. The <main> wears mgmt-ground/mgmt-body (the bb-time
+     lesson): the block embeds app chrome (.card/.btn/.note/mgmt-title)
+     whose classes assume the mgmt remapping. */
+  const puck = await getPuckPage("live");
+  if (puck) {
+    const live: LiveDoorLiveProps | null = room
+      ? {
+          slug: state.room!,
+          title: room.title,
+          kind: room.kind === "community" ? "community" : "class",
+          tierName: room.minTier === "all" ? null : TIERS[room.minTier].name,
+          startedAt: state.startedAt,
+        }
+      : null;
+    return (
+      <>
+        <SiteHeader />
+        <PaletteVars />
+        <main className="mgmt-ground mgmt-body">
+          <Render config={config} data={applyLiveToPuck(puck as Data, { live, embed })} />
+        </main>
+        <SiteFooter />
+        {/* STUDIO P2: the popup host rides the designer branch (the fallback
+            never had one — byte-identical law — so it is not added there) */}
+        <PopupHost />
+      </>
+    );
+  }
 
   return (
     <main className="mgmt-ground">

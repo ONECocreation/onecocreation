@@ -182,6 +182,29 @@ const COMPONENTS: CompDef[] = [
     desc: "The live Bitcoin Federated Time reading — the canonical BFT date and the boxed-star block height, read from the chain live-or-dashes (never an estimate, never stored). Use on the time page.",
     fields: {},
   },
+  /* TASK-296 wave B, pair live (0018.06.25 a₿ · block 967,201): the
+     lockstep law (puck-config.tsx) — Number One may place the live door.
+     It is DATA-BOUND: the heading's live/idle flip, the Jitsi embed and the
+     room card render from the server-judged live flag when the page is
+     published (never stored in the page doc); only the idle voice is copy. */
+  {
+    type: "LiveDoor",
+    desc: "The live door — when a room is live it shows 'Love is live now' with the meeting embed and the room card (tier honesty, the way in); when idle it shows the editable heading, the schedule line and the YouTube pointer. Use on the live page; never freeze a room name or a 'live now' claim into copy around it.",
+    fields: {
+      idleH1: {
+        schema: { type: "string" },
+        desc: "the heading while no room is live, e.g. 'Live, on the rhythm'",
+      },
+      schedule: {
+        schema: { type: "string" },
+        desc: "the weekly rhythm line shown while idle, e.g. 'Mon · Wed · Fri ~11:11'",
+      },
+      youtubeUrl: {
+        schema: { type: "string" },
+        desc: "the YouTube channel URL the idle card points at",
+      },
+    },
+  },
 ];
 
 /** The component reference Love's request is built against, as prompt text. */
