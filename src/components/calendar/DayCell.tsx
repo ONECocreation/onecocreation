@@ -45,6 +45,15 @@ export interface DayCellProps {
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
+/* T-319 (0018.06.26 a₿ — the Admiral: the month cell's pills were
+   unreadable, truncated to "~1…"/"12:…", with the day-of-year numeral
+   floating over them). A cell shows at most two pills, then an honest
+   "+N more" — the day's own click (onSelect) already opens the altitude
+   that lists everything, so the overflow door needs no wiring of its
+   own. Consumers keep their own caps (marks.ts slices at 4, the member
+   calendar at 3); this cap is only about what one glance can hold. */
+const MAX_SHOWN_PILLS = 2;
+
 export default function DayCell({
   cell, primary, counts, showWeekOfYear, isToday, isSelected, marks, onSelect, onSelectPill,
 }: DayCellProps) {
@@ -61,6 +70,8 @@ export default function DayCell({
   const blackout = !!marks?.blackout;
   const multiDay = !!marks?.multiDay;
   const pills = marks?.pills ?? [];
+  const shownPills = pills.slice(0, MAX_SHOWN_PILLS);
+  const morePills = pills.length - shownPills.length;
 
   const classes = [
     "cal-cell",
@@ -89,7 +100,7 @@ export default function DayCell({
       {blackout && <span className="cal-cell__mark">blackout</span>}
       {pills.length > 0 && (
         <div className="cal-cell__pills">
-          {pills.map((p) => (
+          {shownPills.map((p) => (
             onSelectPill
               ? (
                 <button
@@ -104,6 +115,7 @@ export default function DayCell({
               )
               : <span key={p.id} className={`cal-pill cal-pill--${p.variant ?? "plain"}`}>{p.label}</span>
           ))}
+          {morePills > 0 && <span className="cal-cell__more">+{morePills} more</span>}
         </div>
       )}
       {counts && <span className="cal-cell__doy">{cell.dayOfYear}</span>}
