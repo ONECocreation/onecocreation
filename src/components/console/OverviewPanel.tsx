@@ -132,12 +132,12 @@ export default function OverviewPanel() {
 
       {grp("pink", "NEEDS YOUR KEY", "each card is a door — the counts are the boards' own")}
       <section className="scar-stats" aria-label="what needs you — doors into the rooms">
-        <Link href="/a/action#signoffs" className="scar-stat" data-accent="pink">
+        <Link href="/a/status#sign" className="scar-stat" data-accent="pink">
           <div className="scar-stat__n">{n(counts?.signoffs)}</div>
           <div className="scar-stat__l">Sign-offs</div>
           <div className="scar-stat__sub">cross-project · awaiting your key</div>
         </Link>
-        <Link href="/a/action#decisions" className="scar-stat" data-accent="cyan">
+        <Link href="/a/status#vote" className="scar-stat" data-accent="cyan">
           <div className="scar-stat__n">{n(counts?.decisions)}</div>
           <div className="scar-stat__l">Decisions</div>
           <div className="scar-stat__sub">rulings open</div>
@@ -146,11 +146,6 @@ export default function OverviewPanel() {
           <div className="scar-stat__n">{n(counts?.review)}</div>
           <div className="scar-stat__l">Briefs to review</div>
           <div className="scar-stat__sub">read then rule</div>
-        </Link>
-        <Link href="/a/testing#roster" className="scar-stat" data-accent="neon">
-          <div className="scar-stat__n">{n(counts?.tickets)}</div>
-          <div className="scar-stat__l">Tickets open</div>
-          <div className="scar-stat__sub">the crew board</div>
         </Link>
       </section>
       <p className="mt-3 font-mono text-[11px] text-white/40">

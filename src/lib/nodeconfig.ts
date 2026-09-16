@@ -7,7 +7,7 @@ import { blobStoreEnabled } from "./registry";
  * Node links, operator-editable — the admiral connects their own servers from
  * the GUI (Pac, 2026-07-11), not by editing deployment env. Stored config
  * wins; env vars remain the bootstrap fallback so a fresh fork still works
- * from .env alone. Dual-driver like tickets/merges.
+ * from .env alone. Dual-driver like tickets.
  *
  * `ceremony` rides here too: what a batch ceremony SENDS (certificate
  * template + the welcome letter) is configurable per POKE node standup.
@@ -30,10 +30,11 @@ export interface NodeConfig {
       the floor resolves tags live. Unset stays honestly empty until one is
       configured (derive-or-dash — never invent a stranger's door). */
   chatUrl: string;
-  /** GitHub link for the SCAR merge queue — paste-in from the GUI, so the
-      admiral never has to touch deployment env (Pac, 2026-07-11). */
+  /** The shared GitHub PAT — the personal briefs pull's fallback key behind
+      the dedicated briefsToken below (Pac, 2026-07-11: paste-in, never
+      deployment env). Write-only via the nodes PUT; the merge queue it once
+      served is retired (T-320), so nothing reads a repo from it anymore. */
   githubToken: string;
-  githubRepo: string;
   /** The PRIVATE briefs repo the library pulls from (captains-only) — the
       "personal" tier. Not a secret (just owner/name + branch) — the SAME
       githubToken above reads it (needs Contents:read on it). The brief CONTENT
@@ -45,8 +46,8 @@ export interface NodeConfig {
       place to enter it (the admiral kept hunting for one). Write-only: set via
       the nodes PUT, masked-by-omission from the GET, like githubToken/deployHook.
       The personal pull PREFERS this; if unset it falls back to the shared
-      merge-queue githubToken, so nothing breaks for anyone already on that. Its
-      own 90-day renewal, independent of the merge token. Fine-grained PAT with
+      githubToken, so nothing breaks for anyone already on that. Its
+      own 90-day renewal, independent of the shared token. Fine-grained PAT with
       Contents:read on the briefs repo. */
   briefsToken: string;
   /** The SHARED (public) briefs repo — the "shared" tier. Pulled via the public
@@ -75,7 +76,6 @@ const EMPTY: NodeConfig = {
   mudToken: "",
   chatUrl: "",
   githubToken: "",
-  githubRepo: "",
   briefsRepo: "",
   briefsBranch: "",
   briefsToken: "",
@@ -194,10 +194,14 @@ export async function effectiveMempoolNode(): Promise<{
   return { url: MEMPOOL_URL_DEFAULT, source: "default" };
 }
 
-export async function effectiveGithub(): Promise<{ repo: string; token: string }> {
+/** The shared GitHub PAT — stored config first, env bootstrap (GITHUB_TOKEN)
+    second, empty when neither is connected. Token only: the merge queue that
+    once read a repo from this pair is retired (T-320) — the old repo fallback
+    (`PacsArcade/frens.earth`, the arcade's own repo leaking into a client
+    site) went with it. The briefs route destructures `.token` only. */
+export async function effectiveGithub(): Promise<{ token: string }> {
   const c = await readNodeConfig();
   return {
-    repo: c.githubRepo || process.env.GITHUB_REPO?.trim() || "PacsArcade/frens.earth",
     token: c.githubToken || process.env.GITHUB_TOKEN?.trim() || "",
   };
 }
@@ -217,7 +221,7 @@ export async function effectiveBriefsRepo(): Promise<{ repo: string; branch: str
 /** The token the PERSONAL briefs pull authenticates with. PREFERS the dedicated
     briefs token (stored config first, env bootstrap second) so there's an
     obvious, briefs-scoped place to enter a key with its own 90-day renewal; if
-    that's unset it FALLS BACK to the shared merge-queue GitHub PAT, so nothing
+    that's unset it FALLS BACK to the shared GitHub PAT, so nothing
     breaks for anyone already pulling on the shared token. `source` tells which
     key answered (or `none` when neither is connected). */
 export async function effectiveBriefsToken(): Promise<{

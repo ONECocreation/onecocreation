@@ -163,10 +163,12 @@ export default function GoLiveRoom({
 }: {
   rooms: DoorRoom[];
   studioVdo: { room: string; push: string; guest: string };
-  /** TASK-261: the director seat's own link (`studioDirectorLink`,
-   *  `?director=<room>&label=Love&muteallguests`) — a SEPARATE derivation
-   *  from `studioVdo.push` (the on-camera/publish link), so "on camera"
-   *  and "the director's desk" can never be conflated by a caller. */
+  /** TASK-261: the director seat's own door — a SEPARATE derivation from
+   *  `studioVdo.push` (the on-camera/publish link), so "on camera" and
+   *  "the director's desk" can never be conflated by a caller. TASK-306:
+   *  the SITE route (`/a/studio/room/<room>`, page.tsx's derivation via
+   *  live-links.ts's directorDeskUrl) — the keyed studio URL no longer
+   *  rides this href; the desk route's own server mints it. */
   studioDirector: string;
   sessions: TodaySession[];
   meeting: GoLiveMeeting;

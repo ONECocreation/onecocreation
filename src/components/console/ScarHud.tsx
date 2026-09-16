@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { CONSOLE_NODE } from "@/lib/console";
 
 /**
@@ -10,15 +9,15 @@ import { CONSOLE_NODE } from "@/lib/console";
  *
  *   NODE · RANK · PTS · CMDS
  *
- * One gated read of /api/admin/rank feeds it (the same door the rank track
- * panel reads — registry claim → BFT tenure → the fleet ladder; points and
- * commendations straight off the duty roster's resolved tickets). Semantics
- * hold: the rank seg is pink (honor-only, never coin), live counts are neon,
- * the node dot is neon (live). When the board doesn't answer, the HUD goes
- * honestly dark — "NO READ" beats an invented number, always.
+ * One gated read of /api/admin/rank feeds it (registry claim → BFT tenure →
+ * the fleet ladder; points and commendations straight off resolved tickets).
+ * Semantics hold: the rank seg is pink (honor-only, never coin), live counts
+ * are neon, the node dot is neon (live). When the board doesn't answer, the
+ * HUD goes honestly dark — "NO READ" beats an invented number, always.
  *
- * The rank seg is also the door to the full rank track (it absorbed the old
- * top-bar rank chip, so rank reads once, in one place).
+ * The rank seg absorbed the old top-bar rank chip, so rank reads once, in one
+ * place. It is a readout, not a door — the crew board it once opened retired
+ * with the merge queue (T-320).
  */
 
 interface HudRead {
@@ -80,21 +79,20 @@ export default function ScarHud() {
 
       {hud.at === "lit" && (
         <>
-          <Link
-            href="/a/testing#rank"
+          <span
             className="scar-hud__seg scar-hud__seg--rank"
-            title="your rank track — office label first (Pac's ruling); the full board lives on the crew board"
+            title="your rank — office label first (Pac's ruling)"
           > {hud.read.office ?? hud.read.rank?.name ?? "NO TAG YET"}
-          </Link>
+          </span>
           <span
             className="scar-hud__seg"
-            title="points — resolutions you logged on the duty roster (the board's own count)"
+            title="points — the board's own count"
           >
             PTS <b>{hud.read.points}</b>
           </span>
           <span
             className="scar-hud__seg"
-            title="commendations logged on the crew board — straight off resolved tickets"
+            title="commendations — straight off resolved tickets"
           >
             CMDS <b>{hud.read.commendations.reduce((sum, c) => sum + c.n, 0)}</b>
           </span>

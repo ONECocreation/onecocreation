@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import StudioRoom from "@/components/studio-overlay/StudioRoom";
 import { defaultStudioDoc } from "@/lib/studio/doc";
 import { STUDIO_SCENES, type StudioSceneId } from "@/lib/studio/scenes";
-import { studioVdoLinks, studioDirectorLink } from "@/lib/live";
+import { studioVdoLinks } from "@/lib/live";
 
 /**
  * TASK-261 (0018.06.24 a₿) — the /a/studio links card grows a third row:
@@ -18,13 +18,17 @@ import { studioVdoLinks, studioDirectorLink } from "@/lib/live";
  *  · `/a/studio/page.tsx` no longer hand-builds the `{room, push, guest}`
  *    shape inline — it calls the SAME `studioVdoLinks` every other caller
  *    uses (the grep-pin below), and derives `director` via
- *    `studioDirectorLink`.
+ *    `directorDeskUrl` (TASK-306: the SITE route — it was
+ *    `studioDirectorLink`'s off-site URL before).
  */
 
 const read = (rel: string) => readFileSync(rel, "utf8");
 
 const VDO = studioVdoLinks("onecocreation", "vdo.onecocreation.com");
-const DIRECTOR = studioDirectorLink("vdo.onecocreation.com", VDO.room);
+/* TASK-306: the director door is the SITE route now (T-292 Page A) —
+   what page.tsx mints via directorDeskUrl on the request origin; the
+   keyed studio URL no longer rides this href. */
+const DIRECTOR = "https://onecocreation.test/a/studio/room/onecocreation_studio";
 /* TASK-297: the guest door is the SITE url now (T-292 Page B) — what
    page.tsx mints via meetStudioUrl on the request origin. */
 const GUEST_DOOR = "https://onecocreation.test/meet/studio/onecocreation_studio";
@@ -71,9 +75,9 @@ describe("the VDO links card — three doors, each named and carrying the room",
     expect(html.split("onecocreation_studio").length - 1).toBeGreaterThanOrEqual(4); // the caption line + the 3 door names
   });
 
-  it("the director row's copy value is studioDirectorLink's own output", () => {
+  it("the director row's copy value is the in-site desk route (TASK-306)", () => {
     const html = renderRoom();
-    expect(html).toContain(DIRECTOR.replace(/&/g, "&amp;"));
+    expect(html).toContain(`href="${DIRECTOR}"`);
     expect(html).toContain("Copy the director link");
   });
 
@@ -91,13 +95,17 @@ describe("the VDO links card — three doors, each named and carrying the room",
 describe("/a/studio/page.tsx — one source, not a second hand-built shape", () => {
   const src = read("src/app/a/studio/page.tsx");
 
-  it("imports studioVdoLinks and studioDirectorLink from @/lib/live, never re-spells the link shape", () => {
-    expect(src).toContain('import { studioVdoLinks, studioDirectorLink, studioRoomKey } from "@/lib/live"');
+  it("imports studioVdoLinks and studioRoomKey from @/lib/live, never re-spells the link shape", () => {
+    expect(src).toContain('import { studioVdoLinks, studioRoomKey } from "@/lib/live"');
     // TASK-305: the room name is derived once (this SAME builder, never
     // re-spelled) to compute the key before the real, keyed links mint —
     // the substring below still names the one true builder call.
     expect(src).toContain("studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost)");
-    expect(src).toContain("studioDirectorLink(config.meeting.vdoHost, vdo.room, roomKey)");
+    /* TASK-306: the director door is derived by directorDeskUrl (the SITE
+       route) — studioDirectorLink is no longer called on this page; the
+       keyed studio URL leaves the href and the CopyGhost for good. */
+    expect(src).toContain("directorDeskUrl(origin, vdo.room)");
+    expect(src).not.toContain("studioDirectorLink(");
     // the old inline hand-built shape is gone
     expect(src).not.toMatch(/push:\s*`https:\/\/\$\{config\.meeting\.vdoHost\}/);
   });

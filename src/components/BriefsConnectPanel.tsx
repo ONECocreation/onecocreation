@@ -11,8 +11,8 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
  *   • PERSONAL — the PRIVATE captains-only repo. It has its OWN dedicated,
  *                write-only briefs token field here (an obvious place to paste a
  *                briefs-scoped key, with its own 90-day renewal). If that's
- *                unset the pull falls back to the shared Merge-Queue GitHub PAT,
- *                which we link to — never duplicate.
+ *                unset the pull falls back to the shared GitHub PAT — never
+ *                duplicate.
  *
  * The ⟳ PULL action stays on the Briefs page; this card is just the repo/branch
  * editors + honest state. Brief CONTENT never lands in this public repo either
@@ -93,22 +93,18 @@ export default function BriefsConnectPanel() {
           branch={config?.briefsBranch ?? ""}
           fields={{ repo: "briefsRepo", branch: "briefsBranch" }}
           onSaved={load}
-          note="Read with the dedicated briefs token below if set, else the merge queue's connected PAT (needs Contents:read on this repo either way)."
+          note="Read with the dedicated briefs token below if set, else the connected GitHub PAT (needs Contents:read on this repo either way)."
           extra={
             <div className="mt-3 space-y-3 border-t border-edge pt-3">
               <BriefsTokenField tokenSet={config?.briefsTokenSet ?? false} onSaved={load} />
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-edge pt-3 font-mono text-[11px]">
-                <span className="text-white/40">FALLBACK · MERGE-QUEUE PAT</span>
+                <span className="text-white/40">FALLBACK · GITHUB PAT</span>
                 {config?.githubTokenSet ? (
                   <span className="text-neon">✓ CONNECTED</span>
                 ) : (
                   <span className="text-ghost">NOT CONNECTED</span>
                 )}
-                <a href="/a/action#approvals" className="text-cyan underline hover:text-white">
-                  {config?.githubTokenSet
-                    ? "manage the key in the merge queue"
-                    : "connect the GitHub PAT in the merge queue"}
-                </a>
+                <span className="text-white/40">not currently editable in the console</span>
               </div>
             </div>
           }
@@ -237,8 +233,8 @@ function SourceBox({
 }
 
 /** The PERSONAL briefs token — its OWN dedicated place to enter a briefs-scoped
-    key (the admiral kept hunting for one). Write-only, mirroring the merge
-    token / deploy hook: we POST it and never read it back, so the UI only ever
+    key (the admiral kept hunting for one). Write-only, mirroring the deploy
+    hook: we POST it and never read it back, so the UI only ever
     knows SET / NOT SET — the value is never echoed. Same POINT · SAVE rail as
     the repo boxes; no hardcoded hex. */
 function BriefsTokenField({ tokenSet, onSaved }: { tokenSet: boolean; onSaved: () => void }) {
@@ -307,7 +303,7 @@ function BriefsTokenField({ tokenSet, onSaved }: { tokenSet: boolean; onSaved: (
       </div>
       <p className="mt-2 font-body text-xs text-white/50">
         Fine-grained PAT with <span className="font-mono text-white/70">frens-briefs</span> → Contents:
-        read. Stored write-only — never shown again. Empty falls back to the merge-queue PAT below.
+        read. Stored write-only — never shown again. Empty falls back to the GitHub PAT below.
       </p>
       {err && <p className="mt-2 font-pixel text-[9px] uppercase text-ghost">{err}</p>}
     </div>

@@ -22,7 +22,7 @@ import { serverBlockInfo } from "./chain-tip-server";
  *   • PERSONAL — PULLED from a private, captains-only GitHub repo (briefsRepo in
  *     the node config, default PacsArcade/frens-briefs) using the DEDICATED
  *     briefs token if set (its own briefs-scoped key, its own renewal), else the
- *     merge queue's connected PAT — a fine-grained token needing Contents:read on
+ *     console's shared GitHub PAT — a fine-grained token needing Contents:read on
  *     that repo either way.
  *   • SHARED — PULLED from a PUBLIC GitHub repo (sharedBriefsRepo, default
  *     PacsArcade/frens-briefs-public) via the public API with NO token, so
@@ -439,7 +439,7 @@ const GH = "https://api.github.com";
 export interface PullResult {
   ok: boolean;
   tier: BriefTier;
-  /** honest state when it can't run — mirrors the merge queue's connect box.
+  /** honest state when it can't run.
       `not-found` = the repo/branch 404s (e.g. the public repo isn't made yet). */
   reason?: "connect-github" | "unreachable" | "empty" | "not-found";
   detail?: string;
@@ -547,7 +547,7 @@ async function pullTier(
 
 /** The PERSONAL tier — the private captains-only repo. Reads with the DEDICATED
     briefs token if one is set (its own briefs-scoped key), else falls back to the
-    console's connected merge-queue PAT (Contents:read either way). Honest
+    console's shared GitHub PAT (Contents:read either way). Honest
     `connect-github` when NEITHER is connected. */
 export async function pullPersonalBriefs(): Promise<PullResult> {
   const [{ token }, { repo, branch }] = await Promise.all([effectiveBriefsToken(), effectiveBriefsRepo()]);
@@ -559,7 +559,7 @@ export async function pullPersonalBriefs(): Promise<PullResult> {
       repo,
       branch,
       detail:
-        "no briefs token connected — paste a dedicated briefs token in Connections → Briefs, or connect the merge-queue PAT (needs Contents:read on the briefs repo)",
+        "no briefs token connected — paste a dedicated briefs token in Connections → Briefs (needs Contents:read on the briefs repo)",
     };
   }
   return pullTier("personal", repo, branch, token);
