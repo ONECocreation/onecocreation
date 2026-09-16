@@ -158,7 +158,11 @@ describe("item 6 (re-verified, not rebuilt) — the sign-in door renders both pa
     const end = src.indexOf('state === "code" &&');
     const signInBlock = src.slice(start, end);
     expect(signInBlock).toContain('type="email"');
-    expect(signInBlock).toContain("{DOOR_KEY_NOTE}");
+    /* TASK-316: the note is device-aware now — keyNoteFor returns
+       DOOR_KEY_NOTE when an extension is present (and on first paint),
+       the handoff words otherwise; both paths still render in the same
+       block, and DOOR_KEY_NOTE still feeds it from door-machine.ts */
+    expect(signInBlock).toContain("keyNoteFor(hasNostr, android)");
     expect(signInBlock).toContain("{DOOR_KEY_CTA}");
   });
 
