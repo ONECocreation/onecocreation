@@ -247,6 +247,32 @@ describe("applyLiveToPuck — the render-time injection (never fossilised, nowhe
     const doc = { content: [{ type: "Heading", props: { id: "h" } }], root: {} };
     expect(applyLiveToPuck(doc, { live: null, embed: null })).toBe(doc);
   });
+
+  it("the injection reaches a LiveDoor nested inside a Band's slot (the pair-live shots lesson)", async () => {
+    const { applyLiveToPuck } = await import("@/lib/puck-blocks/live-door");
+    const doc = {
+      content: [{
+        type: "Band",
+        props: {
+          id: "band",
+          content: [
+            { type: "Eyebrow", props: { id: "eb", text: "Live" } },
+            { type: "LiveDoor", props: { id: "lv-door", idleH1: "i", schedule: "s", youtubeUrl: "y" } },
+          ],
+        },
+      }],
+      root: {},
+    };
+    const injected = { live: { slug: "clair-senses", title: "t", kind: "class" as const, tierName: "Weekly Intuitive" }, embed: null };
+    const out = applyLiveToPuck(doc, injected);
+    expect(out).not.toBe(doc);
+    const band = (out.content as SeedBlock[])[0];
+    const inner = band.props.content as SeedBlock[];
+    expect(inner[0].props.live).toBeUndefined(); // nowhere else, even nested
+    expect(inner[1].props.live).toEqual(injected.live);
+    // the stored doc keeps no flag
+    expect(JSON.stringify(doc)).not.toContain("clair-senses");
+  });
 });
 
 describe("LivePage — the fallback renders BOTH states as today", () => {
@@ -379,5 +405,34 @@ describe("LivePage published — the SAME widget with the server props injected,
     expect(html).toContain("Live, on the rhythm");
     expect(html).toContain("Mon · Wed · Fri ~11:11");
     expect(html).toContain("The replay stays on the channel when the moment passes.");
+  });
+
+  it("the REAL seed under a LIVE flag: the injection reaches the nested block — 'Love is live now' through the band (the pair-live shots lesson)", async () => {
+    mockLive(LIVE_STATE);
+    try {
+      const store = await import("@/lib/puck-store");
+      const { SEEDS } = await import("@/lib/puck-seeds");
+      await store.setPuckDraft("live", SEEDS.live);
+      await store.publishDraft("live");
+
+      const LivePage = (await import("@/app/live/page")).default;
+      const el = await LivePage();
+
+      const { Render } = await import("@puckeditor/core");
+      const renders = findAll(el, (e) => e.type === Render);
+      expect(renders).toHaveLength(1);
+      const band = ((renders[0].props as { data: { content: SeedBlock[] } }).data.content)[0];
+      const door = (band.props.content as SeedBlock[]).find((b) => b.type === "LiveDoor")!;
+      expect(door.props.live).toMatchObject({ slug: "clair-senses", tierName: "Weekly Intuitive" });
+      /* the stored published seed keeps only the fields */
+      expect(JSON.stringify(await store.getPuckPage("live"))).not.toContain("clair-senses");
+
+      const html = renderToStaticMarkup(renders[0]);
+      expect(html).toContain("Love is live now");
+      expect(html).toContain("Clair Senses — Foundations");
+      expect(html).toContain("opening the room…");
+    } finally {
+      vi.doUnmock("@/lib/live");
+    }
   });
 });

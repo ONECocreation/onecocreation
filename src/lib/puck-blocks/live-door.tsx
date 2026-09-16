@@ -161,15 +161,31 @@ export function createLiveDoor() {
  * (never on any other block, never written back to the store — a published
  * snapshot keeps only its fields). Pure; the input is never mutated; a doc
  * with no LiveDoor entry comes back the SAME reference (untouched-path
- * law).
+ * law). RECURSIVE — the seed nests the block inside a Band's slot (the
+ * pair-live lesson, found on the lane's own shots: a top-level map injects
+ * nothing there and the live face never shows).
  */
-export function applyLiveToPuck<T extends { content?: unknown[] }>(data: T, injected: LiveDoorInjected): T {
-  const current = Array.isArray(data.content) ? (data.content as { type?: string; props?: Record<string, unknown> }[]) : [];
+export function applyLiveToPuck<T>(data: T, injected: LiveDoorInjected): T {
   let touched = false;
-  const content = current.map((b) => {
-    if (b?.type !== "LiveDoor" || !b.props) return b;
-    touched = true;
-    return { ...b, props: { ...b.props, live: injected.live, embed: injected.embed } };
-  });
-  return touched ? ({ ...data, content } as T) : data;
+  const walk = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(walk);
+    if (v && typeof v === "object") {
+      const o = v as Record<string, unknown>;
+      if (o.type === "LiveDoor" && o.props && typeof o.props === "object") {
+        touched = true;
+        return { ...o, props: { ...(o.props as Record<string, unknown>), live: injected.live, embed: injected.embed } };
+      }
+      let changed = false;
+      const next: Record<string, unknown> = {};
+      for (const [k, val] of Object.entries(o)) {
+        const nv = walk(val);
+        if (nv !== val) changed = true;
+        next[k] = nv;
+      }
+      return changed ? next : v;
+    }
+    return v;
+  };
+  const out = walk(data);
+  return touched ? (out as T) : data;
 }
