@@ -7,6 +7,8 @@ import { createJoinSurface } from "@/lib/puck-blocks/join-surface";
 import { createFormDoors } from "@/lib/puck-blocks/form-doors";
 import { createRetreatsList } from "@/lib/puck-blocks/retreats-list";
 import { createPackagesGrid } from "@/lib/puck-blocks/packages-grid";
+import { createLettersRoom } from "@/lib/puck-blocks/letters-room";
+import { createCartPanel } from "@/lib/puck-blocks/cart-panel";
 import { createMeSwitch } from "@/lib/puck-blocks/me-switch";
 import { createLoginDoor } from "@/lib/puck-blocks/login-door";
 import { createBbConsole } from "@/lib/puck-blocks/bb-console";
@@ -119,6 +121,15 @@ components.RetreatsList = createRetreatsList() as unknown as (typeof components)
    LOCAL, like its siblings — the package stays vendored-untouched. */
 components.PackagesGrid = createPackagesGrid() as unknown as (typeof components)[string];
 
+/* TASK-296 wave B, letters-cart pair (0018.06.25 a₿ · block ~967,200):
+   LettersRoom + CartPanel — the rubric-3 data-bound blocks (the
+   RetreatsList/PackagesGrid shape): the stored doc holds only the id; the
+   server-judged props (the public-letters shelf, the payment rails) are
+   injected at render time by applyLettersToPuck / applyCartRailsToPuck on
+   the published page (see each block's docblock). LOCAL, like their
+   siblings — appended, never reordered (the wave B union-merge law). */
+components.LettersRoom = createLettersRoom() as unknown as (typeof components)[string];
+components.CartPanel = createCartPanel() as unknown as (typeof components)[string];
 /* TASK-296 wave B, me-login pair (0018.06.25 a₿ · block ~967,192): MeSwitch
    + LoginDoor — the { id }-only blocks (the JoinSurface/FormDoors shape):
    the stored doc holds only the id, the block renders the real session-
@@ -159,7 +170,7 @@ export const config = {
   components,
   categories: {
     ...categories,
-    layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid", "LiveDoor"] },
+    layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid", "LettersRoom", "CartPanel", "LiveDoor"] },
     actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors", "MeSwitch", "LoginDoor", "BbConsole", "BftClock"] },
   },
   /* STUDIO P1: page-level SEO lives on the Puck root — plain fields edited
