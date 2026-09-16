@@ -3,13 +3,14 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import OperatorGate from "@/components/OperatorGate";
 import OverviewPanel from "@/components/console/OverviewPanel";
-import { glassCard, SectionHead } from "@/components/console/glass";
+import { glassCard } from "@/components/console/glass";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { CONSOLE_SITE, CONSOLE_CHROME } from "@/lib/console";
 import { listTips, tipsConfigured, type TipLedger } from "@/lib/tips";
 import LovesDesk from "@/components/console/LovesDesk";
-import AttentionStrip from "@/components/console/AttentionStrip";
+import TodaySummary, { type TodayNext } from "@/components/console/TodaySummary";
 import { getLiveState, roomForSlug, LIVE_SCHEDULE, LIVE_YOUTUBE } from "@/lib/live";
+import { listBookings } from "@/lib/booking-orders";
 
 const JAR_LABELS: Record<string, string> = {
   love: "Tip Love",
@@ -74,6 +75,26 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+/* T-326 (0018.06.26 a₿): the next-session read lives server-side —
+   listBookings() is the same vault the calendar feed draws from, without
+   that route's orders loop. A failed read is the "error" marker, never a
+   quiet zero (finding 10). Held + confirmed slots in the future; the list
+   arrives pre-sorted by startUtc. Kept out of the component body so the
+   purity rule never meets Date.now() (letters/[key]'s helper idiom). */
+async function nextUpcomingBooking(): Promise<TodayNext | null | "error"> {
+  try {
+    const now = Date.now();
+    const upcoming = (await listBookings()).find(
+      (b) => (b.state === "held" || b.state === "confirmed") && Date.parse(b.startUtc) > now,
+    );
+    return upcoming
+      ? { serviceTitle: upcoming.serviceTitle, startUtc: upcoming.startUtc, endUtc: upcoming.endUtc, artistTz: upcoming.artistTz }
+      : null;
+  } catch {
+    return "error";
+  }
+}
+
 export default async function ConsoleOverviewPage() {
   const cookie = (await headers()).get("cookie");
   const operator = operatorFromCookieHeader(cookie);
@@ -85,31 +106,28 @@ export default async function ConsoleOverviewPage() {
     // the live flag — the schedule line below and /live read this same truth
     const live = await getLiveState();
     const liveRoom = live.live && live.room ? roomForSlug(live.room) : undefined;
+    const todayNext = await nextUpcomingBooking();
     // Home & Calendar (wireframe v2): the jars at a glance, then the week.
     return (
       <div className="p-6">
         <LovesDesk />
-        {/* the day's actions live WITH the calendar (Admiral, 0018.05.15) —
-            revisited T-319 (0018.06.26 a₿, the Admiral: the mark-fulfilled
-            area is "kind of a nunsance… not sure if that is the best
-            place"): fulfilment moved to the Money room's order popup; what
-            stays here is one compact counted pointer (Astra's K48 option
-            (b)). Sessions still close out in their calendar popups */}
-        <AttentionStrip />
-        {/* TASK-192 — the class door folded into the Go-Live room (one door
-            on Love's desk, four ways in); this pointer is all that stays here */}
-        <SectionHead label="Go live" />
-        <div style={glassCard}>
-          <p style={{ margin: 0, fontSize: ".82rem", color: "var(--ink-body)" }}>
-            The class door moved — <Link href="/a/live" style={{ color: "var(--info)", textDecoration: "underline" }}>the Go-Live room</Link> holds
-            the strip and the four ways in: the rooms, YouTube, today&apos;s calls, a guest.
-          </p>
-        </div>
-        {/* THE WEEKLY RHYTHM (Admiral, 0018.05.18): where Love checks, when */}
-        <SectionHead label="Love's week — where to check" />
-        <div style={glassCard}>
-          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column",
+        {/* T-326 (0018.06.26 a₿): the Today summary — next session's 24h
+            time + title + live action, with T-319's counted pointer mounted
+            inside it unchanged (fulfilment still closes out only in the
+            Money room's order popup, sessions in their calendar popups) */}
+        <TodaySummary next={todayNext} liveNow={!!liveRoom} liveTitle={liveRoom?.title} />
+        {/* the six fixed reminders, folded (T-326) — collapsed by default,
+            one tap away; the Go-Live pointer keeps its literal /a/live link
+            here (TASK-192's fold into the Go-Live room stands) */}
+        <details style={{ ...glassCard, marginTop: 26 }}>
+          <summary style={{ cursor: "pointer", fontSize: ".82rem", fontWeight: 700, color: "var(--ink-body)",
+            minHeight: 44, padding: "12px 0", boxSizing: "border-box" }}>
+            Routine checks — the weekly rhythm, tucked away
+          </summary>
+          <ul style={{ margin: "8px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column",
             gap: 4, fontSize: ".82rem", color: "var(--ink-body)" }}>
+            <li>🎥 <b>Go live</b> — the class door moved: <Link href="/a/live" style={{ color: "var(--info)", textDecoration: "underline" }}>the Go-Live room</Link> holds
+              the strip and the four ways in: the rooms, YouTube, today&apos;s calls, a guest</li>
             <li>📺 {liveRoom ? <>🔴 <b>LIVE now</b> — <Link href="/live" style={{ color: "var(--info)", textDecoration: "underline" }}>{liveRoom.title}</Link> is open · the banner is up</> : <><b>{LIVE_SCHEDULE}</b> — go live on <a href={LIVE_YOUTUBE} target="_blank" rel="noreferrer" style={{ color: "var(--info)", textDecoration: "underline" }}>YouTube</a></>}</li>
             <li>⚑ <b>Daily</b> — tap a flagged session on the calendar above; saving notes closes it out</li>
             <li>✉️ <b>Weekly</b> — write &amp; publish the news: <Link href="/a/letters" style={{ color: "var(--info)", textDecoration: "underline" }}>Letters</Link> (it lands on <Link href="/news" style={{ color: "var(--info)", textDecoration: "underline" }}>/news</Link> + every inbox)</li>
@@ -117,7 +135,7 @@ export default async function ConsoleOverviewPage() {
             <li>📅 <b>Weekly</b> — hours &amp; days off ring true: <Link href="/a/booking" style={{ color: "var(--info)", textDecoration: "underline" }}>Sessions &amp; hours</Link></li>
             <li>👥 <b>Monthly</b> — who&apos;s new, who needs a hand: <Link href="/a/people" style={{ color: "var(--info)", textDecoration: "underline" }}>People</Link></li>
           </ul>
-        </div>
+        </details>
         {/* the jars, as a scoreboard strip (Admiral, 0018.05.18) — the big
             card retired; the left rail already IS the rooms map */}
         <div className="mt-6">

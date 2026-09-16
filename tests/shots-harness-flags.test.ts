@@ -39,6 +39,15 @@ describe("shots-fixture.sh flags (TASK-294)", () => {
     expect(sh).toContain('"SET", "store:catalog"');
   });
 
+  it("--seed-kv (TASK-326) is parsed, documented in USAGE, repeatable, and refuses a null result", () => {
+    expect(sh).toContain("--seed-kv) SEED_KV+=");
+    expect(sh).toMatch(/usage: scripts\/shots-fixture\.sh.*--seed-kv/);
+    // a command the fixture KV didn't take answers {"result":null} — that
+    // must fail the run, never pass silently (a shot of an unseeded state
+    // that BELIEVES it was seeded is worse than no shot)
+    expect(sh).toContain("*'\"result\":null'*");
+  });
+
   it("--full-page is parsed, documented in USAGE, and forwarded to the driver", () => {
     expect(sh).toContain("--full-page) FULL_PAGE=1");
     expect(sh).toMatch(/usage: scripts\/shots-fixture\.sh.*--full-page/);
