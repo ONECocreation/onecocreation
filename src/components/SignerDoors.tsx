@@ -128,8 +128,11 @@ export default function SignerDoors({
   return (
     <div className="space-y-3">
       {/* ── NIP-46: remote signer / bunker — iOS + any browser ─────────── */}
+      {/* T-317 (0018.06.25 a₿): both <summary> lines wrap on narrow screens — .btn-quiet
+         keeps its pill face, but the label must never clip at the card edge (seen at 390
+         once T-316 put these doors on the sign-in path). */}
       <details style={{ borderRadius: 16, border: "1px solid var(--glass-edge)", background: "var(--glass)", padding: "12px 16px", textAlign: "left" }}>
-        <summary className="btn-quiet" style={{ listStyle: "none", padding: 0 }}>remote signer · works on iPhone + any browser</summary>
+        <summary className="btn-quiet" style={{ listStyle: "none", padding: 0, whiteSpace: "normal", lineHeight: 1.4, textAlign: "left" }}>remote signer · works on iPhone + any browser</summary>
         <div className="mt-3 space-y-3">
           <p style={{ fontSize: ".8rem", lineHeight: 1.7, color: "var(--ink-body)" }}>
             Your key lives in a signer you already trust — nsec.app, Amber, or
@@ -200,7 +203,7 @@ export default function SignerDoors({
 
       {/* ── NIP-55: Android signer apps — honest about where it works ──── */}
       <details style={{ borderRadius: 16, border: "1px solid var(--glass-edge)", background: "var(--glass)", padding: "12px 16px", textAlign: "left" }}>
-        <summary className="btn-quiet" style={{ listStyle: "none", padding: 0 }}>Android signer app · Amber-class</summary>
+        <summary className="btn-quiet" style={{ listStyle: "none", padding: 0, whiteSpace: "normal", lineHeight: 1.4, textAlign: "left" }}>Android signer app · Amber-class</summary>
         <div className="mt-3 space-y-3">
           {android === false ? (
             <p style={{ fontSize: ".8rem", lineHeight: 1.7, color: "var(--ink-body)" }}>
