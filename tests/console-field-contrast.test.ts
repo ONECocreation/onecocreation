@@ -72,7 +72,7 @@ describe("TASK-324 — the console field's placeholder + focus ring (grey-on-gre
     const ring = css.match(/\.console-field:focus-visible\s*\{([^}]*)\}/) ??
       css.match(/([^{}]*\.console-field:focus-visible[^{}]*)\{([^}]*)\}/);
     expect(ring, ".console-field is not wired into a :focus-visible rule").not.toBeNull();
-    expect(css).toMatch(/\.console-field:focus-visible[^{}]*\{[^}]*outline:\s*2px solid var\(--color-cyan\)[^}]*outline-offset:\s*2px/s);
+    expect(css).toMatch(/\.console-field:focus-visible[^{}]*\{[^}]*outline:\s*2px solid var\(--color-cyan\)[^}]*outline-offset:\s*2px/);
   });
 
   it("the placeholder hex clears 4.5:1 on --field-bg's worst composite (94% white over black)", async () => {
