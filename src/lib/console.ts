@@ -172,32 +172,6 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     ],
   },
   {
-    key: "duty",
-    houseOnly: true,
-    href: "/a/action",
-    label: "DUTY ROSTER",
-    short: "DUTY ROSTER",
-    blurb: "everything that needs your key, then the crew board — missions, rank track, ship's log",
-    // pink = your action (the admiral rules here); not coin — gold = money only (Pac's house law)
-    tone: "pink",
-    subs: [
-      { key: "signoffs", label: "SIGN-OFFS", href: "/a/action#signoffs", countKey: "signoffs" },
-      { key: "approvals", label: "APPROVALS", href: "/a/action#approvals" },
-      { key: "decisions", label: "DECISIONS", href: "/a/action#decisions", countKey: "decisions" },
-      {
-        key: "crew",
-        label: "CREW BOARD",
-        href: "/a/testing",
-        children: [
-          { key: "inflight", label: "IN FLIGHT", href: "/a/testing#inflight" },
-          { key: "roster", label: "TICKETS", href: "/a/testing#roster", countKey: "tickets" },
-          { key: "rank", label: "RANK TRACK", href: "/a/testing#rank" },
-          { key: "log", label: "SHIP'S LOG", href: "/a/testing#log" },
-        ],
-      },
-    ],
-  },
-  {
     key: "sim",
     houseOnly: true,
     href: "/a/sim",
@@ -365,8 +339,7 @@ function allSubs(room: ConsoleRoom): ConsoleRoomSub[] {
 /**
  * Which room a console pathname lives in — "/a" exactly is the Overview front
  * page (◉ HOME), then the exact room href, then a sub route at any accordion
- * level (Briefs lives under BRIDGE; the crew board under DUTY ROSTER), then
- * the longest room-href prefix.
+ * level (Briefs lives under BRIDGE), then the longest room-href prefix.
  */
 export function roomForPath(pathname: string): ConsoleRoom {
   if (pathname === CONSOLE_OVERVIEW.href) return CONSOLE_OVERVIEW;
