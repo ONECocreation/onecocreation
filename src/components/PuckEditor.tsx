@@ -350,7 +350,7 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
 
 
   return (
-    <div className="oc-studio" style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100vh", overflow: "hidden", background: "var(--ground)" /* S2: pinned — the ruling landed (S21 dawn table A6): the literal WAS night --ground byte-for-byte, so the pin rides the token; night identical, dawn takes the cartridge's designed ground */ }}>
+    <div className="oc-studio" style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100%" /* TASK-327 seam (pre-allowed, one line): 100vh → 100% — the route layout now carries the shared header + room strip above; the editor fills the body region its parent allocates instead of the whole viewport */, overflow: "hidden", background: "var(--ground)" /* S2: pinned — the ruling landed (S21 dawn table A6): the literal WAS night --ground byte-for-byte, so the pin rides the token; night identical, dawn takes the cartridge's designed ground */ }}>
       <Puck config={config} data={liveData} onChange={onChange} onPublish={publishLive} onAction={changelog.onAction} height="100%">
         <ChangelogBridge
           log={changelog}
