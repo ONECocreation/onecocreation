@@ -121,20 +121,29 @@ describe("the builders — &password=<key> appended only when a key is given", (
 });
 
 describe("the four call-sites thread the key (grep pins against the real source)", () => {
-  it("src/app/a/studio/page.tsx derives roomKey and passes it into both studioVdoLinks and studioDirectorLink", () => {
+  it("src/app/a/studio/page.tsx derives roomKey, threads it into studioVdoLinks, and derives the director door as the in-site route (TASK-306)", () => {
     const src = read("src/app/a/studio/page.tsx");
     expect(src).toContain("studioRoomKey");
     expect(src).toContain("const vdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost, roomKey);");
-    expect(src).toContain("const director = studioDirectorLink(config.meeting.vdoHost, vdo.room, roomKey);");
+    /* TASK-306: the director door is the SITE route (directorDeskUrl) —
+       the keyed studioDirectorLink call is GONE from this page; the desk
+       route's own server mints the key into its iframe src instead
+       (src/app/a/studio/room/mint.ts, pinned in
+       tests/studio-director-desk.test.ts). */
+    expect(src).toContain("const director = directorDeskUrl(origin, vdo.room);");
+    expect(src).not.toContain("studioDirectorLink(");
   });
 
-  it("src/app/a/live/page.tsx derives roomKey and passes it into both studioVdoLinks and studioDirectorLink", () => {
+  it("src/app/a/live/page.tsx derives roomKey, threads it into studioVdoLinks, and derives studioDirector as the in-site route (TASK-306)", () => {
     const src = read("src/app/a/live/page.tsx");
     expect(src).toContain("studioRoomKey");
     expect(src).toContain(
       "const studioVdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost, roomKey);",
     );
-    expect(src).toContain("studioDirector={studioDirectorLink(config.meeting.vdoHost, studioVdo.room, roomKey)}");
+    // TASK-306: same flip as /a/studio — the in-site desk route, never
+    // the keyed studio URL in an href again.
+    expect(src).toContain("studioDirector={directorDeskUrl(origin, studioVdo.room)}");
+    expect(src).not.toContain("studioDirectorLink(");
   });
 
   it("src/app/rooms/[slug]/page.tsx derives roomKey and passes it into studioGuestCameraLink and down to ClassroomView", () => {
@@ -157,9 +166,12 @@ describe("the desk's honest key line (StudioRoom.tsx) — never prints the key i
     const StudioRoom = (await import("@/components/studio-overlay/StudioRoom")).default;
     const { defaultStudioDoc } = await import("@/lib/studio/doc");
     const { STUDIO_SCENES } = await import("@/lib/studio/scenes");
-    const { studioVdoLinks, studioDirectorLink } = await import("@/lib/live");
+    const { studioVdoLinks } = await import("@/lib/live");
     const VDO = studioVdoLinks("onecocreation", "vdo.onecocreation.com", "keyabc123x");
-    const DIRECTOR = studioDirectorLink("vdo.onecocreation.com", VDO.room, "keyabc123x");
+    /* TASK-306: the director door is the UNKEYED in-site route now — the
+       only door on this card still carrying the key is vdo.push (Love's
+       own camera seat, never handed out). */
+    const DIRECTOR = "https://onecocreation.test/a/studio/room/onecocreation_studio";
     const overlayUrls = Object.fromEntries(STUDIO_SCENES.map((s) => [s.id, null])) as Record<StudioSceneId, string | null>;
     const showInStudioUrls = { ...overlayUrls };
 
@@ -179,8 +191,8 @@ describe("the desk's honest key line (StudioRoom.tsx) — never prints the key i
       );
 
     // the status line's own text never repeats the raw key — it says
-    // words, not the value (the doors above it already carry the key,
-    // legitimately, in their hrefs; this line is the ONLY thing being
+    // words, not the value (the push door above carries the key,
+    // legitimately, in its href; this line is the ONLY thing being
     // pinned not to leak it a second time as bare text)
     const keyLine = /<p[^>]*>(Room key: on[^<]*|room unkeyed[^<]*)<\/p>/;
 

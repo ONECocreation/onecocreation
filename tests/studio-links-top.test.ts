@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import StudioRoom from "@/components/studio-overlay/StudioRoom";
 import { defaultStudioDoc } from "@/lib/studio/doc";
 import { STUDIO_SCENES, type StudioSceneId } from "@/lib/studio/scenes";
-import { studioVdoLinks, studioDirectorLink } from "@/lib/live";
+import { studioVdoLinks } from "@/lib/live";
 
 /**
  * TASK-300 (0018.06.25 a₿ · block 967,174) — Love call #4 findings 1-2:
@@ -20,7 +20,8 @@ import { studioVdoLinks, studioDirectorLink } from "@/lib/live";
  *  · the links card is the FIRST section on the page, ahead of "Scene";
  *  · all three doors carry a real target="_blank" rel="noopener" OPEN
  *    anchor, each the exact output of the shared builders
- *    (studioDirectorLink / studioVdoLinks) — never a re-spelled link;
+ *    (studioVdoLinks; the director door is directorDeskUrl's in-site
+ *    route since TASK-306) — never a re-spelled link;
  *  · the "Send to user" placeholder is a real, disabled button — an
  *    honest not-yet, no fake action;
  *  · `/a/studio/page.tsx` computes the room's plain name and threads it
@@ -35,7 +36,9 @@ import { studioVdoLinks, studioDirectorLink } from "@/lib/live";
 const read = (rel: string) => readFileSync(rel, "utf8");
 
 const VDO = studioVdoLinks("onecocreation", "vdo.onecocreation.com");
-const DIRECTOR = studioDirectorLink("vdo.onecocreation.com", VDO.room);
+/* TASK-306: the director door is the SITE route now (T-292 Page A) —
+   what /a/studio/page.tsx mints via directorDeskUrl on the request origin. */
+const DIRECTOR = "https://onecocreation.test/a/studio/room/onecocreation_studio";
 const ROOM_TITLE = "Heart Field · the studio";
 /* TASK-297: the guest door is the SITE url (T-292 Page B) — what
    /a/studio/page.tsx mints via meetStudioUrl on the request origin. */
@@ -100,7 +103,9 @@ describe("the links card — moved to the top, OPEN + Copy, the room's plain nam
     const html = renderRoom();
     expect((html.match(/target="_blank"/g) ?? []).length).toBeGreaterThanOrEqual(3);
     expect((html.match(/rel="noopener"/g) ?? []).length).toBeGreaterThanOrEqual(3);
-    expect(html).toContain(`href="${DIRECTOR.replace(/&/g, "&amp;")}"`);
+    /* TASK-306: the director OPEN anchor is the in-site desk route — no
+       & escaping needed, the route carries no query (and no key). */
+    expect(html).toContain(`href="${DIRECTOR}"`);
     expect(html).toContain(`href="${VDO.push.replace(/&/g, "&amp;")}"`);
     /* TASK-297: the guest OPEN anchor is the SITE door, never the keyed
        vdo-host guest link (T-292 DESIGN.md §2 Page B + §4). */

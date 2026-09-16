@@ -3,7 +3,8 @@ import { headers } from "next/headers";
 import OperatorGate from "@/components/OperatorGate";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { ROOMS } from "@/lib/matrix-rooms";
-import { slugOfRoom, studioVdoLinks, studioDirectorLink, studioRoomKey, confirmedToday, liveRoomPrefix, LIVE_YOUTUBE } from "@/lib/live";
+import { slugOfRoom, studioVdoLinks, studioRoomKey, confirmedToday, liveRoomPrefix, LIVE_YOUTUBE } from "@/lib/live";
+import { directorDeskUrl } from "@/lib/live-links";
 import { listBookings } from "@/lib/booking-orders";
 import { getSiteConfig } from "@/lib/site-config";
 import GoLiveRoom from "./go-live-room";
@@ -51,7 +52,11 @@ export default async function GoLivePage() {
     <GoLiveRoom
       rooms={ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind, minTier: r.minTier }))}
       studioVdo={studioVdo}
-      studioDirector={studioDirectorLink(config.meeting.vdoHost, studioVdo.room, roomKey)}
+      /* TASK-306 (0018.06.25 a₿): the director's desk door is the SITE
+         route /a/studio/room/<room> (T-292 DESIGN.md §2 Page A) — the
+         keyed studio URL leaves this href; the desk route's own server
+         mints the key into its iframe src at request time. */
+      studioDirector={directorDeskUrl(origin, studioVdo.room)}
       sessions={confirmedToday(bookings)}
       meeting={{
         rail: config.meeting.rail,
