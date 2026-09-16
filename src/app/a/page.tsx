@@ -121,7 +121,7 @@ export default async function ConsoleOverviewPage() {
             here (TASK-192's fold into the Go-Live room stands) */}
         <details style={{ ...glassCard, marginTop: 26 }}>
           <summary style={{ cursor: "pointer", fontSize: ".82rem", fontWeight: 700, color: "var(--ink-body)",
-            minHeight: 44, display: "flex", alignItems: "center" }}>
+            minHeight: 44, padding: "12px 0", boxSizing: "border-box" }}>
             Routine checks — the weekly rhythm, tucked away
           </summary>
           <ul style={{ margin: "8px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column",
