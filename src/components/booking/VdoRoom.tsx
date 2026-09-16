@@ -62,17 +62,24 @@ export default function VdoRoom({
   vdoHost,
   title = "the meeting room",
   height = "72vh",
+  endCard,
 }: {
-  /** the SERVER-MINTED keyed studio URL (mintStudioFrameTarget) —
-   *  appears in the page's HTML only inside this iframe's src */
+  /** the SERVER-MINTED keyed studio URL (mintStudioFrameTarget for the
+   *  guest seat, mintStudioDirectorTarget for the director's) — appears
+   *  in the page's HTML only inside this iframe's src */
   src: string;
   /** the studio's own host (config.meeting.vdoHost) — the expected
-   *  postMessage origin after the frame's 302 lands; public knowledge,
+   *  postMessage origin of the frame's events; public knowledge,
    *  carried in every pre-T-297 link */
   vdoHost: string;
   title?: string;
   /** JitsiRoom's own prop shape — the parent sizes the frame */
   height?: string;
+  /** TASK-306: the farewell when the frame hangs up — defaults to
+   *  VdoRoomEndCard (the guest's member-facing doors). The director's
+   *  desk passes its own console-flavoured card instead (the operator
+   *  is not a guest; /me and /classes are not her rooms). */
+  endCard?: React.ReactNode;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const [state, setState] = useState<"loading" | "live" | "ended">("loading");
@@ -90,7 +97,7 @@ export default function VdoRoom({
   }, [vdoHost]);
 
   if (state === "ended") {
-    return <VdoRoomEndCard />;
+    return <>{endCard ?? <VdoRoomEndCard />}</>;
   }
 
   return (
