@@ -839,6 +839,34 @@ const bbContent: Block[] = [
   ]),
 ];
 
+/* ── live — the door: the eyebrow words + the LIVE state block ──────────── */
+const lv = kit("lv");
+const liveContent: Block[] = [
+  /* TASK-296 wave B, pair live (0018.06.25 a₿ · block 967,201): /live
+     becomes a designer page. The eyebrow is the page's one always-static
+     word (transcribed VERBATIM from src/app/live/page.tsx — the fallback,
+     NOT edited). Everything else is the ONE LiveDoor data-bound block (GO
+     §2 rubric line 3): the h1 flips with the server-judged live flag, so
+     the h1 belongs to the block, not the seed; the idle h1/schedule/YouTube
+     URL ride as its editable FIELDS (stored), the live card + embed arrive
+     by injection at render (never stored). The field defaults are literals
+     transcribed from src/lib/live.ts's LIVE_SCHEDULE/LIVE_YOUTUBE — this
+     file reaches the client (PagesPanel) and @/lib/live is server-only
+     (the matrix-rooms Turbopack lesson), so the import can't happen here;
+     tests/live-puck.test.ts pins the literals against the constants. A
+     literal block with an explicit unique id, the rt-list/pk-grid idiom
+     (the kit consumed lv-0). */
+  lv.band("plain", "theme", [
+    lv.eyebrow("Live"),
+    { type: "LiveDoor", props: {
+      id: "lv-door",
+      idleH1: "Live, on the rhythm",
+      schedule: "Mon · Wed · Fri ~11:11",
+      youtubeUrl: "https://www.youtube.com/@Onecocreation",
+    } },
+  ]),
+];
+
 /*
  * ── the "(old)" seeds — Love's ORIGINAL ShinePages pages, transcribed from
  * the 0018.05.20 capture (docs/shinepages-capture-manifest.md, screenshots in
@@ -1979,6 +2007,11 @@ export const SEEDS: Record<string, PuckPageData> = {
   bb: { content: bbContent, root: { props: {
     title: "Bitcoin Buddy — One Cocreation",
     description: "Meet your Bitcoin Buddy — a co-owned virtual pet born at a block and cared for with your key. Sign in with nostr to start.",
+  } } },
+  /* T-296 pair live: /live mirrors its hand-built metadata exactly — title
+     only (the page carries no description today; none is invented) */
+  live: { content: liveContent, root: { props: {
+    title: "Live — One Cocreation",
   } } },
   /* STUDIO P2: the popup lane. THE ONE REAL POPUP — the rebuild of the
      original platform's only popup ("Free Guide"), retargeted to the Free

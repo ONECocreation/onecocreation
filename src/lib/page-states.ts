@@ -67,6 +67,7 @@ export const PAGE_STATES: PageStateEntry[] = [
   { path: "/contact", slug: "contact", state: "designer", note: DESIGNER_NOTE },
   { path: "/jewelry", slug: "jewelry", state: "designer", note: DESIGNER_NOTE },
   { path: "/letters", slug: "letters", state: "designer", note: DESIGNER_NOTE },
+  { path: "/live", slug: "live", state: "designer", note: DESIGNER_NOTE },
   { path: "/login", slug: "login", state: "designer", note: DESIGNER_NOTE },
   { path: "/me", slug: "me", state: "designer", note: DESIGNER_NOTE },
   { path: "/media", slug: "media", state: "designer", note: DESIGNER_NOTE },
@@ -82,7 +83,6 @@ export const PAGE_STATES: PageStateEntry[] = [
   { path: "/terms", slug: "terms", state: "designer", note: DESIGNER_NOTE },
   { path: "/time", slug: "time", state: "designer", note: DESIGNER_NOTE },
 
-  { path: "/live", state: "words", note: "words — the live page; copy lives in code" },
   { path: "/welcome", state: "words", note: "words — the welcome page; copy lives in code" },
 
   { path: "/p/home-old", slug: "home-old", state: "reference", note: REFERENCE_NOTE },
