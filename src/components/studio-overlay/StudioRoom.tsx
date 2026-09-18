@@ -54,7 +54,7 @@ function CopyDoor({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <input readOnly value={value} onFocus={(e) => e.target.select()} style={{ ...field, width: "100%", fontSize: ".78rem" }} />
+      <input readOnly value={value} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".78rem" }} />
       <button
         type="button"
         className="btn btn-sm"
@@ -343,7 +343,7 @@ export default function StudioRoom({
             <input
               value={doc.host.name}
               onChange={(e) => setDoc({ ...doc, host: { ...doc.host, name: e.target.value } })}
-              style={{ ...field, width: "100%" }}
+              className="console-field" style={{ ...field, width: "100%" }}
             />
           </label>
           <label className="block">
@@ -352,7 +352,7 @@ export default function StudioRoom({
               value={doc.host.specialty}
               onChange={(e) => setDoc({ ...doc, host: { ...doc.host, specialty: e.target.value } })}
               placeholder="what you do, in two or three words"
-              style={{ ...field, width: "100%" }}
+              className="console-field" style={{ ...field, width: "100%" }}
             />
           </label>
           <label className="block sm:col-span-2">
@@ -361,7 +361,7 @@ export default function StudioRoom({
               value={doc.showTitle}
               onChange={(e) => setDoc({ ...doc, showTitle: e.target.value })}
               placeholder={showTitleFallback}
-              style={{ ...field, width: "100%" }}
+              className="console-field" style={{ ...field, width: "100%" }}
             />
           </label>
         </div>
@@ -382,7 +382,7 @@ export default function StudioRoom({
               type="datetime-local"
               value={isoToLocalInput(doc.startsAt)}
               onChange={(e) => setDoc({ ...doc, startsAt: localInputToIso(e.target.value) })}
-              style={{ ...field, width: "100%" }}
+              className="console-field" style={{ ...field, width: "100%" }}
             />
           </label>
           <label className="block">
@@ -391,7 +391,7 @@ export default function StudioRoom({
               value={doc.afterHoursLine}
               onChange={(e) => setDoc({ ...doc, afterHoursLine: e.target.value })}
               placeholder="left blank = the thank-you scene omits the line"
-              style={{ ...field, width: "100%" }}
+              className="console-field" style={{ ...field, width: "100%" }}
             />
           </label>
         </div>
@@ -428,7 +428,7 @@ export default function StudioRoom({
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block">
                 <span style={fieldLabel}>guest {i + 1} — name</span>
-                <input value={g.name} onChange={(e) => setGuest(i, { name: e.target.value })} style={{ ...field, width: "100%" }} />
+                <input value={g.name} onChange={(e) => setGuest(i, { name: e.target.value })} className="console-field" style={{ ...field, width: "100%" }} />
               </label>
               <label className="block">
                 <span style={fieldLabel}>specialty</span>
@@ -436,7 +436,7 @@ export default function StudioRoom({
                   value={g.specialty}
                   onChange={(e) => setGuest(i, { specialty: e.target.value })}
                   placeholder="what they carry, in two or three words"
-                  style={{ ...field, width: "100%" }}
+                  className="console-field" style={{ ...field, width: "100%" }}
                 />
               </label>
             </div>

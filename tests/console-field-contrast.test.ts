@@ -32,6 +32,12 @@ const GLOBALS = "src/app/globals.css";
 const PEOPLE = "src/app/a/people/page.tsx";
 const USABILITY = "scripts/check-usability.mjs";
 
+/* TASK-333 (0018.06.27 a₿) — StudioRoom.tsx was excluded from T-324's sweep
+   because T-306 (its owning lane) was still an open PR; T-306 has since
+   merged. This lane threads .console-field onto its 8 field-styled
+   elements and, per its named decision (fold in), onto
+   SendToUserChooser.tsx's one adjacent field too — same pin, two more
+   consumers. */
 const CONSUMERS = [
   "src/app/a/booking/page.tsx",
   "src/app/a/letters/page.tsx",
@@ -45,6 +51,8 @@ const CONSUMERS = [
   "src/components/console/NavEditor.tsx",
   "src/components/console/CardsRailCard.tsx",
   "src/components/console/RetreatsDesk.tsx",
+  "src/components/studio-overlay/StudioRoom.tsx",
+  "src/components/studio-overlay/SendToUserChooser.tsx",
 ];
 
 const FIELD_STYLE = /style=\{(?:\{\s*\.\.\.field(?![A-Za-z])|field\})/;
@@ -85,7 +93,7 @@ describe("TASK-324 — the console field's placeholder + focus ring (grey-on-gre
     expect(ratio(luminance(hex), worstBg)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("every field-styled element in the 12 in-scope consumers wears .console-field", async () => {
+  it("every field-styled element in the 14 in-scope consumers wears .console-field", async () => {
     for (const rel of CONSUMERS) {
       const src = await read(rel);
       const lines = src.split("\n");
@@ -114,5 +122,21 @@ describe("TASK-324 — the console field's placeholder + focus ring (grey-on-gre
     const css = await read(GLOBALS);
     expect(css.includes(`.console-field::placeholder {\n    color: ${entry![1]};`),
       "the contract pair and the CSS rule pour different placeholder values").toBe(true);
+  });
+
+  /* TASK-333 — two targeted tests naming the exact evidence each of the
+     newly-unblocked files carries, beyond the generic sweep above. */
+  it("StudioRoom.tsx's CopyDoor readonly input carries .console-field (focus ring only — it's readOnly, never a placeholder)", async () => {
+    const src = await read("src/components/studio-overlay/StudioRoom.tsx");
+    const line = src.split("\n").find((l) => l.includes("readOnly") && l.includes("...field"));
+    expect(line, "CopyDoor's readonly input line not found").toBeDefined();
+    expect(line!.includes("console-field"), "CopyDoor's readonly input lost .console-field").toBe(true);
+  });
+
+  it("SendToUserChooser.tsx's member-search box carries .console-field (folded in per T-333's named decision)", async () => {
+    const src = await read("src/components/studio-overlay/SendToUserChooser.tsx");
+    const line = src.split("\n").find((l) => l.includes("...field") && l.includes("fontSize"));
+    expect(line, "member-search box style line not found").toBeDefined();
+    expect(line!.includes("console-field"), "member-search box lost .console-field").toBe(true);
   });
 });
