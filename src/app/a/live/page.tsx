@@ -10,9 +10,9 @@ import { redirect } from "next/navigation";
  * both stay on disk (never-delete law); go-live-room.tsx is imported
  * unchanged from the merged Studio page instead of from here.
  *
- * decision 4: the redirect fires UNCONDITIONALLY, no operator gate in
- * this file at all — the merged room's own gate (/a/studio/page.tsx:
- * operatorFromCookieHeader + <OperatorGate>) covers it either way, so
+ * decision 4: the redirect fires UNCONDITIONALLY — no cookie check, no
+ * gate component, nothing operator-shaped in this file at all — the
+ * merged room's own door (/a/studio/page.tsx) covers it either way, so
  * gating twice would only be decorative. tests/go-live-door.test.ts
  * pins this (the "gates like every /a room" pin retired, honestly, for
  * "redirects to the merged room, which gates").
