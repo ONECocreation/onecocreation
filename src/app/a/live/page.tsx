@@ -1,72 +1,72 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import OperatorGate from "@/components/OperatorGate";
-import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
-import { ROOMS } from "@/lib/matrix-rooms";
-import { slugOfRoom, studioVdoLinks, studioRoomKey, confirmedToday, liveRoomPrefix, LIVE_YOUTUBE } from "@/lib/live";
-import { directorDeskUrl } from "@/lib/live-links";
-import { listBookings } from "@/lib/booking-orders";
-import { getSiteConfig } from "@/lib/site-config";
-import GoLiveRoom from "./go-live-room";
+import { redirect } from "next/navigation";
 
 /**
- * /a/live — THE GO-LIVE DOOR (TASK-192, 0018.06.18 a₿ · H69 ruled A). One
- * door on Love's desk, four ways in: Read live on the site (the folded-in
- * class door), YouTube live (T-191's studio VDO links), Discovery call 1:1
- * (today's confirmed bookings from the booking store), Co-create with a
- * guest (the meeting config's rails). The client half holds the strip and
- * the one-door-at-a-time state; this page only GATE-KEEPS and DERIVES —
- * every prop below is a read, nothing is invented.
+ * /a/live — THE GO-LIVE DOOR (TASK-192, 0018.06.18 a₿ · H69 ruled A) — now
+ * a REDIRECT (TASK-330, 0018.06.27 a₿, RULED Studio 0018.06.26 · 11:20
+ * a₿): Live and Studio merge into ONE room, "Studio" — being in the
+ * studio opens the go-live controls too (src/app/a/studio/page.tsx +
+ * src/components/console/StudioHub.tsx). This file and go-live-room.tsx
+ * both stay on disk (never-delete law); go-live-room.tsx is imported
+ * unchanged from the merged Studio page instead of from here.
  *
- * Same gate as every /a room: no operator cookie, the door renders.
+ * decision 4: the redirect fires UNCONDITIONALLY, no operator gate in
+ * this file at all — the merged room's own gate (/a/studio/page.tsx:
+ * operatorFromCookieHeader + <OperatorGate>) covers it either way, so
+ * gating twice would only be decorative. tests/go-live-door.test.ts
+ * pins this (the "gates like every /a room" pin retired, honestly, for
+ * "redirects to the merged room, which gates").
+ *
+ * decision 4 (query + anchors): every query key/value a bookmark or link
+ * carried on /a/live rides along — searchParams IS visible server-side,
+ * so it's threaded through studioRedirectPath (pure, exported so the
+ * test pins the real resulting URL rather than a hand-typed string). A
+ * URL FRAGMENT never reaches the server at all (RFC 7231 §7.1.2 — the
+ * browser keeps it client-side only), so it can't be read or remapped
+ * here; this lane inventoried /a/live for known section anchors before
+ * writing this file — grepped the whole tree for `/a/live#` and for
+ * `id=` attributes inside go-live-room.tsx — and found NONE: nothing
+ * links into this room with a fragment today, and the room itself names
+ * no id targets. So there is nothing to map, and the honest fallback
+ * ("unknown anchors fall back to the room top") is exactly what happens
+ * on its own: since studioRedirectPath's Location carries no fragment of
+ * its own, a UA that DID carry one over from a bookmark keeps it
+ * (standard redirect fragment carry-over) and lands wherever that id
+ * exists on /a/studio, or the room's top if it doesn't — never a broken
+ * link. See SUMMARY's anchors inventory.
  */
 
 export const metadata: Metadata = {
-  title: "Go live — admin",
+  title: "Studio — admin",
   robots: { index: false, follow: false },
 };
 
 export const dynamic = "force-dynamic";
 
-export default async function GoLivePage() {
-  const cookie = (await headers()).get("cookie");
-  const operator = operatorFromCookieHeader(cookie);
-  if (!operator) {
-    return <OperatorGate configured={operatorsConfigured()} />;
+/** Pure — builds the redirect target, every query key/value preserved,
+ *  in the URL's own repeat-key order (URLSearchParams.append, never a
+ *  Map that would collapse a repeated key). Exported so the tests pin the
+ *  real resulting path (computed the same real way as the page), not a
+ *  hand-typed string. */
+export function studioRedirectPath(searchParams: Record<string, string | string[] | undefined>): string {
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (value === undefined) continue;
+    if (Array.isArray(value)) {
+      for (const v of value) qs.append(key, v);
+    } else {
+      qs.append(key, value);
+    }
   }
+  const query = qs.toString();
+  return query ? `/a/studio?${query}` : "/a/studio";
+}
 
-  const [config, bookings] = await Promise.all([getSiteConfig(), listBookings()]);
-  /* TASK-305: same room, so the SAME key every other door into it carries
-     (T-292 DESIGN.md §4.1) — the room name is derived once (unkeyed) to
-     compute the key, then studioVdo is minted for real, keyed. */
-  const roomKey = studioRoomKey(studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost).room) ?? undefined;
-  const studioVdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost, roomKey);
-
-  /* TASK-297: the request's own origin — the base for every SITE guest
-     url this desk hands out (/meet/studio/<room>, T-292 DESIGN.md §2
-     Page B). Same derivation /a/studio already runs for its overlay URLs. */
-  const h = await headers();
-  const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host") ?? "localhost"}`;
-
-  return (
-    <GoLiveRoom
-      rooms={ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind, minTier: r.minTier }))}
-      studioVdo={studioVdo}
-      /* TASK-306 (0018.06.25 a₿): the director's desk door is the SITE
-         route /a/studio/room/<room> (T-292 DESIGN.md §2 Page A) — the
-         keyed studio URL leaves this href; the desk route's own server
-         mints the key into its iframe src at request time. */
-      studioDirector={directorDeskUrl(origin, studioVdo.room)}
-      sessions={confirmedToday(bookings)}
-      meeting={{
-        rail: config.meeting.rail,
-        jitsiDomain: config.meeting.jitsiDomain,
-        jitsiPrefix: liveRoomPrefix(),
-        vdoRoomPrefix: config.meeting.vdoRoomPrefix,
-        vdoHost: config.meeting.vdoHost,
-        siteOrigin: origin,
-      }}
-      youtube={LIVE_YOUTUBE}
-    />
-  );
+export default async function GoLivePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  redirect(studioRedirectPath(sp));
 }
