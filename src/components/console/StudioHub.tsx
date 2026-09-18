@@ -93,6 +93,10 @@ export interface StudioHubProps {
   roomTitle?: string;
   roomKeyed?: boolean;
   guestDoor: string;
+  /* TASK-337: the Jitsi one-time door's own props — pass-through only, no
+     StudioHub-owned logic. */
+  jitsiDomain?: string;
+  initialJitsiRoom?: string | null;
   /* ── the go-live door (GoLiveRoom's own props, unchanged) ────────────── */
   goLiveRooms: DoorRoom[];
   goLiveSessions: TodaySession[];
@@ -111,6 +115,8 @@ export default function StudioHub({
   roomTitle,
   roomKeyed,
   guestDoor,
+  jitsiDomain,
+  initialJitsiRoom,
   goLiveRooms,
   goLiveSessions,
   meeting,
@@ -147,6 +153,8 @@ export default function StudioHub({
         roomTitle={roomTitle}
         roomKeyed={roomKeyed}
         guestDoor={guestDoor}
+        jitsiDomain={jitsiDomain}
+        initialJitsiRoom={initialJitsiRoom}
       />
 
       {/* live second (Astra r4 §4) */}

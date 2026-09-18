@@ -16,6 +16,7 @@ import { getStudioDoc } from "@/lib/studio/roster";
 import { listBookings } from "@/lib/booking-orders";
 import { ROOMS } from "@/lib/matrix-rooms";
 import StudioHub from "@/components/console/StudioHub";
+import { getJitsiDoor } from "@/lib/studio/jitsi-door";
 
 /**
  * /a/studio — THE DIRECTOR'S DESK, now also THE STUDIO ROOM (TASK-191,
@@ -66,7 +67,15 @@ export default async function StudioRoomPage() {
      confirmed calls) joins the existing two — the union of what
      /a/live/page.tsx used to fetch on its own, added here rather than a
      second Promise.all. ROOMS and LIVE_YOUTUBE need no fetch (static). */
-  const [doc, config, bookings] = await Promise.all([getStudioDoc(), getSiteConfig(), listBookings()]);
+  /* TASK-337: the Jitsi one-time door's current room (KV, null on any
+     miss/unconfigured vault) joins the same Promise.all as the page's
+     other fetches — one round of parallel reads, no second waterfall. */
+  const [doc, config, bookings, initialJitsiRoom] = await Promise.all([
+    getStudioDoc(),
+    getSiteConfig(),
+    listBookings(),
+    getJitsiDoor(),
+  ]);
 
   /* the copy-able overlay URL per scene — null when the seat secret is
      unset and the room says so honestly instead of minting a dead link */
@@ -156,6 +165,8 @@ export default async function StudioRoomPage() {
       roomTitle={roomTitle}
       roomKeyed={roomKey !== undefined}
       guestDoor={guestDoor}
+      jitsiDomain={config.meeting.jitsiDomain}
+      initialJitsiRoom={initialJitsiRoom}
       goLiveRooms={ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind, minTier: r.minTier }))}
       goLiveSessions={confirmedToday(bookings)}
       meeting={{
