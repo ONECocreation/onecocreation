@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { promises as fs } from "fs";
 import path from "path";
 
@@ -19,13 +19,16 @@ const ROOT = process.cwd();
 const read = (rel: string) => fs.readFile(path.join(ROOT, rel), "utf8");
 
 describe("the accordion's rows + the current mark", () => {
-  it("carries exactly the four sub-rooms, Switches first at /a/site", async () => {
+  it("carries the four /a/site sub-rooms (Switches first) plus TASK-330's Brand row, last", async () => {
     const { SITE_SUBS } = await import("@/components/console/SiteConsoleShell");
     expect(SITE_SUBS.map((s) => [s.key, s.href, s.label])).toEqual([
       ["switches", "/a/site", "Switches"],
       ["menu", "/a/site/menu", "Menu"],
       ["community-door", "/a/site/community-door", "Community door"],
       ["about-videos", "/a/site/about-videos", "Videos on About"],
+      // TASK-330 (0018.06.27 a₿): Brand folds under Site as a fifth
+      // sub-row — its own route (/a/brand), not under /a/site/*.
+      ["brand", "/a/brand", "Brand"],
     ]);
     // "Community & rooms" is omitted — no such card exists on /a/site
     const labels: string[] = SITE_SUBS.map((s) => s.label);
@@ -42,6 +45,36 @@ describe("the accordion's rows + the current mark", () => {
     expect(siteSubForPath("/a/site/anything-else")).toBe("switches");
     expect(siteSubForPath("/a/money")).toBeNull();
     expect(siteSubForPath("/a")).toBeNull();
+  });
+
+  /* TASK-330 (0018.06.27 a₿): Brand is NOT under /a/site/* — it's its own
+     route, /a/brand — so siteSubForPath's "exact" match (not the
+     startsWith("/a/site/") branch) is what has to answer it. */
+  it("marks Brand current on its own route, /a/brand — outside /a/site/*", async () => {
+    const { siteSubForPath } = await import("@/components/console/SiteConsoleShell");
+    expect(siteSubForPath("/a/brand")).toBe("brand");
+  });
+
+  it("the Site row reads active on /a/brand (new coverage, TASK-330 decision 2's active-prop wiring)", async () => {
+    const { createElement: h } = await import("react");
+    const { renderToStaticMarkup } = await import("react-dom/server");
+    vi.resetModules();
+    vi.doMock("next/navigation", () => ({ usePathname: () => "/a/brand" }));
+    const { default: SiteConsoleShell } = await import("@/components/console/SiteConsoleShell");
+    const html = renderToStaticMarkup(h(SiteConsoleShell, { children: h("div", null, "body") }));
+    // the Site row itself reads active (is-active) even though current.key
+    // is "brand", not "site" — decision 2's one-line active-prop change.
+    expect(html).toContain('aria-controls="mgmt-site-subs"');
+    const siteButtonMatch = html.match(/<button[^>]*aria-controls="mgmt-site-subs"[^>]*>/);
+    expect(siteButtonMatch).not.toBeNull();
+    expect(siteButtonMatch?.[0]).toContain("mgmt-rail-tab is-active");
+    // the accordion is closed by default (SSR/no localStorage) — the sub-row
+    // markup itself is siteSubForPath's own contract, pinned above, since
+    // the sub-list only renders once toggled open client-side.
+    expect(html).toContain("Site<span");
+    expect(html).toContain('<h1 class="mgmt-title">Brand');
+    vi.doUnmock("next/navigation");
+    vi.resetModules();
   });
 
   it("remembers open/closed in localStorage and exposes the accordion semantics (source pin)", async () => {

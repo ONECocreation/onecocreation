@@ -26,13 +26,29 @@ describe("the site rail — the rooms, in Love's working order", () => {
     for (const r of rail) expect(r.houseOnly).toBeFalsy();
   });
 
-  it("carries the ten labels in the shell's working order, sorted the same real way", async () => {
-    const { SITE_LABELS, SITE_NAV_ORDER, siteRoomOrder } = await import("@/components/console/SiteConsoleShell");
+  it("SITE_NAV_ORDER keeps its ten-key sort contract untouched (TASK-330 decision 1a: the smaller diff)", async () => {
+    const { SITE_NAV_ORDER, siteRoomOrder } = await import("@/components/console/SiteConsoleShell");
     const rail = siteRoomOrder([CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly));
     expect(rail.map((r) => r.key)).toEqual(SITE_NAV_ORDER);
     expect(SITE_NAV_ORDER).toEqual(["overview", "booking", "live", "studio", "letters", "people", "money", "store", "site", "brand"]);
+  });
+
+  /* TASK-330 (0018.06.27 a₿): Live and Brand drop off the top-level rail —
+     Live folds into Studio, Brand folds under Site as a sub-row. Computed
+     the same real way the component renders it: siteRoomOrder's sorted
+     list, then the SAME filter chained onto SiteConsoleShell.tsx's own
+     `rooms` line, never a hand-typed eight-item array. */
+  it("carries the eight-row rendered set (Live+Brand folded off the top rail), sorted the same real way", async () => {
+    const { SITE_LABELS, SITE_NAV_ORDER, siteRoomOrder } = await import("@/components/console/SiteConsoleShell");
+    const rail = siteRoomOrder([CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly)).filter(
+      (r) => r.key !== "live" && r.key !== "brand",
+    );
+    const expectedOrder = SITE_NAV_ORDER.filter((k) => k !== "live" && k !== "brand");
+    expect(rail.map((r) => r.key)).toEqual(expectedOrder);
+    expect(expectedOrder).toEqual(["overview", "booking", "studio", "letters", "people", "money", "store", "site"]);
     const labels = rail.map((r) => SITE_LABELS[r.key] ?? r.label);
-    expect(labels).toEqual(["Home", "Sessions & hours", "Live", "Studio", "Letters", "People", "Money", "Items", "Site", "Brand"]);
+    expect(labels).toEqual(expectedOrder.map((k) => SITE_LABELS[k]));
+    expect(labels).toEqual(["Home", "Sessions & hours", "Studio", "Letters", "People", "Money", "Items", "Site"]);
   });
 
   it("registers /a/site, reachable and not house furniture", () => {
