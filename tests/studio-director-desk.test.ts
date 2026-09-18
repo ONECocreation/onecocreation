@@ -212,10 +212,19 @@ describe("the three call-sites render the in-site path, never a studio-host dire
     );
   });
 
-  it("/a/live/page.tsx derives studioDirector via directorDeskUrl", () => {
-    const src = read("src/app/a/live/page.tsx");
-    expect(src).toContain("directorDeskUrl(origin, studioVdo.room)");
-    expect(src).not.toContain("studioDirectorLink(");
+  /* TASK-330 (0018.06.27 a₿): the go-live door's studioDirector prop now
+     rides the SAME `director` /a/studio/page.tsx already derives via
+     directorDeskUrl(origin, vdo.room) for its own desk — one room, one
+     key, never re-derived a second time for the merged-in door. The pin
+     above this one (":177" ish, "derives the desk door via directorDeskUrl")
+     already covers that call; /a/live/page.tsx computes nothing any more. */
+  it("/a/live/page.tsx derives nothing — it's a bare redirect (TASK-330); the director door lives solely in /a/studio/page.tsx now", () => {
+    const liveSrc = read("src/app/a/live/page.tsx");
+    expect(liveSrc).not.toContain("directorDeskUrl(");
+    expect(liveSrc).not.toContain("studioDirectorLink(");
+    const studioSrc = read("src/app/a/studio/page.tsx");
+    expect(studioSrc).toContain("directorDeskUrl(origin, vdo.room)");
+    expect(studioSrc).not.toContain("studioDirectorLink(");
   });
 
   it("go-live-room.tsx still wires the door to the studioDirector prop (the value changed, the wiring didn't)", () => {

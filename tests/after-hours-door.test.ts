@@ -353,8 +353,13 @@ describe("source pins", () => {
     expect(src).not.toContain("btn-gold");
   });
 
-  it("DoorRoom / the /a/live page thread minTier so the picker can filter the free Commons out", () => {
+  /* TASK-330 (0018.06.27 a₿): the go-live door's room-chip mapping moved
+     from /a/live/page.tsx (now a bare redirect) into /a/studio/page.tsx —
+     StudioHub's goLiveRooms prop is built with the exact same ROOMS.map
+     shape, minTier threaded the same way, so the after-hours picker's
+     free-Commons filter still has what it needs. */
+  it("DoorRoom / the go-live door's room mapping (now in /a/studio/page.tsx) thread minTier so the picker can filter the free Commons out", () => {
     expect(read("src/components/console/LiveDoorCard.tsx")).toContain("minTier?: Tier");
-    expect(read("src/app/a/live/page.tsx")).toContain("minTier: r.minTier");
+    expect(read("src/app/a/studio/page.tsx")).toContain("minTier: r.minTier");
   });
 });

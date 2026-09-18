@@ -280,19 +280,80 @@ describe("the member-header strip — the same flag, presence and absence", () =
   });
 });
 
-describe("the room itself — the gate and the desk pointer", () => {
-  it("/a/live gates like every /a room", () => {
-    const src = read("src/app/a/live/page.tsx");
-    expect(src).toContain("operatorFromCookieHeader");
-    expect(src).toContain('from "@/lib/operator-auth"');
-    expect(src).toContain("if (!operator)");
-    expect(src).toContain("<OperatorGate configured={operatorsConfigured()} />");
-  });
-
+describe("the room itself — the desk pointer", () => {
   it("the console front page points at the Go-Live room instead of mounting the old card", () => {
     const src = read("src/app/a/page.tsx");
     expect(src).toContain('href="/a/live"');
     expect(src).not.toContain("LiveDoorCard");
+  });
+});
+
+/* TASK-330 (0018.06.27 a₿ — RULED Studio 0018.06.26 · 11:20 a₿): Live and
+ * Studio merge into ONE room. /a/live retired its own gate+render (the
+ * pin above this comment, honestly broken — decision 4) for a plain
+ * redirect to /a/studio, which gates the merged room either way. */
+describe("/a/live redirects to /a/studio (decision 4) — the merged room's own gate covers it", () => {
+  it("no longer gates itself — that's the merged room's job now", () => {
+    const src = read("src/app/a/live/page.tsx");
+    expect(src).not.toContain("OperatorGate");
+    expect(src).not.toContain("operatorFromCookieHeader");
+    expect(src).toContain('redirect(studioRedirectPath(sp))');
+    expect(src).toContain('from "next/navigation"');
+  });
+
+  it("redirects to /a/studio with no query", async () => {
+    const { default: GoLivePage } = await import("@/app/a/live/page");
+    let caught: { digest?: string } | undefined;
+    try {
+      await GoLivePage({ searchParams: Promise.resolve({}) });
+    } catch (e) {
+      caught = e as { digest?: string };
+    }
+    expect(caught?.digest).toContain("NEXT_REDIRECT");
+    expect(caught?.digest).toContain("/a/studio");
+    expect(caught?.digest).not.toContain("/a/studio?");
+  });
+
+  it("preserves every query key/value a bookmark or link carried, verbatim, by BROWSER NAVIGATION — not just the bare route", async () => {
+    const { default: GoLivePage } = await import("@/app/a/live/page");
+    let caught: { digest?: string } | undefined;
+    try {
+      await GoLivePage({ searchParams: Promise.resolve({ ref: "newsletter", utm_source: "mail" }) });
+    } catch (e) {
+      caught = e as { digest?: string };
+    }
+    expect(caught?.digest).toContain("/a/studio?ref=newsletter&utm_source=mail");
+  });
+
+  /* studioRedirectPath is pure — tested directly so the query-preserving
+     logic is pinned against real URLSearchParams behaviour (repeat keys,
+     arrays, blanks), the same real way the page itself builds the target,
+     never a hand-typed string. */
+  describe("studioRedirectPath — pure, computed the same real way the page redirects", () => {
+    it("no query at all", async () => {
+      const { studioRedirectPath } = await import("@/app/a/live/page");
+      expect(studioRedirectPath({})).toBe("/a/studio");
+    });
+
+    it("a single key", async () => {
+      const { studioRedirectPath } = await import("@/app/a/live/page");
+      expect(studioRedirectPath({ room: "heart-field" })).toBe("/a/studio?room=heart-field");
+    });
+
+    it("multiple keys, in order", async () => {
+      const { studioRedirectPath } = await import("@/app/a/live/page");
+      expect(studioRedirectPath({ a: "1", b: "2" })).toBe("/a/studio?a=1&b=2");
+    });
+
+    it("a repeated key (array value) rides every value, never collapsed", async () => {
+      const { studioRedirectPath } = await import("@/app/a/live/page");
+      expect(studioRedirectPath({ tag: ["x", "y"] })).toBe("/a/studio?tag=x&tag=y");
+    });
+
+    it("undefined values are dropped, never rendered as the literal string 'undefined'", async () => {
+      const { studioRedirectPath } = await import("@/app/a/live/page");
+      expect(studioRedirectPath({ room: "heart-field", ghost: undefined })).toBe("/a/studio?room=heart-field");
+    });
   });
 });
 

@@ -134,16 +134,21 @@ describe("the four call-sites thread the key (grep pins against the real source)
     expect(src).not.toContain("studioDirectorLink(");
   });
 
-  it("src/app/a/live/page.tsx derives roomKey, threads it into studioVdoLinks, and derives studioDirector as the in-site route (TASK-306)", () => {
-    const src = read("src/app/a/live/page.tsx");
-    expect(src).toContain("studioRoomKey");
-    expect(src).toContain(
-      "const studioVdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost, roomKey);",
-    );
-    // TASK-306: same flip as /a/studio — the in-site desk route, never
-    // the keyed studio URL in an href again.
-    expect(src).toContain("studioDirector={directorDeskUrl(origin, studioVdo.room)}");
-    expect(src).not.toContain("studioDirectorLink(");
+  /* TASK-330 (0018.06.27 a₿): /a/live/page.tsx is a bare redirect now — it
+     derives no roomKey, no studioVdo, nothing keyed at all. The go-live
+     door's own key/room threading happens once, in /a/studio/page.tsx
+     (the pin right above this one, "src/app/a/studio/page.tsx derives
+     roomKey..."), and StudioHub reuses that SAME `vdo`/`director` for the
+     go-live door's studioVdo/studioDirector props — one room, one key,
+     never re-derived. */
+  it("src/app/a/live/page.tsx derives no key/room at all — it's a bare redirect (TASK-330); StudioHub reuses studio/page.tsx's own vdo/director", () => {
+    const liveSrc = read("src/app/a/live/page.tsx");
+    expect(liveSrc).not.toContain("studioRoomKey");
+    expect(liveSrc).not.toContain("studioVdoLinks");
+    expect(liveSrc).not.toContain("directorDeskUrl(");
+    const hubSrc = read("src/components/console/StudioHub.tsx");
+    expect(hubSrc).toContain("studioVdo={vdo}");
+    expect(hubSrc).toContain("studioDirector={director}");
   });
 
   it("src/app/rooms/[slug]/page.tsx derives roomKey and passes it into studioGuestCameraLink and down to ClassroomView", () => {
