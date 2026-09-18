@@ -31,7 +31,7 @@
     "@frens-earth/plugin-rails": "https://github.com/PacsArcade/puck-studio/releases/download/plugin-rails-v0.4.0/frens-earth-plugin-rails-0.4.0.tgz",
     "@frens-earth/presence": "https://github.com/PacsArcade/puck-studio/releases/download/presence-v0.2.0/frens-earth-presence-0.2.0.tgz",
     "@frens-earth/puck-changelog": "https://github.com/PacsArcade/puck-studio/releases/download/puck-changelog-v0.2.0/frens-earth-puck-changelog-0.2.0.tgz",
-    "@frens-earth/puck-config": "https://github.com/PacsArcade/puck-studio/releases/download/puck-config-v0.14.0/frens-earth-puck-config-0.14.0.tgz",
+    "@frens-earth/puck-config": "https://github.com/PacsArcade/puck-studio/releases/download/puck-config-v0.16.0/frens-earth-puck-config-0.16.0.tgz",
     "@frens-earth/variant-engine": "https://github.com/PacsArcade/puck-studio/releases/download/variant-engine-v0.4.0/frens-earth-variant-engine-0.4.0.tgz",
     "@puckeditor/core": "^0.23.0",
     "@types/nodemailer": "^8.0.1",
