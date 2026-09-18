@@ -118,7 +118,7 @@ export default function SendToUserChooser({ roomTitle }: { roomTitle?: string })
             onChange={(e) => setQ(e.target.value)}
             placeholder="search members by email…"
             aria-label="search members by email"
-            style={{ ...field, width: "100%", fontSize: ".82rem" }}
+            className="console-field" style={{ ...field, width: "100%", fontSize: ".82rem" }}
           />
           <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
             {people === null ? (
