@@ -304,9 +304,18 @@ describe("every handed-out guest link is the SITE url (source pins on the three 
     expect(src).toContain("value={studioVdo.push}");
   });
 
-  it("/a/live/page.tsx computes the request origin and threads it into the meeting config", () => {
-    const src = read("src/app/a/live/page.tsx");
+  /* TASK-330 (0018.06.27 a₿): the go-live door's meeting config (siteOrigin
+     included) now threads out of /a/studio/page.tsx — /a/live/page.tsx is
+     a bare redirect and computes no origin of its own any more. */
+  it("/a/studio/page.tsx computes the request origin and threads it into the go-live door's meeting config", () => {
+    const src = read("src/app/a/studio/page.tsx");
     expect(src).toContain("siteOrigin: origin");
+  });
+
+  it("/a/live/page.tsx no longer computes an origin at all — it's a bare redirect now (TASK-330)", () => {
+    const src = read("src/app/a/live/page.tsx");
+    expect(src).not.toContain("x-forwarded-proto");
+    expect(src).not.toContain("siteOrigin");
   });
 
   it("/meet/[bookingId]: the guest anchor is /meet/studio/<bookingId>; the director door is the in-site desk route (TASK-306 — was \"stays a studio URL, keyed the same\" before the desk route existed)", () => {
