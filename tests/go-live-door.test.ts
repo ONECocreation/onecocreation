@@ -278,6 +278,17 @@ describe("the member-header strip — the same flag, presence and absence", () =
     const layout = read("src/app/layout.tsx");
     expect(layout).not.toContain("<LiveBanner />");
   });
+
+  it("TASK-339: the strip reads bigger — roomier padding, larger type, a bigger dot, a pill-shaped Join", () => {
+    const src = read("src/components/LiveStrip.tsx");
+    expect(src).toContain('padding: "12px 20px"');
+    expect(src).toContain('fontSize: "1rem"');
+    expect(src).toContain('fontSize: "1.4em"');
+    expect(src).toContain('borderRadius: "999px"');
+    // the two live-signal colors ride the same tokens, unchanged by the size pass
+    expect(src).toContain('color: "var(--info)"');
+    expect(src).toContain('color: "var(--err)"');
+  });
 });
 
 describe("the room itself — the desk pointer", () => {
