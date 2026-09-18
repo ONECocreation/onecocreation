@@ -4,14 +4,11 @@ import OperatorGate from "@/components/OperatorGate";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { cartridge } from "@/brand/cartridge";
 import { getSiteConfig } from "@/lib/site-config";
-import {
-  studioVdoLinks,
-  studioRoomKey,
-  slugOfRoom,
-  confirmedToday,
-  liveRoomPrefix,
-  LIVE_YOUTUBE,
-} from "@/lib/live";
+import { studioVdoLinks, studioRoomKey } from "@/lib/live";
+// TASK-330: the go-live door's own imports from the same module, kept on
+// their own line so the existing pin (tests/studio-desk-doors.test.ts)
+// on the line above's exact text survives untouched.
+import { slugOfRoom, confirmedToday, liveRoomPrefix, LIVE_YOUTUBE } from "@/lib/live";
 import { meetStudioUrl, directorDeskUrl } from "@/lib/live-links";
 import { STUDIO_SCENES, type StudioSceneId } from "@/lib/studio/scenes";
 import { overlayConfigured, overlayQuery } from "@/lib/studio/overlay-token";
