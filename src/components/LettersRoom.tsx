@@ -11,7 +11,10 @@ import SubscribeForm from "@/components/SubscribeForm";
  * offered the free-meditation letter and the recent public notes.
  */
 
-interface Entry { key: string; subject: string; atMs: number }
+/* readable is optional — a stale/uncached response with no field still
+   renders as a clickable link (readable-by-default is the safe fallback);
+   only an explicit readable === false renders the plain "sent" receipt. */
+interface Entry { key: string; subject: string; atMs: number; readable?: boolean }
 interface Who { ok: boolean; signedIn: boolean; operator: boolean; email: string | null; letters: Entry[] }
 
 export default function LettersRoom({ recent }: { recent: { key: string; subject: string }[] }) {
@@ -95,23 +98,45 @@ export default function LettersRoom({ recent }: { recent: { key: string; subject
           : "Nothing here yet — when Love publishes her next letter, it lands here too."}
       </p>
       <div style={{ display: "grid", gap: 10, textAlign: "left" }}>
-        {who.letters.map((l, i) => (
-          <Link key={`${l.key}-${l.atMs}-${i}`} href={`/letters/${l.key}`}
-            style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit",
-              borderRadius: 16, padding: "14px 18px", background: "var(--glass)",
-              border: "1px solid var(--glass-edge)", boxShadow: "0 18px 44px -28px rgba(120,100,160,.45)" }}>
-            <span style={{ fontSize: "1.4rem" }}>💌</span>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <b style={{ display: "block", fontFamily: "var(--font-h3)", fontWeight: 400,
-                fontSize: "1.05rem", color: "var(--ink-strong)" }}>{l.subject}</b>
-              <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>
-                {new Date(l.atMs).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+        {who.letters.map((l, i) => {
+          /* TASK-332: a mailbox key that never resolves to a real letter
+             template (T-304's own "studio-invite" receipts, for example)
+             is a 404 waiting behind a Link — /letters/[key]/page.tsx:24
+             notFound()s any key failing isLetterKey. readable === false
+             is the route's own honest annotation of that; the row renders
+             as a plain receipt instead: no href, "sent" not "read", same
+             tokens and visual weight, no color-only signal. readable
+             true/undefined (a stale/uncached response) stays a clickable
+             "read" link — the safe fallback. */
+          const rowStyle = {
+            display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit",
+            borderRadius: 16, padding: "14px 18px", background: "var(--glass)",
+            border: "1px solid var(--glass-edge)", boxShadow: "0 18px 44px -28px rgba(120,100,160,.45)",
+          } as const;
+          const rowContent = (
+            <>
+              <span style={{ fontSize: "1.4rem" }}>💌</span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <b style={{ display: "block", fontFamily: "var(--font-h3)", fontWeight: 400,
+                  fontSize: "1.05rem", color: "var(--ink-strong)" }}>{l.subject}</b>
+                <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>
+                  {new Date(l.atMs).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+                </span>
               </span>
-            </span>
-            <span style={{ fontSize: ".72rem", fontWeight: 700, textTransform: "uppercase",
-              letterSpacing: ".06em", color: "var(--gold-deep)", whiteSpace: "nowrap" }}>read</span>
-          </Link>
-        ))}
+              <span style={{ fontSize: ".72rem", fontWeight: 700, textTransform: "uppercase",
+                letterSpacing: ".06em", color: "var(--gold-deep)", whiteSpace: "nowrap" }}>
+                {l.readable === false ? "sent" : "read"}
+              </span>
+            </>
+          );
+          return l.readable === false ? (
+            <div key={`${l.key}-${l.atMs}-${i}`} style={rowStyle}>{rowContent}</div>
+          ) : (
+            <Link key={`${l.key}-${l.atMs}-${i}`} href={`/letters/${l.key}`} style={rowStyle}>
+              {rowContent}
+            </Link>
+          );
+        })}
       </div>
       {who.letters.length === 0 && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
