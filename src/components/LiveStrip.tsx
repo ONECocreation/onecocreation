@@ -68,8 +68,8 @@ export default function LiveStrip() {
       style={{
         display: "block",
         textAlign: "center",
-        padding: "5px 16px",
-        fontSize: ".78rem",
+        padding: "12px 20px",
+        fontSize: "1rem",
         fontWeight: 700,
         letterSpacing: ".04em",
         textDecoration: "none",
@@ -78,7 +78,18 @@ export default function LiveStrip() {
         color: "var(--info)",
       }}
     >
-      <span style={{ color: "var(--err)" }}>●</span> {model.label}
+      <span style={{ color: "var(--err)", fontSize: "1.4em", verticalAlign: "-.05em" }}>●</span>{" "}
+      <span
+        style={{
+          display: "inline-block",
+          padding: "6px 18px",
+          borderRadius: "999px",
+          background: "rgba(139,118,196,.22)",
+          border: "1px solid rgba(139,118,196,.5)",
+        }}
+      >
+        {model.label}
+      </span>
     </Link>
   );
 }
