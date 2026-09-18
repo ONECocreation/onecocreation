@@ -79,12 +79,16 @@ export default function LiveStrip() {
       }}
     >
       <span style={{ color: "var(--err)", fontSize: "1.4em", verticalAlign: "-.05em" }}>●</span>{" "}
+      {/* border-only pill (no fill): a filled pill here would stack its own
+          tint ON TOP of the strip's own wash and cut the label's measured
+          contrast below 4.5:1 in both themes (measured while building this
+          — see SUMMARY) — the border + radius + padding alone read as a
+          real tap target without touching what's under the text */}
       <span
         style={{
           display: "inline-block",
           padding: "6px 18px",
           borderRadius: "999px",
-          background: "rgba(139,118,196,.22)",
           border: "1px solid rgba(139,118,196,.5)",
         }}
       >
