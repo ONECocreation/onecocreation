@@ -93,6 +93,15 @@ export const SITE_SUBS = [
   { key: "menu", href: "/a/site/menu", label: "Menu" },
   { key: "community-door", href: "/a/site/community-door", label: "Community door" },
   { key: "about-videos", href: "/a/site/about-videos", label: "Videos on About" },
+  /* TASK-330 (0018.06.27 a₿): Brand drops off the top-level rail and
+     folds in here as a fifth sub-row — its own route (/a/brand) and
+     houseOnly filtering are untouched (it's still a real CONSOLE_ROOMS
+     entry, src/lib/console.ts:285-294 — this is presentation-only, the
+     T-323 escape hatch). siteSubForPath's existing "exact" match below
+     already answers "/a/brand" → "brand" once this entry exists — no
+     separate case needed there (verified: no code change on that
+     function was required, see SUMMARY). */
+  { key: "brand", href: "/a/brand", label: "Brand" },
 ] as const;
 
 export type SiteSubKey = (typeof SITE_SUBS)[number]["key"];
@@ -201,7 +210,14 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
   // House furniture stays on the house's bridge. An artist running their own
   // shop has no use for a SIMULATOR or a FLEET MAP, and showing them would
   // make their admin feel like someone else's software.
-  const rooms = siteRoomOrder([CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly));
+  // TASK-330 (0018.06.27 a₿): Live and Brand drop off the top-level rail —
+  // Live folds into Studio (being in the studio opens the go-live door
+  // too), Brand folds into Site as a sub-row (below). Chained after the
+  // existing sort so SITE_NAV_ORDER/siteRoomOrder's own contract (and
+  // tests/console.test.ts's import of it) stays exactly as it was.
+  const rooms = siteRoomOrder([CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly)).filter(
+    (r) => r.key !== "live" && r.key !== "brand",
+  );
 
   return (
     <div className="mgmt-ground">
@@ -211,7 +227,10 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
         {/* the LEFT RAIL — wireframe v2: tabs down the side, stage beside */}
         <nav className="mgmt-rail" aria-label="Management sections">
           {rooms.map((r) => {
-            const active = r.key === current.key;
+            // TASK-330: Brand folded under Site (a sub-row, not its own
+            // rail entry) — the Site row itself must still read active
+            // when the current room IS Brand, so it highlights.
+            const active = r.key === current.key || (r.key === "site" && current.key === "brand");
             /* TASK-188: the Site row is the accordion — every other console
                item is the same flat link it always was. */
             if (r.key === "site") {
