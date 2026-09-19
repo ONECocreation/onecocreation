@@ -113,13 +113,15 @@ describe("the seed — /style/me opens pre-populated, her words + the honest blo
     expect(root.props?.description).toContain("a member's own room under the house sky.");
   });
 
-  it("the MeSwitch block renders the REAL widget — the same component the fallback mounts", async () => {
+  it("the MeSwitch block renders the REAL widget — the same component the fallback mounts (TASK-342: now nested one level inside BuilderMarker, a canvas-only no-op wrapper)", async () => {
     const { createMeSwitch } = await import("@/lib/puck-blocks/me-switch");
     const MeSwitch = (await import("@/components/me/MeSwitch")).default;
+    const BuilderMarker = (await import("@/components/style/BuilderMarker")).default;
     const block = createMeSwitch();
     const el = block.render() as ReactElement;
     expect(isElement(el)).toBe(true);
-    expect(el.type).toBe(MeSwitch);
+    expect(el.type).toBe(BuilderMarker);
+    expect(findAll(el, (e) => e.type === MeSwitch)).toHaveLength(1);
   });
 
   it("me is designer in the manifest, wearing the SAME note every other wired route does", async () => {
