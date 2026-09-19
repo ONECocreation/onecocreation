@@ -68,8 +68,8 @@ export default function LiveStrip() {
       style={{
         display: "block",
         textAlign: "center",
-        padding: "5px 16px",
-        fontSize: ".78rem",
+        padding: "12px 20px",
+        fontSize: "1rem",
         fontWeight: 700,
         letterSpacing: ".04em",
         textDecoration: "none",
@@ -78,7 +78,25 @@ export default function LiveStrip() {
         color: "var(--info)",
       }}
     >
-      <span style={{ color: "var(--err)" }}>●</span> {model.label}
+      {/* border-only pill (no fill): a filled pill here would stack its own
+          tint ON TOP of the strip's own wash and cut the label's measured
+          contrast below 4.5:1 in both themes (measured while building this
+          — see SUMMARY) — the border + radius + padding alone read as a
+          real tap target without touching what's under the text. The dot
+          lives INSIDE the pill (send-back, T-339) so dot + label wrap
+          together as one piece at narrow widths instead of the dot
+          orphaning onto its own line above the pill. */}
+      <span
+        style={{
+          display: "inline-block",
+          padding: "6px 18px",
+          borderRadius: "999px",
+          border: "1px solid rgba(139,118,196,.5)",
+        }}
+      >
+        <span style={{ color: "var(--err)", fontSize: "1.4em", verticalAlign: "-.05em", marginRight: ".35em" }}>●</span>
+        {model.label}
+      </span>
     </Link>
   );
 }
