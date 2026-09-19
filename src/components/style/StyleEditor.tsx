@@ -18,9 +18,11 @@ import PuckEditor from "@/components/PuckEditor";
  * library from the server would inline it into every style flight payload.
  * A second StylePac tenant forks this one file (its own
  * config/seeds/tokens/Copilot), never the editor. The prop contract toward
- * the page is the one PuckEditor always had: { slug, data }.
+ * the page is the one PuckEditor always had: { slug, data }, plus `operator`
+ * (TASK-342) — the already-gated signed-in operator, forwarded straight
+ * through so PuckEditor can name them on the canvas.
  */
-export default function StyleEditor({ slug, data }: { slug: string; data: Data }) {
+export default function StyleEditor({ slug, data, operator }: { slug: string; data: Data; operator: string }) {
   return (
     <PuckEditor
       slug={slug}
@@ -29,6 +31,7 @@ export default function StyleEditor({ slug, data }: { slug: string; data: Data }
       seeds={SEEDS}
       tokens={ONECOCREATION}
       Copilot={Copilot}
+      operator={operator}
     />
   );
 }
