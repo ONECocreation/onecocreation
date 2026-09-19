@@ -22,8 +22,9 @@ import { useCallback, useState, useSyncExternalStore } from "react";
 import { Chip, SectionHead, field, glassCard } from "@/components/console/glass";
 import { STUDIO_SCENES, type StudioSceneId } from "@/lib/studio/scenes";
 import { GUEST_LIMIT, type StudioDoc } from "@/lib/studio/doc";
-import { saveStudio } from "@/app/a/studio/actions";
+import { saveStudio, mintJitsiDoor } from "@/app/a/studio/actions";
 import SendToUserChooser from "./SendToUserChooser";
+import JitsiDoorCard from "./JitsiDoorCard";
 
 /* datetime-local speaks LOCAL wall-clock words with no timezone — the
    doc stores an instant (ISO), so the field's value is a round-trip
@@ -46,9 +47,14 @@ const fieldLabel: React.CSSProperties = {
   color: "var(--muted)", marginBottom: 3,
 };
 
-/* every action card: the buttons hug the bottom, stacked, uniform */
-const card: React.CSSProperties = { ...glassCard, display: "flex", flexDirection: "column", gap: 10 };
-const doorStack: React.CSSProperties = { marginTop: "auto", display: "flex", flexDirection: "column", gap: 8 };
+/* every action card: the buttons hug the bottom, stacked, uniform.
+   TASK-337: exported so JitsiDoorCard.tsx (its own pure file, no site
+   imports beyond this one) reuses the same visual language instead of a
+   second copy — named decision: export-in-place rather than lifting these
+   two consts up to @/components/console/glass, since that file sits
+   outside this lane's OWNS/READ-ONLY list. */
+export const card: React.CSSProperties = { ...glassCard, display: "flex", flexDirection: "column", gap: 10 };
+export const doorStack: React.CSSProperties = { marginTop: "auto", display: "flex", flexDirection: "column", gap: 8 };
 
 function CopyDoor({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false);
@@ -151,6 +157,8 @@ export default function StudioRoom({
   roomTitle,
   roomKeyed,
   guestDoor,
+  jitsiDomain,
+  initialJitsiRoom,
 }: {
   initial: StudioDoc;
   overlayUrls: Record<StudioSceneId, string | null>;
@@ -185,11 +193,45 @@ export default function StudioRoom({
    *  key rides only inside the iframe src that page's own frame route
    *  mints. Required — the one true door, never re-derived here. */
   guestDoor: string;
+  /** TASK-337: config.meeting.jitsiDomain, page.tsx's own `meeting` prop
+   *  value reused — the fourth door's domain, e.g. "meet.onecocreation.com".
+   *  Optional (falls back to "") so an older render call with no opinion
+   *  on Jitsi still type-checks — same derive-or-dash posture as
+   *  `roomTitle`/`roomKeyed` above. */
+  jitsiDomain?: string;
+  /** TASK-337: the one-time Jitsi room's current slug, from KV
+   *  (`getJitsiDoor()`) — null/undefined when nothing's minted yet, the
+   *  vault isn't configured, or an older render call passes nothing
+   *  (derive-or-dash, never fabricated). */
+  initialJitsiRoom?: string | null;
 }) {
   const [doc, setDoc] = useState<StudioDoc>(initial);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [jitsiRoom, setJitsiRoom] = useState<string | null>(initialJitsiRoom ?? null);
+  const [jitsiMinting, setJitsiMinting] = useState(false);
+  /* TASK-337 named decision: its own error state, not the shared `error`
+     above — that one only renders inside the "For the director's desk"
+     accordion (closed by default), which would hide a top-card mint
+     failure from view entirely. Same honest setError-on-failure pattern
+     as save(), surfaced where the card actually is. */
+  const [jitsiError, setJitsiError] = useState<string | null>(null);
+
+  async function mintJitsi() {
+    setJitsiMinting(true);
+    setJitsiError(null);
+    try {
+      const res = await mintJitsiDoor();
+      if (res.ok) {
+        setJitsiRoom(res.room);
+      } else {
+        setJitsiError(res.reason);
+      }
+    } finally {
+      setJitsiMinting(false);
+    }
+  }
   const [deskOpen, toggleDesk] = useDeskOpen();
 
   const setGuest = (i: number, patch: Partial<{ name: string; specialty: string }>) =>
@@ -256,7 +298,20 @@ export default function StudioRoom({
             <CopyGhost value={guestDoor} label="Copy the guest link" />
           </div>
         </div>
+        {/* TASK-337: a fourth card — Love's ask for a one-time Jitsi room
+            beside the three VDO copy doors above. Placed last in the
+            stack (builder's placement call): it reads as "one more door"
+            rather than displacing any of the three existing ones, and
+            sits right before the roomKeyed note below, which now reads
+            fairly for either rail. */}
+        <JitsiDoorCard domain={jitsiDomain ?? ""} room={jitsiRoom} minting={jitsiMinting} onMint={mintJitsi} />
       </div>
+      {jitsiError && (
+        <p style={{ margin: "8px 0 0", padding: "8px 14px", borderRadius: 10, fontSize: ".82rem",
+          color: "var(--err)", background: "rgba(197,110,139,.04)", border: "1px solid rgba(197,110,139,.4)" }}>
+          ◌ {jitsiError}
+        </p>
+      )}
       {/* TASK-305: words only, never the key itself — the doors above
           already carry it. Honest either way: derive-or-dash. */}
       <p style={{ margin: "8px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>
