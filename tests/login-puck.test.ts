@@ -107,14 +107,17 @@ describe("the seed — /style/login opens pre-populated, the hero verbatim + the
     expect(root.props?.description).toContain("no passwords, nothing stored.");
   });
 
-  it("the LoginDoor block renders the REAL door — DoorSheet in its page mount, the header's own sheet", async () => {
+  it("the LoginDoor block renders the REAL door — DoorSheet in its page mount, the header's own sheet (TASK-342: now nested one level inside BuilderMarker, a canvas-only no-op wrapper)", async () => {
     const { createLoginDoor } = await import("@/lib/puck-blocks/login-door");
     const DoorSheet = (await import("@/components/door/DoorSheet")).default;
+    const BuilderMarker = (await import("@/components/style/BuilderMarker")).default;
     const block = createLoginDoor();
     const el = block.render() as ReactElement;
     expect(isElement(el)).toBe(true);
-    expect(el.type).toBe(DoorSheet);
-    expect((el.props as { mount?: string }).mount).toBe("page");
+    expect(el.type).toBe(BuilderMarker);
+    const doors = findAll(el, (e) => e.type === DoorSheet);
+    expect(doors).toHaveLength(1);
+    expect((doors[0].props as { mount?: string }).mount).toBe("page");
   });
 
   it("login is designer in the manifest, wearing the SAME note every other wired route does", async () => {
