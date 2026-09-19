@@ -17,6 +17,7 @@ import { usePresence, PresenceBridge, PresenceChips, PresenceHalos } from "@fren
 import PagesPanel from "@/components/style/PagesPanel";
 import PopupsPanel from "@/components/style/PopupsPanel";
 import type { PopupTrigger } from "@/lib/puck-store";
+import { BuilderMarkerContext, operatorDisplayName } from "@/components/style/BuilderMarker";
 
 /**
  * PuckEditor — the page designer (Style), wearing the MOCKUP CHROME (UI
@@ -50,13 +51,19 @@ type LiveState = "idle" | "publishing" | "live" | "error";
 type PanelKey = "lib" | "fields" | "cop";
 const PANELS_LS = "oc-studio-panels";
 
-export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot }: {
+export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot, operator }: {
   slug: string;
   data: Data;
   config: Config;
   seeds: Record<string, PuckPageData>;
   tokens: BrandTokens;
   Copilot: ComponentType<{ slug: string; currentContent: () => Data; onApply: (data: Data) => void }>;
+  /** TASK-342: the signed-in operator (hex pubkey or email seat, ground
+   *  fact 2) — provided to `BuilderMarkerContext` below so the canvas's
+   *  session-aware blocks (MeSwitch/LoginDoor) can name whoever is
+   *  looking. Never reaches the live site: only this route ever renders
+   *  `<PuckEditor>` with a real operator. */
+  operator: string;
 }) {
   const [liveData, setLiveData] = useState<Data>(data);
   const liveRef = useRef<Data>(data);
@@ -350,6 +357,16 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
 
 
   return (
+    /* TASK-342: the ONLY place `BuilderMarkerContext` is ever provided —
+       every render of MeSwitch/LoginDoor's Puck block that is NOT a
+       descendant of this tree (every live-site render) reads the
+       context's `null` default and shows nothing (ground fact 1 + the
+       correctness backbone described in BuilderMarker.tsx). `CanvasArea`
+       (and its `<Puck.Preview />` iframe) renders inside this same React
+       tree via `<Puck>`'s own children, not a second render root — see
+       ground fact 1's ThemePane portal proof for why a Context above it
+       still spans the boundary. */
+    <BuilderMarkerContext.Provider value={operatorDisplayName(operator)}>
     <div className="oc-studio" style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100%" /* TASK-327 seam (pre-allowed, one line): was the viewport-unit height — the route layout now carries the shared header + room strip above; the editor fills the body region its parent allocates instead of the whole viewport */, overflow: "hidden", background: "var(--ground)" /* S2: pinned — the ruling landed (S21 dawn table A6): the literal WAS night --ground byte-for-byte, so the pin rides the token; night identical, dawn takes the cartridge's designed ground */ }}>
       <Puck config={config} data={liveData} onChange={onChange} onPublish={publishLive} onAction={changelog.onAction} height="100%">
         <ChangelogBridge
@@ -546,6 +563,7 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot 
         </div>
       )}
     </div>
+    </BuilderMarkerContext.Provider>
   );
 }
 
