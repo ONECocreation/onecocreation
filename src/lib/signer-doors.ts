@@ -190,3 +190,42 @@ export function nip55SignUri(kind: ChallengeKind, next?: string): string {
   });
   return `nostrsigner:${encodeURIComponent(JSON.stringify(event))}?${params.toString()}`;
 }
+
+// ---------------------------------------------------------------------------
+// Direct-extension sign timeout (TASK-350, decision 3(b) — REVIEW-K83) — a
+// shared home for the 30-second no-silent-wait law (the Admiral, MOCKUPS-1,
+// the R-069 lesson) rather than inline in SignInCard, because this file
+// already holds every other signer-timing law (BUNKER_TIMEOUT_MS/
+// withTimeout above) and Kind0Doors.tsx's own unguarded
+// `window.nostr.signEvent` call (T-350's ground) is the same shape and
+// could import this later — a pure ADDITIVE export, no existing signature
+// here changes.
+// ---------------------------------------------------------------------------
+
+/** How long the direct NIP-07 extension call gets before we call it
+    honestly quiet — never a silent wait. */
+export const SIGN_TIMEOUT_MS = 30_000;
+
+/** Thrown by withSignTimeout on expiry, so a caller can tell "the signer
+    simply never answered" from a real signer error (declined, malformed)
+    and show the plain M3 words instead of leaving busy/note in limbo. */
+export class SignTimeoutError extends Error {}
+
+/** Races any signer promise (today: window.nostr.signEvent's direct-tap
+    path) against the 30-second window. Rejects with SignTimeoutError on
+    expiry; resolves/rejects exactly as `p` does otherwise. */
+export function withSignTimeout<T>(p: Promise<T>, ms: number = SIGN_TIMEOUT_MS): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new SignTimeoutError(`no answer after ${ms / 1000} seconds`)), ms);
+    p.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      }
+    );
+  });
+}
