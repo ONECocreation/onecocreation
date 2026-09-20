@@ -1,0 +1,14 @@
+# work-claim — task-346 LANE A (/style home canvas preview hero — the mount mechanism only: `overrides.iframe`, a bare `Hero`, the `<main>` wrap, the "preview only" affordance, the mounts-once-never-double-draws-on-`/` shot proof)
+
+Lane: home crew (Number One sonnet sub-agent). Base = onecocreation main @ **b1828aa or newer** (the T-342 merge, PR #19). Branch `feat/task-346-style-preview-hero`.
+Worktree cut by Number One; `npm ci` already done. Lane ports **4514–4517**. GO: `~/dev/home/inbox/TASK-346-oc-style-preview-hero.md` (its SUPERSEDING CUT NOTE, 0018.07.02 a₿ · block 967,839, scopes this cut to LANE A only).
+
+OWNS: `src/components/style/PreviewHero.tsx` (new), `src/components/PuckEditor.tsx` (the `previewHero` prop + `overrides.iframe` wiring only — not T-342's own edits, which are already landed), `src/components/style/StyleEditor.tsx` (the `previewHero` prop only), `src/app/style/[[...slug]]/page.tsx` (the session resolution + `<Hero>` render + one new prop only), `tests/style-preview-hero.test.ts` (new), this claim.
+
+READ-ONLY: `src/components/sections.tsx` (import `Hero`/`VisitorSession` only, never edit), `src/lib/matrix.ts`, `src/components/CosmicSky.tsx`, `src/components/LightCode.tsx`, `src/app/page.tsx`, `src/lib/puck-seeds.ts` (including `homeContent`/`SEEDS.home` — never add a content block), `src/lib/puck-config.tsx` (including `config.root` — never add a `render`), `src/components/style/BuilderMarker.tsx` (T-342, already landed — read its exports, never edit, and never wrap anything in it — that is Lane B), `tests/home-puck.test.ts`, `tests/me-puck.test.ts`, `tests/login-puck.test.ts`, everything under `@frens-earth/puck-config` / `@puckeditor/core` (vendored, never touched).
+
+Forbidden: any edit to `config.root.render` or anything that would make `config` render a Hero on the live `/` route; any content block added to `homeContent`/`SEEDS.home`; any edit to `src/components/sections.tsx`'s `Hero`; env/KV; deploy steps; BFT/date math beyond BFT-derived stamps; wrapping the reading door in `BuilderMarker` (Lane B, not this lane); the sample-visitor switch (a separate named follow-on); touching the ThemePane overlay (Ground #7 — named follow-on only); a color-only preview-affordance cue.
+
+Superseding cut note (Number One, 0018.07.02 a₿ · block 967,839): Lane A only — the drafter's split from the full L-sized brief. Ships: the `overrides.iframe` mount, a bare `<Hero>` with the session resolved per option 1 (the Admiral's ruling 0018.06.28 a₿), the `<main>` wrap, the "preview only" affordance, and the shot proof it mounts once and never double-draws on `/`. Lane B (BuilderMarker wrap of the reading door) is a later cut, same task number, a second worktree, after T-342 (already landed at base) and this lane both gate.
+
+cut 0018.07.02 a₿ · block 967,839, built 0018.07.02 a₿ · block 967,841
