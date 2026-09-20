@@ -107,15 +107,15 @@ describe("the seed — /style/login opens pre-populated, the hero verbatim + the
     expect(root.props?.description).toContain("no passwords, nothing stored.");
   });
 
-  it("the LoginDoor block renders the REAL door — DoorSheet in its page mount, the header's own sheet (TASK-342: now nested one level inside BuilderMarker, a canvas-only no-op wrapper)", async () => {
+  it("the LoginDoor block renders the REAL door — SignInCard in its page mount (TASK-350, decision 1 WRAP: the header's own sheet keeps plain DoorSheet elsewhere; TASK-342: nested one level inside BuilderMarker, a canvas-only no-op wrapper)", async () => {
     const { createLoginDoor } = await import("@/lib/puck-blocks/login-door");
-    const DoorSheet = (await import("@/components/door/DoorSheet")).default;
+    const SignInCard = (await import("@/components/door/SignInCard")).default;
     const BuilderMarker = (await import("@/components/style/BuilderMarker")).default;
     const block = createLoginDoor();
-    const el = block.render() as ReactElement;
+    const el = block.render(block.defaultProps as never) as ReactElement;
     expect(isElement(el)).toBe(true);
     expect(el.type).toBe(BuilderMarker);
-    const doors = findAll(el, (e) => e.type === DoorSheet);
+    const doors = findAll(el, (e) => e.type === SignInCard);
     expect(doors).toHaveLength(1);
     expect((doors[0].props as { mount?: string }).mount).toBe("page");
   });
