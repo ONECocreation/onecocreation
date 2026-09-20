@@ -114,16 +114,30 @@
   padding:11px 14px;font-family:inherit;font-size:1rem;
 }
 .kit-field-input:focus-visible{outline:2px solid var(--info);outline-offset:2px}
-/* an ACCESSIBILITY FINDING, fixed here rather than shipped silently:
-   --field-bg/--field-ink carry NO dawn override in cartridge.css (grepped
-   at cut) — the field surface is fixed light in BOTH themes. --err DOES
-   flip (night #E7899E / dawn #a34e6c), so an error ink riding var(--err)
-   would resolve to the night rung on this always-light surface and read
-   2.19:1 — under the 4.5:1 law. The dawn rung alone, as a literal (not a
-   new cartridge token — reused, not invented), reads 5.41:1 on the field
-   surface in EITHER theme, because the surface itself never moves. */
+/* TWO DIFFERENT SURFACES, TWO DIFFERENT INKS — an accessibility finding
+   corrected in ROUND 2 after Number One's pickup caught the /style/kit
+   dawn pane and asked for a by-eye check. Round 1 gave BOTH the invalid
+   border AND the error text the same fixed literal (#a34e6c, the dawn
+   rung of --err) reasoning that --field-bg/--field-ink never flip with
+   the theme (verified: no dawn override exists in cartridge.css for
+   either). That reasoning is right for the BORDER — it sits on the
+   input's own fixed-light fill — but wrong for the error TEXT: Field.tsx
+   renders the error <p> as a sibling of the input, not inside it, so it
+   sits on whatever ground SURROUNDS the field (the page or Card the
+   Field is placed on) — which DOES flip with the theme. The fixed
+   literal read fine at dawn (5.10-5.30:1, because #a34e6c IS the dawn
+   rung) but only 3.43:1 on the night ground — under the 4.5:1 law, and
+   invisible-looking against a night Card in the /style/kit dawn-pane
+   shot that caught it.
+   - the border stays the literal: it borders the field-bg surface,
+     which never moves, so a fixed ink is correct there (~4.5-5.7:1 on
+     field-bg in either theme — verified in SUMMARY's contrast table).
+   - the error text now reads var(--err) directly: the token IS designed
+     for exactly this surface (text on the theme's OWN ground), and
+     measures 7.52:1 at night / 5.10-5.30:1 at dawn against both the bare
+     ground and a Card's --panel — comfortably clearing 4.5:1 in both. */
 .kit-field-input[aria-invalid="true"]{border-color:#a34e6c}
-.kit-field-error{margin:0;font-size:.82rem;font-weight:600;color:#a34e6c}
+.kit-field-error{margin:0;font-size:.82rem;font-weight:600;color:var(--err)}
 
 /* ── TABS ──────────────────────────────────────────────────────────
    New construction (Ground: no real ARIA tablist exists anywhere in
