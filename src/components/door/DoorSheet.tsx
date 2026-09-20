@@ -7,7 +7,7 @@ import type { VerifiedEvent } from "nostr-tools/pure";
 import { applyMemberSession } from "@/hooks/useMemberSession";
 import { nextPathFromLocation } from "@/lib/next-path";
 import SignerDoors from "@/components/SignerDoors";
-import { isAndroid } from "@/lib/signer-doors";
+import { isAndroid, withSignTimeout } from "@/lib/signer-doors";
 import {
   DOOR_BACK,
   DOOR_COPY,
@@ -217,12 +217,14 @@ export default function DoorSheet({
     setBusy(true);
     let event;
     try {
-      event = await window.nostr.signEvent({
-        kind: 22242,
-        created_at: Math.floor(Date.now() / 1000),
-        tags: [],
-        content: `PACS-LOGIN-${Date.now()}`,
-      });
+      event = await withSignTimeout(
+        window.nostr.signEvent({
+          kind: 22242,
+          created_at: Math.floor(Date.now() / 1000),
+          tags: [],
+          content: `PACS-LOGIN-${Date.now()}`,
+        })
+      );
     } catch {
       setNote("signing was declined — nothing sent");
       setBusy(false);
