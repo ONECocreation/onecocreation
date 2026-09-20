@@ -100,8 +100,13 @@ describe("TASK-175 — the route folders moved", () => {
     /* TASK-342 (0018.06.28 a₿): the route now forwards the already-gated
        operator to StyleEditor too (the builder-marker context source) —
        this pin widens to match, the rest of the contract (import site,
-       component identity) is unchanged */
-    expect(page).toContain("<StyleEditor slug={slug} data={data} operator={operator} />");
+       component identity) is unchanged.
+       TASK-346 LANE A (0018.07.02 a₿, found running the gate — the same
+       class of uncataloged pin T-342's own SUMMARY flagged in this exact
+       file): the route now also forwards the locked preview hero,
+       rendered server-side (option 1) and passed down as `previewHero` —
+       widened again, same reasoning. */
+    expect(page).toContain("<StyleEditor slug={slug} data={data} operator={operator} previewHero={previewHero} />");
   });
 
   it("the former import sites all read @/components/style/* (puck-config, PuckEditor, brand board)", async () => {

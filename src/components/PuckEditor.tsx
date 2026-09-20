@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, type ComponentType } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Puck, Render, Drawer, createUsePuck, useGetPuck, type Config, type Data } from "@puckeditor/core";
 import "@puckeditor/core/no-external.css";
@@ -18,6 +18,7 @@ import PagesPanel from "@/components/style/PagesPanel";
 import PopupsPanel from "@/components/style/PopupsPanel";
 import type { PopupTrigger } from "@/lib/puck-store";
 import { BuilderMarkerContext, operatorDisplayName } from "@/components/style/BuilderMarker";
+import PreviewHero from "@/components/style/PreviewHero";
 
 /**
  * PuckEditor — the page designer (Style), wearing the MOCKUP CHROME (UI
@@ -51,7 +52,65 @@ type LiveState = "idle" | "publishing" | "live" | "error";
 type PanelKey = "lib" | "fields" | "cop";
 const PANELS_LS = "oc-studio-panels";
 
-export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot, operator }: {
+/**
+ * TASK-346 LANE A (0018.07.02 a₿) — the mount mechanism: `overrides.iframe`
+ * (Ground #1, the brief's own research pass reading `Preview2`/`AutoFrame`
+ * directly — `node_modules/@puckeditor/core/dist/chunk-55V3NZVF.mjs:11855`,
+ * `Frame = overrides.iframe`, invoked as `<Frame document={..}>{inner}</Frame>`
+ * where `inner` is Puck's OWN rendered `<Render/>` — never `overrides.preview`,
+ * never `config.root.render`, see the brief's Ground #1/#7 for why both of
+ * those are wrong or out of scope).
+ *
+ * `PreviewCanvasContext` carries slug + the ALREADY-RENDERED `previewHero`
+ * element to `PreviewCanvasFrame` — NOT a closure over PuckEditor's own
+ * locals — because `overrides.iframe`'s value must stay a REFERENTIALLY
+ * STABLE component across PuckEditor re-renders (every keystroke, every
+ * draft autosave) or `<Frame>` remounts on every one of them, restarting
+ * Hero's own `CosmicSky`/`LightCode` client-side animations for no reason.
+ * A module-level component's identity never changes; only its Context
+ * subscription re-renders when slug/previewHero change (never a remount).
+ * The Context itself crosses Puck's own internal `AutoFrame` portal
+ * exactly the way `BuilderMarkerContext` already does (T-342 ground fact
+ * 1's proof, extended by this lane's own Ground #2) — a real React portal,
+ * not a second render root, so a Provider above `<Puck>` still reaches
+ * `overrides.iframe`'s render.
+ *
+ * `previewHero` arrives as a ReactNode, not a `session` value: it is
+ * rendered SERVER-SIDE by the route (`src/app/style/[[...slug]]/page.tsx`,
+ * `<Hero session={session}/>`) and passed down as an opaque element — see
+ * that file's own doc comment for why (a real `next build` failure: `Hero`
+ * lives in `sections.tsx`, whose sibling imports pull in Node/redis-only
+ * code that cannot enter a client bundle; PuckEditor is "use client").
+ */
+const PreviewCanvasContext = createContext<{ slug: string; previewHero: ReactNode } | null>(null);
+
+/**
+ * The `overrides.iframe` Frame itself. Mounts BEFORE Puck's own rendered
+ * content (`children` — Puck's `<Render/>` or the empty-canvas edit
+ * placeholder), matching `src/app/page.tsx:61-64`'s `<main><Hero/>
+ * <Render/></main>` order. Gated to the home slug only (Ground #12 — both
+ * `/style` and `/style/home` resolve to the literal slug `"home"`); every
+ * other slug renders `children` alone, byte-identical to before this lane.
+ * The `<main>` wrap is load-bearing, not decorative — Ground #9: `.hero`'s
+ * own `keep-dark` token pin (`cartridge.css:409`, `main .keep-dark{...}`)
+ * is scoped to a `main` ancestor, and Puck's bare `<Render/>` never
+ * supplies one.
+ */
+function PreviewCanvasFrame({ children }: { children: ReactNode; document?: Document }) {
+  const ctx = useContext(PreviewCanvasContext);
+  return (
+    <>
+      {ctx?.slug === "home" && (
+        <main>
+          <PreviewHero hero={ctx.previewHero} />
+        </main>
+      )}
+      {children}
+    </>
+  );
+}
+
+export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot, operator, previewHero }: {
   slug: string;
   data: Data;
   config: Config;
@@ -64,6 +123,14 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot,
    *  looking. Never reaches the live site: only this route ever renders
    *  `<PuckEditor>` with a real operator. */
   operator: string;
+  /** TASK-346 LANE A: the locked preview hero, ALREADY RENDERED
+   *  server-side by the route (option 1, the Admiral's ruling 0018.06.28
+   *  a₿ — `src/app/page.tsx:34`'s own session read, applied to `/style`'s
+   *  cookie header) and passed down as an opaque element. Mounted via
+   *  `overrides.iframe` below, home slug only; never reaches the live
+   *  site. See `PreviewCanvasContext`'s doc comment for why this arrives
+   *  pre-rendered rather than as a raw session value. */
+  previewHero: ReactNode;
 }) {
   const [liveData, setLiveData] = useState<Data>(data);
   const liveRef = useRef<Data>(data);
@@ -366,9 +433,14 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot,
        tree via `<Puck>`'s own children, not a second render root — see
        ground fact 1's ThemePane portal proof for why a Context above it
        still spans the boundary. */
+    <PreviewCanvasContext.Provider value={{ slug, previewHero }}>
     <BuilderMarkerContext.Provider value={operatorDisplayName(operator)}>
     <div className="oc-studio" style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100%" /* TASK-327 seam (pre-allowed, one line): was the viewport-unit height — the route layout now carries the shared header + room strip above; the editor fills the body region its parent allocates instead of the whole viewport */, overflow: "hidden", background: "var(--ground)" /* S2: pinned — the ruling landed (S21 dawn table A6): the literal WAS night --ground byte-for-byte, so the pin rides the token; night identical, dawn takes the cartridge's designed ground */ }}>
-      <Puck config={config} data={liveData} onChange={onChange} onPublish={publishLive} onAction={changelog.onAction} height="100%">
+      {/* TASK-346 LANE A: overrides.iframe mounts PreviewCanvasFrame
+          INSIDE Puck's own canvas iframe (Ground #1-#3) — a locked,
+          preview-only Hero draws above whatever Puck content the builder
+          is editing, on the home slug only, never entering data.content. */}
+      <Puck config={config} data={liveData} onChange={onChange} onPublish={publishLive} onAction={changelog.onAction} overrides={{ iframe: PreviewCanvasFrame }} height="100%">
         <ChangelogBridge
           log={changelog}
           captureViewState={() => ({ collapsed, showFindings })}
@@ -564,6 +636,7 @@ export default function PuckEditor({ slug, data, config, seeds, tokens, Copilot,
       )}
     </div>
     </BuilderMarkerContext.Provider>
+    </PreviewCanvasContext.Provider>
   );
 }
 
