@@ -185,7 +185,10 @@ export function drawBftBackground(
     const mx = W * 0.86 - np * W * 0.62;
     const my = 64 - Math.sin(np * Math.PI) * 34;
     ctx.globalAlpha = clamp01(scene.night * 1.3);
-    ctx.font = "26px serif";
+    // TASK-349: the canvas serif leak (the file's only ctx.font call) —
+    // dropped for a plain sans stack, matching the no-serif law (architect
+    // pass §1: Barlow heads / Helvetica-Open Sans body, no serif anywhere).
+    ctx.font = "26px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(scene.moonEmoji, mx, my);
