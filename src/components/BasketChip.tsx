@@ -28,18 +28,35 @@ export default function BasketChip() {
        number floating near the basket rather than a count ON it (the
        Admiral: "looks gross"). The icon box is now the positioning
        context; the badge is absolutely placed on its top-right corner. */
-    <Link href="/cart" title="Your basket" style={{ position: "relative", display: "inline-flex", whiteSpace: "nowrap" }}>
-      {/* T-121 THE PINK PASS: the 🧺 emoji "feels jank" (Love, Sept 1 00:25) —
-          a simple rounded-bag inline SVG in the rose ink. The header never
-          theme-flips, so the night rose #E7B2C3 is pinned literal here (the
-          house's always-night chrome idiom), not var(--rose) which would
-          flip to the dawn rung on a dark bar. */}
+    <Link href="/cart" title="Your basket" className="basket-chip" style={{ position: "relative", display: "inline-flex", whiteSpace: "nowrap" }}>
+      {/* T-121 → TASK-355 (0018.07.02 a₿, the Admiral's ruling on his site
+          walk): Love LIKED the 🧺 emoji — the bag was the Admiral's own
+          taste call, not hers, and this redraw is his ruling, not a second
+          reversal of Love's ask. He asked for something "like the add to
+          basket" wording everywhere, and Love envisioned a woven Red Riding
+          Hood basket rather than either the emoji or the bag — an arched
+          handle, a couple of weave lines, and (once something's inside) a
+          small shape peeking over the rim under the handle. No emoji; the
+          store buttons' own "Add to basket 🧺" text is untouched, out of
+          this lane's OWNS. The header never theme-flips, so the night rose
+          #E7B2C3 is pinned literal here (the house's always-night chrome
+          idiom), not var(--rose) which would flip to the dawn rung on a
+          dark bar. */}
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"
         style={{ color: "#E7B2C3" }}>
-        <path d="M5.6 8.4h12.8l-1.05 10.3a2.6 2.6 0 0 1-2.6 2.4H9.25a2.6 2.6 0 0 1-2.6-2.4L5.6 8.4Z"
-          stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M9 10.6V7a3 3 0 0 1 6 0v3.6"
-          stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        {/* the arched handle */}
+        <path d="M8 10c0-4.4 1.8-7 4-7s4 2.6 4 7"
+          stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        {count > 0 && (
+          /* the filled state: a small shape (a cloth fold) peeking over the
+             rim, under the handle's arch — the empty state omits it */
+          <path d="M9.4 10c0-1.9 1.1-3.1 2.6-3.1s2.6 1.2 2.6 3.1" fill="currentColor" />
+        )}
+        {/* the woven basket body — a couple of weave lines at most */}
+        <path d="M4.8 10h14.4l-1.2 8.4a2.3 2.3 0 0 1-2.3 2.1H8.3a2.3 2.3 0 0 1-2.3-2.1L4.8 10Z"
+          stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+        <path d="M6.2 13.2h11.6M6.7 16.4h10.6"
+          stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity=".6" />
       </svg>
       {count > 0 && (
         <span
@@ -52,7 +69,10 @@ export default function BasketChip() {
             boxShadow: "0 0 0 1.5px rgba(14,12,24,.86)",
           }}
         >
-          {count}
+          {/* TASK-355: the display caps at 99+ (a truly huge cart is a DATA
+              finding, not a render bug — see SUMMARY.md); the screen-reader
+              line below keeps the true count regardless. */}
+          {count > 99 ? "99+" : count}
         </span>
       )}
       <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
