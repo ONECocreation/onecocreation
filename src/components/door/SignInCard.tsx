@@ -52,6 +52,13 @@ import {
  * (`/api/auth/email/*`, `/api/member/session`, `/api/member/claim`,
  * `/api/member/profile`, `/api/member/availability`) — nothing new
  * server-side, no auth logic rewritten.
+ *
+ * SEND-BACK (Number One's Chrome walk, 390px): the kit's `variant="main"`
+ * Button (kit.css `.kit-btn-main`) is a fixed 1.5rem/40px-padding/2px-
+ * letter-spacing/nowrap size that clips at 390px (measured: width 277,
+ * scrollWidth 281, "EMAIL ME A CODE"). `kit.css` is READ-ONLY for this
+ * lane (T-349's), so every `variant="main"` Button below carries `sm` —
+ * a real fluid button size is kit lane 4b's job, not this lane's.
  */
 
 const noopSubscribe = () => () => {};
@@ -345,7 +352,7 @@ export default function SignInCard({
 
   const emailPane = emailSignerOpen ? (
     <>
-      <p className="kit-body">
+      <p className="kit-body" style={{ marginBottom: 12 }}>
         No extension on this device — your key still opens the door, one of these ways:
       </p>
       <SignerDoors kind="login" submit={submitSignedKey} next={nextPathFromLocation() ?? undefined} />
@@ -363,7 +370,7 @@ export default function SignInCard({
     </>
   ) : (
     <>
-      <p className="kit-body">{copy.note}</p>
+      <p className="kit-body" style={{ marginBottom: 12 }}>{copy.note}</p>
       <form onSubmit={sendCode} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <Field
           id="signin-email"
@@ -374,7 +381,8 @@ export default function SignInCard({
           onChange={(e) => setEmail(e.target.value)}
           placeholder="your@email.com"
         />
-        <Button type="submit" disabled={busy}>
+        {/* send-back: sm — .kit-btn-main clips at 390px, kit.css is read-only */}
+        <Button type="submit" sm disabled={busy}>
           {busy ? copy.busyCta : copy.cta}
         </Button>
       </form>
@@ -389,9 +397,10 @@ export default function SignInCard({
 
   const keyPane = (
     <>
-      <p className="kit-body">{keyExplainer}</p>
+      <p className="kit-body" style={{ marginBottom: 12 }}>{keyExplainer}</p>
       {hasNostr ? (
-        <Button onClick={signInWithKey} disabled={busy}>
+        // send-back: sm — .kit-btn-main clips at 390px, kit.css is read-only
+        <Button onClick={signInWithKey} sm disabled={busy}>
           {busy ? "Signing…" : DOOR_KEY_CTA}
         </Button>
       ) : (
@@ -417,7 +426,7 @@ export default function SignInCard({
 
       {state === "code" && (
         <>
-          <p className="kit-body">
+          <p className="kit-body" style={{ marginBottom: 12 }}>
             {copy.note} Sent to <strong>{email}</strong>.
           </p>
           <form onSubmit={verifyCode} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -432,7 +441,8 @@ export default function SignInCard({
               onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
               placeholder="••••••"
             />
-            <Button type="submit" disabled={busy || code.length !== 6}>
+            {/* send-back: sm — .kit-btn-main clips at 390px, kit.css is read-only */}
+            <Button type="submit" sm disabled={busy || code.length !== 6}>
               {busy ? copy.busyCta : copy.cta}
             </Button>
           </form>
@@ -453,7 +463,7 @@ export default function SignInCard({
 
       {state === "new-name" && (
         <>
-          <p className="kit-body">{copy.note}</p>
+          <p className="kit-body" style={{ marginBottom: 12 }}>{copy.note}</p>
           <form onSubmit={claimName} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <Field
               id="signin-name"
@@ -471,7 +481,8 @@ export default function SignInCard({
                 <span style={{ color: "var(--err)" }}>✗ {availReason ?? "not available — try another"}</span>
               )}
             </p>
-            <Button type="submit" disabled={busy || wish.trim().length < 3 || avail === "taken"}>
+            {/* send-back: sm — .kit-btn-main clips at 390px, kit.css is read-only */}
+            <Button type="submit" sm disabled={busy || wish.trim().length < 3 || avail === "taken"}>
               {busy ? copy.busyCta : copy.cta}
             </Button>
           </form>
@@ -493,8 +504,11 @@ export default function SignInCard({
 
       {state === "in" && (
         <>
-          <p className="kit-body">{copy.note}</p>
-          <Button onClick={finish}>{copy.cta}</Button>
+          <p className="kit-body" style={{ marginBottom: 12 }}>{copy.note}</p>
+          {/* send-back: sm — .kit-btn-main clips at 390px, kit.css is read-only */}
+          <Button onClick={finish} sm>
+            {copy.cta}
+          </Button>
         </>
       )}
 
