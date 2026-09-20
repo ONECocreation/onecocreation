@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# pre-commit — law guard (plan-of-action §10 row 0.6). Tracked in .githooks/; armed by `git config core.hooksPath .githooks`.
+# Laws: vercel-author-email (a wrong author = a silently blocked deploy) · named-adds (row 0.10: a lane never stages outside its OWNS).
+# No network, no prompts. Refuses with the law named; never fixes anything itself.
+set -uo pipefail
+top="$(git rev-parse --show-toplevel)"
+conf="${top}/.githooks/law.conf"
+[ -f "${conf}" ] || { echo "✗ law-guard: ${conf} missing — refusing (fail-closed)"; exit 1; }
+# shellcheck disable=SC1090
+. "${conf}"
+
+if [ -n "${AUTHOR_EMAIL:-}" ]; then
+  have="$(git var GIT_AUTHOR_IDENT | sed -n 's/.*<\(.*\)>.*/\1/p')"
+  [ "${have}" = "${AUTHOR_EMAIL}" ] || { echo "✗ vercel-author-email law: author is <${have}>, this repo commits only as <${AUTHOR_EMAIL}>"; exit 1; }
+fi
+
+# named-adds: the lane's claim file is work-claims/task-NNN.md (NNN from the branch name); its "## OWNS" section names paths
+# in `backticks`. A staged path must equal one, or sit under one (a trailing /** or * is a prefix). No claim or no OWNS = no check.
+branch="$(git symbolic-ref --short -q HEAD || true)"
+num="$(printf '%s' "${branch}" | sed -n 's/.*task-\([0-9][0-9]*\).*/\1/p')"
+claim="${top}/work-claims/task-${num}.md"
+if [ -n "${num}" ] && [ -f "${claim}" ]; then
+  owns="$(awk '/^## OWNS/{on=1;next} /^## /{on=0} on' "${claim}" | grep -o '`[^`]*`' | tr -d '`' | sed 's/\*\**$//')"
+  if [ -n "${owns}" ]; then
+    bad=0
+    while IFS= read -r path; do
+      ok=0
+      while IFS= read -r own; do
+        [ -n "${own}" ] && case "${path}" in "${own}"|"${own%/}"/*) ok=1;; esac
+        case "${own}" in */) case "${path}" in "${own}"*) ok=1;; esac;; esac
+      done <<< "${owns}"
+      [ $ok -eq 1 ] || { echo "✗ named-adds law: ${path} is staged but is not in this lane's OWNS (work-claims/task-${num}.md)"; bad=1; }
+    done < <(git diff --cached --name-only)
+    [ $bad -eq 0 ] || { echo "  (a real widening of the lane = edit the claim's OWNS first, in its own named add)"; exit 1; }
+  fi
+fi
+exit 0
