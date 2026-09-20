@@ -346,6 +346,10 @@ const CSS_SWEEP_FILES = [
   "src/app/house.css", "src/app/scar.css",
   "src/app/style/preview.css", "src/app/style/puck-theme.css", "src/app/style/studio-tokens.css",
   "src/lib/puck-blocks/parallax.css",
+  // TASK-349 (lane 1, the OC UI kit): kit.css is new house UI law — swept
+  // the same as house.css, not exempt by omission (the one pre-allowed
+  // seam the lane's brief names explicitly).
+  "src/app/kit.css",
 ];
 
 const scopeBuckets = { root: new Map(), dawn: new Map(), twin: {}, twinDawn: {}, studio: new Map(), studioDawn: new Map() };
