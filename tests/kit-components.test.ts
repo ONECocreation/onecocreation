@@ -181,9 +181,9 @@ describe("nextTabIndex — the arrow-key law, pure (testable with no DOM)", () =
 });
 
 describe("TASK-349 — the canvas serif leak, fixed", () => {
-  it("scene.ts carries no serif font anywhere", async () => {
+  it("scene.ts carries no serif font anywhere (a bare \"serif\", not the sans-serif fallback this fix adds)", async () => {
     const src = await read("src/lib/bb/scene.ts");
-    expect(src.toLowerCase()).not.toContain("serif");
+    expect(src.toLowerCase()).not.toMatch(/(?<!sans-)serif/);
   });
 
   it("the one ctx.font call now uses a plain sans stack", async () => {

@@ -33,7 +33,7 @@ export const dynamic = "force-dynamic";
 /* demo-only labels previewing the real /me tab set the architect pass
    names for lane 4 (§3, §6) — this page wires nothing to a real API */
 const DEMO_TABS = [
-  { id: "profile", label: "Profile", content: <p className="kit-body">A local-first profile — signed in first, "link a key" optional (architect pass §3, A3).</p> },
+  { id: "profile", label: "Profile", content: <p className="kit-body">A local-first profile — signed in first, &ldquo;link a key&rdquo; optional (architect pass §3, A3).</p> },
   { id: "calendar", label: "Calendar", content: <p className="kit-body">Lane 4 mounts the real BFT calendar here — scoped to the viewer, not a list drawn new.</p> },
   { id: "purchases", label: "Purchases", content: <p className="kit-body">Owned memberships and one-time items, this viewer only.</p> },
 ];
