@@ -48,10 +48,27 @@ describe("TASK-349 — /style/kit exists as a static sibling route", () => {
     expect(src).not.toContain("onClick={() => setTheme");
   });
 
-  it("includes a narrow (390px) two-button demo frame proving the stack law without devtools", async () => {
+  it("includes a dashed demo frame proving the stack law without devtools, at any viewport width", async () => {
     const src = await read("src/app/style/kit/page.tsx");
-    expect(src).toContain("maxWidth: 390");
+    // ROUND 2 (Number One's pickup): the frame moved to ONE shared instance
+    // above the two-pane grid (the law is theme-independent) and dropped
+    // the hardcoded 390px pixel width — kit.css's own .kit-btn-row (a
+    // flex-wrap row of nowrap-content buttons) is what proves the stack
+    // law at ANY container width, not a specific frame size; see
+    // tests/kit-components.test.ts's flex-wrap pin for that law itself.
+    expect(src).toContain("kit-preview-frame");
     expect(src).toContain("kit-btn-row");
+  });
+
+  it("ROUND 2 (Number One's pickup): a two-column grid seats night beside dawn from 820px up, so a plain screenshot shows both panes without scrolling an inner overflow div", async () => {
+    const src = await read("src/app/style/kit/page.tsx");
+    expect(src).toContain("kit-preview-grid");
+    expect(src).toMatch(/@media\(min-width:820px\)\{\.kit-preview-grid\{grid-template-columns:1fr 1fr/);
+  });
+
+  it("ROUND 2: cites the shared /style layout's forced inner scroller by file:line, since it isn't this page's own choice", async () => {
+    const src = await read("src/app/style/kit/page.tsx");
+    expect(src).toContain("src/app/style/layout.tsx:39");
   });
 });
 
