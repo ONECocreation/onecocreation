@@ -136,3 +136,42 @@ describe("SignInCard — RULED item 3, named not fixed: one signInWithKey, two e
     expect(calls.length).toBe(2);
   });
 });
+
+describe("SignInCard — send-back (Number One's Chrome walk, 390px): the main button clip", () => {
+  it("source: every default/main-variant <Button> also passes sm (variant=second/quiet are exempt — R-071's fixed .kit-btn-main clips at 390px, kit.css is read-only)", async () => {
+    const src = await read("src/components/door/SignInCard.tsx");
+    const buttonTags = src.match(/<Button\b[\s\S]*?>/g) ?? [];
+    expect(buttonTags.length).toBeGreaterThan(0);
+    for (const tag of buttonTags) {
+      if (/variant="(second|quiet)"/.test(tag)) continue;
+      expect(tag, `main-variant Button missing sm: ${tag}`).toMatch(/\bsm\b/);
+    }
+  });
+
+  it("rendered: every kit-btn-main class also carries kit-btn-sm, in both the sign-in and new-name states", async () => {
+    const SignInCard = (await import("@/components/door/SignInCard")).default;
+    const signInHtml = renderToStaticMarkup(createElement(SignInCard, {}));
+    const newNameHtml = renderToStaticMarkup(
+      createElement(SignInCard, {
+        initialKey: { event: { kind: 22242 }, npub: "npub1fixture" },
+      }),
+    );
+    for (const html of [signInHtml, newNameHtml]) {
+      const classAttrs = [...html.matchAll(/class="([^"]*)"/g)].map((m) => m[1]);
+      const mainButtons = classAttrs.filter((c) => c.split(" ").includes("kit-btn-main"));
+      expect(mainButtons.length).toBeGreaterThan(0);
+      for (const c of mainButtons) {
+        expect(c.split(" "), `kit-btn-main without kit-btn-sm: "${c}"`).toContain("kit-btn-sm");
+      }
+    }
+  });
+
+  it("source: the kit-body paragraphs that sit before a field/SignerDoors/button carry marginBottom: 12, not flush", async () => {
+    const src = await read("src/components/door/SignInCard.tsx");
+    const paras = src.match(/<p className="kit-body"[^>]*>/g) ?? [];
+    expect(paras.length).toBeGreaterThan(0);
+    for (const p of paras) {
+      expect(p, `kit-body paragraph missing marginBottom: 12: ${p}`).toContain("marginBottom: 12");
+    }
+  });
+});
