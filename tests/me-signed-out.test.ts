@@ -119,6 +119,13 @@ describe("MeSwitch.tsx source — the error state never traps the visitor", () =
   });
 });
 
+describe("SESSION_CHECK_TIMEOUT_MS — decision 2: a bounded check, never hangs forever", () => {
+  it("is exported and a few seconds (the signer-doors.ts SIGN_TIMEOUT_MS precedent, tests/signin-card.test.ts)", async () => {
+    const { SESSION_CHECK_TIMEOUT_MS } = await import("@/hooks/useMemberSession");
+    expect(SESSION_CHECK_TIMEOUT_MS).toBe(8000);
+  });
+});
+
 describe("useMemberSession.ts — the additive seam, non-breaking by construction", () => {
   it("useMemberSession()'s own pinned return shape is untouched (tests/member-rename.test.ts, TASK-278)", () => {
     const src = readSrc("src", "hooks", "useMemberSession.ts");

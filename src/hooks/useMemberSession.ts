@@ -53,7 +53,7 @@ const listeners = new Set<() => void>();
  *  needs far less slack than a human's signer app, so a few seconds is
  *  plenty before this resolves to the error state instead of hanging the
  *  loading beat forever. */
-const SESSION_CHECK_TIMEOUT_MS = 8000;
+export const SESSION_CHECK_TIMEOUT_MS = 8000;
 
 function emit(next: SessionState) {
   state = next;
