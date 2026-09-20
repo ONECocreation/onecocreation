@@ -34,6 +34,7 @@ export function styleRoomLabel(pathname: string): string {
   const rest = pathname.replace(/^\/style\/?/, "");
   if (rest === "") return "home";
   if (rest === "brand") return "Brand board";
+  if (rest === "kit") return "Kit"; // TASK-349: the OC UI kit preview
   if (rest.startsWith("reference/")) return `Reference · ${rest.slice("reference/".length)}`;
   return rest;
 }

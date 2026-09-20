@@ -17,6 +17,12 @@ import "./house.css";
 /* S9 (0018.05.28 a₿): the non-default cartridge twins — inert unless the
    selection flips and <html> wears data-oc-cartridge (layout below). */
 import "./cartridges.css";
+/* TASK-349 (lane 1, the OC UI kit) — kit.css imports last, after house.css,
+   so it can safely extend/override the house's own `.btn`/`.card` scoped
+   names if a later lane ever needs to; today every kit class is `kit-`
+   prefixed, so import order barely matters, but the seam is honored
+   anyway (architect pass §2/§4, Ground: CSS import order). */
+import "./kit.css";
 
 /* Retronoid (the template's display face) moved OFF the root (QW9,
    ~0018.05.24 a₿) — it ships only to console-skin routes via
