@@ -7,6 +7,9 @@ import PaletteVars from "@/components/PaletteVars";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { getPuckDraft, getPuckPage } from "@/lib/puck-store";
 import { SEEDS } from "@/lib/puck-seeds";
+import { sessionsFromCookieHeader } from "@/lib/member-auth";
+import { tierForSubject } from "@/lib/member-tier";
+import { Hero } from "@/components/sections";
 
 /**
  * STYLE — the Puck visual-editor pilot, moved out of /a for PUCK P2
@@ -54,6 +57,40 @@ export default async function StylePage({
     return <OperatorGate configured={operatorsConfigured()} />;
   }
 
+  /* TASK-346 LANE A (0018.07.02 a₿) — option 1 (the Admiral's ruling
+     0018.06.28 a₿): the preview hero mounted on the /style home canvas
+     shows the BUILDER'S OWN visitor/member session, read exactly the way
+     src/app/page.tsx:34-37 reads it, applied to the SAME raw cookie header
+     already read above for operator resolution — no new cookie-reading
+     code, per the brief's Build step 1. */
+  const active = sessionsFromCookieHeader(cookie)[0] ?? null;
+  const session = active
+    ? { handle: active.handle, space: active.space, tier: await tierForSubject(`${active.handle}@${active.space}`) }
+    : null;
+
+  /* GROUND GAP FOUND WHILE BUILDING, not in the brief's own Ground work:
+     src/components/sections.tsx has NO "use client" directive and its
+     module-level siblings (src/lib/booking.ts, src/lib/store.ts,
+     src/lib/site-config.ts — all imported at the top of sections.tsx)
+     import Node built-ins (fs, path) and redis/nodemailer transitively.
+     On the live / route this is fine: page.tsx is a server component, so
+     Hero's whole module graph runs server-side only. But PuckEditor.tsx
+     (and everything it renders, including this lane's overrides.iframe
+     Frame) is "use client" — if a client file imported Hero directly,
+     Next's bundler would have to pull sections.tsx's ENTIRE module graph
+     into the browser bundle (confirmed: `npx next build` fails with 20+
+     "Module not found: fs/net/tls/dns/child_process" errors tracing
+     through src/lib/store.ts → nodemailer → the browser chunk). The fix:
+     render Hero HERE, server-side, exactly like page.tsx's own <Hero
+     session={session}/> — and pass the finished element down through the
+     client tree as an opaque ReactNode prop (the standard Next.js
+     "Server Component passed as a Client Component's prop" composition
+     pattern). No client file ever imports sections.tsx; Hero stays
+     entirely read-only, unmodified — this only moves WHERE it is
+     instantiated, from the brief's Build step 4 (PreviewHero.tsx) to
+     here, one layer up. */
+  const previewHero = <Hero session={session} />;
+
   const { slug: slugParts } = await params;
   const slug = slugParts?.join("/") || "home";
   // resume the working draft; else what's live; else a page seed (P4 opens
@@ -66,7 +103,7 @@ export default async function StylePage({
   return (
     <>
       <PaletteVars />
-      <StyleEditor slug={slug} data={data} operator={operator} />
+      <StyleEditor slug={slug} data={data} operator={operator} previewHero={previewHero} />
     </>
   );
 }
