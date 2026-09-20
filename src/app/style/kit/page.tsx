@@ -59,8 +59,12 @@ function KitPane({ label }: { label: string }) {
       </p>
       <div style={{ maxWidth: 390, border: "1px dashed var(--edge)", borderRadius: 12, padding: 16, marginBottom: 24 }}>
         <div className="kit-btn-row">
-          <Button variant="main">A rather long main label</Button>
-          <Button variant="second">Another long second label</Button>
+          <Button variant="main" sm>
+            A rather long main label
+          </Button>
+          <Button variant="second" sm>
+            Another long second label
+          </Button>
         </div>
       </div>
 
