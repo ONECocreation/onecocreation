@@ -1,29 +1,71 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import MePanel from "./MePanel";
 import EmailMemberPanel from "./EmailMemberPanel";
 import MemberQuickCards from "./MemberQuickCards";
 import ConstellationCard from "./ConstellationCard";
+import Card from "@/components/kit/Card";
+import Button from "@/components/kit/Button";
+import SignInCard from "@/components/door/SignInCard";
+import useMemberSession, { useSessionStatus, refresh } from "@/hooks/useMemberSession";
+import { classifyMeState } from "./session-state";
 
 /**
  * Two kinds of member, one /me (dual-path ruling): key members get the full
  * nostr control room; email members get their own home — no key demanded.
+ *
+ * TASK-351 (OC UI kit lane 3, REVIEW-K83 folded — decision 4(a) taken):
+ * reads the SHARED `useMemberSession()` store instead of running its own
+ * duplicate fetch — one session source with the header (`DoorButton`) and
+ * `MePanel`, three lanes before lane 5 gets there on its own. Four honest
+ * states now (Ground: there was no signed-out state at all before this
+ * lane — a true 401 and a genuine fetch failure both fell into the same
+ * "assume key" branch):
+ *   loading     — a real "checking…" beat, `aria-busy`, never a blank flash
+ *   error       — the CHECK ITSELF failed (network/5xx) — plain words +
+ *                 Retry; the sign-in card stays one glance away, never a
+ *                 dead end
+ *   signed-out  — a real 401: the sign-in card ALONE, nothing else beside it
+ *   email / key — today's existing signed-in views, unchanged
+ * `classifyMeState` (session-state.ts) is the one place this decision is
+ * made — a sibling module the hook's own fetch handling shares — pinned
+ * directly in tests/me-signed-out.test.ts.
  */
 export default function MeSwitch() {
-  const [kind, setKind] = useState<"loading" | "email" | "key">("loading");
+  const { checked } = useMemberSession();
+  const { status } = useSessionStatus();
+  const kind = classifyMeState({ checked, status });
 
-  useEffect(() => {
-    fetch("/api/member/session")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: { ok?: boolean; space?: string } | null) => {
-        setKind(d?.ok && d.space === "email" ? "email" : "key");
-      })
-      .catch(() => setKind("key"));
-  }, []);
+  if (kind === "loading") {
+    return (
+      <Card aria-busy="true" role="status" style={{ minHeight: 320 }}>
+        <p className="kit-body" style={{ margin: 0 }}>
+          Checking your session…
+        </p>
+      </Card>
+    );
+  }
 
-  if (kind === "loading") return null;
+  if (kind === "error") {
+    return (
+      <>
+        <Card role="alert" style={{ marginBottom: 16 }}>
+          <p className="kit-body" style={{ marginBottom: 12 }}>
+            couldn&apos;t check your session — try again
+          </p>
+          <Button variant="second" sm onClick={refresh}>
+            Retry
+          </Button>
+        </Card>
+        <SignInCard mount="page" />
+      </>
+    );
+  }
+
+  if (kind === "signed-out") return <SignInCard mount="page" />;
+
   if (kind === "email") return <EmailMemberPanel />;
+
   return (
     <>
       {/* the same gentle stars the email home greets with (Admiral, 0018.05.15) */}
