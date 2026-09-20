@@ -1,0 +1,154 @@
+/* ════════════════════════════════════════════════════════════════════
+   THE OC UI KIT — TASK-349 (lane 1 of the migration order, architect
+   pass §2/§4/§5, stamp 0018.07.02 a₿ block 967,889). One small token +
+   component kit — Button, Card, Tabs, Field, a type scale — drawn FROM
+   what already exists in cartridge.css/house.css, nothing invented.
+   Every class here is `kit-` prefixed (named decision 1: one kit.css,
+   distinct prefixed names, so import order doesn't have to fight the
+   cascade against `.btn`/`.card` — see src/app/layout.tsx for the
+   import line, after house.css).
+
+   This file reads cartridge.css tokens; it adds none — the one
+   exception is the Field error ink, called out at that rule with the
+   reasoning (a real contrast bug the theme-flipping --err token would
+   have shipped silently; see the comment there). ══════════════════ */
+
+/* ── BUTTON ────────────────────────────────────────────────────────
+   Drawn from house.css's `.btn` fill law (89-146): square corners
+   (radius 0), Open Sans 700, 2px letter-spacing, uppercase. R-071
+   (the Admiral, MOCKUPS-1): button text never wraps — `white-space:
+   nowrap` on every variant below, unconditionally, no exception.
+   Named decision 4: `kit-btn-main` stays CALM — no shimmer sweep.
+   `.btn`'s shimmer (house.css:100-111) is that button's own life on
+   the public site; the kit ships the fill law without opting into the
+   animation, so a page that migrates onto the kit gets the shimmer
+   back only if it explicitly wants it later (out of this lane's
+   scope — the shimmer keyframes/rule live in house.css, untouched). ── */
+.kit-btn{
+  display:inline-block;
+  white-space:nowrap; /* R-071, unconditional */
+  cursor:pointer;
+  border:0;
+  font-family:inherit;
+  text-decoration:none;
+  transition:transform .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+.kit-btn:focus-visible{outline:2px solid var(--info);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.kit-btn{transition:none}}
+
+/* main — the .btn/.btn-rose fill law, calm (no shimmer) */
+.kit-btn-main{
+  padding:20px 40px;border-radius:0;
+  font-family:var(--font-open-sans),'Open Sans',-apple-system,'Segoe UI',sans-serif;
+  font-weight:700;letter-spacing:2px;font-size:1.5rem;line-height:1.25;
+  text-transform:uppercase;text-align:center;
+  background:linear-gradient(135deg,#E7B2C3,#C56E8B);color:var(--rose-btn-ink);
+  /* T-121 gate fix's own proof, reused verbatim (house.css:125 comment):
+     9.65:1 / 4.99:1 across the two gradient stops, both themes (the
+     gradient is theme-independent, like the ink) */
+}
+.kit-btn-main:hover{transform:translateY(-3px)}
+
+/* second/ghost — the .btn-ghost pairing */
+.kit-btn-second{
+  padding:20px 40px;border-radius:0;
+  font-family:var(--font-open-sans),'Open Sans',-apple-system,'Segoe UI',sans-serif;
+  font-weight:700;letter-spacing:2px;font-size:1.5rem;line-height:1.25;
+  text-transform:uppercase;text-align:center;
+  background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px var(--edge);
+}
+.kit-btn-second:hover{transform:translateY(-3px)}
+
+/* quiet — the .btn-quiet link typography (house.css already carries
+   white-space:nowrap here; kept for the record, R-071 covers it twice) */
+.kit-btn-quiet{
+  background:none;padding:8px 6px;
+  font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--muted);
+}
+.kit-btn-quiet:hover{color:var(--info)}
+
+/* sm — the .btn-sm padding/size delta; composes onto main/second.
+   (Composing onto quiet is allowed, not forbidden, but not meaningful —
+   quiet already carries its own compact size; noted honestly in
+   SUMMARY rather than silently blocked.) */
+.kit-btn-sm{padding:12px 24px;font-size:.9rem;letter-spacing:1.5px}
+
+/* the stack law (Build step 1c / R-071): two buttons in a narrow box
+   STACK rather than either label wrapping. No media query needed — a
+   flex row whose items carry `white-space:nowrap` (so they can't
+   shrink below their label's content width) wraps the SECOND item onto
+   its own line the moment the row is too narrow for both, at ANY
+   container width, independent of the viewport (the 390px demo frame
+   on /style/kit proves this without devtools; the phone-width shot
+   proves it at the viewport level too). */
+.kit-btn-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+
+/* ── CARD ──────────────────────────────────────────────────────────
+   Outer shell only (house.css:205's card contract, verbatim): radius
+   24, glass edge, the soft shadow. No forced internal slot structure —
+   this lane owns no page that uses the legacy `.card .thumb`/`.card
+   .body` grid. `.kit-card-body` is an optional convenience for
+   anything that wants inner padding (used by the /style/kit preview
+   itself); nothing requires it. ── */
+.kit-card{
+  background:var(--panel);border:1px solid var(--glass-edge);border-radius:24px;
+  overflow:hidden;box-shadow:var(--soft);display:flex;flex-direction:column;
+  backdrop-filter:blur(8px);
+}
+.kit-card-body{padding:24px}
+
+/* ── FIELD ─────────────────────────────────────────────────────────
+   No existing `.field` law to extract wholesale (Ground, task brief):
+   `.chip-select` and the two `.console-field` pseudo-rules are the
+   nearest law and neither is a full field component. Built fresh,
+   grounded in --field-bg/--field-ink (cartridge.css:36) so it looks at
+   home beside Button/Card. Bound label (htmlFor), input, and an
+   error-text slot wired with aria-describedby — never color alone. ── */
+.kit-field{display:flex;flex-direction:column;gap:6px;max-width:360px}
+.kit-field-label{font-size:.85rem;font-weight:700;letter-spacing:.03em;color:var(--ink-body)}
+.kit-field-input{
+  background:var(--field-bg);color:var(--field-ink);
+  border:1.5px solid rgba(139,118,196,.4);border-radius:10px;
+  padding:11px 14px;font-family:inherit;font-size:1rem;
+}
+.kit-field-input:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+/* an ACCESSIBILITY FINDING, fixed here rather than shipped silently:
+   --field-bg/--field-ink carry NO dawn override in cartridge.css (grepped
+   at cut) — the field surface is fixed light in BOTH themes. --err DOES
+   flip (night #E7899E / dawn #a34e6c), so an error ink riding var(--err)
+   would resolve to the night rung on this always-light surface and read
+   2.19:1 — under the 4.5:1 law. The dawn rung alone, as a literal (not a
+   new cartridge token — reused, not invented), reads 5.41:1 on the field
+   surface in EITHER theme, because the surface itself never moves. */
+.kit-field-input[aria-invalid="true"]{border-color:#a34e6c}
+.kit-field-error{margin:0;font-size:.82rem;font-weight:600;color:#a34e6c}
+
+/* ── TABS ──────────────────────────────────────────────────────────
+   New construction (Ground: no real ARIA tablist exists anywhere in
+   this repo today). Selected state carries TWO cues, never color
+   alone: font-weight 700 AND the underline — a grayscale render still
+   shows which tab is active. ── */
+.kit-tabs{display:flex;flex-direction:column;gap:12px}
+.kit-tabs-list{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--glass-edge)}
+.kit-tab{
+  background:none;border:0;cursor:pointer;font-family:inherit;
+  padding:10px 16px;font-size:.9rem;font-weight:600;letter-spacing:.02em;
+  color:var(--muted);white-space:nowrap;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+}
+.kit-tab:hover{color:var(--ink)}
+.kit-tab:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.kit-tab-active{color:var(--ink-strong);font-weight:700;border-bottom-color:var(--lavender)}
+.kit-tab-panel{padding:12px 2px}
+.kit-tab-panel:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+
+/* ── TYPE SCALE ────────────────────────────────────────────────────
+   Built from house.css's h1/h2/.sec-h/.lead law (44-60): same font
+   trio (Barlow heads via --font-h1/--font-h2, Helvetica/Open Sans
+   body), zero new font stacks. ── */
+.kit-h1{font-family:var(--font-h1);font-weight:700;line-height:1.16;margin:0 0 .45em;color:var(--ink-strong);font-size:clamp(1.9rem,5vw,2.6rem)}
+.kit-h2{font-family:var(--font-h2);font-weight:700;line-height:1.16;margin:0 0 .45em;color:var(--ink-strong);font-size:clamp(1.4rem,3.6vw,1.9rem)}
+.kit-body{font-family:var(--font-body);color:var(--ink-body);line-height:1.7;max-width:680px;margin:0 auto}
+.kit-text-quiet{font-family:var(--font-body);color:var(--muted);font-size:.9rem}
