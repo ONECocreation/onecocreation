@@ -97,7 +97,11 @@ describe("TASK-175 — the route folders moved", () => {
     expect(editor).not.toMatch(/<StudioEditor/);
     const page = await read("src/app/style/[[...slug]]/page.tsx");
     expect(page).toContain('import StyleEditor from "@/components/style/StyleEditor"');
-    expect(page).toContain("<StyleEditor slug={slug} data={data} />");
+    /* TASK-342 (0018.06.28 a₿): the route now forwards the already-gated
+       operator to StyleEditor too (the builder-marker context source) —
+       this pin widens to match, the rest of the contract (import site,
+       component identity) is unchanged */
+    expect(page).toContain("<StyleEditor slug={slug} data={data} operator={operator} />");
   });
 
   it("the former import sites all read @/components/style/* (puck-config, PuckEditor, brand board)", async () => {

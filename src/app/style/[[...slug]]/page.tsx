@@ -66,7 +66,7 @@ export default async function StylePage({
   return (
     <>
       <PaletteVars />
-      <StyleEditor slug={slug} data={data} />
+      <StyleEditor slug={slug} data={data} operator={operator} />
     </>
   );
 }

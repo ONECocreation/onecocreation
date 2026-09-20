@@ -1,4 +1,5 @@
 import DoorSheet from "@/components/door/DoorSheet";
+import BuilderMarker from "@/components/style/BuilderMarker";
 
 /**
  * LoginDoor block (TASK-296 wave B, me-login pair — 0018.06.25 a₿): the
@@ -12,11 +13,17 @@ import DoorSheet from "@/components/door/DoorSheet";
  * door the hand-built page does, and nothing session-shaped is ever frozen
  * into a doc. The component itself is never edited — this file only
  * imports and mounts it.
+ *
+ * TASK-342 (0018.06.28 a₿): wrapped in `BuilderMarker`, a no-op everywhere
+ * but the /style canvas (see BuilderMarker.tsx). LoginDoor carries none of
+ * MeSwitch's Fragment-collapse risk (ground fact 10) — `DoorSheet` is a
+ * single element — but the same component is used for both so the wrap
+ * stays uniform.
  */
 export function createLoginDoor() {
   return {
     label: "Login door (the header's own sheet, page mount)",
     fields: {},
-    render: () => <DoorSheet mount="page" />,
+    render: () => <BuilderMarker><DoorSheet mount="page" /></BuilderMarker>,
   };
 }
