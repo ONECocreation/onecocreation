@@ -136,6 +136,40 @@ export function canReact(mineForId: Set<string> | undefined, key: string): boole
   return !mineForId?.has(key);
 }
 
+/* TASK-380 (0018.07.02+ a₿ · block 968,047, the Admiral's production walk,
+   item D4: "the reading room button should link to the top of the page not
+   bottom of chat. focus on video for them.") — the messages pane no longer
+   drags the PAGE down or steals focus on mount; it only ever scrolls its
+   OWN scroll box, and only when this decision says to. Roughly one message
+   row's worth of slack below the visible bottom (the pane's own padding +
+   a single bubble), so arriving on the newest bubble — not the exact last
+   pixel — still counts as "the reader is following the room". */
+export const NEAR_BOTTOM_PX = 120;
+
+/** pure distance check against the messages pane's OWN scroll box — never
+ *  the window. Exported so the boundary is a direct pin, not a rendered
+ *  guess. */
+export function isNearBottom(scrollTop: number, clientHeight: number, scrollHeight: number, threshold: number): boolean {
+  return scrollHeight - scrollTop - clientHeight <= threshold;
+}
+
+/** the follow decision itself, pure and separate from the effect that
+ *  calls it: a first population and the reader's own send always follow;
+ *  otherwise only a reader already near the bottom gets carried along — a
+ *  reader scrolled up into history is never yanked back down by someone
+ *  else's message. */
+export function shouldFollow({
+  firstPopulation,
+  wasNearBottom,
+  ownSend,
+}: {
+  firstPopulation: boolean;
+  wasNearBottom: boolean;
+  ownSend: boolean;
+}): boolean {
+  return firstPopulation || ownSend || wasNearBottom;
+}
+
 /**
  * The picker's own row of buttons — pulled out so its RENDERED shape (not
  * just the REACTION_EMOJIS data array) is a direct pin: a test can render
@@ -199,7 +233,18 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
 
   const session = useRef<{ hs: string; token: string; userId: string; roomId: string } | null>(null);
   const txn = useRef(0);
-  const bottom = useRef<HTMLDivElement>(null);
+  const pane = useRef<HTMLDivElement>(null);
+  /* three small refs that carry the follow decision's intent ACROSS
+     renders without themselves triggering one (TASK-380, Build 1) —
+     `nearBottom` is kept current by readTimeline() itself, measured
+     against the pane immediately BEFORE the new content lands, never by a
+     scroll listener: a hidden or backgrounded tab fires zero scroll
+     events (Number One's browser acceptance, block 968,048), which would
+     leave an event-driven read stuck at whatever it last saw right when a
+     reader leaves the tab open in the background. */
+  const nearBottom = useRef(true);
+  const firstPopulation = useRef(true);
+  const ownSend = useRef(false);
 
   const api = useCallback(async (path: string, init?: RequestInit) => {
     const s = session.current!;
@@ -235,6 +280,19 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
     const chunk = (r.data.chunk ?? []) as TimelineEvent[];
     const { msgs: nextMsgs, reactions: nextReactions, myReactions: mine } =
       parseTimelineChunk(chunk, session.current?.userId);
+    /* measured HERE, immediately before the new content lands, against the
+       pane's STILL-OLD scroll position — the reader's true "was I near the
+       bottom" intent at the instant the update arrives. Not a scroll
+       listener: a hidden/backgrounded tab fires zero scroll events (found
+       by Number One's browser acceptance, block 968,048), so an
+       event-driven read would silently go stale — stuck at attach-time 0
+       for a member who opens the room already backgrounded, or stuck true
+       for one who scrolled up while away, either way yanking or freezing
+       the chat the moment they come back. When the pane hasn't mounted yet
+       (`state !== "open"`), the ref is left untouched — `firstPopulation`
+       already forces that first population to the bottom regardless. */
+    const el = pane.current;
+    if (el) nearBottom.current = isNearBottom(el.scrollTop, el.clientHeight, el.scrollHeight, NEAR_BOTTOM_PX);
     setMsgs(nextMsgs);
     setReactions(nextReactions);
     setMyReactions(mine);
@@ -244,6 +302,13 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
   useEffect(() => {
     let live = true;
     let timer: ReturnType<typeof setInterval> | null = null;
+    /* a room change (alias) restarts first-population semantics — the new
+       room's own first population should land at the bottom too, and a
+       stale "near enough to follow" read from the OLD room's scroll box
+       must never leak into the new one. */
+    firstPopulation.current = true;
+    nearBottom.current = true;
+    ownSend.current = false;
     (async () => {
       const login = await fetch("/api/matrix/login", { method: "POST" });
       if (login.status === 401) { if (live) setState("signedout"); return; }
@@ -265,9 +330,29 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
     return () => { live = false; if (timer) clearInterval(timer); };
   }, [alias, api, readTimeline]);
 
+  /* the follow effect itself — scrolls the messages pane's OWN box
+     (`scrollTop`), never `scrollIntoView` (which walks every scrollable
+     ancestor, including the window). Keyed on the NEWEST message's id, not
+     `msgs.length`: the timeline is a fixed 60-event window, so a new
+     message can arrive while the count stays the same (an older event
+     falls off as the new one lands) — a count-keyed effect stops following
+     exactly when the room is busiest. */
+  const lastMsgId = msgs[msgs.length - 1]?.id;
   useEffect(() => {
-    bottom.current?.scrollIntoView({ block: "end" });
-  }, [msgs.length]);
+    const el = pane.current;
+    if (!el) return;
+    if (
+      shouldFollow({
+        firstPopulation: firstPopulation.current,
+        wasNearBottom: nearBottom.current,
+        ownSend: ownSend.current,
+      })
+    ) {
+      el.scrollTop = el.scrollHeight;
+    }
+    firstPopulation.current = false;
+    ownSend.current = false;
+  }, [lastMsgId]);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -279,7 +364,11 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
       `/rooms/${encodeURIComponent(s.roomId)}/send/m.room.message/oc${Date.now()}x${txn.current++}`,
       { method: "PUT", body: JSON.stringify({ msgtype: "m.text", body }) },
     );
-    if (r.ok) { setDraft(""); await readTimeline(); }
+    if (r.ok) {
+      setDraft("");
+      ownSend.current = true; // the reader's own successful send is always followed, even from history
+      await readTimeline();
+    }
     setSending(false);
   }
 
@@ -355,7 +444,7 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
         </div>
       </div>
 
-      <div style={{ padding: "18px 22px", display: "flex", flexDirection: "column", gap: 14, minHeight: 260, maxHeight: "56vh", overflowY: "auto" }}>
+      <div ref={pane} style={{ padding: "18px 22px", display: "flex", flexDirection: "column", gap: 14, minHeight: 260, maxHeight: "56vh", overflowY: "auto" }}>
         {msgs.length === 0 && (
           <p style={{ color: "var(--muted)", fontSize: ".9rem" }}>
             The field is quiet — be the first to say hello. 🕊️
@@ -459,12 +548,10 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
             </div>
           );
         })}
-        <div ref={bottom} />
       </div>
 
       <form onSubmit={send} style={{ display: "flex", gap: 10, padding: "14px 22px 18px", borderTop: "1px solid var(--glass-edge)" }}>
         <input
-          autoFocus
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder={kind === "class" ? "Write to the room…" : "Write to the field…"}
