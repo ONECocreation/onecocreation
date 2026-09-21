@@ -44,19 +44,20 @@ export default function BasketChip() {
           dark bar. */}
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"
         style={{ color: "#E7B2C3" }}>
-        {/* the arched handle */}
-        <path d="M8 10c0-4.4 1.8-7 4-7s4 2.6 4 7"
+        {/* v2 (the Admiral's pick, block 967,914): the handle spans the rim */}
+        <path d="M4.6 11.2C5 5.6 8 2.8 12 2.8s7 2.8 7.4 8.4"
           stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
         {count > 0 && (
-          /* the filled state: a small shape (a cloth fold) peeking over the
-             rim, under the handle's arch — the empty state omits it */
-          <path d="M9.4 10c0-1.9 1.1-3.1 2.6-3.1s2.6 1.2 2.6 3.1" fill="currentColor" />
+          /* the filled state: a loaf under a cloth fold, peeking over the
+             rim — the empty state omits it */
+          <path d="M7.2 11c.5-2.3 2-3.6 3.6-3.6 1 0 1.6.5 2 1.1.5-.5 1.2-.8 2-.8 1.4 0 2.3 1.3 2.4 3.3Z" fill="currentColor" />
         )}
-        {/* the woven basket body — a couple of weave lines at most */}
-        <path d="M4.8 10h14.4l-1.2 8.4a2.3 2.3 0 0 1-2.3 2.1H8.3a2.3 2.3 0 0 1-2.3-2.1L4.8 10Z"
-          stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-        <path d="M6.2 13.2h11.6M6.7 16.4h10.6"
-          stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity=".6" />
+        {/* the rim bar and the round bowl */}
+        <path d="M3.4 11.2h17.2M4.6 11.4c.2 4.6 1.6 7.4 3.4 8.6.7.5 1.5.7 2.4.7h3.2c.9 0 1.7-.2 2.4-.7 1.8-1.2 3.2-4 3.4-8.6"
+          stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        {/* the weave — one light path */}
+        <path d="M5.4 14.6h13.2M6.8 17.6h10.4M9 11.6l1 8.8M15 11.6l-1 8.8M12 11.6v9"
+          stroke="currentColor" strokeWidth=".9" strokeLinecap="round" opacity=".5" />
       </svg>
       {count > 0 && (
         <span
