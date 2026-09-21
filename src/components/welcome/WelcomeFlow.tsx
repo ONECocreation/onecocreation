@@ -145,7 +145,9 @@ export default function WelcomeFlow({ next = null }: { next?: string | null }) {
 
   useEffect(() => {
     if (!session || reducedMotion) return;
-    const id = setInterval(() => setWalkIdx((i) => (i + 1) % DOORS.length), 2600);
+    /* one door = one full lap of the rim (shine-spin is 2.4s), then the
+       light hands over to the next door down: top, middle, bottom. */
+    const id = setInterval(() => setWalkIdx((i) => (i + 1) % DOORS.length), 2400);
     return () => clearInterval(id);
   }, [session, reducedMotion]);
 
@@ -245,8 +247,11 @@ export default function WelcomeFlow({ next = null }: { next?: string | null }) {
             {DOORS.map((d, i) => (
               <Link key={d.t} href={d.href}
                 className={`card shine-hover${reducedMotion || i === walkIdx ? " shine-walk" : ""}`}
+                /* overflow visible: .card clips at its padding box, and the
+                   shine rim rides 1.5px OUTSIDE it — clipped, the light never
+                   showed (the Admiral's walk, 0018.07.02). */
                 style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12,
-                  textDecoration: "none", color: "var(--ink-body)", padding: "13px 16px",
+                  overflow: "visible", textDecoration: "none", color: "var(--ink-body)", padding: "13px 16px",
                   background: "rgba(255,255,255,.05)", fontSize: ".85rem" }}>
                 <span style={{ fontSize: "1.2rem" }}>{d.icon}</span>
                 <span style={{ flex: 1 }}>
