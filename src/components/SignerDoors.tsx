@@ -56,6 +56,10 @@ export default function SignerDoors({
   variant?: "card";
 }) {
   const isCard = variant === "card";
+  /* pickup walk (Number One): dawn's --glass-edge is white on a white card,
+     so the rows lost their edge — the card variant wears the same edge
+     literal as kit.css .kit-field-input, visible on both themes. */
+  const CARD_DOOR_EDGE = "1.5px solid rgba(139,118,196,.4)";
   const android = useIsAndroid();
   const [bunkerInput, setBunkerInput] = useState("");
   const [busy, setBusy] = useState<"idle" | "bunker" | "invite">("idle");
@@ -163,7 +167,7 @@ export default function SignerDoors({
       {/* T-317 (0018.06.25 a₿): both <summary> lines wrap on narrow screens — .btn-quiet
          keeps its pill face, but the label must never clip at the card edge (seen at 390
          once T-316 put these doors on the sign-in path). */}
-      <details style={{ borderRadius: 16, border: "1px solid var(--glass-edge)", background: isCard ? "var(--ghost-bg)" : "var(--glass)", padding: "12px 16px", textAlign: "left" }}>
+      <details style={{ borderRadius: 16, border: isCard ? CARD_DOOR_EDGE : "1px solid var(--glass-edge)", background: isCard ? "var(--ghost-bg)" : "var(--glass)", padding: "12px 16px", textAlign: "left" }}>
         <summary className="btn-quiet" style={{ listStyle: "none", padding: 0, whiteSpace: "normal", lineHeight: 1.4, textAlign: "left", ...(isCard ? { color: "var(--ghost-ink)", cursor: "pointer" } : {}) }}>remote signer · works on iPhone + any browser</summary>
         <div className="mt-3 space-y-3">
           <p style={{ fontSize: ".8rem", lineHeight: 1.7, color: "var(--ink-body)" }}>
@@ -234,7 +238,7 @@ export default function SignerDoors({
       </details>
 
       {/* ── NIP-55: Android signer apps — honest about where it works ──── */}
-      <details style={{ borderRadius: 16, border: "1px solid var(--glass-edge)", background: isCard ? "var(--ghost-bg)" : "var(--glass)", padding: "12px 16px", textAlign: "left" }}>
+      <details style={{ borderRadius: 16, border: isCard ? CARD_DOOR_EDGE : "1px solid var(--glass-edge)", background: isCard ? "var(--ghost-bg)" : "var(--glass)", padding: "12px 16px", textAlign: "left" }}>
         <summary className="btn-quiet" style={{ listStyle: "none", padding: 0, whiteSpace: "normal", lineHeight: 1.4, textAlign: "left", ...(isCard ? { color: "var(--ghost-ink)", cursor: "pointer" } : {}) }}>Android signer app · Amber-class</summary>
         <div className="mt-3 space-y-3">
           {android === false ? (
