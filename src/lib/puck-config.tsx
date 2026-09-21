@@ -11,6 +11,7 @@ import { createLettersRoom } from "@/lib/puck-blocks/letters-room";
 import { createCartPanel } from "@/lib/puck-blocks/cart-panel";
 import { createMeSwitch } from "@/lib/puck-blocks/me-switch";
 import { createLoginDoor } from "@/lib/puck-blocks/login-door";
+import { createAccountDoor } from "@/lib/puck-blocks/account-door";
 import { createBbConsole } from "@/lib/puck-blocks/bb-console";
 import { createBftClock } from "@/lib/puck-blocks/bft-clock";
 import { createLiveDoor } from "@/lib/puck-blocks/live-door";
@@ -157,6 +158,14 @@ components.BftClock = createBftClock() as unknown as (typeof components)[string]
    Appended, never reordered (the wave B append-only law). */
 components.LiveDoor = createLiveDoor() as unknown as (typeof components)[string];
 
+/* TASK-355 (0018.07.02 a₿, REVIEW-K86 item 3): AccountDoor — the { id
+   }-only session-aware block (the MeSwitch/LoginDoor shape): the stored
+   doc holds only the id, the block renders the real signed-in/signed-out
+   door live on the published page AND the designer canvas. LOCAL, like
+   its siblings — the package stays vendored-untouched. Appended, never
+   reordered (the same append-only law the wave B pairs set). */
+components.AccountDoor = createAccountDoor() as unknown as (typeof components)[string];
+
 /* the library rail: ParallaxBand (and the data-bound blocks, TASK-231's
    RetreatsList + TASK-232's PackagesGrid) join the Layout group, appended
    at the end (after Divider — the package's array order is never reordered) */
@@ -171,7 +180,7 @@ export const config = {
   categories: {
     ...categories,
     layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid", "LettersRoom", "CartPanel", "LiveDoor"] },
-    actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors", "MeSwitch", "LoginDoor", "BbConsole", "BftClock"] },
+    actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors", "MeSwitch", "LoginDoor", "BbConsole", "BftClock", "AccountDoor"] },
   },
   /* STUDIO P1: page-level SEO lives on the Puck root — plain fields edited
      through Puck.Fields' root section; the registry's root RENDER stays the

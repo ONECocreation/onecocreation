@@ -580,6 +580,10 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
      the name still ellipsises; the popup escapes it. */
   .nav-tail>*{max-width:180px;min-width:0}
   .nav-tail>button,.nav-tail>a,.nav-tail>*>button{display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+  /* TASK-355 (0018.07.02 a₿, REVIEW-K86): the badge sits at top:-6,right:-8,
+     outside the basket icon's own box — the ellipsis clip above sliced it
+     off (the Admiral's "block"). ONE carve-out, the basket link alone. */
+  .nav-tail a.basket-chip{overflow:visible;max-width:none}
 }
 
 /* ── the console's left rail (wireframe v2) ── */
@@ -661,6 +665,9 @@ html,body{overflow-x:clip}
   .site-header nav.nav-menu{width:auto;flex:0 0 auto}
   .nav-tail{order:2;margin-left:auto;gap:10px;min-width:0}
   .nav-tail a{overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+  /* TASK-355 (0018.07.02 a₿, REVIEW-K86): same carve-out as the desktop
+     rule above — the phone tail clip sliced the badge the same way. */
+  .nav-tail a.basket-chip{overflow:visible;max-width:none}
   .nav-items{display:none;position:absolute;right:10px;left:auto;top:calc(100% + 6px);z-index:var(--z-sheet,60);
     flex-direction:column;align-items:stretch;gap:0;min-width:240px;max-width:calc(100vw - 20px);
     background:var(--pop-bg);border:1.5px solid var(--pop-edge);border-radius:14px;padding:8px 0}

@@ -44,7 +44,11 @@ const video = (youtube: string, ratio = "9/16") => blk("Video", { youtube, ratio
    soft pink) — "gold" still renders, but through the swapped tokens it too
    pours rose; no seed keeps a gold door by default anymore */
 const button = (label: string, href: string, variant = "rose", align = "left") => blk("Button", { label, href, variant, align, style: st() });
-const buttons = (list: { label: string; href: string; variant: string }[], align = "center") => blk("Buttons", { align, buttons: list });
+/* TASK-355 (0018.07.02 a₿): the top-level `buttons()` helper's one caller —
+   the about seed's account-door entry — is now `blk("AccountDoor")`
+   (REVIEW-K86 item 6); removed here rather than left dead (the `kit()`
+   factory below has its own `buttons` method, still used by home/support/
+   memberships and untouched). */
 const twocol = (left: Block[], right: Block[], gap = 26, valign = "top") => blk("TwoColumns", { gap, valign, left, right });
 const band = (background: string, hold: string, content: Block[]) => blk("Band", { background, hold, content });
 
@@ -168,10 +172,13 @@ const aboutContent: Block[] = [
     rich("That love comes from inside of us — seeking love and validation from within you. We are moving out of the polarity of the Mind-Masculine dissonance, of controlling, and into a balance of the Divine Masculine and Feminine. The mind comes along — <b style=\"color:var(--gold-2)\">letting the Heart lead the way.</b>", "center"),
     rich("We can BE the Now and create a more collaborative future for us and all — as IAM, WE ARE. The shifts are already here: a breaking down and a synchronistic leveling up, occurring now with Gaia. <b>The New Earth and the New Human, as Onecocreation.</b>", "center"),
     text("Ready to get started?", "center", st({ color: "ink", size: 19, font: "display", spaceAbove: 20, spaceBelow: 16 })),
-    buttons([
-      { label: "Create your account ✨", href: "/welcome", variant: "rose" },
-      { label: "ConsciousCuts & Waxing ✂️", href: "/services", variant: "teal" },
-    ], "center"),
+    /* TASK-355 (0018.07.02 a₿, REVIEW-K86 item 6): the plain "Create your
+       account ✨" button becomes the session-aware AccountDoor block — a
+       signed-in visitor reads "Go to your page →" instead of an invitation
+       to a second account (the Admiral's own walk). The retired
+       "ConsciousCuts & Waxing ✂️" second entry (TASK-128) leaves the seed
+       here too, matching the hand-built page it had already left. */
+    blk("AccountDoor"),
   ]),
 ];
 
