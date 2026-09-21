@@ -59,7 +59,7 @@ export default async function LoginPage() {
             <StackedHero kicker="Members" lines={[{ t: "WELCOME" }, { t: "HOME", tone: "teal" }]} constellation />
           </div>
         </section>
-        <section className="sky-night" style={{ padding: "40px 0 70px" }}>
+        <section className="sky-glass" style={{ padding: "40px 0 70px" }}>
           <div className="wrap" style={{ maxWidth: 440 }}>
             <DoorSheet mount="page" />
           </div>

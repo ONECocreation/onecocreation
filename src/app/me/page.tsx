@@ -67,7 +67,7 @@ export default async function MePage() {
             </p>
           </div>
         </section>
-        <section className="sky-night" style={{ padding: "36px 0 70px" }}>
+        <section className="sky-glass" style={{ padding: "36px 0 70px" }}>
           <div className="wrap" style={{ maxWidth: 720 }}>
             <MeSwitch />
           </div>

@@ -1872,7 +1872,7 @@ const meContent: Block[] = [
     me.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
     me.text("Your name, your sessions, your profile card — this room is yours.", "center", st({ color: "body", size: 15 })),
   ]),
-  me.band("sky-night", "theme", [
+  me.band("sky-glass", "theme", [
     { type: "MeSwitch", props: { id: "me-switch" } },
   ]),
 ];
@@ -1881,9 +1881,10 @@ const meContent: Block[] = [
    src/app/login/page.tsx transcribed VERBATIM. The hero maps like /me's
    (sky-veil holding the night; the login-galaxy veil and CosmicSky's star
    field are beyond the Band — the declared difference). DoorSheet is NOT
-   transcribed: the LoginDoor { id }-only block renders the same sheet the
-   header mounts, page mount — the deep links (?next=) ride the component
-   itself, so a published /login serves the identical door. */
+   transcribed: the LoginDoor { id }-only block renders SignInCard (RULED
+   K83 — /login's Puck-published path is the one place SignInCard lives),
+   page mount — the deep links (?next=) ride the component itself, so a
+   published /login serves the identical door. */
 const lg = kit("lg");
 const loginContent: Block[] = [
   lg.band("sky-veil", "night", [
@@ -1891,7 +1892,7 @@ const loginContent: Block[] = [
     lg.stacked("WELCOME", "HOME", "h1", "center"),
     lg.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
   ]),
-  lg.band("sky-night", "theme", [
+  lg.band("sky-glass", "theme", [
     { type: "LoginDoor", props: { id: "lg-door" } },
   ]),
 ];

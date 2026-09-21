@@ -2,16 +2,21 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ROOMS } from "@/lib/matrix-rooms";
 
 /**
  * The member-home cards every signed-in soul gets (the Admiral's ask):
- * purchases + the quick doors, including the Matrix classrooms. Mounted in
- * the Purchases tab of `/me`'s `MeSwitch`, for BOTH member kinds (TASK-352,
- * OC UI kit lane 4 — RULED, Build item 6: an email member used to get its
- * own smaller purchases card; this file's StateChip/Matrix-classroom extras
- * are now a real, named superset for them too). The Calendar tab sits one
- * tab over, mounting `MemberCalendar` directly — not this file's concern.
+ * purchases + the quick doors. Mounted in the Purchases tab of `/me`'s
+ * `MeSwitch`, for BOTH member kinds (TASK-352, OC UI kit lane 4 — RULED,
+ * Build item 6: an email member used to get its own smaller purchases
+ * card; this file's StateChip extras are now a real, named superset for
+ * them too). The Calendar tab sits one tab over, mounting `MemberCalendar`
+ * directly — not this file's concern.
+ *
+ * TASK-365 (0018.07.02 a₿, block 967,927): the quick-doors row's own
+ * per-classroom loop (three links, all → /classes, zero new information)
+ * is gone — the static "Community & Classes" door already covers it; the
+ * Admiral's own "this is just a community" ruling is the reason not to
+ * invent new per-room doors here instead.
  */
 interface MemberOrder {
   id: string;
@@ -68,8 +73,6 @@ export default function MemberQuickCards() {
       .catch(() => setOrders([]));
   }, []);
 
-  const classes = ROOMS.filter((r) => r.kind === "class");
-
   return (
     <div style={{ marginBottom: 8 }}>
       <div style={card}>
@@ -107,26 +110,12 @@ export default function MemberQuickCards() {
         <h2 style={{ fontFamily: "var(--font-h2)", fontWeight: 400, fontSize: "1.2rem", margin: 0, color: "var(--ink-strong)" }}>
           Quick doors
         </h2>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
-          <Link className="btn btn-ghost btn-sm" href="/memberships">Memberships</Link>
-          <Link className="btn btn-ghost btn-sm" href="/book">Book a Session</Link>
-          <Link className="btn btn-ghost btn-sm" href="/store">The Store</Link>
-          <Link className="btn btn-ghost btn-sm" href="/classes">Community & Classes</Link>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px,100%), 1fr))", gap: 10, marginTop: 14 }}>
+          <Link className="kit-btn kit-btn-second kit-btn-sm" href="/memberships">Memberships</Link>
+          <Link className="kit-btn kit-btn-second kit-btn-sm" href="/book">Book a Session</Link>
+          <Link className="kit-btn kit-btn-second kit-btn-sm" href="/store">The Store</Link>
+          <Link className="kit-btn kit-btn-second kit-btn-sm" href="/classes">Community & Classes</Link>
         </div>
-        {classes.length > 0 && (
-          <>
-            <p style={{ color: "var(--muted)", fontSize: ".82rem", margin: "14px 0 6px" }}>
-              Matrix classrooms (open with your tier):
-            </p>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {classes.map((r) => (
-                <Link key={r.id} className="btn btn-ghost btn-sm" href="/classes">
-                  {r.title}
-                </Link>
-              ))}
-            </div>
-          </>
-        )}
         <p style={{ color: "var(--muted)", fontSize: ".78rem", marginTop: 14 }}>
           Your calendar lives one tab over — the sessions you&apos;ve booked ride the grid there.
         </p>

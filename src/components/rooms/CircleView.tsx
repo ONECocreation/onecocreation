@@ -88,15 +88,35 @@ export function buildPublicMarks(
   };
 }
 
+const ROOMS_HEADING = (
+  <h3 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: "1.02rem", margin: "0 0 12px", color: "var(--ink-strong)" }}>The rooms</h3>
+);
+
 function RoomCardsGrid({ feed, activeSlug }: { feed: RoomsFeed | null; activeSlug: string }) {
-  if (!feed) return <p style={{ color: "var(--muted)" }}>opening the rooms…</p>;
-  /* only this class's package + the Commons — never the whole house */
-  const packages = groupRoomsByPackage(shelfRoomsForRoom(feed.rooms, activeSlug));
+  if (!feed) {
+    return (
+      <div style={{ marginTop: 26 }}>
+        {ROOMS_HEADING}
+        <p style={{ color: "var(--muted)" }}>opening the rooms…</p>
+      </div>
+    );
+  }
+  /* only this class's package + the Commons — never the whole house — and
+     never the package whose own ENTER door would land the visitor back on
+     the room they're already reading (TASK-365, RULED by the Admiral,
+     block 967,927: drop the whole card, not just its ENTER button — what
+     goes in its place, the period's own events, is T-364's ground). */
+  const packages = groupRoomsByPackage(shelfRoomsForRoom(feed.rooms, activeSlug))
+    .filter((p) => p.primary.slug !== activeSlug);
+  if (packages.length === 0) return null;
   return (
-    <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(min(240px,100%), 1fr))" }}>
-      {packages.map((p) => (
-        <PackageRoomsCard key={p.tier} pkg={p} signedIn={feed.signedIn} compact />
-      ))}
+    <div style={{ marginTop: 26 }}>
+      {ROOMS_HEADING}
+      <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(min(240px,100%), 1fr))" }}>
+        {packages.map((p) => (
+          <PackageRoomsCard key={p.tier} pkg={p} signedIn={feed.signedIn} compact />
+        ))}
+      </div>
     </div>
   );
 }
@@ -207,10 +227,7 @@ export default function CircleView({
         </div>
       )}
 
-      <div style={{ marginTop: 26 }}>
-        <h3 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: "1.02rem", margin: "0 0 12px", color: "var(--ink-strong)" }}>The rooms</h3>
-        <RoomCardsGrid feed={feed} activeSlug={activeSlug} />
-      </div>
+      <RoomCardsGrid feed={feed} activeSlug={activeSlug} />
     </div>
   );
 }
