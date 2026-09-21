@@ -10,6 +10,8 @@ import { useEffect, useState } from "react";
 import useMemberSession from "@/hooks/useMemberSession";
 import { cartridge } from "@/brand/cartridge";
 import { continueLabel } from "@/components/door/door-machine";
+import Field from "@/components/kit/Field";
+import Button from "@/components/kit/Button";
 
 /**
  * /welcome — WHAT'S YOURS NOW (TASK-185 Phase B, the Admiral's ruling 1,
@@ -37,6 +39,19 @@ import { continueLabel } from "@/components/door/door-machine";
  * read server-side (page.tsx's own `safeNextPath` over `searchParams`) and
  * handed down as a plain prop — no client-only window read, no hydration
  * seam.
+ *
+ * TASK-358 (the Admiral, block 967,926, Named decision 2 — the recommended
+ * path): an email member with no `accountName` yet meets a real claim form
+ * here — the constellation's "claim your community name" star already
+ * points at this URL for them, and until now it landed on nothing to type
+ * into. Reuses the EXACT `PUT /api/member/profile` call `DoorSheet.tsx` and
+ * `SignInCard.tsx` already make (`accountName`/`displayName` both set to
+ * the same trimmed value), now guarded server-side by D5's atomic
+ * `SET … NX` reservation — a name already held by another email member, or
+ * a live key handle, comes back as a 409 whose `reason` renders inline,
+ * same as the doors already show it. A successful save clears the form and
+ * lights the star on the member's next `/me` visit (ConstellationCard's own
+ * fetch, unedited here).
  */
 
 /** Love's welcome photo — her hands, sent by email. `null` until it lands:
@@ -63,6 +78,13 @@ export default function WelcomeFlow({ next = null }: { next?: string | null }) {
   /* the known-by name (the door's own rule): an email member is greeted by
      who they ARE once the name is claimed, never by the mailbox */
   const [knownBy, setKnownBy] = useState<string | null>(null);
+  /* TASK-358: whether this email member has ALREADY claimed an
+     accountName — null until the profile fetch resolves, so the claim
+     form never flashes on then off while that first answer is in flight. */
+  const [accountName, setAccountName] = useState<string | null>(null);
+  const [nameWish, setNameWish] = useState("");
+  const [claiming, setClaiming] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
   /* the walking shine (item 2): one door lit at a time, one after another.
      prefers-reduced-motion holds all three lit, still, no interval. */
   const [walkIdx, setWalkIdx] = useState(0);
@@ -77,9 +99,42 @@ export default function WelcomeFlow({ next = null }: { next?: string | null }) {
       .then((p: { ok?: boolean; displayName?: string; accountName?: string } | null) => {
         const known = p?.displayName || p?.accountName;
         if (p?.ok && known) setKnownBy(known);
+        if (p?.ok) setAccountName(p.accountName ?? "");
       })
       .catch(() => {});
   }, [session]);
+
+  /* D5 (the Admiral, block 967,926): the same claim-write pattern
+     DoorSheet.tsx/SignInCard.tsx already use — accountName and displayName
+     both set to the same trimmed value — now guarded server-side by the
+     SET…NX reservation. A 409 comes back with `reason` set to the exact
+     wording those doors already surface ("already claimed"). */
+  async function claimAccountName(ev: React.FormEvent) {
+    ev.preventDefault();
+    const want = nameWish.trim();
+    if (!want || claiming) return;
+    setClaiming(true);
+    setClaimError(null);
+    try {
+      const res = await fetch("/api/member/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountName: want, displayName: want }),
+      });
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; reason?: string; accountName?: string } | null;
+      if (!res.ok || !data?.ok) {
+        setClaimError(data?.reason ?? "that name couldn't be claimed — try another");
+        return;
+      }
+      setAccountName(data.accountName ?? want);
+      setKnownBy(data.accountName ?? want);
+      setNameWish("");
+    } catch {
+      setClaimError("couldn't reach the server — try again");
+    } finally {
+      setClaiming(false);
+    }
+  }
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -149,6 +204,33 @@ export default function WelcomeFlow({ next = null }: { next?: string | null }) {
           <p style={{ fontSize: ".9rem", margin: "10px 0 4px" }}>
             welcome home{name ? <>, <b style={{ color: "#EBCB77" }}>{name}</b></> : ""} — your doors are open.
           </p>
+
+          {/* TASK-358, D5/Named decision 2: an email member with no
+              accountName yet gets a real place to type one — the
+              constellation's "claim your community name" star points
+              here for exactly this reason. Key members already claimed
+              their @tag at the door, so this never renders for them. */}
+          {session.space === "email" && accountName === "" && (
+            <form onSubmit={claimAccountName} style={{ display: "grid", gap: 10, margin: "16px 0 4px", textAlign: "left" }}>
+              <p style={{ fontSize: ".8rem", color: "var(--ink-body)", margin: 0 }}>
+                Claim your own <b>@onecocreation</b> name — yours, once you save it.
+              </p>
+              <Field
+                id="welcome-account-name"
+                label="Your community name"
+                placeholder="yourname"
+                value={nameWish}
+                onChange={(e) => { setNameWish(e.target.value); setClaimError(null); }}
+                error={claimError ?? undefined}
+                disabled={claiming}
+                maxLength={24}
+              />
+              <Button type="submit" variant="main" sm disabled={claiming || nameWish.trim().length < 2}>
+                {claiming ? "saving…" : "claim your name"}
+              </Button>
+            </form>
+          )}
+
           {/* the walking shine (item 2): the same border-beam recipe the
               fleet already runs on hover (.shine-hover, house.css,
               unedited) — this rule just fires it off a class instead of
