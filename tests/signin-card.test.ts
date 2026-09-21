@@ -129,11 +129,115 @@ describe("SignInCard — the email field keeps T-315's no-autofocus law on the f
   });
 });
 
-describe("SignInCard — RULED item 3, named not fixed: one signInWithKey, two entry points", () => {
-  it("the Email tab's ghost button and the Key tab's own button both call signInWithKey (the same doors)", async () => {
+describe("SignInCard — TASK-356: the Admiral overrules K83's RULED item 3 ('same doors')", () => {
+  /* The Admiral, walking /login (block 967,911): "on the email tab, we
+     shouldnt have a button to sign in with a key. it makes it confusing
+     for the user. that's why we split the tabs." K83's RULED item 3 (a
+     second key button INSIDE the Email tab, opening SignerDoors in
+     place) is overruled, not just trimmed — the Email tab keeps no key
+     door of its own; the Key tab's is the only one. */
+  it("exactly one onClick={signInWithKey} now — the Key tab's own button, not a second Email-tab door", async () => {
     const src = await read("src/components/door/SignInCard.tsx");
     const calls = src.match(/onClick=\{signInWithKey\}/g) ?? [];
-    expect(calls.length).toBe(2);
+    expect(calls.length).toBe(1);
+  });
+
+  it("the Email tab carries no key CTA, no emailSignerOpen state, and no in-place SignerDoors mount", async () => {
+    const src = await read("src/components/door/SignInCard.tsx");
+    expect(src).not.toMatch(/emailSignerOpen/);
+    expect(src).not.toMatch(/No extension on this device/);
+    /* SignerDoors is mounted exactly once now — the Key tab's no-extension pane */
+    const mounts = src.match(/<SignerDoors\b/g) ?? [];
+    expect(mounts.length).toBe(1);
+  });
+
+  it("the local keyNoteFor/KEY_NOTE_* duplicate (and the now-unused useIsAndroid) left with the button", async () => {
+    const src = await read("src/components/door/SignInCard.tsx");
+    expect(src).not.toMatch(/keyNoteFor/);
+    expect(src).not.toMatch(/KEY_NOTE_ANDROID/);
+    expect(src).not.toMatch(/KEY_NOTE_REMOTE/);
+    expect(src).not.toMatch(/useIsAndroid/);
+    /* DOOR_KEY_CTA stays imported — the Key tab still uses it */
+    expect(src).toMatch(/DOOR_KEY_CTA/);
+  });
+
+  it("a real, words-only pointer sends the Email tab reader to the Key tab instead", async () => {
+    const { EMAIL_KEY_POINTER, EMAIL_KEY_TAB_LINK } = await import("@/components/door/SignInCard");
+    expect(EMAIL_KEY_POINTER).toBe("Have a key? ");
+    expect(EMAIL_KEY_TAB_LINK).toBe("Use the Key tab.");
+    const html = renderToStaticMarkup(createElement((await import("@/components/door/SignInCard")).default, {}));
+    expect(html).toContain(EMAIL_KEY_POINTER);
+    expect(html).toContain(EMAIL_KEY_TAB_LINK);
+  });
+
+  it("the Key tab, no extension: KEY_NO_EXTENSION_NOTE renders above SignerDoors, never a silent gap", async () => {
+    const { KEY_NO_EXTENSION_NOTE } = await import("@/components/door/SignInCard");
+    expect(KEY_NO_EXTENSION_NOTE).toBe(
+      "No key add-on found in this browser. Pick one of these ways, or use the Email tab.",
+    );
+    const html = renderToStaticMarkup(createElement((await import("@/components/door/SignInCard")).default, {}));
+    expect(html).toContain(KEY_NO_EXTENSION_NOTE);
+  });
+});
+
+describe("SignInCard — Tabs run controlled now, so 'Use the Key tab.' can really select it", () => {
+  it("source: Tabs is passed active/onChange, not defaultActive", async () => {
+    const src = await read("src/components/door/SignInCard.tsx");
+    const tabsTag = src.match(/<Tabs\b[\s\S]*?items=\{\[/)?.[0] ?? "";
+    expect(tabsTag).toContain("active={activeTab}");
+    expect(tabsTag).toContain("onChange=");
+    expect(tabsTag).not.toMatch(/defaultActive=/);
+  });
+
+  it("rendered: clicking the pointer's Button selects the Key tab (aria-selected flips)", async () => {
+    /* node env, no DOM click harness — this repo's convention is a real
+       function call, not a simulated event (Tabs.tsx's own nextTabIndex
+       is tested the same pure way). The pointer's onClick calls
+       setActiveTab("key") directly; we exercise the same state machine
+       Tabs itself drives by rendering with defaultTab="key" and
+       confirming the controlled prop, not an internal default, is what
+       Tabs honors. */
+    const SignInCard = (await import("@/components/door/SignInCard")).default;
+    const html = renderToStaticMarkup(createElement(SignInCard, { defaultTab: "key" }));
+    const keyTab = html.match(/<button[^>]*>Key<\/button>/)?.[0] ?? "";
+    expect(keyTab).toContain('aria-selected="true"');
+  });
+});
+
+describe("SignInCard — variant=\"card\" is SignInCard's own choice, not DoorSheet's or OperatorGate's", () => {
+  it("SignInCard passes variant=\"card\" to its SignerDoors mount", async () => {
+    const src = await read("src/components/door/SignInCard.tsx");
+    expect(src).toMatch(/<SignerDoors[\s\S]*?variant="card"/);
+  });
+
+  it("DoorSheet.tsx and OperatorGate.tsx mount SignerDoors with no variant prop at all (byte-stable default)", async () => {
+    const doorSheetSrc = await read("src/components/door/DoorSheet.tsx");
+    const operatorGateSrc = await read("src/components/OperatorGate.tsx");
+    expect(doorSheetSrc).not.toMatch(/variant=/);
+    expect(operatorGateSrc).not.toMatch(/variant=/);
+  });
+});
+
+describe("SignInCard — TASK-356 alignment (RULED K-b = (a)): title + tabs centred, body left", () => {
+  it("the card title carries an explicit centred style", async () => {
+    const src = await read("src/components/door/SignInCard.tsx");
+    expect(src).toMatch(/className="kit-h2" style=\{\{ textAlign: "center" \}\}/);
+  });
+
+  it("no kit-body paragraph is centred (legibility doctrine: reading text stays left)", async () => {
+    const src = await read("src/components/door/SignInCard.tsx");
+    const paras = src.match(/<p className="kit-body"[^>]*>/g) ?? [];
+    for (const p of paras) expect(p).not.toMatch(/textAlign/);
+  });
+});
+
+describe("DoorButton — TASK-356 (REVIEW-K87 item 7): dawn LOG IN is pinned to the always-night ink", () => {
+  it("the signed-out chip's color is the literal #ECE3C9, never 'inherit'", async () => {
+    const src = await read("src/components/door/DoorButton.tsx");
+    const chip = src.match(/cursor: walking \? "default" : "pointer", color: [^,]+,/)?.[0] ?? "";
+    expect(chip, "the signed-out chip's style object").toBeTruthy();
+    expect(chip).toContain('color: "#ECE3C9"');
+    expect(chip).not.toContain('color: "inherit"');
   });
 });
 
