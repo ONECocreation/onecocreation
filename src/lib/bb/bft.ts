@@ -5,10 +5,11 @@
  * 13 months × 28 days × 144 blocks/day; genesis = a₿ 0. Dates render ₿-marked
  * with the marker AFTER the date ("0016.05.23 a₿") so they read as bitcoin
  * dates — ONE order for both epochs (the day-first b₿ inversion is dead,
- * Pac's ruling). The moon is block-timed — one lunation per 28-day month —
- * and each year carries a 12-animal sign (AB 0 / 2009 = Ox; new year M01·D01
- * is a new moon). Signs are lore, not finance (same house rule as the
- * Observatory's zodiac).
+ * Pac's ruling). We only have one moon, and it's the sky's: `moonPhase`
+ * reads the real synodic month off wall time, never the 28-day BFT month —
+ * the calendar month never wears the moon's name. Each year also carries a
+ * 12-animal sign (AB 0 / 2009 = Ox). Signs are lore, not finance (same house
+ * rule as the Observatory's zodiac).
  */
 
 export const BLOCKS_PER_DAY = 144;
@@ -225,7 +226,6 @@ export const MOON_PHASES: ReadonlyArray<readonly [string, string]> = [
   ["🌕", "Full"], ["🌖", "Waning Gibbous"], ["🌗", "Last Quarter"], ["🌘", "Waning Crescent"],
 ];
 
-/** One lunation per BFT month → phase is a pure function of the day-of-month. */
 /** THE SKY'S OWN MOON (universal-calendar review, 0018.05.18): phase from
  *  the real synodic month (29.530589 days) anchored to a known new moon —
  *  not the calendar day. The 28-day month is our RHYTHM; the moon keeps her
@@ -259,7 +259,10 @@ const YEAR_ANIMALS: ReadonlyArray<readonly [string, string]> = [
   ["🐈", "Astronomical Cat"],
 ];
 
-/** 13-animal year sign. AB 0 (2009) = Ox; the new year falls on a new moon (M01·D01). */
+/** 13-animal year sign. AB 0 (2009) = Ox — one sign per BFT year (52,416
+ *  blocks), unrelated to the sky moon (the new year (M01·D01) does not
+ *  reliably fall on a new moon; we only have one moon, and it keeps its own
+ *  time, not the calendar's). */
 export function yearAnimal(height: number): { emoji: string; name: string } {
   const [emoji, name] = YEAR_ANIMALS[(bft(height).year + 1) % 13];
   return { emoji, name };
