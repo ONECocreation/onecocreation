@@ -506,7 +506,7 @@ export function createOrrery(root: HTMLElement): OrreryEngine {
      GOLD — hidden at rest. The MOON
      rides its
      own orbit just outside the calendar's MONTH (synodic ≈ 4,252 blocks vs
-     4,032 — the two-moons drift made visible; they kiss every ~19.3 bitcoin
+     4,032 — the moon-month drift made visible; they kiss every ~19.3 bitcoin
      months, the house Metonic). Rings wear watchmaker tick marks — the
      Breguet/Patek graduation law. The moon is drawn as the NORTHERN sky
      sees it, and says so. ═══ */
