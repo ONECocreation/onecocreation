@@ -27,6 +27,21 @@ export const dynamic = "force-dynamic";
  * crash between the write and the release leaks a stale reservation on the
  * old name; `scripts/account-name-dupe-sweep.mjs` is the named backstop
  * for exactly that leak, not a guarantee against it.
+ *
+ * FOLLOW-UP (Number One's review, same block): D5 as first shipped had a
+ * hole — every name saved BEFORE this lane carries no `accountname:<name>`
+ * reservation at all (the PUT only reserves on an actual CHANGE). A legacy
+ * holder simply re-saving their own unchanged name never reserved it, so
+ * ANY other member could `SET … NX` that same name and win — this lane
+ * would have CREATED new duplicates instead of preventing them. Fixed with
+ * a lazy heal: whenever GET or PUT reads a profile whose `accountName` is
+ * already non-empty, it fires `SET accountname:<name> <email> NX` and
+ * ignores a non-OK result (NX never overwrites — a legacy twin who beat
+ * this member to healing keeps it; this never 409s a member for reading
+ * or re-saving their OWN already-saved name). `ConstellationCard.tsx`
+ * fetches this GET on every `/me` load, so every visiting member
+ * self-heals over time — `scripts/account-name-dupe-sweep.mjs --backfill`
+ * (same commit) is the batch path for members who never visit.
  */
 function restEnv(): { url: string; token: string } | null {
   const url = process.env.KV_REST_API_URL;
@@ -72,11 +87,26 @@ interface ProfileDoc {
 const normPrefer = (v: unknown): "fiat" | "sats" | undefined =>
   v === "fiat" || v === "sats" ? v : undefined;
 
+/** The lazy heal (follow-up fix, above): best-effort only — a heal never
+ *  blocks or fails the read/write it rides on. `SET … NX` either reserves
+ *  the name for THIS member (nobody held it yet) or silently no-ops (it's
+ *  already held — by this same member already-healed, or by a legacy twin
+ *  who got here first; either way, never a 409, never a throw). */
+async function healReservation(name: string, holder: string): Promise<void> {
+  if (!name) return;
+  try {
+    await kv(["SET", accountNameKey(name), holder, "NX"]);
+  } catch {
+    /* best-effort — never breaks the GET/PUT it rides on */
+  }
+}
+
 export async function GET(request: Request) {
   const fren = memberFromRequest(request);
   if (!fren || fren.space !== "email") return NextResponse.json({ ok: false }, { status: 401 });
   const raw = (await kv(["GET", key(fren.handle)])) as string | null;
   const profile: ProfileDoc = raw ? JSON.parse(raw) : {};
+  if (profile.accountName) await healReservation(profile.accountName, fren.handle);
   return NextResponse.json({
     ok: true,
     email: fren.handle,
@@ -127,6 +157,14 @@ export async function PUT(request: Request) {
       }
       accountName = want;
     }
+  }
+  // FOLLOW-UP heal: the name is NOT changing this PUT (either because this
+  // PUT never mentioned accountName at all, or it resubmitted the same
+  // value) — if this member already has a name on their doc, make sure
+  // it's actually reserved. A freshly-changed name is already reserved by
+  // the branch above; this only ever fires for the unchanged case.
+  if (!nameChanged && accountName) {
+    await healReservation(accountName, fren.handle);
   }
   // TASK-186 — the money word is additive: a valid choice replaces, anything
   // else leaves the saved word standing (never a silent wipe)

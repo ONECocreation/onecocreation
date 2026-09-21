@@ -173,16 +173,42 @@ describe("C — /me/your-key: the explainer's words, verbatim (D6)", () => {
 describe("D — account-name-dupe-sweep.mjs: read-only, by construction", () => {
   const src = () => readScript("account-name-dupe-sweep.mjs");
 
-  it("issues SCAN and GET only — never SET, never DEL", () => {
+  it("default mode (no --backfill) issues SCAN and GET only — every SET in the file sits behind the backfill gate", () => {
     const s = src();
     expect(s).toMatch(/kv\(\["SCAN"/);
     expect(s).toMatch(/kv\(\["GET"/);
-    expect(s).not.toMatch(/kv\(\["SET"/);
-    expect(s).not.toMatch(/kv\(\["DEL"/);
+    const backfillGateIdx = s.indexOf("if (!backfill) return;");
+    expect(backfillGateIdx).toBeGreaterThan(-1);
+    const firstSetIdx = s.indexOf('kv(["SET"');
+    // SET exists in the file (the backfill reservation), but only AFTER the
+    // early-return that makes default mode never reach it
+    expect(firstSetIdx).toBeGreaterThan(backfillGateIdx);
+  });
+
+  it("every SET this script can ever emit carries the NX flag — no bare SET, anywhere, in either mode", () => {
+    const s = src();
+    const setCalls = s.match(/kv\(\[\s*"SET"[^\]]*\]\)/g) ?? [];
+    expect(setCalls.length).toBeGreaterThan(0); // the backfill reservation exists
+    for (const call of setCalls) expect(call).toContain('"NX"');
+  });
+
+  it("never issues DEL, in either mode", () => {
+    expect(src()).not.toMatch(/kv\(\["DEL"/);
+  });
+
+  it('a DUPLICATED name is skipped under --backfill, never reserved for either twin', () => {
+    const s = src();
+    expect(s).toMatch(/if \(emails\.length > 1\)/);
+    expect(s).toContain('SKIP "${name}"');
   });
 
   it("refuses to run without KV_REST_API_URL/TOKEN rather than guessing", () => {
     expect(src()).toContain("KV_REST_API_URL and KV_REST_API_TOKEN are required");
+  });
+
+  it("--backfill is parsed from argv, off by default", () => {
+    const s = src();
+    expect(s).toContain('process.argv.includes("--backfill")');
   });
 });
 
@@ -353,5 +379,66 @@ describe("E — profile PUT: the atomic reservation + the 409 path", () => {
     expect(res.status).toBe(200);
     // the guard held — someone-else's reservation was never deleted
     expect(fakeKv.store.get("accountname:guardold")).toBe("someone-else@example.com");
+  });
+});
+
+describe("F — the follow-up fix: lazy heal for names saved before this lane", () => {
+  beforeEach(() => {
+    fakeKv = makeFakeKv();
+    vi.stubGlobal("fetch", fakeKv.fetchStub);
+    writeKeyRegistry([]);
+  });
+
+  it("(a) a legacy holder's GET heals the missing reservation — a second member then gets refused 409 for the same name", async () => {
+    // Simulate a profile doc saved BEFORE this lane's D5 shipped: an
+    // accountName on the doc, but no accountname:* reservation at all —
+    // exactly the hole Number One's review found.
+    fakeKv.store.set(
+      "member:profile:legacy@example.com",
+      JSON.stringify({ displayName: "Legacy", accountName: "legacyname", moneyPrefer: null }),
+    );
+    expect(fakeKv.store.has("accountname:legacyname")).toBe(false);
+
+    const got = await getProfile("legacy@example.com");
+    expect(got.status).toBe(200);
+    expect(got.json.accountName).toBe("legacyname");
+    expect(fakeKv.store.get("accountname:legacyname")).toBe("legacy@example.com"); // healed
+
+    const res = await putProfile("newcomer@example.com", { accountName: "legacyname", displayName: "legacyname" });
+    expect(res.status).toBe(409);
+    expect(res.json.reason).toBe("already claimed");
+  });
+
+  it("(b) a legacy holder's GET never throws and never steals a reservation a twin already holds", async () => {
+    // Two members' docs both carry the SAME accountName (a pre-lane
+    // duplicate) — one already healed (holds the reservation), one not.
+    fakeKv.store.set(
+      "member:profile:winner@example.com",
+      JSON.stringify({ displayName: "Winner", accountName: "twinname", moneyPrefer: null }),
+    );
+    fakeKv.store.set(
+      "member:profile:loser@example.com",
+      JSON.stringify({ displayName: "Loser", accountName: "twinname", moneyPrefer: null }),
+    );
+    fakeKv.store.set("accountname:twinname", "winner@example.com"); // already healed, winner's side
+
+    const got = await getProfile("loser@example.com");
+    expect(got.status).toBe(200); // no throw
+    expect(got.json.accountName).toBe("twinname"); // reads back their OWN doc's value
+    // the reservation is untouched — still the winner's, never stolen
+    expect(fakeKv.store.get("accountname:twinname")).toBe("winner@example.com");
+  });
+
+  it("(c) a PUT that resubmits an unchanged, never-reserved name heals it and returns ok", async () => {
+    fakeKv.store.set(
+      "member:profile:unhealed@example.com",
+      JSON.stringify({ displayName: "Old Display", accountName: "unhealedname", moneyPrefer: null }),
+    );
+    expect(fakeKv.store.has("accountname:unhealedname")).toBe(false);
+
+    const res = await putProfile("unhealed@example.com", { accountName: "unhealedname", displayName: "New Display" });
+    expect(res.status).toBe(200);
+    expect(res.json.accountName).toBe("unhealedname");
+    expect(fakeKv.store.get("accountname:unhealedname")).toBe("unhealed@example.com"); // healed
   });
 });
