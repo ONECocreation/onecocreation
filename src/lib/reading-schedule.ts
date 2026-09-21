@@ -1,7 +1,7 @@
 import { DEFAULT_TZ, wallClockToUtc, zonedDateParts, isValidTz } from "./booking-time.ts";
 
 /**
- * THE READING SCHEDULE (TASK-381, cut 0018.07.0X a₿) — the ONE source both
+ * THE READING SCHEDULE (TASK-381, cut at block 968,048) — the ONE source both
  * the public notice (T-382, held on the mockup nod) and the event sign-up
  * block (T-370, later) read: when the weekly reading happens, and whether
  * it's published at all right now.

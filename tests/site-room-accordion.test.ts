@@ -19,7 +19,7 @@ const ROOT = process.cwd();
 const read = (rel: string) => fs.readFile(path.join(ROOT, rel), "utf8");
 
 describe("the accordion's rows + the current mark", () => {
-  it("carries the four /a/site sub-rooms (Switches first) plus TASK-330's Brand row, last", async () => {
+  it("carries the five /a/site sub-rooms (Switches first) plus TASK-330's Brand row, last", async () => {
     const { SITE_SUBS } = await import("@/components/console/SiteConsoleShell");
     expect(SITE_SUBS.map((s) => [s.key, s.href, s.label])).toEqual([
       ["switches", "/a/site", "Switches"],
