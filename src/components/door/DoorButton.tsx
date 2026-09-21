@@ -99,7 +99,15 @@ export default function DoorButton() {
           aria-expanded={walking}
           aria-haspopup="dialog"
           style={{
-            background: "none", border: "none", cursor: walking ? "default" : "pointer", color: "inherit",
+            /* TASK-356 (the Admiral's desktop walk, REVIEW-K87 item 7 —
+               "Dawn LOG IN RIDES"): this chip lives on the always-night
+               header, which never theme-flips — `color: "inherit"` used
+               to inherit whatever ink the DOCUMENT was wearing, so on
+               dawn it read the dawn `--ink` (#4A4458, ≈1.2:1 on the dark
+               header — nearly invisible). Pinned to the same always-night
+               ink the signed-in menu rows already wear (line ~144 below,
+               "S2: pinned"), one literal value, both themes. */
+            background: "none", border: "none", cursor: walking ? "default" : "pointer", color: "#ECE3C9",
             font: "inherit", letterSpacing: ".05em", textTransform: "uppercase",
             fontSize: ".78rem", whiteSpace: "nowrap",
           }}
