@@ -84,4 +84,9 @@ describe("source pins — RoomView never touches the window or steals focus", ()
     const src = await fs.readFile(path.join(process.cwd(), "src/components/rooms/RoomView.tsx"), "utf8");
     expect(src).not.toContain("autoFocus");
   });
+
+  it("no scroll-event listener on the pane — a hidden/backgrounded tab fires zero scroll events (Number One's browser acceptance, block 968,048), so the follow decision must be measured, never event-driven", async () => {
+    const src = await fs.readFile(path.join(process.cwd(), "src/components/rooms/RoomView.tsx"), "utf8");
+    expect(src).not.toContain('addEventListener("scroll"');
+  });
 });

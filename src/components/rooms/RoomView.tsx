@@ -235,11 +235,13 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
   const txn = useRef(0);
   const pane = useRef<HTMLDivElement>(null);
   /* three small refs that carry the follow decision's intent ACROSS
-     renders without themselves triggering one (TASK-380, Build 1) — the
-     scroll listener below keeps `nearBottom` current BEFORE any update
-     lands; measuring it after the new content has already committed is
-     the race that stops the chat from following right when the room is
-     busiest. */
+     renders without themselves triggering one (TASK-380, Build 1) —
+     `nearBottom` is kept current by readTimeline() itself, measured
+     against the pane immediately BEFORE the new content lands, never by a
+     scroll listener: a hidden or backgrounded tab fires zero scroll
+     events (Number One's browser acceptance, block 968,048), which would
+     leave an event-driven read stuck at whatever it last saw right when a
+     reader leaves the tab open in the background. */
   const nearBottom = useRef(true);
   const firstPopulation = useRef(true);
   const ownSend = useRef(false);
@@ -278,6 +280,19 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
     const chunk = (r.data.chunk ?? []) as TimelineEvent[];
     const { msgs: nextMsgs, reactions: nextReactions, myReactions: mine } =
       parseTimelineChunk(chunk, session.current?.userId);
+    /* measured HERE, immediately before the new content lands, against the
+       pane's STILL-OLD scroll position — the reader's true "was I near the
+       bottom" intent at the instant the update arrives. Not a scroll
+       listener: a hidden/backgrounded tab fires zero scroll events (found
+       by Number One's browser acceptance, block 968,048), so an
+       event-driven read would silently go stale — stuck at attach-time 0
+       for a member who opens the room already backgrounded, or stuck true
+       for one who scrolled up while away, either way yanking or freezing
+       the chat the moment they come back. When the pane hasn't mounted yet
+       (`state !== "open"`), the ref is left untouched — `firstPopulation`
+       already forces that first population to the bottom regardless. */
+    const el = pane.current;
+    if (el) nearBottom.current = isNearBottom(el.scrollTop, el.clientHeight, el.scrollHeight, NEAR_BOTTOM_PX);
     setMsgs(nextMsgs);
     setReactions(nextReactions);
     setMyReactions(mine);
@@ -314,24 +329,6 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
     })();
     return () => { live = false; if (timer) clearInterval(timer); };
   }, [alias, api, readTimeline]);
-
-  /* keeps `nearBottom` current from the pane's OWN scroll events — this is
-     the "intent captured BEFORE the update" half of the follow rule. Keyed
-     on `state` (not `[]`) because the pane doesn't exist in the DOM until
-     the room finishes loading (RoomView returns early below for every
-     other state), so a one-time listener attached at mount would forever
-     find `pane.current` null; re-running when `state` flips to "open"
-     attaches it against the real element. */
-  useEffect(() => {
-    const el = pane.current;
-    if (!el) return;
-    const onScroll = () => {
-      nearBottom.current = isNearBottom(el.scrollTop, el.clientHeight, el.scrollHeight, NEAR_BOTTOM_PX);
-    };
-    onScroll();
-    el.addEventListener("scroll", onScroll);
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [state]);
 
   /* the follow effect itself — scrolls the messages pane's OWN box
      (`scrollTop`), never `scrollIntoView` (which walks every scrollable
