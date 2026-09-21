@@ -22,14 +22,17 @@ import { nip19 } from "nostr-tools";
  * `children` completely unwrapped: no extra DOM node, no behavior change.
  * Only `PuckEditor.tsx` ever provides a value.
  *
- * NO WRAPPING BOX around `children` (ground fact 10): MeSwitch's own
- * render is a bare Fragment of three siblings inside the Band's flow
- * (`<>{ConstellationCard}{MemberQuickCards}{MePanel}</>`) — a single new
- * wrapper element here would collapse those three flex/grid items into
- * one. `BuilderMarker` returns a Fragment holding the label row FIRST,
- * then `children` untouched and unwrapped right after it, so MeSwitch's
- * three siblings stay three siblings (now with one extra row ahead of
- * them) and LoginDoor's one child stays one child. The label row/tooltip
+ * NO WRAPPING BOX around `children` (ground fact 10): (TASK-352, OC UI kit
+ * lane 4 — corrects the stale shape this note used to describe) MeSwitch's
+ * signed-in branches each render one kit `Tabs` element now (Profile/
+ * Calendar/Purchases), not the three-sibling Fragment
+ * (`<>{ConstellationCard}{MemberQuickCards}{MePanel}</>`) this note
+ * originally named — either way, a wrapper element here would still
+ * disturb whatever MeSwitch renders, so `BuilderMarker` returns a Fragment
+ * holding the label row FIRST, then `children` untouched and unwrapped
+ * right after it: MeSwitch's own render stays exactly its own shape (now
+ * with one extra row ahead of it) and LoginDoor's one child stays one
+ * child. The label row/tooltip
  * anchor their own absolute position off the trigger BUTTON itself
  * (`position: relative` on the button, not on any wrapping element) so
  * they never depend on a `position: relative` ancestor Band doesn't

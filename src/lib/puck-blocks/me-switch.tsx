@@ -17,9 +17,11 @@ import BuilderMarker from "@/components/style/BuilderMarker";
  * TASK-342 (0018.06.28 a₿): wrapped in `BuilderMarker`, which is a no-op
  * everywhere but the /style canvas (its context defaults to `null` — see
  * BuilderMarker.tsx). `BuilderMarker` renders NO wrapping box around
- * `children` on the canvas either (ground fact 10): MeSwitch's own render
- * is a bare Fragment of three siblings, and a wrapping div here would
- * collapse those three flex/grid items into one.
+ * `children` on the canvas either (ground fact 10) — that holds regardless
+ * of what MeSwitch itself renders (TASK-352, OC UI kit lane 4 — MeSwitch's
+ * signed-in branches are now one kit `Tabs` element each, not the three
+ * bare siblings this note used to describe; BuilderMarker's own no-wrap
+ * behavior toward `children` is unaffected either way).
  */
 export function createMeSwitch() {
   return {

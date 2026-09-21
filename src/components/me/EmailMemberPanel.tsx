@@ -1,29 +1,23 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import ConstellationCard from "@/components/me/ConstellationCard";
 
 /**
  * The email member's home (dual-path ruling, 0018.05.15): no keys demanded —
- * a name of their choosing, their purchases, and the quick doors. Key
- * members keep the full MePanel; adding a key later is the account-link
- * design on Love's checklist.
+ * a name of their choosing. Key members keep the full MePanel; adding a key
+ * later is the account-link design on Love's checklist.
+ *
+ * TASK-352 (OC UI kit lane 4): this is now the Profile tab's content ONLY —
+ * the purchases and quick-doors cards this file used to render itself moved
+ * to the shared Purchases tab (`MeSwitch.tsx` mounts `MemberQuickCards` for
+ * BOTH member kinds, RULED, Build item 6); this file keeps only the welcome
+ * card.
  */
-interface MemberOrder {
-  id: string;
-  state: string;
-  createdAtMs: number;
-  title: string;
-  amount: { amount: number; currency: string };
-  bookingId: string | null;
-}
-
 export default function EmailMemberPanel() {
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [saved, setSaved] = useState(false);
-  const [orders, setOrders] = useState<MemberOrder[] | null>(null);
   /* TASK-212 (Love's call #33): bumped on every successful save so the
      constellation below re-derives and lights its name star the same
      moment — no reload needed to see the name you just picked. */
@@ -39,10 +33,6 @@ export default function EmailMemberPanel() {
         }
       })
       .catch(() => {});
-    fetch("/api/member/orders")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: { ok?: boolean; orders?: MemberOrder[] } | null) => setOrders(d?.orders ?? []))
-      .catch(() => setOrders([]));
   }, []);
 
   async function saveName(e: React.FormEvent) {
@@ -99,43 +89,6 @@ export default function EmailMemberPanel() {
             {saved ? "Saved ✓" : "Save"}
           </button>
         </form>
-      </div>
-
-      <div style={card}>
-        <h2 style={{ fontFamily: "var(--font-h2)", fontWeight: 400, fontSize: "1.2rem", margin: 0 }}>
-          Your purchases
-        </h2>
-        {orders === null ? (
-          <p style={{ color: "var(--muted)", fontSize: ".88rem", marginTop: 10 }}>reading…</p>
-        ) : orders.length === 0 ? (
-          <p style={{ color: "var(--muted)", fontSize: ".88rem", marginTop: 10 }}>
-            Nothing yet — your sessions and offerings will gather here.
-          </p>
-        ) : (
-          <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0" }}>
-            {orders.map((o) => (
-              <li key={o.id} style={{ padding: "10px 0", borderTop: "1px solid rgba(139,118,196,.2)" }}>
-                <b>{o.title}</b> · {o.state}
-                {/* every purchase gets OUR receipt door — bookings to the booking
-                    receipt, everything else to the order page (never BTCPay) */}
-                {" "}
-                · <Link href={o.bookingId ? `/book/receipt/${o.bookingId}` : `/store/order/${o.id}`} style={{ color: "var(--gold-deep)" }}>receipt</Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div style={card}>
-        <h2 style={{ fontFamily: "var(--font-h2)", fontWeight: 400, fontSize: "1.2rem", margin: 0 }}>
-          Quick doors
-        </h2>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
-          <Link className="btn btn-ghost btn-sm" href="/memberships">Memberships</Link>
-          <Link className="btn btn-ghost btn-sm" href="/book">Book a Session</Link>
-          <Link className="btn btn-ghost btn-sm" href="/store">The Store</Link>
-          <Link className="btn btn-ghost btn-sm" href="/classes">Community & Classes</Link>
-        </div>
       </div>
     </div>
   );

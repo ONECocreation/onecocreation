@@ -6,9 +6,12 @@ import { ROOMS } from "@/lib/matrix-rooms";
 
 /**
  * The member-home cards every signed-in soul gets (the Admiral's ask):
- * purchases + the quick doors, including the Matrix classrooms. Shown to
- * key members above their control room and inside the email member's home.
- * The community CALENDAR tab lands here next (nostr calendar + .ics sync).
+ * purchases + the quick doors, including the Matrix classrooms. Mounted in
+ * the Purchases tab of `/me`'s `MeSwitch`, for BOTH member kinds (TASK-352,
+ * OC UI kit lane 4 — RULED, Build item 6: an email member used to get its
+ * own smaller purchases card; this file's StateChip/Matrix-classroom extras
+ * are now a real, named superset for them too). The Calendar tab sits one
+ * tab over, mounting `MemberCalendar` directly — not this file's concern.
  */
 interface MemberOrder {
   id: string;
@@ -125,8 +128,7 @@ export default function MemberQuickCards() {
           </>
         )}
         <p style={{ color: "var(--muted)", fontSize: ".78rem", marginTop: 14 }}>
-          The community calendar lands here next — nostr events plus a sync feed for your own
-          calendar.
+          Your calendar lives one tab over — the sessions you&apos;ve booked ride the grid there.
         </p>
       </div>
     </div>
