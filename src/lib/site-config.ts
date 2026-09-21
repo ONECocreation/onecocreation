@@ -7,6 +7,7 @@ import { TENANT } from "./tenant.ts";
 import { SPACE_NAME, domainForSpace } from "./identity-config.ts";
 import { YOUTUBE_ID_RE } from "./youtube-id.ts";
 import type { AboutVideo } from "./about-content.ts";
+import { validateReadingSchedule, type ReadingSchedule } from "./reading-schedule.ts";
 
 /**
  * THE SWITCHES (TASK-129, cut 0018.06.16 a₿) — one site-config doc so Love
@@ -125,6 +126,16 @@ export interface SiteConfig {
   nav?: NavConfig;
   /** TASK-161: the About playlist Love pastes. Absent = the seed stands. */
   about?: AboutConfig;
+  /** TASK-381: the weekly reading's day/time/zone/length, set from
+      /a/site/reading. Absent (never saved, or a malformed stored doc) =
+      no default lives HERE — every reader applies reading-schedule.ts's
+      own DEFAULT_READING_SCHEDULE (Wednesdays 1:11 PM Mountain, on) at
+      read time instead. A validly-saved schedule with `on: false` is NOT
+      collapsed to absent — "nothing published" is a real saved state,
+      distinct from "never set," same as `about`'s empty-list-survives
+      rule; only a genuinely malformed doc falls back (sanitizeReading
+      below). */
+  reading?: ReadingSchedule;
 }
 
 export type SiteConfigPatch = {
@@ -136,6 +147,9 @@ export type SiteConfigPatch = {
   nav?: NavConfig;
   /** same whole-list replace as nav — the card always saves its full set */
   about?: AboutConfig;
+  /** whole-object replace when present, same shape as nav/about — the
+      reading card always saves its complete schedule, never one field */
+  reading?: ReadingSchedule;
 };
 
 /** The site's real routes a nav item may point to (TASK-137) — kept in sync
@@ -245,7 +259,20 @@ function sanitize(raw: unknown): SiteConfig {
     },
     nav: sanitizeNav(o.nav),
     about: sanitizeAbout(o.about),
+    reading: sanitizeReading(o.reading),
   };
+}
+
+/** The stored reading doc → a validated ReadingSchedule, or `undefined`
+    when `reading` was never saved OR the stored value is malformed — same
+    absent-means-undefined shape as sanitizeAbout (a missing/garbage doc
+    falls back; every READER then applies reading-schedule.ts's own
+    DEFAULT_READING_SCHEDULE). Reuses validateReadingSchedule itself rather
+    than re-deriving the same checks — one definition of "valid," shared by
+    this read-side backstop and the route's write-side refusal below. */
+function sanitizeReading(raw: unknown): ReadingSchedule | undefined {
+  const checked = validateReadingSchedule(raw);
+  return checked.ok ? checked.value : undefined;
 }
 
 /** One playlist entry → known-good, or dropped: the id must be the 11-char
@@ -514,6 +541,11 @@ export async function saveSiteConfig(patch: SiteConfigPatch): Promise<SiteConfig
     // TASK-161: same whole-list rule for the About playlist — omitted leaves
     // her saved list (or the absent-means-seed default) untouched.
     about: patch.about !== undefined ? patch.about : current.about,
+    // TASK-381: same whole-object rule for the reading schedule — omitted
+    // leaves her saved schedule (or the absent-means-reader-default) alone;
+    // missing this line (or the sanitize() wiring above) would silently
+    // erase a saved reading time on the next unrelated save.
+    reading: patch.reading !== undefined ? patch.reading : current.reading,
   });
   await writeStored(next);
   cache = next;
