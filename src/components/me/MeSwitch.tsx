@@ -3,9 +3,11 @@
 import MePanel from "./MePanel";
 import EmailMemberPanel from "./EmailMemberPanel";
 import MemberQuickCards from "./MemberQuickCards";
+import MemberCalendar from "./MemberCalendar";
 import ConstellationCard from "./ConstellationCard";
 import Card from "@/components/kit/Card";
 import Button from "@/components/kit/Button";
+import Tabs from "@/components/kit/Tabs";
 import SignInCard from "@/components/door/SignInCard";
 import useMemberSession, { useSessionStatus, refresh } from "@/hooks/useMemberSession";
 import { classifyMeState } from "./session-state";
@@ -30,6 +32,20 @@ import { classifyMeState } from "./session-state";
  * `classifyMeState` (session-state.ts) is the one place this decision is
  * made — a sibling module the hook's own fetch handling shares — pinned
  * directly in tests/me-signed-out.test.ts.
+ *
+ * TASK-352 (OC UI kit lane 4): the "email"/"key" branches below are now
+ * three kit `Tabs` — Profile, Calendar, Purchases — each branch wiring its
+ * own `items` (RULED, Build item 1, option (b): matches this file family's
+ * existing separation — EmailMemberPanel/MePanel/MemberQuickCards/
+ * ConstellationCard never share a file today). Tab state is uncontrolled
+ * (`defaultActive`, RULED, Build item 2) — no URL param, no new plumbing.
+ * Calendar mounts today's real `MemberCalendar` (`/api/member/bookings`)
+ * unmodified for BOTH kinds — the one genuinely new fetch this lane adds
+ * (an email member never had a calendar surface on /me before). Purchases
+ * mounts `MemberQuickCards` for BOTH kinds (RULED, Build item 6) — an email
+ * member gains its state chips and Matrix classroom links, a real, named
+ * superset of what `EmailMemberPanel` used to render alone. "Link a key" is
+ * OUT of this lane entirely (RULED, the Admiral) — nothing built for it.
  */
 export default function MeSwitch() {
   const { checked } = useMemberSession();
@@ -64,14 +80,39 @@ export default function MeSwitch() {
 
   if (kind === "signed-out") return <SignInCard mount="page" />;
 
-  if (kind === "email") return <EmailMemberPanel />;
+  if (kind === "email") {
+    return (
+      <Tabs
+        label="Your account"
+        defaultActive="profile"
+        items={[
+          { id: "profile", label: "Profile", content: <EmailMemberPanel /> },
+          { id: "calendar", label: "Calendar", content: <MemberCalendar /> },
+          { id: "purchases", label: "Purchases", content: <MemberQuickCards /> },
+        ]}
+      />
+    );
+  }
 
   return (
-    <>
-      {/* the same gentle stars the email home greets with (Admiral, 0018.05.15) */}
-      <ConstellationCard />
-      <MemberQuickCards />
-      <MePanel />
-    </>
+    <Tabs
+      label="Your account"
+      defaultActive="profile"
+      items={[
+        {
+          id: "profile",
+          label: "Profile",
+          content: (
+            <>
+              {/* the same gentle stars the email home greets with (Admiral, 0018.05.15) */}
+              <ConstellationCard />
+              <MePanel />
+            </>
+          ),
+        },
+        { id: "calendar", label: "Calendar", content: <MemberCalendar /> },
+        { id: "purchases", label: "Purchases", content: <MemberQuickCards /> },
+      ]}
+    />
   );
 }
