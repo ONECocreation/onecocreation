@@ -26,6 +26,9 @@ describe("the accordion's rows + the current mark", () => {
       ["menu", "/a/site/menu", "Menu"],
       ["community-door", "/a/site/community-door", "Community door"],
       ["about-videos", "/a/site/about-videos", "Videos on About"],
+      // TASK-381 (block 968,047+): the weekly reading's source, no public
+      // surface yet (the notice is T-382, held on the mockup nod).
+      ["reading", "/a/site/reading", "The weekly reading"],
       // TASK-330 (0018.06.27 a₿): Brand folds under Site as a fifth
       // sub-row — its own route (/a/brand), not under /a/site/*.
       ["brand", "/a/brand", "Brand"],
@@ -41,6 +44,7 @@ describe("the accordion's rows + the current mark", () => {
     expect(siteSubForPath("/a/site/menu")).toBe("menu");
     expect(siteSubForPath("/a/site/community-door")).toBe("community-door");
     expect(siteSubForPath("/a/site/about-videos")).toBe("about-videos");
+    expect(siteSubForPath("/a/site/reading")).toBe("reading");
     // a deeper unknown /a/site/* path still marks Switches; outside /a/site nothing marks
     expect(siteSubForPath("/a/site/anything-else")).toBe("switches");
     expect(siteSubForPath("/a/money")).toBeNull();
