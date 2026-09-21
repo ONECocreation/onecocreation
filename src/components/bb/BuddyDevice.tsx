@@ -177,7 +177,11 @@ export default function BuddyDevice({
       if (tipNow != null && tipNow !== bgHeight) {
         if (bgHeight !== -1 && !reduce) shimmerAt = t; // the block broke mid-visit
         bgHeight = tipNow;
-        scene = bftScene(bgHeight);
+        // TASK-362: the sky's real instant, not the flat estimate clock —
+        // Date.now() here (not the `nowMs` state above) because this rAF
+        // loop's closure is fixed at mount ([buddy.bornBlock] deps) and
+        // never sees later `nowMs` updates, unlike blockRef.current below.
+        scene = bftScene(bgHeight, Date.now());
         drawBftBackground(bgctx, W, H, scene);
       }
       ctx.drawImage(bg, 0, 0);
