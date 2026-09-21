@@ -16,9 +16,9 @@ import useNostrProfile from "@/hooks/useNostrProfile";
  * name the visitor just picked lights the star the same moment, not after a
  * refresh. Omit the prop and this mounts once, same as before.
  *
- * TASK-358 (the Admiral, block 967,926): "open the school portal" is
- * DROPPED (arcade residue — Love gives no classes) and "connect a zap
- * wallet" is HIDDEN (no NWC code exists anywhere in this repo). "Dress
+ * TASK-358 (the Admiral, block 967,926): the classroom-door star is
+ * DROPPED (arcade residue — Love gives no classes) and the lightning-
+ * wallet star is HIDDEN (no NWC code exists anywhere in this repo). "Dress
  * your profile card" now lights from the SAME live kind-0 signal
  * `MePanel`'s own `ProfileEditor` already reads (`useNostrProfile`,
  * `state === "found"`) instead of a hardcoded `false` — its own npub comes
