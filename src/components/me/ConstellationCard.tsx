@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import useNostrProfile from "@/hooks/useNostrProfile";
 
 /**
  * YOUR CONSTELLATION (the Admiral's welcome answers, 0018.05.15): what
@@ -14,47 +15,78 @@ import { useEffect, useState } from "react";
  * like to be called" field) re-derive the stars without a page reload — the
  * name the visitor just picked lights the star the same moment, not after a
  * refresh. Omit the prop and this mounts once, same as before.
+ *
+ * TASK-358 (the Admiral, block 967,926): "open the school portal" is
+ * DROPPED (arcade residue — Love gives no classes) and "connect a zap
+ * wallet" is HIDDEN (no NWC code exists anywhere in this repo). "Dress
+ * your profile card" now lights from the SAME live kind-0 signal
+ * `MePanel`'s own `ProfileEditor` already reads (`useNostrProfile`,
+ * `state === "found"`) instead of a hardcoded `false` — its own npub comes
+ * from this card's existing `/api/member/session` fetch, so no other file
+ * changes. "Hold your own key" stays present-and-unlit for email members
+ * (block 967,919's ruling); its `href` now opens the plain-words explainer
+ * at `/me/your-key` — never `/login`, which starts a second, unlinked key
+ * session instead of linking one.
  */
 interface Star { done: boolean; icon: string; t: string; w: string; href: string }
 
+interface LettersResp { signedIn?: boolean; email?: string | null }
+interface ProfileResp { accountName?: string; displayName?: string }
+interface SessionResp { handle?: string; space?: string; npub?: string | null }
+
 export default function ConstellationCard({ refreshKey }: { refreshKey?: number } = {}) {
-  const [stars, setStars] = useState<Star[] | null>(null);
+  const [data, setData] = useState<{ who: LettersResp | null; prof: ProfileResp | null; ses: SessionResp | null } | null>(null);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/me/letters", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
       fetch("/api/member/profile").then((r) => (r.ok ? r.json() : null)).catch(() => null),
       fetch("/api/member/session").then((r) => (r.ok ? r.json() : null)).catch(() => null),
-    ]).then(([who, prof, ses]) => {
-      if (!who?.signedIn) { setStars([]); return; }
-      const emailMember = !!who.email;
-      /* key members claimed their @tag at the door — that star is already lit;
-         their "hello" face is the kind-0 profile card, not a call-me field */
-      const named = emailMember
-        ? { done: !!prof?.accountName, t: prof?.accountName ? `named ${prof.accountName}@onecocreation` : "claim your community name", href: "/welcome" }
-        : { done: !!ses?.handle, t: ses?.handle ? `named ${ses.handle}@${ses.space}` : "claim your community name", href: "/welcome" };
-      setStars([
-        { done: true, icon: "✦", t: "joined the field", w: "", href: "" },
-        { done: named.done, icon: "💫", t: named.t, w: "how the circle knows you", href: named.href },
-        emailMember
-          ? { done: !!prof?.displayName, icon: "🌸", t: "a call-me name", w: "what Love says hello with", href: "/me" }
-          : { done: false, icon: "🌸", t: "dress your profile card", w: "the face every nostr app shows for you", href: "/me" },
-        { done: false, icon: "📚", t: "open the school portal", w: "your classrooms, one door", href: "/classes" },
-        { done: false, icon: "⚡", t: "connect a zap wallet", w: "send & receive sats — optional", href: "/me" },
-        { done: !emailMember, icon: "🔑", t: "hold your own key", w: "when you're ready — your name becomes truly yours", href: "/login" },
-      ]);
-    });
+    ]).then(([who, prof, ses]) => setData({ who, prof, ses }));
   }, [refreshKey]);
+
+  /* the live kind-0 signal for "dress your profile card" — Named decision
+     1(a): read here, off this card's own session fetch, so MeSwitch.tsx's
+     bare `<ConstellationCard />` mount (and its test pin) never changes.
+     `npub` is null for an email member and for every render before the
+     session fetch resolves — the hook no-ops cleanly on null and simply
+     never reaches "found", which is exactly the unlit state this star
+     wants until then (no "checking…" affordance is ever rendered off it). */
+  const { state: profileSignal } = useNostrProfile(data?.ses?.npub ?? null);
+
+  const stars: Star[] | null = !data
+    ? null
+    : !data.who?.signedIn
+      ? []
+      : (() => {
+          const { who, prof, ses } = data;
+          const emailMember = !!who?.email;
+          /* key members claimed their @tag at the door — that star is already lit;
+             their "hello" face is the kind-0 profile card, not a call-me field */
+          const named = emailMember
+            ? { done: !!prof?.accountName, t: prof?.accountName ? `named ${prof.accountName}@onecocreation` : "claim your community name", href: "/welcome" }
+            : { done: !!ses?.handle, t: ses?.handle ? `named ${ses.handle}@${ses.space}` : "claim your community name", href: "/welcome" };
+          return [
+            { done: true, icon: "✦", t: "joined the field", w: "", href: "" },
+            { done: named.done, icon: "💫", t: named.t, w: "how the circle knows you", href: named.href },
+            emailMember
+              ? { done: !!prof?.displayName, icon: "🌸", t: "a call-me name", w: "what Love says hello with", href: "/me" }
+              : { done: profileSignal === "found", icon: "🌸", t: "dress your profile card", w: "the face every nostr app shows for you", href: "/me" },
+            { done: !emailMember, icon: "🔑", t: "hold your own key", w: "when you're ready — your name becomes truly yours", href: "/me/your-key" },
+          ];
+        })();
 
   if (!stars || stars.length === 0) return null;
   const lit = stars.filter((s) => s.done).length;
   const whole = lit === stars.length;
 
-  /* the sky map (Love's ask, 0018.05.15): six stars in a real figure — a
-     little swan rising. Each lit star appears; lit NEIGHBORS get their line,
-     so the constellation genuinely draws itself as the walk completes. */
-  const SKY: [number, number][] = [[10, 46], [30, 22], [50, 34], [70, 14], [88, 30], [62, 54]];
-  const EDGES: [number, number][] = [[0, 1], [1, 2], [2, 3], [3, 4], [2, 5], [4, 5]];
+  /* the sky map (Love's ask, 0018.05.15): four stars in a real figure —
+     the swan's four brightest points, the school-portal and zap-wallet
+     stars retired from the count (TASK-358). Each lit star appears; lit
+     NEIGHBORS get their line, so the constellation genuinely draws itself
+     as the walk completes. */
+  const SKY: [number, number][] = [[10, 46], [36, 18], [64, 32], [90, 14]];
+  const EDGES: [number, number][] = [[0, 1], [1, 2], [2, 3]];
   const gold = "var(--gold-2, #EBCB77)";
 
   return (
