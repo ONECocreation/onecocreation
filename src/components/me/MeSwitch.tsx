@@ -44,8 +44,9 @@ import { classifyMeState } from "./session-state";
  * (an email member never had a calendar surface on /me before). Purchases
  * mounts `MemberQuickCards` for BOTH kinds (RULED, Build item 6) — an email
  * member gains its state chips and Matrix classroom links, a real, named
- * superset of what `EmailMemberPanel` used to render alone. "Link a key" is
- * OUT of this lane entirely (RULED, the Admiral) — nothing built for it.
+ * superset of what `EmailMemberPanel` used to render alone. The deferred
+ * email→key linking affordance is OUT of this lane entirely (RULED, the
+ * Admiral) — nothing built for it, in any wording.
  */
 export default function MeSwitch() {
   const { checked } = useMemberSession();
