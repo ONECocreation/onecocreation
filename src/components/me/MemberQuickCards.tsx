@@ -5,12 +5,18 @@ import { useEffect, useState } from "react";
 
 /**
  * The member-home cards every signed-in soul gets (the Admiral's ask):
- * purchases + the quick doors, including the Matrix classrooms. Mounted in
- * the Purchases tab of `/me`'s `MeSwitch`, for BOTH member kinds (TASK-352,
- * OC UI kit lane 4 — RULED, Build item 6: an email member used to get its
- * own smaller purchases card; this file's StateChip/Matrix-classroom extras
- * are now a real, named superset for them too). The Calendar tab sits one
- * tab over, mounting `MemberCalendar` directly — not this file's concern.
+ * purchases + the quick doors. Mounted in the Purchases tab of `/me`'s
+ * `MeSwitch`, for BOTH member kinds (TASK-352, OC UI kit lane 4 — RULED,
+ * Build item 6: an email member used to get its own smaller purchases
+ * card; this file's StateChip extras are now a real, named superset for
+ * them too). The Calendar tab sits one tab over, mounting `MemberCalendar`
+ * directly — not this file's concern.
+ *
+ * TASK-365 (0018.07.02 a₿, block 967,927): the quick-doors row's own
+ * per-classroom loop (three links, all → /classes, zero new information)
+ * is gone — the static "Community & Classes" door already covers it; the
+ * Admiral's own "this is just a community" ruling is the reason not to
+ * invent new per-room doors here instead.
  */
 interface MemberOrder {
   id: string;
