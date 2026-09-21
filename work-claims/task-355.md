@@ -45,12 +45,15 @@ not a build step — noted in the brief's own item 8).
 
 ## OWNS
 
-`src/components/BasketChip.tsx`, NEW `src/components/AccountDoor.tsx`, NEW
-`src/lib/puck-blocks/account-door.tsx`, `src/app/about/page.tsx` (the one link), `src/lib/
-puck-seeds.ts` (the one about `buttons` entry), `src/lib/puck-config.tsx` (register the block —
-a pre-allowed seam, one line), `src/lib/copilot.ts` (mirror the new block, the LOCKSTEP law),
-`src/app/house.css` (the two carve-out rules only), NEW `tests/chrome-trio.test.ts`, NEW
-`work-claims/task-355.md` (this file, first commit).
+`src/components/BasketChip.tsx`, NEW `src/components/AccountDoor.tsx`,
+NEW `src/lib/puck-blocks/account-door.tsx`,
+`src/app/about/page.tsx` (the one link),
+`src/lib/puck-seeds.ts` (the one about `buttons` entry),
+`src/lib/puck-config.tsx` (register the block — a pre-allowed seam, one line),
+`src/lib/copilot.ts` (mirror the new block, the LOCKSTEP law),
+`src/app/house.css` (the two carve-out rules only),
+NEW `tests/chrome-trio.test.ts`,
+NEW `work-claims/task-355.md` (this file, first commit).
 
 READ-ONLY (per brief): `src/app/api/cart/**`, `src/lib/cart.ts`, `src/components/SiteHeader.tsx`,
 `src/components/store/**`, `src/hooks/useMemberSession.ts`, the kit, `src/app/welcome/**`,

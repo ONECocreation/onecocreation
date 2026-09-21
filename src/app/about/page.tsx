@@ -15,6 +15,7 @@ import { applyFeaturedToPuck } from "@/lib/puck-seeds";
 import AboutPlaylist from "@/components/about/AboutPlaylist";
 import AboutFeatured from "@/components/about/AboutFeatured";
 import StackedHero from "@/components/StackedHero";
+import AccountDoor from "@/components/AccountDoor";
 import {
   ABOUT_BRIDGE_LINE,
   ABOUT_JOIN_LINES,
@@ -352,8 +353,12 @@ export default async function AboutPage() {
                 Ready to get started?
               </p>
               <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
-                {/* TASK-154 item 7: the account door pours pink too */}
-                <Link className={ABOUT_PINK_DOOR} href="/welcome">Create your account ✨</Link>
+                {/* TASK-154 item 7: the account door pours pink too.
+                    TASK-355 (0018.07.02 a₿, the Admiral's walk, D2a): a
+                    signed-in member sees "Go to your page →" to /me
+                    instead of an invitation to create a second account —
+                    AccountDoor reads the session itself, no flash. */}
+                <AccountDoor />
                 {/* TASK-128 (0018.06.16 a₿): the ConsciousCuts & Waxing door is
                     retired with the service — the account door stays. */}
               </div>

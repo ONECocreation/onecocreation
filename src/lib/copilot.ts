@@ -205,6 +205,16 @@ const COMPONENTS: CompDef[] = [
       },
     },
   },
+  /* TASK-355 (0018.07.02 a₿): the lockstep law (puck-config.tsx) —
+     Number One may place the session-aware account door. It is DATA-BOUND
+     and { id }-only: the signed-in/signed-out state renders live on the
+     published page (never stored in the page doc); it carries no copy
+     fields at all. */
+  {
+    type: "AccountDoor",
+    desc: "The account door — 'Create your account ✨' to /welcome for a signed-out visitor, 'Go to your page →' to /me for a signed-in member. Use it anywhere a page invites someone to join; never freeze either label or href into copy around it.",
+    fields: {},
+  },
 ];
 
 /** The component reference Love's request is built against, as prompt text. */
