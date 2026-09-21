@@ -8,6 +8,7 @@ import { applyMemberSession } from "@/hooks/useMemberSession";
 import { nextPathFromLocation } from "@/lib/next-path";
 import SignerDoors from "@/components/SignerDoors";
 import { isAndroid, withSignTimeout } from "@/lib/signer-doors";
+import { useHasNostrExtension } from "@/lib/use-nostr-extension";
 import {
   DOOR_BACK,
   DOOR_COPY,
@@ -20,16 +21,15 @@ import {
   reduce,
 } from "./door-machine";
 
-/* hydration-safe one-shot platform reads (the Kind0Doors/SignerDoors
-   useHasSigner pattern — the server snapshot is null, never a lie) */
+/* hydration-safe one-shot platform read for the device check (the
+   Kind0Doors/SignerDoors useHasSigner pattern — the server snapshot is
+   null, never a lie). The nostr-extension read moved to
+   src/lib/use-nostr-extension.ts (TASK-356, REVIEW-K87 item 2): the local
+   copy here was a one-shot (useSyncExternalStore(noopSubscribe, …)) that
+   never re-checked, so a late-injecting extension (nos2x-class) left the
+   door on the no-extension pane forever. `useIsAndroid` keeps its own
+   one-shot shape below — a user agent does not change mid-session. */
 const noopSubscribe = () => () => {};
-function useHasNostrExtension(): boolean | null {
-  return useSyncExternalStore(
-    noopSubscribe,
-    () => typeof window !== "undefined" && !!window.nostr,
-    () => null,
-  );
-}
 function useIsAndroid(): boolean | null {
   return useSyncExternalStore(noopSubscribe, () => isAndroid(), () => null);
 }

@@ -1,13 +1,14 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { nip19 } from "nostr-tools";
 import type { VerifiedEvent } from "nostr-tools/pure";
 import { applyMemberSession } from "@/hooks/useMemberSession";
 import { nextPathFromLocation } from "@/lib/next-path";
 import SignerDoors from "@/components/SignerDoors";
-import { isAndroid, SignTimeoutError, withSignTimeout } from "@/lib/signer-doors";
+import { SignTimeoutError, withSignTimeout } from "@/lib/signer-doors";
+import { useHasNostrExtension } from "@/lib/use-nostr-extension";
 import Button from "@/components/kit/Button";
 import Card from "@/components/kit/Card";
 import Field from "@/components/kit/Field";
@@ -16,7 +17,6 @@ import {
   DOOR_BACK,
   DOOR_COPY,
   DOOR_KEY_CTA,
-  DOOR_KEY_NOTE,
   DOOR_NAME_SUFFIX,
   DoorState,
   isUnnamedKeyReason,
@@ -35,18 +35,39 @@ import {
  * published), and the signer-return strip — untabbed and otherwise
  * unchanged. `SignInCard` is a NEW, additive render of the SAME underlying
  * model (`reduce`/`DOOR_COPY`/`landingFor`, imported directly from
- * `door-machine.ts`), redrawn in kit parts — not a wrapper that mounts
- * `DoorSheet`'s own inline-styled JSX as an opaque child (that would keep
- * the inline `card`/`headline`/`bodyNote`/`field` objects the ask names
- * for replacement). The Email/Key split is a UI-only layer over the SAME
- * "sign-in" DoorState — exactly the `signerOpen` precedent (DoorSheet.tsx:
- * 99) the Ground section names, just hosted here instead.
+ * `door-machine.ts`), redrawn in kit parts.
  *
- * RULED item 3 — named, not fixed: the Email tab's own ghost button
- * ("Sign in with my key") can ALSO open `SignerDoors` in place, inside the
- * Email tab, via `signInWithKey()` below — the SAME function the Key tab's
- * own button calls when an extension is present. It is a real duplication
- * (two ways to reach the same doors) and is left as-is, per the ruling.
+ * TASK-356 (0018.07.02 a₿, the Admiral's desktop walk of `/login`,
+ * REVIEW-K87 folded — its "OWNS is now:" line is the real OWNS) — four
+ * fixes from one walk:
+ *
+ *  1. THE ADMIRAL OVERRULES K83's own RULED item 3 ("same doors"): "on the
+ *     email tab, we shouldnt have a button to sign in with a key. it makes
+ *     it confusing for the user. that's why we split the tabs." The
+ *     Email tab's second key Button, its device-aware quiet line, and the
+ *     local sign-in-in-place branch that opened `SignerDoors` inside the
+ *     Email tab are gone
+ *     — replaced with one quiet, real pointer to the Key tab. `Tabs` runs
+ *     controlled now (`activeTab` state, `active`/`onChange`) so that
+ *     pointer can actually select the Key tab, not just say the words.
+ *  2. THE KEY TAB ALWAYS SHOWS A REAL WAY IN: with no extension, a plain
+ *     line above the doors says so, and `SignerDoors` renders with the new
+ *     `variant="card"` (SignerDoors.tsx, additive) — a visible chevron,
+ *     the native marker hidden, `--ghost-bg`/`--ghost-ink` in place of the
+ *     quiet default, ≥4.5:1 on both themes (SUMMARY.md carries the
+ *     computed ratios).
+ *  3. THE SECOND CAUSE (REVIEW-K87 item 2, rides both mounts): the local
+ *     one-shot `useHasNostrExtension` (never re-checked after first paint)
+ *     is retired in favor of `@/lib/use-nostr-extension`'s real subscribe
+ *     — an add-on that injects `window.nostr` after hydration now flips
+ *     the card instead of stranding it. `DoorSheet.tsx` gets the same
+ *     swap, that swap only.
+ *  4. ALIGNMENT (RULED K-b = (a)): the title and the tab list are centred;
+ *     body copy stays left (legibility doctrine — reading text is never
+ *     centred); the email/code/name `Field`s lose their kit-wide
+ *     `max-width:360px` cap (via a component-scoped class + a scoped
+ *     `<style>`, `kit.css` itself untouched) so their right edge lands on
+ *     the same edge as the full-width main Button beneath them.
  *
  * Every call below is the SAME real route DoorSheet.tsx calls
  * (`/api/auth/email/*`, `/api/member/session`, `/api/member/claim`,
@@ -59,32 +80,13 @@ import {
  * scrollWidth 281, "EMAIL ME A CODE"). `kit.css` is READ-ONLY for this
  * lane (T-349's), so every `variant="main"` Button below carries `sm` —
  * a real fluid button size is kit lane 4b's job, not this lane's.
+ *
+ * Mount matrix (Ground item 10): `login-door.tsx` (Puck block, READ-ONLY,
+ * no self-wrap here), the `/login` hand-built fallback, `MeSwitch.tsx`
+ * (×2, error + signed-out) — every one of them can mount this with no
+ * props/callbacks at all, so every fix above must be safe under the
+ * default props with no `onIn`/`onClose`.
  */
-
-const noopSubscribe = () => () => {};
-function useHasNostrExtension(): boolean | null {
-  return useSyncExternalStore(
-    noopSubscribe,
-    () => typeof window !== "undefined" && !!window.nostr,
-    () => null,
-  );
-}
-function useIsAndroid(): boolean | null {
-  return useSyncExternalStore(noopSubscribe, () => isAndroid(), () => null);
-}
-
-/* Per-device key note — duplicated from DoorSheet.tsx (TASK-316 item 3):
-   door-machine.ts stays byte-identical, so these strings live beside each
-   of DOOR_KEY_NOTE's consumers, not in the model. SignInCard is the SECOND
-   consumer of this exact copy. */
-const KEY_NOTE_ANDROID =
-  "Have a key in a signer app? One tap — your signer app opens and brings you back.";
-const KEY_NOTE_REMOTE =
-  "Have a key? Connect a remote signer — it signs for you; the key never leaves it.";
-function keyNoteFor(hasNostr: boolean | null, android: boolean | null): string {
-  if (hasNostr || android === null) return DOOR_KEY_NOTE;
-  return android ? KEY_NOTE_ANDROID : KEY_NOTE_REMOTE;
-}
 
 /** B2 — the Key tab's "what is this?" explainer, M2's exact words
     (`oc-kit-me-login-mockups.html:113`). Also this Puck field's default. */
@@ -96,6 +98,18 @@ export const KEY_EXPLAINER =
     paraphrase. */
 export const SIGNER_TIMEOUT_MESSAGE =
   "⚠ No answer after 30 seconds. Your signer opens its own small window — look behind this one. Still nothing? Close this window, open a new one, and try again.";
+
+/** TASK-356 (the Admiral's overruling of K83's RULED item 3): the Email
+    tab's own quiet pointer to the Key tab — words, not a duplicate door.
+    Split in two so only "Use the Key tab." rides inside the real,
+    tab-selecting Button. */
+export const EMAIL_KEY_POINTER = "Have a key? ";
+export const EMAIL_KEY_TAB_LINK = "Use the Key tab.";
+
+/** TASK-356 (REVIEW-K87 item 2 of the Build steps): the Key tab, no
+    extension found — said plainly, above the doors, never a silent gap. */
+export const KEY_NO_EXTENSION_NOTE =
+  "No key add-on found in this browser. Pick one of these ways, or use the Email tab.";
 
 export interface SignInCardProps {
   /** SignInCard is the /login page-mount presentation only (RULED 1: the
@@ -129,10 +143,10 @@ export default function SignInCard({
 }: SignInCardProps) {
   const router = useRouter();
   const hasNostr = useHasNostrExtension();
-  const android = useIsAndroid();
 
   type OpenState = Exclude<DoorState, "closed">;
   const [state, setState] = useState<OpenState>(initialKey ? "new-name" : "sign-in");
+  const [activeTab, setActiveTab] = useState<"email" | "key">(defaultTab ?? "email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [wish, setWish] = useState("");
@@ -140,10 +154,6 @@ export default function SignInCard({
   const [availReason, setAvailReason] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  /* RULED item 3 — named, not fixed: a UI-only flag over the "sign-in"
-     state, exactly like DoorSheet's own signerOpen, deciding whether the
-     Email tab shows its form or the same SignerDoors the Key tab shows. */
-  const [emailSignerOpen, setEmailSignerOpen] = useState(false);
 
   const keyEvent = useRef<unknown>(initialKey?.event ?? null);
   const keyNpub = useRef<string | null>(initialKey?.npub ?? null);
@@ -207,10 +217,10 @@ export default function SignInCard({
     }
   }
 
-  /* ONE submit function, every key entry point: the Email tab's ghost
-     button's SignerDoors, the Key tab's own SignerDoors, and the Key tab's
-     direct-extension button — mirrors DoorSheet.tsx's own submitSignedKey
-     shape/contract exactly (TASK-316's "one submit" law). */
+  /* ONE submit function, every key entry point: the Key tab's own
+     SignerDoors and the Key tab's direct-extension button — mirrors
+     DoorSheet.tsx's own submitSignedKey shape/contract exactly (TASK-316's
+     "one submit" law). */
   async function submitSignedKey(event: VerifiedEvent): Promise<string | null> {
     setBusy(true);
     try {
@@ -245,18 +255,12 @@ export default function SignInCard({
     }
   }
 
-  /* the Email tab's ghost button AND the Key tab's own "Sign in with my
-     key" button both call this — RULED item 3's "same doors": no extension
-     ⇒ SignerDoors (shown here, inside the Email tab, when triggered from
-     there); extension present ⇒ the direct tap, wrapped in the shared
+  /* the Key tab's own "Sign in with my key" button, wrapped in the shared
      30-second timeout (decision 3b), M3's exact words on expiry. */
   async function signInWithKey() {
     if (busy) return;
     setNote(null);
-    if (!window.nostr) {
-      setEmailSignerOpen(true);
-      return;
-    }
+    if (!window.nostr) return;
     setBusy(true);
     let event;
     try {
@@ -350,25 +354,7 @@ export default function SignInCard({
 
   const copy = DOOR_COPY[state];
 
-  const emailPane = emailSignerOpen ? (
-    <>
-      <p className="kit-body" style={{ marginBottom: 12 }}>
-        No extension on this device — your key still opens the door, one of these ways:
-      </p>
-      <SignerDoors kind="login" submit={submitSignedKey} next={nextPathFromLocation() ?? undefined} />
-      <p style={{ margin: "14px 0 0" }}>
-        <Button
-          variant="quiet"
-          onClick={() => {
-            setEmailSignerOpen(false);
-            setNote(null);
-          }}
-        >
-          ← the email door
-        </Button>
-      </p>
-    </>
-  ) : (
+  const emailPane = (
     <>
       <p className="kit-body" style={{ marginBottom: 12 }}>{copy.note}</p>
       <form onSubmit={sendCode} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -380,18 +366,23 @@ export default function SignInCard({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="your@email.com"
+          className="signin-card-field"
         />
         {/* send-back: sm — .kit-btn-main clips at 390px, kit.css is read-only */}
-        <Button type="submit" sm disabled={busy}>
+        <Button type="submit" sm disabled={busy} style={{ width: "100%" }}>
           {busy ? copy.busyCta : copy.cta}
         </Button>
       </form>
-      <p className="kit-text-quiet" style={{ margin: "16px 0 8px" }}>
-        {keyNoteFor(hasNostr, android)}
+      {/* TASK-356 (the Admiral overrules K83's RULED item 3): a real
+          pointer, not a second door — "Use the Key tab." selects the Key
+          tab via the now-controlled Tabs below, it never opens SignerDoors
+          in place here. */}
+      <p className="kit-text-quiet" style={{ margin: "16px 0 0" }}>
+        {EMAIL_KEY_POINTER}
+        <Button variant="quiet" onClick={() => setActiveTab("key")}>
+          {EMAIL_KEY_TAB_LINK}
+        </Button>
       </p>
-      <Button variant="second" sm onClick={signInWithKey} disabled={busy}>
-        {DOOR_KEY_CTA}
-      </Button>
     </>
   );
 
@@ -400,28 +391,54 @@ export default function SignInCard({
       <p className="kit-body" style={{ marginBottom: 12 }}>{keyExplainer}</p>
       {hasNostr ? (
         // send-back: sm — .kit-btn-main clips at 390px, kit.css is read-only
-        <Button onClick={signInWithKey} sm disabled={busy}>
+        <Button onClick={signInWithKey} sm disabled={busy} style={{ width: "100%" }}>
           {busy ? "Signing…" : DOOR_KEY_CTA}
         </Button>
       ) : (
-        <SignerDoors kind="login" submit={submitSignedKey} next={nextPathFromLocation() ?? undefined} />
+        <>
+          {/* REVIEW-K87 item 3 ("i dont see the ability to sign in there"):
+              said plainly, above the doors, then a real way in — never a
+              dead end. `variant="card"` is SignInCard's alone; DoorSheet
+              and OperatorGate keep the default look. */}
+          <p className="kit-body" style={{ marginBottom: 12 }}>{KEY_NO_EXTENSION_NOTE}</p>
+          <SignerDoors
+            kind="login"
+            submit={submitSignedKey}
+            next={nextPathFromLocation() ?? undefined}
+            variant="card"
+          />
+        </>
       )}
     </>
   );
 
   return (
     <Card role="dialog" aria-label="Sign in">
-      {copy && <p className="kit-h2">{copy.title}</p>}
+      {/* RULED K-b = (a): title + tab list centred, body left, controls
+          full card width. Neither kit.css nor Tabs.tsx/Field.tsx (both
+          READ-ONLY) are touched — this scoped rule targets only this
+          card's own Field wrapper (a component-local class, the
+          WelcomeFlow.tsx "shine-walk" precedent) and its own tab-list
+          wrapper (a data attribute, never a class rename). */}
+      <style>{`
+        .kit-field.signin-card-field{max-width:none}
+        [data-signin-tabs] .kit-tabs-list{justify-content:center}
+      `}</style>
+
+      {copy && <p className="kit-h2" style={{ textAlign: "center" }}>{copy.title}</p>}
 
       {state === "sign-in" && (
-        <Tabs
-          label="Sign in"
-          defaultActive={defaultTab}
-          items={[
-            { id: "email", label: emailTabLabel, content: emailPane },
-            { id: "key", label: keyTabLabel, content: keyPane },
-          ]}
-        />
+        <div data-signin-tabs="">
+          <Tabs
+            label="Sign in"
+            active={activeTab}
+            onChange={(id) => setActiveTab(id === "key" ? "key" : "email")}
+            items={[
+              { id: "email", label: emailTabLabel, content: emailPane },
+              { id: "key", label: keyTabLabel, content: keyPane },
+            ]}
+          />
+        </div>
       )}
 
       {state === "code" && (
@@ -440,9 +457,10 @@ export default function SignInCard({
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
               placeholder="••••••"
+              className="signin-card-field"
             />
             {/* send-back: sm — .kit-btn-main clips at 390px, kit.css is read-only */}
-            <Button type="submit" sm disabled={busy || code.length !== 6}>
+            <Button type="submit" sm disabled={busy || code.length !== 6} style={{ width: "100%" }}>
               {busy ? copy.busyCta : copy.cta}
             </Button>
           </form>
@@ -473,6 +491,7 @@ export default function SignInCard({
               onChange={(e) => wishChanged(e.target.value)}
               placeholder="your name"
               maxLength={20}
+              className="signin-card-field"
             />
             <p aria-live="polite" className="kit-text-quiet" style={{ margin: 0, minHeight: "1.2em" }}>
               {avail === "checking" && <span>checking…</span>}
@@ -482,7 +501,7 @@ export default function SignInCard({
               )}
             </p>
             {/* send-back: sm — .kit-btn-main clips at 390px, kit.css is read-only */}
-            <Button type="submit" sm disabled={busy || wish.trim().length < 3 || avail === "taken"}>
+            <Button type="submit" sm disabled={busy || wish.trim().length < 3 || avail === "taken"} style={{ width: "100%" }}>
               {busy ? copy.busyCta : copy.cta}
             </Button>
           </form>
@@ -506,7 +525,7 @@ export default function SignInCard({
         <>
           <p className="kit-body" style={{ marginBottom: 12 }}>{copy.note}</p>
           {/* send-back: sm — .kit-btn-main clips at 390px, kit.css is read-only */}
-          <Button onClick={finish} sm>
+          <Button onClick={finish} sm style={{ width: "100%" }}>
             {copy.cta}
           </Button>
         </>

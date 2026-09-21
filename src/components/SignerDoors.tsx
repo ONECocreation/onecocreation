@@ -29,6 +29,7 @@ export default function SignerDoors({
   kind,
   submit,
   next,
+  variant,
 }: {
   kind: ChallengeKind;
   /** POST the signed challenge; resolve an error message, or null = the
@@ -36,7 +37,29 @@ export default function SignerDoors({
   submit: (event: VerifiedEvent) => Promise<string | null>;
   /** Same-origin path the NIP-55 bounce should land back on. */
   next?: string;
+  /**
+   * TASK-356 (REVIEW-K87, K-a = (a)): ADDITIVE only. Omitted (DoorSheet's
+   * header sheet, OperatorGate's console door) renders today's exact
+   * look, byte-stable — `tests/pink-shimmer-doors.test.ts` and
+   * `tests/signer-doors-summary-wrap.test.ts` pin that default path and
+   * stay unedited. `"card"` (SignInCard's Key tab only) makes each door
+   * read as an openable row: a visible chevron that rotates open, the
+   * native `::-webkit-details-marker` hidden, and the `--ghost-bg`/
+   * `--ghost-ink` pair (already the house's own `.btn-ghost` pairing) in
+   * place of the quiet `--glass`/`--muted` default — both pairs computed
+   * ≥4.5:1 on both themes inside a kit Card (SUMMARY.md carries the
+   * numbers). Every change here is an INLINE style value, never a new or
+   * renamed class — the two summary tags below (both still `btn-quiet`,
+   * pinned by tests/signer-doors-summary-wrap.test.ts) are untouched
+   * either way.
+   */
+  variant?: "card";
 }) {
+  const isCard = variant === "card";
+  /* pickup walk (Number One): dawn's --glass-edge is white on a white card,
+     so the rows lost their edge — the card variant wears the same edge
+     literal as kit.css .kit-field-input, visible on both themes. */
+  const CARD_DOOR_EDGE = "1.5px solid rgba(139,118,196,.4)";
   const android = useIsAndroid();
   const [bunkerInput, setBunkerInput] = useState("");
   const [busy, setBusy] = useState<"idle" | "bunker" | "invite">("idle");
@@ -125,14 +148,27 @@ export default function SignerDoors({
     window.location.href = nip55SignUri(kind, ret);
   }
 
+  /* card variant only — never rendered on the default path, so the two
+     <details>/<summary> tags below stay byte-identical to today's output
+     whenever `variant` is omitted (their base style objects are the exact
+     literal that shipped before this lane; the card extras only ever
+     spread in when isCard is true). */
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-doors-variant={isCard ? "card" : undefined}>
+      {isCard && (
+        <style>{`
+          [data-doors-variant="card"] summary::-webkit-details-marker{display:none}
+          [data-doors-variant="card"] summary::before{content:"▸";display:inline-block;margin-right:8px;transition:transform .15s ease}
+          [data-doors-variant="card"] details[open] summary::before{transform:rotate(90deg)}
+          @media(prefers-reduced-motion:reduce){[data-doors-variant="card"] summary::before{transition:none}}
+        `}</style>
+      )}
       {/* ── NIP-46: remote signer / bunker — iOS + any browser ─────────── */}
       {/* T-317 (0018.06.25 a₿): both <summary> lines wrap on narrow screens — .btn-quiet
          keeps its pill face, but the label must never clip at the card edge (seen at 390
          once T-316 put these doors on the sign-in path). */}
-      <details style={{ borderRadius: 16, border: "1px solid var(--glass-edge)", background: "var(--glass)", padding: "12px 16px", textAlign: "left" }}>
-        <summary className="btn-quiet" style={{ listStyle: "none", padding: 0, whiteSpace: "normal", lineHeight: 1.4, textAlign: "left" }}>remote signer · works on iPhone + any browser</summary>
+      <details style={{ borderRadius: 16, border: isCard ? CARD_DOOR_EDGE : "1px solid var(--glass-edge)", background: isCard ? "var(--ghost-bg)" : "var(--glass)", padding: "12px 16px", textAlign: "left" }}>
+        <summary className="btn-quiet" style={{ listStyle: "none", padding: 0, whiteSpace: "normal", lineHeight: 1.4, textAlign: "left", ...(isCard ? { color: "var(--ghost-ink)", cursor: "pointer" } : {}) }}>remote signer · works on iPhone + any browser</summary>
         <div className="mt-3 space-y-3">
           <p style={{ fontSize: ".8rem", lineHeight: 1.7, color: "var(--ink-body)" }}>
             Your key lives in a signer you already trust — nsec.app, Amber, or
@@ -202,8 +238,8 @@ export default function SignerDoors({
       </details>
 
       {/* ── NIP-55: Android signer apps — honest about where it works ──── */}
-      <details style={{ borderRadius: 16, border: "1px solid var(--glass-edge)", background: "var(--glass)", padding: "12px 16px", textAlign: "left" }}>
-        <summary className="btn-quiet" style={{ listStyle: "none", padding: 0, whiteSpace: "normal", lineHeight: 1.4, textAlign: "left" }}>Android signer app · Amber-class</summary>
+      <details style={{ borderRadius: 16, border: isCard ? CARD_DOOR_EDGE : "1px solid var(--glass-edge)", background: isCard ? "var(--ghost-bg)" : "var(--glass)", padding: "12px 16px", textAlign: "left" }}>
+        <summary className="btn-quiet" style={{ listStyle: "none", padding: 0, whiteSpace: "normal", lineHeight: 1.4, textAlign: "left", ...(isCard ? { color: "var(--ghost-ink)", cursor: "pointer" } : {}) }}>Android signer app · Amber-class</summary>
         <div className="mt-3 space-y-3">
           {android === false ? (
             <p style={{ fontSize: ".8rem", lineHeight: 1.7, color: "var(--ink-body)" }}>
