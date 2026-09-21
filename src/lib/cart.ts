@@ -34,6 +34,23 @@ export interface CartDoc {
 export const CART_COOKIE = "oc-cart";
 const TTL_S = 72 * 3600; // the Admiral's 72 hours — carts remember
 
+/** The 1..21 law, one source (T-357 — it used to live three places). */
+export const CART_MAX_QTY = 21;
+
+/** NaN → 1, otherwise `Math.max(1, Math.min(CART_MAX_QTY, Math.floor(n)))`.
+ *  `Math.floor` runs FIRST and the NaN check reads ITS result, not the raw
+ *  `n` — a non-numeric `body.qty` (e.g. `"abc"`) reaches here as a string
+ *  despite this signature's promise of `number` (an unchecked JSON field,
+ *  cast with `as` at the route), and `Math.floor` coerces it the same way
+ *  the old inline line always did (JS's own ToNumber — `Math.floor("5")` is
+ *  still `5`, unchanged); checking the FLOORED value is what catches the
+ *  NaN a naive `Number.isNaN(n)` would miss on a string. `+Infinity` → 21
+ *  and `-Infinity` → 1, exactly as the old line gave. */
+export function clampQty(n: number): number {
+  const floored = Math.floor(n);
+  return Number.isNaN(floored) ? 1 : Math.max(1, Math.min(CART_MAX_QTY, floored));
+}
+
 function restEnv(): { url: string; token: string } | null {
   const url = process.env.KV_REST_API_URL;
   const token = process.env.KV_REST_API_TOKEN;
@@ -68,7 +85,13 @@ export function cartIdFromRequest(request: Request): { id: string | null; anon: 
 export async function getCart(id: string): Promise<CartDoc> {
   try {
     const raw = (await kv(["GET", key(id)])) as string | null;
-    return raw ? (JSON.parse(raw) as CartDoc) : { lines: [], updatedAtMs: 0 };
+    const doc: CartDoc = raw ? (JSON.parse(raw) as CartDoc) : { lines: [], updatedAtMs: 0 };
+    // D2(a), T-357: heal a poisoned qty on READ, in memory only — KV keeps
+    // the raw value until the next save. A slot line is one-of-a-kind and
+    // always qty 1 (as is a gift-session voucher line); it rides through
+    // untouched, never rebuilt.
+    doc.lines = doc.lines.map((l) => (l.slot ? l : { ...l, qty: clampQty(l.qty) }));
+    return doc;
   } catch {
     return { lines: [], updatedAtMs: 0 };
   }
@@ -94,8 +117,8 @@ export async function mergeCarts(anonId: string, memberId: string): Promise<void
       continue;
     }
     const at = m.lines.findIndex((l) => !l.slot && l.itemId === line.itemId && l.size === line.size);
-    if (at >= 0) m.lines[at].qty += line.qty;
-    else m.lines.push(line);
+    if (at >= 0) m.lines[at].qty = clampQty(m.lines[at].qty + line.qty);
+    else m.lines.push({ ...line, qty: clampQty(line.qty) });
   }
   await saveCart(memberId, m);
   await clearCart(anonId);

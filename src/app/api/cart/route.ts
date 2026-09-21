@@ -4,6 +4,7 @@ import {
   getCart,
   saveCart,
   mergeCarts,
+  clampQty,
   CART_COOKIE,
   type CartDoc,
   type CartLine,
@@ -336,7 +337,7 @@ export async function POST(request: Request) {
     if (!item || item.status !== "live") {
       return NextResponse.json({ ok: false, reason: "that item isn't on the shelf" }, { status: 404 });
     }
-    const qty = Math.max(1, Math.min(21, Math.floor(body.qty ?? 1)));
+    const qty = clampQty(body.qty ?? 1);
     if (at >= 0) cart.lines[at].qty = qty;
     else cart.lines.push({ itemId: body.itemId!, qty, size: body.size });
   }

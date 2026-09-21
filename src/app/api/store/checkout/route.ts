@@ -15,6 +15,7 @@ import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 import { orderDoorUrl, sendOrderReceipt } from "@/lib/order-receipt";
 import { memberFromRequest } from "@/lib/member-auth";
+import { clampQty } from "@/lib/cart";
 
 export const dynamic = "force-dynamic";
 
@@ -203,7 +204,7 @@ export async function POST(request: Request) {
      qty), repriced before any discount, and the line carries qty so the
      inventory countdown (recordChargeEvent) counts it down as it already
      knows how */
-  const qty = Math.max(1, Math.min(21, Math.floor(body.qty ?? 1)));
+  const qty = clampQty(body.qty ?? 1);
   let snapshot: PriceSnapshot =
     !wantsCard && effective.sats != null
       ? { amount: effective.sats * qty, currency: "SATS", at: new Date().toISOString() }
