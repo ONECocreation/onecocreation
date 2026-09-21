@@ -110,7 +110,7 @@ export default function MemberQuickCards() {
         <h2 style={{ fontFamily: "var(--font-h2)", fontWeight: 400, fontSize: "1.2rem", margin: 0, color: "var(--ink-strong)" }}>
           Quick doors
         </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginTop: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px,100%), 1fr))", gap: 10, marginTop: 14 }}>
           <Link className="kit-btn kit-btn-second kit-btn-sm" href="/memberships">Memberships</Link>
           <Link className="kit-btn kit-btn-second kit-btn-sm" href="/book">Book a Session</Link>
           <Link className="kit-btn kit-btn-second kit-btn-sm" href="/store">The Store</Link>
