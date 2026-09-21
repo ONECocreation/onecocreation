@@ -46,10 +46,10 @@ superseded one-lunation-per-month line above the real sky-anchor docblock delete
 `src/lib/bb/scene.ts` (`bftScene`'s docblock + signature `bftScene(height, atMs?)` + its
 `moonPhase(height, atMs)` call), `src/components/bb/BuddyDevice.tsx` (one call-site
 argument-list change only — `bftScene(bgHeight)` → `bftScene(bgHeight, Date.now())`, plus
-the comment explaining why `Date.now()` and not `nowMs`), `transplant/frens-earth-time/
-components/time/orrery/orrery-engine.ts` (the one "two-moons" → "moon-month" phrase, no
-other edit), NEW `tests/one-moon-calls.test.ts`, `work-claims/task-362.md` (this file,
-first commit).
+the comment explaining why `Date.now()` and not `nowMs`),
+`transplant/frens-earth-time/components/time/orrery/orrery-engine.ts` (the one
+"two-moons" → "moon-month" phrase, no other edit), NEW `tests/one-moon-calls.test.ts`,
+`work-claims/task-362.md` (this file, first commit).
 
 READ-ONLY (per brief, untouched): `src/components/CertCase.tsx` (single-arg
 `certCase(cert.etchedAt)` call stays — it's unmounted, nothing to thread `atMs` from),
