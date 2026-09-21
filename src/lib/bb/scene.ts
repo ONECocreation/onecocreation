@@ -37,13 +37,16 @@ export interface BftScene {
   animalName: string;
 }
 
-/** Everything the background needs, derived deterministically from height. */
-export function bftScene(height: number): BftScene {
+/** Everything the background needs, derived deterministically from height —
+ *  plus (optionally) the wall time to read the moon by. `atMs` follows
+ *  `bft.ts`'s own `moonPhase` contract: pass the live instant (`Date.now()`)
+ *  when you have it; omitted = the flat estimate clock. */
+export function bftScene(height: number, atMs?: number): BftScene {
   const d = bft(height);
   const beat = ((height % BLOCKS_PER_DAY) + BLOCKS_PER_DAY) % BLOCKS_PER_DAY;
   // Sun elevation on the 144-beat day: beat 72 = noon (+1), beat 0 = midnight (−1).
   const elev = Math.cos(((beat - 72) / BLOCKS_PER_DAY) * Math.PI * 2);
-  const mp = moonPhase(height);
+  const mp = moonPhase(height, atMs);
   return {
     height,
     beat,

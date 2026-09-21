@@ -9,10 +9,12 @@ import { bft, bftDate, moonPhase, yearAnimal, BLOCKS_PER_MONTH } from "./bb/bft"
  * no scarcity theater: the calendar IS the rarity.
  *
  *   GREY CART     any block — the honest classic
- *   SILVER        etched on a full-moon day (block-timed lunation)
+ *   SILVER        etched under the sky's real full moon (wall time, not
+ *                 the BFT calendar — we only have one moon)
  *   GOLD          etched on a difficulty-epoch boundary day (height % 2016
  *                 < 144 — the first day of a new epoch) — the Zelda cart
- *   CRYSTAL       etched on BFT New Year (M01·D01 — always a new moon)
+ *   CRYSTAL       etched on BFT New Year (M01·D01 — a calendar boundary,
+ *                 not a moon phase)
  *   ASTRONOMICAL  etched within a day of a halving (height % 210000 < 144) —
  *                 the 13th tier, where the Astronomical Cat lives
  *
@@ -42,10 +44,14 @@ const CASE_NAMES: Record<CertTier, string> = {
 /** Blocks into the current day-of-calendar for boundary checks (one BFT day = 144). */
 const DAY = 144;
 
-/** The case a cert etched at `height` ships in — pure function of the block. */
-export function certCase(height: number): CertCaseSpec {
+/** The case a cert etched at `height` ships in — pure function of the block,
+ *  plus (optionally) the wall time it was etched at. `atMs` follows
+ *  `bft.ts`'s own `moonPhase` contract: the caller supplies the wall time of
+ *  etching; omitted = the flat estimate clock, and the estimate is what you
+ *  get — this function does not pretend otherwise. */
+export function certCase(height: number, atMs?: number): CertCaseSpec {
   const d = bft(height);
-  const moon = moonPhase(height);
+  const moon = moonPhase(height, atMs);
   const animal = yearAnimal(height);
 
   let tier: CertTier = "grey";
@@ -60,7 +66,7 @@ export function certCase(height: number): CertCaseSpec {
   }
   if (d.month === 1 && d.day === 1) {
     tier = "crystal";
-    why = "etched on the Bitcoin new year — a new moon, a new ring";
+    why = "etched on the Bitcoin new year — a calendar boundary, not a moon phase";
   }
   if (height % 210000 < DAY) {
     tier = "astronomical";
