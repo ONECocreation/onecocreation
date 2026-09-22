@@ -22,13 +22,23 @@ import ContactDoors from "./ContactDoors";
 
 /** TASK-393 (the toggle sweep, block 968,132+ a₿) — the live payment
  *  rails, judged once per render the SAME way cart/page.tsx and
- *  packages/[slug]/page.tsx already do (ensureSquareVault warms the
- *  cold-instance vault before the square check — payments.ts's own
- *  cold-instance-honesty note). Reused below by every home-shelf copy
- *  line that used to promise a rail unconditionally (Jewelry/
- *  Affirmations/Donations) — payments.ts stays READ-ONLY, called never
- *  edited. */
+ *  packages/[slug]/page.tsx already do: WARM BEFORE YOU JUDGE (T-186's
+ *  idiom, cart/page.tsx:25-35) — liveAdapter() reads siteSwitchesSync()'s
+ *  own warm cache, which under the KV/blob driver only reflects whatever
+ *  the LAST getSiteConfig()/saveSiteConfig() call on this instance
+ *  warmed it to; a caller that skips the await getSiteConfig() below
+ *  judges last request's switches, one request behind (the walk finding,
+ *  block 968,1xx — Donations() lagged while Affirmations() didn't,
+ *  because Affirmations() happened to await getSiteConfig() first for
+ *  its own store gate and Donations() never did). getSiteConfig() here
+ *  makes every liveRails() caller correct regardless of what else it
+ *  reads; ensureSquareVault() then warms the (separate) cold-instance
+ *  square vault before the square check. Reused below by every
+ *  home-shelf copy line that used to promise a rail unconditionally
+ *  (Jewelry/Affirmations/Donations) — payments.ts stays READ-ONLY,
+ *  called never edited. */
 async function liveRails(): Promise<{ btc: boolean; card: boolean }> {
+  await getSiteConfig();
   await ensureSquareVault();
   return { btc: liveAdapter() !== null, card: liveAdapter("square") !== null };
 }
