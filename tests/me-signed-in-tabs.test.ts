@@ -58,10 +58,36 @@ describe("MeSwitch.tsx — the key branch is the same three tabs, its own conten
     expect(keyBlock).toContain("<MemberQuickCards");
   });
 
-  it("tab state is uncontrolled — defaultActive, no active/onChange plumbing, no ?tab= param anywhere in this file", () => {
+  it("tab state is controlled by the ?tab= param — useSearchParams present, validated against the three tab ids with a profile fallback, no defaultActive, no useState seeded from the param", () => {
     const src = readSrc("src", "components", "me", "MeSwitch.tsx");
-    expect(src).toContain('defaultActive="profile"');
-    expect(src).not.toContain("useSearchParams");
+    expect(src).toContain("useSearchParams");
+    expect(src).toContain('searchParams.get("tab")');
+    expect(src).toMatch(/\["profile",\s*"calendar",\s*"purchases"\]/);
+    expect(src).not.toContain("defaultActive=");
+    expect(src).not.toMatch(/useState\([^)]*[Tt]ab/);
+  });
+
+  it("both Tabs instances are wired to the SAME active value and the SAME onChange handler — one mechanism, not two", () => {
+    const src = readSrc("src", "components", "me", "MeSwitch.tsx");
+    const emailIdx = src.indexOf('kind === "email"');
+    const keyReturnIdx = src.lastIndexOf("return (");
+    const emailBlock = src.slice(emailIdx, keyReturnIdx);
+    const keyBlock = src.slice(keyReturnIdx);
+    for (const block of [emailBlock, keyBlock]) {
+      expect(block).toContain("active={activeTab}");
+      expect(block).toContain("onChange={handleTabChange}");
+    }
+  });
+});
+
+describe("src/app/me/calendar/page.tsx — the old address is a forward now, not a recreation (TASK-405, E4)", () => {
+  it('calls permanentRedirect("/me?tab=calendar") and mounts no MemberCalendar', () => {
+    const src = readSrc("src", "app", "me", "calendar", "page.tsx");
+    expect(src).toContain('permanentRedirect("/me?tab=calendar")');
+    /* a comment may honestly name the retired mount (why it's gone) — the
+       pin scans for the real thing: the import and the JSX tag */
+    expect(src).not.toContain('from "@/components/me/MemberCalendar"');
+    expect(src).not.toContain("<MemberCalendar");
   });
 });
 
