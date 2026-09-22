@@ -1728,7 +1728,6 @@ if (WRITE_ENV === "init" || WRITE_ENV === "1") {
 
       const violations = compareBaseline(baseline, measured, { buttonFamilies: measuredFamilies, fontDecls: measuredFonts });
       if (violations.length > 0) throw new Error(formatFailureMessage(violations));
-      expect(violations).toHaveLength(0);
     });
   });
 }
