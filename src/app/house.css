@@ -365,10 +365,10 @@ section{padding:76px 0;position:relative}
 .svc .meta h4{margin:0;font-weight:400;font-size:1.05rem}
 .svc .meta p{margin:2px 0 0;font-size:.85rem;color:var(--muted)}
 .svc .pr{font-family:var(--serif);color:var(--gold-deep);font-weight:700}
-.roomrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,118,196,.3);color:var(--ink-body)}
+.roomrow{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;text-align:left;padding:10px 0;border-bottom:1px solid rgba(139,118,196,.3);color:var(--ink-body)}
 /* T-121: the wash is ROSE now (rgba of #C56E8B), the ink rides
    --gold-wash-ink — the pink pass's rose-on-wash pair, ≥4.5:1 both themes */
-.lockpill{margin-left:auto;font-size:.66rem;text-transform:uppercase;color:var(--gold-wash-ink);background:rgba(197,110,139,.18);border-radius:999px;padding:3px 11px;font-weight:700}
+.lockpill{margin-left:auto;grid-column:2;min-width:128px;text-align:center;font-size:.66rem;text-transform:uppercase;color:var(--gold-wash-ink);background:rgba(197,110,139,.18);border-radius:999px;padding:3px 11px;font-weight:700}
 .note{max-width:780px;margin:30px auto 0;text-align:center;font-size:.9rem;color:var(--ink-body);background:var(--glass);border:1px solid var(--glass-edge);border-radius:18px;padding:18px 22px}
 .note b{color:var(--gold-deep)}
 .stub{display:inline-block;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-deep);border:1px dashed rgba(173,84,112,.5);border-radius:999px;padding:5px 12px}
