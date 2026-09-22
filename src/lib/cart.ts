@@ -16,6 +16,8 @@ export interface CartLine {
    *  the basket, so a cart can't promise a taken time. holdId doubles as
    *  the future bookingId, which is what lets settle confirm the claim. */
   slot?: { startUtc: string; endUtc: string; holdId: string; holdUntilMs: number };
+  /** TASK-395: the discovery call's own note, riding a session line through to the booking's customer.note. */
+  note?: string;
   /** pay-what-you-can offer for this LINE (total sats, Admiral 0018.05.14):
    *  charged up front; below list price the order waits on Love's review. */
   offerSats?: number;
