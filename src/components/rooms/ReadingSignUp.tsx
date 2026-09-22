@@ -187,7 +187,7 @@ export function ReadingSignUpCard({
               ? "Joining…"
               : kind === "member-key"
                 ? "Count me in for the reading"
-                : "Join the weekly reading"}
+                : "Join the reading"}
           </Button>
         </div>
         <p className="kit-text-quiet">
