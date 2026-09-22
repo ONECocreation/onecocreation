@@ -45,7 +45,7 @@ import type { Tier } from "@/lib/entitlement";
  */
 export default function StageView({
   slug, alias, title, kind, pin, live, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, roomKey, onCameraMxids, stageMxids, cameraDoor,
-  fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, afterHours, signedIn, viewerTier,
+  fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, afterHours, signedIn, viewerTier, chatHidden,
 }: {
   slug: string;
   alias: string;
@@ -104,6 +104,12 @@ export default function StageView({
    *  so it can't reuse `door` above). */
   signedIn?: boolean;
   viewerTier?: Tier | null;
+  /** TASK-387: pass-through only -- ClassroomView's own state (the saved
+   *  per-room switch, kept current by its 20s poll). A hidden chat
+   *  renders NO `.cl-area-chat` region at all -- the video takes the
+   *  width (M4) -- never a collapsed/muted chat. Absent = today's
+   *  behavior (the chat mounts). */
+  chatHidden?: boolean;
 }) {
   const gated = !!door && door !== "open";
   const [items, setItems] = useState<MaterialItem[] | null>(null);
@@ -130,7 +136,7 @@ export default function StageView({
           <p style={{ margin: "6px 0 0", whiteSpace: "pre-line", color: "var(--ink-body)", fontSize: ".9rem" }}>{pin.text}</p>
         </div>
       )}
-      <div className="cl-grid-stage">
+      <div className={`cl-grid-stage${chatHidden ? " cl-grid-stage--no-chat" : ""}`}>
         <div role="region" className="cl-region cl-area-video" data-region="video" aria-label="Video">
           <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roomKey={roomKey} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={fullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} />
         </div>
@@ -140,9 +146,13 @@ export default function StageView({
             <ResourcesCard resources={resources} />
           </div>
         )}
-        <div role="region" className="cl-region cl-area-chat" data-region="chat" aria-label="Chat">
-          <StageChat slug={slug} alias={alias} title={title} kind={kind} />
-        </div>
+        {/* TASK-387: hidden means NO chat column at all -- not mounting
+            the region, never reaching into StageChat/RoomView. */}
+        {!chatHidden && (
+          <div role="region" className="cl-region cl-area-chat" data-region="chat" aria-label="Chat">
+            <StageChat slug={slug} alias={alias} title={title} kind={kind} />
+          </div>
+        )}
         <div role="region" className="cl-region cl-area-people" data-region="people" aria-label="People">
           <RoomPresence roster={roster ?? null} />
         </div>

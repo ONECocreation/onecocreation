@@ -169,6 +169,11 @@
       "colours": 0,
       "styledButtons": 0
     },
+    "src/app/a/site/chat/page.tsx": {
+      "styleBlocks": 3,
+      "colours": 0,
+      "styledButtons": 0
+    },
     "src/app/a/site/community-door/SiteCommunityDoorRoom.tsx": {
       "styleBlocks": 3,
       "colours": 0,
@@ -1051,6 +1056,11 @@
     },
     "src/components/console/ScarRail.tsx": {
       "styleBlocks": 2,
+      "colours": 0,
+      "styledButtons": 0
+    },
+    "src/components/console/SiteChatCard.tsx": {
+      "styleBlocks": 0,
       "colours": 0,
       "styledButtons": 0
     },

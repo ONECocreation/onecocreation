@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import VantageSwitcher from "./VantageSwitcher";
 import { useRoomVantage } from "./vantage";
 import LessonPathView from "./LessonPathView";
@@ -137,12 +137,57 @@ interface Props {
    *  reading room; the notice mounts only while this AND `!thisRoomLive`
    *  both hold (below). */
   reading?: ReadingNoticeProps | null;
+  /** TASK-387: pass-through only -- the room page's own T-387 rooms-map
+   *  read (`SiteConfig.rooms`), off the SAME `switches` its sibling props
+   *  above already ride (Ground, "First paint" -- zero new server fetch).
+   *  Absent slug or absent map reads as chat ON (Named decision D). The
+   *  poll below re-reads the live map so an operator's mid-session flip
+   *  (Named decision A, the saved switch IS the session switch) reaches
+   *  every open room page within about one tick. */
+  chatHidden?: boolean;
 }
 
-export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, roomKey, onCameraMxids, stageMxids, fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, signedIn, viewerTier, reading, cameraDoor }: Props) {
+/** TASK-387 (review fold, Build 6) -- the ONE decision the poll's added
+ *  fetch makes for `chatHidden`, pulled out of the effect so it is
+ *  testable without React or timers: a stale reply (an EARLIER tick's
+ *  response landing after a LATER tick already became "latest") is
+ *  ignored outright, keeping whatever is already current; otherwise the
+ *  room's own `rooms[slug].chat === "hidden"` reading wins (absent slug
+ *  or absent map = chat on, Named decision D -- the SAME rule the room
+ *  page's server-side first paint applies). Called only from inside the
+ *  poll's own `if (alive && d?.ok)` guard (mirroring the existing
+ *  `setLive` call exactly), so a failed fetch or a non-2xx reply never
+ *  even reaches here -- a network hiccup can never flip a hidden room
+ *  back visible (Ground). */
+export function nextChatHidden(
+  prev: boolean,
+  tick: number,
+  latestTick: number,
+  config: { rooms?: Record<string, { chat?: "on" | "hidden" }> },
+  slug: string,
+): boolean {
+  if (tick !== latestTick) return prev; // a stale reply -- a newer tick already decided
+  return config.rooms?.[slug]?.chat === "hidden";
+}
+
+export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, roomKey, onCameraMxids, stageMxids, fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, signedIn, viewerTier, chatHidden: chatHiddenProp, reading, cameraDoor }: Props) {
   const [vantage] = useRoomVantage();
   const [feed, setFeed] = useState<RoomsFeed | null>(null);
   const [live, setLive] = useState<LiveFeed | null>(null);
+  /* TASK-387: starts from the server's own first-paint prop (Named
+   *  decision C) -- a client-only fetch would flash the chat visible on
+   *  every load of a hidden room, the one state Love explicitly never
+   *  wants shown. The poll below keeps it current afterward. */
+  const [chatHidden, setChatHidden] = useState(!!chatHiddenProp);
+  /* the poll effect below keeps its ORIGINAL `[]` deps (byte-identical --
+     OWNS) -- a ref, not a dependency, is what lets its closure read the
+     CURRENT slug without re-running the effect on every prop change. Kept
+     current from its OWN effect (react-hooks/refs: a ref may never be
+     written during render itself), never inside the poll effect. */
+  const slugRef = useRef(slug);
+  useEffect(() => {
+    slugRef.current = slug;
+  });
 
   useEffect(() => {
     let alive = true;
@@ -155,10 +200,31 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
 
   useEffect(() => {
     let alive = true;
+    let latestTick = 0;
     function poll() {
+      const tick = ++latestTick;
       fetch("/api/live", { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => { if (alive && d?.ok) setLive(d); })
+        .catch(() => {});
+      /* TASK-387: rides the SAME tick as the /api/live fetch above --
+         one new fetch inside the existing poll, zero new timers (the
+         poll law, K93's own ruling: "name the poll; no new poll"). The
+         PUBLIC, no-auth half of /api/admin/site (NavMenu.tsx's and
+         SiteFooter.tsx's own fetch idiom, T-385's useReadingSchedule
+         hook reads the same route). */
+      fetch("/api/admin/site", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          /* the SAME `if (alive && d?.ok) set…` shape the /api/live
+             fetch above already uses -- a failed fetch or a non-2xx
+             reply just never calls the setter, so `chatHidden` keeps
+             its last valid value (never flips a hidden room back
+             visible from an error, Ground). */
+          if (alive && d?.ok) {
+            setChatHidden((prev) => nextChatHidden(prev, tick, latestTick, d.config, slugRef.current));
+          }
+        })
         .catch(() => {});
     }
     poll();
@@ -186,9 +252,9 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
 
       {/* TASK-184: exactly three vantages, in the ruling's order */}
       {vantage === "stage" && (
-        <StageView slug={slug} alias={alias} title={title} kind={kind} pin={pin} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} roster={roster} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roomKey={roomKey} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={activeFullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} afterHours={live?.afterHours ?? null} signedIn={signedIn} viewerTier={viewerTier} />
+        <StageView slug={slug} alias={alias} title={title} kind={kind} pin={pin} live={thisRoomLive} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} roster={roster} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roomKey={roomKey} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={activeFullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} afterHours={live?.afterHours ?? null} signedIn={signedIn} viewerTier={viewerTier} chatHidden={chatHidden} />
       )}
-      {vantage === "lesson" && <LessonPathView slug={slug} alias={alias} title={title} kind={kind} door={door} doorPackage={doorPackage} />}
+      {vantage === "lesson" && <LessonPathView slug={slug} alias={alias} title={title} kind={kind} door={door} doorPackage={doorPackage} chatHidden={chatHidden} />}
       {vantage === "circle" && <CircleView feed={feed} live={live} activeSlug={slug} slug={slug} title={title} door={door} doorPackage={doorPackage} />}
     </div>
   );

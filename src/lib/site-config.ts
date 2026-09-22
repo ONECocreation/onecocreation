@@ -136,6 +136,29 @@ export interface SiteConfig {
       rule; only a genuinely malformed doc falls back (sanitizeReading
       below). */
   reading?: ReadingSchedule;
+  /** TASK-387 (block 968,088+): the per-room chat switch, set from
+      /a/site/chat — Love's own studio ask, "hide the chat fully for some
+      of the rooms. even during some sessions turn it on and off." Keyed
+      by room SLUG (the same `id.slice(1, id.indexOf(":"))` derivation
+      rooms/[slug]/page.tsx and matrix/rooms/route.ts already use).
+      Absent slug (or an absent `rooms` map entirely) means chat ON
+      (Named decision D) — today's behavior is the default; the operator
+      card starts every room ON until Love hides one. UNLIKE nav/about/
+      reading's whole-object replace, a save carries only the CHANGED
+      slug(s) — saveSiteConfig below merges per-slug, so a stale operator
+      tab can never clobber a room it never touched. The saved default IS
+      the live session toggle (Named decision A, "name the poll; no new
+      poll") — the room page's own 20s /api/live poll re-reads this same
+      map (ClassroomView.tsx). */
+  rooms?: Record<string, RoomChatConfig>;
+}
+
+/** TASK-387: one room's own chat switch. `chat` optional so a future
+    per-room field could ride alongside it without disturbing this one;
+    today only `chat` exists. Absent `chat` reads as chat ON, same as an
+    absent room entry entirely (Named decision D). */
+export interface RoomChatConfig {
+  chat?: "on" | "hidden";
 }
 
 export type SiteConfigPatch = {
@@ -150,6 +173,12 @@ export type SiteConfigPatch = {
   /** whole-object replace when present, same shape as nav/about — the
       reading card always saves its complete schedule, never one field */
   reading?: ReadingSchedule;
+  /** TASK-387: PARTIAL keyed map, unlike reading/about/nav's whole-object
+      rule above — a save carries only the changed slug(s)
+      (`{ rooms: { "<slug>": { chat } } }`), and saveSiteConfig merges
+      each named slug into the stored map, leaving every OTHER slug
+      untouched. */
+  rooms?: Record<string, RoomChatConfig>;
 };
 
 /** The site's real routes a nav item may point to (TASK-137) — kept in sync
@@ -260,6 +289,7 @@ function sanitize(raw: unknown): SiteConfig {
     nav: sanitizeNav(o.nav),
     about: sanitizeAbout(o.about),
     reading: sanitizeReading(o.reading),
+    rooms: sanitizeRooms(o.rooms),
   };
 }
 
@@ -342,6 +372,53 @@ export function aboutPatchError(raw: unknown): string | null {
       return "the featured video: a title is required";
     if (fo.ratio !== "16/9" && fo.ratio !== "9/16")
       return "the featured video: the shape must be landscape (16/9) or portrait (9/16)";
+  }
+  return null;
+}
+
+/** TASK-387: the known room slugs — the SAME derivation
+    `rooms/[slug]/page.tsx`'s `bySlug`, `matrix/rooms/route.ts` and four
+    other call sites already use (grepped this session); no shared helper
+    exists to import, and adding one is a seam beyond this lane. */
+const ROOM_SLUGS: readonly string[] = ROOMS.map((r) => r.id.slice(1, r.id.indexOf(":")));
+
+/** TASK-387: the stored rooms map -> known-good entries only, the SAME
+    per-row-drop rule sanitizeAbout uses above: an unknown slug or a
+    malformed `chat` value is dropped silently on read (the
+    hand-edited-doc backstop; roomsPatchError below is what refuses a bad
+    SAVE in words). `undefined` when nothing survives -- a hand-edited
+    doc can never fabricate a door (Ground). */
+function sanitizeRooms(raw: unknown): Record<string, RoomChatConfig> | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const out: Record<string, RoomChatConfig> = {};
+  for (const [slug, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!ROOM_SLUGS.includes(slug)) continue;
+    if (!v || typeof v !== "object") continue;
+    const chat = (v as Record<string, unknown>).chat;
+    if (chat !== "on" && chat !== "hidden") continue;
+    out[slug] = { chat };
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/** Route-side patch validation (TASK-387) -- the /api/admin/site PUT
+    refuses a malformed `rooms` patch IN WORDS instead of silently
+    dropping rows on the sanitize round-trip, `aboutPatchError`'s shape
+    exactly: a bad slug or a bad `chat` value refuses the WHOLE patch,
+    named -- nothing is quietly excluded from an otherwise-saved patch
+    (review fold). An empty patch (`{}`) passes -- a save that touches no
+    room is honest, not an error. Returns the refusal reason, or null
+    when the patch is clean. sanitizeRooms above stays the backstop for
+    hand-edited docs. */
+export function roomsPatchError(raw: unknown): string | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return "rooms must be an object keyed by room slug";
+  }
+  for (const [slug, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!ROOM_SLUGS.includes(slug)) return `unknown room "${slug}"`;
+    if (!v || typeof v !== "object") return `room "${slug}": the entry must be an object`;
+    const chat = (v as Record<string, unknown>).chat;
+    if (chat !== "on" && chat !== "hidden") return `room "${slug}": chat must be "on" or "hidden"`;
   }
   return null;
 }
@@ -546,6 +623,11 @@ export async function saveSiteConfig(patch: SiteConfigPatch): Promise<SiteConfig
     // missing this line (or the sanitize() wiring above) would silently
     // erase a saved reading time on the next unrelated save.
     reading: patch.reading !== undefined ? patch.reading : current.reading,
+    // TASK-387: PER-SLUG merge, unlike every field above -- a rooms patch
+    // never replaces the whole map. Every slug named in the patch
+    // replaces that slug's own entry; every other stored slug rides
+    // through untouched (the merge site the review fold names).
+    rooms: patch.rooms !== undefined ? { ...current.rooms, ...patch.rooms } : current.rooms,
   });
   await writeStored(next);
   cache = next;

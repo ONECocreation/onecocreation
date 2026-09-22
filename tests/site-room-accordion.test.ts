@@ -29,6 +29,9 @@ describe("the accordion's rows + the current mark", () => {
       // TASK-381 (block 968,047+): the weekly reading's source, no public
       // surface yet (the notice is T-382, held on the mockup nod).
       ["reading", "/a/site/reading", "The weekly reading"],
+      // TASK-387 (block 968,088+): hide the chat fully for a room, or flip
+      // it live mid-session — the saved default IS the session switch.
+      ["chat", "/a/site/chat", "Room chat"],
       // TASK-330 (0018.06.27 a₿): Brand folds under Site as a fifth
       // sub-row — its own route (/a/brand), not under /a/site/*.
       ["brand", "/a/brand", "Brand"],
@@ -45,6 +48,7 @@ describe("the accordion's rows + the current mark", () => {
     expect(siteSubForPath("/a/site/community-door")).toBe("community-door");
     expect(siteSubForPath("/a/site/about-videos")).toBe("about-videos");
     expect(siteSubForPath("/a/site/reading")).toBe("reading");
+    expect(siteSubForPath("/a/site/chat")).toBe("chat");
     // a deeper unknown /a/site/* path still marks Switches; outside /a/site nothing marks
     expect(siteSubForPath("/a/site/anything-else")).toBe("switches");
     expect(siteSubForPath("/a/money")).toBeNull();
