@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
 import MePanel from "./MePanel";
 import EmailMemberPanel from "./EmailMemberPanel";
 import MemberQuickCards from "./MemberQuickCards";
@@ -11,6 +12,9 @@ import Tabs from "@/components/kit/Tabs";
 import SignInCard from "@/components/door/SignInCard";
 import useMemberSession, { useSessionStatus, refresh } from "@/hooks/useMemberSession";
 import { classifyMeState } from "./session-state";
+
+const TAB_IDS = ["profile", "calendar", "purchases"] as const;
+type TabId = (typeof TAB_IDS)[number];
 
 /**
  * Two kinds of member, one /me (dual-path ruling): key members get the full
@@ -37,8 +41,16 @@ import { classifyMeState } from "./session-state";
  * three kit `Tabs` — Profile, Calendar, Purchases — each branch wiring its
  * own `items` (RULED, Build item 1, option (b): matches this file family's
  * existing separation — EmailMemberPanel/MePanel/MemberQuickCards/
- * ConstellationCard never share a file today). Tab state is uncontrolled
- * (`defaultActive`, RULED, Build item 2) — no URL param, no new plumbing.
+ * ConstellationCard never share a file today). Tab state is now CONTROLLED
+ * by the `?tab=` URL param (TASK-405, W-20/E5 — supersedes the RULED line
+ * above: "uncontrolled… no URL param"): `useSearchParams().get("tab")` is
+ * validated against the three tab ids and falls to `"profile"` when absent
+ * or unknown (Tabs' own `findIndex` miss would otherwise render NO selected
+ * tab), then handed to Tabs' `active`/`onChange` override — derived fresh
+ * every render, never copied into state once. `onChange` rebuilds the URL
+ * from the CURRENT params (`new URLSearchParams`, `tab` set or deleted,
+ * the hash dropped) and `router.replace`s it (`{ scroll: false }`) — a tab
+ * click replaces the current address; Back does not replay tab clicks.
  * Calendar mounts today's real `MemberCalendar` (`/api/member/bookings`)
  * unmodified for BOTH kinds — the one genuinely new fetch this lane adds
  * (an email member never had a calendar surface on /me before). Purchases
@@ -52,6 +64,18 @@ export default function MeSwitch() {
   const { checked } = useMemberSession();
   const { status } = useSessionStatus();
   const kind = classifyMeState({ checked, status });
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const rawTab = searchParams.get("tab");
+  const activeTab: TabId = (TAB_IDS as readonly string[]).includes(rawTab ?? "") ? (rawTab as TabId) : "profile";
+
+  function handleTabChange(id: string) {
+    const params = new URLSearchParams(searchParams);
+    if (id === "profile") params.delete("tab");
+    else params.set("tab", id);
+    const qs = params.toString();
+    router.replace(qs ? `/me?${qs}` : "/me", { scroll: false });
+  }
 
   if (kind === "loading") {
     return (
@@ -85,7 +109,8 @@ export default function MeSwitch() {
     return (
       <Tabs
         label="Your account"
-        defaultActive="profile"
+        active={activeTab}
+        onChange={handleTabChange}
         items={[
           { id: "profile", label: "Profile", content: <EmailMemberPanel /> },
           { id: "calendar", label: "Calendar", content: <MemberCalendar /> },
@@ -98,7 +123,8 @@ export default function MeSwitch() {
   return (
     <Tabs
       label="Your account"
-      defaultActive="profile"
+      active={activeTab}
+      onChange={handleTabChange}
       items={[
         {
           id: "profile",
