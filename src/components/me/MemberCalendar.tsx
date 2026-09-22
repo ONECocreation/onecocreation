@@ -12,6 +12,8 @@ import {
   type CalendarDayMarks,
   type CalendarDayMarksLookup,
 } from "@/components/calendar";
+import { useReadingSchedule } from "@/components/calendar/useReadingSchedule";
+import { readingMarksLookup, mergeDayMarks } from "@/components/calendar/reading-marks";
 
 interface MemberBooking {
   bookingId: string;
@@ -62,6 +64,9 @@ export default function MemberCalendar() {
      Date.now() may run); only read once bookings land client-side */
   const [nowMs] = useState(() => Date.now());
   const [view, setView] = useState<"week" | "month">("week"); // week is the DEFAULT (#18)
+  /* TASK-385 — the weekly reading joins /me/calendar, via the ONE shared
+     fetch (Named decision B). No fetch code lives in this file. */
+  const readingSchedule = useReadingSchedule();
 
   const today = useMemo(() => bftToday(nowMs), [nowMs]);
   const [bftYear, setBftYear] = useState(today.year);
@@ -78,7 +83,17 @@ export default function MemberCalendar() {
       .catch(() => setBookings([]));
   }, []);
 
-  const marks = useMemo(() => buildBookingMarks(bookings), [bookings]);
+  /* TASK-385, Astra's plan review, block 968,061 — order is LOAD-BEARING
+     here (unlike CircleView's merge): buildBookingMarks alone can already
+     return up to 3 pills for a busy day, DayCell only ever DISPLAYS 2, and
+     there is no click-through to reveal the rest today (T-364's
+     territory). The reading pill goes FIRST so it is always among the
+     first two shown, even on a day already busy with two or more of the
+     member's own bookings. buildBookingMarks itself is untouched. */
+  const marks = useMemo(
+    () => mergeDayMarks(readingMarksLookup(readingSchedule), buildBookingMarks(bookings)),
+    [bookings, readingSchedule],
+  );
 
   function stepMonth(dir: -1 | 1) {
     let m = bftMonth + dir;

@@ -17,6 +17,8 @@ import type { RoomsFeed, LiveFeed } from "./ClassroomView";
 import { groupRoomsByPackage, shelfRoomsForRoom } from "@/lib/matrix-rooms";
 import { signInDoorLine, signInDoorHref, packageDoorLine, type RoomGate } from "@/lib/room-access";
 import PackageRoomsCard from "./PackageRoomsCard";
+import { useReadingSchedule } from "@/components/calendar/useReadingSchedule";
+import { readingMarksLookup, mergeDayMarks } from "@/components/calendar/reading-marks";
 
 /**
  * C — THE CIRCLE (loves-desk-and-classroom-plan.md): calendar-first.
@@ -139,6 +141,9 @@ export default function CircleView({
   const [bftMonth, setBftMonth] = useState(today.month);
   const [marksFeed, setMarksFeed] = useState<MarksFeed | null>(null);
   const { primary, counts } = useCalendarPrefs();
+  /* TASK-385 — the weekly reading joins the Events tab, via the ONE shared
+     fetch (Named decision B). No fetch code lives in this file. */
+  const readingSchedule = useReadingSchedule();
 
   const gated = !!door && door !== "open";
 
@@ -174,7 +179,17 @@ export default function CircleView({
 
   const todayCivilKey = new Date().toISOString().slice(0, 10);
   const liveNowCivilKey = live?.live ? todayCivilKey : null;
-  const marks = buildPublicMarks(marksFeed, { liveNowCivilKey, liveRoomTitle: live?.roomTitle ?? null });
+  /* TASK-385 — additive only: buildPublicMarks itself is untouched, and the
+     reading lookup is merged in alongside it. buildPublicMarks contributes
+     at most one pill per cell, so the merged total here is at most two —
+     DayCell's own two-pill display cap, so both always show regardless of
+     argument order (unlike MemberCalendar's merge below, where the order
+     IS load-bearing). Kept buildPublicMarks first only for readability, as
+     it is this surface's own pre-existing mark. */
+  const marks = mergeDayMarks(
+    buildPublicMarks(marksFeed, { liveNowCivilKey, liveRoomTitle: live?.roomTitle ?? null }),
+    readingMarksLookup(readingSchedule),
+  );
 
   const civilRangeLabel = firstCell && lastCell
     ? `${firstCell.civilMonthAbbr} ${firstCell.civilDayNum} – ${lastCell.civilMonthAbbr} ${lastCell.civilDayNum}`

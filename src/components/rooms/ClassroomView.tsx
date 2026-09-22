@@ -6,12 +6,14 @@ import { useRoomVantage } from "./vantage";
 import LessonPathView from "./LessonPathView";
 import CircleView from "./CircleView";
 import StageView from "./StageView";
+import ReadingNotice from "./ReadingNotice";
 import type { RosterResult } from "./RoomPresence";
 import type { RoomPin } from "@/lib/room-pins";
 import type { RoomGate } from "@/lib/room-access";
 import type { StudioSceneId } from "@/lib/studio/scenes";
 import type { Tier } from "@/lib/entitlement";
 import type { AfterHoursFeed } from "./AfterHoursDoor";
+import type { ReadingNoticeProps } from "./ReadingNotice";
 import "./classroom.css";
 
 /**
@@ -128,9 +130,16 @@ interface Props {
    *  reuse `door` above). */
   signedIn?: boolean;
   viewerTier?: Tier | null;
+  /** TASK-382: pass-through only — the room page's own T-381 schedule read
+   *  (`SiteConfig.reading`, or the reader's own default) plus the ONE
+   *  server clock reading (`asOfMs`) both it and `nextReading` used, so the
+   *  notice's first paint never calls `Date.now()` itself. Null off the
+   *  reading room; the notice mounts only while this AND `!thisRoomLive`
+   *  both hold (below). */
+  reading?: ReadingNoticeProps | null;
 }
 
-export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, roomKey, onCameraMxids, stageMxids, fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, signedIn, viewerTier, cameraDoor }: Props) {
+export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDomain, liveRoom, door, doorPackage, roster, rail, vdoHost, studioRoom, roomKey, onCameraMxids, stageMxids, fullScene, fullSceneShowTitle, fullSceneStartsAt, fullSceneAfterHoursLine, signedIn, viewerTier, reading, cameraDoor }: Props) {
   const [vantage] = useRoomVantage();
   const [feed, setFeed] = useState<RoomsFeed | null>(null);
   const [live, setLive] = useState<LiveFeed | null>(null);
@@ -168,6 +177,12 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
       <div className="cls-bar">
         <VantageSwitcher />
       </div>
+
+      {/* TASK-382: the next-reading notice — vantage-independent (shows
+          above whichever of Stage/Lesson Path/Circle is picked), gated OUT
+          the instant the room's own live poll (thisRoomLive, above) says
+          Love is live. */}
+      {reading && !thisRoomLive && <ReadingNotice schedule={reading.schedule} next={reading.next} asOfMs={reading.asOfMs} />}
 
       {/* TASK-184: exactly three vantages, in the ruling's order */}
       {vantage === "stage" && (

@@ -23,9 +23,12 @@ const PAGES = [
   "src/app/a/site/about-videos/page.tsx",
   "src/app/a/site/community-door/page.tsx",
   "src/app/a/site/menu/page.tsx",
+  // TASK-381 (block 968,047+): the weekly reading room — same server
+  // gate-wrapper shape as its four siblings above.
+  "src/app/a/site/reading/page.tsx",
 ];
 
-describe("the four Site rooms wear the operator gate (source pins)", () => {
+describe("the five Site rooms wear the operator gate (source pins)", () => {
   it.each(PAGES)("%s is a server gate: OperatorGate + operatorFromCookieHeader + operatorsConfigured, no \"use client\"", async (rel) => {
     const src = await read(rel);
     expect(src).not.toContain('"use client"');

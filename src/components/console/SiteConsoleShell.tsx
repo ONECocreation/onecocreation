@@ -93,6 +93,10 @@ export const SITE_SUBS = [
   { key: "menu", href: "/a/site/menu", label: "Menu" },
   { key: "community-door", href: "/a/site/community-door", label: "Community door" },
   { key: "about-videos", href: "/a/site/about-videos", label: "Videos on About" },
+  /* TASK-381 (block 968,047+): the weekly reading's day/time/zone/length —
+     no public surface yet (the notice is T-382, held on the mockup nod),
+     but the source lives here so Love can set it ahead of that lane. */
+  { key: "reading", href: "/a/site/reading", label: "The weekly reading" },
   /* TASK-330 (0018.06.27 a₿): Brand drops off the top-level rail and
      folds in here as a fifth sub-row — its own route (/a/brand) and
      houseOnly filtering are untouched (it's still a real CONSOLE_ROOMS

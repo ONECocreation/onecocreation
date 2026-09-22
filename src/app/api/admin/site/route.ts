@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { getSiteConfig, saveSiteConfig, aboutPatchError, type SiteConfigPatch } from "@/lib/site-config";
+import { validateReadingSchedule } from "@/lib/reading-schedule";
 import { btcpayAdapter, squareAdapter } from "@/lib/payments";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +43,17 @@ function railStatus() {
   };
 }
 
+/** Route-side patch validation (TASK-381) — the same job as aboutPatchError
+    above (site-config.ts): a malformed `reading` patch is refused IN WORDS
+    before anything is persisted; sanitizeReading (site-config.ts) stays the
+    read-side backstop for pre-existing stored garbage. A thin wrapper over
+    validateReadingSchedule so there's one definition of "valid," shared by
+    both call sites — exported so it's unit-tested as a pure function. */
+export function readingPatchError(raw: unknown): string | null {
+  const checked = validateReadingSchedule(raw);
+  return checked.ok ? null : checked.reason;
+}
+
 export async function GET(request: Request) {
   const operator = operatorFromCookieHeader(request.headers.get("cookie"));
   /* Dual-mode read (TASK-129): the SWITCHES THEMSELVES are public — they only
@@ -73,6 +85,14 @@ export async function PUT(request: Request) {
      sanitized into dropped rows. */
   if ("about" in patch) {
     const reason = aboutPatchError((patch as Record<string, unknown>).about);
+    if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
+  }
+  /* TASK-381 — same rule, same shape, for the reading schedule: refused IN
+     WORDS before it's persisted. Only when the key rides the patch at all —
+     a features-, payments-, meeting-, nav- or about-only save is untouched
+     by this check. */
+  if ("reading" in patch) {
+    const reason = readingPatchError((patch as Record<string, unknown>).reading);
     if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
   }
   const config = await saveSiteConfig(patch);
