@@ -7,6 +7,8 @@
  * run, never a repo dependency, never the vault.
  *
  *   POST /  body: ["GET",k] | ["SET",k,v,...] | ["DEL",k] | ["SADD",k,m] | ["SMEMBERS",k]
+ *     | ["SREM",k,m] | ["INCR",k] | ["HGET",k,f] | ["HSET",k,f,v] | ["HSETNX",k,f,v]
+ *     | ["HDEL",k,f] | ["HGETALL",k] | ["KEYS"] | ["EXISTS",k] | ["EXPIRE",k,...] | ["PEXPIRE",k,...]
  *   → { result: … }
  *
  * ONE deviation from the archived copies: the silent numeric port
@@ -16,6 +18,16 @@
  * collision from a value like that).
  * scripts/shots-fixture.sh always sets FIXTURE_KV_PORT explicitly; if it's
  * ever missing, this fails loud instead of quietly binding a stray port.
+ *
+ * TASK-399 named these validation gaps so a walk never reads them as
+ * bugs: SET's `EX`/`PX`/`NX PX` options (email-auth.ts's code TTL,
+ * mail.ts's onceWithin guard) are accepted — same as SET's existing `NX`
+ * flag, just more array positions — and IGNORED; no TTL is ever set, so
+ * this fixture cannot prove timed code-expiry or a timed mail-guard
+ * release. INCR is stateless — always answers `1` (mail.ts's hourly
+ * send-cap meter never counts up here). EXPIRE/PEXPIRE are acknowledged
+ * stubs, same shape, no TTL tracked. KEYS ignores its pattern argument
+ * (no caller sends one).
  */
 const http = require("node:http");
 
@@ -27,6 +39,7 @@ if (!KV_PORT) {
 
 const store = new Map();
 const sets = new Map();
+const hashes = new Map();
 http
   .createServer((req, res) => {
     let body = "";
@@ -45,6 +58,8 @@ http
           }
         } else if (op === "DEL") {
           store.delete(key);
+          sets.delete(key);
+          hashes.delete(key);
           result = 1;
         } else if (op === "SADD") {
           if (!sets.has(key)) sets.set(key, new Set());
@@ -55,6 +70,39 @@ http
           sets.get(key)?.delete(val);
           result = 1;
         } else if (op === "INCR") result = 1;
+        else if (op === "HGET") result = hashes.get(key)?.get(val) ?? null;
+        else if (op === "HSET") {
+          // Upstash shape: returns the count of NEW fields (1 created, 0
+          // overwritten) — the value updates either way (AMENDMENT R1;
+          // callers at booking-orders.ts:220/:265 overwrite and never
+          // read the result, so this is safe to be exact about).
+          if (!hashes.has(key)) hashes.set(key, new Map());
+          const hSet = hashes.get(key);
+          const isNewField = !hSet.has(val);
+          hSet.set(val, flag);
+          result = isNewField ? 1 : 0;
+        } else if (op === "HSETNX") {
+          if (!hashes.has(key)) hashes.set(key, new Map());
+          const h = hashes.get(key);
+          if (h.has(val)) result = 0;
+          else {
+            h.set(val, flag);
+            result = 1;
+          }
+        } else if (op === "HDEL") {
+          // No ghost keys (AMENDMENT R2): removing a hash's last field
+          // removes the hash entry itself — EXISTS then answers 0 and
+          // KEYS omits it, matching real KV (releaseSlot sends this,
+          // booking-orders.ts:249-253).
+          const hDel = hashes.get(key);
+          const removed = hDel?.delete(val) ? 1 : 0;
+          if (hDel && hDel.size === 0) hashes.delete(key);
+          result = removed;
+        } else if (op === "HGETALL") result = hashes.has(key) ? [...hashes.get(key).entries()].flat() : [];
+        else if (op === "KEYS") result = [...new Set([...store.keys(), ...sets.keys(), ...hashes.keys()])];
+        else if (op === "EXISTS") result = store.has(key) || sets.has(key) || hashes.has(key) ? 1 : 0;
+        else if (op === "EXPIRE") result = 1;
+        else if (op === "PEXPIRE") result = 1;
       } catch {
         /* result stays null */
       }
