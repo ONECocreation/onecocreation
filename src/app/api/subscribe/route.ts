@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addSubscriber, validEmail, subscribersConfigured } from "@/lib/subscribers";
+import { addSubscriber, addReadingTag, validEmail, subscribersConfigured } from "@/lib/subscribers";
 import { mailConfigured } from "@/lib/mail";
 import { sendLeadMagnetLetter, sendReadWithLoveLetter, enqueueDayTwoWelcome } from "@/lib/lead-magnet";
 
@@ -30,6 +30,18 @@ export async function POST(request: Request) {
   const email = (body.email ?? "").trim();
   if (!validEmail(email)) {
     return NextResponse.json({ ok: false, reason: "that email doesn't look right" }, { status: 400 });
+  }
+
+  /* TASK-388 — the reading sign-up's own branch: tags the subscriber via
+     the narrow seam (addReadingTag, subscribers.ts's own Ground — bare
+     addSubscriber cannot express additive tagging on an existing record)
+     and sends NO letter (decision C: the wrong letter is worse than none;
+     TASK-389 is the very next lane that adds the confirmation and turns
+     this into a one-line change). Every other source's path below is
+     untouched. */
+  if ((body.source ?? "") === "reading") {
+    const { outcome } = await addReadingTag(email);
+    return NextResponse.json({ ok: true, outcome });
   }
 
   const { added, already } = await addSubscriber(email, body.source ?? "site");
