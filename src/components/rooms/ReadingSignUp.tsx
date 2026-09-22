@@ -137,9 +137,17 @@ export function ReadingSignUpCard({
       <Card>
         <div className="center kit-stack">
           <p className="kit-h2">Hold your seat.</p>
-          <Button onClick={() => submitEmail(memberEmail)} disabled={submit.kind === "pending"} sm>
-            {submit.kind === "pending" ? "Counting you in…" : "Count me in for the weekly reading"}
-          </Button>
+          {/* the plain wrapper is the fix: .kit-stack is a flex column with
+              no align-items rule, so its default align-items:stretch was
+              stretching the <button> flex-item itself to the card's full
+              width (959px at 1440, the Chrome walk's own catch) — a bare
+              block div takes the stretch instead, and the inline-block
+              Button inside it centres on the inherited .center text-align */}
+          <div>
+            <Button onClick={() => submitEmail(memberEmail)} disabled={submit.kind === "pending"} sm>
+              {submit.kind === "pending" ? "Counting you in…" : "Count me in for the reading"}
+            </Button>
+          </div>
           {submit.kind === "error" && <p className="kit-field-error">{submit.message}</p>}
           <p className="kit-text-quiet">Free for every member — no extra letters, just your seat.</p>
         </div>
@@ -168,13 +176,20 @@ export function ReadingSignUpCard({
           onChange={(e) => setEmail(e.target.value)}
           error={submit.kind === "error" ? submit.message : undefined}
         />
-        <Button type="submit" disabled={submit.kind === "pending"} sm>
-          {submit.kind === "pending"
-            ? "Joining…"
-            : kind === "member-key"
-              ? "Count me in for the weekly reading"
-              : "Join the weekly reading"}
-        </Button>
+        {/* same fix as the member branch's button — see its comment above.
+            The Field above is left unwrapped: kit-field's own max-width:
+            360px (kit.css) already caps it well under the ~420px stretch
+            concern, so the stretched flex-item never actually renders past
+            360px wide regardless of the card's own width. */}
+        <div>
+          <Button type="submit" disabled={submit.kind === "pending"} sm>
+            {submit.kind === "pending"
+              ? "Joining…"
+              : kind === "member-key"
+                ? "Count me in for the reading"
+                : "Join the weekly reading"}
+          </Button>
+        </div>
         <p className="kit-text-quiet">
           {kind === "member-key"
             ? "Your key doesn't carry an email on file — leave one here for the reading list."

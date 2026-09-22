@@ -132,7 +132,7 @@ describe("ReadingSignUpCard — the three real render states (renderToStaticMark
     const html = renderToStaticMarkup(
       createElement(ReadingSignUpCard, { kind: "member", memberEmail: "reader@example.com" }),
     );
-    expect(html).toContain("Count me in for the weekly reading");
+    expect(html).toContain("Count me in for the reading");
     expect(html).not.toContain("<input");
     expect(html).not.toContain("/news");
     expect(html).not.toContain("Join the weekly reading");
@@ -141,7 +141,7 @@ describe("ReadingSignUpCard — the three real render states (renderToStaticMark
   it("key-signed member: the email field (decision B), same button words, still no /news door", () => {
     const html = renderToStaticMarkup(createElement(ReadingSignUpCard, { kind: "member-key", memberEmail: null }));
     expect(html).toContain("<input");
-    expect(html).toContain("Count me in for the weekly reading");
+    expect(html).toContain("Count me in for the reading");
     expect(html).not.toContain("/news");
     expect(html).toContain("carry an email on file");
   });
