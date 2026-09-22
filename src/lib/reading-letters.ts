@@ -63,10 +63,13 @@ const esc = (url: string) => url.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
  *  back to Intl's own short zone name (e.g. "MDT") rather than a guess. */
 const FRIENDLY_ZONE: Record<string, string> = { "America/Denver": "Mountain" };
 
-function zoneLabel(tz: string): string {
+/** `atMs` — the OCCURRENCE's own instant, not "now" — so a fallback,
+ *  non-Denver zone's short name (MDT vs. MST, say) reflects the reading's
+ *  own moment rather than whenever this letter happens to be composed. */
+function zoneLabel(atMs: number, tz: string): string {
   if (FRIENDLY_ZONE[tz]) return FRIENDLY_ZONE[tz];
   const part = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" })
-    .formatToParts(new Date())
+    .formatToParts(new Date(atMs))
     .find((p) => p.type === "timeZoneName");
   return part?.value ?? tz;
 }
@@ -150,7 +153,7 @@ export function readingDayOfLetter(email: string, startsAtMs: number, tz: string
     to: email,
     subject: "Don't forget — the reading is today",
     html: brandShell(
-      `<p>Just a gentle note: the reading is today at ${clockWords(startsAtMs, tz)} ${zoneLabel(tz)}.</p>
+      `<p>Just a gentle note: the reading is today at ${clockWords(startsAtMs, tz)} ${zoneLabel(startsAtMs, tz)}.</p>
        ${stageDoorHtml("Join the reading")}
        <p>With love,<br/>One Cocreation</p>`,
       { unsubscribeUrl: unsub },
