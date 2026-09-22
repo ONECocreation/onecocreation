@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Card from "@/components/kit/Card";
 import Countdown from "@/components/studio-overlay/Countdown";
+import ReadingSignUp from "./ReadingSignUp";
 import { nextReading, type ReadingSchedule } from "@/lib/reading-schedule";
 
 /**
@@ -173,11 +174,17 @@ export default function ReadingNotice({ schedule, next, asOfMs }: ReadingNoticeP
 
   if (state.kind === "window") {
     return (
-      <Card>
-        <div className="kit-stack">
-          <div>Starting soon.</div>
-        </div>
-      </Card>
+      <>
+        <Card>
+          <div className="kit-stack">
+            <div>Starting soon.</div>
+          </div>
+        </Card>
+        {/* TASK-388: the sign-up block, below the notice's own words —
+            decision D unchanged: this whole component (block included)
+            never mounts while thisRoomLive (ClassroomView.tsx's own gate). */}
+        <ReadingSignUp state={state} />
+      </>
     );
   }
 
@@ -186,24 +193,30 @@ export default function ReadingNotice({ schedule, next, asOfMs }: ReadingNoticeP
   );
 
   return (
-    <Card>
-      <div className="kit-stack">
-        <div>Next reading.</div>
-        <div>{day}</div>
-        <div className="kit-text-quiet">
-          {`Love: ${clockAt(state.startsAtMs, schedule.tz)} ${zoneLabel(state.startsAtMs, schedule.tz)}`}
-          {visitorTz &&
-            ` · Your time: ${clockAt(state.startsAtMs, visitorTz)} ${zoneLabel(state.startsAtMs, visitorTz)}`}
-          {"."}
-        </div>
-        {state.kind === "soon" && (
-          <div>
-            {"Starts in "}
-            <Countdown target={new Date(state.startsAtMs).toISOString()} />
+    <>
+      <Card>
+        <div className="kit-stack">
+          <div>Next reading.</div>
+          <div>{day}</div>
+          <div className="kit-text-quiet">
+            {`Love: ${clockAt(state.startsAtMs, schedule.tz)} ${zoneLabel(state.startsAtMs, schedule.tz)}`}
+            {visitorTz &&
+              ` · Your time: ${clockAt(state.startsAtMs, visitorTz)} ${zoneLabel(state.startsAtMs, visitorTz)}`}
             {"."}
           </div>
-        )}
-      </div>
-    </Card>
+          {state.kind === "soon" && (
+            <div>
+              {"Starts in "}
+              <Countdown target={new Date(state.startsAtMs).toISOString()} />
+              {"."}
+            </div>
+          )}
+        </div>
+      </Card>
+      {/* TASK-388: the sign-up block, same as the window state above —
+          sign-up stays open through "soon" (the Admiral: "its free for
+          members"), reading the notice's own already-computed state. */}
+      <ReadingSignUp state={state} />
+    </>
   );
 }
