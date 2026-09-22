@@ -35,10 +35,10 @@ only — the public GET half byte-identical), `src/components/console/SiteConsol
 `nextChatHidden` helper, the poll's one added `/api/admin/site` fetch, the two vantage prop
 lines), `src/components/rooms/StageView.tsx` (the `chatHidden` prop, the conditional chat
 region, the `cl-grid-stage--no-chat` modifier class), `src/components/rooms/LessonPathView.tsx`
-(the `chatHidden` prop, the two conditional `RoomView` mounts), `src/components/rooms/
-classroom.css` (one additive modifier rule, `.cl-grid-stage--no-chat`), and
-`tests/design-drift.ceilings.json` (T-383's Gates note: `DESIGN_DRIFT_WRITE=1` run once to
-register the two new `.tsx` files' own measured counts — no existing file's ceiling raised).
+(the `chatHidden` prop, the two conditional `RoomView` mounts), `src/components/rooms/classroom.css`
+(one additive modifier rule, `.cl-grid-stage--no-chat`), and `tests/design-drift.ceilings.json`
+(T-383's Gates note: `DESIGN_DRIFT_WRITE=1` run once to register the two new `.tsx` files' own
+measured counts — no existing file's ceiling raised).
 
 Seam, named here (Build 4 makes it unavoidable, minimal diff only): `tests/site-room-accordion.test.ts`
 — not owned above until this line, but Build 4's one new `SITE_SUBS` row breaks its pinned

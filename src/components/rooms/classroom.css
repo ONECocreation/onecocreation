@@ -223,6 +223,21 @@
   max-width: 440px;
 }
 
+/* TASK-387 (block 968,088+) — Love's per-room chat switch: hidden means
+   NO chat column at all, not a collapsed one — the video already spans
+   both columns on its own row above, and the remaining areas below it
+   (afterhours/resources/people) ride one column instead of splitting
+   chat/people side by side. Additive only; .cl-grid-stage above is
+   untouched. */
+.cl-grid-stage--no-chat {
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "video"
+    "afterhours"
+    "resources"
+    "people";
+}
+
 /* CIRCLE (TASK-184 — "centre the events in the monthly calendar"): the
    event pills sit CENTRED in their day cells. Scoped to the Circle's own
    wrapper so Love's /a calendars (the same DayCell atom) keep their
