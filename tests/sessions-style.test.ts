@@ -84,6 +84,17 @@ describe("TASK-152 — the sessions/book pages wear the house style", () => {
     }
   });
 
+  it("full details rides the inStore gate on BOTH faces — twice in source, nowhere else (TASK-409)", async () => {
+    // K102 Ask 1 (W-11): the door duplicated Book ⚡ wherever no store page
+    // exists (the discovery call's "full details" was the booking page in a
+    // false label — Admiral's B9). Both doors now render only behind
+    // svc.inStore, and the dead detailsHref helper retired with them.
+    const src = await read("src/components/ServiceCard.tsx");
+    const doors = src.match(/full details/g) ?? [];
+    expect(doors.length).toBe(2); // front + back, each behind {svc.inStore && …}
+    expect(src.includes("detailsHref")).toBe(false);
+  });
+
   it("the home shelf and /book share the ONE session card (the style the home page proves correct)", async () => {
     const home = await read("src/components/sections.tsx");
     const book = await read("src/app/book/page.tsx");
