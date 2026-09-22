@@ -212,7 +212,10 @@ export async function listEntitlements(): Promise<Entitlement[]> {
  * The expiry only ever rides the WINNING tier of this call — a taster never
  * downgrades a standing permanent membership at the same or higher tier,
  * and a permanent purchase always clears any taster expiry it replaces. Two
- * tasters at the same tier extend to the later of the two (a renewed week).
+ * tasters at the same tier now ADD instead of extend: an early renewal adds
+ * the pass's own length — less the few milliseconds the read took — onto
+ * the standing end; once expired, the gate above already reads it as
+ * nothing, so the renewal starts fresh instead, no grace days owed.
  */
 export async function grantTier(
   npub: string,
@@ -236,7 +239,8 @@ export async function grantTier(
     // already permanent at this tier — a taster can't downgrade it
     expiresAtMs = undefined;
   } else if (existing?.tier === tier && existing.expiresAtMs != null) {
-    expiresAtMs = Math.max(existing.expiresAtMs, opts.expiresAtMs); // renewal stacks
+    // renewal adds: standing end + this pass's own length, less the read's few ms
+    expiresAtMs = existing.expiresAtMs + (opts.expiresAtMs - Date.now());
   } else {
     expiresAtMs = opts.expiresAtMs;
   }
