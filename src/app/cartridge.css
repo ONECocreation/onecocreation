@@ -99,7 +99,9 @@
   --soft:0 24px 60px -30px rgba(5,3,16,.8);
   /* the nav-dropdown recipe, once — .nav-sub, the mobile sheet, and
      FrenBadge all pour from this jug (cartridge walk step 6, Admiral's
-     walk, 0018.05.15). Always night: the header never theme-flips. */
+     walk, 0018.05.15). Always night: the nav gold and the dropdown never
+     theme-flip — the bar itself follows the theme through --header-bg
+     (TASK-398). */
   --pop-bg:rgba(20,16,32,.97); --pop-edge:rgba(217,178,78,.4); --pop-shadow:0 10px 30px rgba(0,0,0,.4);
   /* the dawn — where-you-are in the nav (VERSION B ~0018.05.24 a₿: Love's
      ORIGINAL gold nav — #FAC51C links, live-extracted from the production
@@ -113,7 +115,7 @@
      lavender --info, gold then reserved for money + the coin mark. Inert
      data, nothing consumes it, until a fork flips cartridge.nav.accent to
      "dawn" and CartridgeVars pours it over the four tokens above. */
-  --nav-dawn-link:#ECE3C9; /* 10a's door cream — the night --ghost-ink, pinned literal: the header never theme-flips */
+  --nav-dawn-link:#ECE3C9; /* 10a's door cream — the night --ghost-ink, pinned literal: the dropdown stays night (the bar itself follows --header-bg) */
   --nav-dawn-hover:var(--info);
   --nav-dawn-grad:linear-gradient(90deg,#E7B2C3 0%,#9d86d9 100%);
   --nav-dawn-wash:linear-gradient(90deg,rgba(231,178,195,.14),rgba(157,134,217,.14));
@@ -422,7 +424,8 @@ html[data-oc-theme="light"] #classes .lead{color:var(--muted)}
    section background is one of four decisions. !important so a sky class
    beats the id band rules (#services) the old inline styles used to beat;
    the light-theme repaint below still out-specifies these for non-keep-dark
-   sections, and the sky light overrides out-specify the repaint. ── */
+   sections, and the sky light overrides do NOT out-specify the repaint —
+   they lose where both match, see THE FOUR SKIES docblock. ── */
 .sky-night{background:linear-gradient(180deg,#1a1428 0%,#141021 100%)!important}
 .sky-veil{background:radial-gradient(700px 420px at 50% 0%,rgba(120,86,180,.34),transparent 60%),linear-gradient(180deg,#241a33 0%,var(--sky-veil-mid) 50%,#1a1428 100%)!important}
 .sky-glass{background:linear-gradient(180deg,#1a1428 0%,#241a33 100%)!important}
@@ -462,8 +465,12 @@ html[data-oc-theme="light"] main section:not(.keep-dark):not(.lions-gate):not(.r
    0018.05.24). lions-gate-dark is a keep-dark-law page: it never flips. */
 html[data-oc-theme="light"] main:not(.lions-gate-dark){background:#FCF7F0!important}
 /* THE FOUR SKIES, at dawn — warm cream analogs of the four night skies.
-   Higher specificity than the blanket repaint above so each sky keeps its
-   own character in light; .keep-dark skies are excluded and hold the night */
+   These four dawn rules never win against the blanket repaint above
+   WHERE BOTH MATCH: (0,4,3) loses to (0,5,3), both backgrounds
+   !important. Such a section wears the blanket cream in light today;
+   .keep-dark skies are excluded and hold the night regardless. Keep
+   the four rules below byte-identical — making their distinct dawn
+   paints win is a LOOK change needing a mockup, outside TASK-404. */
 html[data-oc-theme="light"] main section.sky-night:not(.keep-dark):not(.lions-gate){background:linear-gradient(180deg,#FCF7F0 0%,#F3EEF4 100%)!important}
 html[data-oc-theme="light"] main section.sky-veil:not(.keep-dark):not(.lions-gate){background:radial-gradient(700px 420px at 50% 0%,rgba(214,178,214,.38),transparent 60%),linear-gradient(180deg,#F8EDF0 0%,#EFE9F7 55%,#F3EEF4 100%)!important}
 html[data-oc-theme="light"] main section.sky-glass:not(.keep-dark):not(.lions-gate){background:#F3EEF4!important}
@@ -478,8 +485,8 @@ html[data-oc-theme="light"] main section.sky-warm:not(.keep-dark):not(.lions-gat
    only on effect cleanup; prefers-reduced-motion, :21, is the only
    thing that stills it) — nothing in the component reads its own
    visibility. Why dawn wants it at all: the canvas paints --sky-cream
-   (:177) stars over the dawn sky-veil wash (:468, a pink/lavender
-   rgba(214,178,214,.38) over #F8EDF0 → #EFE9F7 → #F3EEF4) —
+   (:177) stars over the blanket cream #FCF7F0 → #F3EEF4 (the sky-veil
+   wash :475 never wins there — see THE FOUR SKIES docblock) —
    LOW-CONTRAST cream-on-pastel, not proven invisible (R2; the
    before/after proof is Number One's walk, not this comment).
    #services-scoped so the hero's CosmicSky (sections.tsx:115,
