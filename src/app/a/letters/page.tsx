@@ -139,7 +139,7 @@ export default function LettersRoom() {
     setPreviewOpen(null); // a fresh editor never opens onto a stale preview
     const l = api(key);
     setSubj(l?.override?.subject ?? l?.default?.subject ?? fallbackSubject);
-    setBodyTxt(l?.override?.body ?? "");
+    setBodyTxt(l?.override?.body ?? l?.default?.body ?? "");
     setNote("");
   }
 
