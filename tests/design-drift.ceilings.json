@@ -195,9 +195,9 @@
       "styledButtons": 0
     },
     "src/app/a/site/reading/ReadingScheduleCard.tsx": {
-      "styleBlocks": 3,
-      "colours": 0,
-      "styledButtons": 0
+      "styleBlocks": 23,
+      "colours": 1,
+      "styledButtons": 1
     },
     "src/app/a/site/reading/SiteReadingRoom.tsx": {
       "styleBlocks": 3,
