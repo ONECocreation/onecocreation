@@ -66,6 +66,14 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
    * would be cosmetic — there would be nothing to embed. */
   const switches = await getSiteConfig();
 
+  /* TASK-387: this room's own chat switch, off the SAME `switches` read
+   * above -- zero new server fetch. Absent slug or absent map reads as
+   * chat ON (Named decision D, today's behavior is the default). The
+   * page's own `dynamic = "force-dynamic"` (set near the top of this
+   * file) is what makes this a live read every request, so a hidden room
+   * never flashes its chat on first paint, even once (Ground). */
+  const chatHidden = switches.rooms?.[slug]?.chat === "hidden";
+
   /* TASK-382: the next-reading notice's own server snapshot (Ground,
    * DETERMINISTIC HYDRATION) — reads `switches.reading`, already fetched
    * above, so this costs no extra read. See `computeReading` above for why
@@ -211,6 +219,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           signedIn={!!session}
           viewerTier={visitorTier}
           reading={reading}
+          chatHidden={chatHidden}
         />
       </section>
       <SiteFooter />
