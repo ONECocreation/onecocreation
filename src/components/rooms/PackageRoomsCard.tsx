@@ -23,16 +23,18 @@ import type { RoomPackage } from "@/lib/matrix-rooms";
  * were "not even — this looks like slop". The doors now HUG THE BOTTOM:
  * the card fills its grid cell (`.room-card` in house.css), the body
  * flexes, and the doors ride one bottom column (`.room-card-doors`) —
- * stacked top-to-bottom (the who-you-are / sign-in door first, then the
- * enter/see door), the same width, the same order on every card. The
- * signed-in soul's name rides the top of the door column ("you're in as
- * <name>") so a visitor with a second name knows which one they wear;
- * signed out, the sign-in door stands in its place. The ENTER door names
- * the package ("Enter the Heart Field Commons") and lands on the room's
- * STAGE — the bare `/rooms/<slug>` IS the Stage's address: vantage.ts's
- * ROOM_VANTAGE_SITE_DEFAULT is "stage" (T-149/T-174 made the Stage the
- * gated door; no `?v=` param exists — a member's own saved vantage still
- * wins, by T-149's design).
+ * stacked top-to-bottom, the same width, the same order on every card:
+ * signed in, the ENTER/SEE door alone; signed out, the sign-in door in
+ * its place. TASK-401 (block 968,141) took the who-you-are row back out
+ * — it repeated "you're in as <name>" on every card; the shelf's own
+ * foot note (RoomsShelf.tsx) already names the signed-in account once,
+ * below the cards, with the fuller truth (the full Matrix id and whose
+ * server it lives on) — this card says it not at all now. The ENTER door
+ * names the package ("Enter the Heart Field Commons") and lands on the
+ * room's STAGE — the bare `/rooms/<slug>` IS the Stage's address:
+ * vantage.ts's ROOM_VANTAGE_SITE_DEFAULT is "stage" (T-149/T-174 made the
+ * Stage the gated door; no `?v=` param exists — a member's own saved
+ * vantage still wins, by T-149's design).
  */
 export interface PackageRoomLine {
   slug: string;
@@ -45,14 +47,10 @@ export interface PackageRoomLine {
 export default function PackageRoomsCard({
   pkg,
   signedIn,
-  name = null,
   compact = false,
 }: {
   pkg: RoomPackage<PackageRoomLine>;
   signedIn: boolean;
-  /** the signed-in soul's handle — the "you're in as <name>" line atop the
-      door column; absent (or a feed that won't say) paints nothing */
-  name?: string | null;
   compact?: boolean;
 }) {
   const pill = pkg.open
@@ -151,18 +149,16 @@ export default function PackageRoomsCard({
       </ul>
       {/* TASK-183: THE DOOR COLUMN — the doors HUG THE BOTTOM (margin-top:auto
           in house.css), stacked top-to-bottom, the same width, the same order
-          on every card: FIRST who you are (signed in: your name; signed out:
-          the sign-in door), THEN the card's door — ENTER when the member
-          holds the tier, SEE <PACKAGE> (ghost) when not. The ENTER door lands
-          on the room's STAGE: the bare /rooms/<slug> is the Stage's address
+          on every card: signed in, the card's door alone — ENTER when the
+          member holds the tier, SEE <PACKAGE> (ghost) when not; signed out,
+          the sign-in door stands in its place. TASK-401 (block 968,141): the
+          who-you-are row that used to lead this column is gone — it repeated
+          on every card; the shelf's own foot note names the signed-in
+          account once, below the cards. The ENTER door lands on the room's
+          STAGE: the bare /rooms/<slug> is the Stage's address
           (ROOM_VANTAGE_SITE_DEFAULT, T-149/T-174). Signed out, the Commons'
           single door is the welcome path — sign in · join free. */}
       <div className="room-card-doors">
-        {signedIn && name && (
-          <p className="room-card-name">
-            you&apos;re in as <b>@{name}</b>
-          </p>
-        )}
         {!signedIn && (
           <Link className="btn btn-sm" href="/login">
             {pkg.tier === "all" ? "Sign in · join free" : "Sign in"}
