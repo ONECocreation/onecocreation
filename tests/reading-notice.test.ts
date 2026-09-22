@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import ReadingNotice, { noticeState, type ReadingNoticeProps } from "@/components/rooms/ReadingNotice";
+import ReadingNotice, { noticeState, nextBoundaryMs, type ReadingNoticeProps } from "@/components/rooms/ReadingNotice";
 import type { ReadingSchedule } from "@/lib/reading-schedule";
 
 /**
@@ -94,6 +94,38 @@ describe("noticeState — the exact boundaries (RULED, block 968,061, TESTS/Astr
       startsAtMs: Date.parse("2026-09-24T05:00:00.000Z"),
       endsAtMs: Date.parse("2026-09-24T07:00:00.000Z"),
     });
+  });
+});
+
+describe("the fixed-clock walk (Number One's review): upcoming → soon → window → next week's upcoming", () => {
+  it("a clock stepped through the four checkpoints reads the correct kind at each — the same sequence an open tab's own re-checks (nextBoundaryMs) must land on", () => {
+    expect(noticeState(BASE, STARTS - ONE_DAY_MS - 1)).toMatchObject({ kind: "upcoming" });
+    expect(noticeState(BASE, STARTS - ONE_DAY_MS)).toMatchObject({ kind: "soon" });
+    expect(noticeState(BASE, STARTS)).toMatchObject({ kind: "window" });
+    const nextStarts = Date.parse("2026-09-30T19:11:00.000Z");
+    expect(noticeState(BASE, ENDS)).toEqual({
+      kind: "upcoming",
+      startsAtMs: nextStarts,
+      endsAtMs: nextStarts + 60 * 60_000,
+    });
+  });
+});
+
+describe("nextBoundaryMs — the next instant settle() re-checks at (Number One's review: an open tab must still reach soon)", () => {
+  it("off: nothing scheduled to wait for", () => {
+    expect(nextBoundaryMs({ kind: "off" })).toBeNull();
+  });
+
+  it("upcoming: start−24h — the exact instant bucketOccurrence flips it to soon", () => {
+    expect(nextBoundaryMs({ kind: "upcoming", startsAtMs: STARTS, endsAtMs: ENDS })).toBe(STARTS - ONE_DAY_MS);
+  });
+
+  it("soon: the start instant — the exact instant it becomes window", () => {
+    expect(nextBoundaryMs({ kind: "soon", startsAtMs: STARTS, endsAtMs: ENDS })).toBe(STARTS);
+  });
+
+  it("window: the end instant — the exact instant ROLLOVER re-derives next week's occurrence", () => {
+    expect(nextBoundaryMs({ kind: "window", startsAtMs: STARTS, endsAtMs: ENDS })).toBe(ENDS);
   });
 });
 

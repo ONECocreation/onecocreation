@@ -80,6 +80,24 @@ export function noticeState(schedule: ReadingSchedule, nowMs: number): NoticeSta
   );
 }
 
+/**
+ * The next instant worth re-checking, given the CURRENT state (Number
+ * One's review, correcting an earlier draft that only ever armed the
+ * timer at startsAtMs/endsAtMs: a tab opened more than a day early sat on
+ * "upcoming" — no countdown — right up to the start instant, then jumped
+ * straight to "window," skipping "soon" for that whole session). `off`
+ * has nothing scheduled to wait for; `upcoming`'s own next boundary is
+ * start−24h, the exact instant `bucketOccurrence` above flips it to
+ * "soon"; `soon`'s is the start instant itself (→ "window"); `window`'s
+ * is the end instant (→ ROLLOVER's next-week re-derivation).
+ */
+export function nextBoundaryMs(state: NoticeState): number | null {
+  if (state.kind === "off") return null;
+  if (state.kind === "upcoming") return state.startsAtMs - ONE_DAY_MS;
+  if (state.kind === "soon") return state.startsAtMs;
+  return state.endsAtMs; // window
+}
+
 const DAY_LABEL: Intl.DateTimeFormatOptions = { weekday: "long", month: "long", day: "numeric" };
 const CLOCK_LABEL: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
 
@@ -106,17 +124,23 @@ export default function ReadingNotice({ schedule, next, asOfMs }: ReadingNoticeP
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     // RULED — ROLLOVER (Astra point 2): recompute from the schedule itself
-    // on every check, arm ONE timer for the next boundary (the start
-    // instant unless already in the window, else the end instant), and
-    // re-arm by calling `noticeState`/`nextReading` again on firing —
-    // never a fixed 7×24h step.
+    // on every check, arm ONE timer for the next boundary (nextBoundaryMs,
+    // above — start−24h while upcoming, the start instant while soon, the
+    // end instant while in the window), and re-arm by calling
+    // `noticeState`/`nextReading` again on firing — never a fixed 7×24h
+    // step. This is what lets a tab opened more than a day early still
+    // walk itself into "soon" (with the countdown), not just sit on
+    // "upcoming" until the exact start instant (Number One's review).
     function settle() {
       if (cancelled) return;
       const fresh = noticeState(schedule, Date.now());
       setState(fresh);
       setVisitorTz(Intl.DateTimeFormat().resolvedOptions().timeZone);
-      if (fresh.kind === "off") return;
-      const boundaryMs = fresh.kind === "window" ? fresh.endsAtMs : fresh.startsAtMs;
+      const boundaryMs = nextBoundaryMs(fresh);
+      if (boundaryMs === null) return;
+      // The largest possible delay here is under a week (a weekly
+      // schedule's own period) — comfortably inside setTimeout's
+      // 2^31−1 ms (~24.8-day) cap.
       timer = setTimeout(settle, Math.max(0, boundaryMs - Date.now()));
     }
 
