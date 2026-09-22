@@ -468,6 +468,32 @@ html[data-oc-theme="light"] main section.sky-night:not(.keep-dark):not(.lions-ga
 html[data-oc-theme="light"] main section.sky-veil:not(.keep-dark):not(.lions-gate){background:radial-gradient(700px 420px at 50% 0%,rgba(214,178,214,.38),transparent 60%),linear-gradient(180deg,#F8EDF0 0%,#EFE9F7 55%,#F3EEF4 100%)!important}
 html[data-oc-theme="light"] main section.sky-glass:not(.keep-dark):not(.lions-gate){background:#F3EEF4!important}
 html[data-oc-theme="light"] main section.sky-warm:not(.keep-dark):not(.lions-gate){background:linear-gradient(180deg,var(--sky-warm-dawn-0) 0%,var(--sky-warm-dawn-1) 100%)!important}
+
+/* TASK-400 (block 968,142; AMENDMENT R1/R2/R4 trued this note after
+   Astra's plan review — read them before touching this rule). This rule
+   hides the services star canvas in light mode; the component keeps
+   animating off-screen — stilling it is another lane's (named seam),
+   not this one's (R1): CosmicSky.tsx:51-60 keeps clearing and drawing
+   and :82-90 reschedules the rAF regardless of `display` (cancellation
+   only on effect cleanup; prefers-reduced-motion, :21, is the only
+   thing that stills it) — nothing in the component reads its own
+   visibility. Why dawn wants it at all: the canvas paints --sky-cream
+   (:177) stars over the dawn sky-veil wash (:468, a pink/lavender
+   rgba(214,178,214,.38) over #F8EDF0 → #EFE9F7 → #F3EEF4) —
+   LOW-CONTRAST cream-on-pastel, not proven invisible (R2; the
+   before/after proof is Number One's walk, not this comment).
+   #services-scoped so the hero's CosmicSky (sections.tsx:115,
+   .hero.keep-dark) is never matched; no !important — the canvas's own
+   inline style (CosmicSky.tsx:93-94) sets no `display` to out-fight.
+   Boundary named, not chased (R4): this matches EVERY descendant
+   canvas of any #services (no sky/keep-dark exclusion) and follows the
+   DOCUMENT theme only — the studio preview's .oc-pv-dark/.oc-pv-light
+   pane scopes (:17-25,:245,:385-388) are not honoured, so a services
+   canvas inside a preview pane whose pane theme disagrees with the
+   document's would hide or show wrong; whether any preview mounts
+   #services at all is unverified. */
+html[data-oc-theme="light"] #services canvas{display:none}
+
 /* the hero fade lands wherever the page continues */
 .hero::after{background:linear-gradient(180deg,transparent,#1a1428)}
 /* TASK-216 (#12): `.hero` (sections.tsx's home hero) always carries

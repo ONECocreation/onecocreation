@@ -53,6 +53,9 @@ const ROOT = process.cwd();
 const CARTRIDGE_PATH = path.join(ROOT, "src/app/cartridge.css");
 const ROOMS_SHELF_PATH = path.join(ROOT, "src/components/rooms/RoomsShelf.tsx");
 const SHELF_SECTION_PATH = path.join(ROOT, "src/components/store/ShelfSection.tsx");
+// TASK-400 (AMENDMENT R3): the two other stylesheets the plain-text guard reads.
+const HOUSE_CSS_PATH = path.join(ROOT, "src/app/house.css");
+const KIT_CSS_PATH = path.join(ROOT, "src/app/kit.css");
 
 // ---------------------------------------------------------------------------
 // The cascade evaluator: selector parse -> specificity -> match -> winner
@@ -439,6 +442,32 @@ describe("source pins", () => {
   const roomsShelfSrc = readFileSync(ROOMS_SHELF_PATH, "utf8");
   const shelfSectionSrc = readFileSync(SHELF_SECTION_PATH, "utf8");
 
+  /**
+   * TASK-400 (AMENDMENT R3): a plain brace-balanced TEXT scan for
+   * `selector{body}` pairs, found anywhere in the stylesheet INCLUDING
+   * inside `@media`/`@keyframes` bodies (unlike `extractRules` above,
+   * which skips at-rule bodies wholesale — the reason R3 gives for why
+   * that evaluator cannot carry "no other rule in any stylesheet hides a
+   * canvas"). This is honestly NOT the cascade evaluator: no specificity,
+   * no `:not()` semantics, no cascade winner — just "does this selector
+   * mention canvas, and does this declaration body set display". Returns
+   * each matching block's normalized `selector{body}` text.
+   */
+  function canvasDisplayBlocks(cssRaw: string): string[] {
+    const stripped = stripComments(cssRaw);
+    const found: string[] = [];
+    const braceRe = /([^{}]+)\{([^{}]*)\}/g;
+    let m: RegExpExecArray | null;
+    while ((m = braceRe.exec(stripped))) {
+      const selector = m[1].trim();
+      const body = m[2];
+      if (/\bcanvas\b/.test(selector) && /(?:^|;)\s*display\s*:/.test(body)) {
+        found.push(normalizeWs(`${selector}{${body.trim()}}`));
+      }
+    }
+    return found;
+  }
+
   it("no composed rgba(14,10,28 background literal remains in either .tsx (the scrim lives in the stylesheet now)", () => {
     expect(roomsShelfSrc).not.toContain("rgba(14,10,28");
     expect(shelfSectionSrc).not.toContain("rgba(14,10,28");
@@ -467,6 +496,19 @@ describe("source pins", () => {
     expect(line).toContain(":not(.lions-gate)");
     expect(line).toContain(":not(.room-photo-scrim)");
     expect(line).toContain(":not(.shelf-photo-scrim)");
+  });
+
+  it("TASK-400: cartridge.css's only canvas-targeted display declaration is the dawn services rule (AMENDMENT R3 pin, modulo whitespace)", () => {
+    expect(canvasDisplayBlocks(cartridgeCss)).toEqual([
+      normalizeWs('html[data-oc-theme="light"] #services canvas{display:none}'),
+    ]);
+  });
+
+  it("TASK-400: house.css and kit.css — a plain-text guard, not the cascade evaluator (AMENDMENT R3) — neither file's canvas-mentioning selector ever sets display (ground check, block 968,142: house.css:349's .hero canvas{pointer-events:none!important} does mention canvas but never display, so R3's literal 'no selector mentioning canvas' does not hold here — this is the narrower, true claim that still answers R3's actual concern)", () => {
+    const houseCss = readFileSync(HOUSE_CSS_PATH, "utf8");
+    const kitCss = readFileSync(KIT_CSS_PATH, "utf8");
+    expect(canvasDisplayBlocks(houseCss), "house.css").toEqual([]);
+    expect(canvasDisplayBlocks(kitCss), "kit.css").toEqual([]);
   });
 });
 
