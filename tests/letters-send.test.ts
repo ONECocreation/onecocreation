@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 /**
  * TASK-131 (0018.06.16 a₿): compose a letter and send it to the list — all,
@@ -375,5 +377,57 @@ describe("public audience", () => {
     // a list-only composed letter stays OFF the shelf
     const { key: listOnly } = await createLetter({ title: "Members Only Note", audience: "list" });
     expect(shelf.map((s) => s.key)).not.toContain(listOnly);
+  });
+});
+
+/* TASK-402 (block 968,142 a₿): the news-sample seed speaks in real words now
+ * — the paused visiting-artist filler and the "catchy headline" filler are
+ * gone, replaced by two REAL doors (the free meditation, the weekly
+ * reading) borrowed from their own pages, and the closing button no longer
+ * points at the letter itself. The editor's body fallback mirrors the
+ * subject's own chain (`:141`) so a first-ever open shows the seed's words,
+ * not a blank box. No harness renders the admin Letters room client
+ * component today, so the fallback is pinned at the source — the house's
+ * own idiom for such lines (see tests/door-first-screen.test.ts). */
+const lettersRoomSrc = readFileSync(
+  resolve(__dirname, "../src/app/a/letters/page.tsx"),
+  "utf8",
+);
+
+describe("news-sample real words (TASK-402)", () => {
+  it("the news-sample default body carries none of the template filler", async () => {
+    const { LETTER_DEFAULTS } = await import("@/lib/letters");
+    const body = LETTER_DEFAULTS["news-sample"]?.body ?? "";
+    expect(body).not.toContain("Grab your reader");
+    expect(body).not.toContain("catchy headline");
+    expect(body).not.toContain("Visiting Artists");
+  });
+
+  it("no seed in LETTER_DEFAULTS carries the filler class of phrase", async () => {
+    const { LETTER_DEFAULTS } = await import("@/lib/letters");
+    for (const [key, tpl] of Object.entries(LETTER_DEFAULTS)) {
+      const body = tpl?.body ?? "";
+      expect(body, `${key} body carries "Grab your reader"`).not.toContain("Grab your reader");
+      expect(body, `${key} body carries "catchy headline"`).not.toContain("catchy headline");
+    }
+  });
+
+  it("the news-sample seed's three doors are real pages and its cta is /news — none the letter itself", async () => {
+    const { LETTER_DEFAULTS } = await import("@/lib/letters");
+    const body = LETTER_DEFAULTS["news-sample"]?.body ?? "";
+    const lines = body.split("\n").map((l) => l.trim());
+    const sectionLinks = lines
+      .filter((l) => l.startsWith("!section:"))
+      .map((l) => l.split("|")[2]?.trim());
+    expect(sectionLinks).toEqual(["/meditation", "/memberships", "/reading"]);
+
+    const ctaLine = lines.find((l) => l.startsWith("!cta:"));
+    expect(ctaLine?.split("|")[1]?.trim()).toBe("/news");
+  });
+
+  it("the Letters room editor's body fallback is exactly override, then the seed's own default, then blank (nullish, never ||)", () => {
+    expect(lettersRoomSrc).toContain(
+      'setBodyTxt(l?.override?.body ?? l?.default?.body ?? "");',
+    );
   });
 });
