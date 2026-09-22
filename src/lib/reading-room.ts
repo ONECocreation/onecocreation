@@ -16,6 +16,10 @@ import { ROOMS, type MatrixRoom } from "./matrix-rooms.ts";
  * room" row (door-machine.ts — Love's 0018.06.18 call: the row led to the
  * tier-B Chronicles room and met a package wall), and the nav's Heart Field
  * row (NavMenu.tsx). One derivation, so the three doors can never disagree.
+ *
+ * TASK-384 (block 968,061, the Admiral's ruling: arriving at the reading
+ * room always opens the Stage) adds one more export, `opensOnStage` — its
+ * one consumer is `vantage.ts`'s arrival rule.
  */
 
 /** `#heart-field:onecocreation.com` → `heart-field`. */
@@ -32,6 +36,13 @@ export function freeRoom(rooms: MatrixRoom[] = ROOMS): MatrixRoom | null {
 const readingRoom = freeRoom();
 export const READING_ROOM_SLUG: string | null = readingRoom ? roomSlug(readingRoom.id) : null;
 export const READING_ROOM_PATH: string | null = readingRoom ? roomPath(readingRoom.id) : null;
+
+/** True iff `pathname` is the reading room's own address — the Admiral's
+ *  ruling (block 968,051): arriving at the reading room always opens the
+ *  Stage. Null-safe: no free room in the registry → always false. */
+export function opensOnStage(pathname: string): boolean {
+  return READING_ROOM_PATH !== null && pathname === READING_ROOM_PATH;
+}
 
 /** Where the free reading's door leads: a member straight into the room, a
  *  guest to the sign-in card with `?next=` carried (the T-156 same-origin
