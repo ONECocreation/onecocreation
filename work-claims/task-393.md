@@ -31,6 +31,13 @@ Claimed at block 968,133 (house beacon, fresh read at claim time).
 - `src/app/a/site/SiteRoom.tsx` — ONE new `FEATURE_ROWS` row (`key: "largeSums"`), widened
   into OWNS by R2 — every other line byte-identical
 - NEW `tests/feature-switches.test.ts` (the pins, widened by R8's switch→output contract)
+- `src/components/console/NavEditor.tsx` — **named add, block 968,135**: ONE line
+  (`largeSums: "Large Sums of Money"`) in the exhaustive `FEATURE_LABELS: Record<keyof
+  SiteConfig["features"], string>` map (`:34`), forced by `tsc --noEmit` the moment
+  `site-config.ts`'s `largeSums` member landed — the same shape TASK-187's `memberships` line
+  already documents in this same file. Minimal, load-bearing, not a feature change: `largeSums`
+  gates no nav route, so this label is never actually surfaced by `featuresFor()`. Every other
+  line byte-identical.
 
 ## READ-ONLY (grounding, never edited)
 
@@ -41,13 +48,4 @@ Claimed at block 968,133 (house beacon, fresh read at claim time).
 `src/lib/page-states.ts`, `src/lib/shinepages-recon.ts`, `src/app/kit.css`, `src/app/house.css`,
 `src/app/cartridge.css`.
 
-## Named add — block 968,135 (a real widening, its own line per the named-adds law)
-
-- `src/components/console/NavEditor.tsx` — ONE line (`largeSums: "Large Sums of Money"`) in
-  the exhaustive `FEATURE_LABELS: Record<keyof SiteConfig["features"], string>` map (`:34`),
-  forced by `tsc --noEmit` the moment `site-config.ts`'s `largeSums` member landed — the same
-  shape TASK-187's `memberships` line already documents in this same file. Minimal, load-
-  bearing, not a feature change: `largeSums` gates no nav route, so this label is never
-  actually surfaced by `featuresFor()`. Every other line byte-identical.
-
-Block height at claim: 968,133.
+Block height at claim: 968,133. NavEditor.tsx named add at block 968,135.
