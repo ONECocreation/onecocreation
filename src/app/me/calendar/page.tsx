@@ -1,27 +1,16 @@
-import type { Metadata } from "next";
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
-import MemberCalendar from "@/components/me/MemberCalendar";
+import { permanentRedirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Your calendar — One Cocreation",
-};
-
-/** The member's calendar, v1 (list of their sessions). The community
- *  nostr-calendar and week-grid views layer on here next. */
-export default function MemberCalendarPage() {
-  return (
-    <main className="mgmt-ground">
-      <SiteHeader />
-      <section className="mgmt-wrap mgmt-body" style={{ maxWidth: 720 }}>
-        <header className="mgmt-head">
-          <p className="mgmt-eyebrow">Members</p>
-          <h1 className="mgmt-title">Your calendar</h1>
-          <p className="mgmt-blurb">Your booked sessions — meeting links open when they&apos;re confirmed.</p>
-        </header>
-        <MemberCalendar />
-      </section>
-      <SiteFooter />
-    </main>
-  );
+/**
+ * TASK-405 (W-20/E4: "we have a recreation of the /me/calendar") — this
+ * standalone page retires for good. `MemberCalendar` already mounts as the
+ * Calendar tab on `/me` for both member kinds (MeSwitch.tsx); this address
+ * was a true duplicate surface. A permanent (308) redirect forwards here
+ * so browsers and crawlers can forget the old address — `/me/calendar` by
+ * hand lands the visitor on that very same tab. The redirect runs before
+ * any session read and carries the ordinary cookies, so a signed-out
+ * visitor lands on `/me`'s own sign-in branch, exactly as visiting `/me`
+ * directly does — never a calendar.
+ */
+export default function CalendarRedirect() {
+  permanentRedirect("/me?tab=calendar");
 }
