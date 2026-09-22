@@ -139,11 +139,11 @@ You have Answered this Call! Congratulations! We Are the Bridges of the New Way.
 
 IAM here for you to remember the greatness that you ARE and have ALWAYS Been.
 
-!section: Visiting Artists | /images/cut-1.jpg | /letters/news-sample | Grab your reader with a stunning email content — visiting artists, gatherings, and what's coming to the studio.
+!section: Your free meditation | /images/dusk-lake-storm-light.webp | /meditation | A free guided meditation — plus a weekly note of inspiration, with love.
 !section: Membership | /images/lions-gate.webp | /memberships | Three ways into the field — each includes everything before it. Your tier gently becomes your key.
-!section: You can add a catchy headline for this section | /images/newsletter.webp | /store | Grab your reader with a stunning email content — the store, the meditations, the affirmations.
+!section: Read with Love | /images/reading-book.webp | /reading | Join me weekly for a live book reading in my own room.
 
-!cta: Check All News | /letters/news-sample`,
+!cta: Check All News | /news`,
   },
   /* THE OFFER LETTERS (Love's ask, 0018.05.23): the {{slots}} are the
    * machine-built parts — who / the offered lines / the one-tap doors / the
