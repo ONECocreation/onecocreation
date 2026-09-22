@@ -75,11 +75,13 @@ describe("#17 — \"The Heart Field\", two words, no \"Commons\", no dash", () =
 });
 
 describe("#18 — \"My sessions\" → \"Calendar\"", () => {
-  it("MEMBER_MENU carries \"Calendar\", not \"My sessions\"", async () => {
+  it("MEMBER_MENU carries \"Calendar\", not \"My sessions\", pointed at the calendar tab", async () => {
     const { MEMBER_MENU } = await import("@/components/door/door-machine");
     const labels = MEMBER_MENU.map((i) => i.label);
     expect(labels).not.toContain("My sessions");
-    expect(MEMBER_MENU.find((i) => i.href === "/me/calendar")?.label).toBe("Calendar");
+    /* TASK-211: "My sessions" → "Calendar" (the label); TASK-405 W-20/E5:
+       the href re-points at the calendar tab — her-words pins his LATEST word */
+    expect(MEMBER_MENU.find((i) => i.label === "Calendar")?.href).toBe("/me?tab=calendar");
   });
 });
 

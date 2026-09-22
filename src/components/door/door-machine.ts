@@ -98,9 +98,9 @@ export function continueLabel(path: string | null): string {
  *  Ruling 1 (0018.06.18 a₿): /welcome keeps its URL as the post-sign-in
  *  "what's yours now" page, linked from this menu. */
 export const MEMBER_MENU: readonly { label: string; href: string }[] = [
-  { label: "What's yours now", href: "/welcome" }, // ruling 1 — the `in` step became this page
+  { label: "Welcome", href: "/welcome" }, // ruling 1 — the `in` step became this page; TASK-405 (W-20/E5): "What's yours now" → "Welcome" — it IS the welcome thread
   { label: "My library", href: "/me" }, // T-173's purchases live on /me
-  { label: "Calendar", href: "/me/calendar" }, // TASK-211 (0018.06.23 a₿, Love's call #18): "My sessions" → "Calendar"
+  { label: "Calendar", href: "/me?tab=calendar" }, // TASK-211 (0018.06.23 a₿, Love's call #18): "My sessions" → "Calendar"; TASK-405 (W-20): /me/calendar → /me?tab=calendar — the calendar tab, not a separate page
   /* TASK-210 (0018.06.23 a₿, Love's 0018.06.18 call 01:11:02 "the
      reading-room link from the user menu lands in the wrong place"): the
      row was hardwired to the tier-B Chronicles room, so a member without
