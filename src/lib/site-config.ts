@@ -102,6 +102,13 @@ export interface SiteConfig {
         it already is — that item's status in /a/store (Items); this switch
         is the whole surface, not any one package. */
     memberships: boolean;
+    /** TASK-393 (block 968,132+ a₿): §8.7 — "hide large sums of money for
+        now" (Love). Gates the "Large Sums of Money" affirmation off the
+        home shelf (sections.tsx) and the packages add-ons strip
+        (tiers-content.ts's consumer) until flipped true. Default OFF; both
+        entries stay in their data/seed spots so ON brings them back in one
+        line — no delete, no re-type. */
+    largeSums: boolean;
   };
   payments: { btcpay: boolean; square: boolean; stripe: boolean };
   meeting: {
@@ -212,6 +219,7 @@ export function defaultSiteConfig(): SiteConfig {
       jars: true,
       news: true,
       memberships: true,
+      largeSums: false,
     },
     payments: { btcpay: true, square: true, stripe: false },
     meeting: {

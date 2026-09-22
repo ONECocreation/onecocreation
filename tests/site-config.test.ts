@@ -69,6 +69,7 @@ describe("the switches — defaults are Love's streamlined site", () => {
       jars: true,
       news: true,
       memberships: true, // TASK-187: default ON — Love's own offer
+      largeSums: false, // TASK-393: default OFF per §8.7 — one flag brings it back
     });
     expect(c.payments).toEqual({ btcpay: true, square: true, stripe: false });
     expect(c.meeting.rail).toBe("jitsi");
