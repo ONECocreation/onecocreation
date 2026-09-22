@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   validateReadingSchedule,
   nextReading,
+  readingOccurrencesBetween,
   DEFAULT_READING_SCHEDULE,
   READING_MAX_DURATION_MIN,
   type ReadingSchedule,
@@ -201,5 +202,164 @@ describe("nextReading — the DST boundaries (Found, not fixed: booking-time.ts 
   it("both boundaries also validate cleanly on their own — DST alone never fails validateReadingSchedule", () => {
     expect(validateReadingSchedule({ ...BASE, weekday: 0, time: "02:30" }).ok).toBe(true);
     expect(validateReadingSchedule({ ...BASE, weekday: 0, time: "01:30" }).ok).toBe(true);
+  });
+});
+
+/**
+ * TASK-385 (block 968,061+) — readingOccurrencesBetween, the batch
+ * start-within walk the calendar mark reads: "the occurrences whose START
+ * instant lies in [fromMs, toMs)," mirroring nextReading's own civil-date
+ * walk (never a now + n × 86_400_000 instant step). Every UTC fixture below
+ * either reuses a literal already pinned above (cross-checked against the
+ * tz database when it was written) or was hand-verified the same way
+ * before writing it here (`TZ=America/Denver date -d …` / a standalone
+ * repro of booking-time.ts's own offset algorithm).
+ */
+describe("readingOccurrencesBetween — inputs it refuses outright, always []", () => {
+  it("an empty range (toMs === fromMs) → []", () => {
+    expect(readingOccurrencesBetween(BASE, 100, 100)).toEqual([]);
+  });
+
+  it("an inverted range (toMs < fromMs) → []", () => {
+    expect(readingOccurrencesBetween(BASE, 200, 100)).toEqual([]);
+  });
+
+  it("a non-finite fromMs or toMs → [] (NaN and Infinity both)", () => {
+    expect(readingOccurrencesBetween(BASE, NaN, Date.parse("2026-09-08T00:00:00Z"))).toEqual([]);
+    expect(readingOccurrencesBetween(BASE, Date.parse("2026-09-01T00:00:00Z"), Infinity)).toEqual([]);
+  });
+
+  it("on: false → [] — nothing published, never confused with a real occurrence", () => {
+    const r = readingOccurrencesBetween(
+      { ...BASE, on: false },
+      Date.parse("2026-09-01T00:00:00Z"),
+      Date.parse("2026-09-08T00:00:00Z"),
+    );
+    expect(r).toEqual([]);
+  });
+
+  it("an invalid schedule → [], same as any other malformed schedule", () => {
+    const r = readingOccurrencesBetween(
+      { ...BASE, tz: "Not/AZone" },
+      Date.parse("2026-09-01T00:00:00Z"),
+      Date.parse("2026-09-08T00:00:00Z"),
+    );
+    expect(r).toEqual([]);
+  });
+
+  it("a range longer than 366 days → [], even though it would otherwise contain many occurrences", () => {
+    const fromMs = Date.parse("2026-01-01T00:00:00Z");
+    const r = readingOccurrencesBetween(BASE, fromMs, fromMs + 367 * 86_400_000);
+    expect(r).toEqual([]);
+  });
+
+  it("Astra's pin (Ruling 3) — fromMs = 1e16 is finite but Invalid Date: [], never a thrown RangeError", () => {
+    expect(() => readingOccurrencesBetween(BASE, 1e16, 1e16 + 86_400_000)).not.toThrow();
+    expect(readingOccurrencesBetween(BASE, 1e16, 1e16 + 86_400_000)).toEqual([]);
+  });
+
+  it("the identical guard, proven again with an out-of-range toMs", () => {
+    expect(() => readingOccurrencesBetween(BASE, 1e16 - 86_400_000, 1e16)).not.toThrow();
+    expect(readingOccurrencesBetween(BASE, 1e16 - 86_400_000, 1e16)).toEqual([]);
+  });
+});
+
+describe("readingOccurrencesBetween — the start-within boundary is exact", () => {
+  // Wednesday 2026-09-23, 13:11 MDT = 19:11Z (the same instant BASE's own
+  // boundary-instant tests above already pin).
+  const startsAtMs = Date.parse("2026-09-23T19:11:00.000Z");
+  const endsAtMs = Date.parse("2026-09-23T20:11:00.000Z");
+
+  it("a start exactly at fromMs is KEPT (the window is [fromMs, toMs))", () => {
+    const r = readingOccurrencesBetween(BASE, startsAtMs, startsAtMs + 60_000);
+    expect(r).toEqual([{ startsAtMs, endsAtMs }]);
+  });
+
+  it("a start exactly at toMs is DROPPED (never a second day's pill)", () => {
+    const r = readingOccurrencesBetween(BASE, startsAtMs - 60_000, startsAtMs);
+    expect(r).toEqual([]);
+  });
+
+  it("a range entirely between two occurrences (after one ends, before the next starts) → []", () => {
+    const r = readingOccurrencesBetween(BASE, endsAtMs, Date.parse("2026-09-24T00:00:00.000Z"));
+    expect(r).toEqual([]);
+  });
+});
+
+describe("readingOccurrencesBetween — several occurrences, a year rollover, and a same-day-start rule", () => {
+  it("several occurrences across a multi-week range, in ascending order", () => {
+    const r = readingOccurrencesBetween(
+      BASE,
+      Date.parse("2026-09-01T00:00:00Z"),
+      Date.parse("2026-09-30T00:00:00Z"),
+    );
+    expect(r).toEqual([
+      { startsAtMs: Date.parse("2026-09-02T19:11:00.000Z"), endsAtMs: Date.parse("2026-09-02T20:11:00.000Z") },
+      { startsAtMs: Date.parse("2026-09-09T19:11:00.000Z"), endsAtMs: Date.parse("2026-09-09T20:11:00.000Z") },
+      { startsAtMs: Date.parse("2026-09-16T19:11:00.000Z"), endsAtMs: Date.parse("2026-09-16T20:11:00.000Z") },
+      { startsAtMs: Date.parse("2026-09-23T19:11:00.000Z"), endsAtMs: Date.parse("2026-09-23T20:11:00.000Z") },
+    ]);
+  });
+
+  it("a year rollover: a window spanning Dec 2026 into Jan 2027 finds both occurrences, crossing cleanly", () => {
+    // The same Dec 30 2026 / Jan 6 2027 instants nextReading's own year-
+    // rollover test above pins (both MST, -7h, no DST in Denver in winter).
+    const r = readingOccurrencesBetween(
+      BASE,
+      Date.parse("2026-12-25T00:00:00Z"),
+      Date.parse("2027-01-10T00:00:00Z"),
+    );
+    expect(r).toEqual([
+      { startsAtMs: Date.parse("2026-12-30T20:11:00.000Z"), endsAtMs: Date.parse("2026-12-30T21:11:00.000Z") },
+      { startsAtMs: Date.parse("2027-01-06T20:11:00.000Z"), endsAtMs: Date.parse("2027-01-06T21:11:00.000Z") },
+    ]);
+  });
+
+  it("a reading that starts late evening Denver lands on the UTC day of the START, once, never twice", () => {
+    // Wednesday 2026-09-23, 23:00 Denver (MDT, -6h) = 2026-09-24T05:00:00Z —
+    // a UTC day later than the schedule's own Denver-civil weekday. A
+    // 3-day window bracketing both UTC dates either side must still find
+    // exactly ONE occurrence, keyed to the START's own UTC day.
+    const schedule: ReadingSchedule = { on: true, weekday: 3, time: "23:00", tz: "America/Denver", durationMin: 60 };
+    const r = readingOccurrencesBetween(
+      schedule,
+      Date.parse("2026-09-22T00:00:00Z"),
+      Date.parse("2026-09-25T00:00:00Z"),
+    );
+    expect(r).toEqual([
+      { startsAtMs: Date.parse("2026-09-24T05:00:00.000Z"), endsAtMs: Date.parse("2026-09-24T06:00:00.000Z") },
+    ]);
+  });
+});
+
+describe("readingOccurrencesBetween — the two DST-consistency fixtures (not two DST-policy fixtures)", () => {
+  it("the spring gap (2026-03-08): reports the identical startsAtMs nextReading already measured there", () => {
+    // Verbatim schedule from the nextReading spring-gap fixture above
+    // (tests/reading-schedule.test.ts:174-182) — a window bracketing that
+    // same weekend, one Sunday inside it.
+    const schedule: ReadingSchedule = { on: true, weekday: 0, time: "02:30", tz: "America/Denver", durationMin: 60 };
+    const r = readingOccurrencesBetween(
+      schedule,
+      Date.parse("2026-03-05T00:00:00Z"),
+      Date.parse("2026-03-10T00:00:00Z"),
+    );
+    expect(r).toEqual([
+      { startsAtMs: Date.parse("2026-03-08T08:30:00.000Z"), endsAtMs: Date.parse("2026-03-08T09:30:00.000Z") },
+    ]);
+  });
+
+  it("the autumn fold (2026-11-01): reports the identical startsAtMs nextReading already measured there", () => {
+    // Verbatim schedule from the nextReading autumn-fold fixture above
+    // (tests/reading-schedule.test.ts:191-199) — a window bracketing that
+    // same weekend, one Sunday inside it.
+    const schedule: ReadingSchedule = { on: true, weekday: 0, time: "01:30", tz: "America/Denver", durationMin: 60 };
+    const r = readingOccurrencesBetween(
+      schedule,
+      Date.parse("2026-10-29T00:00:00Z"),
+      Date.parse("2026-11-03T00:00:00Z"),
+    );
+    expect(r).toEqual([
+      { startsAtMs: Date.parse("2026-11-01T07:30:00.000Z"), endsAtMs: Date.parse("2026-11-01T08:30:00.000Z") },
+    ]);
   });
 });
