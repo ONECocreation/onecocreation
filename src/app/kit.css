@@ -174,3 +174,19 @@
    default paragraph margin fights this gap). Shared and generic —
    never a ReadingNotice-only rule. ── */
 .kit-stack{display:flex;flex-direction:column;gap:6px}
+
+/* ── PAGE LAYOUT (TASK-391, block 968,088) ────────────────────────
+   Five classes lifted verbatim from the approved Saturday-reading
+   mock's own <style> block (mockups-1/frag-w30.html:2-10; the
+   proposed-class table in notes-w30.md) — layout only (flex/gap/
+   text-wrap/sizing), no new colour/border/shadow/font value; every
+   ink and surface still rides existing tokens. Shared and generic —
+   not a /reading-only ruleset, so a later page can reuse the same
+   five names instead of reinventing them. ── */
+.kitx-balanced{text-wrap:pretty}
+.kitx-balanced :is(h1,h2,h3){text-wrap:balance}
+.kitx-flow{display:flex;flex-direction:column;gap:24px}
+.kitx-actions{justify-content:center;padding-top:16px}
+.kitx-actions>.kit-btn{flex:1 1 240px;max-width:320px}
+.kitx-mark{width:88px;height:88px;margin-inline:auto}
+.kitx-photo{width:min(280px,100%);aspect-ratio:3/4;margin-inline:auto}

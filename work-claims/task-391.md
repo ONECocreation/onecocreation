@@ -35,10 +35,11 @@ words to both the hero's date line and the "Next reading." card, importing `noti
 
 Additive, narrowly: `src/components/NavMenu.tsx` (one `PAGE_CATALOG` row for `/reading`,
 ungated per decision D), `src/lib/site-config.ts` (the matching one `KNOWN_NAV_HREFS` row —
-every other line byte-identical; this file is a seam T-387 also touches elsewhere), `src/app/
-kit.css` (the five RULED `kitx-` rules appended — `kitx-balanced`, `kitx-flow`, `kitx-actions`,
-`kitx-mark`, `kitx-photo`, lifted verbatim from the approved mock's own `<style>` block,
-layout-only, no new colour/border/shadow/font value; every other line byte-identical).
+every other line byte-identical; this file is a seam T-387 also touches elsewhere),
+`src/app/kit.css` (the five RULED `kitx-` rules appended — `kitx-balanced`, `kitx-flow`,
+`kitx-actions`, `kitx-mark`, `kitx-photo`, lifted verbatim from the approved mock's own
+`<style>` block, layout-only, no new colour/border/shadow/font value; every other line
+byte-identical).
 
 NOT owned: `public/reading/` assets — Love's video explanation and the mobile "Love with a
 book" graphic are believed, not yet delivered; both slots ship absent (no placeholder box,
