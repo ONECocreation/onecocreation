@@ -6,6 +6,9 @@ import RoomPresence, { type RosterResult } from "./RoomPresence";
 import StageChat from "./StageChat";
 import { deriveResources, ResourcesCard } from "./LessonPathView";
 import AfterHoursDoor, { type AfterHoursFeed } from "./AfterHoursDoor";
+import Stage2Door from "./Stage2Door";
+import JitsiRoom from "../booking/JitsiRoom";
+import { READING_ROOM_SLUG } from "@/lib/reading-room";
 import type { MaterialItem } from "@/lib/class-materials";
 import type { RoomPin } from "@/lib/room-pins";
 import type { RoomGate } from "@/lib/room-access";
@@ -113,6 +116,12 @@ export default function StageView({
 }) {
   const gated = !!door && door !== "open";
   const [items, setItems] = useState<MaterialItem[] | null>(null);
+  /* TASK-392: the Stage 2 pilot's own join state — set the instant the
+   *  member's fresh click-time re-check (Stage2Door.tsx) clears, cleared
+   *  by the always-visible "Leave Stage 2" control below (JitsiRoom.tsx
+   *  gives its parent no ended/failed callback, confirmed absent this
+   *  session — this is the ONLY reset path, not a redundant one). */
+  const [stage2Room, setStage2Room] = useState<string | null>(null);
 
   useEffect(() => {
     if (gated) return; // the gate closed — no fetch, same law as the Lesson Path
@@ -138,9 +147,28 @@ export default function StageView({
       )}
       <div className={`cl-grid-stage${chatHidden ? " cl-grid-stage--no-chat" : ""}`}>
         <div role="region" className="cl-region cl-area-video" data-region="video" aria-label="Video">
-          <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roomKey={roomKey} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={fullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} />
+          {stage2Room ? (
+            <>
+              {/* TASK-392: the ONLY reset path back to Stage 1 — required,
+                  not decorative (Stage2Door itself renders null while
+                  joined, and JitsiRoom.tsx exposes no ended/failed callback
+                  to its parent). Never hidden, never conditional. */}
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setStage2Room(null)}>
+                Leave Stage 2 · back to the reading
+              </button>
+              <JitsiRoom domain={jitsiDomain ?? ""} room={stage2Room} displayName={undefined} />
+            </>
+          ) : (
+            <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roomKey={roomKey} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={fullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} />
+          )}
         </div>
         <AfterHoursDoor afterHours={afterHours ?? null} signedIn={signedIn} viewerTier={viewerTier} />
+        {/* TASK-392: Stage 2 mounts only on the free reading room's own
+            Stage — this lane's whole scope (Decision 3: every signed-in
+            member of THIS room, never a tier check, never another room). */}
+        {slug === READING_ROOM_SLUG && (
+          <Stage2Door jitsiDomain={jitsiDomain ?? ""} joined={!!stage2Room} onJoin={setStage2Room} signedIn={signedIn} />
+        )}
         {resources.length > 0 && (
           <div role="region" className="cl-region cl-area-resources" aria-label="Resources">
             <ResourcesCard resources={resources} />

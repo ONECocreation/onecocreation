@@ -2,6 +2,7 @@
 
 import { SectionHead } from "@/components/console/glass";
 import ReadingScheduleCard from "./ReadingScheduleCard";
+import Stage2Card from "./Stage2Card";
 
 /**
  * /a/site/reading — the WEEKLY READING sub-room (TASK-381, block 968,047+).
@@ -21,6 +22,8 @@ export default function SiteReadingRoom() {
       </p>
       <SectionHead label="The weekly reading — day, time, zone" />
       <ReadingScheduleCard />
+      <SectionHead label="Stage 2 — after the reading" />
+      <Stage2Card />
     </div>
   );
 }

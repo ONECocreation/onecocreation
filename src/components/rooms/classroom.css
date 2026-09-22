@@ -53,6 +53,10 @@
 
 .cl-area-video { grid-area: video; }
 .cl-area-after-hours { grid-area: afterhours; }
+/* TASK-392 (block 968,091+): Stage 2's own region, the identical
+   mechanism T-236 already used for .cl-area-after-hours — a new named
+   area, not a new ruleset. */
+.cl-area-stage2 { grid-area: stage2; }
 .cl-area-resources { grid-area: resources; }
 .cl-area-chat { grid-area: chat; }
 .cl-area-people { grid-area: people; }
@@ -179,6 +183,7 @@
   grid-template-areas:
     "video video"
     "afterhours afterhours"
+    "stage2 stage2"
     "resources resources"
     "chat people";
   gap: 20px;
@@ -191,6 +196,7 @@
     grid-template-areas:
       "video"
       "afterhours"
+      "stage2"
       "resources"
       "chat"
       "people";
@@ -229,11 +235,19 @@
    (afterhours/resources/people) ride one column instead of splitting
    chat/people side by side. Additive only; .cl-grid-stage above is
    untouched. */
+/* TASK-392 re-grep note: this block postdates the brief's own line
+   numbers (T-387 added it) — the brief named "the two grid-template-areas
+   blocks" (desktop + phone), but a hidden chat and a published Stage 2
+   are orthogonal states an operator can hit together, so the stage2 token
+   rides here too (single-token row, the same one-column shape the phone
+   block uses) rather than leaving Stage2Door's grid-area undefined
+   whenever chat is hidden. */
 .cl-grid-stage--no-chat {
   grid-template-columns: 1fr;
   grid-template-areas:
     "video"
     "afterhours"
+    "stage2"
     "resources"
     "people";
 }
