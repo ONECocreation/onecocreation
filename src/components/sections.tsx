@@ -5,12 +5,12 @@ import { roomGate } from "@/lib/room-access";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { ROOMS, type MatrixRoom } from "@/lib/matrix";
 import { listServices } from "@/lib/booking";
-import { listItems } from "@/lib/store";
+import { listItems, getItem } from "@/lib/store";
 import { getSiteConfig } from "@/lib/site-config";
 import { tierRailsOn } from "@/lib/tier-offer";
 import { jarsOpen, liveAdapter, ensureSquareVault } from "@/lib/payments";
 import SubscribeForm from "./SubscribeForm";
-import TipJar from "./TipJar";
+import TipJar, { type JarKey } from "./TipJar";
 import WildDoors from "./WildDoors";
 import LightCode from "./LightCode";
 import { cartridge } from "@/brand/cartridge";
@@ -539,15 +539,41 @@ export async function Affirmations() {
   );
 }
 
+/* TASK-411 (block 968,170 a₿) — DERIVE-OR-DASH ON THE SHELF: a jar is
+   offered only while its store item is live. The key→itemId map rides here
+   (server) AND in TipJar.tsx's JAR_ITEMS (client, give()) because a server
+   page cannot call a client-module export (payments.ts:656's own note);
+   the lane's pin file keeps the client copy honest against the JARS words.
+   /support imports liveJarKeys too — the two faces can never disagree. */
+const JAR_SHELF: Record<JarKey, string> = {
+  love: "tip-love",
+  onecocreation: "tip-one-cocreation",
+  payforward: "gifts-of-gratitude",
+};
+
+export async function liveJarKeys(): Promise<JarKey[]> {
+  const live = await Promise.all(
+    (Object.keys(JAR_SHELF) as JarKey[]).map(async (key) => {
+      const item = await getItem(JAR_SHELF[key]);
+      return item?.status === "live" ? key : null;
+    }),
+  );
+  return live.filter((k): k is JarKey => k !== null);
+}
+
 export async function Donations() {
   /* TASK-134 (0018.06.17 a₿) — THE JARS FOLLOW THE SWITCHES: the jars block
      renders only when jarsOpen() — features.jars ON *and* the bitcoin rail
-     actually live — so this section and /support can never disagree. */
+     actually live — so this section and /support can never disagree.
+     TASK-411 adds the shelf truth: only jars whose store item is live are
+     offered (derive-or-dash); with none live the copy stands with no
+     widget, same as jarsOpen() false. */
   const open = jarsOpen();
+  const liveJars = open ? await liveJarKeys() : [];
   /* TASK-393 (R5 of the block-968,133 amendment) — "Give in bitcoin over
      lightning or simply in dollars" was unconditional on the payment
-     rails (a separate concern from jarsOpen()'s features.jars gate on
-     the TipJar widget itself, untouched below). Rail-judged the same way
+     rails (a separate concern from the jarsOpen()+shelf gate on the
+     TipJar widget above). Rail-judged the same way
      as Jewelry()/Affirmations() above. */
   const rails = await liveRails();
   const giveLine = rails.btc && rails.card
@@ -561,13 +587,13 @@ export async function Donations() {
     <section id="support">
       <div className="wrap">
         <div style={{ background: "var(--warm-panel)", border: "1px solid var(--warm-edge)", borderRadius: 30, padding: 44, boxShadow: "var(--soft)" }}>
-          <p className="kicker">Support This Work — Gently ⚡</p>
+          <p className="kicker">Support This Work — Gently</p>
           <h2 className="sec-h">Tend the Field</h2>
           <p style={{ color: "var(--ink-body)", maxWidth: 640 }}>
             A gift lands with Love <strong style={{ color: "var(--gold-deep)" }}>whole</strong> — no
             platform between, no cut taken. {giveLine}
           </p>
-          {open && <TipJar />}
+          {open && liveJars.length > 0 && <TipJar only={liveJars} />}
 
           {/* ── the three doors (TASK-126, 0018.06.16 a₿ — same words as /support) ── */}
           <div style={{ marginTop: 34 }}>

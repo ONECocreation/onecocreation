@@ -29,8 +29,14 @@ therefore the DERIVED ids: `tip-love`, `tip-one-cocreation`, `gifts-of-gratitude
   region) + the `:564` kicker's ⚡ (decision C lean, ruled words pending). NOWHERE near
   `:131-135` (406's hunk)
 - `tests/support-jars-basket.test.ts` — NEW (the lane's own pin file, the brief's 5 pins)
+- `tests/tip-receipt.test.ts` — DISCLOSED SEAM (see below): amended, not deleted, to keep
+  T-223's intent green against the retired route's ground
+- `tests/feature-switches.test.ts` (`:133-136` only) — DISCLOSED SEAM: the Donations() mount
+  pin follows build 3's extended gate
+- `tests/studio-publish.test.ts` (`:210` only) — DISCLOSED SEAM: the hand-built /support
+  kicker pin follows decision C's lean (the ⚡ goes with the words)
 
-## Disclosed seams (edits outside OWNS, forced by the brief's own build steps — named, minimal)
+## Disclosed seams (edits outside the brief's OWNS, forced by the brief's own build steps — named, minimal)
 
 - `tests/tip-receipt.test.ts` — T-223's pin hard-imports `@/app/api/tip/route`; the brief's
   consumer grep was scoped to `src/` and missed it. Retiring the route without retiring the
@@ -40,6 +46,10 @@ therefore the DERIVED ids: `tip-love`, `tip-one-cocreation`, `gifts-of-gratitude
 - `tests/feature-switches.test.ts` (`:133-136`) — pins the Donations() mount as exactly
   `{open && <TipJar />}`; build 3's live-jar gating necessarily changes that mount expression.
   Pin updated to the new gate (jarsOpen() AND live shelf items), same describe, minimal diff.
+- `tests/studio-publish.test.ts` (`:210`) — pins the hand-built /support StackedHero kicker as
+  "Support This Work — Gently ⚡"; decision C's lean removes the glyph, so the expected string
+  follows (with a comment marking the ruling pending — if the Admiral keeps the glyph, the
+  expected kicker gains its ⚡ back).
 
 ## Build (the brief's steps 1–6, AMENDMENT 1 applied)
 

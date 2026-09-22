@@ -207,7 +207,10 @@ describe("SupportPage — publish to live actually takes", () => {
     expect(findAll(el, (e) => e.type === Render)).toHaveLength(0);
     const heroes = findAll(el, (e) => e.type === StackedHero);
     expect(heroes).toHaveLength(1);
-    expect((heroes[0].props as { kicker?: string }).kicker).toBe("Support This Work — Gently ⚡");
+    /* TASK-411 (block 968,170 a₿, decision C lean — ruled words pending):
+       the ⚡ goes with the lightning words; if the Admiral rules the glyph
+       is decoration, this expected kicker gains its ⚡ back. */
+    expect((heroes[0].props as { kicker?: string }).kicker).toBe("Support This Work — Gently");
   });
 
   it("after Publish to live in /studio: the SAME request renders the published Puck doc", async () => {

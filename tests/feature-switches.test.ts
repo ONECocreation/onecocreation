@@ -130,9 +130,9 @@ describe("sections.tsx — the R5 rail-aware sweep (Jewelry/Affirmations/Donatio
     expect(src).toContain('"Giving opens again soon."');
   });
 
-  it("Donations()'s jarsOpen() gate on <TipJar/> itself is untouched (a separate concern from the rail-aware paragraph)", async () => {
+  it("Donations()'s <TipJar/> gate: jarsOpen() AND live shelf items (TASK-411 extended T-393's gate)", async () => {
     const src = await read("src/components/sections.tsx");
-    expect(src).toMatch(/\{open && <TipJar \/>\}/);
+    expect(src).toMatch(/\{open && liveJars\.length > 0 && <TipJar only=\{liveJars\} \/>\}/);
   });
 });
 
