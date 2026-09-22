@@ -76,19 +76,8 @@ export default function DoorButton() {
 
   /* the one nav-dropdown recipe — poured from the --pop-* jug, same as
      .nav-sub; the sheet and the menu drink from it alike */
-  const pop: React.CSSProperties = {
-    position: "absolute",
-    right: 0,
-    top: "calc(100% + 10px)",
-    background: "var(--pop-bg)",
-    border: "1.5px solid var(--pop-edge)",
-    borderRadius: 16,
-    boxShadow: "var(--pop-shadow)",
-    zIndex: "var(--z-sheet, 60)" as unknown as number,
-  };
-
   return (
-    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+    <div ref={ref} className="door-anchor">
       {!name ? (
         <button
           onClick={() => {
@@ -135,7 +124,7 @@ export default function DoorButton() {
           (the email verifies before the name is claimed) must NOT unmount
           the sheet from under a new soul */}
       {open === "sheet" && (
-        <div style={{ ...pop, width: "min(360px, calc(100vw - 32px))", padding: 10 }}>
+        <div className="door-pop" style={{ width: "min(360px, calc(100vw - 20px))", padding: 10 }}>
           <DoorSheet
             mount="sheet"
             onIn={(n) => { lastKnownBy = n; setKnownBy(n); }}
@@ -145,7 +134,7 @@ export default function DoorButton() {
       )}
 
       {open === "menu" && name && (
-        <div role="menu" style={{ ...pop, minWidth: 190, padding: "10px 0" }}>
+        <div role="menu" className="door-pop door-pop--menu" style={{ minWidth: 190, padding: "10px 0" }}>
           {/* the soul, listed — with K7's one honest badge: how they proved
               themselves (an inbox answered a code / a signer signed) */}
           <p style={{ margin: 0, padding: "2px 18px 10px", borderBottom: "1px solid rgba(217,178,78,.25)" }}>
