@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { tick } from "@/lib/mail-queue";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
+import { enqueueReadingDayOf } from "@/lib/reading-letters";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -23,7 +24,12 @@ function authorized(request: Request): boolean {
 export async function GET(request: Request) {
   if (!authorized(request)) return NextResponse.json({ ok: false }, { status: 401 });
   const result = await tick();
-  return NextResponse.json({ ok: true, ...result });
+  /* TASK-389 (R1, the amendment): the two reading emails ride this SAME
+     tick — direct sendMail calls, never mail-queue.enqueue() (a letter
+     queued after the drain above would not be picked up again until
+     TOMORROW's single daily cron), so no second drain is needed here. */
+  const reading = await enqueueReadingDayOf(Date.now());
+  return NextResponse.json({ ok: true, ...result, reading });
 }
 
 export async function POST(request: Request) {

@@ -23,6 +23,12 @@ export interface SubscriberRecord {
    *  `listSubscribers`/`subscriberSegments` still read `source` only; a
    *  tag-aware reader is a later lane's own hand-off (Ground). */
   tags?: string[];
+  /** TASK-389: epoch ms the reading confirmation letter was sent — the
+   *  durable dedup for decision E's backlog sweep (a record with a
+   *  "reading" tag and no mark here is owed the letter once; the mark
+   *  itself, not a wall-clock window, is what stops a second send). Set
+   *  only by `markReadingConfirmed`, never touched by `addReadingTag`. */
+  readingConfirmedAt?: number;
 }
 
 const INDEX = "mail:subscribers";
@@ -131,6 +137,22 @@ export async function addReadingTag(
   return { outcome: "joined" };
 }
 
+/**
+ * TASK-389 — stamps `readingConfirmedAt` on an existing record, the
+ * durable mark decision E's backlog sweep dedupes on. A no-op (not an
+ * error) when the record doesn't exist — a caller that already confirmed
+ * a send has nothing left to write for a soul the vault no longer knows.
+ * Never touches `source`/`optedOut`/`tags`.
+ */
+export async function markReadingConfirmed(email: string): Promise<void> {
+  const key = recKey(email);
+  const existing = await kv(["GET", key]);
+  if (!existing) return;
+  const rec = JSON.parse(existing as string) as SubscriberRecord;
+  rec.readingConfirmedAt = Date.now();
+  await kv(["SET", key, JSON.stringify(rec)]);
+}
+
 export async function removeSubscriber(email: string): Promise<void> {
   const existing = await kv(["GET", recKey(email)]);
   if (!existing) return;
@@ -161,6 +183,26 @@ export async function listSubscribers(filter: { source?: string } = {}): Promise
   const emails = ((await kv(["SMEMBERS", INDEX])) as string[]) ?? [];
   if (!filter.source) return emails;
   return (await readRecords(emails)).filter((r) => r.source === filter.source).map((r) => r.email);
+}
+
+/**
+ * TASK-389 — the tag-aware reader `listSubscribers`'s own docblock (above)
+ * hands off to a later lane: same `SMEMBERS` + `readRecords` shape, but
+ * returns every FULL record carrying `tag` in its `tags` list, regardless
+ * of `source` — unlike `listSubscribers`, which returns emails alone. The
+ * fuller shape is deliberate: this lane's callers (the day-of send, the
+ * confirmation backlog sweep) need `readingConfirmedAt` and `optedOut` off
+ * the same record, not a second per-email fetch.
+ *
+ * Does NOT filter by `optedOut` itself — same doctrine as `listSubscribers`
+ * above (an opted-out email is normally already outside INDEX, since
+ * `removeSubscriber` SREMs it there): the actual opt-out guard is the
+ * rail's own send-time check, `isSubscribed`, called by every caller of
+ * this reader immediately before it sends — never re-implemented here.
+ */
+export async function listSubscribersByTag(tag: string): Promise<SubscriberRecord[]> {
+  const emails = ((await kv(["SMEMBERS", INDEX])) as string[]) ?? [];
+  return (await readRecords(emails)).filter((r) => r.tags?.includes(tag));
 }
 
 /** Every door with live souls behind it, with counts — DERIVED from the
