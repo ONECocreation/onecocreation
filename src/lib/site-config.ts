@@ -160,7 +160,7 @@ export type SiteConfigPatch = {
 export const KNOWN_NAV_HREFS: readonly string[] = [
   "/about", "/memberships", "/packages", "/store", "/store/meditations",
   "/store/memberships", "/book", "/services",
-  "/classes", "/news", "/letters", "/meditation", "/support", "/contact", "/me",
+  "/classes", "/news", "/letters", "/meditation", "/support", "/contact", "/me", "/reading",
   /* TASK-210 (0018.06.23 a₿): every room's Stage, DERIVED from the rooms
      registry — the nav's Heart Field row leads to the Commons now, and a
      saved menu row pointing at a room must survive sanitize (Love's call

@@ -74,6 +74,12 @@ export const PAGE_CATALOG: {
   { href: "/support", label: "Support" },
   { href: "/contact", label: "Contact" },
   { href: "/me", label: "Me…" },
+  /* TASK-391 (block 968,088): the Saturday reading's own public front door
+     — the schedule/countdown page at /reading, the reading's public
+     landing spot. Never to be confused with "The reading room" below
+     (the free room's own Stage, READING_ROOM_PATH). Ungated (decision D):
+     the reading is the site's public front door this week. */
+  { href: "/reading", label: "Read with Love" },
   /* TASK-213 (0018.06.23 a₿, Love's call #19): the reading gets its own
      door under Community — the SAME derived room reading-room.ts already
      feeds ReadWithLove, the member menu, and the Heart Field row (never a
