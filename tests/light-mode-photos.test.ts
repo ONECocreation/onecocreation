@@ -496,9 +496,16 @@ describe("the lion regresses not", () => {
     );
     expect(cartridgeCss).toContain(".lions-gate-dark .sec-h{color:#F4ECFF}");
     expect(cartridgeCss).toContain(".lions-gate-dark p{color:#D9D2E4}");
+    // TASK-398 AMENDMENT R1 (block 968,140, Astra finding 1): main .keep-dark
+    // gained --panel/--edge/--ghost-bg/--ghost-ink, so this exception now
+    // resets those four to inherit too, after the original eight (a comment
+    // explaining why sits between the two groups in the real file — split
+    // into two pins here so this regression check doesn't couple to that
+    // comment's wording).
     expect(cartridgeCss).toContain(
-      'html[data-oc-theme="light"] main.lions-gate-dark .keep-dark{--ink-strong:inherit;--ink-body:inherit;--muted:inherit;\n  --rose:inherit;--gold-deep:inherit;--teal-bright:inherit;--glass:inherit;--glass-edge:inherit}',
+      'html[data-oc-theme="light"] main.lions-gate-dark .keep-dark{--ink-strong:inherit;--ink-body:inherit;--muted:inherit;\n  --rose:inherit;--gold-deep:inherit;--teal-bright:inherit;--glass:inherit;--glass-edge:inherit;',
     );
+    expect(cartridgeCss).toContain("--panel:inherit;--edge:inherit;--ghost-bg:inherit;--ghost-ink:inherit}");
   });
 
   it(":422 (the <main> repaint, not a descendant section) is untouched", () => {
