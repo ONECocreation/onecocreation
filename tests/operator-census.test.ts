@@ -1690,6 +1690,9 @@ if (WRITE_ENV === "init" || WRITE_ENV === "1") {
         next.buttonFamilies = recordsAtMeasured(measuredFamilies);
         next.fontDecls = recordsAtMeasured(measuredFonts);
       } else {
+        if (!exists) {
+          throw new Error("OPERATOR CENSUS: CENSUS_WRITE=1 found no baseline -- run CENSUS_WRITE=init first.");
+        }
         next = mergeBaseline(parseBaseline(fs.readFileSync(BASELINE_PATH, "utf8")), measured, extra);
       }
 
