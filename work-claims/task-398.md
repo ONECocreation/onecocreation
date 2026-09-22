@@ -35,15 +35,25 @@ Fixes B6/B12/B14 at their mechanism, all three sharing one root cause per surfac
 ## OWNS
 
 - `work-claims/task-398.md` (NEW, this file, first commit)
-- `src/app/cartridge.css` (three additive spots ONLY: the `main .keep-dark` ruleset `:437-440`,
-  the `:root,.oc-pv-dark` pour beside `:27`, the dawn block beside `:240` — every other line
-  byte-identical; `:446` and `:453` NOT touched)
+- `src/app/cartridge.css` (four additive spots: the `main .keep-dark` ruleset `:437-440`, the
+  `:root,.oc-pv-dark` pour beside `:27`, the dawn block beside `:240` — every other line
+  byte-identical; `:446` and `:453` NOT touched — PLUS, by AMENDMENT R1 (Astra finding 1,
+  block 968,140, Number One's ruling): `html[data-oc-theme="light"] main.lions-gate-dark
+  .keep-dark{}` gains `--panel:inherit;--edge:inherit;--ghost-bg:inherit;--ghost-ink:inherit`,
+  additive, same line style — OWNS widened to this ONE additional additive edit)
 - `src/app/house.css` (`:286` one-declaration swap to `var(--header-bg)`; the `body` rule
   `:32-36` additive; one NEW `main{}` rule; `.site-footer` `:296` margin — every other line
   byte-identical; the console override — `.mgmt-ground .site-header` — NOT touched)
 - `tests/keep-dark-bands.test.ts` (additive assertions only, in the file's own byte-equality
   idiom)
 - NEW `tests/grey-paint-family.test.ts`
+- **NAMED ADD (AMENDMENT R1 seam, block 968,140):** `tests/light-mode-photos.test.ts` — NOT
+  drafted in the original brief's OWNS; TASK-396's own "the lion regresses not" test hardcoded
+  the pre-amendment 8-key exact text of `main.lions-gate-dark .keep-dark{}`, so it broke the
+  moment the AMENDMENT's R1 edit (above) landed. Minimal fix only: split its one `toContain`
+  into two (the original eight, then the new four), so the pin decouples from this lane's
+  comment wording. No other line in that file touched. Declared here, in its own named add,
+  before the commit that makes it, per the named-adds guard.
 
 ## READ-ONLY and FORBIDDEN
 
