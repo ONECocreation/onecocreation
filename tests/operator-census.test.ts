@@ -474,6 +474,7 @@ export function scanSource(sourceText: string, fileName = "fixture.tsx"): FileCe
 // ---------------------------------------------------------------------------
 
 /** Recursive `*.tsx` discovery built from `fs.readdirSync` alone (no third-party walker). */
+/* Verbatim copy of tests/design-drift.test.ts's listFilesRecursive, kept as a copy on purpose (415's decision B: the two guards share philosophy, never code -- no shared test-helper folder). */
 function listFilesRecursive(rootDir: string, extension: string): string[] {
   const out: string[] = [];
   const stack: string[] = [rootDir];
