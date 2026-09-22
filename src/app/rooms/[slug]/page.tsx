@@ -16,6 +16,8 @@ import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { tierForSubject } from "@/lib/member-tier";
 import { TIERS } from "@/lib/entitlement";
 import { roomGate } from "@/lib/room-access";
+import { READING_ROOM_SLUG } from "@/lib/reading-room";
+import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const room = bySlug(slug);
   return { title: `${room?.title ?? "Room"} — One Cocreation` };
+}
+
+/* TASK-382: kept out of RoomPage's own body so the purity rule never meets
+ * `Date.now()` (letters/[key]'s helper idiom,
+ * src/app/a/letters/[key]/page.tsx:78-83 / src/app/a/page.tsx:83-96). Null
+ * off the reading room; on it, the schedule plus the ONE server clock
+ * reading both this and the notice's own first paint use (Ground,
+ * DETERMINISTIC HYDRATION) — never re-read on the client for that paint. */
+function computeReading(
+  slug: string,
+  schedule: ReadingSchedule,
+): { schedule: ReadingSchedule; next: { startsAtMs: number; endsAtMs: number } | null; asOfMs: number } | null {
+  if (slug !== READING_ROOM_SLUG) return null;
+  const asOfMs = Date.now();
+  const next = nextReading(schedule, asOfMs);
+  return { schedule, next: next && { startsAtMs: next.startsAtMs, endsAtMs: next.endsAtMs }, asOfMs };
 }
 
 /* TASK-184 (0018.06.18 a₿): a classroom is THREE rooms — the Stage (the
@@ -47,6 +65,12 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
    * handed down as plain props. Without this the toggle in RoomVideoSlot
    * would be cosmetic — there would be nothing to embed. */
   const switches = await getSiteConfig();
+
+  /* TASK-382: the next-reading notice's own server snapshot (Ground,
+   * DETERMINISTIC HYDRATION) — reads `switches.reading`, already fetched
+   * above, so this costs no extra read. See `computeReading` above for why
+   * the actual `Date.now()` call sits outside this component's own body. */
+  const reading = computeReading(slug, switches.reading ?? DEFAULT_READING_SCHEDULE);
 
   /* TASK-174: the Stage's video slot follows the SAME gate as the chat —
    * the room's minTier vs the visitor's tier, decided ONCE by
@@ -186,6 +210,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           fullSceneAfterHoursLine={fullSceneAfterHoursLine}
           signedIn={!!session}
           viewerTier={visitorTier}
+          reading={reading}
         />
       </section>
       <SiteFooter />

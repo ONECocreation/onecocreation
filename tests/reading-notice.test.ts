@@ -165,3 +165,27 @@ describe("ReadingNotice.tsx — the lintable checks named in the brief", () => {
     expect(src).not.toMatch(/#[0-9a-fA-F]{3,6}/);
   });
 });
+
+describe("ClassroomView.tsx — the live-gated mount line (Build 4, mirrors room-doors.test.ts:140-145's idiom)", () => {
+  it("mounts <ReadingNotice> only inside a reading && !thisRoomLive gate — a literal-substring pin, since thisRoomLive derives from ClassroomView's own poll state (unreachable via props in a static render, LIVE INITIAL STATE)", async () => {
+    const src = await read("src/components/rooms/ClassroomView.tsx");
+    expect(src).toContain(
+      "{reading && !thisRoomLive && <ReadingNotice schedule={reading.schedule} next={reading.next} asOfMs={reading.asOfMs} />}",
+    );
+  });
+
+  it("the new reading prop rides in immediately before cameraDoor in the destructuring — preserves named-guest-camera-door.test.ts's \"cameraDoor }: Props\" substring pin", async () => {
+    const src = await read("src/components/rooms/ClassroomView.tsx");
+    expect(src).toContain("reading, cameraDoor }: Props");
+    expect(src).toContain("cameraDoor }: Props"); // the pre-existing pin, still intact
+  });
+});
+
+describe("rooms/[slug]/page.tsx — reading is null for a non-reading-room slug (source pin)", () => {
+  it("computeReading returns null unless slug === READING_ROOM_SLUG, so <ReadingNotice> never mounts off the reading room", async () => {
+    const src = await read("src/app/rooms/[slug]/page.tsx");
+    expect(src).toContain("if (slug !== READING_ROOM_SLUG) return null;");
+    expect(src).toContain("const reading = computeReading(slug, switches.reading ?? DEFAULT_READING_SCHEDULE);");
+    expect(src).toContain("reading={reading}");
+  });
+});
