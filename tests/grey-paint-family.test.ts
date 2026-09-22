@@ -20,11 +20,21 @@ import path from "path";
  * existed anywhere in house.css, so a short page's `.site-footer` (a fixed
  * `margin-top:30px`) stopped wherever the content ended — B14's mid-screen
  * footer on `/retreats`. `body` is now a flex column (`100vh` first as the
- * old-engine fallback, `100dvh` the real rule, W-07's Build step); a new
- * `main{flex:1 0 auto;display:flex;flex-direction:column}` rule grows to
- * fill whatever body doesn't use; `.site-footer` trades the fixed margin for
- * `auto` — intentional in BOTH themes (the footer's own paint stays night by
- * design; only its position moves).
+ * old-engine fallback, `100dvh` the real rule, W-07's Build step); `.site-footer`
+ * trades the fixed margin for `auto` — intentional in BOTH themes (the
+ * footer's own paint stays night by design; only its position moves).
+ *
+ * R6 (block 968,141, Number One's walk after the first hand-back): the
+ * first draft grew `<main>` with a BARE `main{flex:1 0 auto;display:flex;
+ * flex-direction:column}` rule — it also reached the console's
+ * `main.min-h-screen` (no site chrome, nested under `.console-ground`/
+ * `.scar-frame`/`.scar-main`) and shrank its `mx-auto` content columns.
+ * Replaced with two rules scoped to the real chrome: `.site-header ~ main`
+ * (the designer road — header/main/footer as siblings) only grows, never
+ * becomes a flex container itself; `main:has(> .site-footer)` (the
+ * hand-built road — the footer sits inside main) is both the grower and
+ * its own flex column, so `.site-footer{margin-top:auto}` has a flex
+ * parent. Neither matches a `<main>` with no site chrome.
  *
  * Same idiom as tests/keep-dark-bands.test.ts: read the real cartridge.css/
  * house.css text (no re-typed copies), rgba()-aware value capture (up to
@@ -90,16 +100,34 @@ describe("TASK-398 (W-07) — one sticky-footer law: body is a flex column, main
     expect(vhAt).toBeLessThan(dvhAt);
   });
 
-  it("a bare main{} rule carries flex:1 0 auto, growing to fill whatever body's flex column doesn't use", async () => {
+  it("R6: .site-header ~ main only grows (the designer road — header/main/footer as siblings) — never becomes a flex container itself", async () => {
     const house = await read("src/app/house.css");
-    // `^main\{` (no space, no dot) matches only the bare rule — never
-    // `main .about-story-sky{` (a space intervenes) or a class-qualified
-    // `main.something{` selector (a dot intervenes)
-    const rule = house.match(/^main\{([^}]*)\}/m)?.[1] ?? "";
-    expect(rule, "a bare main{} rule was not found in house.css").not.toBe("");
-    expect(rule).toMatch(/flex:1 0 auto/);
-    expect(rule).toMatch(/display:flex/);
-    expect(rule).toMatch(/flex-direction:column/);
+    const rule = house.match(/\.site-header ~ main\{([^}]*)\}/)?.[1] ?? "";
+    expect(rule, ".site-header ~ main rule not found").not.toBe("");
+    // exact match, not toMatch: this selector must carry ONLY flex:1 0 auto
+    // — the console regression (R6) was exactly an extra display:flex here
+    expect(rule).toBe("flex:1 0 auto");
+  });
+
+  it("R6: main:has(> .site-footer) is both the grower and its own flex column (the hand-built road — the footer sits inside main)", async () => {
+    const house = await read("src/app/house.css");
+    const rule = house.match(/main:has\(> \.site-footer\)\{([^}]*)\}/)?.[1] ?? "";
+    expect(rule, "main:has(> .site-footer) rule not found").not.toBe("");
+    expect(rule).toBe("flex:1 0 auto;display:flex;flex-direction:column");
+  });
+
+  it("R6: no bare main{} rule in house.css carries display:flex (the console regression this rule replaced)", async () => {
+    const house = await read("src/app/house.css");
+    // `^main\{` (no space, no dot) would match only a truly bare rule —
+    // never `.site-header ~ main{`, `main:has(...)`  or a descendant
+    // selector like `main .about-story-sky{`. None should exist post-R6,
+    // but this stays a real scan (not just "not found") so a FUTURE bare
+    // main{} — however it gets added — fails loud the moment it carries
+    // display:flex, the exact shape that reached the console.
+    const bareRules = [...house.matchAll(/^main\{([^}]*)\}/gm)].map((m) => m[1]);
+    for (const rule of bareRules) {
+      expect(rule, `a bare main{} rule carries display:flex: "${rule}"`).not.toMatch(/display:flex/);
+    }
   });
 
   it(".site-footer carries margin-top:auto, not the old fixed margin-top:30px — intentional in both themes", async () => {
