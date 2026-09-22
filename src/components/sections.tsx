@@ -8,7 +8,7 @@ import { listServices } from "@/lib/booking";
 import { listItems } from "@/lib/store";
 import { getSiteConfig } from "@/lib/site-config";
 import { tierRailsOn } from "@/lib/tier-offer";
-import { jarsOpen } from "@/lib/payments";
+import { jarsOpen, liveAdapter, ensureSquareVault } from "@/lib/payments";
 import SubscribeForm from "./SubscribeForm";
 import TipJar from "./TipJar";
 import WildDoors from "./WildDoors";
@@ -19,6 +19,19 @@ import ServiceCard from "./ServiceCard";
 import ContactDoors from "./ContactDoors";
 
 /* eslint-disable @next/next/no-img-element */
+
+/** TASK-393 (the toggle sweep, block 968,132+ a₿) — the live payment
+ *  rails, judged once per render the SAME way cart/page.tsx and
+ *  packages/[slug]/page.tsx already do (ensureSquareVault warms the
+ *  cold-instance vault before the square check — payments.ts's own
+ *  cold-instance-honesty note). Reused below by every home-shelf copy
+ *  line that used to promise a rail unconditionally (Jewelry/
+ *  Affirmations/Donations) — payments.ts stays READ-ONLY, called never
+ *  edited. */
+async function liveRails(): Promise<{ btc: boolean; card: boolean }> {
+  await ensureSquareVault();
+  return { btc: liveAdapter() !== null, card: liveAdapter("square") !== null };
+}
 
 /* TASK-178 (0018.06.18 a₿ · block 966098) — THE HERO'S SECOND DOOR: join the
    weekly reading. DERIVED, never hardcoded: the room comes from the rooms
@@ -298,7 +311,27 @@ function Pendant({ from, to }: { from: string; to: string }) {
   );
 }
 
-export function Jewelry() {
+export async function Jewelry() {
+  /* TASK-393 (R5 of the block-968,133 amendment) — both payment promises
+     below used to be unconditional ("Pay in bitcoin or dollars" / "Checkout
+     is bitcoin/lightning (or dollars)") regardless of payments.btcpay /
+     payments.square. Judged once here, the same liveRails() helper the
+     other home-shelf copy below uses — never a claim on a dark rail. */
+  const rails = await liveRails();
+  const payLine = rails.btc && rails.card
+    ? "Pay in bitcoin or by card; shipped to your door."
+    : rails.btc
+      ? "Pay in bitcoin; shipped to your door."
+      : rails.card
+        ? "Pay by card; shipped to your door."
+        : "Shipped to your door once checkout opens.";
+  const checkoutLine = rails.btc && rails.card
+    ? "Checkout is bitcoin — non-custodial to Love’s own node — or by card; shipping & address collected at checkout."
+    : rails.btc
+      ? "Checkout is bitcoin, non-custodial to Love’s own node; shipping & address collected at checkout."
+      : rails.card
+        ? "Checkout is by card; shipping & address collected at checkout."
+        : "Checkout isn’t open yet; shipping & address will be collected once it is.";
   const items = [
     { name: "Rose Quartz Spiral", story: "Divine feminine — soft heart-opening.", usd: 88, sats: "88,000", from: "var(--rose-soft)", to: "var(--room-rose)" },
     { name: "Amethyst Ascension", story: "Crown-chakra clarity, held in wire.", usd: 111, sats: "111,000", from: "var(--room-lavender-soft)", to: "var(--room-lavender)" },
@@ -310,7 +343,7 @@ export function Jewelry() {
       <div className="wrap">
         <p className="kicker center">Handmade by Love</p>
         <h2 className="center sec-h">The Adornments</h2>
-        <p className="lead center">Wire-wrapped pendants, made one at a time — copper and rose-gold spirals holding stones that chose you. Pay in bitcoin or dollars; shipped to your door.</p>
+        <p className="lead center">Wire-wrapped pendants, made one at a time — copper and rose-gold spirals holding stones that chose you. {payLine}</p>
         <div className="jgrid">
           {items.map((it) => (
             <div className="card" key={it.name}>
@@ -325,7 +358,7 @@ export function Jewelry() {
             </div>
           ))}
         </div>
-        <p className="note"><b>Physical goods</b> — each piece is handmade and posted to you. Checkout is bitcoin/lightning (or dollars), non-custodial to Love&apos;s own node; shipping &amp; address collected at checkout. <em>These are stand-in images — photos of the real pieces are coming soon.</em></p>
+        <p className="note"><b>Physical goods</b> — each piece is handmade and posted to you. {checkoutLine} <em>These are stand-in images — photos of the real pieces are coming soon.</em></p>
       </div>
     </section>
   );
@@ -446,9 +479,23 @@ export async function Affirmations() {
      (ported from the home lane's stalled attempt, worktree task-137) */
   const switches = await getSiteConfig();
   if (!switches.features.store) return null;
+  /* TASK-393 (R5 of the block-968,133 amendment) — "Each payable in
+     bitcoin." was unconditional on payments.btcpay; rail-judged the same
+     way Jewelry() above does. */
+  const rails = await liveRails();
+  const payableLine = rails.btc && rails.card
+    ? "Each payable in bitcoin or by card."
+    : rails.btc
+      ? "Each payable in bitcoin."
+      : rails.card
+        ? "Each payable by card."
+        : "Each one, the moment checkout opens.";
   const aff = [
     { name: "Thank You", sub: "Wake Up Affirmations · 1 hr 11 min", img: "/images/affirmation-thankyou.webp" },
-    { name: "Large Sums of Money", sub: "Sleep Affirmation · 16 min · no music", img: "/images/affirmation-largesums.webp" },
+    // TASK-393 (§8.7): "hide large sums of money for now" — stays in data, the flag brings it back in one line
+    ...(switches.features.largeSums
+      ? [{ name: "Large Sums of Money", sub: "Sleep Affirmation · 16 min · no music", img: "/images/affirmation-largesums.webp" }]
+      : []),
     { name: "IAM Worthy", sub: "Sleep Affirmation · 3 hr 3 min", img: "/images/affirmation-iamenough.webp" },
   ];
   return (
@@ -456,7 +503,7 @@ export async function Affirmations() {
       <div className="wrap">
         <p className="kicker center">With Love, Recorded</p>
         <h2 className="center sec-h">Guided Affirmations</h2>
-        <p className="lead center">Recorded meditations to nurture the New You. Each payable in bitcoin.</p>
+        <p className="lead center">Recorded meditations to nurture the New You. {payableLine}</p>
         <div className="grid grid-3">
           {aff.map((a) => (
             <div className="card" key={a.name}>
@@ -480,6 +527,19 @@ export async function Donations() {
      renders only when jarsOpen() — features.jars ON *and* the bitcoin rail
      actually live — so this section and /support can never disagree. */
   const open = jarsOpen();
+  /* TASK-393 (R5 of the block-968,133 amendment) — "Give in bitcoin over
+     lightning or simply in dollars" was unconditional on the payment
+     rails (a separate concern from jarsOpen()'s features.jars gate on
+     the TipJar widget itself, untouched below). Rail-judged the same way
+     as Jewelry()/Affirmations() above. */
+  const rails = await liveRails();
+  const giveLine = rails.btc && rails.card
+    ? "Give in bitcoin or simply in dollars; bitcoin is an option here, never a demand."
+    : rails.btc
+      ? "Give in bitcoin, straight to Love."
+      : rails.card
+        ? "Give in dollars."
+        : "Giving opens again soon.";
   return (
     <section id="support">
       <div className="wrap">
@@ -488,8 +548,7 @@ export async function Donations() {
           <h2 className="sec-h">Tend the Field</h2>
           <p style={{ color: "var(--ink-body)", maxWidth: 640 }}>
             A gift lands with Love <strong style={{ color: "var(--gold-deep)" }}>whole</strong> — no
-            platform between, no cut taken. Give in bitcoin over lightning or simply in dollars;
-            bitcoin is an option here, never a demand.
+            platform between, no cut taken. {giveLine}
           </p>
           {open && <TipJar />}
 
