@@ -209,6 +209,11 @@
       "colours": 0,
       "styledButtons": 0
     },
+    "src/app/a/site/reading/Stage2Card.tsx": {
+      "styleBlocks": 0,
+      "colours": 0,
+      "styledButtons": 0
+    },
     "src/app/a/site/reading/page.tsx": {
       "styleBlocks": 0,
       "colours": 0,
@@ -416,6 +421,11 @@
     },
     "src/app/privacy/page.tsx": {
       "styleBlocks": 1,
+      "colours": 0,
+      "styledButtons": 0
+    },
+    "src/app/reading/page.tsx": {
+      "styleBlocks": 0,
       "colours": 0,
       "styledButtons": 0
     },
@@ -770,6 +780,11 @@
       "styledButtons": 0
     },
     "src/components/ReadWithLove.tsx": {
+      "styleBlocks": 0,
+      "colours": 0,
+      "styledButtons": 0
+    },
+    "src/components/ReadingHeroCountdown.tsx": {
       "styleBlocks": 0,
       "colours": 0,
       "styledButtons": 0
@@ -1227,6 +1242,11 @@
     "src/components/rooms/SceneFrame.tsx": {
       "styleBlocks": 2,
       "colours": 1,
+      "styledButtons": 0
+    },
+    "src/components/rooms/Stage2Door.tsx": {
+      "styleBlocks": 0,
+      "colours": 0,
       "styledButtons": 0
     },
     "src/components/rooms/StageChat.tsx": {
