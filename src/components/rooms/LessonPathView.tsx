@@ -116,7 +116,7 @@ function writeDone(slug: string, done: Set<string>): void {
 }
 
 export default function LessonPathView({
-  slug, alias, title, kind, door, doorPackage,
+  slug, alias, title, kind, door, doorPackage, chatHidden,
 }: {
   slug: string;
   alias: string;
@@ -127,6 +127,11 @@ export default function LessonPathView({
    *  name. Absent reads as "open" (the pre-gate behavior). */
   door?: RoomGate;
   doorPackage?: string | null;
+  /** TASK-387: pass-through only -- ClassroomView's own state. A hidden
+   *  room shows no Room Chat mount at all here either (Ground: "a hidden
+   *  chat renders no chat column at all"), matching the Stage. Absent =
+   *  today's behavior (chat mounts). */
+  chatHidden?: boolean;
 }) {
   const [feed, setFeed] = useState<Feed | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -211,12 +216,16 @@ export default function LessonPathView({
     return (
       <div>
         <p className="note" style={{ marginBottom: 16 }}>
-          no lessons on this shelf yet — the room&apos;s chat is open below
+          {chatHidden
+            ? "no lessons on this shelf yet"
+            : "no lessons on this shelf yet — the room's chat is open below"}
         </p>
         {resourcesCard}
-        <div style={resources.length > 0 ? { marginTop: 20 } : undefined}>
-          <RoomView slug={slug} alias={alias} title={title} kind={kind} />
-        </div>
+        {!chatHidden && (
+          <div style={resources.length > 0 ? { marginTop: 20 } : undefined}>
+            <RoomView slug={slug} alias={alias} title={title} kind={kind} />
+          </div>
+        )}
       </div>
     );
   }
@@ -271,23 +280,28 @@ export default function LessonPathView({
 
       {resourcesCard}
 
-      <div className="card" style={{ marginTop: 20, padding: "10px 16px" }}>
-        <button
-          type="button"
-          onClick={() => setChatOpen((o) => !o)}
-          className="btn btn-ghost btn-sm"
-          style={{ width: "100%", display: "flex", justifyContent: "space-between" }}
-          aria-expanded={chatOpen}
-        >
-          <span>Room Chat</span>
-          <span aria-hidden="true">{chatOpen ? "▲" : "▼"}</span>
-        </button>
-        {chatOpen && (
-          <div style={{ marginTop: 12 }}>
-            <RoomView slug={slug} alias={alias} title={title} kind={kind} />
-          </div>
-        )}
-      </div>
+      {/* TASK-387: hidden means no Room Chat affordance at all here
+          either -- a toggle onto a hidden chat would be a promise the
+          room doesn't keep. */}
+      {!chatHidden && (
+        <div className="card" style={{ marginTop: 20, padding: "10px 16px" }}>
+          <button
+            type="button"
+            onClick={() => setChatOpen((o) => !o)}
+            className="btn btn-ghost btn-sm"
+            style={{ width: "100%", display: "flex", justifyContent: "space-between" }}
+            aria-expanded={chatOpen}
+          >
+            <span>Room Chat</span>
+            <span aria-hidden="true">{chatOpen ? "▲" : "▼"}</span>
+          </button>
+          {chatOpen && (
+            <div style={{ marginTop: 12 }}>
+              <RoomView slug={slug} alias={alias} title={title} kind={kind} />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
