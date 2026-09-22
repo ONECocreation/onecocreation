@@ -412,7 +412,10 @@ export default function SlotPicker({
       const res = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serviceId, startUtc: chosen, viewerTz }),
+        // TASK-395: the note travels with the basket hold too, the same
+        // composed noteOut the direct-pay path already sent (:213) —
+        // additive on the cart side (lib/cart.ts's owned `note?` member).
+        body: JSON.stringify({ serviceId, startUtc: chosen, viewerTz, note: noteOut }),
       });
       const data = await res.json();
       if (!data.ok) {
@@ -602,13 +605,17 @@ export default function SlotPicker({
           </p>
 
           <div style={{ display: "grid", gap: 10, marginTop: 16, textAlign: "left" }}>
-            {!rescheduleBookingId && <input
+            {/* TASK-395: the ordinary discovery purchase steps these two
+                out of the way — the basket asks for name/email once at its
+                own checkout (CartPanel.tsx:210-216). Gifts keep them
+                (voucherId), same as every non-discovery service. */}
+            {!rescheduleBookingId && (!isDiscovery || voucherId) && <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="your name"
               style={{ ...glassField, padding: "9px 12px", fontSize: ".9rem", width: "100%", boxSizing: "border-box" }}
             />}
-            {!rescheduleBookingId && <input
+            {!rescheduleBookingId && (!isDiscovery || voucherId) && <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email (for your confirmation)"
@@ -625,7 +632,10 @@ export default function SlotPicker({
                   style={{ ...glassField, padding: "9px 12px", fontSize: ".9rem", flex: 1, minWidth: 80 }} />
               </div>
             )}
-            {!(voucherId || rescheduleBookingId) && <input
+            {/* TASK-395: same step-aside — the basket's own checkout carries
+                its own discount-code door (api/cart/checkout/route.ts's
+                discountCode). */}
+            {!(voucherId || rescheduleBookingId) && !isDiscovery && <input
               value={discountCode}
               onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
               placeholder="discount code (optional)"
@@ -675,7 +685,13 @@ export default function SlotPicker({
               </label>
             )}
 
-            {!(voucherId || rescheduleBookingId) && <label style={{ fontSize: ".72rem", letterSpacing: ".08em", textTransform: "uppercase", color: "var(--muted, #897f97)" }}>
+            {/* TASK-395: the rail picker is a direct-pay control — the
+                ordinary discovery purchase no longer has a direct-pay door
+                (Build 2a below), so it stops rendering here too. Every
+                non-discovery service keeps it, byte-identical. The `rail`
+                useState itself stays UNCONDITIONAL (hooks law) — only this
+                render is gated. */}
+            {!(voucherId || rescheduleBookingId) && !isDiscovery && <label style={{ fontSize: ".72rem", letterSpacing: ".08em", textTransform: "uppercase", color: "var(--muted, #897f97)" }}>
               <span style={{ display: "block", marginBottom: 3 }}>paying by</span>
               <select
                 value={rail}
@@ -689,7 +705,7 @@ export default function SlotPicker({
           </div>
 
           {/* the honest wait, said BEFORE they commit, never after */}
-          {!(voucherId || rescheduleBookingId) && rail === "onchain" && (
+          {!(voucherId || rescheduleBookingId) && !isDiscovery && rail === "onchain" && (
             <p style={{ margin: "12px 0 0", fontSize: ".78rem", color: "#7a5a12" }}>
               on-chain payments take 10–60 minutes to confirm. Your time is held the whole while.
             </p>
@@ -699,11 +715,16 @@ export default function SlotPicker({
 
           {/* the doors — bottom center, evenly spaced (the Admiral's law) */}
           <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginTop: 18 }}>
-            <button type="button" disabled={busy} onClick={book} className="btn btn-gold btn-sm">
-              {busy
-                ? rescheduleBookingId ? "Moving your session…" : voucherId ? "Booking your gift…" : "Holding your time…"
-                : rescheduleBookingId ? "Move my session here" : voucherId ? "Claim my gift 🕊️" : "Book this time ⚡"}
-            </button>
+            {/* TASK-395: the ordinary discovery purchase's own direct-pay
+                face goes — gifts, moves, and every non-discovery service
+                keep this door byte-for-byte (decision A, settled scope). */}
+            {(voucherId || rescheduleBookingId || !isDiscovery) && (
+              <button type="button" disabled={busy} onClick={book} className="btn btn-gold btn-sm">
+                {busy
+                  ? rescheduleBookingId ? "Moving your session…" : voucherId ? "Booking your gift…" : "Holding your time…"
+                  : rescheduleBookingId ? "Move my session here" : voucherId ? "Claim my gift 🕊️" : "Book this time ⚡"}
+              </button>
+            )}
             {/* v1.5: the basket door — the slot is HELD (72h) the moment it
                 lands, so browsing on doesn't lose the time */}
             {!(voucherId || rescheduleBookingId) && (

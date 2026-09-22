@@ -207,6 +207,8 @@ export async function POST(request: Request) {
     /** the visitor's zone (TASK-125) — the frame the chosen instant is a
         sacred minute in; missing/invalid = legacy artist-clock validation */
     viewerTz?: string;
+    /** TASK-395: the discovery call's own note, riding the session add */
+    note?: string;
     /** pay-what-you-can: set/clear the line's offer (sats, whole line) */
     offerSats?: number | null;
     /** gift: set/clear who this line is for (email or @tag) */
@@ -258,6 +260,8 @@ export async function POST(request: Request) {
       itemId: service.id,
       qty: 1,
       slot: { startUtc: slot.startUtc, endUtc: slot.endUtc, holdId, holdUntilMs },
+      // TASK-395: only when present — a service add with no note pushes no key at all
+      ...(body.note ? { note: body.note } : {}),
     });
     await saveCart(id, cart);
 
