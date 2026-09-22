@@ -59,13 +59,19 @@ export default function RoomsShelf() {
           one another as you scroll, the same house pattern the store's
           shelf sections already use (ShelfSection.tsx's SHELF_BANDS) —
           not a new idiom, the same one, applied here. */}
+      {/* TASK-396 (block 968,132): the banner photo now rides a CSS custom
+          property (--room-photo) inside this SAME style object; the scrim
+          that used to be hard-coded dark in both themes lives in
+          cartridge.css's .room-photo-scrim pair now (the lion's own
+          night/dawn recipe) — B15's vanish-at-dawn was the scrim's fault,
+          fixed there, not here. */}
       <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
         {packages.map((p) => (
-          <section key={p.tier} className="reveal"
+          <section key={p.tier} className="reveal room-photo-scrim"
             style={{
               borderRadius: 22, overflow: "hidden", padding: "36px 20px",
-              background: `linear-gradient(180deg, rgba(14,10,28,.6), rgba(14,10,28,.8)), url(${p.banner}) center / cover no-repeat`,
-            }}>
+              "--room-photo": `url(${p.banner})`,
+            } as React.CSSProperties}>
             <div style={{ maxWidth: 440, margin: "0 auto" }}>
               {/* TASK-183: the signed-in soul's name rides each card's door
                   column — "you're in as <name>" (the feed's handle, derived
