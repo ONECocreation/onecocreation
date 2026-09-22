@@ -48,7 +48,10 @@ Additive, narrowly — byte-identical except these named lines:
   the docblock comment (both now honest that the reading room shows the schedule above the
   video) — nothing else in that file, and nothing in `ReadingScheduleCard.tsx`, changes.
 
-Any new shared CSS rule lands in `kit.css` (Template check) — named in the final report.
+Additive: `src/app/kit.css` — one new shared rule, `.kit-stack` (a generic vertical
+rhythm for a handful of short status lines inside a kit-card; the Template check names
+`kit.css` as the preferred home for any rule none of `kit-card`/`kit-card-body`/
+`kit-text-quiet` covers). Every existing rule in that file stays byte-identical.
 
 ## READ-ONLY and FORBIDDEN
 
