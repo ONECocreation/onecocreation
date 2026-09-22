@@ -33,11 +33,15 @@ export type ShelfGroup = StoreSection;
  * 0018.05.11) — that order lives in the map itself now. */
 export const SHELF_GROUPS: ShelfGroup[] = STORE_SECTIONS;
 
-/** the cosmic walk — each shelf carries its own tone (0018.05.15) */
-export const SHELF_BANDS: Record<string, { bg: string; dark?: boolean }> = {
+/** the cosmic walk — each shelf carries its own tone (0018.05.15). TASK-396
+ *  (block 968,132): meditations no longer composes its own dark scrim
+ *  string — it names its photo, and the scrim (night AND dawn) lives in
+ *  cartridge.css's .shelf-photo-scrim pair (the lion's own recipe), so
+ *  light mode gets a real dawn veil instead of losing the picture (B15). */
+export const SHELF_BANDS: Record<string, { bg?: string; photo?: string; dark?: boolean }> = {
   sessions: { bg: "linear-gradient(180deg,var(--ground) 0%,var(--band-4) 100%)" },
   meditations: {
-    bg: `linear-gradient(180deg, rgba(14,10,28,.66), rgba(14,10,28,.78)), url(${cartridge.hero.nebula}) center / cover no-repeat`,
+    photo: cartridge.hero.nebula,
     dark: true,
   },
   memberships: { bg: "linear-gradient(180deg,var(--band-2) 0%,var(--band-8) 100%)" },
@@ -99,7 +103,11 @@ export default function ShelfSection({
   const count = group.items.length + (free ? 1 : 0);
   return (
     <section id={group.anchor}
-      style={{ padding: padTop ? "148px 0 52px" : "52px 0", background: band?.bg }}>
+      className={band?.photo ? "shelf-photo-scrim" : undefined}
+      style={{
+        padding: padTop ? "148px 0 52px" : "52px 0", background: band?.bg,
+        "--shelf-photo": band?.photo ? `url(${band.photo})` : undefined,
+      } as React.CSSProperties}>
       <div className="wrap">
         <div className="center reveal" style={{ marginBottom: 26 }}>
           <h2 className="sec-h" style={{ fontSize: "1.7rem", color: band?.dark ? "var(--ink-strong)" : undefined }}>
