@@ -22,6 +22,18 @@ RULED TAKE; C AMENDED — `feat/task-388-reading-sign-up-block` reconfirmed unme
 commits ahead of main) at cut time, so the page ships with the reading-door CTA alone, no
 second door; E already SATISFIED (the mock's nod).
 
+## Seam (named add — `git diff`-visible, not folded in silently)
+
+`npx vitest run` (whole suite) surfaced ONE adjacent, unowned failure not named anywhere in
+the brief: `tests/pages-panel-states.test.ts`'s TASK-230 manifest walk — every top-level
+`src/app/*/page.tsx` route must appear exactly once in `PAGE_STATES`
+(`src/lib/page-states.ts`) or be dashed in `ROUTE_WALK_EXCLUSIONS`, and the new `/reading`
+route had no row. Minimal diff: one new `PAGE_STATES` entry, `{ path: "/reading", state:
+"words", ... }` (a hand-built page; no `getPuckPage` call, so `"designer"` would be
+false), inserted alphabetically between `/privacy` and `/retreats` per the file's own
+documented ordering. Widened into `src/lib/page-states.ts` for this ONE line only, named
+here per the named-adds law.
+
 ## OWNS
 
 NEW `src/app/reading/page.tsx` (server component: hero, one CTA via
@@ -32,6 +44,9 @@ one client island — binds T-382's `Countdown` plus the optional "Starting soon
 words to both the hero's date line and the "Next reading." card, importing `noticeState`/
 `nextBoundaryMs` from `ReadingNotice.tsx` rather than re-deriving the four-state law), NEW
 `tests/reading-page.test.ts`, this file (`work-claims/task-391.md`, first commit).
+
+Widened by the named Seam above, one line only: `src/lib/page-states.ts` (the new
+`PAGE_STATES` row for `/reading`; every other line byte-identical).
 
 Additive, narrowly: `src/components/NavMenu.tsx` (one `PAGE_CATALOG` row for `/reading`,
 ungated per decision D), `src/lib/site-config.ts` (the matching one `KNOWN_NAV_HREFS` row —
