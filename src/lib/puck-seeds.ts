@@ -379,18 +379,18 @@ const homeContent: Block[] = [
       [hm.panel([
         hm.heading("📚 Classes", "h3"),
         hm.list([
-          "✦ Clair Senses — Foundations · Package A",
-          "✦ Chronicles: Weekly Reading · Package B",
-          "✦ Quantum Healing — Deep Dive · Package C",
+          "✦ Clair Senses — Foundations · Weekly Intuitive",
+          "✦ Chronicles: Weekly Reading · Observer",
+          "✦ Quantum Healing — Deep Dive · Evening Star",
         ], "none"),
       ])],
       [hm.panel([
         hm.heading("💗 Community", "h3"),
         hm.list([
           "♡ The Heart Field · All members",
-          "♡ Daily Tune-Up & Check-ins · Package A",
-          "♡ The Observers’ Circle · Package B",
-          "♡ Evening Star — Inner Sanctum · Package C",
+          "♡ Daily Tune-Up & Check-ins · Weekly Intuitive",
+          "♡ The Observers’ Circle · Observer",
+          "♡ Evening Star — Inner Sanctum · Evening Star",
         ], "none"),
       ])],
     ),
