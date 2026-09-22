@@ -52,9 +52,6 @@ export default function ServiceCard({ svc, delay = 0 }: { svc: ServiceCardData; 
     boxShadow: "0 30px 70px -28px rgba(5,3,16,.8)",
   };
   const priceLine = svc.pwyc ? "give what you can" : svc.usd != null ? `$${svc.usd}` : "";
-  /* full details always has a door: the shelf page when stocked, the
-     booking page (the session's own full story) otherwise */
-  const detailsHref = svc.inStore ? `/store/${svc.id}` : `/book/${svc.id}`;
 
   return (
     /* reveal rides its OWN wrapper: the scroll-observer stamps `in` on the
@@ -104,7 +101,9 @@ export default function ServiceCard({ svc, delay = 0 }: { svc: ServiceCardData; 
                   the T-121 pair, ≥4.99:1 on every stop, both themes) */}
               <Link className="btn btn-sm btn-rose" href={`/book/${svc.id}`}>Book ⚡</Link>
               <button className="btn btn-ghost btn-sm" onClick={flip} aria-expanded={flipped}>more info</button>
-              <Link className="btn-quiet btn-quiet--accent" href={detailsHref}>full details</Link>
+              {svc.inStore && (
+                <Link className="btn-quiet btn-quiet--accent" href={`/store/${svc.id}`}>full details</Link>
+              )}
             </div>
           </div>
         </div>
@@ -138,7 +137,9 @@ export default function ServiceCard({ svc, delay = 0 }: { svc: ServiceCardData; 
                   {busy ? "adding…" : "add to basket 🧺"}
                 </button>
               )}
-              <Link className="btn-quiet btn-quiet--accent" href={detailsHref}>full details</Link>
+              {svc.inStore && (
+                <Link className="btn-quiet btn-quiet--accent" href={`/store/${svc.id}`}>full details</Link>
+              )}
               <button className="btn-quiet" onClick={flip}>flip back</button>
             </div>
           </div>
