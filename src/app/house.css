@@ -40,15 +40,33 @@ html[data-oc-theme="light"] body{
     radial-gradient(900px 500px at 50% -4%, rgba(235,203,119,.28), transparent 60%),
     radial-gradient(760px 620px at 88% 12%, rgba(231,178,195,.26), transparent 62%),
     linear-gradient(180deg,var(--ground) 0%, var(--body-grad-dawn-1) 45%, var(--body-grad-dawn-2) 100%);background-attachment:fixed}
-/* TASK-398 (W-07) — one sticky-footer law for the public site: body is the
-   flex column above (100vh first as the old-engine fallback, 100dvh the
-   real rule); main grows to fill whatever body doesn't use; .site-footer
-   trades its fixed margin-top for auto (below) so a short page's footer
-   still pins to the viewport bottom, on both page shapes the site builds
-   (header/footer as <main> siblings, or inside <main> — the house idiom on
-   sixteen-plus pages). A long page reads as today; the footer's own 52px
-   top padding still carries the separation. No page file touched. */
-main{flex:1 0 auto;display:flex;flex-direction:column}
+/* TASK-398 (W-07) — one sticky-footer law for the public site, scoped to
+   the site chrome, never a bare main{} (R6, block 968,141 — Number One's
+   walk: a bare main{flex:1 0 auto;display:flex;flex-direction:column}
+   also reached the console's main.min-h-screen, nested under
+   .console-ground/.scar-frame/.scar-main with no site chrome at all, and
+   shrank its mx-auto content columns instead of leaving them alone — 893px
+   to 720/796px on the overview). body is the flex column above (100vh
+   first as the old-engine fallback, 100dvh the real rule; unchanged by
+   this fix). Two rules now, keyed off the real chrome, one per page shape:
+     - the designer road (header/main/footer mount as SIBLINGS — the Puck
+       branches, plus /, /login and /classes' hand-built branches): main
+       only needs to grow inside body's flex column; its own children keep
+       ordinary block formatting, so it must NOT become a flex container
+       itself (that was the console's bug, generalized).
+     - the hand-built road (the footer sits INSIDE main, alongside
+       SiteHeader — /retreats, /book, /store and the rest of the sixteen-
+       page list): main must be BOTH the grower and its own flex column, so
+       .site-footer's margin-top:auto (below) has a flex context to pin
+       against. `:has(> .site-footer)` picks out exactly that shape — a
+       first for these three stylesheets; Chrome, Safari and Firefox all
+       carry it.
+   Neither selector matches a <main> with no site chrome (the console, or
+   any future main outside this pattern) — those stay ordinary block boxes,
+   as today. A long page reads as today; the footer's own 52px top padding
+   still carries the separation. No page file touched. */
+.site-header ~ main{flex:1 0 auto}
+main:has(> .site-footer){flex:1 0 auto;display:flex;flex-direction:column}
 img{max-width:100%;display:block}
 a{color:var(--lavender);text-decoration:none}
 h1,h2,h3,h4{line-height:1.16;margin:0 0 .45em;color:var(--ink-strong);font-weight:700}
