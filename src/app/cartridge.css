@@ -296,6 +296,34 @@ html[data-oc-theme="light"] .lions-gate{
     url("/images/lions-gate.webp") center top / cover no-repeat;
 }
 
+/* ROOM + SHELF PHOTO SCRIMS (TASK-396, block 968,132) — the lion's exact
+   recipe (one photo, a night veil and a dawn veil) applied to the
+   room-package banners (RoomsShelf.tsx) and the store's meditations band
+   (ShelfSection.tsx): each component sets its own photo URL as a custom
+   property inside its EXISTING inline style; these two classes compose the
+   veil the component used to hard-code dark in both themes into a real
+   night/dawn pair, joining the light-mode exemption list below (B15). */
+.room-photo-scrim{
+  background:
+    linear-gradient(180deg, rgba(14,10,28,.6), rgba(14,10,28,.8)),
+    var(--room-photo) center / cover no-repeat;
+}
+html[data-oc-theme="light"] .room-photo-scrim{
+  background:
+    linear-gradient(180deg, rgba(251,246,239,.82), rgba(251,246,239,.9)),
+    var(--room-photo) center / cover no-repeat;
+}
+.shelf-photo-scrim{
+  background:
+    linear-gradient(180deg, rgba(14,10,28,.66), rgba(14,10,28,.78)),
+    var(--shelf-photo) center / cover no-repeat;
+}
+html[data-oc-theme="light"] .shelf-photo-scrim{
+  background:
+    linear-gradient(180deg, rgba(251,246,239,.82), rgba(251,246,239,.9)),
+    var(--shelf-photo) center / cover no-repeat;
+}
+
 /* ── the wild doors (Love's pay-it-forward beings, 0018.05.15) — the beast
    grows OUT of its cell on hover: the habitat band clips its gradient, the
    animal itself is free to rise past the card's edge ── */
@@ -411,8 +439,11 @@ main .keep-dark{--ink-strong:#F4ECFF;--ink-body:#D9D2E4;--muted:#9a8fae;
   --band-1:#1a1428;--band-2:#241a33;--band-3:#1e1a2f;
   --glass:var(--glass-night);--glass-edge:var(--glass-night-edge)}
 /* light mode repaints the swept dark bands; image layers and keep-dark
-   sections hold the night */
-html[data-oc-theme="light"] main section:not(.keep-dark):not(.lions-gate){background:linear-gradient(180deg,#FCF7F0,#F3EEF4)!important}
+   sections hold the night. TASK-396: the room banners and the meditations
+   band now carry a REAL photo (the scrim pair above), so their two classes
+   join this exemption list the same way .lions-gate already does — else
+   this blanket would wipe their pictures flat cream at dawn (B15). */
+html[data-oc-theme="light"] main section:not(.keep-dark):not(.lions-gate):not(.room-photo-scrim):not(.shelf-photo-scrim){background:linear-gradient(180deg,#FCF7F0,#F3EEF4)!important}
 /* :not(.lions-gate-dark) — the memberships page wears this class straight
    on <main> (not a section), so it fell outside the sky/section exclusions
    above; this blanket rule used to stomp its dark lion background flat
