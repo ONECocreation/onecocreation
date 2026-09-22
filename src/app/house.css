@@ -33,12 +33,22 @@ body{margin:0;color:var(--ink);font-family:var(--font-body);line-height:1.7;font
   background:
     radial-gradient(900px 500px at 50% -4%, rgba(120,86,180,.22), transparent 60%),
     radial-gradient(760px 620px at 88% 12%, rgba(78,160,175,.1), transparent 62%),
-    linear-gradient(180deg,var(--ground) 0%, var(--body-grad-1) 45%, var(--body-grad-2) 100%);background-attachment:fixed}
+    linear-gradient(180deg,var(--ground) 0%, var(--body-grad-1) 45%, var(--body-grad-2) 100%);background-attachment:fixed;
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
 html[data-oc-theme="light"] body{
   background:
     radial-gradient(900px 500px at 50% -4%, rgba(235,203,119,.28), transparent 60%),
     radial-gradient(760px 620px at 88% 12%, rgba(231,178,195,.26), transparent 62%),
     linear-gradient(180deg,var(--ground) 0%, var(--body-grad-dawn-1) 45%, var(--body-grad-dawn-2) 100%);background-attachment:fixed}
+/* TASK-398 (W-07) — one sticky-footer law for the public site: body is the
+   flex column above (100vh first as the old-engine fallback, 100dvh the
+   real rule); main grows to fill whatever body doesn't use; .site-footer
+   trades its fixed margin-top for auto (below) so a short page's footer
+   still pins to the viewport bottom, on both page shapes the site builds
+   (header/footer as <main> siblings, or inside <main> — the house idiom on
+   sixteen-plus pages). A long page reads as today; the footer's own 52px
+   top padding still carries the separation. No page file touched. */
+main{flex:1 0 auto;display:flex;flex-direction:column}
 img{max-width:100%;display:block}
 a{color:var(--lavender);text-decoration:none}
 h1,h2,h3,h4{line-height:1.16;margin:0 0 .45em;color:var(--ink-strong);font-weight:700}
@@ -283,7 +293,7 @@ section{padding:76px 0;position:relative}
 .push{margin-top:auto}
 
 /* header / footer */
-.site-header{position:sticky;top:0;z-index:40;background:rgba(14,12,24,.86);backdrop-filter:blur(12px)}
+.site-header{position:sticky;top:0;z-index:40;background:var(--header-bg);backdrop-filter:blur(12px)}
 .site-header .bar{display:flex;align-items:center;gap:16px;padding:2px 22px;max-width:1140px;margin:0 auto}
 .logo{display:flex;align-items:center;gap:10px}
 .logo .wm{font-family:var(--serif);line-height:.98}
@@ -293,7 +303,7 @@ section{padding:76px 0;position:relative}
 .site-nav a{font-size:.95rem;letter-spacing:.04em;color:var(--ghost-ink);text-transform:uppercase;font-weight:600}
 .site-nav a:hover{color:var(--gold-2)}
 .site-nav .sats-pill{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink);padding:8px 15px;border-radius:999px}
-.site-footer{background:rgba(14,12,24,.9);color:var(--footer-ink);padding:52px 0 36px;text-align:center;margin-top:30px}
+.site-footer{background:rgba(14,12,24,.9);color:var(--footer-ink);padding:52px 0 36px;text-align:center;margin-top:auto}
 .site-footer .fnav{display:flex;flex-wrap:wrap;gap:15px;justify-content:center;margin:16px 0;font-size:.8rem;text-transform:uppercase}
 .site-footer .fnav a{color:#ECE3C9}
 .site-footer .legal{color:var(--footer-ink);font-size:.8rem}
