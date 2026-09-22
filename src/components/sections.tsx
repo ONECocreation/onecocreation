@@ -430,6 +430,14 @@ export async function Services() {
   );
 }
 
+/** TASK-394 (Astra plan-review R3, block 968,140) — label() hoisted to a
+ *  named export so tests/package-names.test.ts can pin the exact A/B/C →
+ *  real-name mapping by calling it directly, not by rendering. The "all"
+ *  arm is byte-identical to before; anything else resolves through TIERS,
+ *  the one source of truth already imported above (:3). Classes() below
+ *  is still its only real caller. */
+export const label = (min: string) => (min === "all" ? "All members" : TIERS[min as Tier].name);
+
 export async function Classes() {
   /* TASK-129 (0018.06.16 a₿) — THE SWITCHES, visibility only (no copy): the
      section stands when `community` or `classes` is on; each card reads its
@@ -439,7 +447,6 @@ export async function Classes() {
   if (!switches.features.community && !switches.features.classes) return null;
   const classes = ROOMS.filter((r) => r.kind === "class");
   const community = ROOMS.filter((r) => r.kind === "community");
-  const label = (min: string) => (min === "all" ? "All members" : TIERS[min as Tier].name);
   return (
     <section id="classes">
       <div className="wrap">
