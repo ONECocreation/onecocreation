@@ -322,6 +322,8 @@ export async function POST(request: Request) {
       customer: {
         name: body.name?.trim() || body.shipping?.name?.trim() || undefined,
         email: body.contact?.email?.trim() || (cartId.endsWith("@email") ? cartId.slice(0, -"@email".length) : undefined),
+        // TASK-395: the discovery-call note, carried by the owned CartLine field — falls through undefined when absent
+        note: s.line.note,
         city: body.location?.city?.trim() || undefined,
         state: body.location?.state?.trim() || undefined,
         zip: body.location?.zip?.trim() || undefined,
