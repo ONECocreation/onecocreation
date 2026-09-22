@@ -1531,5 +1531,778 @@
         "unresolved@63"
       ]
     }
+  },
+  "buttonFamilies": {
+    "src/app/a/booking/page.tsx": {
+      "count": 11,
+      "names": [
+        "house:button@232[btn,btn-sm]",
+        "house:button@316[btn,btn-sm]",
+        "house:button@319[btn,btn-ghost,btn-sm]",
+        "house:button@345[btn,btn-sm]",
+        "house:button@489[btn,btn-sm]",
+        "house:button@522[btn,btn-sm]",
+        "native:a@131",
+        "native:button@368",
+        "native:button@371",
+        "native:button@399",
+        "native:button@429"
+      ]
+    },
+    "src/app/a/bots/page.tsx": {
+      "count": 2,
+      "names": [
+        "legacy:Link@116[btn-pill]",
+        "legacy:span@98[btn-pill,btn-pill--muted]"
+      ]
+    },
+    "src/app/a/brand/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/briefs/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/chat/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/connections/page.tsx": {
+      "count": 1,
+      "names": [
+        "legacy:a@65[btn-pill,btn-pill--muted]"
+      ]
+    },
+    "src/app/a/decisions/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/layout.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/letters/[key]/page.tsx": {
+      "count": 3,
+      "names": [
+        "house:a@169[btn,btn-ghost,btn-sm]",
+        "house:button@188[btn,btn-sm]",
+        "house:button@223[btn,btn-sm]"
+      ]
+    },
+    "src/app/a/letters/page.tsx": {
+      "count": 19,
+      "names": [
+        "house:a@359[btn,btn-sm]",
+        "house:a@385[btn,btn-ghost,btn-sm]",
+        "house:a@390[btn,btn-sm]",
+        "house:button@283[btn,btn-ghost,btn-sm]",
+        "house:button@284[btn,btn-ghost,btn-sm]",
+        "house:button@285[btn,btn-ghost,btn-sm]",
+        "house:button@286[btn,btn-ghost,btn-sm]",
+        "house:button@287[btn,btn-ghost,btn-sm]",
+        "house:button@288[btn,btn-ghost,btn-sm]",
+        "house:button@289[btn,btn-sm]",
+        "house:button@299[btn,btn-sm]",
+        "house:button@338[btn,btn-sm]",
+        "house:button@339[btn,btn-ghost,btn-sm]",
+        "house:button@344[btn,btn-sm]",
+        "house:button@356[btn,btn-ghost,btn-sm]",
+        "house:button@363[btn,btn-sm]",
+        "house:button@382[btn,btn-ghost,btn-sm]",
+        "house:button@394[btn,btn-sm]",
+        "native:a@416"
+      ]
+    },
+    "src/app/a/live/go-live-room.tsx": {
+      "count": 15,
+      "names": [
+        "house:Link@627[btn,btn-sm]",
+        "house:a@395[btn,btn-sm]",
+        "house:a@399[btn,btn-ghost,btn-sm]",
+        "house:button@137[btn,btn-sm]",
+        "house:button@364[btn,btn-ghost,btn-sm]",
+        "house:button@404[btn,btn-sm]",
+        "house:button@412[btn,btn-sm]",
+        "house:button@432[btn,btn-sm]",
+        "house:button@496[btn,btn-ghost,btn-sm]",
+        "house:button@504[btn,btn-ghost,btn-sm]",
+        "house:button@578[btn,btn-sm]",
+        "house:button@604[btn,btn-sm]",
+        "house:button@608[btn,btn-sm]",
+        "house:button@634[btn,btn-ghost,btn-sm]",
+        "native:a@534"
+      ]
+    },
+    "src/app/a/live/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/mempool/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/money/page.tsx": {
+      "count": 6,
+      "names": [
+        "house:a@266[btn,btn-sm]",
+        "house:a@267[btn,btn-ghost,btn-sm]",
+        "house:a@374[btn,btn-ghost,btn-sm]",
+        "house:button@370[btn,btn-sm]",
+        "house:button@377[btn,btn-ghost,btn-sm]",
+        "native:a@168"
+      ]
+    },
+    "src/app/a/mud/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/page.tsx": {
+      "count": 1,
+      "names": [
+        "native:a@131"
+      ]
+    },
+    "src/app/a/people/page.tsx": {
+      "count": 2,
+      "names": [
+        "house:button@103[btn,btn-sm]",
+        "native:a@39"
+      ]
+    },
+    "src/app/a/scar/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/sim/page.tsx": {
+      "count": 3,
+      "names": [
+        "legacy:Link@77[btn-pill]",
+        "legacy:Link@92[btn-pill]",
+        "legacy:a@69[btn-pill,btn-pill--solid]"
+      ]
+    },
+    "src/app/a/site/SiteRoom.tsx": {
+      "count": 4,
+      "names": [
+        "house:button@116[btn,btn-sm]",
+        "house:button@196[btn,btn-sm]",
+        "house:button@291[btn,btn-gold,btn-sm]",
+        "native:a@110"
+      ]
+    },
+    "src/app/a/site/about-videos/AboutVideosCard.tsx": {
+      "count": 9,
+      "names": [
+        "house:button@235[btn,btn-gold,btn-sm]",
+        "house:button@270[btn,btn-ghost,btn-sm]",
+        "house:button@313[btn,btn-sm]",
+        "house:button@324[btn,btn-ghost,btn-sm]",
+        "house:button@329[btn,btn-gold,btn-sm]",
+        "native:button@205",
+        "native:button@265",
+        "native:button@266",
+        "native:button@279"
+      ]
+    },
+    "src/app/a/site/about-videos/SiteAboutVideosRoom.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/site/about-videos/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/site/chat/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/site/community-door/SiteCommunityDoorRoom.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/site/community-door/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/site/menu/SiteMenuRoom.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/site/menu/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/site/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/site/reading/ReadingScheduleCard.tsx": {
+      "count": 2,
+      "names": [
+        "house:button@118[btn,btn-sm]",
+        "house:button@204[btn,btn-gold,btn-sm]"
+      ]
+    },
+    "src/app/a/site/reading/SiteReadingRoom.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/site/reading/Stage2Card.tsx": {
+      "count": 5,
+      "names": [
+        "house:a@102[btn,btn-ghost,btn-sm]",
+        "house:button@115[btn,btn-ghost,btn-sm]",
+        "house:button@124[btn,btn-ghost,btn-sm]",
+        "house:button@85[btn,btn-ghost,btn-sm]",
+        "house:button@99[btn,btn-ghost,btn-sm]"
+      ]
+    },
+    "src/app/a/site/reading/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/spaces/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/status/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/store/page.tsx": {
+      "count": 20,
+      "names": [
+        "house:a@440[btn,btn-ghost,btn-sm]",
+        "house:button@443[btn,btn-sm]",
+        "house:button@573[btn,btn-sm]",
+        "house:button@576[btn,btn-ghost,btn-sm]",
+        "house:button@642[btn,btn-sm]",
+        "house:button@645[btn,btn-ghost,btn-sm]",
+        "house:button@961[btn,btn-ghost,btn-sm]",
+        "house:label@743[btn,btn-sm]",
+        "house:label@966[btn,btn-ghost,btn-sm]",
+        "native:a@397",
+        "native:a@631",
+        "native:button@1009",
+        "native:button@423",
+        "native:button@426",
+        "native:button@452",
+        "native:button@534",
+        "native:button@540",
+        "native:button@585",
+        "native:button@725",
+        "native:button@733"
+      ]
+    },
+    "src/app/a/studio/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/app/a/studio/room/[room]/end-card.tsx": {
+      "count": 2,
+      "names": [
+        "house:Link@22[btn]",
+        "house:Link@23[btn,btn-ghost]"
+      ]
+    },
+    "src/app/a/studio/room/[room]/page.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/console/AdminWeekGrid.tsx": {
+      "count": 25,
+      "names": [
+        "house:Link@579[btn,btn-ghost,btn-sm]",
+        "house:a@563[btn,btn-sm]",
+        "house:a@568[btn,btn-ghost,btn-sm]",
+        "house:button@300[btn,btn-sm]",
+        "house:button@301[btn,btn-sm]",
+        "house:button@302[btn,btn-sm]",
+        "house:button@308[btn-round]",
+        "house:button@315[btn-round]",
+        "house:button@541[btn,btn-ghost,btn-sm]",
+        "house:button@542[btn,btn-ghost,btn-sm]",
+        "house:button@543[btn,btn-ghost,btn-sm]",
+        "house:button@603[btn,btn-sm]",
+        "house:button@606[btn,btn-ghost,btn-sm]",
+        "house:button@643[btn,btn-sm]",
+        "house:button@644[btn,btn-ghost,btn-sm]",
+        "house:button@659[btn,btn-ghost,btn-sm]",
+        "house:button@689[btn,btn-sm]",
+        "house:button@690[btn,btn-ghost,btn-sm]",
+        "house:button@705[btn,btn-ghost,btn-sm]",
+        "house:button@739[btn,btn-ghost,btn-sm]",
+        "house:button@750[btn,btn-sm]",
+        "house:button@753[btn,btn-ghost,btn-sm]",
+        "native:button@355",
+        "native:button@417",
+        "native:button@504"
+      ]
+    },
+    "src/components/console/AttentionStrip.tsx": {
+      "count": 1,
+      "names": [
+        "house:button@80[btn,btn-sm]"
+      ]
+    },
+    "src/components/console/BftTrayClock.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/console/BrandDesk.tsx": {
+      "count": 1,
+      "names": [
+        "house:button@74[btn,btn-sm]"
+      ]
+    },
+    "src/components/console/CardsRailCard.tsx": {
+      "count": 11,
+      "names": [
+        "house:button@280[btn,btn-sm]",
+        "house:button@281[btn,btn-sm]",
+        "house:button@293[btn,btn-sm]",
+        "house:button@330[btn,btn-ghost,btn-sm]",
+        "house:button@408[btn,btn-sm]",
+        "house:button@534[btn,btn-ghost,btn-sm]",
+        "house:button@547[btn,btn-sm]",
+        "house:button@682[btn,btn-sm]",
+        "native:a@441",
+        "native:a@610",
+        "native:a@696"
+      ]
+    },
+    "src/components/console/CommunityDoorCard.tsx": {
+      "count": 1,
+      "names": [
+        "house:button@108[btn,btn-sm]"
+      ]
+    },
+    "src/components/console/ConsoleBoot.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/console/ConsoleShell.tsx": {
+      "count": 3,
+      "names": [
+        "native:button@139",
+        "native:button@152",
+        "native:button@187"
+      ]
+    },
+    "src/components/console/DiscountsDesk.tsx": {
+      "count": 3,
+      "names": [
+        "house:button@119[btn,btn-sm]",
+        "native:button@69",
+        "native:button@78"
+      ]
+    },
+    "src/components/console/LiveDoorCard.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/console/LovesDesk.tsx": {
+      "count": 10,
+      "names": [
+        "house:Link@258[btn,btn-sm]",
+        "house:button@123[btn,btn-sm]",
+        "house:button@129[btn,btn-sm]",
+        "house:button@242[btn,btn-sm]",
+        "house:button@243[btn,btn-sm]",
+        "house:button@244[btn,btn-sm]",
+        "house:button@253[btn-round]",
+        "house:button@257[btn-round]",
+        "house:button@291[btn-round]",
+        "house:button@295[btn-round]"
+      ]
+    },
+    "src/components/console/NavEditor.tsx": {
+      "count": 8,
+      "names": [
+        "house:button@496[btn,btn-gold,btn-sm]",
+        "house:button@499[btn,btn-ghost,btn-sm]",
+        "native:button@366",
+        "native:button@367",
+        "native:button@400",
+        "native:button@417",
+        "native:button@422",
+        "native:button@436"
+      ]
+    },
+    "src/components/console/OverviewPanel.tsx": {
+      "count": 1,
+      "names": [
+        "legacy:Link@215[btn-pill]"
+      ]
+    },
+    "src/components/console/PwycDesk.tsx": {
+      "count": 3,
+      "names": [
+        "house:button@100[btn,btn-gold,btn-sm]",
+        "house:button@103[btn,btn-ghost,btn-sm]",
+        "native:a@115"
+      ]
+    },
+    "src/components/console/RankTrackPanel.tsx": {
+      "count": 1,
+      "names": [
+        "legacy:Link@86[btn-pill]"
+      ]
+    },
+    "src/components/console/ReaderDrawer.tsx": {
+      "count": 2,
+      "names": [
+        "native:button@100",
+        "native:button@91"
+      ]
+    },
+    "src/components/console/RetreatsDesk.tsx": {
+      "count": 7,
+      "names": [
+        "house:button@125[btn,btn-sm]",
+        "house:button@185[btn,btn-sm]",
+        "house:button@188[btn,btn-ghost,btn-sm]",
+        "native:a@100",
+        "native:a@84",
+        "native:button@105",
+        "native:button@110"
+      ]
+    },
+    "src/components/console/ScarHud.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/console/ScarRail.tsx": {
+      "count": 6,
+      "names": [
+        "native:button@95",
+        "scar:Link@145[scar-railbtn]",
+        "scar:Link@180[scar-railsubbtn]",
+        "scar:a@202[scar-railsubbtn,scar-railsubbtn--2]",
+        "scar:span@133[scar-railbtn,scar-railbtn--soon]",
+        "scar:span@167[scar-railsubbtn,scar-railsubbtn--soon]"
+      ]
+    },
+    "src/components/console/SiteChatCard.tsx": {
+      "count": 2,
+      "names": [
+        "house:button@142[btn,btn-sm]",
+        "house:button@161[btn,btn-gold,btn-sm]"
+      ]
+    },
+    "src/components/console/SiteConsoleShell.tsx": {
+      "count": 1,
+      "names": [
+        "native:button@176"
+      ]
+    },
+    "src/components/console/StudioHub.tsx": {
+      "count": 1,
+      "names": [
+        "house:a@139[btn,btn-ghost,btn-sm]"
+      ]
+    },
+    "src/components/console/TodaySummary.tsx": {
+      "count": 1,
+      "names": [
+        "house:button@79[btn,btn-sm]"
+      ]
+    },
+    "src/components/console/desk/DayAltitude.tsx": {
+      "count": 3,
+      "names": [
+        "house:button@75[btn,btn-ghost,btn-sm]",
+        "house:button@93[btn,btn-sm]",
+        "house:button@96[btn,btn-ghost,btn-sm]"
+      ]
+    },
+    "src/components/console/desk/MaterialsShelf.tsx": {
+      "count": 4,
+      "names": [
+        "house:button@131[btn,btn-ghost,btn-sm]",
+        "house:button@135[btn,btn-ghost,btn-sm]",
+        "house:label@154[btn,btn-sm]",
+        "native:a@128"
+      ]
+    },
+    "src/components/console/desk/RosterPanel.tsx": {
+      "count": 1,
+      "names": [
+        "house:Link@49[btn,btn-ghost,btn-sm]"
+      ]
+    },
+    "src/components/console/desk/WeekAltitude.tsx": {
+      "count": 1,
+      "names": [
+        "native:button@104"
+      ]
+    },
+    "src/components/console/glass.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/console/site-chrome.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/rooms/AfterHoursDoor.tsx": {
+      "count": 3,
+      "names": [
+        "house:Link@104[btn,btn-ghost,btn-sm]",
+        "house:Link@111[btn,btn-ghost,btn-sm]",
+        "house:Link@119[btn,btn-ghost,btn-sm]"
+      ]
+    },
+    "src/components/rooms/CircleView.tsx": {
+      "count": 4,
+      "names": [
+        "house:Link@211[btn,btn-sm]",
+        "house:Link@219[btn,btn-sm]",
+        "house:button@232[btn-round]",
+        "house:button@234[btn-round]"
+      ]
+    },
+    "src/components/rooms/ClassroomView.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/rooms/LessonPathView.tsx": {
+      "count": 7,
+      "names": [
+        "house:Link@181[btn,btn-sm]",
+        "house:Link@189[btn,btn-sm]",
+        "house:button@254[btn,btn-ghost,btn-sm]",
+        "house:button@262[btn,btn-ghost,btn-sm]",
+        "house:button@288[btn,btn-ghost,btn-sm]",
+        "native:a@245",
+        "native:a@86"
+      ]
+    },
+    "src/components/rooms/PackageRoomsCard.tsx": {
+      "count": 3,
+      "names": [
+        "house:Link@163[btn,btn-sm]",
+        "house:Link@168[btn,btn-sm]",
+        "house:Link@174[btn,btn-ghost,btn-sm]"
+      ]
+    },
+    "src/components/rooms/ReadingNotice.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/rooms/ReadingSignUp.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/rooms/RoomPresence.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/rooms/RoomVideoSlot.tsx": {
+      "count": 6,
+      "names": [
+        "house:Link@347[btn,btn-sm]",
+        "house:Link@362[btn,btn-sm]",
+        "house:Link@423[btn,btn-gold]",
+        "house:Link@437[btn,btn-gold]",
+        "house:Link@450[btn,btn-gold]",
+        "house:a@412[btn,btn-ghost]"
+      ]
+    },
+    "src/components/rooms/RoomView.tsx": {
+      "count": 6,
+      "names": [
+        "house:Link@416[btn,btn-sm]",
+        "house:Link@426[btn,btn-sm]",
+        "house:button@561[btn,btn-sm]",
+        "native:button@207",
+        "native:button@500",
+        "native:button@514"
+      ]
+    },
+    "src/components/rooms/RoomsShelf.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/rooms/SceneFrame.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/rooms/Stage2Door.tsx": {
+      "count": 2,
+      "names": [
+        "house:Link@104[btn,btn-ghost,btn-sm]",
+        "house:button@111[btn,btn-ghost,btn-sm]"
+      ]
+    },
+    "src/components/rooms/StageChat.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/rooms/StageView.tsx": {
+      "count": 1,
+      "names": [
+        "house:button@156[btn,btn-ghost,btn-sm]"
+      ]
+    },
+    "src/components/rooms/VantageSwitcher.tsx": {
+      "count": 1,
+      "names": [
+        "house:button@25[btn,btn-ghost,btn-sm]"
+      ]
+    },
+    "src/components/studio-overlay/Countdown.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/studio-overlay/FullScene.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/studio-overlay/JitsiDoorCard.tsx": {
+      "count": 2,
+      "names": [
+        "house:button@66[btn,btn-ghost,btn-sm]",
+        "house:button@80[btn,btn-sm]"
+      ]
+    },
+    "src/components/studio-overlay/OverlayStage.tsx": {
+      "count": 0,
+      "names": []
+    },
+    "src/components/studio-overlay/SendToUserChooser.tsx": {
+      "count": 5,
+      "names": [
+        "house:button@106[btn,btn-sm]",
+        "house:button@109[btn,btn-ghost,btn-sm]",
+        "house:button@138[btn,btn-ghost,btn-sm]",
+        "house:button@83[btn,btn-ghost,btn-sm]",
+        "native:button@132"
+      ]
+    },
+    "src/components/studio-overlay/StudioRoom.tsx": {
+      "count": 13,
+      "names": [
+        "house:a@271[btn,btn-sm]",
+        "house:a@283[btn,btn-sm]",
+        "house:a@295[btn,btn-sm]",
+        "house:button@376[btn,btn-sm]",
+        "house:button@424[btn,btn-sm]",
+        "house:button@457[btn,btn-ghost,btn-sm]",
+        "house:button@464[btn,btn-sm]",
+        "house:button@499[btn,btn-ghost,btn-sm]",
+        "house:button@512[btn,btn-sm]",
+        "house:button@519[btn,btn-sm]",
+        "house:button@64[btn,btn-sm]",
+        "house:button@90[btn,btn-ghost,btn-sm]",
+        "native:button@331"
+      ]
+    }
+  },
+  "fontDecls": {
+    "src/app/cartridge.css": {
+      "count": 2,
+      "names": [
+        "token:font-family@244[--font-body-app]",
+        "token:font-family@245[--font-pixel]"
+      ]
+    },
+    "src/app/globals.css": {
+      "count": 19,
+      "names": [
+        "literal:font-family@158",
+        "literal:font-family@184",
+        "literal:font-family@206",
+        "literal:font-family@365",
+        "literal:font-family@854",
+        "literal:font-family@889",
+        "literal:font-family@913",
+        "literal:font-family@972",
+        "literal:font-family@977",
+        "token:font-family@513[--font-console]",
+        "token:font-family@536[--font-pixel]",
+        "token:font-family@578[--font-pixel]",
+        "token:font-family@594[--font-pixel]",
+        "token:font-family@611[--font-console]",
+        "token:font-family@625[--font-pixel]",
+        "token:font-family@863[--font-h1]",
+        "token:font-family@923[--font-h1]",
+        "token:font-family@924[--font-h2]",
+        "token:font-family@925[--font-h3]"
+      ]
+    },
+    "src/app/house.css": {
+      "count": 22,
+      "names": [
+        "literal:font-family@118",
+        "literal:font-family@13",
+        "literal:font-family@158",
+        "literal:font-family@165",
+        "literal:font-family@18",
+        "literal:font-family@305",
+        "literal:font-family@317",
+        "literal:font-family@350",
+        "literal:font-family@351",
+        "literal:font-family@352",
+        "literal:font-family@367",
+        "literal:font-family@492",
+        "literal:font-family@497",
+        "literal:font-family@510",
+        "literal:font-family@635",
+        "literal:font-family@652",
+        "literal:font-family@752",
+        "literal:font-family@773",
+        "token:font-family@32[--font-body]",
+        "token:font-family@75[--font-h1]",
+        "token:font-family@76[--font-h2]",
+        "token:font-family@77[--font-h3]"
+      ]
+    },
+    "src/app/kit.css": {
+      "count": 9,
+      "names": [
+        "literal:font-family@114",
+        "literal:font-family@150",
+        "literal:font-family@32",
+        "literal:font-family@43",
+        "literal:font-family@56",
+        "token:font-family@165[--font-h1]",
+        "token:font-family@166[--font-h2]",
+        "token:font-family@167[--font-body]",
+        "token:font-family@168[--font-body]"
+      ]
+    },
+    "src/app/scar.css": {
+      "count": 26,
+      "names": [
+        "token:font-family@105[--font-console]",
+        "token:font-family@120[--font-console]",
+        "token:font-family@124[--font-console]",
+        "token:font-family@136[--font-pixel]",
+        "token:font-family@158[--font-pixel]",
+        "token:font-family@176[--font-console]",
+        "token:font-family@192[--font-console]",
+        "token:font-family@210[--font-console]",
+        "token:font-family@250[--font-console]",
+        "token:font-family@276[--font-console]",
+        "token:font-family@298[--font-console]",
+        "token:font-family@319[--font-console]",
+        "token:font-family@347[--font-console]",
+        "token:font-family@378[--font-console]",
+        "token:font-family@386[--font-console]",
+        "token:font-family@409[--font-pixel]",
+        "token:font-family@421[--font-pixel]",
+        "token:font-family@426[--font-console]",
+        "token:font-family@433[--font-console]",
+        "token:font-family@454[--font-console]",
+        "token:font-family@461[--font-console]",
+        "token:font-family@540[--font-console]",
+        "token:font-family@574[--font-console]",
+        "token:font-family@625[--font-console]",
+        "token:font-family@633[--font-console]",
+        "token:font-family@643[--font-console]"
+      ]
+    }
   }
 }
