@@ -22,10 +22,11 @@ import { READING_ROOM_SLUG } from "@/lib/reading-room";
  * rotation elsewhere always re-authorizes against the current truth
  * rather than replaying a stale one.
  *
- * No `onLeave` prop — this component returns `null` while `joined`, so a
- * prop it could never render would be dead code; the leave control lives
- * in `StageView.tsx` itself, always visible, since `JitsiRoom.tsx` gives
- * its parent no way to know the call ended or failed.
+ * There is no leave-callback prop on this component — it returns `null`
+ * the instant `joined` is true, so a callback it could never invoke would
+ * be dead code; the leave control lives in `StageView.tsx` itself, always
+ * visible, since `JitsiRoom.tsx` gives its parent no way to know the call
+ * ended or failed.
  */
 
 export interface Stage2DoorProps {
