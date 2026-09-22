@@ -19,9 +19,14 @@ therefore the DERIVED ids: `tip-love`, `tip-one-cocreation`, `gifts-of-gratitude
 - `work-claims/task-411.md` (NEW, this file)
 - `src/components/TipJar.tsx` — rebuilt on the basket: give() POSTs /api/cart add + set-offer,
   `oc-cart-changed` event + in-basket note with a /cart door (BuyPanel.tsx:420-433 pattern);
-  `payInModal` import gone; JAR_ITEMS map (derived ids) beside JARS; preset pills move from
+  `payInModal` import gone; give() reads the jar id map from `@/lib/jars` (fix round — was a
+  local JAR_ITEMS beside JARS); preset pills move from
   inline styles to existing `.btn btn-sm` (btn-gold selected / btn-ghost unselected —
   BuyPanel.tsx:414/:432 precedent); Give button prints `Give {amount} sats`; docblock re-trued
+- `src/lib/jars.ts` — NEW (FIX ROUND, slop-review finding 1 = security-review finding 4, same
+  defect: the key→itemId map rode twice, unpinned against itself). The single source of truth
+  for the jar id map — the three derived ids keyed by jar key — in a neutral (non-client)
+  module both consumers (TipJar.tsx client, sections.tsx server) import.
 - `src/app/support/page.tsx` — the three lightning-word sites (`:78` kicker ⚡, `:96`, `:100-102`)
   re-worded; the two TipJar mounts additionally gate on live shelf items (derive-or-dash)
 - `src/app/api/tip/route.ts` — DELETED (the brief's sanctioned `git rm`; decision B)
@@ -59,10 +64,11 @@ therefore the DERIVED ids: `tip-love`, `tip-one-cocreation`, `gifts-of-gratitude
 2. TipJar.tsx rebuilt on the basket (see OWNS).
 3. Derive-or-dash on the shelf: server faces check `getItem(JAR_ITEMS[key])?.status === "live"`
    and pass only live jars via `only`. The RSC boundary (payments.ts:656's own note: a server
-   page cannot call a client-module export) means the key→itemId map rides twice: TipJar.tsx's
-   JAR_ITEMS (client, give()) and the server helper exported from sections.tsx
-   (`liveJarKeys()`), which support/page.tsx imports — home page precedent
-   (src/app/page.tsx:17 imports sections).
+   page cannot call a client-module export) is honoured WITHOUT duplicating the map (fix
+   round): the map lives once in the neutral module `src/lib/jars.ts`, imported by TipJar.tsx
+   (client, give()) and by sections.tsx's `liveJarKeys()` (server), which support/page.tsx
+   imports — home page precedent (src/app/page.tsx:17 imports sections). Pin 4 pins the single
+   source for both consumers.
 4. The lightning words go (both ⚡ kickers lose the glyph — decision C lean, ruled words
    pending the Admiral).
 5. `api/tip` retired; `src/lib/tips.ts` STAYS (historical ledger, decision F).
