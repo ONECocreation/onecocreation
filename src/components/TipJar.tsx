@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { payInModal } from "@/lib/btcpay-modal";
+import Link from "next/link";
+import { JAR_ITEMS } from "@/lib/jars";
 
 /**
  * Three jars, one gesture (the Admiral's design): tip Love, tip the house,
  * or pay a session forward for someone who can't. Presets are angel numbers;
- * custom keeps it open. POST /api/tip mints the invoice; BTCPay's checkout
- * (lightning-first) takes it from there.
+ * custom keeps it open. Give posts the jar's shelf item to the basket and
+ * sets the chosen amount as a pay-what-you-can offer (the basket route's own
+ * floor: 111 sats); checkout is the basket's own — bitcoin on-chain, a
+ * normal order whose receipt names the jar by its item title.
  *
  * TASK-134 (0018.06.17 a₿): the payforward jar is renamed GIFTS OF
  * GRATITUDE everywhere (the KEY stays `payforward` — ledger continuity),
@@ -15,6 +18,14 @@ import { payInModal } from "@/lib/btcpay-modal";
  * field" and "Gifts of Gratitude" sections. The switch gate (features.jars
  * AND the live bitcoin rail) is jarsOpen() in @/lib/payments — the server
  * pages ask it before rendering this at all.
+ *
+ * TASK-411 (block 968,170 a₿): the jars ride the basket. /api/tip and its
+ * invoice modal are retired; the gift is ONE basket line carrying a
+ * pay-what-you-can offer, settled by the standard checkout (a gift line is
+ * sats-only by the basket's own offer law — honestly refused to cards).
+ * The jar key → shelf item id map lives once in @/lib/jars (AMENDMENT 1's
+ * derived ids — the store desk derives the id from the title); the server
+ * faces re-check those items are live before mounting a jar at all.
  */
 export const JARS = [
   {
@@ -50,26 +61,40 @@ export default function TipJar({ only }: { only?: readonly JarKey[] }) {
 
   async function give() {
     if (state === "busy") return;
+    if (!amount || amount < 111) {
+      setState("error");
+      setNote("offers start at 111 sats");
+      return;
+    }
     setState("busy");
     setNote("");
     try {
-      const res = await fetch("/api/tip", {
+      const itemId = JAR_ITEMS[jar];
+      const add = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target: jar, amountSats: amount }),
+        body: JSON.stringify({ itemId, qty: 1 }),
       });
-      const data = (await res.json()) as { ok: boolean; payUrl?: string; reason?: string };
-      if (data.ok && data.payUrl) {
-        const opened = await payInModal(data.payUrl, {
-          onPaid: () => { setState("idle"); setNote("received with love 💛 — thank you"); },
-          onClose: () => setState("idle"),
-        });
-        if (!opened) { window.location.href = data.payUrl; return; }
-        setNote("");
+      const added = (await add.json().catch(() => ({ ok: false }))) as { ok: boolean; reason?: string };
+      if (!added.ok) {
+        setState("error");
+        setNote(added.reason ?? "Something went sideways — please try again.");
         return;
       }
-      setState("error");
-      setNote(data.reason ?? "Something went sideways — please try again.");
+      const offer = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId, offerSats: amount }),
+      });
+      const offered = (await offer.json().catch(() => ({ ok: false }))) as { ok: boolean; reason?: string };
+      if (!offered.ok) {
+        setState("error");
+        setNote(offered.reason ?? "Something went sideways — please try again.");
+        return;
+      }
+      window.dispatchEvent(new Event("oc-cart-changed"));
+      setState("idle");
+      setNote("in the basket 🧺");
     } catch {
       setState("error");
       setNote("Something went sideways — please try again.");
@@ -108,16 +133,7 @@ export default function TipJar({ only }: { only?: readonly JarKey[] }) {
               setSats(p);
               setCustom("");
             }}
-            style={{
-              border: !custom && sats === p ? "1.5px solid var(--gold-deep)" : "1.5px solid rgba(180,134,43,.4)",
-              background: !custom && sats === p ? "rgba(217,178,78,.14)" : "transparent",
-              color: "var(--gold-deep)",
-              borderRadius: 999,
-              padding: "9px 17px",
-              fontWeight: 700,
-              fontSize: ".84rem",
-              cursor: "pointer",
-            }}
+            className={!custom && sats === p ? "btn btn-gold btn-sm" : "btn btn-ghost btn-sm"}
           >
             {p.toLocaleString()} sats
           </button>
@@ -139,10 +155,20 @@ export default function TipJar({ only }: { only?: readonly JarKey[] }) {
           }}
         />
         <button className="btn btn-gold" type="button" onClick={give} disabled={state === "busy" || !amount}>
-          {state === "busy" ? "Opening the jar…" : `Give ⚡ ${amount ? amount.toLocaleString() : "—"} sats`}
+          {state === "busy" ? "Placing it in the basket…" : `Give ${amount ? amount.toLocaleString() : "—"} sats`}
         </button>
       </div>
-      {state === "error" && <p style={{ color: "var(--muted)", fontSize: ".85rem", marginTop: 10 }}>{note}</p>}
+      {note && (
+        <p style={{ color: "var(--muted)", fontSize: ".85rem", marginTop: 10 }}>
+          {note}
+          {state !== "error" && (
+            <>
+              {" — "}
+              <Link href="/cart">open the basket</Link>
+            </>
+          )}
+        </p>
+      )}
     </div>
   );
 }

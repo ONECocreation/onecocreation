@@ -6,6 +6,7 @@ import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import TipJar from "@/components/TipJar";
+import { liveJarKeys } from "@/components/sections";
 import WildDoors from "@/components/WildDoors";
 import StackedHero from "@/components/StackedHero";
 import PaletteVars from "@/components/PaletteVars";
@@ -68,6 +69,13 @@ export default async function SupportPage() {
   }
   /* ── end TASK-159 Puck-first branch; hand-built fallback below ── */
 
+  /* TASK-411 (block 968,170 a₿) — the jars ride the basket now, and a jar
+     is offered only while its shelf item is live (derive-or-dash): the
+     section copy stands either way, the widget mounts only for live jars —
+     same truth the home Donations() section reads (one helper, sections.tsx). */
+  const liveJars = jarsOpen() ? await liveJarKeys() : [];
+  const fieldJars = liveJars.filter((k) => k !== "payforward");
+
   return (
     <>
       <SiteHeader />
@@ -75,7 +83,7 @@ export default async function SupportPage() {
         {/* ── the field hero ── */}
         <section style={{ paddingBottom: 26 }}>
           <div className="wrap center reveal">
-            <StackedHero kicker="Support This Work — Gently ⚡" lines={[{ t: "TEND" }, { t: "THE FIELD", tone: "teal" }]} constellation />
+            <StackedHero kicker="Support This Work — Gently" lines={[{ t: "TEND" }, { t: "THE FIELD", tone: "teal" }]} constellation />
             <p className="lead" style={{ marginBottom: 0 }}>
               Everything here — the sessions, the rooms, the letters — is held by one pair of hands.
               A gift lands with Love <b style={{ color: "var(--gold-deep)" }}>whole</b>: no platform
@@ -84,7 +92,8 @@ export default async function SupportPage() {
           </div>
         </section>
 
-        {/* ── the jars (TASK-134: gone entirely when jarsOpen() is false) ── */}
+        {/* ── the jars (TASK-134: gone entirely when jarsOpen() is false;
+             TASK-411: each jar additionally follows its shelf item) ── */}
         {jarsOpen() && (
           <section style={{ padding: "10px 0 30px" }}>
             <div className="wrap reveal">
@@ -93,11 +102,11 @@ export default async function SupportPage() {
                 {/* ── Tip the field ── */}
                 <h2 style={{ fontWeight: 400, fontSize: "1.5rem", margin: 0 }}>Tip the Field</h2>
                 <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: ".95rem" }}>
-                  pick a jar, pick an amount — lightning opens, and it&apos;s done in a breath.
+                  pick a jar, pick an amount — it lands in your basket, and it&apos;s done in a breath.
                 </p>
-                <TipJar only={["love", "onecocreation"]} />
+                {fieldJars.length > 0 && <TipJar only={fieldJars} />}
                 <p style={{ fontSize: ".82rem", color: "var(--muted)", marginTop: 18 }}>
-                  Bitcoin gifts travel the Lightning Network straight to Love&apos;s own wallet — nothing
+                  Bitcoin gifts travel on-chain straight to Love&apos;s own wallet — nothing
                   held, nothing routed by anyone else. Dollars are always welcome too: bitcoin is an
                   option here, never a demand.
                 </p>
@@ -111,7 +120,7 @@ export default async function SupportPage() {
                   <p style={{ color: "var(--muted)", margin: "2px 0 0", fontSize: ".95rem" }}>
                     — how gifts were received will show here.
                   </p>
-                  <TipJar only={["payforward"]} />
+                  {liveJars.includes("payforward") && <TipJar only={["payforward"]} />}
                 </div>
               </div>
             </div>
