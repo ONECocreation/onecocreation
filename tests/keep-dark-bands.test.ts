@@ -93,3 +93,91 @@ describe("TASK-216 — PopupHost's hand-carried night pins match main .keep-dark
     }
   });
 });
+
+/**
+ * TASK-398 (W-01, block 968,140) — the grey-paint family. `main .keep-dark`
+ * (cartridge.css:437-440) already pinned eight tokens against the dawn
+ * repaint; it never covered `--panel`/`--edge`/`--ghost-bg`/`--ghost-ink`, so
+ * a keep-dark frame's `.card` (the book picture under "Join the Weekly
+ * Reading", B6) and `.btn-ghost` (`/book`'s "more info", B12) still read the
+ * dawn grey inside an always-dark frame. Same idiom as the TASK-216 tests
+ * above: read the real cartridge.css text, assert the four pins exist, and
+ * prove byte-equality to the real night pour — but rgba()-aware (these four
+ * values are `rgba(...)` and one hex, not the band family's hex-only shape),
+ * so the match captures up to the terminating `;`/`}` rather than a
+ * hex-only regex retyped from memory.
+ */
+describe("TASK-398 (W-01) — main .keep-dark pins --panel/--edge/--ghost-bg/--ghost-ink too, so dawn cannot grey a keep-dark card or ghost button", () => {
+  const FOUR_KEYS = ["panel", "edge", "ghost-bg", "ghost-ink"];
+
+  it("main .keep-dark pins all four tokens", async () => {
+    const css = await read("src/app/cartridge.css");
+    const block = css.match(/main \.keep-dark\{([\s\S]*?)\}/)?.[1] ?? "";
+    expect(block, "main .keep-dark block not found").not.toBe("");
+    for (const key of FOUR_KEYS) {
+      expect(block, `--${key} missing from main .keep-dark`).toMatch(new RegExp(`--${key}:`));
+    }
+  });
+
+  it("those four values are byte-identical to the real NIGHT pour (:root,.oc-pv-dark) — rgba()-aware, never a re-typed guess", async () => {
+    const css = await read("src/app/cartridge.css");
+    // two `:root,.oc-pv-dark{…}` blocks exist in this file (the base token
+    // pour, and the band family) — find the ONE that actually holds --panel
+    const night = [...css.matchAll(/:root,\.oc-pv-dark\{([\s\S]*?)\}/g)]
+      .map((m) => m[1]).find((block) => /--panel:/.test(block)) ?? "";
+    const keepDark = css.match(/main \.keep-dark\{([\s\S]*?)\}/)?.[1] ?? "";
+    expect(night, "the base :root,.oc-pv-dark block not found").not.toBe("");
+    for (const key of FOUR_KEYS) {
+      // rgba()-aware: capture up to the terminating `;` or `}`, unlike the
+      // band test's hex-only regex above — --panel/--edge/--ghost-bg are
+      // rgba(), --ghost-ink alone is hex
+      const nightVal = night.match(new RegExp(`--${key}:([^;}]+)(?:[;}]|$)`))?.[1]?.trim();
+      const pinVal = keepDark.match(new RegExp(`--${key}:([^;}]+)(?:[;}]|$)`))?.[1]?.trim();
+      expect(nightVal, `--${key} missing from the night pour`).toBeTruthy();
+      expect(pinVal, `--${key} missing from the pin`).toBeTruthy();
+      expect(pinVal, `--${key} drifted: night=${nightVal}, pin=${pinVal}`).toBe(nightVal);
+    }
+  });
+
+  /**
+   * AMENDMENT R1 (Astra finding 1, block 968,140): the lion page's dawn
+   * exception (`html[data-oc-theme="light"] main.lions-gate-dark
+   * .keep-dark{…inherit}`) resets every token `main .keep-dark` pins back to
+   * `inherit`, so the memberships page reads its OWN dawn values instead of
+   * the night pin. Rather than a hardcoded key list (which silently rots the
+   * next time either ruleset grows), this reads BOTH blocks and asserts the
+   * exception's key set is a superset of the pin's key set — so a future pin
+   * addition that forgets the lion's exception fails loud, exactly the
+   * "cannot bypass the lion's dawn contract" Astra asked for.
+   */
+  it("the lion page's dawn exception (main.lions-gate-dark .keep-dark) resets to inherit every key main .keep-dark pins, except the known pre-existing --band-1/2/3 gap (TASK-216, named in Seams — not this lane's fix)", async () => {
+    const css = await read("src/app/cartridge.css");
+    const keepDark = css.match(/main \.keep-dark\{([\s\S]*?)\}/)?.[1] ?? "";
+    const lionException = css
+      .match(/html\[data-oc-theme="light"\] main\.lions-gate-dark \.keep-dark\{([\s\S]*?)\}/)?.[1] ?? "";
+    expect(keepDark, "main .keep-dark block not found").not.toBe("");
+    expect(lionException, "the lion page's dawn .keep-dark exception not found").not.toBe("");
+
+    // TASK-216 pinned --band-1/2/3 into main .keep-dark but never extended
+    // this exception to match it — found while writing this test (Astra
+    // §4's ask), pre-existing (present before this lane touched anything),
+    // and out of this lane's OWNS (widened by exactly ONE additive edit,
+    // the four W-01 tokens — AMENDMENT R1). Likely inert today: neither
+    // `.hero` nor `.about-story-sky` (the only two `var(--band-2)`
+    // consumers) render on the lion page, and its own
+    // `main.lions-gate-dark section{background:transparent!important}`
+    // already blanks section backgrounds regardless — but not verified by
+    // a walk, and not silently dropped from view: named in SUMMARY's Seams
+    // for a future pin-audit lane. This allowlist is the one place that
+    // follow-on would also need to update.
+    const KNOWN_PRE_EXISTING_GAP = ["band-1", "band-2", "band-3"];
+
+    const pinKeys = [...keepDark.matchAll(/--([a-z0-9-]+):/g)].map((m) => m[1]);
+    expect(pinKeys.length, "no keys parsed from main .keep-dark").toBeGreaterThan(0);
+    for (const key of pinKeys) {
+      if (KNOWN_PRE_EXISTING_GAP.includes(key)) continue;
+      expect(lionException, `--${key} is pinned by main .keep-dark but not reset to inherit in the lion's dawn exception`)
+        .toMatch(new RegExp(`--${key}:inherit\\b`));
+    }
+  });
+});

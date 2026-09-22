@@ -25,6 +25,11 @@
    dawn document; a .oc-pv-light pane stays dawn inside a night one). ══ */
 :root,.oc-pv-dark{
   --space:#0a0a14; --panel:rgba(24,19,44,.72); --edge:rgba(139,118,196,.34);
+  /* TASK-398 (B12): the header bar's own token — was a bare literal on
+     .site-header (house.css:286), so the bar could never follow the theme.
+     Night value byte-identical to the literal it replaces; the dawn twin
+     rides the block below (named decision A, RULED: PLUM LIFT). */
+  --header-bg:rgba(14,12,24,.86);
   --cream:#FBF6EF; --ink:#E9E2F2; --muted:#9a8fae;
   --ink-strong:#F4ECFF; --ink-body:#D9D2E4;
   --glass:rgba(22,17,40,.66); --glass-edge:rgba(139,118,196,.35);
@@ -238,6 +243,9 @@
 .button,h5,h6{font-family:var(--font-pixel)}
 
 html[data-oc-theme="light"],.oc-pv-light{  --panel:rgba(255,255,255,.6); --edge:rgba(139,118,196,.28);
+  --header-bg:rgba(36,26,51,.86); /* TASK-398 (B12) "a little lighter" — RULED PLUM LIFT: the
+     palette's own --band-2 family (#241a33) at the night bar's own .86 alpha; not the cream
+     flip, so the gold nav/here-mark/DoorButton pin/burger/lockup all hold unchanged */
   --ink:#4A4458; --muted:#6F6885; /* S21 D6: dawn muted deepens #897F97 → #6F6885 — 3.55 → 4.93 on cream; night --muted untouched */
   --ink-strong:#3f3a4e; --ink-body:#544e64;
   --glass:rgba(252,247,240,.62); --glass-edge:rgba(255,255,255,.6);
@@ -437,7 +445,9 @@ html[data-oc-theme="light"] #classes .lead{color:var(--muted)}
 main .keep-dark{--ink-strong:#F4ECFF;--ink-body:#D9D2E4;--muted:#9a8fae;
   --rose:#E7B2C3;--gold-deep:#E7B2C3;--teal-bright:#8FD0D8;
   --band-1:#1a1428;--band-2:#241a33;--band-3:#1e1a2f;
-  --glass:var(--glass-night);--glass-edge:var(--glass-night-edge)}
+  --glass:var(--glass-night);--glass-edge:var(--glass-night-edge);
+  --panel:rgba(24,19,44,.72);--edge:rgba(139,118,196,.34);
+  --ghost-bg:rgba(255,255,255,.08);--ghost-ink:#ECE3C9}
 /* light mode repaints the swept dark bands; image layers and keep-dark
    sections hold the night. TASK-396: the room banners and the meditations
    band now carry a REAL photo (the scrim pair above), so their two classes
@@ -523,4 +533,10 @@ html[data-oc-theme="light"] main.lions-gate-dark section{background:transparent!
    re-scopes the ink tokens pale; on the lion page at dawn the tokens fall
    back to the page's own (light) values so the words read on cream. */
 html[data-oc-theme="light"] main.lions-gate-dark .keep-dark{--ink-strong:inherit;--ink-body:inherit;--muted:inherit;
-  --rose:inherit;--gold-deep:inherit;--teal-bright:inherit;--glass:inherit;--glass-edge:inherit}
+  --rose:inherit;--gold-deep:inherit;--teal-bright:inherit;--glass:inherit;--glass-edge:inherit;
+  /* TASK-398 (AMENDMENT R1): main .keep-dark now also pins --panel/--edge/
+     --ghost-bg/--ghost-ink (:437-440) — this exception must fall back to
+     `inherit` for those four too, or the lion page's dawn cards/ghost
+     buttons would hold the NIGHT pin instead of reading the page's own
+     light values like every other token here already does. */
+  --panel:inherit;--edge:inherit;--ghost-bg:inherit;--ghost-ink:inherit}
