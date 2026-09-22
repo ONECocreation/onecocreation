@@ -73,11 +73,13 @@ export default function RoomsShelf() {
               "--room-photo": `url(${p.banner})`,
             } as React.CSSProperties}>
             <div style={{ maxWidth: 440, margin: "0 auto" }}>
-              {/* TASK-183: the signed-in soul's name rides each card's door
-                  column — "you're in as <name>" (the feed's handle, derived
-                  server-side; a feed that won't say passes null and the
-                  line stays unpainted — derive-or-dash) */}
-              <PackageRoomsCard pkg={p} signedIn={feed.signedIn} name={feed.handle} />
+              {/* TASK-401 (block 968,141): the name reads ONCE per surface,
+                  not on every card. The per-card "you're in as <name>" line
+                  came out of PackageRoomsCard.tsx (it used to repeat once
+                  per package); on /classes the once is the foot note below,
+                  which already names the signed-in account with the fuller
+                  truth (the full Matrix id and whose server it lives on). */}
+              <PackageRoomsCard pkg={p} signedIn={feed.signedIn} />
             </div>
           </section>
         ))}
