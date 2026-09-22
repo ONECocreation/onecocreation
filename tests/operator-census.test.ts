@@ -268,7 +268,7 @@ export function scanSource(sourceText: string, fileName = "fixture.tsx"): FileCe
   const resolveInitializer = (id: ts.Identifier): ts.Expression | null => {
     let scope: ts.Node | undefined = id.parent;
     while (scope) {
-      if (ts.isSourceFile(scope) || ts.isBlock(scope) || ts.isModuleBlock(scope) || ts.isCaseBlock(scope)) {
+      if (ts.isSourceFile(scope) || ts.isBlock(scope) || ts.isModuleBlock(scope)) {
         for (const stmt of scope.statements) {
           if (!ts.isVariableStatement(stmt)) continue;
           for (const decl of stmt.declarationList.declarations) {
@@ -342,7 +342,7 @@ export function scanSource(sourceText: string, fileName = "fixture.tsx"): FileCe
   };
 
   const visit = (node: ts.Node): void => {
-    if (ts.isJsxAttribute(node) && node.name.text === "style") {
+    if (ts.isJsxAttribute(node) && ts.isIdentifier(node.name) && node.name.text === "style") {
       const init = node.initializer;
       if (init && ts.isJsxExpression(init) && init.expression) {
         walkExpression(init.expression, undefined, new Set());
