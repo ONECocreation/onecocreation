@@ -1,13 +1,21 @@
 import { describe, it, expect } from "vitest";
+import { promises as fs } from "fs";
+import path from "path";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import {
   readingMarksLookup,
   readingPillLabel,
   mergeDayMarks,
   normalizeReadingResponse,
 } from "@/components/calendar/reading-marks";
+import BftMonthGrid from "@/components/calendar/BftMonthGrid";
 import { bftMonthGrid, type CalendarDayCell } from "@/lib/calendar-view";
 import { DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { buildPublicMarks } from "@/components/rooms/CircleView";
+import { buildBookingMarks } from "@/components/me/MemberCalendar";
+
+const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
 
 /**
  * TASK-385 (block 968,061+) — the weekly reading's mark-merging half:
@@ -132,5 +140,55 @@ describe("normalizeReadingResponse (Ruling 4 — five distinct outcomes)", () =>
 
   it("config.reading present and valid → that exact schedule", () => {
     expect(normalizeReadingResponse(200, { ok: true, config: { reading: VALID_RAW } })).toEqual(VALID_RAW);
+  });
+});
+
+describe("Ruling 1 — the pill-order/visibility proof (a static render, not just a unit test on the pure functions)", () => {
+  it("BftMonthGrid fed mergeDayMarks(readingMarksLookup, buildBookingMarks) shows the reading pill even on a day already busy with two bookings", () => {
+    // MemberCalendar's own order (Build 4): the reading lookup goes FIRST,
+    // so it survives DayCell's two-pill display cap even when the day
+    // already carries two of the member's own bookings.
+    const cell = cellMatching((c) => c.civilDate.getUTCDay() === DEFAULT_READING_SCHEDULE.weekday);
+    const bookings = [
+      {
+        bookingId: "b1", title: "Booking One", startUtc: `${cell.civilKey}T01:00:00Z`,
+        endUtc: `${cell.civilKey}T01:30:00Z`, state: "confirmed", meetingUrl: null, location: null,
+      },
+      {
+        bookingId: "b2", title: "Booking Two", startUtc: `${cell.civilKey}T02:00:00Z`,
+        endUtc: `${cell.civilKey}T02:30:00Z`, state: "confirmed", meetingUrl: null, location: null,
+      },
+    ];
+    const marks = mergeDayMarks(readingMarksLookup(DEFAULT_READING_SCHEDULE), buildBookingMarks(bookings));
+    const readingLabel = readingMarksLookup(DEFAULT_READING_SCHEDULE)(cell)?.pills?.[0]?.label;
+    expect(readingLabel).toBeTruthy();
+
+    const html = renderToStaticMarkup(createElement(BftMonthGrid, { bftYear: 18, bftMonth: 6, marks }));
+    expect(html).toContain(readingLabel!);
+    expect(html).toContain("Booking One");
+    expect(html).toContain("+1 more"); // the cap is real — Booking Two folds
+    expect(html).not.toContain("Booking Two"); // …never swallowing the reading pill instead
+  });
+});
+
+describe("source pins — CircleView.tsx and MemberCalendar.tsx wiring never touches what T-364's brief promised to leave alone", () => {
+  it("buildPublicMarks's and buildBookingMarks's exported signatures are unchanged, verbatim", async () => {
+    const circleSrc = await read("src/components/rooms/CircleView.tsx");
+    expect(circleSrc).toMatch(
+      /export function buildPublicMarks\(\s*feed: MarksFeed \| null,\s*opts: \{ liveNowCivilKey: string \| null; liveRoomTitle: string \| null \},\s*\): CalendarDayMarksLookup \{/,
+    );
+    const memberSrc = await read("src/components/me/MemberCalendar.tsx");
+    expect(memberSrc).toContain(
+      "export function buildBookingMarks(bookings: MemberBooking[] | null): CalendarDayMarksLookup {",
+    );
+  });
+
+  it("CircleView.tsx and MemberCalendar.tsx both call useReadingSchedule() and mergeDayMarks(", async () => {
+    const circleSrc = await read("src/components/rooms/CircleView.tsx");
+    const memberSrc = await read("src/components/me/MemberCalendar.tsx");
+    for (const src of [circleSrc, memberSrc]) {
+      expect(src).toContain("useReadingSchedule()");
+      expect(src).toContain("mergeDayMarks(");
+    }
   });
 });
