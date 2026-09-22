@@ -234,6 +234,15 @@ describe("sendReadingConfirmation — the shared send path (R2/R3/R4)", () => {
     expect(onceWithinClaims.has("reading-confirm:reader@example.com")).toBe(false);
   });
 
+  it("R4: capacity is checked FIRST — a spent meter reports skippedCap even for an address that is ALSO unsubscribed", async () => {
+    // deliberately not added to subscribedState, so this pins the ORDER:
+    // if isSubscribed ran first this would report skippedUnsubscribed instead.
+    mailControl.cap = 0;
+    const { sendReadingConfirmation } = await lib();
+    const result = await sendReadingConfirmation("reader@example.com");
+    expect(result).toBe("skippedCap");
+  });
+
   it("R3: the shared per-recipient claim stops a second call for the same email — the sign-up path and the sweep can never double-send", async () => {
     subscribedState.add("reader@example.com");
     const { sendReadingConfirmation } = await lib();

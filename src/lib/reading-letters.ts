@@ -171,16 +171,18 @@ export type ReadingConfirmationResult = "sent" | "skippedCap" | "skippedClaimed"
  * The confirmation's ONE send path — called by BOTH the subscribe route
  * (immediate, on `outcome === "joined"`) and the backlog sweep below
  * (decision E), so the two share R3's single per-recipient claim and can
- * never double-send the same soul. Order, RULED: subscribed? → capacity? →
- * claim → send → stamp. Capacity is checked BEFORE the claim so a spent
- * meter never burns the 24h claim window (R4) — the record stays
- * unstamped and unclaimed, so the very next tick's sweep is the retry.
- * `isSubscribed` sits immediately before the claim+send pair (R2) so an
- * opt-out landing between the list snapshot and the send is still honored.
+ * never double-send the same soul. Order, RULED: capacity → subscribed? →
+ * claim → send → stamp — R4's own words ("the sign-up confirmation checks
+ * capRemaining() first"), mirrored here for the sweep's own call so both
+ * paths agree. Capacity is checked BEFORE the claim so a spent meter never
+ * burns the 24h claim window — the record stays unstamped and unclaimed,
+ * so the very next tick's sweep is the retry. `isSubscribed` still sits
+ * immediately before the claim+send pair (R2) so an opt-out landing
+ * between the list snapshot and the send is honored either way.
  */
 export async function sendReadingConfirmation(email: string): Promise<ReadingConfirmationResult> {
+  if (!((await capRemaining()) > 0)) return "skippedCap"; // R4: capacity checked FIRST
   if (!(await isSubscribed(email))) return "skippedUnsubscribed";
-  if (!((await capRemaining()) > 0)) return "skippedCap";
   if (!(await onceWithin(`reading-confirm:${email}`, CONFIRM_ONCE_WINDOW_MS))) return "skippedClaimed";
   await sendMail("news", readingConfirmationLetter(email));
   await markReadingConfirmed(email);
