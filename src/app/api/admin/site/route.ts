@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
-import { getSiteConfig, saveSiteConfig, aboutPatchError, type SiteConfigPatch } from "@/lib/site-config";
+import { getSiteConfig, saveSiteConfig, aboutPatchError, roomsPatchError, type SiteConfigPatch } from "@/lib/site-config";
 import { validateReadingSchedule } from "@/lib/reading-schedule";
 import { btcpayAdapter, squareAdapter } from "@/lib/payments";
 
@@ -93,6 +93,14 @@ export async function PUT(request: Request) {
      by this check. */
   if ("reading" in patch) {
     const reason = readingPatchError((patch as Record<string, unknown>).reading);
+    if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
+  }
+  /* TASK-387 -- same rule, same shape, for the per-room chat switch:
+     refused IN WORDS before it's persisted. Only when the key rides the
+     patch at all — a features-, payments-, meeting-, nav-, about- or
+     reading-only save is untouched by this check. */
+  if ("rooms" in patch) {
+    const reason = roomsPatchError((patch as Record<string, unknown>).rooms);
     if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
   }
   const config = await saveSiteConfig(patch);
