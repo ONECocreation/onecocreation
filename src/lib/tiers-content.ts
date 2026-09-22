@@ -127,6 +127,7 @@ export const TIER_PAGES: TierPage[] = [
  *  ("Or Purchase Single Affirmation Offerings", from her live layout). */
 export const TIER_ADDONS = [
   { itemId: "thank-you-wakeup", name: "Thank You", sub: "Wake Up Affirmations · 1 hr 11 min", img: "/images/affirmation-thankyou.webp" },
+  // TASK-393 (§8.7): gated on features.largeSums at the consumer (packages/[slug]/page.tsx's visibleTierAddons) — stays in data here so ON brings it back in one line
   { itemId: "large-sums", name: "Large Sums of Money", sub: "Sleep Affirmation · 16 min · no music", img: "/images/affirmation-largesums.webp" },
   { itemId: "iam-worthy", name: "IAM Worthy", sub: "Sleep Affirmation · 3 hr 3 min", img: "/images/affirmation-iamenough.webp" },
 ];

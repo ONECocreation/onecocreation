@@ -43,6 +43,13 @@ const FEATURE_LABELS: Record<keyof SiteConfig["features"], string> = {
   // a `memberships` row and this file's own Record type would fail to
   // compile without it): the label the "hidden by the X switch" note wears.
   memberships: "Memberships",
+  // TASK-393 (minimal forced edit — load-bearing, the same shape as the
+  // memberships line above): Record<keyof SiteConfig["features"], string>
+  // must stay exhaustive, so adding site-config.ts's largeSums member
+  // forces a line here too — largeSums gates an OFFER inside home/
+  // packages, not a nav route, so no PAGE_CATALOG entry ever names it
+  // and featuresFor() below never surfaces this label in practice.
+  largeSums: "Large Sums of Money",
 };
 
 /** TASK-187: a route may need more than one switch ON now (PAGE_CATALOG's

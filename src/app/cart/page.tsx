@@ -20,6 +20,22 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+/** TASK-393 (R4 of the block-968,133 amendment) — the basket's one-line
+ *  promise, judged against BOTH rails cart/page.tsx already computes
+ *  below (never a third switch): both live keeps the original words
+ *  whole; one dark drops the absent rail from the sentence; neither
+ *  live drops the checkout promise entirely — a plain resting line in
+ *  the page's own voice, never a claim on a dark rail. Pure + exported
+ *  so the four states are pinned as a table (tests/feature-switches
+ *  .test.ts), the same idiom as packages/[slug]/page.tsx's
+ *  tierJoinedBanner. */
+export function cartCheckoutLine(rails: { btc: boolean; card: boolean }): string {
+  if (rails.btc && rails.card) return "one checkout — everything settles together, by lightning or by card.";
+  if (rails.btc) return "one checkout — everything settles together, by lightning.";
+  if (rails.card) return "one checkout — everything settles together, by card.";
+  return "your basket is holding everything — checkout opens the moment a payment rail does.";
+}
+
 /** The basket, wearing the night (Admiral, 0018.05.15). */
 export default async function CartPage() {
   /* TASK-186 (0018.06.18 a₿) — WARM BEFORE YOU JUDGE, the item page's own
@@ -62,7 +78,7 @@ export default async function CartPage() {
           <div className="center reveal" style={{ marginBottom: 26 }}>
             <StackedHero kicker="The Store" lines={[{ t: "YOUR" }, { t: "BASKET 🧺", tone: "teal" }]} />
             <p style={{ color: "var(--muted)", fontSize: ".9rem", margin: "14px 0 0" }}>
-              one checkout — everything settles together, by lightning or by card.
+              {cartCheckoutLine(rails)}
             </p>
           </div>
           <CartPanel rails={rails} />

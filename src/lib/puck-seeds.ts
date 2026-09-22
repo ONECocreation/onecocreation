@@ -411,13 +411,24 @@ const homeContent: Block[] = [
         hm.text("$11.11 — ⚡ ≈ 11,110 sats", "center"),
         hm.button("Add ⚡", "/store", "quiet", "center"),
       ])],
-      [hm.panel([
-        hm.img("/images/affirmation-largesums.webp", "Large Sums of Money", 280, "soft", "center"),
-        hm.heading("Large Sums of Money", "h3", "center"),
-        hm.text("Sleep Affirmation · 16 min · no music", "center", st({ size: 15 })),
-        hm.text("$11.11 — ⚡ ≈ 11,110 sats", "center"),
-        hm.button("Add ⚡", "/store", "quiet", "center"),
-      ])],
+      [
+        // TASK-393 (§8.7 a₿ — "hide large sums of money for now"): the
+        // Large Sums panel comes OUT of the studio starting point, gated
+        // behind site-config.ts's features.largeSums (default OFF) the
+        // same as the live home shelf (sections.tsx Affirmations()) and
+        // the packages add-ons strip. Bring it back with ONE step:
+        // uncomment the hm.panel(...) below + republish /studio/home —
+        // this seed spot does not follow the flag on its own (a
+        // published home Puck doc is KV data; see SUMMARY.md's
+        // fossilization note).
+        // hm.panel([
+        //   hm.img("/images/affirmation-largesums.webp", "Large Sums of Money", 280, "soft", "center"),
+        //   hm.heading("Large Sums of Money", "h3", "center"),
+        //   hm.text("Sleep Affirmation · 16 min · no music", "center", st({ size: 15 })),
+        //   hm.text("$11.11 — ⚡ ≈ 11,110 sats", "center"),
+        //   hm.button("Add ⚡", "/store", "quiet", "center"),
+        // ]),
+      ],
       [hm.panel([
         hm.img("/images/affirmation-iamenough.webp", "IAM Worthy", 280, "soft", "center"),
         hm.heading("IAM Worthy", "h3", "center"),

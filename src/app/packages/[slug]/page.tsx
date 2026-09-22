@@ -58,6 +58,17 @@ export function generateStaticParams() {
   return TIER_PAGES.map((t) => ({ slug: t.slug }));
 }
 
+/** TASK-393 (§8.7, R1 of the block-968,133 amendment) — TIER_ADDONS stays
+ *  plain data in tiers-content.ts; this is the ONE filter that keeps the
+ *  Large Sums entry off the add-ons strip while `features.largeSums` is
+ *  false. Pure + exported so the gate is pinned without a full page
+ *  render (tests/feature-switches.test.ts, the same idiom as
+ *  tierJoinedBanner below). ON restores it in one line — the array
+ *  itself never loses the entry. */
+export function visibleTierAddons(largeSums: boolean): typeof TIER_ADDONS {
+  return largeSums ? TIER_ADDONS : TIER_ADDONS.filter((a) => a.itemId !== "large-sums");
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -132,7 +143,7 @@ export default async function TierPage({
     itemLive(page.oneTime?.itemId),
     itemLive(upgrade?.slug),
     Promise.all(TIER_PAGES.filter((p) => p.slug !== page.slug).map(async (p) => ((await itemLive(p.slug)) ? p : null))),
-    Promise.all(TIER_ADDONS.map(async (a) => {
+    Promise.all(visibleTierAddons(switches.features.largeSums).map(async (a) => {
       const item = await getItem(a.itemId).catch(() => null);
       if (item?.status !== "live") return null;
       const eff = item.sale ?? item.price;
