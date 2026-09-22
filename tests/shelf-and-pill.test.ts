@@ -11,12 +11,22 @@ import path from "path";
  * re-typed copies), plain node:fs, synchronous, no cascade evaluator.
  *
  * AMENDMENT R4 (block 968,146, after Astra's plan review) gives the four
- * pins their exact lexical contracts, adopted verbatim here:
+ * pins their exact lexical contracts, adopted verbatim here. AMENDMENT 2
+ * (same block, the Admiral's ruling on Number One's walk — Go-Live Sheet
+ * card b5) SUPERSEDES pin (a) only: the flex/flex-wrap recipe is OUT,
+ * replaced by a two-column grid that puts the pill UNDER the title on
+ * every row, glyph always beside the title, all seven pills the same
+ * size. Pins (b)-(d) are unchanged by AMENDMENT 2.
  *   (a) after stripping CSS comments, the base `.roomrow{…}` declaration
- *       block in house.css contains `flex-wrap:wrap` (CSS whitespace
- *       allowed) — a SOURCE pin only. It proves nothing about rendered
- *       containment; that walk (390 / ~760 / desktop, both themes) is
- *       Number One's, not this file's (R1).
+ *       block in house.css contains `display:grid` and
+ *       `grid-template-columns:auto 1fr`, and does NOT contain
+ *       `flex-wrap`; the base `.lockpill{…}` block contains
+ *       `grid-column:2`, a `min-width:`, and `text-align:center`, and
+ *       carries no `white-space` (394's pin, tests/package-names.test.ts:171-174,
+ *       stands) — a SOURCE pin only. It proves nothing about rendered
+ *       containment or the pills' actual equal width; that walk
+ *       (390 / ~760 / 1440, both themes) is Number One's, not this
+ *       file's (R1, AMENDMENT 2's own Walk paragraph).
  *   (b) the literal `room-card-name` occurs NOWHERE under src/, INCLUDING
  *       comments (R4) — reads src/ only, so this test file's own string
  *       (it lives under tests/, outside the scanned tree) never
@@ -51,12 +61,24 @@ function stripCssComments(css: string): string {
   return css.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "));
 }
 
-describe("TASK-404 (a) — .roomrow wraps: the base rule carries flex-wrap:wrap", () => {
-  it("after stripping CSS comments, house.css's base .roomrow{…} block contains flex-wrap:wrap", () => {
+describe("TASK-404 (a) — AMENDMENT 2: .roomrow is a two-column grid (pill under title), .lockpill is uniform", () => {
+  it("after stripping CSS comments, house.css's base .roomrow{…} block is a two-column grid and carries no flex-wrap", () => {
     const css = stripCssComments(read("src/app/house.css"));
     const rule = css.match(/\.roomrow\{([^}]*)\}/)?.[0] ?? "";
     expect(rule, ".roomrow rule not found in house.css").not.toBe("");
-    expect(rule).toMatch(/flex-wrap:\s*wrap/);
+    expect(rule).toMatch(/display:\s*grid/);
+    expect(rule).toMatch(/grid-template-columns:\s*auto\s+1fr/);
+    expect(rule).not.toMatch(/flex-wrap/);
+  });
+
+  it("after stripping CSS comments, house.css's base .lockpill{…} block carries grid-column:2, a min-width and text-align:center, and no white-space", () => {
+    const css = stripCssComments(read("src/app/house.css"));
+    const rule = css.match(/\.lockpill\{([^}]*)\}/)?.[0] ?? "";
+    expect(rule, ".lockpill rule not found in house.css").not.toBe("");
+    expect(rule).toMatch(/grid-column:\s*2/);
+    expect(rule).toMatch(/min-width:/);
+    expect(rule).toMatch(/text-align:\s*center/);
+    expect(rule).not.toMatch(/white-space/);
   });
 });
 
