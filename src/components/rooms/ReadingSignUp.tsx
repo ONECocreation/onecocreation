@@ -66,7 +66,7 @@ import {
 export const OUTCOME_COPY: Record<ReadingTagOutcome, string> = {
   joined: "You're on the list for the reading.",
   already: "You're already in.",
-  unsubscribed: "You've unsubscribed from our list — this can't quietly re-add you.",
+  unsubscribed: "You unsubscribed earlier, so this can't quietly add you back.",
 };
 
 const GENERIC_ERROR = "Something went sideways — please try again.";
@@ -125,7 +125,7 @@ export function ReadingSignUpCard({
     return (
       <Card>
         <div className="center kit-stack">
-          <p className="kit-h2">The weekly reading.</p>
+          <p className="kit-h2">Hold your seat.</p>
           <p>{OUTCOME_COPY[submit.outcome]}</p>
         </div>
       </Card>
@@ -136,7 +136,7 @@ export function ReadingSignUpCard({
     return (
       <Card>
         <div className="center kit-stack">
-          <p className="kit-h2">The weekly reading.</p>
+          <p className="kit-h2">Hold your seat.</p>
           <Button onClick={() => submitEmail(memberEmail)} disabled={submit.kind === "pending"} sm>
             {submit.kind === "pending" ? "Counting you in…" : "Count me in for the weekly reading"}
           </Button>
@@ -158,7 +158,7 @@ export function ReadingSignUpCard({
           submitEmail(email);
         }}
       >
-        <p className="kit-h2">The weekly reading.</p>
+        <p className="kit-h2">Hold your seat.</p>
         <Field
           id="reading-sign-up-email"
           label="Email"
