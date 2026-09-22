@@ -17,6 +17,12 @@ export interface SubscriberRecord {
   /** doctrine: paying members are opted in by default, off switch in profile */
   optedOut?: boolean;
   npub?: string;
+  /** TASK-388: additive tags beside `source` — a record can carry more
+   *  than one door's mark (e.g. joined by "footer", later tagged
+   *  "reading") without rewriting the door it first arrived through.
+   *  `listSubscribers`/`subscriberSegments` still read `source` only; a
+   *  tag-aware reader is a later lane's own hand-off (Ground). */
+  tags?: string[];
 }
 
 const INDEX = "mail:subscribers";
@@ -71,6 +77,58 @@ export async function addSubscriber(
   await kv(["SET", recKey(email), JSON.stringify(rec)]);
   await kv(["SADD", INDEX, rec.email]);
   return { added: true, already: false };
+}
+
+/**
+ * TASK-388 — the reading sign-up's own narrow seam: additive TAGGING,
+ * proven necessary because `addSubscriber` cannot express it (Ground,
+ * `tests/subscribers-source.test.ts`'s own proof that a re-join keeps the
+ * FIRST door's source, never rewrites it — so calling bare `addSubscriber`
+ * for an already-subscribed record silently drops the "reading" mark).
+ *
+ * Three honest outcomes, never a fourth silent one:
+ *  - "joined"       — a brand-new record (seeded with source "reading" AND
+ *                      tags:["reading"]) OR an existing, not-opted-out
+ *                      record that didn't carry the tag yet (merged in;
+ *                      source/optedOut/npub/joinedAtMs byte-identical).
+ *  - "already"      — an existing record that already carries the tag —
+ *                      no write.
+ *  - "unsubscribed" — an existing record with `optedOut: true`. NO write,
+ *                      NO silent resubscribe: opting out is a stated
+ *                      preference (Builder must NOT) and stays preserved
+ *                      — unlike `addSubscriber`'s own re-join path, which
+ *                      clears a prior opt-out. The card built on this
+ *                      outcome tells the soul plainly, rather than
+ *                      claiming "you're in."
+ *
+ * `listSubscribers`/`subscriberSegments` are UNCHANGED by this lane — they
+ * still read `source` only; a tag-aware reader is TASK-389's own hand-off.
+ */
+export async function addReadingTag(
+  email: string,
+): Promise<{ outcome: "joined" | "already" | "unsubscribed" }> {
+  const key = recKey(email);
+  const existing = await kv(["GET", key]);
+
+  if (!existing) {
+    const rec: SubscriberRecord = {
+      email: email.toLowerCase(),
+      joinedAtMs: Date.now(),
+      source: "reading",
+      tags: ["reading"],
+    };
+    await kv(["SET", key, JSON.stringify(rec)]);
+    await kv(["SADD", INDEX, rec.email]);
+    return { outcome: "joined" };
+  }
+
+  const prior = JSON.parse(existing as string) as SubscriberRecord;
+  if (prior.optedOut) return { outcome: "unsubscribed" }; // preserved, never cleared here
+  if (prior.tags?.includes("reading")) return { outcome: "already" };
+
+  const next: SubscriberRecord = { ...prior, tags: [...(prior.tags ?? []), "reading"] };
+  await kv(["SET", key, JSON.stringify(next)]);
+  return { outcome: "joined" };
 }
 
 export async function removeSubscriber(email: string): Promise<void> {
