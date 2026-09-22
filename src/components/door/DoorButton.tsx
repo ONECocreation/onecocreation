@@ -75,7 +75,9 @@ export default function DoorButton() {
   const proof = session ? proofFor(session.space) : null;
 
   /* the one nav-dropdown recipe — poured from the --pop-* jug, same as
-     .nav-sub; the sheet and the menu drink from it alike */
+     .nav-sub; the sheet and the menu drink from it alike, via house.css's
+     .door-anchor/.door-pop rules (T-386 moved the position half there so
+     the phone breakpoint can re-anchor it) */
   return (
     <div ref={ref} className="door-anchor">
       {!name ? (

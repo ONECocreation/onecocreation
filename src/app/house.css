@@ -695,7 +695,8 @@ html,body{overflow-x:clip}
   .door-pop{right:10px}
   /* TASK-386, Astra's review, RULED: the member menu carries its own
      SECOND overflow (Ground, part A) — the full {name} plus the menu
-     rows inherit white-space:nowrap from .nav-tail (house.css:683) and
+     rows inherit white-space:nowrap from the unscoped .nav-tail rule
+     further down this file, and
      the menu wrapper has no max-width at all, so one long unbroken name
      can push role="menu" wider than the phone. Menu-only, phone-only —
      the sign-in sheet never mounts this second class. */
