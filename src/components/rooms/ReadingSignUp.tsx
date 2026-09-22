@@ -35,6 +35,15 @@ import {
  * down from `ReadingNotice`'s own already-computed `NoticeState` (What
  * this lane is NOT).
  *
+ * Every `Button` below carries `sm` — `SignInCard.tsx`'s own send-back
+ * note (TASK-356) measured `kit-btn-main`'s unmodified size (`kit.css`'s
+ * fixed 1.5rem/40px-padding/nowrap law, R-071) clipping at 390px even for
+ * "EMAIL ME A CODE" (16 characters); this block's longest label, "Count me
+ * in for the weekly reading" (34 characters), would clip harder still.
+ * `kit.css` itself is READ-ONLY for this lane, so `sm` — composing onto
+ * `kit-btn-main` by design (kit.css's own doc comment) — is the same fix
+ * that lane already proved, not a new one.
+ *
  * TWO components, on purpose: `ReadingSignUp` (default) calls the real
  * `useMemberSession()` hook, so `<ReadingSignUp>` is what `ReadingNotice`
  * mounts. `ReadingSignUpCard` (named) is the pure presentation over an
@@ -128,7 +137,7 @@ export function ReadingSignUpCard({
       <Card>
         <div className="center kit-stack">
           <p className="kit-h2">The weekly reading.</p>
-          <Button onClick={() => submitEmail(memberEmail)} disabled={submit.kind === "pending"}>
+          <Button onClick={() => submitEmail(memberEmail)} disabled={submit.kind === "pending"} sm>
             {submit.kind === "pending" ? "Counting you in…" : "Count me in for the weekly reading"}
           </Button>
           {submit.kind === "error" && <p className="kit-field-error">{submit.message}</p>}
@@ -159,7 +168,7 @@ export function ReadingSignUpCard({
           onChange={(e) => setEmail(e.target.value)}
           error={submit.kind === "error" ? submit.message : undefined}
         />
-        <Button type="submit" disabled={submit.kind === "pending"}>
+        <Button type="submit" disabled={submit.kind === "pending"} sm>
           {submit.kind === "pending"
             ? "Joining…"
             : kind === "member-key"
