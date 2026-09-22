@@ -97,6 +97,10 @@ export const SITE_SUBS = [
      no public surface yet (the notice is T-382, held on the mockup nod),
      but the source lives here so Love can set it ahead of that lane. */
   { key: "reading", href: "/a/site/reading", label: "The weekly reading" },
+  /* TASK-387 (block 968,088+): hide the chat fully for a room, or flip it
+     live mid-session — the saved default IS the session switch (Named
+     decision A). */
+  { key: "chat", href: "/a/site/chat", label: "Room chat" },
   /* TASK-330 (0018.06.27 a₿): Brand drops off the top-level rail and
      folds in here as a fifth sub-row — its own route (/a/brand) and
      houseOnly filtering are untouched (it's still a real CONSOLE_ROOMS

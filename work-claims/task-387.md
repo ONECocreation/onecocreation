@@ -38,13 +38,12 @@ region, the `cl-grid-stage--no-chat` modifier class), `src/components/rooms/Less
 (the `chatHidden` prop, the two conditional `RoomView` mounts), `src/components/rooms/
 classroom.css` (one additive modifier rule, `.cl-grid-stage--no-chat`).
 
-## Seams
-
-`tests/site-room-accordion.test.ts` — not owned above, but Build 4's one new `SITE_SUBS` row
-breaks its pinned exact-array assertion by construction (it lists every row, in order). Minimal
-diff only: one new row in the pinned array (`["chat", "/a/site/chat", "Room chat"]`, between
-`reading` and `brand`, matching `SITE_SUBS`'s real order) and one `siteSubForPath("/a/site/chat")`
-assertion alongside its siblings. Nothing else in that file changes.
+Seam, named here (Build 4 makes it unavoidable, minimal diff only): `tests/site-room-accordion.test.ts`
+— not owned above until this line, but Build 4's one new `SITE_SUBS` row breaks its pinned
+exact-array assertion by construction (it lists every row, in order). Diff: one new row in the
+pinned array (`["chat", "/a/site/chat", "Room chat"]`, between `reading` and `brand`, matching
+`SITE_SUBS`'s real order) and one `siteSubForPath("/a/site/chat")` assertion alongside its
+siblings. Nothing else in that file changes.
 
 ## READ-ONLY and FORBIDDEN
 
