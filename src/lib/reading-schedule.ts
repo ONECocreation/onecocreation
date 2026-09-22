@@ -189,3 +189,98 @@ export function nextReading(
   // `null` rather than an `as`-cast past a loop that "can't" fall through.
   return null;
 }
+
+/**
+ * Every occurrence whose START instant lies in `[fromMs, toMs)` (TASK-385,
+ * the calendar mark) — a calendar pill belongs to the day a reading
+ * STARTS, never to a second day it runs into (a reading that starts
+ * 11:30 PM UTC and runs an hour is Wednesday's pill only), exactly how the
+ * booking pills already match (`MemberCalendar.tsx`'s
+ * `b.startUtc.slice(0,10) === cell.civilKey`).
+ *
+ * Mirrors `nextReading`'s own civil-date walk: anchor the first civil date
+ * via `zonedDateParts(new Date(fromMs), tz).date` and the last via
+ * `zonedDateParts(new Date(toMs), tz).date`, then step whole civil dates in
+ * `schedule.tz` from the first through the last, inclusive — never a
+ * `now + n × 86_400_000` INSTANT walk (a fixed-millisecond step can skip or
+ * repeat a local date beside a clock change). No look-back is needed for
+ * start-within semantics: a start at or after `fromMs` can never fall on an
+ * earlier civil date, in the schedule's own zone, than `fromMs` itself.
+ *
+ * `[]` — never a thrown error, never an invented occurrence — for: a
+ * non-finite `fromMs`/`toMs`, an empty or inverted range (`toMs <= fromMs`),
+ * a range longer than 366 days (this lane's callers ask for one day; an
+ * unbounded walk is a bug, not a feature), an invalid schedule, or
+ * `on: false`. Mirrors `nextReading`'s own `null`-for-honest-absence
+ * convention.
+ *
+ * FINITE IS NOT THE SAME AS VALID (Astra's plan review, block 968,061):
+ * `Number.isFinite(fromMs)` alone doesn't guarantee `new Date(fromMs)` is a
+ * real instant — `fromMs = 1e16` is finite (well under `Number.MAX_VALUE`)
+ * but sits outside the ECMAScript Date range (±8,640,000,000,000,000ms from
+ * epoch), so `new Date(1e16).getTime()` is `NaN`, and handing an Invalid
+ * Date to `zonedDateParts` (which formats it with `Intl.DateTimeFormat`)
+ * throws a `RangeError`, not an honest `[]` — both constructed anchor dates
+ * are therefore validated explicitly before either ever reaches
+ * `zonedDateParts`. The same guard applies inside the loop to every
+ * `wallClockToUtc(...)` result — belt and braces for a derived y/m/d near
+ * the walk's own edges, even though the bounded walk (a day at a time,
+ * capped at 366 days) makes that unreachable today.
+ *
+ * Deliberately DROPS `nextReading`'s `phase` field — phase is "relative to
+ * now," meaningless for a batch range query; a caller that needs it can
+ * compare `startsAtMs` to `Date.now()` itself. Does not touch `nextReading`,
+ * `validateReadingSchedule`, `DEFAULT_READING_SCHEDULE`, or
+ * `ReadingSchedule` — purely additive.
+ */
+export function readingOccurrencesBetween(
+  schedule: ReadingSchedule,
+  fromMs: number,
+  toMs: number,
+): { startsAtMs: number; endsAtMs: number }[] {
+  if (!Number.isFinite(fromMs) || !Number.isFinite(toMs) || toMs <= fromMs) return [];
+  if (toMs - fromMs > 366 * 86_400_000) return [];
+
+  // Invalid Date must never reach zonedDateParts (it throws a RangeError on
+  // one) — checked explicitly, because a finite ms value isn't always a
+  // real instant (see the docblock above).
+  const fromDate = new Date(fromMs);
+  const toDate = new Date(toMs);
+  if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) return [];
+
+  const checked = validateReadingSchedule(schedule);
+  if (!checked.ok) return [];
+  const { on, weekday, time, tz, durationMin } = checked.value;
+  if (!on) return [];
+  const [hh, mm] = time.split(":").map(Number);
+
+  // The first and last civil dates to walk, as the schedule's OWN zone sees
+  // fromMs/toMs — the same technique nextReading uses to read "today."
+  const { date: fromDateStr } = zonedDateParts(fromDate, tz);
+  const { date: toDateStr } = zonedDateParts(toDate, tz);
+  const [fy, fm, fd] = fromDateStr.split("-").map(Number);
+  const [ty, tm, td] = toDateStr.split("-").map(Number);
+  const firstDayMs = Date.UTC(fy, fm - 1, fd);
+  const lastDayMs = Date.UTC(ty, tm - 1, td);
+
+  const occurrences: { startsAtMs: number; endsAtMs: number }[] = [];
+  for (let dayMs = firstDayMs; dayMs <= lastDayMs; dayMs += 86_400_000) {
+    // Step the CALENDAR date itself, same normalization trick as
+    // nextReading's own loop.
+    const probe = new Date(dayMs);
+    if (probe.getUTCDay() !== weekday) continue;
+    const startDate = wallClockToUtc(
+      probe.getUTCFullYear(),
+      probe.getUTCMonth() + 1,
+      probe.getUTCDate(),
+      hh,
+      mm,
+      tz,
+    );
+    const startsAtMs = startDate.getTime();
+    if (Number.isNaN(startsAtMs)) continue; // belt and braces — see the docblock
+    if (startsAtMs < fromMs || startsAtMs >= toMs) continue;
+    occurrences.push({ startsAtMs, endsAtMs: startsAtMs + durationMin * 60_000 });
+  }
+  return occurrences;
+}
