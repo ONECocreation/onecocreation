@@ -30,21 +30,27 @@ CircleView/MemberCalendar wiring), extended `tests/reading-schedule.test.ts` (ne
 `work-claims/task-385.md` (this file, first commit).
 
 Additive, narrowly: `src/lib/reading-schedule.ts` (the one new `readingOccurrencesBetween`
-export only — every existing export byte-identical), `src/components/rooms/CircleView.tsx`
-(new import lines, the `useReadingSchedule()` call, and the one changed `marks` line at the
-render site — `buildPublicMarks`'s own function body and the `<WeekRibbon>`/`<BftMonthGrid>`
-JSX tags' prop lists stay byte-identical beyond those import lines), `src/components/me/
-MemberCalendar.tsx` (new import lines, the `useReadingSchedule()` call, and the one changed
-`marks` line — `buildBookingMarks`'s own function body stays byte-identical beyond those
-import lines).
+export only — every existing export byte-identical).
+
+Additive, narrowly: `src/components/rooms/CircleView.tsx` (new import lines, the
+`useReadingSchedule()` call, and the one changed `marks` line at the render site —
+`buildPublicMarks`'s own function body and the `<WeekRibbon>`/`<BftMonthGrid>` JSX tags'
+prop lists stay byte-identical beyond those import lines).
+
+Additive, narrowly: `src/components/me/MemberCalendar.tsx` (new import lines, the
+`useReadingSchedule()` call, and the one changed `marks` line — `buildBookingMarks`'s own
+function body stays byte-identical beyond those import lines).
 
 ## READ-ONLY and FORBIDDEN (per brief)
 
-READ-ONLY: `src/lib/booking-time.ts`, `src/lib/site-config.ts`, `src/app/api/admin/site/
-route.ts`, `src/lib/calendar-view.ts`, `src/lib/live.ts`, `src/components/calendar/
-BftMonthGrid.tsx`/`WeekRibbon.tsx`/`DayCell.tsx`/`CalendarPrefs.tsx`/`CalendarOptions.tsx`/
-`calendar-view.css`/`index.ts`, `src/components/rooms/VantageSwitcher.tsx`/`vantage.ts`,
-`src/app/me/calendar/page.tsx`, `src/components/me/MeSwitch.tsx`, `src/app/me/page.tsx`.
+READ-ONLY: `src/lib/booking-time.ts`, `src/lib/site-config.ts`,
+`src/app/api/admin/site/route.ts`, `src/lib/calendar-view.ts`, `src/lib/live.ts`,
+`src/components/calendar/BftMonthGrid.tsx`, `src/components/calendar/WeekRibbon.tsx`,
+`src/components/calendar/DayCell.tsx`, `src/components/calendar/CalendarPrefs.tsx`,
+`src/components/calendar/CalendarOptions.tsx`, `src/components/calendar/calendar-view.css`,
+`src/components/calendar/index.ts`, `src/components/rooms/VantageSwitcher.tsx`,
+`src/components/rooms/vantage.ts`, `src/app/me/calendar/page.tsx`,
+`src/components/me/MeSwitch.tsx`, `src/app/me/page.tsx`.
 
 FORBIDDEN: `src/components/rooms/ClassroomView.tsx`, `src/app/rooms/[slug]/page.tsx`
 (T-382's claimed files), `src/app/api/rooms/marks/route.ts` (T-364's conditional
