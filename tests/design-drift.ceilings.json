@@ -194,6 +194,21 @@
       "colours": 0,
       "styledButtons": 0
     },
+    "src/app/a/site/reading/ReadingScheduleCard.tsx": {
+      "styleBlocks": 3,
+      "colours": 0,
+      "styledButtons": 0
+    },
+    "src/app/a/site/reading/SiteReadingRoom.tsx": {
+      "styleBlocks": 3,
+      "colours": 0,
+      "styledButtons": 0
+    },
+    "src/app/a/site/reading/page.tsx": {
+      "styleBlocks": 0,
+      "colours": 0,
+      "styledButtons": 0
+    },
     "src/app/a/spaces/page.tsx": {
       "styleBlocks": 0,
       "colours": 0,
@@ -1085,7 +1100,7 @@
       "styledButtons": 0
     },
     "src/components/door/DoorButton.tsx": {
-      "styleBlocks": 10,
+      "styleBlocks": 9,
       "colours": 6,
       "styledButtons": 0
     },
@@ -1172,6 +1187,11 @@
     "src/components/rooms/PackageRoomsCard.tsx": {
       "styleBlocks": 12,
       "colours": 4,
+      "styledButtons": 0
+    },
+    "src/components/rooms/ReadingNotice.tsx": {
+      "styleBlocks": 0,
+      "colours": 0,
       "styledButtons": 0
     },
     "src/components/rooms/RoomPresence.tsx": {
