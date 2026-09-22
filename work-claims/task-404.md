@@ -33,12 +33,50 @@ A/B/C/D stand:**
 - **R5** — OWNS widened: `house.css:848-851` (the orphan comment leaves with its two rules — four
   lines out, not two); reflected above.
 
+**AMENDMENT 2 (block 968,146, the Admiral's ruling on Number One's walk — Go-Live Sheet card b5,
+his comment on the desktop after-image: "this one is the best version, let's make the pills the
+same size though") — SUPERSEDES decision A, the FORBIDDEN line on `.lockpill`, and pin (a):**
+- **The look, ruled (not a lean):** the pill sits UNDER the title on every row at every width
+  (a one-line title, the pill on its own line right-pulled below it); the glyph stays beside the
+  title, never alone on a line; all seven pills render the SAME size.
+- **The recipe replaces `flex-wrap:wrap` outright.** `house.css:368` `.roomrow` becomes a
+  two-column grid: `display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;
+  text-align:left` — `padding:10px 0`, `border-bottom:1px solid rgba(139,118,196,.3)`,
+  `color:var(--ink-body)` all stay; `flex-wrap:wrap` (this lane's own AMENDMENT-1 addition) comes
+  back OUT; the base `display:flex` becomes `display:grid`. The glyph `<span>` auto-places at
+  (1,1); the bare title text (anonymous grid item) auto-places at (1,2) and wraps inside its own
+  column; the pill is given `grid-column:2`, landing it at (2,2) by auto-placement, where its own
+  existing `margin-left:auto` right-pulls it inside the cell. `text-align:left` keeps the title
+  flush after the glyph (the card's own centred text would otherwise centre the grid's contents).
+- **Uniform pills, `house.css:371` `.lockpill` (previously FORBIDDEN, now ruled):** gains
+  `grid-column:2` (inert outside a grid context) + `min-width` (the widest label's rendered
+  width, rounded up) + `text-align:center`. No `white-space` (394's pin `tests/package-names.test.ts:171-174`
+  stands); the `.card .nowrap` utility and the row markup (`sections.tsx`) stay untouched; no
+  media query.
+- **Pin (a), re-pinned (SUPERSEDING the AMENDMENT-1 text):** after stripping CSS comments, the
+  `.roomrow{…}` block contains `display:grid` AND `grid-template-columns:auto 1fr` AND does NOT
+  contain `flex-wrap`; the `.lockpill{…}` block contains `grid-column:2` AND `min-width:` AND
+  `text-align:center` AND carries no `white-space`. Pins (b)–(d) unchanged.
+- **Min-width value:** chosen by reasoning from source + the 394 walk's own measurement, not a
+  fresh live measurement this pass (both sanctioned by AMENDMENT 2's own text — "measure … if you
+  can … or reason from the 394 walk's 120 px"). Only four distinct pill-label strings exist
+  site-wide (`src/lib/entitlement.ts` TIERS: "Weekly Intuitive" / "Observer" / "Evening Star",
+  plus `sections.tsx:439`'s `label()` special case "All members" for tier "all") — "Weekly
+  Intuitive" is the longest by character count (16 vs. 12 / 11 / 8) and is the exact string the
+  394 walk measured at 120 px rendered, on this same `.lockpill` font-size/padding recipe
+  (untouched by this lane). Picked **128px** — the brief's own example value, ≥120px with an 8px
+  margin for rendering variance. Named in SUMMARY with this same reasoning.
+
 ## OWNS (nothing else) — widened by AMENDMENT R2/R5 (block 968,146, folded before any source edit)
 
 - `work-claims/task-404.md` (NEW, this file)
-- `src/app/house.css` — `:368` one declaration (`flex-wrap:wrap` added to `.roomrow`); `:848-851`
-  FOUR lines out (R5: the two-line "signed-in soul's name" comment leaves WITH the two
-  `.room-card-name` rules it documents — no orphan comment left behind) — nothing else
+- `src/app/house.css` — `:368` the `.roomrow` rule (AMENDMENT 2 — a two-column grid recipe,
+  `flex-wrap:wrap` OUT, replaced by `display:grid;grid-template-columns:auto 1fr;text-align:left`;
+  `align-items:center`/`gap:10px`/`padding:10px 0`/`border-bottom:…`/`color:…` stay); `:371` the
+  `.lockpill` rule (AMENDMENT 2 — gains `grid-column:2` + `min-width:128px` + `text-align:center`
+  only; every existing declaration stays, no `white-space` added); `:848-851` FOUR lines out (R5:
+  the two-line "signed-in soul's name" comment leaves WITH the two `.room-card-name` rules it
+  documents — no orphan comment left behind) — nothing else in `house.css`
 - `src/app/cartridge.css` — comments ONLY, FIVE sites, no value moves anywhere: `:102` and `:116`
   (the two stale "never theme-flips" tails reworded, decision C); `:425` (R2 — one clause
   re-trued: "and the sky light overrides out-specify the repaint" was false); the "THE FOUR
@@ -48,9 +86,11 @@ A/B/C/D stand:**
   which never wins there). The four sky rules `:467-470` stay byte-identical (R3 — 396's pin
   covers two of the four, `sky-night` + `sky-warm`, not all four; the retirement stays closed
   regardless of that correction)
-- `tests/shelf-and-pill.test.ts` (NEW) — four source pins (a)–(d), R4's lexical contracts:
-  (b) and (c) count comments too (no tombstone comment under `src/` naming the retired class);
-  (d) is scoped to the THE FOUR SKIES docblock only, not a global count
+- `tests/shelf-and-pill.test.ts` (NEW) — four source pins (a)–(d), R4's lexical contracts, pin (a)
+  RE-PINNED by AMENDMENT 2 (`.roomrow` carries `display:grid` + `grid-template-columns:auto 1fr`,
+  no `flex-wrap`; `.lockpill` carries `grid-column:2` + `min-width:` + `text-align:center`, no
+  `white-space`); (b) and (c) count comments too (no tombstone comment under `src/` naming the
+  retired class); (d) is scoped to the THE FOUR SKIES docblock only, not a global count
 
 ## READ-ONLY and FORBIDDEN
 
@@ -61,9 +101,13 @@ a new file, not an extension of this one), `tests/keep-dark-bands.test.ts`, `tes
 (401's absence-pins — not consumers, left untouched), `tests/light-mode-photos.test.ts` (396's
 untouched-rules pin), every other file.
 
-FORBIDDEN: touching `.lockpill` or the `.card .nowrap` utility; any value change in either
-sheet; retiring anything beyond the four named lines (`house.css:848-851`); a phone media
-query restacking title over pill; any civil-date stamp (block heights only); `DESIGN_DRIFT_WRITE`
+FORBIDDEN: touching the `.card .nowrap` utility; touching `.lockpill` beyond AMENDMENT 2's three
+named additions (`grid-column:2`, `min-width:128px`, `text-align:center`) — no `white-space`, no
+change to its existing `margin-left`/`font-size`/`text-transform`/`color`/`background`/
+`border-radius`/`padding`/`font-weight`; any value change in `cartridge.css`; retiring anything
+beyond the four named lines (`house.css:848-851`); a phone media query restacking title over
+pill; a markup change to `sections.tsx`'s row loops; any civil-date stamp (block heights only);
+`DESIGN_DRIFT_WRITE`
 (this lane's only new file is a `.test.ts` — the design-drift ratchet never records it, and both
 edited stylesheets are comment/declaration-only, so no ceiling should move); a tombstone comment
 under `src/` naming the retired `room-card-name` class (R4 — the retirement note lives only in
@@ -73,14 +117,19 @@ containment is Number One's walk, not this builder's claim.
 
 ## Decisions as ruled (Number One, at cut, block 968,146)
 
-- **A — TAKEN as leaned, rendering promise re-worded by R1.** `.roomrow{flex-wrap:wrap}` (one
-  declaration); the pill keeps `margin-left:auto`; no media query. `.roomrow` holds THREE flex
-  items (the glyph span, the bare title text, the pill) — not a glyph+title unit and a pill; the
-  row may break between any of them, the title may wrap internally, and a pill alone on its own
-  line is right-aligned by its existing `margin-left:auto`. The rejected recipe (a ≤390px
-  breakpoint that stacks title over pill) is out. Containment (`scrollWidth <= clientWidth`) is
-  Number One's walk to verify, not a claim made here; a bad glyph/title/pill grouping, if seen,
-  is reported under A in SUMMARY, never fixed with new markup/style/breakpoint.
+- **A — SUPERSEDED by AMENDMENT 2: RULED by the Admiral directly (not a lean), after his own walk.**
+  The flex/`flex-wrap:wrap` recipe (AMENDMENT 1) is OUT. `.roomrow` (`:368`) is now a two-column
+  CSS grid — `display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;
+  text-align:left`, existing `padding`/`border-bottom`/`color` unchanged. The glyph auto-places
+  at (1,1), the bare title text at (1,2) and wraps inside its own column, and `.lockpill`
+  (`:371`) is given `grid-column:2` so auto-placement lands it at (2,2) — its own
+  `margin-left:auto` right-pulls it inside that cell, putting the pill UNDER the title on every
+  row at every width, the glyph always beside the title. `.lockpill` also gains `min-width:128px`
+  (reasoning below) + `text-align:center` so all seven pills render the same size; no
+  `white-space` (394's pin stands). No media query, no markup change. This is the Admiral's own
+  picked look (Go-Live Sheet card b5, the desktop after-image) — not a claim this builder is
+  making about containment elsewhere; Number One's re-walk confirms `scrollWidth == clientWidth`
+  at 390/760/1440 and that all seven pill widths match.
 - **B — TAKEN.** The pins live in a NEW file, `tests/shelf-and-pill.test.ts`, not appended to
   398's `tests/grey-paint-family.test.ts` — a different fix family, its own file history.
 - **C — TAKEN.** "Always night" stays for the dropdown (`:102`'s `--pop-bg` family is still
@@ -113,4 +162,7 @@ Ground truth as of block 968,143 (K100 Ask 1, first cut, drafter Ms. Kimi, re-gr
 re-grepped again on this tip, every anchor held; A/B/C taken as leaned, D ruled: comment, not
 retire). This claim written at block 968,146; AMENDMENT R1–R5 (same block, after Astra's plan
 review) folded into this same claim, before any source edit, by editing this file and
-re-committing it ahead of the `house.css`/`cartridge.css`/test changes.
+re-committing it ahead of the `house.css`/`cartridge.css`/test changes. AMENDMENT 2 (same block,
+the Admiral's ruling on Number One's walk, superseding decision A / the `.lockpill` FORBIDDEN
+line / pin (a)) folded the same way, in its own commit, before the `.roomrow`/`.lockpill` grid
+edit and the re-pinned test.
