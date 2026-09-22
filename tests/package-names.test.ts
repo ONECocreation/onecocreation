@@ -27,6 +27,15 @@ import { isolateCwd } from "./helpers/isolate-cwd";
  *     the six seed lines' "· Package A/B/C" tails now read the same three
  *     real names.
  *
+ * Amendment R4 (Number One's walk of the first gated build, block 968,140):
+ * the two-word names ("Weekly Intuitive", "Evening Star") wrapped INSIDE
+ * the pill on a tight .roomrow. Fix rides an EXISTING house.css utility
+ * (`.card .nowrap{white-space:nowrap}`, :213) — the two lockpill spans
+ * gained a second class, `nowrap`, no CSS edited. Pinned below: the render
+ * suite's class-list pin follows the new className, plus a read-only pin
+ * that the utility still exists in house.css (a file this lane never
+ * writes to — another live lane owns it).
+ *
  * A wide grep stands as its own test: no "Package A/B/C" string survives in
  * src/ outside this lane's own claim/tests (Ground's own grep, at cut: the
  * ONLY two sources were sections.tsx's generator and these six seed lines).
@@ -141,7 +150,8 @@ describe("the home shelf, rendered — the real Classes() component (feature-swi
   it("every room row still wraps its label in the SAME .lockpill span — no structural change", async () => {
     const html = await renderClasses();
     // ROOMS (matrix-rooms.ts): 3 "class" rooms + 4 "community" rooms = 7 rows, 7 pills.
-    expect(html.match(/class="lockpill"/g)?.length).toBe(7);
+    expect(html.match(/class="lockpill"/g)).toBeNull(); // the bare class alone no longer appears
+    expect(html.match(/class="lockpill nowrap"/g)?.length).toBe(7);
   });
 
   it("R1 (amendment): the pills are labels, not links — the section's only anchor is the /classes door", async () => {
@@ -149,5 +159,18 @@ describe("the home shelf, rendered — the real Classes() component (feature-swi
     const anchors = html.match(/<a /g) ?? [];
     expect(anchors.length).toBe(1); // "Enter your rooms" — the lockpills carry no href at all
     expect(html).toContain('href="/classes"');
+  });
+});
+
+describe("R4 (Number One's walk, block 968,140) — the pill never wraps", () => {
+  it('house.css still carries the .card .nowrap utility this fix rides (read-only evidence — never edited here)', async () => {
+    const css = await read("src/app/house.css");
+    expect(css).toContain(".card .nowrap{white-space:nowrap}");
+  });
+
+  it(".lockpill itself still carries no white-space rule — the utility class is load-bearing, not redundant", async () => {
+    const css = await read("src/app/house.css");
+    const lockpillRule = css.match(/\.lockpill\{[^}]*\}/)?.[0] ?? "";
+    expect(lockpillRule).not.toContain("white-space");
   });
 });

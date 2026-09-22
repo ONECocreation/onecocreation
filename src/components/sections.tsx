@@ -461,7 +461,7 @@ export async function Classes() {
               {classes.map((r) => (
                 <div className="roomrow" key={r.id}>
                   <span aria-hidden>✦</span> {r.title}
-                  <span className="lockpill">{label(r.minTier as string)}</span>
+                  <span className="lockpill nowrap">{label(r.minTier as string)}</span>
                 </div>
               ))}
             </div></div>
@@ -472,7 +472,7 @@ export async function Classes() {
               {community.map((r) => (
                 <div className="roomrow" key={r.id}>
                   <span aria-hidden>♡</span> {r.title}
-                  <span className="lockpill">{label(r.minTier as string)}</span>
+                  <span className="lockpill nowrap">{label(r.minTier as string)}</span>
                 </div>
               ))}
             </div></div>
