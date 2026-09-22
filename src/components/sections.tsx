@@ -439,7 +439,7 @@ export async function Classes() {
   if (!switches.features.community && !switches.features.classes) return null;
   const classes = ROOMS.filter((r) => r.kind === "class");
   const community = ROOMS.filter((r) => r.kind === "community");
-  const label = (min: string) => (min === "all" ? "All members" : `Package ${min}`);
+  const label = (min: string) => (min === "all" ? "All members" : TIERS[min as Tier].name);
   return (
     <section id="classes">
       <div className="wrap">
