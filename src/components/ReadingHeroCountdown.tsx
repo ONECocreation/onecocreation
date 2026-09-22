@@ -28,8 +28,8 @@ import type { ReadingSchedule } from "@/lib/reading-schedule";
  *
  * Two variants render from the SAME state, never a page-local
  * reimplementation of what a state means: `hero` is the page's one-line
- * date line ("Wednesday · 1:11 PM MDT · live online"; off → "Stay tuned,
- * with love."; window → "Starting soon." — decision B); `card` is the
+ * date line (weekday · clock time · zone abbreviation · "live online"; off
+ * → "Stay tuned, with love."; window → "Starting soon." — decision B); `card` is the
  * "Next reading." card's own body (kit-stack, the same off/window/
  * upcoming/soon words `ReadingNotice.tsx` renders) — a second mount of the
  * same schedule and the same four states, elsewhere on the page.

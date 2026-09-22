@@ -122,10 +122,10 @@ export default async function ReadingPage() {
         </section>
 
         {/* WHAT YOU WILL EXPERIENCE (item 5) — the recurrence item is
-            DERIVED from the schedule's own weekday (never the mock's
-            literal "Every week"); derive-or-dash when off (no next
-            occurrence to name a weekday from). The other three are the
-            mock's own words, unchanged. */}
+            DERIVED from the schedule's own weekday (never the mock's own
+            hard-coded recurrence phrasing); derive-or-dash when off (no
+            next occurrence to name a weekday from). The other three are
+            the mock's own words, unchanged. */}
         <section className="wrap kitx-flow">
           <h2 className="kit-h2">What you will experience</h2>
           <ul className="feat">
