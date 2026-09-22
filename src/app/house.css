@@ -661,6 +661,7 @@ html,body{overflow-x:clip}
 .door-pop{position:absolute;top:calc(100% + 10px);right:0;
   background:var(--pop-bg);border:1.5px solid var(--pop-edge);border-radius:16px;
   box-shadow:var(--pop-shadow);z-index:var(--z-sheet,60)}
+.door-pop--sheet{width:min(360px,calc(100vw - 20px))}
 
 @media(max-width:1000px){
   /* ONE row on phones (mobile menu1.png fix): logo left, then
@@ -693,6 +694,11 @@ html,body{overflow-x:clip}
      no horizontal padding of its own), then a real gutter. */
   .door-anchor{position:static}
   .door-pop{right:10px}
+  /* TASK-386, Number One's Chrome walk (320-375 wide, a real 15px
+     scrollbar): 100vw counts a classic desktop scrollbar's own width;
+     the containing block's % does not (measured) — so both new widths
+     below ride % here, not vw. */
+  .door-pop--sheet{width:min(360px,calc(100% - 20px))}
   /* TASK-386, Astra's review, RULED: the member menu carries its own
      SECOND overflow (Ground, part A) — the full {name} plus the menu
      rows inherit white-space:nowrap from the unscoped .nav-tail rule
@@ -700,7 +706,7 @@ html,body{overflow-x:clip}
      the menu wrapper has no max-width at all, so one long unbroken name
      can push role="menu" wider than the phone. Menu-only, phone-only —
      the sign-in sheet never mounts this second class. */
-  .door-pop--menu{max-width:calc(100vw - 20px);white-space:normal;overflow-wrap:anywhere}
+  .door-pop--menu{max-width:calc(100% - 20px);white-space:normal;overflow-wrap:anywhere}
   .nav-items.is-open{display:flex}
   .nav-item .nav-link{display:block;width:100%;text-align:left;padding:10px 18px}
   .nav-sub{position:static;border:none;box-shadow:none;background:transparent;padding:0 0 4px 14px;min-width:0}

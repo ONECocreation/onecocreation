@@ -126,7 +126,7 @@ export default function DoorButton() {
           (the email verifies before the name is claimed) must NOT unmount
           the sheet from under a new soul */}
       {open === "sheet" && (
-        <div className="door-pop" style={{ width: "min(360px, calc(100vw - 20px))", padding: 10 }}>
+        <div className="door-pop door-pop--sheet" style={{ padding: 10 }}>
           <DoorSheet
             mount="sheet"
             onIn={(n) => { lastKnownBy = n; setKnownBy(n); }}
