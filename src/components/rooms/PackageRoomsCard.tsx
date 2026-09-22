@@ -26,7 +26,7 @@ import type { RoomPackage } from "@/lib/matrix-rooms";
  * stacked top-to-bottom, the same width, the same order on every card:
  * signed in, the ENTER/SEE door alone; signed out, the sign-in door in
  * its place. TASK-401 (block 968,141) took the who-you-are row back out
- * — it repeated "you're in as <name>" on every card; the shelf's own
+ * — it named the visitor's handle on every card; the shelf's own
  * foot note (RoomsShelf.tsx) already names the signed-in account once,
  * below the cards, with the fuller truth (the full Matrix id and whose
  * server it lives on) — this card says it not at all now. The ENTER door

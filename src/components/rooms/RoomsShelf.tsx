@@ -74,9 +74,9 @@ export default function RoomsShelf() {
             } as React.CSSProperties}>
             <div style={{ maxWidth: 440, margin: "0 auto" }}>
               {/* TASK-401 (block 968,141): the name reads ONCE per surface,
-                  not on every card. The per-card "you're in as <name>" line
-                  came out of PackageRoomsCard.tsx (it used to repeat once
-                  per package); on /classes the once is the foot note below,
+                  not on every card. The per-card who's-signed-in line came
+                  out of PackageRoomsCard.tsx (it used to repeat once per
+                  package); on /classes the once is the foot note below,
                   which already names the signed-in account with the fuller
                   truth (the full Matrix id and whose server it lives on). */}
               <PackageRoomsCard pkg={p} signedIn={feed.signedIn} />
