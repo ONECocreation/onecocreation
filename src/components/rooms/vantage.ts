@@ -1,6 +1,7 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 import { opensOnStage } from "@/lib/reading-room";
 
 /**
@@ -170,15 +171,34 @@ const store = createVisitStore({
 });
 
 /** Reads the member's vantage choice + a setter. Standalone — no Provider
- *  needed, matching `useCalendarPrefs`'s own provider-less fallback shape. */
+ *  needed, matching `useCalendarPrefs`'s own provider-less fallback shape.
+ *
+ *  T-384: `stored` still comes from `readVantage`/`readServerVantage`
+ *  (untouched) rather than calling `store.resolve(pathname)` directly —
+ *  deliberately. `store.resolve` reads the injected `storage.get()`
+ *  synchronously, and calling that straight from render (outside
+ *  `useSyncExternalStore`) would read the REAL localStorage on the
+ *  client's first hydration pass while the server rendered with none at
+ *  all — exactly the hydration-mismatch risk `useSyncExternalStore`'s
+ *  separate server/client snapshot pair exists to prevent. `store.resolve`
+ *  is exactly what the tests exercise directly; production reaches the
+ *  same, provably-identical answer through the hydration-safe path. */
 export function useRoomVantage(): [RoomVantage, (next: RoomVantage) => void] {
-  const vantage = useSyncExternalStore(subscribe, readVantage, readServerVantage);
+  const pathname = usePathname() ?? ""; // the NavMenu.tsx:239 idiom
+  const stored = useSyncExternalStore(subscribe, readVantage, readServerVantage);
+  const pinned = useSyncExternalStore(subscribe, store.snapshot, () => null); // SSR/first hydration: never pinned
+  const vantage = vantageFor({ pathname, stored, pinned });
+
+  useEffect(() => {
+    store.arrive(pathname);
+    return () => {
+      store.depart(pathname);
+      notify();
+    };
+  }, [pathname]);
+
   function setVantage(next: RoomVantage) {
-    try {
-      localStorage.setItem(VANTAGE_KEY, next);
-    } catch {
-      /* private mode */
-    }
+    store.pick(pathname, next);
     notify();
   }
   return [vantage, setVantage];

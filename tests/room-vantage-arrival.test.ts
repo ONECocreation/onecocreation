@@ -1,4 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
+import { promises as fs } from "fs";
+import path from "path";
 import type { StorageLike } from "@/components/rooms/vantage";
 
 /**
@@ -23,6 +25,7 @@ import type { StorageLike } from "@/components/rooms/vantage";
 
 const READING_PATH = "/rooms/heart-field"; // READING_ROOM_PATH's own value (tests/read-with-love-letter.test.ts:132)
 const OTHER_PATH = "/rooms/clair-senses";
+const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
 
 describe('opensOnStage — the one predicate answering "is this the reading room"', () => {
   it("the exact reading-room path → true", async () => {
@@ -177,5 +180,33 @@ describe("createVisitStore — the pure, storage-injected controller behind useR
     store.resolve(READING_PATH);
     store.depart(READING_PATH);
     expect(set).not.toHaveBeenCalled();
+  });
+});
+
+describe("source pins — useRoomVantage's own wiring (vantage.ts)", () => {
+  it("imports usePathname from next/navigation and opensOnStage from reading-room.ts", async () => {
+    const src = await read("src/components/rooms/vantage.ts");
+    expect(src).toContain('import { usePathname } from "next/navigation"');
+    expect(src).toContain('import { opensOnStage } from "@/lib/reading-room"');
+  });
+
+  it("the effect arrives on mount; its cleanup departs, THEN notifies", async () => {
+    const src = await read("src/components/rooms/vantage.ts");
+    const arriveIdx = src.indexOf("store.arrive(pathname)");
+    const departIdx = src.indexOf("store.depart(pathname)");
+    const notifyAfterDepart = src.indexOf("notify()", departIdx);
+    expect(arriveIdx).toBeGreaterThan(-1);
+    expect(departIdx).toBeGreaterThan(arriveIdx);
+    expect(notifyAfterDepart).toBeGreaterThan(departIdx);
+  });
+
+  it("setVantage picks before it notifies", async () => {
+    const src = await read("src/components/rooms/vantage.ts");
+    const setVantageIdx = src.indexOf("function setVantage(");
+    const pickIdx = src.indexOf("store.pick(pathname, next)", setVantageIdx);
+    const notifyIdx = src.indexOf("notify()", pickIdx);
+    expect(setVantageIdx).toBeGreaterThan(-1);
+    expect(pickIdx).toBeGreaterThan(setVantageIdx);
+    expect(notifyIdx).toBeGreaterThan(pickIdx);
   });
 });
