@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { JAR_ITEMS } from "@/lib/jars";
 
 /**
  * Three jars, one gesture (the Admiral's design): tip Love, tip the house,
@@ -22,9 +23,9 @@ import Link from "next/link";
  * invoice modal are retired; the gift is ONE basket line carrying a
  * pay-what-you-can offer, settled by the standard checkout (a gift line is
  * sats-only by the basket's own offer law — honestly refused to cards).
- * JAR_ITEMS maps each jar key to its shelf item (AMENDMENT 1's derived
- * ids — the store desk derives the id from the title); the server faces
- * re-check those items are live before mounting a jar at all.
+ * The jar key → shelf item id map lives once in @/lib/jars (AMENDMENT 1's
+ * derived ids — the store desk derives the id from the title); the server
+ * faces re-check those items are live before mounting a jar at all.
  */
 export const JARS = [
   {
@@ -45,15 +46,6 @@ export const JARS = [
 ] as const;
 
 export type JarKey = (typeof JARS)[number]["key"];
-
-/** TASK-411 — the jar's shelf item (the receipt names the gift by the
- *  item's title). AMENDMENT 1's derived ids: the desk types the TITLE and
- *  api/admin/store/route.ts derives the id from it. */
-export const JAR_ITEMS: Record<JarKey, string> = {
-  love: "tip-love",
-  onecocreation: "tip-one-cocreation",
-  payforward: "gifts-of-gratitude",
-};
 
 const PRESETS = [2_100, 11_111, 111_111];
 

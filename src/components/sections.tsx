@@ -6,6 +6,7 @@ import { TIER_PAGES } from "@/lib/tiers-content";
 import { ROOMS, type MatrixRoom } from "@/lib/matrix";
 import { listServices } from "@/lib/booking";
 import { listItems, getItem } from "@/lib/store";
+import { JAR_ITEMS } from "@/lib/jars";
 import { getSiteConfig } from "@/lib/site-config";
 import { tierRailsOn } from "@/lib/tier-offer";
 import { jarsOpen, liveAdapter, ensureSquareVault } from "@/lib/payments";
@@ -540,21 +541,16 @@ export async function Affirmations() {
 }
 
 /* TASK-411 (block 968,170 a₿) — DERIVE-OR-DASH ON THE SHELF: a jar is
-   offered only while its store item is live. The key→itemId map rides here
-   (server) AND in TipJar.tsx's JAR_ITEMS (client, give()) because a server
-   page cannot call a client-module export (payments.ts:656's own note);
-   the lane's pin file keeps the client copy honest against the JARS words.
-   /support imports liveJarKeys too — the two faces can never disagree. */
-const JAR_SHELF: Record<JarKey, string> = {
-  love: "tip-love",
-  onecocreation: "tip-one-cocreation",
-  payforward: "gifts-of-gratitude",
-};
-
+   offered only while its store item is live. The key→itemId map lives
+   ONCE in @/lib/jars (a neutral module — a server page cannot call a
+   client-module export, payments.ts:656's own note), read by this gate
+   and by TipJar's give() alike; the lane's pin 4 pins that single source
+   against the JARS words. /support imports liveJarKeys too — the two
+   faces can never disagree. */
 export async function liveJarKeys(): Promise<JarKey[]> {
   const live = await Promise.all(
-    (Object.keys(JAR_SHELF) as JarKey[]).map(async (key) => {
-      const item = await getItem(JAR_SHELF[key]);
+    (Object.keys(JAR_ITEMS) as JarKey[]).map(async (key) => {
+      const item = await getItem(JAR_ITEMS[key]);
       return item?.status === "live" ? key : null;
     }),
   );

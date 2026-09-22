@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync } from "fs";
 import path from "path";
-import { JARS, JAR_ITEMS } from "@/components/TipJar";
+import { JARS } from "@/components/TipJar";
+import { JAR_ITEMS } from "@/lib/jars";
 
 /**
  * TASK-411 (block 968,170 a₿) — /support gifts become an order with a
@@ -20,8 +21,11 @@ import { JARS, JAR_ITEMS } from "@/components/TipJar";
  *     to the word only — drop the `⚡` assertion and let both kickers stay
  *     byte-identical.
  *  3. TipJar posts to /api/cart and never to /api/tip (source pin).
- *  4. The three jar itemIds appear in TipJar's map AND the titles match
- *     the JARS table's words — the receipt-naming truth (checkout's
+ *  4. The three jar itemIds live in ONE map — src/lib/jars.ts, the single
+ *     source BOTH consumers read (TipJar's give() client-side, sections'
+ *     liveJarKeys() server-side; fix round: slop finding 1 = security
+ *     finding 4, the map used to ride twice unpinned) — AND the titles
+ *     match the JARS table's words: the receipt-naming truth (checkout's
  *     basketDescription joins line titles; the jar item's title IS the
  *     gift's name on the receipt). AMENDMENT 1 (SUPERSEDING build 1's
  *     ids): the store desk has no id field and api/admin/store/route.ts:56
