@@ -18,19 +18,27 @@ import { ROOM_VANTAGE_SITE_DEFAULT } from "@/components/rooms/vantage";
  * TASK-183 (0018.06.18 a₿ · block 966,098) — THE /classes ROOM CARDS,
  * UNIFORM. The Admiral (0018.06.17): "the buttons are not even, this looks
  * like slop" — the law: buttons and doors HUG THE BOTTOM of every card,
- * stacked top-to-bottom, uniform across a row. These pin:
+ * stacked top-to-bottom, uniform across a row. TASK-401 (block 968,141):
+ * the per-card "you're in as <name>" line came back OUT — it repeated on
+ * every card; the shelf's own foot note names the signed-in account once,
+ * below the cards, with the fuller truth (the full Matrix id and whose
+ * server it lives on). These pin:
  *  1. CARD ORDER — Heart Field · Weekly Intuitive · Observer ·
  *     Evening Star (the shelf maps groupRoomsByPackage's order unchanged).
  *  2. THE DOOR COLUMN — every card ends in ONE `.room-card-doors` column;
- *     who-you-are first (the name line signed in, the sign-in door signed
- *     out), the enter/see door last; the column follows the rooms list.
+ *     signed in, the ENTER/SEE door alone; signed out, the sign-in door in
+ *     its place — the column follows the rooms list, nothing rides above
+ *     the door any more.
  *  3. THE STAGE HREF — "Enter the Heart Field" lands on
  *     /rooms/heart-field, and the bare room URL IS the Stage's address:
  *     ROOM_VANTAGE_SITE_DEFAULT is "stage" (T-149/T-174 made the Stage the
  *     gated door; no `?v=` param exists anywhere in the room route).
- *  4. THE NAME LINE — a fixture session ("love") paints "you're in as
- *     @love"; signed out, the sign-in door stands in its place. A feed
- *     that won't say the name paints nothing (derive-or-dash).
+ *  4. THE NAME READS ONCE — a signed-in card paints NO "in as" line and no
+ *     `.room-card-name` element, locked or open, any package. The `name`
+ *     prop is gone from PackageRoomsCard entirely (decision C) — nothing
+ *     is left to feed it. RoomsShelf's own wiring (read from its real
+ *     source, not assumed — Astra's R1) no longer threads a handle into
+ *     the card; its foot note stays the surface's one mention, unchanged.
  */
 
 /** the same mapping /api/matrix/rooms serves (route.ts), fixture-ized */
@@ -48,10 +56,10 @@ function feedRooms(signedIn: boolean, tier: Tier | null) {
 
 function render(
   pkg: RoomPackage<PackageRoomLine & { minTier: string }>,
-  opts: { signedIn: boolean; name?: string | null },
+  opts: { signedIn: boolean },
 ) {
   return renderToStaticMarkup(
-    createElement(PackageRoomsCard, { pkg, signedIn: opts.signedIn, name: opts.name ?? null }),
+    createElement(PackageRoomsCard, { pkg, signedIn: opts.signedIn }),
   );
 }
 
@@ -65,7 +73,7 @@ describe("the card order — Commons first, then the packages by tier", () => {
       "Evening Star",
     ]);
     /* the cards render in that exact order — the shelf maps the array as-is */
-    const html = pkgs.map((p) => render(p, { signedIn: true, name: "love" })).join("");
+    const html = pkgs.map((p) => render(p, { signedIn: true })).join("");
     const idx = pkgs.map((p) => html.indexOf(p.name));
     expect(idx.every((v) => v >= 0)).toBe(true);
     expect([...idx].sort((a, b) => a - b)).toEqual(idx); // strictly in package order
@@ -75,7 +83,7 @@ describe("the card order — Commons first, then the packages by tier", () => {
 describe("the Stage door — Enter the Heart Field", () => {
   it("the Heart Field's ENTER door names the room and lands on /rooms/heart-field", () => {
     const commons = groupRoomsByPackage(feedRooms(true, "C"))[0];
-    const html = render(commons, { signedIn: true, name: "love" });
+    const html = render(commons, { signedIn: true });
     expect(html).toContain("Enter the Heart Field");
     expect(html).toContain('href="/rooms/heart-field"');
   });
@@ -89,7 +97,7 @@ describe("the Stage door — Enter the Heart Field", () => {
   it("every open package's ENTER door lands on that package's first room", () => {
     const pkgs = groupRoomsByPackage(feedRooms(true, "C"));
     for (const p of pkgs) {
-      const html = render(p, { signedIn: true, name: "love" });
+      const html = render(p, { signedIn: true });
       expect(html).toContain(`href="/rooms/${p.primary.slug}"`);
     }
   });
@@ -99,7 +107,7 @@ describe("the door column — the doors hug the bottom, one column, one order", 
   it("every card ends in ONE .room-card-doors column, after the rooms list", () => {
     const pkgs = groupRoomsByPackage(feedRooms(true, "A")); // mixed open/locked
     for (const p of pkgs) {
-      const html = render(p, { signedIn: true, name: "love" });
+      const html = render(p, { signedIn: true });
       expect(html.match(/room-card-doors/g)).toHaveLength(1);
       expect(html.indexOf("room-card-doors")).toBeGreaterThan(html.indexOf("<ul")); // below the rooms
       /* the doors are the LAST thing in the card — nothing floats below them */
@@ -107,12 +115,15 @@ describe("the door column — the doors hug the bottom, one column, one order", 
     }
   });
 
-  it("signed in, the name line rides the TOP of the door column, the door below it", () => {
+  it("signed in, the ENTER door is the door column's first (and only) row — no who-you-are row precedes it", () => {
     const commons = groupRoomsByPackage(feedRooms(true, "C"))[0];
-    const html = render(commons, { signedIn: true, name: "love" });
+    const html = render(commons, { signedIn: true });
     const col = html.slice(html.indexOf("room-card-doors"));
-    expect(col.indexOf("you&#x27;re in as")).toBeGreaterThanOrEqual(0);
-    expect(col.indexOf("you&#x27;re in as")).toBeLessThan(col.indexOf("Enter the Heart Field"));
+    expect(col).not.toContain("room-card-name");
+    const firstTag = col.indexOf("<a");
+    expect(firstTag).toBeGreaterThan(-1);
+    // the FIRST anchor the column opens on is the ENTER link itself
+    expect(col.slice(firstTag, firstTag + 200)).toContain('href="/rooms/heart-field"');
   });
 
   it("signed out, the sign-in door stands FIRST, the See door below it — never the other way", () => {
@@ -135,40 +146,65 @@ describe("the door column — the doors hug the bottom, one column, one order", 
   });
 });
 
-describe("the name line — which name the visitor wears", () => {
-  it("a fixture session paints “you're in as @love” on every card", () => {
+describe("the name reads once — not on every card (TASK-401)", () => {
+  /* Astra's R1 (walk-968036/ASTRA-REVIEW-T401.md): PackageRoomsCard.tsx's
+     `name` prop is GONE (decision C) — a helper that simply stops passing
+     `name` would pass a zero-line check even on the UNTOUCHED card, since
+     the prop defaulted to null there too (a render alone never proved the
+     WIRING changed). The real signal is whether RoomsShelf still hands the
+     card a handle — read from its own source, not assumed. This test
+     fails on the untouched tree (RoomsShelf.tsx there still mounts
+     `name={feed.handle}`, four times) and passes once TASK-401 lands. */
+  it("RoomsShelf's real wiring never threads a handle into any of the four real cards; the foot note stays the one account mention", async () => {
+    const shelfSrc = await fs.readFile(
+      path.join(process.cwd(), "src/components/rooms/RoomsShelf.tsx"),
+      "utf8",
+    );
+
+    // the wiring itself: RoomsShelf's real <PackageRoomsCard ... /> mount,
+    // sliced from its own source — this is what actually painted the line
+    // on every card; it must carry no `name=` of any kind
+    const mountIdx = shelfSrc.indexOf("<PackageRoomsCard");
+    const mountEnd = shelfSrc.indexOf("/>", mountIdx);
+    expect(mountIdx, "RoomsShelf no longer mounts PackageRoomsCard where expected").toBeGreaterThan(-1);
+    const mount = shelfSrc.slice(mountIdx, mountEnd);
+    expect(mount).not.toMatch(/\bname=/);
+
+    // the render half: the four real packages (mixed open/locked — the old
+    // bug painted regardless of lock state), signed in, through the real
+    // card component — zero .room-card-name, zero "in as", for any of them
     const pkgs = groupRoomsByPackage(feedRooms(true, "A"));
-    for (const p of pkgs) {
-      const html = render(p, { signedIn: true, name: "love" });
-      expect(html).toContain("you&#x27;re in as");
-      expect(html).toContain("@love");
-    }
+    const cardsHtml = pkgs.map((p) => render(p, { signedIn: true })).join("");
+    expect(cardsHtml).not.toContain("in as");
+    expect((cardsHtml.match(/room-card-name/g) ?? []).length).toBe(0);
+
+    // the foot note — the surface's ONE mention — counted from the real
+    // file, not reconstructed: the account-id interpolation appears
+    // exactly once, carrying the fuller truth
+    const idHits = shelfSrc.match(/@\{feed\.handle\}:onecocreation\.com/g) ?? [];
+    expect(idHits).toHaveLength(1);
+    expect(shelfSrc).toContain("lives on Love");
   });
 
-  it("signed out paints NO name line — the sign-in door stands in its place", () => {
+  it("signed out, no name-adjacent line — the sign-in door stands in its place, unchanged", () => {
     const pkgs = groupRoomsByPackage(feedRooms(false, null));
     for (const p of pkgs) {
-      const html = render(p, { signedIn: false, name: "love" });
+      const html = render(p, { signedIn: false });
       expect(html).not.toContain("in as");
-      expect(html).not.toContain("@love");
+      expect(html).not.toContain("room-card-name");
       expect(html).toContain('href="/login"');
     }
   });
-
-  it("a feed that won't say the name paints nothing — derive-or-dash", () => {
-    const commons = groupRoomsByPackage(feedRooms(true, "C"))[0];
-    const html = render(commons, { signedIn: true, name: null });
-    expect(html).not.toContain("in as");
-  });
 });
 
-describe("source-level pins — the shelf threads the name; the CSS is the additive .room-card block", () => {
-  it("RoomsShelf hands the feed's handle to every card", async () => {
+describe("source-level pins — the shelf no longer threads the name; the CSS is the additive .room-card block", () => {
+  it("RoomsShelf does not hand a handle to the card any more, and still carries the foot note's account line", async () => {
     const src = await fs.readFile(
       path.join(process.cwd(), "src/components/rooms/RoomsShelf.tsx"),
       "utf8",
     );
-    expect(src).toContain("name={feed.handle}");
+    expect(src).not.toContain("name={feed.handle}");
+    expect(src).toContain("lives on Love");
   });
 
   it("house.css carries the .room-card contract — the fill, the bottom column, the full-width doors", async () => {
