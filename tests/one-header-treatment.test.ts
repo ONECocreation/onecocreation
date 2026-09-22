@@ -34,7 +34,7 @@ describe("TASK-216 — the nav header is already the ONE component (pinned, not 
     expect(src).toMatch(/export default function SiteHeader/);
   });
 
-  it("every PUBLIC page route imports SiteHeader — the console (/a) and the Style canvas (/style) wear it via their layouts instead; the three documented standalone couriers are the only true exceptions", async () => {
+  it("every PUBLIC page route imports SiteHeader — the console (/a) and the Style canvas (/style) wear it via their layouts instead; the four documented standalone couriers are the only true exceptions", async () => {
     const pages = await findPageFiles();
     /* TASK-327 (0018.06.26 a₿): /style is no longer a header exception —
        the shared header OWNS the route via src/app/style/layout.tsx
@@ -49,6 +49,8 @@ describe("TASK-216 — the nav header is already the ONE component (pinned, not 
       "src/app/login/signer-return/page.tsx",
       // the OBS transparent browser-source overlay — full-bleed, no chrome
       "src/app/studio/overlay/page.tsx",
+      // TASK-405: a pure 308 forward to /me?tab=calendar — it never returns JSX, no chrome by design
+      "src/app/me/calendar/page.tsx",
     ]);
     const checked: string[] = [];
     const missing: string[] = [];

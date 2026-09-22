@@ -25,6 +25,11 @@ the current address; Back does not replay tab clicks.
 - `src/app/me/calendar/page.tsx` — whole file becomes the forward (`permanentRedirect`)
 - `tests/door-machine.test.ts` (`:121-126`), `tests/her-words.test.ts` (`:79-84`),
   `tests/me-signed-in-tabs.test.ts` (`:61-65` + a NEW forward pin, per R5's full spec)
+- `tests/one-header-treatment.test.ts` — WIDENED at pickup by Number One (the builder's own
+  hand-back named this as a seam, not a fix): the `EXCLUDE_EXACT` allowlist gains
+  `src/app/me/calendar/page.tsx` with its reason (a bare 308 forward never returns JSX — the
+  same class as `login/signer-return`), and the it-title's courier count re-trues to four. One
+  entry + one word; the census itself is untouched.
 
 ## READ-ONLY (grounding, never edited)
 
