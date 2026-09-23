@@ -1,15 +1,15 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { TIERS, type Tier } from "@/lib/entitlement";
-import { roomGate } from "@/lib/room-access";
 import { TIER_PAGES } from "@/lib/tiers-content";
-import { ROOMS, type MatrixRoom } from "@/lib/matrix";
+import { ROOMS } from "@/lib/matrix";
 import { listServices } from "@/lib/booking";
 import { listItems, getItem } from "@/lib/store";
 import { JAR_ITEMS } from "@/lib/jars";
 import { getSiteConfig } from "@/lib/site-config";
 import { tierRailsOn } from "@/lib/tier-offer";
 import { jarsOpen, liveAdapter, ensureSquareVault } from "@/lib/payments";
+import { DEFAULT_READING_SCHEDULE, validateReadingSchedule, type ReadingSchedule } from "@/lib/reading-schedule";
 import SubscribeForm from "./SubscribeForm";
 import TipJar, { type JarKey } from "./TipJar";
 import WildDoors from "./WildDoors";
@@ -44,20 +44,26 @@ async function liveRails(): Promise<{ btc: boolean; card: boolean }> {
   return { btc: liveAdapter() !== null, card: liveAdapter("square") !== null };
 }
 
-/* TASK-178 (0018.06.18 a₿ · block 966098) — THE HERO'S SECOND DOOR: join the
-   weekly reading. DERIVED, never hardcoded: the room comes from the rooms
-   registry (derive-or-dash — no registry entry, NO door, never a fake link),
-   and the words follow the room's OWN tier — TIERS' name for it — so "free
-   for every member" is only ever said of a room whose door is open to every
-   member (the Weekly Reading is minTier B today → "with the Observer"). No
-   public calendar derives the next Weekly Reading, so the words carry the
-   room's standing cadence ("every week"). Pure + exported for
-   tests/join-the-reading.test.ts — the house pins the model, not the render
-   (same idiom as packageWaitlistProps below). */
+/* TASK-437 (block 968,221 a₿ — the Admiral, block 968,215: "send them to the
+   /reading") — THE HERO'S READING DOOR LEADS TO LOVE'S FREE READING. T-178's
+   door (below, retired) derived the PAID Chronicles room — the tier-B room
+   whose slug this lane never names again — and priced itself in the words
+   ("…with the Observer membership"); T-210 moved every other reading door
+   to the free room and this one was never moved. Now the door is ONE door
+   for EVERY visitor — guest, member, any tier — href "/reading", the free
+   reading's own page (T-391), which routes each visitor onward itself
+   (sign-in, or straight into the free room through reading-room.ts's
+   readingDoorHref). The words come from the LIVE schedule, never hardcoded:
+   the weekday and the time in the schedule's own zone, and that it is free.
+   No tier name, no price — the hero never names a package. DERIVE-OR-DASH:
+   schedule off (or invalid) → null → the {readingDoor && (…)} gate below
+   renders no door, no words, and no book picture (T-228). Pure + exported
+   for tests — the house pins the model, not the render (T-178's own idiom,
+   kept: the export name weeklyReadingDoor and its five citers stay). */
 export interface WeeklyReadingDoor {
-  /** the room's Stage — T-174's gate sorts the visitor from there */
+  /** the free reading's page — it sorts the visitor onward from there */
   href: string;
-  /** when it happens + whose key opens it, both derived */
+  /** when it happens (the schedule's own weekday, clock and zone) + free */
   words: string;
 }
 
@@ -67,47 +73,65 @@ export interface WeeklyReadingDoor {
  *  the package the soul holds (member-tier's tierForSubject), null when
  *  the vault says none. TASK-210 (0018.06.23 a₿, Love's 0018.06.18 call):
  *  "the home page weekly-reading door does not know the visitor is signed
- *  in" — it never asked. */
+ *  in" — it never asked. TASK-437 (block 968,221 a₿): the door no longer
+ *  needs the answer — it is /reading for every soul — but the read stays
+ *  (pinned, and T-438's hero will want it). */
 export interface VisitorSession {
   handle: string;
   space: string;
   tier?: Tier | null;
 }
 
-/**
- * The door, for THIS visitor. `visitor` undefined = the page didn't say
- * (the T-178 render, the Stage's bare address); null = a signed-out soul
- * (the door leads to the sign-in card with ?next= carried — the rooms
- * middleware would bounce them there anyway; the door now says so
- * upfront); a session = straight to the Stage, and when the soul's own
- * key opens the room the words say THAT instead of naming a package to
- * buy. The gate decision is roomGate's — the Stage's own — never a second
- * ladder invented here.
- */
-export function weeklyReadingDoor(
-  rooms: MatrixRoom[] = ROOMS,
-  visitor?: VisitorSession | null,
-): WeeklyReadingDoor | null {
-  const slugOf = (id: string) => id.slice(1, id.indexOf(":"));
-  const room = rooms.find((r) => slugOf(r.id) === "weekly-reading");
-  if (!room) return null;
-  const stage = `/rooms/${slugOf(room.id)}`;
-  const tierWords =
-    room.minTier === "all"
-      ? "Every week, live in Love's room — free for every member."
-      : `Every week, live in Love's room — with the ${TIERS[room.minTier].name} membership.`;
-  if (visitor === null) {
-    return { href: `/login?next=${encodeURIComponent(stage)}`, words: `${tierWords} Sign in and the room knows you.` };
-  }
-  if (visitor && roomGate(room.minTier, { signedIn: true, tier: visitor.tier ?? null }) === "open") {
-    const key = room.minTier === "all" ? "your membership" : `your ${TIERS[visitor.tier as Tier].name} key`;
-    return { href: stage, words: `Every week, live in Love's room — ${key} opens it.` };
-  }
-  return { href: stage, words: tierWords };
+/** The weekday's own name, derived the way /reading prints it (Intl's long
+ *  weekday, reading/page.tsx:42-44) but from the schedule's INDEX alone —
+ *  pure, no clock read: the epoch fell on a Thursday, so `(weekday - 4)`
+ *  days from it lands on a civil day carrying the schedule's weekday, and
+ *  UTC formatting reads its name back. */
+function weekdayName(weekday: number): string {
+  return new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: "UTC" })
+    .format(new Date((weekday - 4) * 86_400_000));
 }
 
-export function Hero({ session }: { session?: VisitorSession | null }) {
-  const readingDoor = weeklyReadingDoor(ROOMS, session);
+/** "1:11 PM" — schedule.time IS the wall clock in schedule.tz, so the words
+ *  are string-derived straight from it, never an Intl round-trip through an
+ *  instant (and never a DST question). */
+function clockWords(time: string): string {
+  const [hh, mm] = time.split(":");
+  const h = Number(hh);
+  return `${h % 12 || 12}:${mm} ${h < 12 ? "AM" : "PM"}`;
+}
+
+/** The zone in words — the house's one zone gets its friendly name (the
+ *  reading-letters.ts FRIENDLY_ZONE idiom: "America/Denver" → "Mountain");
+ *  any other zone prints its IANA name rather than a guessed abbreviation. */
+const FRIENDLY_ZONE: Record<string, string> = { "America/Denver": "Mountain" };
+
+/**
+ * The door, the SAME door for every visitor. The schedule is read once by
+ * the page (the /reading page's own idiom — the saved schedule, else the
+ * standing default) and threaded down as a plain prop; the words are
+ * derived from it whole, so Love retyping the day at /a/site/reading
+ * re-words the hero with no redeploy. `on: false` (or a schedule that
+ * fails its own validation) → null: no door, no words, never a fake link.
+ */
+export function weeklyReadingDoor(
+  schedule: ReadingSchedule = DEFAULT_READING_SCHEDULE,
+): WeeklyReadingDoor | null {
+  const checked = validateReadingSchedule(schedule);
+  if (!checked.ok || !checked.value.on) return null;
+  const s = checked.value;
+  return {
+    href: "/reading",
+    words: `Every ${weekdayName(s.weekday)} at ${clockWords(s.time)} ${FRIENDLY_ZONE[s.tz] ?? s.tz} — live with Love, free.`,
+  };
+}
+
+export function Hero({ reading = DEFAULT_READING_SCHEDULE }: { session?: VisitorSession | null; reading?: ReadingSchedule }) {
+  /* TASK-437: the page still threads the session prop (T-210's one read —
+     pinned, and T-438's coming "see her live" door will want it) — the
+     reading door itself no longer asks who is knocking: /reading sorts
+     that. The door now derives from the schedule prop alone. */
+  const readingDoor = weeklyReadingDoor(reading);
   return (
     <section className="hero keep-dark">{/* keep-dark: the design holds the dark hero in both
         themes — "light code draws in light against the void" (cartridge.css);
