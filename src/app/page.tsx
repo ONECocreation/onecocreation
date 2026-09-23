@@ -11,6 +11,7 @@ import PaletteVars from "@/components/PaletteVars";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
 import { getSiteConfig } from "@/lib/site-config";
+import { DEFAULT_READING_SCHEDULE } from "@/lib/reading-schedule";
 import { applyHomeSwitchesToPuck } from "@/lib/puck-seeds";
 import {
   Hero, About, Packages, Services, Classes, Affirmations, Donations, FreeMeditation, Contact,
@@ -36,6 +37,13 @@ export default async function Home() {
     ? { handle: active.handle, space: active.space, tier: await tierForSubject(`${active.handle}@${active.space}`) }
     : null;
 
+  /* TASK-437 (block 968,221 a₿ — the Admiral: "send them to the /reading")
+     — the hero door's words come from the LIVE reading schedule, the
+     /reading page's own idiom (reading/page.tsx): the saved schedule when
+     one is stored, the standing default otherwise. Read fresh per request
+     beside the session read; threaded to <Hero> on BOTH branches below. */
+  const reading = (await getSiteConfig()).reading ?? DEFAULT_READING_SCHEDULE;
+
   /* TASK-293 (0018.06.25 a₿ · block 967,144) — PUCK P4, mirroring
      /about-/retreats-/packages byte-for-byte: once the Admiral publishes
      the Puck rebuild (/style/home -> Publish to live), the live / serves
@@ -43,13 +51,13 @@ export default async function Home() {
      nothing changes for visitors until he chooses it.
 
      The hero keeps rendering from CODE on both branches — <Hero
-     session={session}/> carries the signed-in visitor's own weekly-reading
-     door (T-210), per-request per-soul state no static Puck doc can hold;
-     puck-seeds.ts's homeContent carries no Hero block for exactly this
-     reason. The memberships/classes-community/affirmations/services bands
-     follow the SAME site-config switches their sections.tsx twins read —
-     applyHomeSwitchesToPuck resolves them fresh every request, never
-     fossilised into the stored doc (puck-seeds.ts). */
+     session={session} reading={reading}/> carries the signed-in visitor
+     (T-210) and the live reading schedule (T-437) — per-request state no
+     static Puck doc can hold; puck-seeds.ts's homeContent carries no Hero
+     block for exactly this reason. The memberships/classes-community/
+     affirmations/services bands follow the SAME site-config switches their
+     sections.tsx twins read — applyHomeSwitchesToPuck resolves them fresh
+     every request, never fossilised into the stored doc (puck-seeds.ts). */
   const puck = await getPuckPage("home");
   if (puck) {
     const switches = await getSiteConfig();
@@ -59,7 +67,7 @@ export default async function Home() {
         <SiteHeader />
         <PaletteVars />
         <main>
-          <Hero session={session} />
+          <Hero session={session} reading={reading} />
           <Render config={config} data={data} />
         </main>
         <SiteFooter />
@@ -73,7 +81,7 @@ export default async function Home() {
     <>
       <SiteHeader />
       <main>
-        <Hero session={session} />
+        <Hero session={session} reading={reading} />
         <About />
         <Packages />
         <Classes />

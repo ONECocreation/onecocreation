@@ -12,11 +12,14 @@ import { renderToStaticMarkup } from "react-dom/server";
  *      rooms' Stage reads (member-auth over the raw header), asks the vault
  *      for the soul's package, and threads both to the hero (source pin —
  *      an async server component never renders in the node env).
- *   2. THE HERO DOOR FOLLOWS THE VISITOR — a known guest's door leads to
- *      the sign-in card with ?next= back to the Stage (the words say so);
- *      a member goes straight in; a member whose key opens the room is
- *      told THAT, never sold the package; the T-178 render (no visitor
- *      said) keeps the bare Stage.
+ *   2. THE HERO DOOR IS ONE DOOR FOR EVERY VISITOR (RE-TRUED by TASK-437,
+ *      block 968,221 a₿ — the Admiral: "send them to the /reading") — the
+ *      door no longer follows the visitor's tier: guest, member without a
+ *      package, and tiers A/B/C all get href "/reading" (Love's FREE
+ *      reading page, which routes each visitor onward itself), the words
+ *      come from the live schedule and say free, and nobody is sold a
+ *      package. The page still reads the session and threads it (pin 1) —
+ *      the door simply no longer needs it.
  *   3. ONE READING ROOM — the free reading's room derives ONCE
  *      (lib/reading-room.ts, T-174's minTier "all" rule) and the home card,
  *      the member menu's "The reading room" row and the nav's Heart Field
@@ -30,7 +33,6 @@ import { renderToStaticMarkup } from "react-dom/server";
  */
 
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
-const src = (html: string, needle: string) => html.indexOf(needle);
 
 describe("TASK-210 — the home page reads the session (source pin)", () => {
   it("page.tsx reads the RAW cookie header (never cookies() — it URL-encodes an email handle's @ and the token fails its own signature), parses it with member-auth, reads the tier, and hands the hero a known visitor (null for a guest)", async () => {
@@ -41,49 +43,55 @@ describe("TASK-210 — the home page reads the session (source pin)", () => {
     expect(page).toContain('from "@/lib/member-auth"');
     expect(page).toContain("sessionsFromCookieHeader(");
     expect(page).toContain("tierForSubject(");
-    expect(page).toContain("<Hero session={session} />");
+    expect(page).toContain("(await getSiteConfig()).reading ?? DEFAULT_READING_SCHEDULE"); // TASK-437: the hero door's words ride the live schedule
+    expect(page).toContain("<Hero session={session} reading={reading} />");
     expect(page).toMatch(/:\s*null;/); // a guest is a KNOWN null, never undefined
   });
 });
 
-describe("TASK-210 — the hero's reading door follows the visitor", () => {
-  it("a known guest's door leads to the sign-in card with ?next= back to the Stage, and the words say so", async () => {
+describe("TASK-437 — the hero's reading door is ONE door for every visitor", () => {
+  it("a known guest gets /reading — never the paid room, never a sign-in detour named on the door", async () => {
     const { weeklyReadingDoor } = await import("@/components/sections");
-    const door = weeklyReadingDoor(undefined, null)!;
-    expect(door.href).toBe(`/login?next=${encodeURIComponent("/rooms/weekly-reading")}`);
-    expect(door.words).toContain("Sign in and the room knows you");
-    expect(door.words).toContain("with the Observer"); // the tier words still ride — honest about the key
+    const door = weeklyReadingDoor()!;
+    expect(door.href).toBe("/reading"); // /reading itself carries the guest onward to sign-in (reading-room.ts)
+    expect(door.href).not.toContain("/login");
+    expect(door.href).not.toContain("/rooms/weekly-reading");
+    expect(door.words).toContain("free");
+    expect(door.words).not.toContain("with the Observer"); // no package is ever named on the hero
   });
 
-  it("a member goes straight to the Stage; without the room's key the words name the package", async () => {
-    const { weeklyReadingDoor } = await import("@/components/sections");
-    const door = weeklyReadingDoor(undefined, { handle: "firefly@example.com", space: "email", tier: null })!;
-    expect(door.href).toBe("/rooms/weekly-reading");
-    expect(door.words).toContain("with the Observer membership");
-    expect(door.words).not.toContain("Sign in");
-    // tier A holds no key to a tier-B room — the same ladder as the Stage's gate
-    expect(weeklyReadingDoor(undefined, { handle: "a", space: "email", tier: "A" })!.words).toContain("with the Observer");
-  });
-
-  it("a member whose key opens the room is told THAT — never sold the package (B and C both open a B room)", async () => {
-    const { weeklyReadingDoor } = await import("@/components/sections");
-    for (const tier of ["B", "C"] as const) {
-      const door = weeklyReadingDoor(undefined, { handle: "firefly@example.com", space: "email", tier })!;
-      expect(door.href).toBe("/rooms/weekly-reading");
-      expect(door.words).toContain("key opens it");
-      expect(door.words).not.toContain("with the Observer membership");
+  it("a member without a package and each tier A/B/C get the SAME door — the words never sell a package", async () => {
+    const { weeklyReadingDoor, Hero } = await import("@/components/sections");
+    const { DEFAULT_READING_SCHEDULE } = await import("@/lib/reading-schedule");
+    const door = weeklyReadingDoor(DEFAULT_READING_SCHEDULE)!;
+    for (const tier of [null, "A", "B", "C"] as const) {
+      const html = renderToStaticMarkup(
+        createElement(Hero, { session: { handle: "firefly@example.com", space: "email", tier } }),
+      );
+      expect(html).toContain('href="/reading"');
+      expect(html).toContain(door.words); // identical words for every visitor
+      expect(html).not.toContain("membership");
+      expect(html).not.toContain("key opens it"); // the retired tier-following words are gone
     }
   });
 
-  it("no visitor said (the T-178 render) → the bare Stage and the tier words, unchanged", async () => {
+  it("the words carry the live schedule's own day and clock — a fixture schedule proves they are derived", async () => {
+    const { weeklyReadingDoor } = await import("@/components/sections");
+    const door = weeklyReadingDoor({ on: true, weekday: 2, time: "09:45", tz: "America/Denver", durationMin: 45 })!;
+    expect(door.words).toContain("Tuesday");
+    expect(door.words).toContain("9:45 AM");
+    expect(door.words).not.toContain("Saturday");
+  });
+
+  it("schedule off → no door for anyone (derive-or-dash); the T-178 bare render keeps the standing door", async () => {
     const { weeklyReadingDoor, Hero } = await import("@/components/sections");
-    expect(weeklyReadingDoor()!.href).toBe("/rooms/weekly-reading");
+    const { DEFAULT_READING_SCHEDULE } = await import("@/lib/reading-schedule");
+    expect(weeklyReadingDoor({ ...DEFAULT_READING_SCHEDULE, on: false })).toBeNull();
+    const bare = renderToStaticMarkup(createElement(Hero));
+    expect(bare).toContain('href="/reading"'); // no visitor, no schedule said → the standing default
     const guest = renderToStaticMarkup(createElement(Hero, { session: null }));
-    expect(guest).toContain(`href="/login?next=${encodeURIComponent("/rooms/weekly-reading")}"`);
-    expect(guest).toContain("Sign in and the room knows you");
-    const member = renderToStaticMarkup(createElement(Hero, { session: { handle: "f", space: "email", tier: "B" } }));
-    expect(member).toContain('href="/rooms/weekly-reading"');
-    expect(src(member, "key opens it")).toBeGreaterThan(-1);
+    expect(guest).toContain('href="/reading"');
+    expect(guest).not.toContain("/rooms/weekly-reading");
   });
 });
 
