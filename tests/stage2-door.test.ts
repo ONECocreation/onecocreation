@@ -115,6 +115,20 @@ describe("JitsiRoom.tsx — read-only source pin (ruling 3): chat on, cameras an
   });
 });
 
+describe("globals.css — the .mgmt-body pill trap spares kit buttons (Amendment 2, A5)", () => {
+  const CSS = "src/app/globals.css";
+
+  it("the shell's button rule carries :not(.kit-btn) — kit buttons keep the kit's own look inside .mgmt-body", () => {
+    const css = read(CSS);
+    expect(css).toContain(".mgmt-body button:not(.kit-btn)");
+  });
+
+  it("no BARE .mgmt-body button rule survives — that was the pill trap (specificity 0,1,1 over the kit's 0,1,0)", () => {
+    const css = read(CSS);
+    expect(css).not.toMatch(/\.mgmt-body button\s*\{/);
+  });
+});
+
 describe("Stage2DoorBody — every decision, rendered pure", () => {
   it("hidden renders nothing", async () => {
     expect(await renderBody({ decision: "hidden" })).toBe("");
@@ -134,15 +148,24 @@ describe("Stage2DoorBody — every decision, rendered pure", () => {
     expect(html).not.toContain(encodeURIComponent("/rooms/"));
   });
 
-  it("package renders the packageDoorLine words and the 'See the Weekly Intuitive package' link to its own page", async () => {
+  it("package renders Stage 2's OWN line (Amendment 2, A8) and the link labelled exactly 'See the package' (A6) to the package's own page", async () => {
     const html = await renderBody({ decision: "package", pkg: { ...PKG, week: null } });
-    expect(html).toContain("This stage opens with the Weekly Intuitive package — and everything above it.");
-    expect(html).toContain("See the Weekly Intuitive package");
+    /* A8: the shared packageDoorLine reads wrong for Stage 2 — it is the
+       BOTTOM tier that opens Stage 2, and a one-week pass opens it too */
+    expect(html).toContain("Stage 2 comes with every membership, from Weekly Intuitive up.");
+    expect(html).not.toContain("and everything above it");
+    expect(html).not.toContain("one-week pass");
+    /* A6: the line above already names the package, so the label says
+       nothing twice — and it fits the kit's 320px box */
+    const link = html.match(/<a[^>]*>([^<]*)<\/a>/);
+    expect(link, "the package link not found").not.toBeNull();
+    expect(link![1]).toBe("See the package");
     expect(html).toContain('href="/packages/weekly-intuitive"');
   });
 
-  it("package with the week offer renders a kit button reading 'Try one week — $11' (Amendment A3)", async () => {
+  it("package with the week offer: the A8 line gains the one-week-pass clause, and a kit button reads 'Try one week — $11' (Amendment A3)", async () => {
     const html = await renderBody({ decision: "package", pkg: { ...PKG, week: WEEK } });
+    expect(html).toContain("Stage 2 comes with every membership, from Weekly Intuitive up — or with a one-week pass.");
     expect(html).toContain("Try one week — $11");
     const btn = html.match(/<button[^>]*>[^<]*Try one week[^<]*<\/button>/);
     expect(btn, "the Try-one-week button not found").not.toBeNull();
