@@ -120,17 +120,19 @@ const CHROME_BIN = "/usr/bin/chromium";
 
 const THEMES = ["dark", "dawn"];
 const AUTHS = ["operator", "signedout"];
-/* Markers are matched against a LOWERCASED haystack: innerText reflects
-   text-transform (the gate's h1 renders "OPERATOR SIGN-IN" under the
-   mgmt-title rule), so a case-sensitive match would lie. The gate marker is
-   the OperatorGate's h1 (src/components/OperatorGate.tsx); the 401 courtesy
-   is the policy's own second door — its _doc: "signedOut: gate = a
-   signed-out visitor meets the operator gate (OperatorGate or the API's
-   401 courtesy), never the room". The six client rooms (booking, letters,
-   letters/[key], money, people, store) carry no OperatorGate; their door
-   is the /api/admin/* 401 the room's data fetch meets (the page then shows
-   its reading… line, never the room). */
-const GATE_MARKER = "operator sign-in";
+/* R2: the OperatorGate is recognised by its DOM, never a body substring —
+   `main.mgmt-ground h1.mgmt-title` reading "Operator sign-in"
+   (src/components/OperatorGate.tsx:103 `<main className="mgmt-ground">`,
+   :109 `<h1 className="mgmt-title mb-4">Operator sign-in</h1>`). The API's
+   401 courtesy is the policy's second door, accepted ONLY on rows the
+   policy marks `gateDoor: "api-401"` (the six client rooms whose page.tsx
+   carries no OperatorGate). A signed-out gate cell fails on ANY redirect
+   hop — redirect-then-gate does not meet the gate. */
+const GATE_SELECTOR = "main.mgmt-ground h1.mgmt-title";
+const GATE_TITLE = "Operator sign-in";
+/* R3: the room's own denial words — an API's 401 courtesy surfacing in the
+   room's text means the operator's room never opened. */
+const DENIAL_WORDS = ["operator session required"];
 const ERROR_MARKERS = ["application error", "internal server error"];
 
 /* The dynamic-segment substitution table — the walker's OWN documented
@@ -357,6 +359,15 @@ function readPolicy() {
     if (row.alwaysRedirectTo !== undefined && typeof row.alwaysRedirectTo !== "string") {
       throw new Error(`console-matrix.cjs: ${row.route}: alwaysRedirectTo must be a path string`);
     }
+    /* gateDoor (R2): the API's 401 courtesy is the signed-out door ONLY on
+       rows the policy marks for it — every other signed-out row must show
+       the OperatorGate DOM. */
+    if (row.gateDoor !== undefined && row.gateDoor !== "api-401") {
+      throw new Error(`console-matrix.cjs: ${row.route}: unknown gateDoor value "${row.gateDoor}"`);
+    }
+    if (row.gateDoor !== undefined && row.alwaysRedirectTo !== undefined) {
+      throw new Error(`console-matrix.cjs: ${row.route}: gateDoor on an alwaysRedirectTo row is nonsense`);
+    }
     /* `source` is 416's per-row provenance — READ and ignored, never
        asserted (the Cut note's ruling). */
   }
@@ -364,11 +375,16 @@ function readPolicy() {
 }
 
 /* What this cell must do — the policy row read against this build's chrome
-   and this auth state. Nothing here comes from the tree. */
+   and this auth state. Nothing here comes from the tree. R2's order:
+   alwaysRedirectTo redirects under EVERY auth (it is unconditional); a
+   signedOut "gate" row owes the gate IN PLACE to a signed-out visitor —
+   even where the same row redirects the operator under the site chrome
+   (a redirect-then-gate does not meet the gate; the cell fails and the
+   RED is reported, never patched). */
 function expectationFor(row, chrome, auth) {
   if (row.alwaysRedirectTo) return { kind: "redirect", target: row.alwaysRedirectTo };
+  if (auth === "signedout") return { kind: "gate", door: row.gateDoor ?? "operator-gate" };
   if (chrome === "site" && row.siteChrome === "redirect") return { kind: "redirect", target: "/a" };
-  if (auth === "signedout") return { kind: "gate" };
   return { kind: "render" };
 }
 
@@ -378,19 +394,24 @@ function expectationFor(row, chrome, auth) {
    (scar.css), the DisplayFonts --font-retronoid registration and
    next/font's --font-press-start on <html>.
 
-   THE SCOPE RULING (this lane's named decision, REGISTER.md): §6's drift
-   locks guard THE CHROME — "SCAR furniture leaked onto her clone" means the
-   LCARS shell mounting under the artist's header/footer, a console face
+   THE SCOPE RULING (this lane's named decision, REGISTER.md; TAKEN and
+   HARDENED by Number One's R1 at block 968,203): §6's drift locks guard
+   THE CHROME — "SCAR furniture leaked onto her clone" means the LCARS
+   shell mounting under the artist's header/footer, a console face
    reaching the shell, a pixel face LOADING on her brand. The ROOMS are
    shared furniture by design (SiteConsoleShell.tsx: "Every ROOM is
-   untouched — same pages, same APIs") — BriefsPanel's reader drawer is
-   ScarConsole in BOTH chromes, BrandDesk's whole job is pouring the
-   cartridges' own display faces (the pacman twin's IS Press Start 2P). So:
-   assertions live OUTSIDE the room-content root (main.mgmt-body; the
-   gate's .mgmt-wrap) plus loaded faces page-wide; hits INSIDE room content
-   are reported as FINDING lines — the brief's rule that a surprise beyond
-   the policy is reported, never asserted by a second oracle. */
-function probesInPage() {
+   untouched — same pages, same APIs"). So: assertions live OUTSIDE the
+   room-content root (main.mgmt-body; the gate's .mgmt-wrap), plus loaded
+   faces page-wide — EXCEPT the SCAR IDENTITY nodes (.scar-brandline,
+   .scar-readout, .scar-crumb), which fail PAGE-WIDE under the site build
+   (R1: a SCAR shell nested inside the site room root is the leak §6
+   guards). Font faces and other SCAR furniture inside room content stay
+   FINDING lines (R1: /a/brand previews cartridge faces by design; the
+   brief's Named decision A — a surprise beyond the policy is reported,
+   never asserted by a second oracle). R3: the probes await
+   document.fonts.ready first, so the face census is settled. */
+async function probesInPage() {
+  await document.fonts.ready;
   const norm = (s) => (s || "").toLowerCase().replace(/["'\s]/g, "");
   const PIXEL = /retronoid|pressstart2p/;
   const consoleStack = getComputedStyle(document.documentElement).getPropertyValue("--font-console").trim();
@@ -399,9 +420,15 @@ function probesInPage() {
   const inRoom = (el) => !!(contentRoot && contentRoot.contains(el));
   const tag = (el) =>
     `${el.tagName.toLowerCase()}.${String(el.className).split(" ").filter(Boolean).slice(0, 2).join(".")}`.slice(0, 80);
+  /* R1: the SCAR identity nodes fail PAGE-WIDE — collected separately */
+  const identityHits = [];
+  for (const el of document.querySelectorAll(".scar-brandline, .scar-readout, .scar-crumb")) {
+    identityHits.push(tag(el));
+  }
   const scarShell = [];
   const scarRoom = [];
   for (const el of document.querySelectorAll('[class*="scar-"]')) {
+    if (el.matches(".scar-brandline, .scar-readout, .scar-crumb")) continue; // identity, above
     (inRoom(el) ? scarRoom : scarShell).push(tag(el));
   }
   const pixelShell = new Set();
@@ -424,6 +451,7 @@ function probesInPage() {
     }
   }
   return {
+    identityHits: identityHits.slice(0, 6),
     scarShell: scarShell.slice(0, 6),
     scarRoom: scarRoom.slice(0, 6),
     pixelShell: [...pixelShell].slice(0, 5),
@@ -438,6 +466,8 @@ function probesInPage() {
    FINDING lines on the run — named, never asserted. */
 function judgeProbes(probes, label, findings) {
   const bad = [];
+  if (probes.identityHits.length > 0)
+    bad.push(`scar identity node(s) under the site build (fail page-wide, R1): ${probes.identityHits.join(" | ")}`);
   if (probes.scarShell.length > 0) bad.push(`scar-* DOM node(s) in the site CHROME: ${probes.scarShell.join(" | ")}`);
   if (probes.pixelShell.length > 0) bad.push(`pixel/console display faces in the site CHROME's computed styles: ${probes.pixelShell.join(" | ")}`);
   if (probes.loadedFaces.length > 0) bad.push(`font faces LOADED on the site clone: ${probes.loadedFaces.join(" | ")}`);
@@ -465,6 +495,50 @@ async function setTheme(page, theme) {
 
 /* ── one cell ──────────────────────────────────────────────────────────── */
 
+/* R5: no request leaves the box — every page walks behind request
+   interception that aborts any http(s) request NOT to loopback; each abort
+   is a FINDING line with its URL. (Server-side isolation is the env pins +
+   the unshare wrapper in console-matrix.sh; this is the browser half.) */
+const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
+
+function armInterception(page, label, findings) {
+  page.on("request", (req) => {
+    try {
+      const u = new URL(req.url());
+      if ((u.protocol === "http:" || u.protocol === "https:") && !LOOPBACK_HOSTS.has(u.hostname)) {
+        if (findings.length < 50) findings.push(`off-box request aborted at ${label}: ${req.url().slice(0, 160)}`);
+        req.abort().catch(() => {});
+        return;
+      }
+    } catch {
+      /* an unparseable URL is not a request off the box */
+    }
+    req.continue().catch(() => {});
+  });
+}
+
+/* R3: the room root's text — site: `main.mgmt-body`; scar: `.scar-main`
+   minus the shell nodes (ConsoleShell.tsx renders children inside
+   .scar-main beside the scar-* topbar). */
+function roomRootTextInPage(chrome) {
+  if (chrome === "site") {
+    const el = document.querySelector("main.mgmt-body");
+    return el ? (el.textContent || "").trim() : "";
+  }
+  const root = document.querySelector(".scar-main");
+  if (!root) return "";
+  const clone = root.cloneNode(true);
+  for (const el of clone.querySelectorAll('[class*="scar-"]')) el.remove();
+  return (clone.textContent || "").trim();
+}
+
+/* R2: the OperatorGate by its DOM — main.mgmt-ground h1.mgmt-title reading
+   "Operator sign-in" (OperatorGate.tsx:103/:109), never a body substring. */
+function gateDomInPage() {
+  const el = document.querySelector("main.mgmt-ground h1.mgmt-title");
+  return el ? (el.textContent || "").trim() : null;
+}
+
 async function walkCell(ctx, base, row, url, chrome, theme, auth, cookie, findings) {
   const expect = expectationFor(row, chrome, auth);
   const expectLabel = expect.kind === "redirect" ? `redirect→${expect.target}` : expect.kind;
@@ -480,11 +554,16 @@ async function walkCell(ctx, base, row, url, chrome, theme, auth, cookie, findin
     ...(row.pending ? { pending: row.pending } : {}),
   };
   const label = `${row.route} · chrome=${chrome} · theme=${theme} · auth=${auth}`;
+  const baseOrigin = new URL(base).origin;
   let page;
   try {
     page = await ctx.newPage();
     page.setDefaultNavigationTimeout(30000);
+    await page.setRequestInterception(true);
+    armInterception(page, label, findings);
+    const pageErrors = [];
     page.on("pageerror", (err) => {
+      pageErrors.push(String(err).slice(0, 200));
       if (findings.length < 50) findings.push(`pageerror at ${label}: ${String(err).slice(0, 200)}`);
     });
     /* the localStorage half of the theme recipe BEFORE any app script runs
@@ -504,15 +583,18 @@ async function walkCell(ctx, base, row, url, chrome, theme, auth, cookie, findin
 
     const hops = [];
     let api401 = 0;
+    const sameOrigin500 = [];
     page.on("response", (r) => {
       try {
         const s = r.status();
-        const pathname = new URL(r.url()).pathname;
+        const u = new URL(r.url());
         /* the API's 401 courtesy — the policy's second signed-out door for
-           the client rooms (any /api/admin/* 401 this page met) */
-        if (s === 401 && pathname.startsWith("/api/admin/")) api401++;
+           gateDoor rows; a FAIL on render cells (R3) */
+        if (s === 401 && u.pathname.startsWith("/api/admin/")) api401++;
+        /* ANY same-origin ≥500, every resource type (R3) */
+        if (s >= 500 && u.origin === baseOrigin) sameOrigin500.push(`${s} ${u.pathname}`.slice(0, 120));
         if (r.request().resourceType() !== "document") return;
-        if (s >= 300 && s < 400) hops.push({ status: s, from: pathname, to: r.headers().location || "" });
+        if (s >= 300 && s < 400) hops.push({ status: s, from: u.pathname, to: r.headers().location || "" });
       } catch {
         /* a raced response — the goto result below is the authority */
       }
@@ -527,38 +609,63 @@ async function walkCell(ctx, base, row, url, chrome, theme, auth, cookie, findin
     const finalPath = new URL(page.url()).pathname;
     const text = await page.evaluate(() => document.body?.innerText || "").catch(() => "");
     const hay = text.toLowerCase();
-    const hasGate = hay.includes(GATE_MARKER);
+    const gateTitle = await page.evaluate(gateDomInPage).catch(() => null);
+    const hasGate = gateTitle === GATE_TITLE;
     const hasError = status === 500 || ERROR_MARKERS.some((m) => hay.includes(m));
+    const denial = DENIAL_WORDS.find((w) => hay.includes(w));
     const hopLabel = hops.length ? hops.map((h) => `${h.status} ${h.from}→${h.to}`).join("; ") : "no hops";
 
     const bad = [];
     if (expect.kind === "redirect") {
-      const firstTo = hops.length ? new URL(hops[0].to, base).pathname : null;
+      /* R6: the first hop is compared by ORIGIN AND pathname */
+      const first = hops.length ? new URL(hops[0].to, base) : null;
       if (!hops.length) bad.push(`expected redirect to ${expect.target}, got a render (HTTP ${status} at ${finalPath})`);
-      else if (firstTo !== expect.target) bad.push(`first hop landed on ${firstTo}, not ${expect.target} (${hopLabel})`);
+      else if (first.origin !== baseOrigin)
+        bad.push(`first hop left the origin — landed on ${first.origin}${first.pathname}, not ${expect.target} (${hopLabel})`);
+      else if (first.pathname !== expect.target)
+        bad.push(`first hop landed on ${first.pathname}, not ${expect.target} (${hopLabel})`);
       if (finalPath === url) bad.push(`never left ${url}`);
       if (status !== 200) bad.push(`landing answered HTTP ${status}`);
       if (hasError) bad.push("error boundary on the landing");
     } else if (expect.kind === "gate") {
+      /* R2: a signed-out gate cell fails on ANY redirect hop */
+      if (hops.length) bad.push(`signed-out met a redirect, not the gate (${hopLabel}) — redirect-then-gate does not meet the gate`);
       if (status !== 200) bad.push(`expected the gate (HTTP 200), got HTTP ${status}`);
       if (hasError) bad.push("error boundary / 500 instead of the gate");
-      /* the policy's two named doors: the OperatorGate, OR the API's 401
-         courtesy for the client rooms — either one is the gate met */
-      if (!hasGate && api401 === 0)
-        bad.push(`neither the OperatorGate ("${GATE_MARKER}") nor the API's 401 courtesy appeared — the signed-out door did not render`);
+      /* the policy's two named doors: the OperatorGate DOM on every row,
+         the API's 401 courtesy ONLY on gateDoor rows (R2) */
+      const doorOk = hasGate || (expect.door === "api-401" && api401 > 0);
+      if (!doorOk)
+        bad.push(
+          expect.door === "api-401"
+            ? `neither the OperatorGate DOM (${GATE_SELECTOR}) nor the API's 401 courtesy appeared — the signed-out door did not render`
+            : `no OperatorGate DOM (${GATE_SELECTOR} = "${GATE_TITLE}") — the signed-out door did not render`
+        );
       cell.gateMetBy = hasGate ? "operator-gate" : api401 > 0 ? `api-401-courtesy (${api401})` : "none";
     } else {
+      /* R3: render cells prove the ROOM, not a page */
       if (status !== 200) bad.push(`expected render (HTTP 200), got HTTP ${status}`);
       if (hasError) bad.push("error boundary / 500");
       if (hops.length) bad.push(`expected a render, got redirected (${hopLabel})`);
-      if (text.trim().length < 10) bad.push("empty page");
+      if (api401 > 0) bad.push(`${api401} /api/admin/* 401(s) under a valid operator cookie`);
+      if (denial) bad.push(`the room's own denial words on the page: "${denial}"`);
+      if (sameOrigin500.length) bad.push(`same-origin ≥500: ${sameOrigin500.slice(0, 3).join(" | ")}`);
+      if (pageErrors.length) bad.push(`pageerror: ${pageErrors[0]}`);
       if (hasGate) bad.push("the gate rendered under a valid operator cookie — the room never opened");
+      const roomText = await page.evaluate(roomRootTextInPage, chrome).catch(() => "");
+      if (roomText.length < 10) bad.push(`the room root holds ${roomText.length} character(s) of text — the room did not render`);
     }
 
     /* Astra §6 computed-style probes — the SITE build only, on every page
-       that actually rendered (render cells AND the signed-out gate). */
+       that actually rendered (render cells AND the signed-out gate). R3:
+       a probe evaluate that throws FAILS the cell — never skipped. */
     if (chrome === "site" && (expect.kind === "render" || expect.kind === "gate") && status === 200 && !hasError) {
-      const probes = await page.evaluate(probesInPage).catch(() => null);
+      let probes = null;
+      try {
+        probes = await page.evaluate(probesInPage);
+      } catch (err) {
+        bad.push(`the §6 probe evaluate threw: ${String(err).slice(0, 160)}`);
+      }
       if (probes) {
         cell.probes = probes;
         for (const b of judgeProbes(probes, label, findings)) bad.push(b);
@@ -633,7 +740,8 @@ async function clientNavStep(ctx, base, rows, chrome, cookie, findings) {
     if (finalPath !== to) bad.push(`after the click the URL is ${finalPath}, not ${to}`);
     if (hasError) bad.push("error boundary after client navigation");
     if (text.trim().length < 10) bad.push("empty page after client navigation");
-    if (hay.includes(GATE_MARKER)) bad.push("the gate rendered after client navigation with a valid operator cookie");
+    const navGate = await page.evaluate(gateDomInPage).catch(() => null);
+    if (navGate === GATE_TITLE) bad.push("the gate rendered after client navigation with a valid operator cookie");
     if (step.navigationKind !== "client") {
       /* a document reload is not the drift Astra §6 names, but the step was
          asked to exercise the CLIENT path — recorded as a finding, not a
@@ -773,8 +881,8 @@ const SELFTEST_ROWS = [
 ];
 
 const SELFTEST_ROOM =
-  "<!doctype html><html><body><main><h1>A room</h1><p>the room renders here, honestly and at length.</p></main></body></html>";
-const SELFTEST_GATE = `<!doctype html><html><body><main><h1>${GATE_MARKER}</h1><p>This area is for site operators.</p></main></body></html>`;
+  '<!doctype html><html><body><main class="mgmt-body"><h1>A room</h1><p>the room renders here, honestly and at length.</p></main></body></html>';
+const SELFTEST_GATE = `<!doctype html><html><body><main class="mgmt-ground"><h1 class="mgmt-title">${GATE_TITLE}</h1><p>This area is for site operators.</p></main></body></html>`;
 
 async function selftest(ports, outDir) {
   /* the scratch fixture server — deliberately wrong in three named ways */
