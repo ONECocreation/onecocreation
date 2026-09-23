@@ -109,6 +109,37 @@ done
 
 mkdir -p "$OUT"
 
+# ---- R5: no request leaves the box ----------------------------------------
+# The block height is read OUTSIDE the network namespace and handed in —
+# under unshare the beacon is unreachable by design (the walker prefers
+# OC_MATRIX_BLOCK_HEIGHT, else fetches itself).
+BLOCK_HEIGHT="$(curl -fsS --max-time 5 https://time.pacsarcade.org/height 2>/dev/null | sed -n 's/.*"height":\([0-9]*\).*/\1/p')"
+if [ -n "$BLOCK_HEIGHT" ]; then
+  export OC_MATRIX_BLOCK_HEIGHT="$BLOCK_HEIGHT"
+  echo "console-matrix.sh: block $BLOCK_HEIGHT (read outside the namespace)"
+fi
+
+# Preferred isolation is a network namespace: unshare --user --map-root-user
+# --net with loopback raised — every walker invocation (selftest and both
+# walks, with their KV/app/stub/chromium children) runs inside ONE namespace
+# where loopback is the whole world. When the kernel refuses it the walker
+# still runs behind browser request interception and loopback-pinned server
+# env, and the residue is printed, honestly.
+ISOLATION="interception+loopback-env"
+if unshare --user --map-root-user --net bash -c 'ip link set lo up' 2>/dev/null; then
+  ISOLATION="unshare-net"
+fi
+export OC_MATRIX_ISOLATION="$ISOLATION"
+if [ "$ISOLATION" = "unshare-net" ]; then
+  echo "console-matrix.sh: isolation: unshare-net (a network namespace — loopback is the whole world)"
+  run_walker() { unshare --user --map-root-user --net bash -c 'ip link set lo up 2>/dev/null; exec node "$@"' _ "$WALKER" "$@"; }
+else
+  echo "console-matrix.sh: WARNING the kernel refused unshare --net — isolation: interception+loopback-env;" >&2
+  echo "console-matrix.sh:   browser requests off the box are aborted (a FINDING each), but server-side code" >&2
+  echo "console-matrix.sh:   can still reach out past the env pins (the residue, named)" >&2
+  run_walker() { node "$WALKER" "$@"; }
+fi
+
 cleanup() {
   RC=$?
   for p in $APP_PORT $KV_PORT $SCRATCH_PORT; do
@@ -135,7 +166,7 @@ FINAL_RC=0
 
 # ---- the walker's own red-then-green, once per run ----------------------
 echo "console-matrix.sh: selftest (the walker against a deliberately wrong scratch server)"
-if ! node "$WALKER" --selftest --ports "$PORTS" --out "$OUT"; then
+if ! run_walker --selftest --ports "$PORTS" --out "$OUT"; then
   echo "console-matrix.sh: SELFTEST FAILED — the walker itself is suspect; refusing to trust a run" >&2
   exit 1
 fi
@@ -143,7 +174,7 @@ fi
 walk_chrome() {
   local chrome="$1"
   echo "console-matrix.sh: walking chrome=$chrome"
-  if ! node "$WALKER" --chrome "$chrome" --ports "$PORTS" --out "$OUT"; then
+  if ! run_walker --chrome "$chrome" --ports "$PORTS" --out "$OUT"; then
     echo "console-matrix.sh: the $chrome walk went RED" >&2
     FINAL_RC=1
   fi

@@ -151,8 +151,9 @@ const DYNAMIC_SUBS = {
 
 /* The fixture seed that keeps the studio room's registry read loopback —
    merged over defaults by site-config.ts's sanitize(), so every other
-   switch keeps its default. Behavior-neutral except vdoHost. */
-const FIXTURE_SITE_CONFIG = { meeting: { vdoHost: "127.0.0.1" } };
+   switch keeps its default. R5: jitsiDomain pinned loopback beside vdoHost,
+   so no meeting-surface config can name a host off the box. */
+const FIXTURE_SITE_CONFIG = { meeting: { vdoHost: "127.0.0.1", jitsiDomain: "127.0.0.1" } };
 const SITE_CONFIG_KV_KEY = "site:config:onecocreation";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -253,8 +254,13 @@ function kvPost(port, cmd) {
 }
 
 /* Block-height stamp (house beacon) — the only clock this file reads.
-   A failed read is a dash, never a civil date. */
+   A failed read is a dash, never a civil date. R5: under network isolation
+   the beacon is unreachable by design, so the orchestrator reads the height
+   OUTSIDE the namespace and hands it in as OC_MATRIX_BLOCK_HEIGHT; the env
+   wins, the live fetch is the fallback for an unwrapped run. */
 function fetchBlockHeight() {
+  const fromEnv = Number(process.env.OC_MATRIX_BLOCK_HEIGHT);
+  if (Number.isInteger(fromEnv) && fromEnv > 0) return Promise.resolve(fromEnv);
   return new Promise((resolve) => {
     const req = https.get("https://time.pacsarcade.org/height", { timeout: 3500 }, (res) => {
       let data = "";
@@ -272,6 +278,23 @@ function fetchBlockHeight() {
       req.destroy();
       resolve(null);
     });
+  });
+}
+
+/* R4: the BTCPay loopback stub. src/lib/tips.ts listTips() GETs
+   `${BTCPAY_URL}/api/v1/stores/<id>/invoices?...` expecting a JSON ARRAY;
+   an unreachable BTCPay is an unhandled throw in
+   src/app/api/admin/tips/route.ts:20 (T-430 — named, never fixed here).
+   The stub answers `[]` to everything, so the money room renders its
+   honest empty state instead of the 500. */
+function startBtcpayStub(port) {
+  return new Promise((resolve, reject) => {
+    const srv = http.createServer((req, res) => {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end("[]");
+    });
+    srv.once("error", reject);
+    srv.listen(port, "127.0.0.1", () => resolve(srv));
   });
 }
 
@@ -832,7 +855,8 @@ function summaryLines(report) {
   const lines = [];
   lines.push(
     `console-matrix · chrome=${chrome} · ${report.rows} policy rows · ${cells.length} cells` +
-      (report.blockHeight ? ` · block ${report.blockHeight.toLocaleString("en-US")}` : " · block —")
+      (report.blockHeight ? ` · block ${report.blockHeight.toLocaleString("en-US")}` : " · block —") +
+      (report.isolation ? ` · isolation: ${report.isolation}` : "")
   );
   lines.push(`cells: PASS ${pass} · FAIL ${fail.length} · DASH ${dash.length}`);
   for (const c of fail) lines.push(`  FAIL ${c.route} · theme=${c.theme} · auth=${c.auth} — ${c.detail}`);
@@ -1014,6 +1038,12 @@ async function main() {
   const rows = readPolicy();
   const blockHeight = await fetchBlockHeight();
   const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: REPO_ROOT, encoding: "utf8" }).stdout.trim();
+  /* R5: which isolation held this run — the orchestrator names it */
+  const isolation = process.env.OC_MATRIX_ISOLATION || "none (walker run unwrapped)";
+
+  /* R11: resolve the borrowed puppeteer BEFORE any child is spawned, so a
+     missing borrow fails fast with nothing left running to clean up. */
+  const puppeteer = loadPuppeteer();
 
   /* throwaway fixture secrets, never the vault — minted fresh for this run
      and dead with it */
@@ -1022,6 +1052,7 @@ async function main() {
 
   let kvChild = null;
   let appChild = null;
+  let btcpayStub = null;
   let exitCode = 1;
   try {
     /* fixture KV on A+1, then the loopback vdoHost seed (see header) */
@@ -1033,9 +1064,17 @@ async function main() {
     const seeded = await kvPost(ports.kv, ["SET", SITE_CONFIG_KV_KEY, JSON.stringify(FIXTURE_SITE_CONFIG)]);
     if (seeded !== "OK") throw new Error(`the fixture site-config seed did not land: ${seeded}`);
 
+    /* R4: the BTCPay stub on A+3 (see startBtcpayStub) */
+    btcpayStub = await startBtcpayStub(ports.spare);
+
     const mint = mintOperator(seatSecret, path.join(outDir, `mint-${chrome}.log`));
 
-    /* the production server, throwaway env only (shots-fixture.sh's set) */
+    /* the production server, throwaway env only (shots-fixture.sh's set).
+       R5: every host the server could name is loopback — BTCPAY_URL is the
+       stub (R4), MATRIX_HOMESERVER and MEMPOOL_NODE_URL are pinned at a
+       dead loopback port (their readers degrade: matrix.ts defaults to
+       matrix.onecocreation.com, nodeconfig.ts to mempool.space — the pin
+       overrides both), the SQUARE_* pair is dropped entirely. */
     const appLog = fs.openSync(path.join(outDir, `serve-app-${chrome}.log`), "w");
     appChild = spawn("npx", ["next", "start", "-p", String(ports.app), "-H", "127.0.0.1"], {
       cwd: REPO_ROOT,
@@ -1046,11 +1085,11 @@ async function main() {
         SEAT_SECRET: seatSecret,
         KV_REST_API_URL: `http://127.0.0.1:${ports.kv}`,
         KV_REST_API_TOKEN: kvToken,
-        BTCPAY_URL: "http://btcpay.fixture",
+        BTCPAY_URL: `http://127.0.0.1:${ports.spare}`,
         BTCPAY_STORE_ID: "fixture-store",
         BTCPAY_API_KEY: "fixture-key",
-        SQUARE_ACCESS_TOKEN: "fixture-square-token",
-        SQUARE_LOCATION_ID: "fixture-location",
+        MATRIX_HOMESERVER: "http://127.0.0.1:1",
+        MEMPOOL_NODE_URL: "http://127.0.0.1:1",
         OPERATOR_NPUBS: mint.operatorNpub,
       },
       stdio: ["ignore", appLog, appLog],
@@ -1058,7 +1097,6 @@ async function main() {
     if (!(await waitHttp(ports.app, 60))) throw new Error(`next start never came up on ${ports.app}`);
     await sleep(2);
 
-    const puppeteer = loadPuppeteer();
     const browser = await launchBrowser(puppeteer);
     const findings = [];
     let result;
@@ -1081,6 +1119,7 @@ async function main() {
       policy: "scripts/console-matrix.routes.json",
       base: head,
       blockHeight,
+      isolation,
       rows: rows.length,
       portSpan: ports.span,
       cells: result.cells,
@@ -1101,6 +1140,7 @@ async function main() {
     for (const child of [appChild, kvChild]) {
       if (child) child.kill("SIGTERM");
     }
+    if (btcpayStub) await new Promise((resolve) => btcpayStub.close(resolve));
     await sleep(1500);
     const still = await allPortsFree(ports);
     if (still) {
