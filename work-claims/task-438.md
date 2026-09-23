@@ -55,7 +55,10 @@ nebula rule moved out of `src/app/cartridge.css:287-293`,
 byte-identical), `src/components/rooms/ReadingSignUp.tsx` (the `public` variant ONLY — the
 `room` render byte-identical), `src/lib/reading-letters.ts` (`stageDoorHtml` only), and
 `tests/reading-page.test.ts`, `tests/reading-letters.test.ts`,
-`tests/reading-sign-up.test.ts` (all re-trued, never deleted). Plus this file.
+`tests/reading-sign-up.test.ts` (all re-trued, never deleted). Plus this file and
+`work-claims/task-438-register.md` (the lane's register — widened in the K122 fix round when
+the register moved off the repo root; house law from block 968,284: a builder's register
+lives at `work-claims/task-NNN-register.md`).
 
 **READ-ONLY / FORBIDDEN (binding).** Everything T-439 owns (`stage2*` imported read-only,
 `Stage2Door`, `StageView`, `Stage2Card`, `globals.css`, `packages/[slug]/page.tsx`) and
