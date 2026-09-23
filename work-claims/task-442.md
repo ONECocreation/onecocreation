@@ -37,6 +37,8 @@ What the lane builds:
 `tests/next-path-open-redirect.test.ts` (NEW),
 `REGISTER.md` (the lane's report file, last commit — no SUMMARY.md, no LANE-DONE;
 the orchestrator files those).
+`work-claims/task-442-register.md` (Number One at the gate, block 968,284: the
+register moves off the repo root to sit beside this claim — `git mv`, nothing deleted).
 
 READ-ONLY (grounding only, never edited): `src/components/door/DoorSheet.tsx`,
 `src/components/door/SignInCard.tsx`, `src/components/door/door-machine.ts`,
