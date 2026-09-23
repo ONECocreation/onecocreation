@@ -905,46 +905,144 @@ async function launchBrowser(puppeteer) {
   });
 }
 
-/* ── selftest: the walker's own red-then-green ─────────────────────────── */
+/* ── selftest: every check proven red, per cell (R13) ────────────────────
+   The scratch server answers DELIBERATELY WRONG in one named way per case;
+   the expected fail/pass/dash CELL SETS are computed in code below and the
+   verdict is GREEN only when the walker's actual sets match them exactly —
+   every assertion the walker owns is fired and caught, none is proven by
+   proxy. The arithmetic, quoted in SUMMARY.md:
+     15 rows × 2 themes × 2 auths = 60 cells
+     28 fail = ten 2-cell room/gate wrongs (operator or signedout, both
+               themes) + two alwaysRedirectTo rows failing all 4 cells
+               (one wrong-target, one OFF-ORIGIN, R6)
+     28 pass = the honest halves of those cases + the /a control +
+               the client-nav landing row
+      4 dash = the dynamic row with no substitution
+     plus the client-navigation step, expected FAIL (plain HTML navigates
+     as a document load, R7). */
 
-const SELFTEST_ROWS = [
-  { route: "/a", siteChrome: "render", signedOut: "gate" }, // control — the scratch serves it honestly
-  { route: "/a/broken", siteChrome: "render", signedOut: "gate" }, // render declared, the scratch 500s
-  { route: "/a/sneaky", siteChrome: "render", signedOut: "gate" }, // render declared, the scratch 302s away
-  { route: "/a/bots", siteChrome: "redirect", signedOut: "gate", source: "selftest" }, // redirect declared, the scratch RENDERS
+const ST_ROOM = (extra = "") =>
+  `<!doctype html><html><body><main class="mgmt-body"><h1>A room</h1><p>the room renders here, honestly and at length.</p>${extra}</main></body></html>`;
+const ST_GATE = `<!doctype html><html><body><main class="mgmt-ground"><h1 class="mgmt-title">${GATE_TITLE}</h1><p>This area is for site operators.</p></main></body></html>`;
+
+/* route · which auth's cells must FAIL (both themes) · row overrides */
+const SELFTEST_CASES = [
+  { route: "/a", failAuths: [] }, // control — served honestly; links deeper for the client-nav step
+  { route: "/a/t-scar-id", failAuths: ["operator"] }, // a scar identity node in the room (R1, page-wide)
+  { route: "/a/t-redir-gate", failAuths: ["signedout"] }, // signedout is 302'd away — redirect-then-gate never meets the gate (R2)
+  { route: "/a/t-text-gate", failAuths: ["signedout"] }, // the gate's WORDS without the gate's DOM (R2)
+  { route: "/a/t-no-gate", failAuths: ["signedout"] }, // 200, no gate, no 401 courtesy
+  { route: "/a/t-gated-room", failAuths: ["operator"] }, // the gate under a valid operator cookie (R3)
+  { route: "/a/t-api-500", failAuths: ["operator"] }, // a same-origin ≥500 (R3)
+  { route: "/a/t-api-401", failAuths: ["operator"] }, // an /api/admin/* 401 + the room's denial words (R3)
+  { route: "/a/t-pageerror", failAuths: ["operator"] }, // a pageerror (R3)
+  { route: "/a/t-empty", failAuths: ["operator"] }, // an empty room root (R3)
+  { route: "/a/t-errscreen", failAuths: ["operator"] }, // the error-boundary words on HTTP 200 (R3)
+  { route: "/a/t-alias", failAuths: ["operator", "signedout"], row: { alwaysRedirectTo: "/a/studio" } }, // hops to the WRONG target (R6)
+  { route: "/a/t-offorigin", failAuths: ["operator", "signedout"], row: { alwaysRedirectTo: "/a/studio" } }, // hops OFF the origin (R6)
+  { route: "/a/x/[id]", dash: true }, // a dynamic segment with no substitution — DASH, never a fabricated green
+  { route: "/a/t-target", failAuths: [] }, // the client-nav landing row, served honestly
 ];
 
-const SELFTEST_ROOM =
-  '<!doctype html><html><body><main class="mgmt-body"><h1>A room</h1><p>the room renders here, honestly and at length.</p></main></body></html>';
-const SELFTEST_GATE = `<!doctype html><html><body><main class="mgmt-ground"><h1 class="mgmt-title">${GATE_TITLE}</h1><p>This area is for site operators.</p></main></body></html>`;
+const SELFTEST_ROWS = SELFTEST_CASES.map((c) => ({
+  route: c.route,
+  siteChrome: "render",
+  signedOut: "gate",
+  ...(c.row || {}),
+}));
+
+/* the expected cell sets, computed — never hand-counted at the verdict */
+function selftestExpectation() {
+  const exp = { fail: new Set(), pass: new Set(), dash: new Set() };
+  for (const c of SELFTEST_CASES) {
+    for (const theme of THEMES) {
+      for (const auth of AUTHS) {
+        const key = `${c.route} · ${theme} · ${auth}`;
+        if (c.dash) exp.dash.add(key);
+        else if (c.failAuths.includes(auth)) exp.fail.add(key);
+        else exp.pass.add(key);
+      }
+    }
+  }
+  return exp;
+}
+
+const cellKey = (c) => `${c.route} · ${c.theme} · ${c.auth}`;
+const setDiff = (a, b) => [...a].filter((x) => !b.has(x));
 
 async function selftest(ports, outDir) {
-  /* the scratch fixture server — deliberately wrong in three named ways */
+  const html = (body) => `<!doctype html><html><body>${body}</body></html>`;
+  /* the scratch fixture server — deliberately wrong in fourteen named ways */
   const scratch = http.createServer((req, res) => {
     const u = new URL(req.url || "/", "http://127.0.0.1");
     const authed = (req.headers.cookie || "").includes("fe-operator=");
-    if (u.pathname === "/a") {
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.end(authed ? SELFTEST_ROOM : SELFTEST_GATE);
-    } else if (u.pathname === "/a/broken") {
-      res.writeHead(500, { "Content-Type": "text/html" });
-      res.end("<!doctype html><html><body>Internal Server Error</body></html>");
-    } else if (u.pathname === "/a/sneaky") {
-      res.writeHead(302, { Location: "/a" });
-      res.end();
-    } else if (u.pathname === "/a/bots") {
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.end(authed ? SELFTEST_ROOM : SELFTEST_GATE);
-    } else {
-      res.writeHead(404);
-      res.end("nope");
+    const send = (status, body, headers = {}) => {
+      res.writeHead(status, { "Content-Type": "text/html", ...headers });
+      res.end(body);
+    };
+    switch (u.pathname) {
+      case "/a":
+        return send(200, authed ? ST_ROOM('<a href="/a/t-target">deeper into the console</a>') : ST_GATE);
+      case "/a/t-target":
+        return send(200, authed ? ST_ROOM() : ST_GATE);
+      case "/a/t-scar-id":
+        return send(200, authed ? ST_ROOM('<div class="scar-brandline">one c○creation</div>') : ST_GATE);
+      case "/a/t-redir-gate":
+        if (authed) return send(200, ST_ROOM());
+        return send(302, "", { Location: "/a" });
+      case "/a/t-text-gate":
+        return send(200, authed ? ST_ROOM() : html('<main class="mgmt-body"><p>Operator sign-in</p><p>the words without the gate DOM.</p></main>'));
+      case "/a/t-no-gate":
+        return send(200, authed ? ST_ROOM() : html('<main class="mgmt-body"><p>just a page — no gate, no courtesy.</p></main>'));
+      case "/a/t-gated-room":
+        return send(200, ST_GATE);
+      case "/a/t-api-500":
+        return send(200, authed ? ST_ROOM('<script>fetch("/api/admin/x")</script>') : ST_GATE);
+      case "/a/t-api-401":
+        return send(
+          200,
+          authed ? ST_ROOM('<script>fetch("/api/admin/y")</script><p>operator session required</p>') : ST_GATE
+        );
+      case "/a/t-pageerror":
+        return send(200, authed ? ST_ROOM('<script>throw new Error("boom")</script>') : ST_GATE);
+      case "/a/t-empty":
+        return send(200, authed ? html('<main class="mgmt-body"></main>') : ST_GATE);
+      case "/a/t-errscreen":
+        return send(
+          200,
+          authed
+            ? html('<main class="mgmt-body"><p>Application error: a client-side exception has occurred</p></main>')
+            : ST_GATE
+        );
+      case "/a/t-alias":
+        return send(302, "", { Location: "/a" });
+      case "/a/t-offorigin":
+        return send(302, "", { Location: `http://127.0.0.1:${ports.spare}/a/studio` });
+      case "/api/admin/x":
+        return send(500, "Internal Server Error");
+      case "/api/admin/y":
+        return send(401, '{"error":"unauthorized"}', { "Content-Type": "application/json" });
+      default:
+        return send(404, "nope");
     }
   });
   await new Promise((resolve) => scratch.listen(ports.scratch, "127.0.0.1", resolve));
+  /* the OFF-ORIGIN landing (R6): another loopback origin is still off THIS
+     origin — the walker's base is the scratch port */
+  const offOrigin = http.createServer((req, res) => {
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(ST_GATE);
+  });
+  await new Promise((resolve) => offOrigin.listen(ports.spare, "127.0.0.1", resolve));
 
+  const exp = selftestExpectation();
   const lines = [];
-  lines.push("SELFTEST · the walker against a scratch fixture server that answers DELIBERATELY WRONG");
-  lines.push("scratch wrongs: /a/broken 500s · /a/sneaky 302s where render is declared · /a/bots RENDERS where redirect is declared (site chrome)");
+  lines.push("SELFTEST · the walker against a scratch fixture server that answers DELIBERATELY WRONG (R13: every check red, per cell)");
+  lines.push(
+    `expectation, computed in code: ${exp.fail.size} fail · ${exp.pass.size} pass · ${exp.dash.size} dash ` +
+      `across ${SELFTEST_ROWS.length} rows × 2 themes × 2 auths = ${SELFTEST_ROWS.length * 4} cells, ` +
+      "plus the client-navigation step expected FAIL (plain HTML navigates as a document load)"
+  );
   let rc = 1;
   try {
     const puppeteer = loadPuppeteer();
@@ -961,32 +1059,49 @@ async function selftest(ports, outDir) {
         chrome: "site",
         cookie: { name: "fe-operator", value: "selftest-throwaway" },
         findings,
-        runClientNav: false,
+        runClientNav: true,
       });
     } finally {
       console.log = log;
       await browser.close().catch(() => {});
     }
-    lines.push("— the red run, verbatim (every bad cell named: route · theme · auth) —");
+    lines.push("— the run, verbatim (every cell named: route · theme · auth) —");
     lines.push(...captured);
-    const failRoutes = new Set(result.cells.filter((c) => c.result === "fail").map((c) => c.route));
-    const passRoutes = new Set(result.cells.filter((c) => c.result === "pass").map((c) => c.route));
-    const expectedFails = ["/a/broken", "/a/sneaky", "/a/bots"];
-    const caughtAll = expectedFails.every((r) => failRoutes.has(r));
-    const controlClean = passRoutes.has("/a") && !failRoutes.has("/a");
-    const named = captured.filter((l) => l.startsWith("cell FAIL")).length;
-    lines.push("— the green verdict —");
-    if (caughtAll && controlClean) {
+
+    const act = { fail: new Set(), pass: new Set(), dash: new Set() };
+    for (const c of result.cells) act[c.result === "fail" ? "fail" : c.result === "dash" ? "dash" : "pass"].add(cellKey(c));
+    const surprises = [
+      ...setDiff(act.fail, exp.fail).map((k) => `FAILED but expected otherwise: ${k}`),
+      ...setDiff(exp.fail, act.fail).map((k) => `expected FAIL, got otherwise: ${k}`),
+      ...setDiff(act.pass, exp.pass).map((k) => `passed but expected otherwise: ${k}`),
+      ...setDiff(exp.pass, act.pass).map((k) => `expected pass, got otherwise: ${k}`),
+      ...setDiff(act.dash, exp.dash).map((k) => `dashed but expected otherwise: ${k}`),
+      ...setDiff(exp.dash, act.dash).map((k) => `expected dash, got otherwise: ${k}`),
+    ];
+    const nav = result.clientNav;
+    const navAsExpected =
+      nav && nav.result === "fail" && /document load/i.test(nav.detail || "") && nav.to === "/a/t-target";
+
+    lines.push("— the verdict —");
+    if (surprises.length === 0 && navAsExpected) {
       lines.push(
-        `SELFTEST GREEN: the walk FAILED as it must — ${named} failing cells across ${[...failRoutes].join(", ")} ` +
-          `(a 500 cell, a redirect where render was declared, a render where redirect was declared), ` +
-          `each named with route · theme · auth; the honest control row /a passed.`
+        `SELFTEST GREEN: every check was proven RED exactly where it must be — ` +
+          `${act.fail.size} failing cells, ${act.pass.size} passing, ${act.dash.size} dashed, matching the computed ` +
+          `expectation cell-for-cell (a scar identity node page-wide; redirect-then-gate; the gate's words without ` +
+          `its DOM; no gate at all; the gate under an operator cookie; a same-origin 500; an API 401 with denial ` +
+          `words; a pageerror; an empty room root; the error-boundary words; a wrong redirect target; an OFF-ORIGIN ` +
+          `redirect; an unsubstituted dynamic row dashed) — and the client-navigation step FAILED as it must ` +
+          `(${nav.detail}). The walker's reds are real.`
       );
       rc = 0;
     } else {
+      if (!navAsExpected)
+        lines.push(
+          `client-nav step not the expected document-load FAIL on /a/t-target: ${nav ? `${nav.result} — ${nav.detail}` : "missing"}`
+        );
+      for (const s of surprises.slice(0, 20)) lines.push(`MISMATCH: ${s}`);
       lines.push(
-        `SELFTEST RED: the walker did NOT catch what it must (caught: ${[...failRoutes].join(", ") || "none"}; ` +
-          `control /a ${controlClean ? "clean" : "WRONGLY failed"}) — the walker itself is suspect, do not trust a run`
+        `SELFTEST RED: ${surprises.length} cell(s) off the computed expectation — the walker itself is suspect, do not trust a run`
       );
       rc = 1;
     }
@@ -995,6 +1110,7 @@ async function selftest(ports, outDir) {
     rc = 1;
   } finally {
     await new Promise((resolve) => scratch.close(resolve));
+    await new Promise((resolve) => offOrigin.close(resolve));
   }
   for (const l of lines) console.log(l);
   fs.writeFileSync(path.join(outDir, "selftest.txt"), lines.join("\n") + "\n");
