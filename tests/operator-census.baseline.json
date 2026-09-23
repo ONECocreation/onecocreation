@@ -2130,8 +2130,16 @@
       "names": []
     },
     "src/components/rooms/Stage2Door.tsx": {
-      "count": 0,
-      "names": []
+      "count": 7,
+      "names": [
+        "kit:Link@120[kit-btn,kit-btn-second,kit-btn-sm]",
+        "kit:Link@131[kit-btn,kit-btn-second,kit-btn-sm]",
+        "kit:button@135[kit-btn,kit-btn-second,kit-btn-sm]",
+        "kit:button@151[kit-btn,kit-btn-main,kit-btn-sm]",
+        "kit:div@119[kit-btn-row]",
+        "kit:div@130[kit-btn-row]",
+        "kit:div@150[kit-btn-row]"
+      ]
     },
     "src/components/rooms/StageChat.tsx": {
       "count": 0,
