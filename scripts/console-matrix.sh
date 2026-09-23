@@ -14,24 +14,27 @@
 # It is the shots-fixture.sh sibling (mirror, never edit): ports come ONLY
 # from --ports A-B, exactly four consecutive ports — A = the app server,
 # A+1 = the fixture KV, A+2 = reserve (the --selftest scratch server binds
-# it), A+3 = reserve. All four verified free BEFORE and AFTER the run;
-# every listener on them is trap-killed on exit (the walker kills its own —
-# this trap is the belt-and-suspenders backstop, the T-232 lesson). Missing
-# --ports is a hard refusal (exit 2), never a guess.
+# it), A+3 = the BTCPay loopback stub in main runs (R4; the --selftest's
+# OFF-ORIGIN landing binds it instead). All four verified free BEFORE and
+# AFTER the run; every listener on them is trap-killed on exit (the walker
+# kills its own — this trap is the belt-and-suspenders backstop, the T-232
+# lesson). Missing --ports is a hard refusal (exit 2), never a guess.
 #
 # NOT gate-riding (K106): this runs on Number One's word like
 # shots-fixture.sh; the repo's five gate steps stay exactly as they are.
 #
 # USAGE
 #   scripts/console-matrix.sh --ports A-B --out <dir>
-#       the full proof run: selftest → scar build → scar walk → site build
-#       → site walk → merged matrix-report.json + one-screen summary.
+#       the full proof run: selftest → site build → site walk → scar build
+#       → scar walk (R12: site FIRST, scar LAST — the tree is left on the
+#       default build) → merged matrix-report.json + one-screen summary.
 #   scripts/console-matrix.sh --ports A-B --out <dir> --no-build --chrome scar|site
 #       the fast path for repeats: skips BOTH builds and walks only the
 #       chrome the CURRENT .next was built as — --chrome declares which,
-#       honestly (there is no way to ask a build what it is; a wrong
-#       declaration fails the walk by name, never passes silently). The
-#       merged report then carries ONE build, labelled.
+#       and the build stamp (.next/.console-matrix-build.json, R9) proves
+#       it: a missing stamp, a head or chrome mismatch, or a dirty src/ is
+#       a hard refusal, never a silent reuse. The merged report then
+#       carries ONE build, labelled.
 #
 # Outputs in --out: matrix-report-scar.json / matrix-report-site.json (the
 # walker's per-build reports), matrix-report.json (the merged both-builds

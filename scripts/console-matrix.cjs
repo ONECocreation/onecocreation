@@ -20,9 +20,10 @@
  *
  * PORT LAW (same as shots-fixture.sh): ports come ONLY from --ports A-B,
  * exactly four consecutive ports — A = the app server, A+1 = the fixture
- * KV, A+2 = reserve (the --selftest scratch server binds it), A+3 = reserve.
- * All four verified free BEFORE and AFTER the run. Missing --ports is a
- * hard refusal (exit 2), never a guess.
+ * KV, A+2 = reserve (the --selftest scratch server binds it), A+3 = the
+ * BTCPay loopback stub in main runs (R4; the --selftest's OFF-ORIGIN
+ * landing binds it instead). All four verified free BEFORE and AFTER the
+ * run. Missing --ports is a hard refusal (exit 2), never a guess.
  *
  * THE CELL MATRIX: policy row × this build's chrome × {dark, dawn} ×
  * {operator cookie, signed out}. Per cell the walk asserts what the row
@@ -36,8 +37,12 @@
  *     recorded, the FIRST hop is the row's own truth);
  *   siteChrome "render" → HTTP 200, non-empty, no error boundary, no 500,
  *     and the room (never the gate) under a valid operator cookie;
- *   signedOut "gate" → the OperatorGate renders ("Operator sign-in"),
- *     never a crash;
+ *   signedOut "gate" → the gate IN PLACE (R2): the OperatorGate's DOM —
+ *     main.mgmt-ground h1.mgmt-title reading "Operator sign-in", read via
+ *     textContent — or, ONLY on rows the policy marks gateDoor "api-401"
+ *     (the six client rooms whose page.tsx carries no OperatorGate), the
+ *     API's 401 courtesy. ANY redirect hop fails the cell —
+ *     redirect-then-gate does not meet the gate;
  *   a row marked `pending` is asserted AS DECLARED TODAY and the note is
  *     printed beside the cell — today's truth, visibly pending.
  * The row's `source` key (416's per-row provenance) is READ and ignored —
@@ -89,13 +94,21 @@
  *     SEAT_SECRET like any fixture run.
  * A pattern row with no substitution emits DASH cells, never a guess.
  *
- * --selftest: binds a scratch fixture server on A+2 that answers
- * DELIBERATELY WRONG (a 500 cell; a redirect where render is declared; a
- * render where redirect is declared) against a synthetic in-memory policy,
- * and proves the walk FAILS and names each bad cell (route · chrome ·
- * theme · auth). Prints the red run, then the green verdict. Run once at
- * build time by scripts/console-matrix.sh; the red-then-green is quoted in
- * the lane's SUMMARY.
+ * --selftest (R13): binds a scratch fixture server on A+2 (plus the
+ * OFF-ORIGIN landing on A+3) that answers DELIBERATELY WRONG in one named
+ * way per case — fourteen cases covering every assertion the walker owns
+ * (a scar identity node page-wide; redirect-then-gate; the gate's words
+ * without its DOM; no gate at all; the gate under an operator cookie; a
+ * same-origin 500; an API 401 with the room's denial words; a pageerror;
+ * an empty room root; the error-boundary words; a wrong redirect target;
+ * an OFF-ORIGIN redirect; an unsubstituted dynamic row dashed; and a
+ * client-navigation landing that arrives as a DOCUMENT load). The
+ * expected fail/pass/dash cell sets are COMPUTED in code (28/28/4 of 60)
+ * and the verdict is GREEN only on an exact cell-for-cell match plus the
+ * client-nav step failing as it must — each bad cell named (route ·
+ * theme · auth). Prints the run, then the verdict. Run once at build
+ * time by scripts/console-matrix.sh; the verdict is quoted in the lane's
+ * SUMMARY.
  *
  * USAGE
  *   node scripts/console-matrix.cjs --chrome scar|site --ports A-B --out <dir>
@@ -726,6 +739,10 @@ async function clientNavStep(ctx, base, rows, chrome, cookie, findings) {
     );
     page = await ctx.newPage();
     page.setDefaultNavigationTimeout(30000);
+    /* R5, browser half: the client-nav page walks behind the same request
+       interception as every cell page — the step is a browser page too */
+    await page.setRequestInterception(true);
+    armInterception(page, "client-nav", findings);
     page.on("pageerror", (err) => {
       if (findings.length < 50) findings.push(`pageerror at client-nav step: ${String(err).slice(0, 200)}`);
     });
