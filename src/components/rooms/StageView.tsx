@@ -163,9 +163,10 @@ export default function StageView({
           )}
         </div>
         <AfterHoursDoor afterHours={afterHours ?? null} signedIn={signedIn} viewerTier={viewerTier} />
-        {/* TASK-392: Stage 2 mounts only on the free reading room's own
-            Stage — this lane's whole scope (Decision 3: every signed-in
-            member of THIS room, never a tier check, never another room). */}
+        {/* TASK-392/TASK-439: Stage 2 mounts only on the free reading
+            room's own Stage — and since block 968,218 (the Admiral's
+            ruling 1) the ROUTE admits tier A and above only; the tier
+            check lives in /api/stage2, never in this component. */}
         {slug === READING_ROOM_SLUG && (
           <Stage2Door jitsiDomain={jitsiDomain ?? ""} joined={!!stage2Room} onJoin={setStage2Room} signedIn={signedIn} />
         )}

@@ -199,7 +199,7 @@ export default async function TierPage({
                   {fiatPrimary ? `or ⚡ ${satsWords(t.priceSats)} / month` : `${tierWords.secondary} / month`}
                 </div>
               )}
-              {page.oneTime && (
+              {page.oneTime && oneTimeLive && (
                 <div style={{ color: "var(--muted)", fontSize: ".92rem" }}>
                   or ${page.oneTime.usd} — {page.oneTime.label}
                 </div>

@@ -972,7 +972,9 @@ footer:not(.site-footer) {
   font-family: var(--sans, inherit);
 }
 
-.mgmt-body button {
+/* kit buttons keep the kit's own look inside the shell — the same trap
+   calendar-view.css:31-39 documents for the calendar cell. */
+.mgmt-body button:not(.kit-btn) {
   border-radius: 999px;
   font-family: var(--sans, inherit);
   letter-spacing: .03em;
