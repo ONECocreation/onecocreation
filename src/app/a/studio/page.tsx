@@ -10,6 +10,7 @@ import { studioVdoLinks, studioRoomKey } from "@/lib/live";
 // on the line above's exact text survives untouched.
 import { slugOfRoom, confirmedToday, liveRoomPrefix, LIVE_YOUTUBE } from "@/lib/live";
 import { meetStudioUrl, directorDeskUrl } from "@/lib/live-links";
+import { withStudioInvite } from "@/lib/studio/invite-token";
 import { STUDIO_SCENES, type StudioSceneId } from "@/lib/studio/scenes";
 import { overlayConfigured, overlayQuery } from "@/lib/studio/overlay-token";
 import { getStudioDoc } from "@/lib/studio/roster";
@@ -118,8 +119,16 @@ export default async function StudioRoomPage() {
      own frame route mints, key included — this URL carries none). TASK-306:
      the director door follows the same law (the SITE route below). The
      PUSH door alone stays a studio URL — that's HER camera seat, not a
-     link anyone is handed. */
-  const guestDoor = meetStudioUrl(origin, vdo.room);
+     link anyone is handed.
+     TASK-440: the door is SIGNED — a standing room opens for an operator
+     or a verified invite only, so the copyable link carries a 7-day
+     `?invite=` token (never the room key; the page's own server mints
+     that into the frame at request time). A failed mint (SEAT_SECRET
+     dark — the same case `roomKeyed` above already reads honestly on the
+     desk) must not hand out a usable unsigned standing-room door: the
+     bare URL stays, and the meeting room's own gate closes it to
+     everyone but an operator. */
+  const guestDoor = withStudioInvite(meetStudioUrl(origin, vdo.room), vdo.room) ?? meetStudioUrl(origin, vdo.room);
 
   /* TASK-300: the room's plain human name — brand/rooms.json on the fork
      (~/dev/apps/onecocreation-studio/brand/rooms.json, TASK-262:

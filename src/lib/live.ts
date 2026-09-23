@@ -125,11 +125,18 @@ export {
  * DERIVE-OR-DASH: no `SEAT_SECRET` (local dev, or the shots fixture before
  * it mints one) → `null`. Every call-site mints its links UNKEYED in that
  * case — never a fabricated key, never a link that silently can't reach
- * the room a real key would have made. */
+ * the room a real key would have made.
+ *
+ * TASK-440 (block 968,222) — the label-bump rotation: `studio-room-key:v2:`
+ * retires every v1 key in one merge, without touching `SEAT_SECRET`
+ * (rotating the secret would evict sessions and receipts — the FACTS
+ * sheet's own warning). Every consumer derives at request time through
+ * this ONE function, so standing, booking and co-create rooms all agree.
+ * Ledger: v1 retired: minted anonymously through /meet/studio until T-440. */
 export function studioRoomKey(room: string): string | null {
   const s = process.env.SEAT_SECRET;
   if (!s || !s.trim()) return null;
-  return createHmac("sha256", s).update(`studio-room-key:${room}`).digest("hex").slice(0, 12);
+  return createHmac("sha256", s).update(`studio-room-key:v2:${room}`).digest("hex").slice(0, 12);
 }
 
 /** TASK-192 (additive read): one confirmed call, shaped for the Go-Live

@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import VdoRoom from "@/components/booking/VdoRoom";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
+import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { getSiteConfig } from "@/lib/site-config";
-import { resolveStudioRoom, memberPrefillName, mintStudioFrameTarget } from "../room-access";
+import { verifyStudioInvite } from "@/lib/studio/invite-token";
+import { resolveStudioRoom, memberPrefillName, mintStudioFrameTarget, studioEntryAllowed } from "../room-access";
 import PreJoin from "./pre-join";
 
 export const metadata: Metadata = { title: "The meeting room — One Cocreation" };
@@ -44,25 +47,72 @@ export const dynamic = "force-dynamic";
  * granted, 302 = "Camera/mic permissions denied"), and the route was an
  * anonymous key-extractor besides. The brief's own shape — server-minted
  * link, mounted — is the right one.
+ *
+ * TASK-440 (block 968,222 — the live leak): admission is decided ONCE,
+ * before anything renders and before `mintStudioFrameTarget` is ever
+ * called (`studioEntryAllowed`, room-access.ts). A standing room (Love's
+ * own studio, any registry room) opens for an operator or a verified
+ * invite ONLY — a signed-out `?join=1` and a bare member session get the
+ * closed card: no frame, no key, no pre-join form. The verified invite
+ * rides the pre-join form as a hidden input so it survives Join (a GET
+ * form REPLACES the action URL's query); an unverified token is never
+ * echoed, and the token never enters the VDO frame URL.
  */
 export default async function MeetStudioPage({
   params,
   searchParams,
 }: {
   params: Promise<{ room: string }>;
-  searchParams: Promise<{ join?: string; label?: string; camera?: string; mic?: string }>;
+  searchParams: Promise<{ join?: string; label?: string; camera?: string; mic?: string; invite?: string }>;
 }) {
   const { room } = await params;
   const access = await resolveStudioRoom(room);
   if (!access) notFound();
 
-  const member = sessionsFromCookieHeader((await headers()).get("cookie"))[0] ?? null;
+  const h = await headers();
+  const cookie = h.get("cookie");
+  const q = await searchParams;
+
+  /* TASK-440: the ONE admission decision, computed before anything else —
+     the operator identity read exactly the way /a/studio reads it. */
+  const operator = !!operatorFromCookieHeader(cookie);
+  if (!studioEntryAllowed(access, room, { operator, invite: q.invite ?? null })) {
+    const roomTitle = access.title ?? room;
+    return (
+      <main className="mgmt-ground">
+        <SiteHeader />
+        <section className="mgmt-wrap mgmt-body">
+          <header className="mgmt-head">
+            <p className="mgmt-eyebrow">the meeting room</p>
+            <h1 className="mgmt-title">{roomTitle}</h1>
+          </header>
+          <div className="kit-body">
+            <p>
+              This room opens with Love&apos;s invitation. If your link has stopped working, ask Love for a fresh
+              one.
+            </p>
+            <p>
+              <Link href="/" className="kit-btn kit-btn-second kit-btn-sm">
+                Back to the home page
+              </Link>
+            </p>
+          </div>
+        </section>
+        <SiteFooter />
+      </main>
+    );
+  }
+
+  /* echo the invite downstream ONLY when it verified for THIS room —
+     an unverified token is never echoed (T-440) */
+  const verifiedInvite =
+    access.standing && q.invite && verifyStudioInvite(room, q.invite) ? q.invite : undefined;
+
+  const member = sessionsFromCookieHeader(cookie)[0] ?? null;
   const initialName = member ? await memberPrefillName(member.handle, member.space) : "";
   const config = await getSiteConfig();
   const roomTitle = access.title ?? room;
-  const q = await searchParams;
 
-  const h = await headers();
   const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("x-forwarded-host") ?? h.get("host") ?? "localhost"}`;
 
   return (
@@ -93,7 +143,7 @@ export default async function MeetStudioPage({
             title={roomTitle}
           />
         ) : (
-          <PreJoin room={room} initialName={initialName} />
+          <PreJoin room={room} initialName={initialName} invite={verifiedInvite} />
         )}
       </section>
       <SiteFooter />

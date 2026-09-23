@@ -39,20 +39,30 @@ said once, under the words; one control per row on the same right edge; `kit-tex
 ## OWNS
 
 `work-claims/task-440.md` (this file, first commit),
-NEW `src/lib/studio/invite-token.ts`,
-`src/lib/live.ts:102-133` (room-key function and docblock only),
+`src/lib/studio/invite-token.ts` (NEW),
+`src/lib/live.ts` (the `:102-133` region only — room-key function and docblock),
 `src/app/meet/studio/room-access.ts`,
 `src/app/meet/studio/[room]/page.tsx`,
 `src/app/meet/studio/[room]/pre-join.tsx` (optional invite + hidden input only),
-`src/app/rooms/[slug]/page.tsx:114,116-122,162,178-184,211` (key derivation, keyed stage inputs,
-prop removal only — widens FL §d for DARK),
-`src/app/a/studio/page.tsx:114-122` (guest door, comment, one new import line),
-`src/app/api/admin/studio/invite/route.ts:43-52` (signing and docblock),
-`src/components/console/StudioHub.tsx:163-170` (prop plumbing only),
-`src/app/a/live/go-live-room.tsx:76,155-178,322-326` (imports, props, doors; reservation feedback
-beside the co-create input),
-`tests/meet-studio.test.ts`, `tests/studio-room-keys.test.ts`, `tests/studio-send-to-user.test.ts`,
-`tests/go-live-door.test.ts`, NEW `tests/studio-key-leak.test.ts`.
+`src/app/rooms/[slug]/page.tsx` (the `:114,116-122,162,178-184,211` regions only — key
+derivation, keyed stage inputs, prop removal; widens FL §d for DARK),
+`src/app/a/studio/page.tsx` (the `:114-122` guest door, its comment, one new import line only),
+`src/app/api/admin/studio/invite/route.ts` (the `:43-52` region and the docblock only),
+`src/components/console/StudioHub.tsx` (the `:163-170` GoLiveRoom mount — prop plumbing only),
+`src/app/a/live/go-live-room.tsx` (the `:76,155-178,322-326` regions — imports, props, doors —
+plus the reservation feedback beside the co-create input and its exported pure builder),
+`tests/meet-studio.test.ts`,
+`tests/studio-room-keys.test.ts`,
+`tests/studio-send-to-user.test.ts`,
+`tests/go-live-door.test.ts`,
+`tests/studio-key-leak.test.ts` (NEW).
+
+CONSEQUENCE (ruled by the Admiral's DARK decision, not a lane choice — see the section below):
+`tests/named-guest-camera-door.test.ts`,
+`tests/stage-shows-the-studio.test.ts`,
+`tests/classroom-live.test.ts`
+— each re-trued in exactly one spot: the byte-pin on `rooms/[slug]/page.tsx`'s import line.
+No assertion deleted, no expectation lowered; the string now names the new true import.
 
 READ-ONLY (never edited): `live-links.ts`, `RoomVideoSlot.tsx`, `ClassroomView.tsx`,
 `StageView.tsx`, `VdoRoom.tsx`, `StudioRoom.tsx`, `a/studio/room/[room]/page.tsx`,

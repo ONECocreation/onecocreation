@@ -113,18 +113,22 @@ beforeEach(() => {
 });
 
 describe("the letter's mint — studioInviteHtml", () => {
-  it("carries the guest door and never a director/key/password parameter", async () => {
+  it("carries the SIGNED guest door and never a director/key/password parameter", async () => {
     const { studioInviteHtml } = await import("@/lib/mail-studio-invite");
     const { meetStudioUrl } = await import("@/lib/live-links");
-    const joinUrl = meetStudioUrl("https://site.example", "onecocreation_studio");
+    const { withStudioInvite, verifyStudioInvite } = await import("@/lib/studio/invite-token");
+    /* TASK-440: the door is signed — a 7-day `?invite=` token rides the
+       SITE url (never the room key), and it verifies against the room. */
+    const joinUrl = withStudioInvite(meetStudioUrl("https://site.example", "onecocreation_studio"), "onecocreation_studio")!;
+    expect(joinUrl).toMatch(/^https:\/\/site\.example\/meet\/studio\/onecocreation_studio\?invite=\d+\.[a-f0-9]{64}$/);
+    expect(verifyStudioInvite("onecocreation_studio", joinUrl.split("?invite=")[1])).toBe(true);
     const html = studioInviteHtml({
       to: "ana@example.com",
       roomTitle: "Heart Field · the studio",
       joinUrl,
       startsAt: "2026-09-20T15:00:00.000Z",
     });
-    expect(joinUrl).toBe("https://site.example/meet/studio/onecocreation_studio");
-    expect(html).toContain("https://site.example/meet/studio/onecocreation_studio");
+    expect(html).toContain("https://site.example/meet/studio/onecocreation_studio?invite=");
     expect(html).toContain("Heart Field · the studio");
     expect(html).toContain("When:"); // startsAt set → the time row rides
     expect(html).not.toContain("director=");

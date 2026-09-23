@@ -203,8 +203,11 @@ describe("the room page — onCameraMxids derives from the director's OWN guest 
   it("passes rail, vdoHost, studioRoom and onCameraMxids down, all from real config/store reads", () => {
     // TASK-305: the import gains studioRoomKey — the string pin updates,
     // the intent (this page reads its VDO builders from @/lib/live) holds.
+    // TASK-440: studioRoomKey leaves the line again — the DARK ruling
+    // (block 968,222) forbids ANY key derivation on this page; the same
+    // string-pin re-true T-305 itself performed here, intent unchanged.
     expect(PAGE_SRC).toContain(
-      'import { liveRoomName, studioVdoLinks, studioGuestCameraLink, studioRoomKey } from "@/lib/live"',
+      'import { liveRoomName, studioVdoLinks, studioGuestCameraLink } from "@/lib/live"',
     );
     expect(PAGE_SRC).toContain('import { getStudioDoc } from "@/lib/studio/roster"');
     expect(PAGE_SRC).toMatch(/studioVdoLinks\(switches\.meeting\.vdoRoomPrefix, switches\.meeting\.vdoHost\)/);

@@ -518,6 +518,23 @@ describe("every standing-studio guest door is signed (RED on 5828cd0)", () => {
     process.env.SEAT_SECRET = saved;
   });
 
+  it("the signed door is stable inside the mint quantum — the letter's double-send guard keys on the URL", async () => {
+    const tok = (await import("@/lib/studio/invite-token")) as InviteToken;
+    vi.useFakeTimers();
+    try {
+      /* a fixed instant comfortably inside one quantum, then +5 s */
+      const t0 = Math.floor(Date.now() / tok.STUDIO_INVITE_MINT_QUANTUM_MS) * tok.STUDIO_INVITE_MINT_QUANTUM_MS + 60_000;
+      vi.setSystemTime(t0);
+      const a = tok.withStudioInvite("https://site.example/meet/studio/onecocreation_studio", ROOM);
+      vi.setSystemTime(t0 + 5_000);
+      const b = tok.withStudioInvite("https://site.example/meet/studio/onecocreation_studio", ROOM);
+      expect(a).not.toBeNull();
+      expect(a).toBe(b);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("the go-live card takes the signed door as a prop — it never signs client-side (source pins)", () => {
     const src = read("src/app/a/live/go-live-room.tsx");
     expect(src).toContain("studioGuestDoor");

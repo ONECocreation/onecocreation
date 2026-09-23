@@ -111,8 +111,11 @@ describe("source-level pins", () => {
     const src = await fs.readFile(path.join(process.cwd(), "src/app/rooms/[slug]/page.tsx"), "utf8");
     // TASK-305: the import gains studioRoomKey — the string pin updates,
     // the intent (this page reads its VDO builders from @/lib/live) holds.
+    // TASK-440: studioRoomKey leaves the line again — the DARK ruling
+    // (block 968,222) forbids ANY key derivation on this page; the same
+    // string-pin re-true T-305 itself performed here, intent unchanged.
     expect(src).toContain(
-      'import { liveRoomName, studioVdoLinks, studioGuestCameraLink, studioRoomKey } from "@/lib/live"',
+      'import { liveRoomName, studioVdoLinks, studioGuestCameraLink } from "@/lib/live"',
     );
     expect(src).toMatch(/liveRoomName\(slug\)/);
   });
