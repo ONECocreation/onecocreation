@@ -28,8 +28,10 @@
  * THE CELL MATRIX: policy row × this build's chrome × {dark, dawn} ×
  * {operator cookie, signed out}. Per cell the walk asserts what the row
  * declares:
- *   siteChrome "redirect" (under the site build) → a redirect to /a,
- *     never a render (the first 3xx hop lands on /a);
+ *   siteChrome "redirect" (under the site build) → a redirect to /a under
+ *     BOTH auths (R14), never a render (the first 3xx hop lands on /a);
+ *     for the signed-out cell the landing /a must render the OperatorGate
+ *     DOM (R14a);
  *   alwaysRedirectTo (both builds, both auths — it is unconditional) →
  *     the first 3xx hop lands on the named target (/a/studio, which itself
  *     then gates; alias rooms may chain a second hop under the site build
@@ -37,12 +39,13 @@
  *     recorded, the FIRST hop is the row's own truth);
  *   siteChrome "render" → HTTP 200, non-empty, no error boundary, no 500,
  *     and the room (never the gate) under a valid operator cookie;
- *   signedOut "gate" → the gate IN PLACE (R2): the OperatorGate's DOM —
- *     main.mgmt-ground h1.mgmt-title reading "Operator sign-in", read via
- *     textContent — or, ONLY on rows the policy marks gateDoor "api-401"
- *     (the six client rooms whose page.tsx carries no OperatorGate), the
- *     API's 401 courtesy. ANY redirect hop fails the cell —
- *     redirect-then-gate does not meet the gate;
+ *   signedOut "gate" → the gate (R2, amended by R14): the OperatorGate's
+ *     DOM — main.mgmt-ground h1.mgmt-title reading "Operator sign-in",
+ *     read via textContent — or, ONLY on rows the policy marks gateDoor
+ *     "api-401" (the six client rooms whose page.tsx carries no
+ *     OperatorGate), the API's 401 courtesy. On a RENDER row ANY redirect
+ *     hop fails the cell — redirect-then-gate does not meet the gate. On
+ *     a site-build REDIRECT row the redirect to /a IS the door (R14);
  *   a row marked `pending` is asserted AS DECLARED TODAY and the note is
  *     printed beside the cell — today's truth, visibly pending.
  * The row's `source` key (416's per-row provenance) is READ and ignored —
@@ -139,8 +142,10 @@ const AUTHS = ["operator", "signedout"];
    :109 `<h1 className="mgmt-title mb-4">Operator sign-in</h1>`). The API's
    401 courtesy is the policy's second door, accepted ONLY on rows the
    policy marks `gateDoor: "api-401"` (the six client rooms whose page.tsx
-   carries no OperatorGate). A signed-out gate cell fails on ANY redirect
-   hop — redirect-then-gate does not meet the gate. */
+   carries no OperatorGate). On a RENDER row a signed-out gate cell fails
+   on ANY redirect hop — redirect-then-gate does not meet the gate. On a
+   site-build REDIRECT row the redirect to /a IS the door (R14), and the
+   landing's gate DOM is asserted by the same match (R14a). */
 const GATE_SELECTOR = "main.mgmt-ground h1.mgmt-title";
 const GATE_TITLE = "Operator sign-in";
 /* R3: the room's own denial words — an API's 401 courtesy surfacing in the
@@ -412,16 +417,20 @@ function readPolicy() {
 }
 
 /* What this cell must do — the policy row read against this build's chrome
-   and this auth state. Nothing here comes from the tree. R2's order:
-   alwaysRedirectTo redirects under EVERY auth (it is unconditional); a
-   signedOut "gate" row owes the gate IN PLACE to a signed-out visitor —
-   even where the same row redirects the operator under the site chrome
-   (a redirect-then-gate does not meet the gate; the cell fails and the
-   RED is reported, never patched). */
+   and this auth state. Nothing here comes from the tree. The order, R2 as
+   amended by R14 (the Admiral, block 968,215): alwaysRedirectTo redirects
+   under EVERY auth (it is unconditional); under the SITE build a
+   siteChrome "redirect" row redirects BOTH auths — the redirect to /a IS
+   the signed-out door (R14), and the landing must render the OperatorGate
+   DOM (R14a, gateLanding below); under the SCAR build nothing changes — a
+   signedOut "gate" row owes the gate IN PLACE, and on a RENDER row any
+   redirect hop still fails the cell (redirect-then-gate does not meet the
+   gate there). */
 function expectationFor(row, chrome, auth) {
   if (row.alwaysRedirectTo) return { kind: "redirect", target: row.alwaysRedirectTo };
+  if (chrome === "site" && row.siteChrome === "redirect")
+    return { kind: "redirect", target: "/a", gateLanding: auth === "signedout" };
   if (auth === "signedout") return { kind: "gate", door: row.gateDoor ?? "operator-gate" };
-  if (chrome === "site" && row.siteChrome === "redirect") return { kind: "redirect", target: "/a" };
   return { kind: "render" };
 }
 
@@ -664,6 +673,12 @@ async function walkCell(ctx, base, row, url, chrome, theme, auth, cookie, findin
       if (finalPath === url) bad.push(`never left ${url}`);
       if (status !== 200) bad.push(`landing answered HTTP ${status}`);
       if (hasError) bad.push("error boundary on the landing");
+      /* R14a, prove don't assume: a signed-out site-redirect cell's door
+         is the redirect — the landing /a must render the OperatorGate DOM */
+      if (expect.gateLanding && !hasGate)
+        bad.push(
+          `the redirect landed on ${finalPath} but the OperatorGate DOM (${GATE_SELECTOR} = "${GATE_TITLE}") did not render there — the door did not open`
+        );
     } else if (expect.kind === "gate") {
       /* R2: a signed-out gate cell fails on ANY redirect hop */
       if (hops.length) bad.push(`signed-out met a redirect, not the gate (${hopLabel}) — redirect-then-gate does not meet the gate`);
@@ -928,12 +943,14 @@ async function launchBrowser(puppeteer) {
    verdict is GREEN only when the walker's actual sets match them exactly —
    every assertion the walker owns is fired and caught, none is proven by
    proxy. The arithmetic, quoted in SUMMARY.md:
-     15 rows × 2 themes × 2 auths = 60 cells
-     28 fail = ten 2-cell room/gate wrongs (operator or signedout, both
+     17 rows × 2 themes × 2 auths = 68 cells
+     32 fail = ten 2-cell room/gate wrongs (operator or signedout, both
                themes) + two alwaysRedirectTo rows failing all 4 cells
-               (one wrong-target, one OFF-ORIGIN, R6)
-     28 pass = the honest halves of those cases + the /a control +
-               the client-nav landing row
+               (one wrong-target, one OFF-ORIGIN, R6) + one site-redirect
+               row 302ing to the WRONG target, failing all 4 cells (R14)
+     32 pass = the honest halves of those cases + the /a control +
+               the client-nav landing row + the R14 site-redirect row
+               whose signed-out landing renders the gate DOM (R14a)
       4 dash = the dynamic row with no substitution
      plus the client-navigation step, expected FAIL (plain HTML navigates
      as a document load, R7). */
@@ -946,7 +963,9 @@ const ST_GATE = `<!doctype html><html><body><main class="mgmt-ground"><h1 class=
 const SELFTEST_CASES = [
   { route: "/a", failAuths: [] }, // control — served honestly; links deeper for the client-nav step
   { route: "/a/t-scar-id", failAuths: ["operator"] }, // a scar identity node in the room (R1, page-wide)
-  { route: "/a/t-redir-gate", failAuths: ["signedout"] }, // signedout is 302'd away — redirect-then-gate never meets the gate (R2)
+  { route: "/a/t-redir-gate", failAuths: ["signedout"] }, // signedout is 302'd away — redirect-then-gate never meets the gate on a RENDER row (R2, stands under R14)
+  { route: "/a/t-redir-door", failAuths: [], row: { siteChrome: "redirect" } }, // R14: a site-redirect row 302s BOTH auths to /a — the redirect IS the door; the signed-out landing renders the gate DOM (R14a)
+  { route: "/a/t-redir-wrong", failAuths: ["operator", "signedout"], row: { siteChrome: "redirect" } }, // R14: a site-redirect row 302ing to the WRONG target fails both auths
   { route: "/a/t-text-gate", failAuths: ["signedout"] }, // the gate's WORDS without the gate's DOM (R2)
   { route: "/a/t-no-gate", failAuths: ["signedout"] }, // 200, no gate, no 401 courtesy
   { route: "/a/t-gated-room", failAuths: ["operator"] }, // the gate under a valid operator cookie (R3)
@@ -1007,6 +1026,10 @@ async function selftest(ports, outDir) {
       case "/a/t-redir-gate":
         if (authed) return send(200, ST_ROOM());
         return send(302, "", { Location: "/a" });
+      case "/a/t-redir-door":
+        return send(302, "", { Location: "/a" });
+      case "/a/t-redir-wrong":
+        return send(302, "", { Location: "/a/studio" });
       case "/a/t-text-gate":
         return send(200, authed ? ST_ROOM() : html('<main class="mgmt-body"><p>Operator sign-in</p><p>the words without the gate DOM.</p></main>'));
       case "/a/t-no-gate":
@@ -1104,10 +1127,12 @@ async function selftest(ports, outDir) {
       lines.push(
         `SELFTEST GREEN: every check was proven RED exactly where it must be — ` +
           `${act.fail.size} failing cells, ${act.pass.size} passing, ${act.dash.size} dashed, matching the computed ` +
-          `expectation cell-for-cell (a scar identity node page-wide; redirect-then-gate; the gate's words without ` +
+          `expectation cell-for-cell (a scar identity node page-wide; redirect-then-gate on a render row; the gate's words without ` +
           `its DOM; no gate at all; the gate under an operator cookie; a same-origin 500; an API 401 with denial ` +
           `words; a pageerror; an empty room root; the error-boundary words; a wrong redirect target; an OFF-ORIGIN ` +
-          `redirect; an unsubstituted dynamic row dashed) — and the client-navigation step FAILED as it must ` +
+          `redirect; a site-redirect row 302ing to the WRONG target (R14); an unsubstituted dynamic row dashed) — ` +
+          `with the R14 door row PASSING as computed (signed-out 302 → /a, the OperatorGate DOM on the landing, R14a) — ` +
+          `and the client-navigation step FAILED as it must ` +
           `(${nav.detail}). The walker's reds are real.`
       );
       rc = 0;
