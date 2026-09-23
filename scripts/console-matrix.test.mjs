@@ -108,6 +108,15 @@ function checkMatrix(aDir, policy) {
     if (!hasAlways && row.signedOut !== undefined && row.signedOut !== "gate")
       failures.push(`${row.route}: unknown signedOut value "${row.signedOut}" (only "gate" is declared today)`);
 
+    /* gateDoor (TASK-418 fix round, R2): the row-key union learns gateDoor,
+       value set {api-401} — the signed-out door is the API's 401 courtesy
+       ONLY where the policy marks it; it never rides an alwaysRedirectTo
+       row (those omit signedOut by the pair rule above). */
+    if (row.gateDoor !== undefined && row.gateDoor !== "api-401")
+      failures.push(`${row.route}: unknown gateDoor value "${row.gateDoor}" (only "api-401" is declared)`);
+    if (row.gateDoor !== undefined && hasAlways)
+      failures.push(`${row.route}: gateDoor on an alwaysRedirectTo row is nonsense — there is no gate to name a door for`);
+
     if (row.siteChrome !== "redirect" && row.siteChrome !== "render") {
       failures.push(`${row.route}: unknown siteChrome value "${row.siteChrome}"`);
       continue;
@@ -232,6 +241,19 @@ const ALIAS_PAGE = `import { redirect } from "next/navigation";\nexport default 
   const aDir = fixture({ "/a": BRANCH_PAGE });
   const failures = checkMatrix(aDir, { routes: [{ route: "/a", siteChrome: "render", signedOut: "gate" }] });
   t("fixture: the page.tsx:105 render branch is NOT an idiom carrier", failures.length === 0, failures.join(" | "));
+}
+
+/* gateDoor: a bad value is caught; a well-formed api-401 row is clean */
+{
+  const aDir = fixture({ "/a/booking": RENDER_PAGE });
+  const bad = checkMatrix(aDir, { routes: [{ route: "/a/booking", siteChrome: "render", signedOut: "gate", gateDoor: "gate-ish" }] });
+  t("fixture: an unknown gateDoor value → caught",
+    bad.some((f) => f.includes("/a/booking") && f.includes("unknown gateDoor")), bad.join(" | "));
+  const good = checkMatrix(aDir, { routes: [{ route: "/a/booking", siteChrome: "render", signedOut: "gate", gateDoor: "api-401" }] });
+  t("fixture: a well-formed gateDoor api-401 row is clean", good.length === 0, good.join(" | "));
+  const onAlias = checkMatrix(aDir, { routes: [{ route: "/a/booking", siteChrome: "redirect", alwaysRedirectTo: "/a", gateDoor: "api-401" }] });
+  t("fixture: gateDoor on an alwaysRedirectTo row → caught",
+    onAlias.some((f) => f.includes("/a/booking") && f.includes("gateDoor on an alwaysRedirectTo")), onAlias.join(" | "));
 }
 
 /* ══ the real tree against the committed policy ══════════════════════════ */
