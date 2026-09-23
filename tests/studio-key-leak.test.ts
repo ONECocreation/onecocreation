@@ -367,6 +367,7 @@ describe("unchanged doors (RED on 5828cd0)", () => {
   it("the normalized co-create name `studio` is reserved — it can never mint an unsigned co-create door", async () => {
     const { cocreateGuestDoor } = await import("@/app/a/live/go-live-room");
     const meeting = {
+      rail: "vdo" as const,
       jitsiDomain: "meet.onecocreation.com",
       jitsiPrefix: "onecocreation-",
       vdoRoomPrefix: "onecocreation",
