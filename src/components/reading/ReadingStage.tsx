@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- the book art is a static house asset; reading/page.tsx carries the same header */
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import JitsiRoom from "@/components/booking/JitsiRoom";
 import Stage2Door from "@/components/rooms/Stage2Door";
 import JitsiViewer from "@/components/reading/JitsiViewer";
@@ -18,9 +18,11 @@ import JitsiViewer from "@/components/reading/JitsiViewer";
  * The phase-control law (Amendment 1): each phase has exactly ONE primary
  * control — closed has none, published has "Watch Love live", watching has
  * only the two small kit-btn-quiet tools (Full screen and Leave), failed
- * has "Try again", ended has "Watch again" only while the room is still
- * published. The book art is in closed, published and ended; there is no
- * <img> of it while watching (JitsiViewer replaces it in the SAME frame).
+ * has "Try again", left-while-published (K122 item 8 — a hangup is not an
+ * ending) has "Watch again", ended has "Watch again" only while the room
+ * is still published. The book art is in closed, published and ended;
+ * there is no <img> of it while watching (JitsiViewer replaces it in the
+ * SAME frame).
  *
  * THE SINGLE-EMBED CONDITIONAL (StageView.tsx:150-163's pattern): joining
  * Stage 2 unmounts the Stage 1 viewer and mounts the UNCHANGED JitsiRoom
@@ -40,10 +42,19 @@ import JitsiViewer from "@/components/reading/JitsiViewer";
 export interface ReadingStageProps {
   initialPhase: "closed" | "prepared" | "published";
   next: { startsAtMs: number; endsAtMs: number } | null;
+  /** the occurrence AFTER next (K122 item 7) — the ended words name the
+   *  next reading, never the one that just ended */
+  following: { startsAtMs: number; endsAtMs: number } | null;
   scheduleTz: string;
   jitsiDomain: string;
   /** the server-rendered Stage2Details — visibility is the island's only say */
   stage2Details: React.ReactNode;
+  /** the server-composed blocks countdown — rendered only while CLOSED
+   *  (K122 item 6a: the counting stops the moment the phase says otherwise) */
+  countdown: React.ReactNode;
+  /** the when-lines companion — rendered while live/failed/left, never in
+   *  ended (the ended words name the date themselves) */
+  countdownWhen: React.ReactNode;
 }
 
 export interface ReadingStageBodyProps {
@@ -51,12 +62,18 @@ export interface ReadingStageBodyProps {
   watching: boolean;
   failed: boolean;
   ended: boolean;
+  /** the viewer left a STILL-PUBLISHED stage (K122 item 8) — "You left
+   *  the reading." + Watch again, never the ended words */
+  left: boolean;
   room: string | null;
   stage2Room: string | null;
   jitsiDomain: string;
   nextWords: string | null;
   /** the server-rendered Stage2Details (null renders nothing extra) */
   stage2Details: React.ReactNode;
+  /** the server-composed countdown nodes — see ReadingStageProps */
+  countdown: React.ReactNode;
+  countdownWhen: React.ReactNode;
   onWatch: () => void;
   onTryAgain: () => void;
   onLeave: () => void;
@@ -66,7 +83,8 @@ export interface ReadingStageBodyProps {
   /** the frame Full screen requests — the island owns the ref. */
   frameRef?: React.RefObject<HTMLDivElement | null>;
   /** JitsiViewer's farewell events (its hangup, or the host ending the
-   *  call) — the island marks the reading ended; defaults to Leave. */
+   *  call) — the island re-reads the stage's fresh truth: left-while-
+   *  published, or ended (K122 item 8); defaults to Leave. */
   onViewerEnded?: () => void;
   /** JitsiViewer's script-load failure — the island marks failed. */
   onViewerFailed?: () => void;
@@ -89,6 +107,19 @@ export function stage1WatchTarget(body: Stage1Wire | null): string | null {
   return typeof body.room === "string" && body.room.length > 0 ? body.room : null;
 }
 
+/** K122 item 7 — which occurrence the island's words name: `next` before
+ *  its start, the FOLLOWING one once the clock is at or past the start
+ *  (a visitor who loaded before or during the reading must never be told
+ *  the reading that just ended is "the next reading"). */
+export function readingShownNext(
+  next: { startsAtMs: number; endsAtMs: number } | null,
+  following: { startsAtMs: number; endsAtMs: number } | null,
+  nowMs: number,
+): { startsAtMs: number; endsAtMs: number } | null {
+  if (next && following && nowMs >= next.startsAtMs) return following;
+  return next;
+}
+
 const BOOK_ALT = "Love's book, its pages curling into a heart, a fairy and a dragon drawn in gold";
 
 export function ReadingStageBody({
@@ -96,11 +127,14 @@ export function ReadingStageBody({
   watching,
   failed,
   ended,
+  left,
   room,
   stage2Room,
   jitsiDomain,
   nextWords,
   stage2Details,
+  countdown,
+  countdownWhen,
   onWatch,
   onTryAgain,
   onLeave,
@@ -111,12 +145,16 @@ export function ReadingStageBody({
   onViewerEnded,
   onViewerFailed,
 }: ReadingStageBodyProps) {
-  /* the Stage 2 card's visibility (the approved sheets): once the reading
-     is live, once it has ended, and for the whole time Stage 2 itself is
-     joined — a fresh closed visitor sees the book and the welcome only */
-  const showStage2Card = phase === "published" || ended || stage2Room !== null;
+  /* the Stage 2 card's visibility (K122 item 10 — the approved sheets):
+     once the viewer is WATCHING (the live sheet), once it has ended, and
+     for the whole time Stage 2 itself is joined — the published first
+     paint (the open sheet) has none */
+  const showStage2Card = watching || ended || stage2Room !== null;
   return (
     <>
+      {/* the countdown rides the island now (K122 item 6a): the cells only
+          while closed, the when-lines until ended, NEITHER in ended */}
+      {phase === "closed" && !ended ? countdown : !ended ? countdownWhen : null}
       {stage2Room ? (
         /* THE SINGLE-EMBED CONDITIONAL — Stage 2 rides the SAME frame,
            the Stage 1 viewer is gone */
@@ -175,7 +213,11 @@ export function ReadingStageBody({
             ) : ended ? (
               <div className="kit-stage-controls">
                 <p className="kit-body">The reading has ended — thank you for being here.</p>
-                {nextWords && <p className="kit-text-quiet">{`The next reading is ${nextWords}.`}</p>}
+                {/* K122 item 13 — with no date (the schedule off) the words
+                    promise one soon instead of naming one */}
+                <p className="kit-text-quiet">
+                  {nextWords ? `The next reading is ${nextWords}.` : "Love will share the next reading date soon."}
+                </p>
                 {phase === "published" && (
                   <div className="kit-btn-row">
                     <button type="button" className="kit-btn kit-btn-main" onClick={onWatch}>
@@ -183,6 +225,17 @@ export function ReadingStageBody({
                     </button>
                   </div>
                 )}
+              </div>
+            ) : left ? (
+              /* K122 item 8 — the viewer's own hangup on a STILL-PUBLISHED
+                 stage: honest words and the way back in, never the ended words */
+              <div className="kit-stage-controls">
+                <p className="kit-body">You left the reading.</p>
+                <div className="kit-btn-row">
+                  <button type="button" className="kit-btn kit-btn-main" onClick={onWatch}>
+                    Watch again
+                  </button>
+                </div>
               </div>
             ) : phase === "published" ? (
               <div className="kit-stage-controls">
@@ -222,17 +275,47 @@ export function ReadingStageBody({
 
 const POLL_MS = 20_000;
 
-export default function ReadingStage({ initialPhase, next, scheduleTz, jitsiDomain, stage2Details }: ReadingStageProps) {
+export default function ReadingStage({
+  initialPhase,
+  next,
+  following,
+  scheduleTz,
+  jitsiDomain,
+  stage2Details,
+  countdown,
+  countdownWhen,
+}: ReadingStageProps) {
   /* prepared is PRIVATE — a visitor's phase is closed until published */
   const [phase, setPhase] = useState<"closed" | "published">(initialPhase === "published" ? "published" : "closed");
   const [room, setRoom] = useState<string | null>(null);
   const [watching, setWatching] = useState(false);
   const [failed, setFailed] = useState(false);
   const [ended, setEnded] = useState(false);
+  const [left, setLeft] = useState(false);
+  /* the ended words' date — computed ONLY in handlers (the purity rule
+     never meets Date.now() in render), and only ever rendered in the
+     ended branch, so SSR and the first client paint agree */
+  const [nextWords, setNextWords] = useState<string | null>(null);
   const [stage2Room, setStage2Room] = useState<string | null>(null);
   const phaseRef = useRef(phase);
   const frameRef = useRef<HTMLDivElement | null>(null);
   const pollNow = useRef<() => void>(() => {});
+
+  /* K122 item 7 + the purity law — the ended words name the NEXT reading
+     (the FOLLOWING occurrence once the clock is at or past next's start),
+     computed here in handler-land, never in render. */
+  const markEnded = useCallback(() => {
+    setLeft(false);
+    const shown = readingShownNext(next, following, Date.now());
+    setNextWords(
+      shown
+        ? new Intl.DateTimeFormat("en-US", { timeZone: scheduleTz, weekday: "long", month: "long", day: "numeric" }).format(
+            new Date(shown.startsAtMs),
+          )
+        : null,
+    );
+    setEnded(true);
+  }, [next, following, scheduleTz]);
 
   useEffect(() => {
     let alive = true;
@@ -246,7 +329,7 @@ export default function ReadingStage({ initialPhase, next, scheduleTz, jitsiDoma
             /* the stage closed under us — the viewer leaves on THIS poll */
             setWatching(false);
             setRoom(null);
-            setEnded(true);
+            markEnded();
           }
           phaseRef.current = nextPhase;
           setPhase(nextPhase);
@@ -263,7 +346,7 @@ export default function ReadingStage({ initialPhase, next, scheduleTz, jitsiDoma
       alive = false;
       clearInterval(id);
     };
-  }, []);
+  }, [markEnded]);
 
   /* the Watch click's OWN fresh, uncached re-check at the instant of the
      click — the poll above is display only, never the authorization */
@@ -279,6 +362,7 @@ export default function ReadingStage({ initialPhase, next, scheduleTz, jitsiDoma
         setWatching(true);
         setFailed(false);
         setEnded(false);
+        setLeft(false);
       } else {
         /* the stage moved between the last paint and this click — a fresh
            closed reads as ended, and nothing mounts */
@@ -286,11 +370,35 @@ export default function ReadingStage({ initialPhase, next, scheduleTz, jitsiDoma
         setPhase("closed");
         setRoom(null);
         setWatching(false);
-        setEnded(true);
+        markEnded();
       }
     } catch {
       setFailed(true);
     }
+  }
+
+  /* K122 item 8 — a viewer's own hangup is NEVER assumed to be "the
+     reading has ended": the stage's own fresh truth decides. Still
+     published -> "You left the reading." + Watch again; only a closed or
+     expired stage shows the ended words. */
+  function viewerEnded() {
+    setWatching(false);
+    setRoom(null);
+    fetch("/api/stage1", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: Stage1Wire | null) => {
+        if (d?.ok && d.phase === "published") {
+          setEnded(false);
+          setLeft(true);
+        } else {
+          markEnded();
+        }
+      })
+      .catch(() => {
+        /* a failed re-check can't know — the ended words are the honest
+           fallback, never a "still live" claim on a guess */
+        markEnded();
+      });
   }
 
   function leave() {
@@ -321,23 +429,20 @@ export default function ReadingStage({ initialPhase, next, scheduleTz, jitsiDoma
     pollNow.current(); // the reading's own fresh truth at once — never an auto-restart
   }
 
-  const nextWords = next
-    ? new Intl.DateTimeFormat("en-US", { timeZone: scheduleTz, weekday: "long", month: "long", day: "numeric" }).format(
-        new Date(next.startsAtMs),
-      )
-    : null;
-
   return (
     <ReadingStageBody
       phase={phase}
       watching={watching}
       failed={failed}
       ended={ended}
+      left={left}
       room={room}
       stage2Room={stage2Room}
       jitsiDomain={jitsiDomain}
       nextWords={nextWords}
       stage2Details={stage2Details}
+      countdown={countdown}
+      countdownWhen={countdownWhen}
       onWatch={() => void watch()}
       onTryAgain={tryAgain}
       onLeave={leave}
@@ -345,10 +450,7 @@ export default function ReadingStage({ initialPhase, next, scheduleTz, jitsiDoma
       onLeaveStage2={leaveStage2}
       onJoinStage2={joinStage2}
       frameRef={frameRef}
-      onViewerEnded={() => {
-        setWatching(false);
-        setEnded(true);
-      }}
+      onViewerEnded={viewerEnded}
       onViewerFailed={() => {
         setWatching(false);
         setFailed(true);

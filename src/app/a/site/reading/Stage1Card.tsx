@@ -45,6 +45,14 @@ const PHASE_WORDS = {
   published: "Published — viewers can watch on /reading.",
 } as const;
 
+/* the host row's OWN state line, said once under its words, in every phase
+   (K122 item 2, verbatim) — it stops saying "then Publish" once published */
+const HOST_WORDS = {
+  closed: "Appears once you Prepare",
+  prepared: "Room ready: open it, log in as love, lock mic, video, screen share and chat, then Publish",
+  published: "Live: this is your room",
+} as const;
+
 export function Stage1CardBody({ state, busy, error, onAct }: Stage1CardBodyProps) {
   /* the state line: busy or error REPLACES the phase words, said once */
   const stateLine = busy ? (
@@ -88,7 +96,7 @@ export function Stage1CardBody({ state, busy, error, onAct }: Stage1CardBodyProp
   );
 
   return (
-    <Card>
+    <Card className="kit-stage1-card">
       <ul className="kit-rows">
         <li data-row="lifecycle">
           <span>
@@ -101,9 +109,8 @@ export function Stage1CardBody({ state, busy, error, onAct }: Stage1CardBodyProp
         </li>
         <li data-row="host">
           <span>
-            {state.room
-              ? "Log in as love, then in the room's settings block guests' mic, video and screen share, and disable chat for non-moderators — then Publish."
-              : "Prepare first — the host link appears once a room exists."}
+            The host door — the reading&apos;s own room, opened as love.
+            <em data-host={state.phase}>{HOST_WORDS[state.phase]}</em>
           </span>
           <span className="kit-rows-end">{hostControl}</span>
         </li>
@@ -116,6 +123,23 @@ export default function Stage1Card() {
   const [state, setState] = useState<Stage1AdminState | null>(null);
   const [busy, setBusy] = useState<"prepare" | "publish" | "close" | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  /* the card's own re-read after any refused or failed PUT (K122 item 4 —
+     a 409/500 keeps offering the old action otherwise, plus a live host
+     link to a room the server may already have closed). The error words
+     stay in the state line while the rows catch up to the real phase.
+     The MOUNT read keeps its own inline form below: the lint purity rule
+     (react-hooks/set-state-in-effect) never meets a shared useCallback
+     inside the effect. */
+  const refresh = useCallback(async () => {
+    try {
+      const r = await fetch("/api/admin/stage1", { cache: "no-store" });
+      const d = r.ok ? await r.json() : null;
+      if (d?.ok) setState({ phase: d.phase, room: d.room, jitsiDomain: d.jitsiDomain });
+    } catch {
+      /* the error words already say their piece — the rows keep the last truth */
+    }
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -130,30 +154,36 @@ export default function Stage1Card() {
     };
   }, []);
 
-  const act = useCallback(async (action: "prepare" | "publish" | "close") => {
-    setBusy(action);
-    setError(null);
-    try {
-      const res = await fetch("/api/admin/stage1", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-        cache: "no-store",
-      });
-      const data = await res.json();
-      if (data.ok) {
-        setState({ phase: data.phase, room: data.room, jitsiDomain: data.jitsiDomain });
-      } else {
-        /* a refused Publish (409 — Stage 1 never publishes from closed)
-           lands here the same way as any other honest refusal */
-        setError(data.reason ?? `the stage refused (${res.status})`);
+  const act = useCallback(
+    async (action: "prepare" | "publish" | "close") => {
+      setBusy(action);
+      setError(null);
+      try {
+        const res = await fetch("/api/admin/stage1", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action }),
+          cache: "no-store",
+        });
+        const data = await res.json();
+        if (data.ok) {
+          setState({ phase: data.phase, room: data.room, jitsiDomain: data.jitsiDomain });
+        } else {
+          /* a refused Publish (409 — Stage 1 never publishes from closed)
+             lands here the same way as any other honest refusal; the error
+             words stay in the state line while the rows re-read the truth */
+          setError(data.reason ?? `the stage refused (${res.status})`);
+          void refresh();
+        }
+      } catch {
+        setError("the stage didn't answer — try again");
+        void refresh();
+      } finally {
+        setBusy(null);
       }
-    } catch {
-      setError("the stage didn't answer — try again");
-    } finally {
-      setBusy(null);
-    }
-  }, []);
+    },
+    [refresh],
+  );
 
   if (!state) {
     return (

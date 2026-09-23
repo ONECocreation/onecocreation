@@ -192,8 +192,8 @@ describe("the default export's own wiring — source pins (self-contained fetch/
 
   it("after a refused or failed PUT the card re-reads GET /api/admin/stage1 (K122 item 4) — the error words stay in the state line while the rows catch up to the real phase", async () => {
     const src = await read(CARD);
-    /* the mount read, the refusal path, and the catch path each re-read */
-    expect(src.match(/void refresh\(\)/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+    /* the refusal path AND the catch path each re-read */
+    expect(src.match(/void refresh\(\)/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
   });
 
   it("the Card carries kit-stage1-card — the narrow-width row stacking is scoped to the card's own class (K122 item 1), the shared .kit-rows grid untouched for Stage2Details", async () => {

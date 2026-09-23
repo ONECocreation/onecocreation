@@ -343,13 +343,9 @@ describe("blocks — the four cells, tabular numerals, and the honest edges", ()
     expect(html).not.toMatch(/live|open|watch/i);
   });
 
-  it("off: 'Stay tuned, with love.' — no cells, no when-lines, no button", () => {
+  it("off: the countdown shows NOTHING (K122 item 13 — a clean 'date to come' page) — no cells, no when-lines, no words, no button", () => {
     const html = renderIsland(props({ schedule: { ...BASE, on: false }, next: null }));
-    expect(html).toContain("Stay tuned, with love.");
-    expect(html).not.toContain("kit-count");
-    expect(html).not.toContain("kit-when");
-    expect(html).not.toContain("<button");
-    expect(html).not.toContain("<a ");
+    expect(html).toBe("");
   });
 });
 

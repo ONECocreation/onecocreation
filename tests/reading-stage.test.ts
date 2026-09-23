@@ -179,6 +179,13 @@ describe("ended — the book, the ended words, the next date; Watch again only w
     expect(html).not.toContain("Watch again");
     expect(html).not.toContain("<button");
   });
+
+  it("K122 item 13 — ended with NO date (nextWords null, the schedule off): 'Love will share the next reading date soon.', never 'The next reading is …'", () => {
+    const html = render(bodyProps({ phase: "closed", ended: true }));
+    expect(html).toContain("The reading has ended — thank you for being here.");
+    expect(html).toContain("Love will share the next reading date soon.");
+    expect(html).not.toContain("The next reading is");
+  });
 });
 
 describe("the Stage-2 branch — the single-embed conditional (StageView.tsx:150-163's pattern)", () => {

@@ -96,6 +96,10 @@ export default async function ReadingPage() {
   const config = await getSiteConfig();
   const schedule = config.reading ?? DEFAULT_READING_SCHEDULE;
   const { asOfMs, next } = deriveReading(schedule);
+  /* K122 item 7 — the occurrence AFTER next: the island's ended words
+     name the next reading, never the one that just ended (a visitor who
+     loaded before or during the window holds TODAY'S occurrence in next) */
+  const following = next ? nextReading(schedule, next.endsAtMs) : null;
   const stage1Phase = (await getStage1State()).phase;
   const weekPass = await deriveWeekPass();
 
@@ -114,26 +118,31 @@ export default async function ReadingPage() {
           <div className="wrap kitx-flow">
             <p className="kicker">{recurrenceLabel ? `Live every ${recurrenceLabel} · free` : "Readings with Love · free"}</p>
             <h1 className="kit-h1">Read with Love</h1>
-            <ReadingHeroCountdown schedule={schedule} next={next} asOfMs={asOfMs} variant="blocks" />
+            {/* the countdown rides INSIDE the island now (K122 item 6a —
+                the stage2Details idiom): only the island knows the phase,
+                so only it can stop the counting when the stage goes live */}
             <ReadingStage
               initialPhase={stage1Phase}
               next={next}
+              following={following}
               scheduleTz={schedule.tz}
               jitsiDomain={config.meeting.jitsiDomain}
               stage2Details={<Stage2Details weekPass={weekPass} />}
+              countdown={<ReadingHeroCountdown schedule={schedule} next={next} asOfMs={asOfMs} variant="blocks" />}
+              countdownWhen={<ReadingHeroCountdown schedule={schedule} next={next} asOfMs={asOfMs} variant="blocks" whenOnly />}
             />
           </div>
         </section>
 
-        {/* STAY IN THE KNOW (M4) — the letters, never a second door; only
-            while there is a reading to remind about. */}
-        {schedule.on && next && (
-          <section className="kitx-section kitx-section-first">
-            <div className="wrap">
-              <ReadingSignUp variant="public" state={{ kind: "upcoming", startsAtMs: next.startsAtMs, endsAtMs: next.endsAtMs }} />
-            </div>
-          </section>
-        )}
+        {/* STAY IN THE KNOW (M4) — the letters, never a second door; shown
+            in EVERY schedule state (K122 item 13 — the one door that works
+            without a date): with the schedule off the state is "off" and
+            the public card's words name no date. */}
+        <section className="kitx-section kitx-section-first">
+          <div className="wrap">
+            <ReadingSignUp variant="public" state={next ? { kind: "upcoming", startsAtMs: next.startsAtMs, endsAtMs: next.endsAtMs } : { kind: "off" }} />
+          </div>
+        </section>
 
         {/* WHAT YOU WILL EXPERIENCE — M3's three lines: the weekday
             DERIVED (never the mock's literal), the clock living once at

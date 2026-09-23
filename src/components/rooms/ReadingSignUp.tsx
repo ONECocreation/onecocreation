@@ -293,7 +293,10 @@ export function ReadingSignUpCard({
 export default function ReadingSignUp({ state, variant = "room" }: { state: NoticeState; variant?: "room" | "public" }) {
   const { member, checked } = useMemberSession();
 
-  if (state.kind === "off") return null;
+  /* the off-gate is the ROOM variant's (K122 item 13): the public variant
+     shows in EVERY schedule state — it is the one door that works without
+     a date, and its words name none. The room render stays byte-identical. */
+  if (state.kind === "off" && variant === "room") return null;
 
   const kind = classifySignUpKind({ checked, member: member ? { space: member.space } : null });
   if (kind === "loading") return null; // Ground: never flash the form before the session resolves

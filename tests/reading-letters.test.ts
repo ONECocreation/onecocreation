@@ -321,6 +321,16 @@ describe("sendReadingDayOf — per-recipient send (R1/R2/R3)", () => {
 /* ═══════════════════════ the tick's added call ═══════════════════════ */
 
 describe("enqueueReadingDayOf — the day-of gate (R5, decision A's tick, the pure function of schedule/nowMs/once-marker)", () => {
+  /* the send path's R1 rule re-reads the REAL clock at the moment of the
+     send (sendReadingDayOf: Date.now() >= startsAtMs -> skippedLate), so
+     these fixtures must HOLD the clock at the fixture tick — without it
+     the suite goes red the instant real time passes 2026-09-23 19:11 UTC
+     (detonated under the K122 fix round, block 968,284). */
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(TICK_15Z);
+  });
+
   it("fires at a 15:00-UTC-shaped tick on the occurrence's zone-day, with capacity, for every reading-tagged subscriber", async () => {
     subscribedState.add("a@example.com");
     subscribedState.add("b@example.com");

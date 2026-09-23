@@ -19,6 +19,10 @@ export const dynamic = "force-dynamic";
  * `jitsiDomain` rides the state response via `getSiteConfig().meeting`
  * (read-only call into an untouched file) — the SAME field the public
  * route reads for a published state (named once, never a second literal).
+ *
+ * SEC-4 (K122, block 968,284): a failed write (the vault unreachable) is
+ * CAUGHT and answered `500 { ok:false, reason }` no-store — a bare throw
+ * past the handler would answer 500 with no Cache-Control at all.
  */
 
 function jsonNoStore(body: unknown, status = 200) {
@@ -56,13 +60,20 @@ export async function PUT(request: Request) {
     return jsonNoStore({ ok: false, reason: "bad request" }, 400);
   }
   const action = body?.action;
-  if (action === "prepare") await prepareStage1();
-  else if (action === "publish") {
-    const published = await publishStage1();
-    if (published === null) {
-      return jsonNoStore({ ok: false, reason: "prepare first — Stage 1 never publishes from closed" }, 409);
-    }
-  } else if (action === "close") await closeStage1();
-  else return jsonNoStore({ ok: false, reason: "action must be prepare, publish, or close" }, 400);
+  /* SEC-4 (K122): a write that throws past the handler would answer a bare
+     500 with NO Cache-Control — a secret-bearing route never rides an
+     intermediary cache, so the failure is CAUGHT and answered no-store */
+  try {
+    if (action === "prepare") await prepareStage1();
+    else if (action === "publish") {
+      const published = await publishStage1();
+      if (published === null) {
+        return jsonNoStore({ ok: false, reason: "prepare first — Stage 1 never publishes from closed" }, 409);
+      }
+    } else if (action === "close") await closeStage1();
+    else return jsonNoStore({ ok: false, reason: "action must be prepare, publish, or close" }, 400);
+  } catch {
+    return jsonNoStore({ ok: false, reason: "the stage store didn't answer — nothing changed" }, 500);
+  }
   return stateResponse();
 }

@@ -40,6 +40,10 @@ export interface ReadingHeroCountdownProps {
   next: { startsAtMs: number; endsAtMs: number } | null;
   asOfMs: number;
   variant: "hero" | "card" | "blocks";
+  /** blocks only (K122 item 6a): render just the when-lines — no cells, no
+   *  "Starting now." The /reading island mounts BOTH server-composed nodes
+   *  and shows this one once the phase says the counting is over. */
+  whenOnly?: boolean;
 }
 
 const ONE_DAY_MS = 24 * 3600_000;
@@ -75,7 +79,7 @@ function zoneLabel(ms: number, tz: string): string {
   return parts.find((p) => p.type === "timeZoneName")?.value ?? tz;
 }
 
-export default function ReadingHeroCountdown({ schedule, next, asOfMs, variant }: ReadingHeroCountdownProps) {
+export default function ReadingHeroCountdown({ schedule, next, asOfMs, variant, whenOnly }: ReadingHeroCountdownProps) {
   const [state, setState] = useState<NoticeState>(() => firstPaintState(next, asOfMs));
   const [visitorTz, setVisitorTz] = useState<string | null>(null);
   /* blocks only: the per-second tick that walks the four cells down — the
@@ -114,11 +118,11 @@ export default function ReadingHeroCountdown({ schedule, next, asOfMs, variant }
   }, [schedule]);
 
   useEffect(() => {
-    if (variant !== "blocks") return;
+    if (variant !== "blocks" || whenOnly) return; // whenOnly shows no seconds — never pays for the tick
     if (state.kind !== "upcoming" && state.kind !== "soon") return;
     const id = setInterval(() => setTickMs(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [variant, state.kind]);
+  }, [variant, whenOnly, state.kind]);
 
   /* ── TASK-438 (Amendment 1 L3 + Amendment 2 M1): the BLOCKS variant —
      the approved round-3 look's when-group (the day on one line, the time
@@ -126,10 +130,12 @@ export default function ReadingHeroCountdown({ schedule, next, asOfMs, variant }
      never splits — OUR normalizing, never ICU-trusted) plus the four
      countdown cells. Fully self-contained: the hero/card code below is
      byte-untouched, and the window state says "Starting now." — it NEVER
-     infers the room is open from the clock alone. */
+     infers the room is open from the clock alone. The OFF state renders
+     NOTHING (K122 item 13 — with the schedule off /reading is a clean
+     "date to come" page; the countdown shows nothing). */
   if (variant === "blocks") {
     if (state.kind === "off") {
-      return <p className="kit-body">Stay tuned, with love.</p>;
+      return null;
     }
     const nbsp = (s: string) => s.replace(/\s/g, "\u00A0");
     const loveTime = nbsp(`${clockAt(state.startsAtMs, schedule.tz)} ${zoneLabel(state.startsAtMs, schedule.tz)}`);
@@ -144,6 +150,7 @@ export default function ReadingHeroCountdown({ schedule, next, asOfMs, variant }
         )}
       </div>
     );
+    if (whenOnly) return when; // K122 item 6a — no cells, no "Starting now." once the phase says otherwise
     if (state.kind === "window") {
       return (
         <>

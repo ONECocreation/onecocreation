@@ -250,6 +250,11 @@ describe("ReadingSignUp — T-438 public-variant source pins (the machine and th
     expect(src.match(/postReadingSignUp\(/g)!.length).toBeGreaterThanOrEqual(2); // definition + the one shared caller
     expect(src).toContain('source: "reading"');
   });
+
+  it("K122 item 13 — the off-gate belongs to the ROOM variant only: the public variant shows in every schedule state (the one door that works without a date; the room render stays byte-identical)", async () => {
+    const src = await read(SRC_PATH);
+    expect(src).toContain('state.kind === "off" && variant === "room"');
+  });
 });
 
 describe("ReadingSignUp — the default, hook-wired export", () => {
@@ -265,7 +270,7 @@ describe("ReadingSignUp — the default, hook-wired export", () => {
     expect(renderToStaticMarkup(createElement(ReadingSignUp, props))).toBe("");
   });
 
-  it("T-438: variant=\"public\" follows the same two laws — off renders nothing, unchecked renders nothing", () => {
+  it("T-438 + K122 item 13: variant=\"public\" — off no longer gates the card (it shows in every schedule state); under renderToStaticMarkup both states still render nothing ONLY because the session is unchecked (the loading law, never the off-gate)", () => {
     expect(
       renderToStaticMarkup(createElement(ReadingSignUp, { state: { kind: "off" }, variant: "public" })),
     ).toBe("");

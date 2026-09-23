@@ -214,6 +214,13 @@ describe("the page itself — source pins (async server component, headers()-dep
     expect(src).not.toMatch(/href="\/news"/);
   });
 
+  it("K122 item 13 — Stay in the know mounts in EVERY schedule state: never gated on schedule.on && next, the date-less state is { kind: \"off\" }, and the kicker falls back to 'Readings with Love · free'", async () => {
+    const src = await read(PAGE_PATH);
+    expect(src).not.toContain("schedule.on && next");
+    expect(src).toContain('{ kind: "off" }');
+    expect(src).toContain("Readings with Love · free");
+  });
+
   it("no tier or payment logic anywhere on this page", async () => {
     const src = await read(PAGE_PATH);
     expect(src).not.toMatch(/\btier\b/i);

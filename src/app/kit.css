@@ -207,6 +207,13 @@
 .sky-stage::after{content:"";position:absolute;left:0;right:0;bottom:0;height:160px;z-index:0;
   background:linear-gradient(180deg,transparent,var(--ground))}
 .sky-stage>.wrap{position:relative;z-index:2}
+/* the band's rhythm is the mock's own (frag-common-top:3-5): one 12 px
+   flow, the kicker and h1 carrying no margin of their own, the cells 10 px
+   extra above — a shared rule under .sky-stage (Amendment 1 owns it),
+   never a per-instance style (K122 item 6b) */
+.sky-stage .kitx-flow{gap:12px}
+.sky-stage .kitx-flow>.kicker,.sky-stage .kitx-flow>.kit-h1{margin:0}
+.sky-stage .kit-count{margin-top:10px}
 @media (prefers-reduced-motion:reduce){.sky-nebula::before,.hero::before{animation:none}}
 
 /* ── the stage: the framed foreground — the book waits in it, Love's live
@@ -256,6 +263,19 @@
 .kit-rows b{display:block;color:var(--ink-strong);font-weight:700}
 .kit-rows em{display:block;font-style:normal;font-size:.88rem;color:var(--muted);line-height:1.45}
 .kit-rows-end{font-variant-numeric:tabular-nums;color:var(--ink-strong);font-weight:700;white-space:nowrap}
+/* the operator Stage 1 card at narrow widths (K122 item 1): each row
+   stacks — words, then the state line, then the control on the row's
+   right edge, identical for every row in every state. SCOPED to the
+   card's own class: the shared .kit-rows grid above stays two-column for
+   Stage2Details' short prices (SHEET-live-390's approved look) */
+@media (max-width:768px){
+  .kit-stage1-card .kit-rows>li{grid-template-columns:1fr;gap:8px}
+  .kit-stage1-card .kit-rows-end{justify-self:end}
+}
+/* disabled controls LOOK disabled (K122 item 3) — scoped to the rows'
+   own end cell (:disabled and the honestly-marked aria-disabled anchor),
+   never a site-wide kit change */
+.kit-rows-end :disabled,.kit-rows-end [aria-disabled="true"]{opacity:.55;cursor:not-allowed}
 
 /* ── the countdown: four cells, tabular numerals so nothing shifts as it
       ticks; the day on one line, the time on the next — a clock never
@@ -296,7 +316,11 @@
 
 /* ── Stay in the know: one field + one button in a row, stacked on a
       phone ── */
-.kit-signup{max-width:800px;margin:0 auto;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center}
+.kit-signup{max-width:800px;margin:0 auto;box-sizing:border-box}
+/* the 16 px between the words and the field lands on the BODY — kit/Card
+   wraps children in .kit-card-body, so the same rule on the outer shell
+   never reached the field (K122 item 9; measured 0 before) */
+.kit-signup .kit-card-body{display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center}
 .kit-signup .kit-stack{gap:6px}
 .kit-signup .kit-h2{margin:0;font-size:1.5rem}
 .kit-signup .kit-text-quiet{margin:0}
