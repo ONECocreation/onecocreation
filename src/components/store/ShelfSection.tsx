@@ -53,10 +53,18 @@ export const SHELF_BANDS: Record<string, { bg?: string; photo?: string; dark?: b
  *  (`shelfDoorFor`) since this module is the shelf's public surface. */
 export const shelfDoorFor = doorForItem;
 
-/** ascending price — the tiers climb left to right (Admiral, 0018.05.15) */
+/** ascending price — the tiers climb left to right (Admiral, 0018.05.15);
+ *  tasters (one-week passes) sit after the tiers — the Admiral, block 968,222 */
 function effectiveAmount(item: StoreItem): number {
   const p = item.sale ?? item.price;
   return p.sats ?? (p.fiat ? p.fiat.amount * 15 : Number.MAX_SAFE_INTEGER);
+}
+
+/** TASK-441 (block 968,222): a TASTER is a package whose grant closes
+ *  itself (entitlementDays > 0 — the one-week passes). Days on any other
+ *  kind name nothing; a package without days is the ordinary monthly tier. */
+export function isTasterPass(item: StoreItem): boolean {
+  return item.kind === "package" && (item.entitlementDays ?? 0) > 0;
 }
 
 export interface ShelfGroupWithItems extends ShelfGroup {
@@ -70,7 +78,9 @@ export interface ShelfGroupWithItems extends ShelfGroup {
 export function shelfGroups(items: StoreItem[]): ShelfGroupWithItems[] {
   return SHELF_GROUPS.map((g) => ({
     ...g,
-    items: items.filter((i) => g.kinds.includes(i.kind)).sort((a, b) => effectiveAmount(a) - effectiveAmount(b)),
+    items: items
+      .filter((i) => g.kinds.includes(i.kind))
+      .sort((a, b) => Number(isTasterPass(a)) - Number(isTasterPass(b)) || effectiveAmount(a) - effectiveAmount(b)),
   }));
 }
 
@@ -101,6 +111,14 @@ export default function ShelfSection({
   const band = SHELF_BANDS[group.anchor];
   const free = withFreeCard && hasFreeMeditation();
   const count = group.items.length + (free ? 1 : 0);
+  const bundles = groupItemsByBundle(group.items);
+  /* TASK-441 (block 968,222 — the Admiral: "when the 4th item wrapps in teh
+     store please put it in the center middle of the row so it looks better"):
+     a last row holding ONE card centres it (house.css's
+     .grid-3.grid-lone-center>:last-child). Never when a bundle rides — a
+     bundle spans the whole row, so child counts no longer map to rows. The
+     count % 3 === 2 pair case keeps today's left-aligned pair. */
+  const loneLast = count >= 4 && count % 3 === 1 && bundles.length === 0;
   return (
     <section id={group.anchor}
       className={band?.photo ? "shelf-photo-scrim" : undefined}
@@ -125,7 +143,7 @@ export default function ShelfSection({
         {count === 0 ? (
           <p className="center" style={{ color: "var(--muted)" }}>Nothing on this shelf yet — come back soon ✨</p>
         ) : (
-          <div className={`grid ${count >= 3 ? "grid-3" : "grid-2"}`}>
+          <div className={loneLast ? "grid grid-3 grid-lone-center" : `grid ${count >= 3 ? "grid-3" : "grid-2"}`}>
             {/* TASK-176: the free meditation is a card here — FIRST in the
                 row, the same house flip, its doors go to /meditation (the
                 gift's own page), never to a checkout */}
@@ -137,7 +155,6 @@ export default function ShelfSection({
                  (no shared cart, never a new money rail — T-198 holds). The
                  bundle's own items keep the shelf's price order; a bundle is
                  rendered once, at the position of its first item. */
-              const bundles = groupItemsByBundle(group.items);
               const rendered = new Set<string>();
               let cardIdx = 0;
               return group.items.map((item) => {
