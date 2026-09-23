@@ -125,11 +125,23 @@ export function Stage2DoorBody({
           )}
           {decision === "package" && (
             <>
-              <div className="kit-body">{packageDoorLine(pkg?.name ?? null)}</div>
+              {/* Amendment 2 (A8, block 968,230 — the Admiral: Stage 2 is
+                  opened by the BOTTOM tier and by a one-week pass, so the
+                  shared "and everything above it" line reads wrong here;
+                  packageDoorLine itself stays untouched for the five room
+                  doors that share it). A6: the label says nothing the line
+                  above already says — and fits the kit's 320px box. */}
+              <div className="kit-body">
+                {pkg
+                  ? week
+                    ? `Stage 2 comes with every membership, from ${pkg.name} up — or with a one-week pass.`
+                    : `Stage 2 comes with every membership, from ${pkg.name} up.`
+                  : packageDoorLine(null)}
+              </div>
               {pkg && (
                 <div className="kit-btn-row kitx-actions">
                   <Link href={pkg.href} className="kit-btn kit-btn-second kit-btn-sm">
-                    See the {pkg.name} package
+                    See the package
                   </Link>
                   {week && (
                     <button
