@@ -13,10 +13,11 @@ import { renderToStaticMarkup } from "react-dom/server";
  *
  *   1. THE HERO DOOR — the picture sits under the "Join the Weekly
  *      Reading" button, both a guest's and a member's render (Hero's
- *      readingDoor is never null against the real ROOMS registry —
- *      weeklyReadingDoor() itself, unchanged, is pinned by
- *      tests/join-the-reading.test.ts and tests/site-knows-who-is-
- *      signed-in.test.ts).
+ *      readingDoor is never null while the standing default schedule is
+ *      on — weeklyReadingDoor(), re-pointed to `/reading` by TASK-437
+ *      (block 968,221 a₿), is pinned by tests/join-the-reading.test.ts,
+ *      tests/site-knows-who-is-signed-in.test.ts and
+ *      tests/hero-door-to-reading.test.ts).
  *   2. GATED BEHIND THE DOOR (source pin, the house idiom) — the picture
  *      markup lives inside the SAME `{readingDoor && (…)}` block as the
  *      button, so derive-or-dash still governs it: no room, no door, no
@@ -49,7 +50,7 @@ describe("the reading-book picture under the hero door (TASK-228)", () => {
     expect(html.indexOf('src="/images/reading-book.webp"')).toBeGreaterThan(html.indexOf("Join the Weekly Reading"));
   });
 
-  it("the picture is gated behind the door — inside the same {readingDoor && (…)} block as the button, weeklyReadingDoor untouched (source pin)", async () => {
+  it("the picture is gated behind the door — inside the same {readingDoor && (…)} block as the button (source pin)", async () => {
     const src = await read("src/components/sections.tsx");
     const gate = src.indexOf("{readingDoor && (");
     const button = src.indexOf("Join the Weekly Reading", gate);
@@ -59,8 +60,11 @@ describe("the reading-book picture under the hero door (TASK-228)", () => {
     expect(button).toBeGreaterThan(gate);
     expect(picture).toBeGreaterThan(button); // the picture comes after the door, inside the same gate
     expect(close).toBeGreaterThan(picture);
-    // weeklyReadingDoor's own body (the derivation) is untouched by this lane
-    expect(src).toContain('const room = rooms.find((r) => slugOf(r.id) === "weekly-reading");');
+    // TASK-437 re-trued the derivation the gate reads: the door is the
+    // /reading door, derived from the schedule prop — never the paid room
+    expect(src).toContain("weeklyReadingDoor(reading)");
+    expect(src).toContain('href: "/reading"');
+    expect(src).not.toContain("/rooms/weekly-reading");
   });
 });
 
