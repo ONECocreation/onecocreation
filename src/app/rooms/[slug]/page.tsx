@@ -116,18 +116,23 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
   const studioVdo = studioVdoLinks(switches.meeting.vdoRoomPrefix, switches.meeting.vdoHost);
 
   /* TASK-440 (block 968,222 — the Admiral: "let's make it dark so no one
-     gets the pssword."): this page computes and sends NO studio key, in
-     EVERY rail, door and live state — no rail-and-door exception, no
-     "live now" exception. Every signed-in member (the free Heart Field
-     included) used to receive `roomKey` here, and room+password is one
-     distinct VDO room, so that one key opened Love's own studio, her
-     director seat and her camera seat. Heart Field's VDO stage goes dark
-     until it has its own room: no key-producing helper is called on this
-     page, no keyed camera/view/push/gallery link is serialized, and no
-     replacement unkeyed broadcast or raw studio link takes their place.
-     (T-305's `roomKey` derivation — live.ts's `studioRoomKey` over
-     `studioVdo.room` — was retired by this ruling, and the `roomKey`
-     client prop with it.) */
+     gets the pssword."): what THIS page controls — it derives and sends
+     NO studio key, in EVERY rail, door and live state — no rail-and-door
+     exception, no "live now" exception. Every signed-in member (the free
+     Heart Field included) used to receive `roomKey` here, and
+     room+password is one distinct VDO room, so that one key opened Love's
+     own studio, her director seat and her camera seat. No key-producing
+     helper is called on this page, and no keyed camera/view/push/gallery
+     link is serialized. (T-305's `roomKey` derivation — live.ts's
+     `studioRoomKey` over `studioVdo.room` — was retired by this ruling,
+     and the `roomKey` client prop with it.)
+     THE HONEST RESIDUAL: the READ-ONLY stage slot (RoomVideoSlot.tsx:323)
+     gates on rail/live/host/room — never on a key — so while the rail is
+     vdo and Love is live it still mounts an UNKEYED view iframe into the
+     unkeyed twin room (:386). That frame shows nothing of Love's keyed
+     studio (room+password is a different room), but it IS a broadcast
+     frame on the page — the stage is dark in CONTENT, not absent, until
+     Heart Field has its own room. */
 
   /* TASK-245: the gallery's on-camera set — derived, never fabricated. No
    * signal anywhere answers "is this soul's camera on right now" (the
@@ -189,7 +194,12 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
       if (mine) {
         /* TASK-440: minted UNKEYED — this page sends no studio key (the
            DARK ruling above); the door pushes into the unkeyed room, the
-           same one the keyless stage watches, never Love's keyed studio. */
+           same one the keyless stage watches, never Love's keyed studio.
+           THE HONEST RESIDUAL: pre-T-440 the SAME key rode both sides, so
+           "Love named you as today's guest" reached her show; now this
+           door no longer reaches Love's v2-keyed director desk (her desk
+           never sees the unkeyed twin) — the named-guest camera path is
+           dark with the stage until Heart Field has its own room. */
         cameraDoor = studioGuestCameraLink(switches.meeting.vdoHost, studioVdo.room, mine.slice(1, mine.indexOf(":")));
       }
     }
