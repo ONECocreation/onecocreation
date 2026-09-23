@@ -30,10 +30,10 @@ export const dynamic = "force-dynamic";
  *  .test.ts), the same idiom as packages/[slug]/page.tsx's
  *  tierJoinedBanner. */
 export function cartCheckoutLine(rails: { btc: boolean; card: boolean }): string {
-  if (rails.btc && rails.card) return "one checkout — everything settles together, by lightning or by card.";
-  if (rails.btc) return "one checkout — everything settles together, by lightning.";
-  if (rails.card) return "one checkout — everything settles together, by card.";
-  return "your basket is holding everything — checkout opens the moment a payment rail does.";
+  if (rails.btc && rails.card) return "Checkout by bitcoin or card — every item must support the rail you choose.";
+  if (rails.btc) return "Checkout by bitcoin — every item must support bitcoin.";
+  if (rails.card) return "Checkout by card — every item must support card.";
+  return "Your basket is holding everything — checkout opens when a payment rail is available.";
 }
 
 /** The basket, wearing the night (Admiral, 0018.05.15). */

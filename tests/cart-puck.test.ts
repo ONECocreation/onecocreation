@@ -94,7 +94,7 @@ describe("the seed — /style/cart opens pre-populated, the hero verbatim + the 
     const flat = JSON.stringify(SEEDS.cart.content);
     expect(flat).toContain("The Store");
     expect(flat).toContain("BASKET 🧺");
-    expect(flat).toContain("one checkout — everything settles together, by lightning or by card.");
+    expect(flat).toContain("Checkout by bitcoin or card — every item must support the rail you choose.");
     expect(flat).toContain('"CartPanel"');
     expect(flat).toContain('"ca-panel"');
     expect(flat).not.toContain('"rails"');
