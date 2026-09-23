@@ -243,8 +243,8 @@ export async function decideOfferWithLetters(
       // (integrator ruling 0018.05.25 a₿); money surface, gold law intact.
       slots.refund = refundLink
         ? `<p style="text-align:center;margin:24px 0;"><a href="${refundLink}" style="background:#b4862b;color:#fff;padding:12px 26px;border-radius:999px;text-decoration:none;">Claim your sats back</a></p>
-           <p style="margin:0 0 1.15em;line-height:1.75;">The link lets you take them over lightning or on-chain — your pick.</p>`
-        : `<p style="margin:0 0 1.15em;line-height:1.75;">Reply to this letter with a lightning address or invoice and they'll be on their way.</p>`;
+           <p style="margin:0 0 1.15em;line-height:1.75;">The link lets you take them back in bitcoin — on-chain, straight to your own wallet.</p>`
+        : `<p style="margin:0 0 1.15em;line-height:1.75;">Reply to this letter with a bitcoin address and they'll be on their way.</p>`;
     }
     try {
       const { subject, html } = await letterFor(accept ? "pwyc-accept" : "pwyc-decline", slots);

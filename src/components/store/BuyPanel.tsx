@@ -263,7 +263,7 @@ export default function BuyPanel({
           ? "Pick how you'd like to pay."
           : cardAvailable && !railLive
             ? "Pay by card, through Square's own secure checkout."
-            : "Pay in bitcoin — quick as a breath on lightning — and it lands straight with the artist."}
+            : "Pay in bitcoin — it travels on-chain, straight to the artist's own wallet."}
       </p>
       {bothAvailable && (
         <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 10 }}>
