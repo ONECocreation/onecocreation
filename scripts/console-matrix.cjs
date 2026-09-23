@@ -163,7 +163,8 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function usage() {
   console.error(
     "usage: node scripts/console-matrix.cjs --chrome scar|site --ports A-B --out <dir>\n" +
-      "       node scripts/console-matrix.cjs --selftest --ports A-B --out <dir>"
+      "       node scripts/console-matrix.cjs --selftest --ports A-B --out <dir>\n" +
+      "       run from a lane worktree — a checkout carrying env files is refused"
   );
 }
 
@@ -735,7 +736,9 @@ async function clientNavStep(ctx, base, rows, chrome, cookie, findings) {
     const resp = await page.goto(`${base}/a`, { waitUntil: "networkidle2", timeout: 30000 });
     await sleep(800);
     if (!resp || resp.status() !== 200) {
-      step.detail = `/a answered HTTP ${resp ? resp.status() : "?"} — no link followed`;
+      /* R7: a client-navigation step that cannot run FAILS — never a dash */
+      step.result = "fail";
+      step.detail = `/a answered HTTP ${resp ? resp.status() : "?"} — the client-navigation step could not run`;
       return step;
     }
     const links = await page.$$eval('a[href^="/a"]', (els) =>
@@ -743,7 +746,9 @@ async function clientNavStep(ctx, base, rows, chrome, cookie, findings) {
     );
     const to = links.map((h) => h.split("?")[0]).find((p) => p !== "/a" && renderable.has(p));
     if (!to) {
-      step.detail = "no in-app link from /a named a renderable policy row — no link followed";
+      /* R7: no link is a FAIL, honestly named — never a dash */
+      step.result = "fail";
+      step.detail = "no in-app link from /a named a renderable policy row — the client-navigation step could not run";
       return step;
     }
     step.to = to;
@@ -766,10 +771,10 @@ async function clientNavStep(ctx, base, rows, chrome, cookie, findings) {
     const navGate = await page.evaluate(gateDomInPage).catch(() => null);
     if (navGate === GATE_TITLE) bad.push("the gate rendered after client navigation with a valid operator cookie");
     if (step.navigationKind !== "client") {
-      /* a document reload is not the drift Astra §6 names, but the step was
-         asked to exercise the CLIENT path — recorded as a finding, not a
-         failure of the row. */
-      findings.push(`client-nav step: /a → ${to} navigated as a DOCUMENT load, not a client navigation`);
+      /* R7: the step was asked to exercise the CLIENT path — a document
+         reload FAILS it (plain HTML, a full reload, a client router that
+         is not one). */
+      bad.push(`/a → ${to} navigated as a DOCUMENT load, not a client navigation`);
     }
     if (chrome === "site" && !hasError) {
       const probes = await page.evaluate(probesInPage).catch(() => null);
@@ -865,7 +870,12 @@ function summaryLines(report) {
   if (clientNav) lines.push(`client-nav: ${clientNav.result.toUpperCase()} — ${clientNav.detail}`);
   lines.push(`findings: ${findings.length}`);
   for (const f of findings.slice(0, 10)) lines.push(`  FINDING ${f}`);
-  lines.push(`result: ${fail.length === 0 && (!clientNav || clientNav.result !== "fail") ? "GREEN" : "RED"}`);
+  /* R8: three honest verdicts — RED on any fail, GREEN-WITH-DASH (n) when
+     the only blemish is dashed cells (the walker exits 4), else GREEN */
+  const navFailed = clientNav && clientNav.result === "fail";
+  const verdict =
+    fail.length > 0 || navFailed ? "RED" : dash.length > 0 ? `GREEN-WITH-DASH (${dash.length})` : "GREEN";
+  lines.push(`result: ${verdict}`);
   return lines;
 }
 
@@ -995,6 +1005,16 @@ async function selftest(ports, outDir) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  /* R10: env files at the repo root mean this is not a lane worktree — a
+     name test only, they are never read */
+  for (const f of [".env", ".env.local", ".env.production", ".env.production.local"]) {
+    if (fs.existsSync(path.join(REPO_ROOT, f))) {
+      console.error(
+        `console-matrix.cjs: ${f} exists at the repo root — run from a lane worktree, never a checkout carrying env files`
+      );
+      process.exit(2);
+    }
+  }
   const ports = parsePorts(args.ports);
   if (!ports) {
     console.error("console-matrix.cjs: --ports A-B is required and must span exactly four ports (A to A+3)");
@@ -1117,7 +1137,7 @@ async function main() {
       tool: "console-matrix (TASK-418)",
       chrome,
       policy: "scripts/console-matrix.routes.json",
-      base: head,
+      head,
       blockHeight,
       isolation,
       rows: rows.length,
@@ -1131,8 +1151,12 @@ async function main() {
     for (const l of lines) console.log(l);
     fs.writeFileSync(path.join(outDir, `walk-${chrome}.summary.txt`), lines.join("\n") + "\n");
 
-    const anyFail = result.cells.some((c) => c.result === "fail") || (result.clientNav && result.clientNav.result === "fail");
-    exitCode = anyFail ? 1 : 0;
+    /* R8: fail → 1; dash-only → 4 (GREEN-WITH-DASH, printed above); else 0 */
+    const failCount =
+      result.cells.filter((c) => c.result === "fail").length +
+      (result.clientNav && result.clientNav.result === "fail" ? 1 : 0);
+    const dashCount = result.cells.filter((c) => c.result === "dash").length;
+    exitCode = failCount > 0 ? 1 : dashCount > 0 ? 4 : 0;
   } catch (err) {
     console.error(`console-matrix.cjs: ${String(err && err.message ? err.message : err)}`);
     exitCode = 1;

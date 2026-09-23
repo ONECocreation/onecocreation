@@ -3,12 +3,13 @@
 # scripts/console-matrix.sh — TASK-418 (GUARD · chrome matrix ★), the
 # two-build orchestrator for the /a chrome-matrix walker. "Both chromes" =
 # TWO BUILDS of the same tree (src/lib/console.ts:32-33 reads
-# NEXT_PUBLIC_CONSOLE_CHROME at BUILD time): build (default scar) → serve →
-# walk → kill → build (NEXT_PUBLIC_CONSOLE_CHROME=site) → serve → walk →
-# kill. The walking itself — fixture KV, throwaway SEAT_SECRET, the real
+# NEXT_PUBLIC_CONSOLE_CHROME at BUILD time): build (site) → serve → walk →
+# kill → build (default scar) → serve → walk → kill — site FIRST, scar LAST
+# (R12), so the tree is left on the default build as a dev would find it.
+# The walking itself — fixture KV, throwaway SEAT_SECRET, the real
 # operator mint, the production `next start` on the given ports — lives in
 # scripts/console-matrix.cjs (the walker); this script owns the builds, the
-# port law, the selftest, and the merged report.
+# port law, the selftest, the network isolation (R5), and the merged report.
 #
 # It is the shots-fixture.sh sibling (mirror, never edit): ports come ONLY
 # from --ports A-B, exactly four consecutive ports — A = the app server,
@@ -47,6 +48,7 @@ cd "$REPO_ROOT"
 usage() {
   cat >&2 <<'USAGE'
 usage: scripts/console-matrix.sh --ports A-B --out <dir> [--no-build --chrome scar|site]
+       run from a lane worktree — a checkout carrying env files is refused
 USAGE
 }
 
@@ -71,6 +73,15 @@ if [ -z "$PORTS" ] || [ -z "$OUT" ]; then
   usage
   exit 2
 fi
+
+# R10: env files at the repo root mean this is not a lane worktree — a name
+# test only, they are never read.
+for f in .env .env.local .env.production .env.production.local; do
+  if [ -f "$REPO_ROOT/$f" ]; then
+    echo "console-matrix.sh: $f exists at the repo root — run from a lane worktree, never a checkout carrying env files" >&2
+    exit 2
+  fi
+done
 PORT_A="${PORTS%-*}"
 PORT_B="${PORTS#*-}"
 case "$PORT_A" in ''|*[!0-9]*) echo "console-matrix.sh: --ports must look like A-B (e.g. 4750-4753)" >&2; usage; exit 2 ;; esac
@@ -92,6 +103,28 @@ if [ "$NO_BUILD" -eq 1 ]; then
   esac
   if [ ! -f "$REPO_ROOT/.next/BUILD_ID" ]; then
     echo "console-matrix.sh: --no-build but .next/BUILD_ID is missing — there is no build to reuse" >&2
+    exit 2
+  fi
+  # R9: the build stamp must name THIS head and the DECLARED chrome, and
+  # src/ must be clean — else the .next cannot be proven to be this tree's
+  # build and the fast path refuses.
+  STAMP="$REPO_ROOT/.next/.console-matrix-build.json"
+  if [ ! -f "$STAMP" ]; then
+    echo "console-matrix.sh: --no-build but .next/.console-matrix-build.json is missing — the current build's provenance is unknown; run a full build" >&2
+    exit 2
+  fi
+  STAMP_HEAD="$(sed -n 's/.*"head":"\([^"]*\)".*/\1/p' "$STAMP")"
+  STAMP_CHROME="$(sed -n 's/.*"chrome":"\([^"]*\)".*/\1/p' "$STAMP")"
+  if [ "$STAMP_HEAD" != "$(git rev-parse HEAD)" ]; then
+    echo "console-matrix.sh: --no-build but the build stamp names $STAMP_HEAD, not HEAD ($(git rev-parse HEAD)) — the .next is stale; run a full build" >&2
+    exit 2
+  fi
+  if [ "$STAMP_CHROME" != "$CHROME" ]; then
+    echo "console-matrix.sh: --no-build --chrome $CHROME but the build stamp names chrome=$STAMP_CHROME — a wrong declaration fails here, never silently" >&2
+    exit 2
+  fi
+  if [ -n "$(git status --porcelain -- src)" ]; then
+    echo "console-matrix.sh: --no-build but src/ carries uncommitted changes — the .next cannot be this tree's build; run a full build" >&2
     exit 2
   fi
 fi
@@ -118,6 +151,12 @@ if [ -n "$BLOCK_HEIGHT" ]; then
   export OC_MATRIX_BLOCK_HEIGHT="$BLOCK_HEIGHT"
   echo "console-matrix.sh: block $BLOCK_HEIGHT (read outside the namespace)"
 fi
+
+# R9: the run stamp — every report this run must be NEWER than it and name
+# THIS head; the merge refuses anything else (a stale report from an older
+# run or tree can never ride into the hand-back).
+RUN_HEAD="$(git rev-parse HEAD)"
+printf 'head=%s\nblock=%s\n' "$RUN_HEAD" "${BLOCK_HEIGHT:-}" > "$OUT/.run-start"
 
 # Preferred isolation is a network namespace: unshare --user --map-root-user
 # --net with loopback raised — every walker invocation (selftest and both
@@ -184,26 +223,39 @@ if [ "$NO_BUILD" -eq 1 ]; then
   echo "console-matrix.sh: --no-build — reusing the current .next as the $CHROME build (declared, honestly)"
   walk_chrome "$CHROME"
 else
-  # ---- build 1: the default (scar) chrome --------------------------------
-  echo "console-matrix.sh: building the default (scar) chrome"
-  env -u NEXT_PUBLIC_CONSOLE_CHROME npx next build || exit 1
-  walk_chrome "scar"
-
-  # ---- build 2: the site chrome ------------------------------------------
+  # R12: site FIRST, scar LAST — the tree is left on the default build, as
+  # a dev would find it. Each build stamps its provenance for --no-build.
+  # ---- build 1: the site chrome -------------------------------------------
   echo "console-matrix.sh: building the site chrome (NEXT_PUBLIC_CONSOLE_CHROME=site)"
   NEXT_PUBLIC_CONSOLE_CHROME=site npx next build || exit 1
+  printf '{"head":"%s","chrome":"site"}\n' "$(git rev-parse HEAD)" > "$REPO_ROOT/.next/.console-matrix-build.json"
   walk_chrome "site"
+
+  # ---- build 2: the default (scar) chrome — LAST ----------------------------
+  echo "console-matrix.sh: building the default (scar) chrome"
+  env -u NEXT_PUBLIC_CONSOLE_CHROME npx next build || exit 1
+  printf '{"head":"%s","chrome":"scar"}\n' "$(git rev-parse HEAD)" > "$REPO_ROOT/.next/.console-matrix-build.json"
+  walk_chrome "scar"
 fi
 
 # ---- merge the per-build reports into the hand-back artifact -------------
 MERGE_CHROMES="$CHROME"
 if [ "$NO_BUILD" -eq 0 ]; then
-  MERGE_CHROMES="scar site"
+  MERGE_CHROMES="site scar"
 fi
 node - "$OUT" $MERGE_CHROMES <<'MERGEEOF'
 const fs = require("fs");
 const path = require("path");
 const [out, ...chromes] = process.argv.slice(2);
+/* R9: every report must be NEWER than the run stamp and name its head */
+let runHead = null;
+let stampMtime = 0;
+const stampPath = path.join(out, ".run-start");
+if (fs.existsSync(stampPath)) {
+  const stamp = fs.readFileSync(stampPath, "utf8");
+  runHead = (stamp.match(/^head=(.*)$/m) || [])[1] || null;
+  stampMtime = fs.statSync(stampPath).mtimeMs;
+}
 const builds = [];
 let missing = 0;
 for (const chrome of chromes) {
@@ -213,28 +265,46 @@ for (const chrome of chromes) {
     missing = 1;
     continue;
   }
-  builds.push(JSON.parse(fs.readFileSync(p, "utf8")));
+  if (stampMtime && fs.statSync(p).mtimeMs < stampMtime) {
+    console.error(`console-matrix.sh: ${p} is OLDER than the run stamp — a stale report, refused`);
+    missing = 1;
+    continue;
+  }
+  const report = JSON.parse(fs.readFileSync(p, "utf8"));
+  if (runHead && report.head !== runHead) {
+    console.error(`console-matrix.sh: ${p} names head ${report.head}, not this run's ${runHead} — refused`);
+    missing = 1;
+    continue;
+  }
+  builds.push(report);
 }
+/* R7: each build's client-navigation step counts as ONE entry in the totals */
 const totals = { pass: 0, fail: 0, dash: 0 };
 for (const b of builds) {
   for (const c of b.cells) totals[c.result === "pass" ? "pass" : c.result === "fail" ? "fail" : "dash"]++;
+  if (b.clientNav) totals[b.clientNav.result === "pass" ? "pass" : b.clientNav.result === "fail" ? "fail" : "dash"]++;
 }
 const merged = {
   tool: "console-matrix (TASK-418) — the merged both-builds report",
   builds: builds.map((b) => b.chrome),
   blockHeight: builds.map((b) => b.blockHeight).find((h) => h != null) ?? null,
-  base: builds[0] ? builds[0].base : null,
+  head: builds[0] ? builds[0].head : null,
+  isolation: builds[0] ? builds[0].isolation : null,
   totals,
   reports: builds,
 };
 fs.writeFileSync(path.join(out, "matrix-report.json"), JSON.stringify(merged, null, 2) + "\n");
 console.log(
   `console-matrix.sh: merged ${builds.length} build report(s) [${builds.map((b) => b.chrome).join(", ")}] — ` +
-    `PASS ${totals.pass} · FAIL ${totals.fail} · DASH ${totals.dash} → ${path.join(out, "matrix-report.json")}`
+    `PASS ${totals.pass} · FAIL ${totals.fail} · DASH ${totals.dash} (cells + one client-nav per build) → ${path.join(out, "matrix-report.json")}`
 );
 process.exit(missing);
 MERGEEOF
 [ $? -ne 0 ] && FINAL_RC=1
+
+if [ "$NO_BUILD" -eq 0 ]; then
+  echo "console-matrix.sh: .next now holds the default (scar) build — the tree is left as a dev would find it"
+fi
 
 echo "console-matrix.sh: done (rc=$FINAL_RC) — reports in $OUT"
 exit $FINAL_RC
