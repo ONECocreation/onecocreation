@@ -138,25 +138,27 @@ describe("resolveStudioRoom — the ONE access read", () => {
       kind: "registry",
       title: "Heart Field · the studio",
       note: "Love's weekly reading room",
+      standing: true, // TASK-440: every registry room is a standing room
     });
   });
 
   it("a namespace room resolves with NO invented title when the registry is silent (derive-or-dash)", async () => {
     stubRoomsJson(null, false); // the fork unreachable — the room still opens, plainly
     const access = await ra.resolveStudioRoom("onecocreation_reading_with_ada");
-    expect(access).toEqual({ kind: "namespace", title: null, note: null });
+    expect(access).toEqual({ kind: "namespace", title: null, note: null, standing: false });
   });
 
   it("the standing studio room resolves through the namespace even with no registry at all", async () => {
     stubRoomsJson(null, false);
     const access = await ra.resolveStudioRoom("onecocreation_studio");
-    expect(access).toEqual({ kind: "namespace", title: null, note: null });
+    // TASK-440: the LOCAL protected list keeps it standing through the outage
+    expect(access).toEqual({ kind: "namespace", title: null, note: null, standing: true });
   });
 
   it("a confirmed vdo-rail booking resolves with its service title as the honest name", async () => {
     stubRoomsJson(null, false);
     const access = await ra.resolveStudioRoom("a297b0000000000000000001");
-    expect(access).toEqual({ kind: "booking", title: "Discovery call with Love", note: null });
+    expect(access).toEqual({ kind: "booking", title: "Discovery call with Love", note: null, standing: false });
   });
 
   it("an unknown room is null — the page's 404 (the /meet/[bookingId] law)", async () => {
@@ -206,12 +208,18 @@ describe("mintStudioFrameTarget — the ONLY keyed mint on the route tree", () =
 });
 
 describe("the page render — the key appears ONLY inside the iframe src", () => {
+  /* TASK-440: the standing room admits a verified invite (or an operator)
+     only — these renders carry a REAL minted invite, the same door Love's
+     signed link opens. The closed card and the rejected tokens are pinned
+     in tests/studio-key-leak.test.ts. */
   const renderPage = async (searchParams: Record<string, string>) => {
+    const { mintStudioInvite } = await import("@/lib/studio/invite-token");
     const { default: MeetStudioPage } = await import("@/app/meet/studio/[room]/page");
+    const invite = mintStudioInvite("onecocreation_studio")!;
     return renderToStaticMarkup(
       await MeetStudioPage({
         params: Promise.resolve({ room: "onecocreation_studio" }),
-        searchParams: Promise.resolve(searchParams),
+        searchParams: Promise.resolve({ invite, ...searchParams }),
       }),
     );
   };
@@ -297,9 +305,14 @@ describe("every handed-out guest link is the SITE url (source pins on the three 
     expect(src).toContain("guestDoor={guestDoor}");
   });
 
-  it("go-live-room.tsx: the YouTube card's guest link is the SITE url; the push link stays hers", () => {
+  it("go-live-room.tsx: the YouTube card's guest link is the SIGNED SITE door from the server prop; the push link stays hers", () => {
+    /* TASK-440: the card no longer builds the door client-side (a client
+       component can never sign) — the signed door arrives as the
+       studioGuestDoor prop (StudioHub plumbs /a/studio's own derivation). */
     const src = read("src/app/a/live/go-live-room.tsx");
-    expect(src).toContain("meetStudioUrl(meeting.siteOrigin, studioVdo.room)");
+    expect(src).toContain("studioGuestDoor");
+    expect(src).toContain("value={studioGuestDoor}");
+    expect(src).not.toContain("meetStudioUrl(");
     expect(src).not.toContain("value={studioVdo.guest}");
     expect(src).toContain("value={studioVdo.push}");
   });

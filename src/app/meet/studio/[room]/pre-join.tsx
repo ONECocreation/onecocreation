@@ -12,6 +12,11 @@
  * mounts the room with the toggles honoured in the minted frame URL
  * (mintStudioFrameTarget). Unchecked boxes simply ride absent — absent
  * reads as off, the honest default.
+ *
+ * TASK-440: a standing room's VERIFIED invite rides the form as a hidden
+ * input — a GET submission REPLACES the action URL's query, so without
+ * this the token would drop at Join. Only a verified token is ever
+ * passed in (page.tsx's gate); nothing unverified is echoed here.
  */
 
 const wrap: React.CSSProperties = {
@@ -40,10 +45,11 @@ const checkLabel: React.CSSProperties = {
   cursor: "pointer",
 };
 
-export default function PreJoin({ room, initialName }: { room: string; initialName: string }) {
+export default function PreJoin({ room, initialName, invite }: { room: string; initialName: string; invite?: string }) {
   return (
     <form method="GET" action={`/meet/studio/${encodeURIComponent(room)}`} style={wrap}>
       <input type="hidden" name="join" value="1" />
+      {invite && <input type="hidden" name="invite" value={invite} />}
       <p style={{ margin: "0 0 14px", color: "var(--ink-body)", fontSize: ".92rem" }}>
         the room opens right here, inside the site — you never leave home for it.
       </p>

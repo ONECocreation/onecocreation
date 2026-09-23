@@ -301,7 +301,7 @@ section{padding:76px 0;position:relative}
   .flip-front,.flip-back{transition:none} /* instant turn — the card still flips, without the sail */
 }
 .grid{display:grid;gap:26px}
-@media(min-width:760px){.grid-3{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr 1fr}}
+@media(min-width:760px){.grid-3{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:1fr 1fr}.grid-3.grid-lone-center>:last-child{grid-column:2}}
 .price{font-family:var(--serif);color:var(--gold-deep);font-size:1.5rem}
 .price small{font-size:.8rem;color:var(--muted)}
 .sats{color:var(--gold-deep);font-size:.82rem;font-weight:700;margin-top:2px}

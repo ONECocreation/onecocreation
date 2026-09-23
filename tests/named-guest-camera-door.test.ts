@@ -152,8 +152,11 @@ describe("the room page — cameraDoor derives on the same gate as onCameraMxids
   it("imports studioGuestCameraLink from live.ts", () => {
     // TASK-305: the import gains studioRoomKey — the string pin updates,
     // the intent (this page reads its VDO builders from @/lib/live) holds.
+    // TASK-440: studioRoomKey leaves the line again — the DARK ruling
+    // (block 968,222) forbids ANY key derivation on this page; the same
+    // string-pin re-true T-305 itself performed here, intent unchanged.
     expect(PAGE_SRC).toContain(
-      'import { liveRoomName, studioVdoLinks, studioGuestCameraLink, studioRoomKey } from "@/lib/live"',
+      'import { liveRoomName, studioVdoLinks, studioGuestCameraLink } from "@/lib/live"',
     );
   });
 

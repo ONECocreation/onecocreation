@@ -21,8 +21,12 @@ import type { StudioSceneId } from "@/lib/studio/scenes";
  *    tests/studio-desk-doors.test.ts);
  *  · `studioRoomKey` is deterministic, 12 lowercase-hex characters, and
  *    `null` without `SEAT_SECRET` (derive-or-dash);
- *  · the four call-sites the brief names all thread the key through
- *    (grep pins against the real source);
+ *  · the remaining call-sites thread the key through (grep pins against
+ *    the real source) — MINUS /rooms: TASK-440 (block 968,222) retires
+ *    that derivation entirely (the DARK ruling; its no-key pin lives
+ *    below, and the behavioral proof in tests/studio-key-leak.test.ts).
+ *    TASK-440 also bumps the label to `studio-room-key:v2:` (v1 retired:
+ *    minted anonymously through /meet/studio until T-440);
  *  · `studioGuestLink` carries `&videomute` beside `&mute` (Love's
  *    both-off arrival ruling, call #4 item 6) regardless of a key.
  */
@@ -120,7 +124,7 @@ describe("the builders — &password=<key> appended only when a key is given", (
   });
 });
 
-describe("the four call-sites thread the key (grep pins against the real source)", () => {
+describe("the key's call-sites (grep pins against the real source — TASK-440 retires the /rooms one)", () => {
   it("src/app/a/studio/page.tsx derives roomKey, threads it into studioVdoLinks, and derives the director door as the in-site route (TASK-306)", () => {
     const src = read("src/app/a/studio/page.tsx");
     expect(src).toContain("studioRoomKey");
@@ -151,11 +155,18 @@ describe("the four call-sites thread the key (grep pins against the real source)
     expect(hubSrc).toContain("studioDirector={director}");
   });
 
-  it("src/app/rooms/[slug]/page.tsx derives roomKey and passes it into studioGuestCameraLink and down to ClassroomView", () => {
+  it("src/app/rooms/[slug]/page.tsx derives NO key (TASK-440's DARK ruling) — the named-camera door mints unkeyed and no client key prop rides down", () => {
+    /* TASK-440 (block 968,222, the Admiral: "let's make it dark so no one
+       gets the pssword.") — this pin used to assert the OPPOSITE (T-305's
+       `const roomKey = studioRoomKey(studioVdo.room) ?? undefined;`,
+       threaded into the camera door and ClassroomView). Every signed-in
+       member received the key, and Heart Field is minTier "all" — the
+       leak's second path. The page now computes and sends NOTHING keyed,
+       in every rail, door and live state. */
     const src = read("src/app/rooms/[slug]/page.tsx");
-    expect(src).toContain("const roomKey = studioRoomKey(studioVdo.room) ?? undefined;");
-    expect(src).toMatch(/cameraDoor = studioGuestCameraLink\(switches\.meeting\.vdoHost, studioVdo\.room, mine\.slice\(1, mine\.indexOf\(":"\)\), roomKey\)/);
-    expect(src).toContain("roomKey={roomKey}");
+    expect(src).not.toContain("studioRoomKey(");
+    expect(src).not.toContain("roomKey=");
+    expect(src).toMatch(/cameraDoor = studioGuestCameraLink\(switches\.meeting\.vdoHost, studioVdo\.room, mine\.slice\(1, mine\.indexOf\(":"\)\)\)/);
   });
 
   it("src/components/rooms/RoomVideoSlot.tsx mints both view tiles through studioViewLink, keyed", () => {
