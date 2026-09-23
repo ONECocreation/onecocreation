@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest";
 import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
 import { TENANT } from "@/lib/tenant";
+import { tierForSubject } from "@/lib/member-tier";
 
 /**
  * TASK-392 Build 3/4 — the two Stage 2 routes, BEHAVIORAL (calls the
@@ -11,6 +12,13 @@ import { TENANT } from "@/lib/tenant";
  * not proof (Astra's review, finding 7) — every claim below actually
  * calls the handler.
  *
+ * TASK-439 (block 968,218, ruling 1) — the route now gates on tier BEFORE
+ * any probe or room: every body carries `decision`, and the "carries the
+ * room" cases run as a tier-A member. `@/lib/member-tier`'s
+ * `tierForSubject` is the ONE mocked boundary (this file's own harness,
+ * shared with tests/stage2-paid-door.test.ts, which owns the free-member
+ * and throw cases).
+ *
  * The KV transport is a fake, proper key -> value map (never a
  * `vi.mock("@/lib/store")` or `vi.mock("@/lib/site-config")`) so
  * stage2.ts's own state and site-config.ts's own config can share one
@@ -19,6 +27,9 @@ import { TENANT } from "@/lib/tenant";
  * dispatched on HTTP method (HEAD vs the KV driver's POST) — no real
  * network call ever reaches meet.onecocreation.com or anywhere else.
  */
+
+vi.mock("@/lib/member-tier", () => ({ tierForSubject: vi.fn() }));
+const mockTier = vi.mocked(tierForSubject);
 
 const CONFIG_KEY = `site:config:${TENANT}`;
 const DOMAIN = "meet.stage2-fixture.invalid";
@@ -86,6 +97,11 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
+  mockTier.mockReset();
+  /* TASK-439: this suite's "carries the room" cases run as a tier-A
+     (Weekly Intuitive) member — the free-member and throw cases live in
+     tests/stage2-paid-door.test.ts. */
+  mockTier.mockResolvedValue("A");
   transport = fakeTransport();
   transport.seedSiteConfig(DOMAIN);
   process.env.KV_REST_API_URL = "https://kv.test.local/exec";
@@ -179,6 +195,7 @@ describe("gate pins", () => {
     const data = await (await memberGet()).json();
     expect(data.room).toBeUndefined();
     expect(data.open).toBe(true);
+    expect(data.decision).toBe("signin");
     expect(data.reachable).toBeNull();
   });
 
@@ -187,11 +204,12 @@ describe("gate pins", () => {
     const data = await (await memberGet(memberCookie)).json();
     expect(data.room).toBeUndefined();
     expect(data.open).toBe(false);
+    expect(data.decision).toBe("hidden");
   });
 
   it("GET /api/stage2 never includes room while phase is closed", async () => {
     const data = await (await memberGet(memberCookie)).json();
-    expect(data).toEqual({ ok: true, open: false });
+    expect(data).toEqual({ ok: true, open: false, decision: "hidden" });
   });
 });
 
@@ -252,7 +270,7 @@ describe("click-after scenarios — no room is ever issued off a stale answer (f
     expect(first.open).toBe(true);
     await closeS2();
     const second = await (await memberGet(memberCookie)).json();
-    expect(second).toEqual({ ok: true, open: false });
+    expect(second).toEqual({ ok: true, open: false, decision: "hidden" });
   });
 
   it("(c) the stored room is rotated between fetches -> refetch returns the NEW room, never the stale one", async () => {
@@ -278,7 +296,7 @@ describe("storage failure (finding 7): kv() throwing -> {open:false}, never a 50
     transport.setKvBroken(true);
     const res = await memberGet(memberCookie);
     expect(res.status).not.toBe(500);
-    expect(await res.json()).toEqual({ ok: true, open: false });
+    expect(await res.json()).toEqual({ ok: true, open: false, decision: "hidden" });
   });
 });
 
@@ -309,8 +327,8 @@ describe("full transition coverage — anonymous / member / operator, closed -> 
     transport.setReachable(200);
 
     // closed
-    expect(await (await memberGet()).json()).toEqual({ ok: true, open: false, reachable: null });
-    expect(await (await memberGet(memberCookie)).json()).toEqual({ ok: true, open: false });
+    expect(await (await memberGet()).json()).toEqual({ ok: true, open: false, reachable: null, decision: "hidden" });
+    expect(await (await memberGet(memberCookie)).json()).toEqual({ ok: true, open: false, decision: "hidden" });
     const admin = await (await adminGet(operatorCookie)).json();
     expect(admin.phase).toBe("closed");
     expect(admin.room).toBeNull();
@@ -320,25 +338,25 @@ describe("full transition coverage — anonymous / member / operator, closed -> 
     const prepared = await prepPut.json();
     expect(prepared.phase).toBe("prepared");
     expect(prepared.room).toMatch(/^oc-[0-9a-f]{16}$/);
-    expect(await (await memberGet()).json()).toEqual({ ok: true, open: false, reachable: null });
-    expect(await (await memberGet(memberCookie)).json()).toEqual({ ok: true, open: false });
+    expect(await (await memberGet()).json()).toEqual({ ok: true, open: false, reachable: null, decision: "hidden" });
+    expect(await (await memberGet(memberCookie)).json()).toEqual({ ok: true, open: false, decision: "hidden" });
 
     // published — the door exists
     const pubPut = await adminPut({ action: "publish" }, operatorCookie);
     const published = await pubPut.json();
     expect(published.phase).toBe("published");
     expect(published.room).toBe(prepared.room);
-    expect(await (await memberGet()).json()).toEqual({ ok: true, open: true, reachable: null });
+    expect(await (await memberGet()).json()).toEqual({ ok: true, open: true, reachable: null, decision: "signin" });
     const memberPublished = await (await memberGet(memberCookie)).json();
-    expect(memberPublished).toEqual({ ok: true, open: true, reachable: true, room: prepared.room });
+    expect(memberPublished).toEqual({ ok: true, open: true, decision: "open", reachable: true, room: prepared.room });
 
     // closed again
     const closePut = await adminPut({ action: "close" }, operatorCookie);
     const closed = await closePut.json();
     expect(closed.phase).toBe("closed");
     expect(closed.room).toBeNull();
-    expect(await (await memberGet()).json()).toEqual({ ok: true, open: false, reachable: null });
-    expect(await (await memberGet(memberCookie)).json()).toEqual({ ok: true, open: false });
+    expect(await (await memberGet()).json()).toEqual({ ok: true, open: false, reachable: null, decision: "hidden" });
+    expect(await (await memberGet(memberCookie)).json()).toEqual({ ok: true, open: false, decision: "hidden" });
   });
 });
 
