@@ -113,7 +113,7 @@ export default function Stage2Card() {
             <div className="kit-text-quiet">members can&apos;t see this yet — start the call above first, then Publish.</div>
             <Chip tone="gold">PREPARED — not visible to members</Chip>
             <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => act("publish")}>
-              {busy ? "Publishing…" : "Publish — let members in"}
+              {busy ? "Publishing…" : "Publish — let paid members in"}
             </button>
           </>
         )}
@@ -121,6 +121,12 @@ export default function Stage2Card() {
         {state.phase === "published" && (
           <>
             <Chip tone="green">PUBLISHED — the door is live</Chip>
+            {/* TASK-439 (block 968,218, rulings 1 & 4): the admin GET
+                carries no package name, so the words name no tier letter
+                and no price — the door itself speaks the package. */}
+            <div className="kit-text-quiet">
+              Weekly Intuitive and above can come in. Stage 2 closes itself at midnight Mountain — Close ends it sooner.
+            </div>
             <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => act("close")}>
               {busy ? "Closing…" : "Close Stage 2"}
             </button>

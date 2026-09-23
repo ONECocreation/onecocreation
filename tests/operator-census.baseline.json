@@ -2130,11 +2130,8 @@
       "names": []
     },
     "src/components/rooms/Stage2Door.tsx": {
-      "count": 2,
-      "names": [
-        "house:Link@104[btn,btn-ghost,btn-sm]",
-        "house:button@111[btn,btn-ghost,btn-sm]"
-      ]
+      "count": 0,
+      "names": []
     },
     "src/components/rooms/StageChat.tsx": {
       "count": 0,
