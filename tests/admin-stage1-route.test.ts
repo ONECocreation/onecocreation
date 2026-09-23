@@ -134,6 +134,24 @@ describe("Publish from closed is REFUSED with 409 — never a mint on Publish (t
   });
 });
 
+describe("SEC-4 (K122 item 5) — with the vault down, a failed write answers a NO-STORE 500 with honest words, never a bare throw past the handler", () => {
+  it("PUT prepare and PUT close both answer 500 { ok:false, reason } with Cache-Control: no-store", async () => {
+    global.fetch = (async () => {
+      throw new Error("vault unreachable");
+    }) as unknown as typeof fetch;
+
+    const prep = await adminPut({ action: "prepare" }, operatorCookie);
+    expect(prep.status).toBe(500);
+    expect(prep.headers.get("Cache-Control")).toBe("no-store");
+    expect(await prep.json()).toEqual({ ok: false, reason: "the stage store didn't answer — nothing changed" });
+
+    const close = await adminPut({ action: "close" }, operatorCookie);
+    expect(close.status).toBe(500);
+    expect(close.headers.get("Cache-Control")).toBe("no-store");
+    expect(await close.json()).toEqual({ ok: false, reason: "the stage store didn't answer — nothing changed" });
+  });
+});
+
 describe("the happy path — prepare -> publish -> close, every response no-store", () => {
   it("walks the lifecycle, asserting exactly what each response carries", async () => {
     /* closed */

@@ -444,3 +444,44 @@ describe("Stage2Details — the round-3 heading and the derive-every-word law", 
     expect(src).not.toMatch(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/);
   });
 });
+
+/* ═══════════════ the K122 fix round (block 968,284) — the look-side pins ═══════════════ */
+
+describe("K122 item 6a — whenOnly: the island's non-closed companion node renders the when-lines with NO cells and NO 'Starting now.'", () => {
+  it("upcoming: the when-lines, no cells", () => {
+    const html = renderIsland(props({ asOfMs: STARTS - 3 * ONE_DAY_MS, whenOnly: true }));
+    expect(html).toContain("kit-when-day");
+    expect(html).not.toContain("kit-count");
+  });
+
+  it("window: the when-lines, never 'Starting now.' (the island's live-line carries that truth now)", () => {
+    const html = renderIsland(props({ asOfMs: STARTS + 30 * 60_000, whenOnly: true }));
+    expect(html).toContain("kit-when-day");
+    expect(html).not.toContain("Starting now.");
+  });
+});
+
+describe("K122 items 1, 3, 6b, 9 — the kit.css additions carry the fix round's rules", () => {
+  it("item 1: the Stage 1 card's rows stack under 769 px (words, the state line, then the control on the row's right edge) — SCOPED to the card; the shared .kit-rows grid stays two-column for Stage2Details (SHEET-live-390)", async () => {
+    const css = await additions();
+    expect(css).toContain(".kit-rows>li{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center");
+    expect(css).toContain(".kit-stage1-card .kit-rows>li{grid-template-columns:1fr");
+    expect(css).toContain(".kit-stage1-card .kit-rows-end{justify-self:end}");
+  });
+
+  it("item 3: disabled controls LOOK disabled — scoped to .kit-rows-end (:disabled and [aria-disabled=\"true\"]), never a site-wide kit change", async () => {
+    const css = await additions();
+    expect(css).toContain('.kit-rows-end :disabled,.kit-rows-end [aria-disabled="true"]{opacity:.55;cursor:not-allowed}');
+  });
+
+  it("item 6b: the band rhythm is the mock's own (frag-common-top:3-5) — a 12 px flow, the kicker and h1 carrying no margin, a shared rule under .sky-stage", async () => {
+    const css = await additions();
+    expect(css).toContain(".sky-stage .kitx-flow{gap:12px}");
+    expect(css).toContain(".sky-stage .kitx-flow>.kicker,.sky-stage .kitx-flow>.kit-h1{margin:0}");
+  });
+
+  it("item 9: Stay in the know's 16 px lands on the card BODY (kit/Card wraps children in .kit-card-body — the outer rule's gap never reached the field)", async () => {
+    const css = await additions();
+    expect(css).toContain(".kit-signup .kit-card-body{display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center}");
+  });
+});

@@ -26,6 +26,7 @@ import Stage2Details from "@/components/reading/Stage2Details";
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
 
 const STAGE = "src/components/reading/ReadingStage.tsx";
+const PAGE = "src/app/reading/page.tsx";
 
 const ROOM = "oc-0123456789abcdef";
 const DOMAIN = "meet.reading-stage-fixture.invalid";
@@ -41,6 +42,9 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     jitsiDomain: DOMAIN,
     nextWords: null,
     stage2Details: null,
+    countdown: null,
+    countdownWhen: null,
+    left: false,
     onWatch: () => {},
     onTryAgain: () => {},
     onLeave: () => {},
@@ -102,10 +106,23 @@ describe("published, not yet watching — one tap starts her picture and sound",
     expect(html).not.toContain("<iframe");
   });
 
-  it("the Stage 2 card rides below (Stage2Details' own heading), and nothing about a camera or a microphone is said anywhere", () => {
-    expect(html).toContain("Join the discussion");
-    expect(html).toContain("Stage 2 · after the reading");
+  it("the Stage 2 card does NOT ride the published first paint (K122 item 10 — the open sheet has none), and nothing about a camera or a microphone is said anywhere", () => {
+    expect(html).not.toContain("Join the discussion");
+    expect(html).not.toContain("Stage 2 · after the reading");
     expect(html).not.toMatch(/camera|microphone/i);
+  });
+
+  it("…the card appears once WATCHING (the round-3 live sheet), still below the frame", () => {
+    const live = render(
+      bodyProps({
+        phase: "published",
+        watching: true,
+        room: ROOM,
+        stage2Details: createElement(Stage2Details, { weekPass: { name: "Weekly Chronicles — One Week Pass", price: "$11" } }),
+      }),
+    );
+    expect(live).toContain("Join the discussion");
+    expect(live).toContain("Stage 2 · after the reading");
   });
 });
 
@@ -179,8 +196,80 @@ describe("the Stage-2 branch — the single-embed conditional (StageView.tsx:150
   });
 });
 
-describe("stage1WatchTarget — the click's fresh answer is the only thing that can mount a room", () => {
-  it("published with a room -> the room", () => {
+describe("the countdown rides the island now (K122 item 6a) — cells only while closed, the when-lines until ended, never in ended", () => {
+  const CELLS = createElement("ul", { className: "kit-count" });
+  const WHEN = createElement("div", { className: "kit-when" });
+
+  it("closed renders the full countdown node (the cells)", () => {
+    const html = render(bodyProps({ countdown: CELLS, countdownWhen: WHEN }));
+    expect(html).toContain("kit-count");
+  });
+
+  it("published, watching and failed render NO cells and no 'Starting now.' — the when-lines ride instead (brief L3: 'until the phase says otherwise')", () => {
+    for (const over of [
+      { phase: "published", room: ROOM },
+      { phase: "published", watching: true, room: ROOM },
+      { phase: "published", failed: true },
+    ] as const) {
+      const html = render(bodyProps({ ...over, countdown: CELLS, countdownWhen: WHEN }));
+      expect(html).not.toContain("kit-count");
+      expect(html).not.toContain("Starting now.");
+      expect(html).toContain("kit-when");
+    }
+  });
+
+  it("ended renders NEITHER node — the ended words name the date themselves (item 7)", () => {
+    const html = render(
+      bodyProps({ phase: "closed", ended: true, nextWords: "Wednesday, September 30", countdown: CELLS, countdownWhen: WHEN }),
+    );
+    expect(html).not.toContain("kit-count");
+    expect(html).not.toContain("kit-when");
+  });
+
+  it("the page hands the countdown INTO ReadingStage as server-composed nodes (the stage2Details idiom) — never a bare page mount that can't know the phase", async () => {
+    const page = await read(PAGE);
+    expect(page).toContain("countdown={");
+    expect(page).toContain("countdownWhen={");
+    const src = await read(STAGE);
+    expect(src).toContain("countdownWhen");
+  });
+});
+
+describe("the ended words name the NEXT reading, never the one that just ended (K122 item 7)", () => {
+  const NEXT = { startsAtMs: 1_000, endsAtMs: 2_000 };
+  const FOLLOWING = { startsAtMs: 8_000, endsAtMs: 9_000 };
+
+  it("three clocks: before the start -> next; in the window -> following; after the window -> following", async () => {
+    const { readingShownNext } = await import("@/components/reading/ReadingStage");
+    expect(readingShownNext(NEXT, FOLLOWING, 500)).toBe(NEXT);
+    expect(readingShownNext(NEXT, FOLLOWING, 1_500)).toBe(FOLLOWING);
+    expect(readingShownNext(NEXT, FOLLOWING, 2_500)).toBe(FOLLOWING);
+  });
+
+  it("the page derives following = nextReading(schedule, next.endsAtMs) and hands it into the island", async () => {
+    const page = await read(PAGE);
+    expect(page).toContain("nextReading(schedule, next.endsAtMs)");
+    expect(page).toContain("following={");
+  });
+});
+
+describe("a viewer's own hangup is NOT 'the reading has ended' (K122 item 8)", () => {
+  it("left-while-published: 'You left the reading.' plus exactly ONE kit-btn-main, Watch again — never the ended words", () => {
+    const html = render(bodyProps({ phase: "published", left: true }));
+    expect(html).toContain("You left the reading.");
+    expect(count(html, "kit-btn-main")).toBe(1);
+    expect(html).toContain("Watch again");
+    expect(html).not.toContain("The reading has ended");
+  });
+
+  it("the viewer-ended path re-reads /api/stage1 no-store — only a closed or expired stage shows the ended words", async () => {
+    const src = await read(STAGE);
+    const fetches = src.match(/fetch\("\/api\/stage1", \{ cache: "no-store" \}\)/g) ?? [];
+    expect(fetches.length).toBeGreaterThanOrEqual(3); // the poll, the Watch click, AND the hangup re-check
+  });
+});
+
+describe("stage1WatchTarget — the click's fresh answer is the only thing that can mount a room", () => {  it("published with a room -> the room", () => {
     expect(stage1WatchTarget({ ok: true, phase: "published", room: ROOM, jitsiDomain: DOMAIN })).toBe(ROOM);
   });
 

@@ -103,13 +103,27 @@ describe("prepared", () => {
     expect(host).toContain("kit-btn kit-btn-second kit-btn-sm");
   });
 
-  it("the host words: log in as love; lock guests' mic, video and screen share; disable chat for non-moderators; then Publish", () => {
+  it("the host row carries its own state line, said ONCE under its words, verbatim (K122 item 2): 'Room ready: open it, log in as love, lock mic, video, screen share and chat, then Publish'", () => {
     const host = row(html, "host");
-    expect(host).toContain("Log in as love");
-    expect(host).toContain("block guests");
-    expect(host).toContain("screen share");
-    expect(host).toContain("disable chat for non-moderators");
-    expect(host).toContain("then Publish");
+    expect(host).toContain(
+      "Room ready: open it, log in as love, lock mic, video, screen share and chat, then Publish",
+    );
+    expect(count(host, "<em")).toBe(1);
+  });
+});
+
+describe("the host row's state line in the other phases (K122 item 2 — said once under its words, in EVERY phase)", () => {
+  it("closed: 'Appears once you Prepare'", () => {
+    const host = row(render(bodyProps({})), "host");
+    expect(host).toContain("Appears once you Prepare");
+    expect(count(host, "<em")).toBe(1);
+  });
+
+  it("published: 'Live: this is your room' — it has STOPPED saying 'then Publish'", () => {
+    const host = row(render(bodyProps({ state: { phase: "published", room: ROOM, jitsiDomain: DOMAIN } })), "host");
+    expect(host).toContain("Live: this is your room");
+    expect(host).not.toContain("then Publish");
+    expect(count(host, "<em")).toBe(1);
   });
 });
 
@@ -174,5 +188,16 @@ describe("the default export's own wiring — source pins (self-contained fetch/
   it("a refused Publish (409) becomes the row's error words, never a silent no-op", async () => {
     const src = await read(CARD);
     expect(src).toContain("409");
+  });
+
+  it("after a refused or failed PUT the card re-reads GET /api/admin/stage1 (K122 item 4) — the error words stay in the state line while the rows catch up to the real phase", async () => {
+    const src = await read(CARD);
+    /* the mount read, the refusal path, and the catch path each re-read */
+    expect(src.match(/void refresh\(\)/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+  });
+
+  it("the Card carries kit-stage1-card — the narrow-width row stacking is scoped to the card's own class (K122 item 1), the shared .kit-rows grid untouched for Stage2Details", async () => {
+    const src = await read(CARD);
+    expect(src).toContain('className="kit-stage1-card"');
   });
 });

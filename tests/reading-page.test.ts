@@ -199,6 +199,14 @@ describe("the page itself — source pins (async server component, headers()-dep
     expect(src).not.toContain("Sign in to join");
   });
 
+  it("the countdown rides INSIDE ReadingStage as server-composed nodes (K122 item 6a — the stage2Details idiom, the island owns the phase), and the page derives the FOLLOWING reading for the ended words (K122 item 7)", async () => {
+    const src = await read(PAGE_PATH);
+    expect(src).toContain("countdown={");
+    expect(src).toContain("countdownWhen={");
+    expect(src).toContain("nextReading(schedule, next.endsAtMs)");
+    expect(src).toContain("following={");
+  });
+
   it("the public sign-up card: ReadingSignUp variant=\"public\" exactly once — the letters, never a second door", async () => {
     const src = await read(PAGE_PATH);
     expect(src.match(/<ReadingSignUp /g)?.length).toBe(1);
