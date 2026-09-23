@@ -454,9 +454,9 @@ const homeContent: Block[] = [
   // 6 - tend the field
   hm.band("sky-warm", "theme", [
     hm.panel([
-      hm.eyebrow("Support This Work — Gently ⚡"),
+      hm.eyebrow("Support This Work — Gently"),
       hm.heading("Tend the Field", "h2"),
-      hm.rich("A gift lands with Love <b style=\"color:var(--gold-deep)\">whole</b> — no platform between, no cut taken. Give in bitcoin over lightning or simply in dollars; bitcoin is an option here, never a demand."),
+      hm.rich("A gift lands with Love. Give in bitcoin or simply in dollars; bitcoin is an option here, never a demand."),
       hm.note("── live tip jar stays code-side ──"),
       hm.heading("Three Doors", "h3"),
       hm.text("Give forward, follow along, read with me."),
@@ -617,17 +617,17 @@ const packagesContent: Block[] = [
 const su = kit("su");
 const supportContent: Block[] = [
   su.band("plain", "theme", [
-    su.eyebrow("Support This Work — Gently ⚡", "center"),
+    su.eyebrow("Support This Work — Gently", "center"),
     su.stacked("TEND", "THE FIELD", "h1", "center"),
     su.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
-    su.rich("Everything here — the sessions, the rooms, the letters — is held by one pair of hands. A gift lands with Love <b style=\"color:var(--gold-deep)\">whole</b>: no platform between, no cut taken. Choose the jar it fills.", "center"),
+    su.rich("Everything here — the sessions, the rooms, the letters — is held by one pair of hands. A gift lands with Love. Choose the jar it fills.", "center"),
   ]),
   su.band("plain", "theme", [
     su.panel([
       su.heading("Gifts of Gratitude", "h2"),
-      su.text("pick a jar, pick an amount — lightning opens, and it’s done in a breath."),
+      su.text("pick a jar, pick an amount — it lands in your basket, and it’s done in a breath."),
       su.note("── live tip jars stay code-side ──"),
-      su.text("Bitcoin gifts travel the Lightning Network straight to Love’s own wallet — nothing held, nothing routed by anyone else. Dollars are always welcome too: bitcoin is an option here, never a demand.", "left", st({ size: 15 })),
+      su.text("Bitcoin gifts travel on-chain straight to Love’s own wallet — nothing held, nothing routed by anyone else. Dollars are always welcome too: bitcoin is an option here, never a demand.", "left", st({ size: 15 })),
     ]),
   ]),
   su.band("plain", "theme", [
@@ -1858,7 +1858,7 @@ const cartContent: Block[] = [
   ca.band("plain", "theme", [
     ca.eyebrow("The Store", "center"),
     ca.stacked("YOUR", "BASKET 🧺", "h1", "center"),
-    ca.text("one checkout — everything settles together, by lightning or by card.", "center", st({ color: "muted", size: 14 })),
+    ca.text("Checkout by bitcoin or card — every item must support the rail you choose.", "center", st({ color: "muted", size: 14 })),
   ]),
   /* the block sits at the ROOT, where the basket sits today — the injector
      (applyCartRailsToPuck) is top-level only, the PackagesGrid law */

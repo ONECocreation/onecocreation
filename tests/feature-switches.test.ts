@@ -136,14 +136,14 @@ describe("sections.tsx — the R5 rail-aware sweep (Jewelry/Affirmations/Donatio
   });
 });
 
-describe("cart/page.tsx:65 — four rail states (R4), pure + tabled", () => {
+describe("cart/page.tsx:32 — four rail states (R4), pure + tabled", () => {
   it("both / btc-only / card-only / neither — the exact table", async () => {
     const { cartCheckoutLine } = await import("@/app/cart/page");
     const table: [{ btc: boolean; card: boolean }, string][] = [
-      [{ btc: true, card: true }, "one checkout — everything settles together, by lightning or by card."],
-      [{ btc: true, card: false }, "one checkout — everything settles together, by lightning."],
-      [{ btc: false, card: true }, "one checkout — everything settles together, by card."],
-      [{ btc: false, card: false }, "your basket is holding everything — checkout opens the moment a payment rail does."],
+      [{ btc: true, card: true }, "Checkout by bitcoin or card — every item must support the rail you choose."],
+      [{ btc: true, card: false }, "Checkout by bitcoin — every item must support bitcoin."],
+      [{ btc: false, card: true }, "Checkout by card — every item must support card."],
+      [{ btc: false, card: false }, "Your basket is holding everything — checkout opens when a payment rail is available."],
     ];
     for (const [rails, want] of table) {
       expect(cartCheckoutLine(rails)).toBe(want);
