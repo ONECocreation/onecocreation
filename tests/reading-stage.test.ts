@@ -4,6 +4,7 @@ import path from "path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ReadingStageBody, stage1WatchTarget, type ReadingStageBodyProps } from "@/components/reading/ReadingStage";
+import Stage2Details from "@/components/reading/Stage2Details";
 
 /**
  * TASK-438 (block 968,222; HOLD LIFTED block 968,269) — `ReadingStage.tsx`,
@@ -39,7 +40,7 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     stage2Room: null,
     jitsiDomain: DOMAIN,
     nextWords: null,
-    weekPass: null,
+    stage2Details: null,
     onWatch: () => {},
     onTryAgain: () => {},
     onLeave: () => {},
@@ -77,7 +78,14 @@ describe("closed — the book waits, the welcome words, no control at all", () =
 });
 
 describe("published, not yet watching — one tap starts her picture and sound", () => {
-  const html = render(bodyProps({ phase: "published", room: ROOM, weekPass: { name: "Weekly Chronicles — One Week Pass", price: "$11" } }));
+  const html = render(
+    bodyProps({
+      phase: "published",
+      room: ROOM,
+      /* the page (server) pre-renders the details — the island never imports them */
+      stage2Details: createElement(Stage2Details, { weekPass: { name: "Weekly Chronicles — One Week Pass", price: "$11" } }),
+    }),
+  );
 
   it("the 'Love is live now' line, the LIVE chip on the book, exactly ONE kit-btn-main: Watch Love live", () => {
     expect(html).toContain("Love is live now");
@@ -197,7 +205,10 @@ describe("the island's own wiring — source pins (the repo runs no jsdom)", () 
     const src = await read(STAGE);
     expect(src).toContain('signInHref="/login?next=%2Freading"');
     expect(src).toContain('from "@/components/rooms/Stage2Door"');
-    expect(src).toContain('from "@/components/reading/Stage2Details"');
+    /* the island NEVER imports Stage2Details — it reads the entitlement
+       rail (whose dynamic `redis` import can never enter a client bundle),
+       so the server page pre-renders it and hands it in as a ReactNode */
+    expect(src).not.toContain('from "@/components/reading/Stage2Details"');
   });
 
   it("the Full screen tool calls requestFullscreen on the frame", async () => {

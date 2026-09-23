@@ -39,7 +39,7 @@ export interface ReadingHeroCountdownProps {
   schedule: ReadingSchedule;
   next: { startsAtMs: number; endsAtMs: number } | null;
   asOfMs: number;
-  variant: "hero" | "card";
+  variant: "hero" | "card" | "blocks";
 }
 
 const ONE_DAY_MS = 24 * 3600_000;
@@ -78,6 +78,10 @@ function zoneLabel(ms: number, tz: string): string {
 export default function ReadingHeroCountdown({ schedule, next, asOfMs, variant }: ReadingHeroCountdownProps) {
   const [state, setState] = useState<NoticeState>(() => firstPaintState(next, asOfMs));
   const [visitorTz, setVisitorTz] = useState<string | null>(null);
+  /* blocks only: the per-second tick that walks the four cells down — the
+     hero/card variants keep their own boundary-settled clock (below) and
+     never pay for a one-second interval (TASK-438, Amendment 1 L3). */
+  const [tickMs, setTickMs] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,6 +112,70 @@ export default function ReadingHeroCountdown({ schedule, next, asOfMs, variant }
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [schedule]);
+
+  useEffect(() => {
+    if (variant !== "blocks") return;
+    if (state.kind !== "upcoming" && state.kind !== "soon") return;
+    const id = setInterval(() => setTickMs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [variant, state.kind]);
+
+  /* ── TASK-438 (Amendment 1 L3 + Amendment 2 M1): the BLOCKS variant —
+     the approved round-3 look's when-group (the day on one line, the time
+     on the next, every gap inside clock-plus-zone a U+00A0 so the clock
+     never splits — OUR normalizing, never ICU-trusted) plus the four
+     countdown cells. Fully self-contained: the hero/card code below is
+     byte-untouched, and the window state says "Starting now." — it NEVER
+     infers the room is open from the clock alone. */
+  if (variant === "blocks") {
+    if (state.kind === "off") {
+      return <p className="kit-body">Stay tuned, with love.</p>;
+    }
+    const nbsp = (s: string) => s.replace(/\s/g, "\u00A0");
+    const loveTime = nbsp(`${clockAt(state.startsAtMs, schedule.tz)} ${zoneLabel(state.startsAtMs, schedule.tz)}`);
+    const when = (
+      <div className="kit-when">
+        <p className="kit-when-day">{dayLabel(state.startsAtMs, schedule.tz)}</p>
+        <p className="kit-when-time">{loveTime}</p>
+        {visitorTz && visitorTz !== schedule.tz && (
+          <p className="kit-text-quiet">
+            {`Your time: ${nbsp(`${clockAt(state.startsAtMs, visitorTz)} ${zoneLabel(state.startsAtMs, visitorTz)}`)}`}
+          </p>
+        )}
+      </div>
+    );
+    if (state.kind === "window") {
+      return (
+        <>
+          {when}
+          <p className="kit-body">Starting now.</p>
+        </>
+      );
+    }
+    const remainingMs = Math.max(0, state.startsAtMs - (tickMs ?? asOfMs));
+    const totalSecs = Math.floor(remainingMs / 1000);
+    const cells: Array<[string, string, number]> = [
+      ["d", "days", Math.floor(totalSecs / 86_400)],
+      ["h", "hours", Math.floor(totalSecs / 3600) % 24],
+      ["m", "mins", Math.floor(totalSecs / 60) % 60],
+      ["s", "secs", totalSecs % 60],
+    ];
+    return (
+      <>
+        {when}
+        <ul className="kit-count" aria-label="Time until the reading">
+          {cells.map(([u, unit, value]) => (
+            <li key={u}>
+              <span className="kit-count-num" data-u={u}>
+                {String(value).padStart(2, "0")}
+              </span>
+              <span className="kit-count-unit">{unit}</span>
+            </li>
+          ))}
+        </ul>
+      </>
+    );
+  }
 
   if (state.kind === "off") {
     return variant === "hero" ? (

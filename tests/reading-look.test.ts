@@ -77,7 +77,7 @@ describe("the nebula rule moved, byte-identical, into one shared selector (L1)",
 
   it("home's hero still wears the class the shared rule dresses (sections.tsx is read-only — the selector group is what keeps home dressed)", async () => {
     const sections = await read("src/components/sections.tsx");
-    expect(sections).toContain('"hero"');
+    expect(sections).toContain('className="hero keep-dark"');
   });
 });
 
@@ -106,6 +106,11 @@ describe("the /reading page — the sky band and the approved structure", () => 
     expect(src).toContain("(await getStage1State()).phase");
     expect(src).toContain("initialPhase={");
     expect(src).toContain("<ReadingStage");
+    /* the server page pre-renders Stage2Details and hands it INTO the
+       island as a ReactNode — the entitlement rail (dynamic `redis`
+       import) stays on the server, never in the client bundle */
+    expect(src).toContain('from "@/components/reading/Stage2Details"');
+    expect(src).toContain("<Stage2Details");
   });
 
   it("mounts ReadingSignUp variant=public EXACTLY ONCE as its own kitx-section-first under the sky band (M4) — still never a /news href", async () => {
@@ -264,13 +269,13 @@ describe("blocks — the when group (M1): the day on one line, the time on the n
   it("every gap inside the clock-plus-zone line is U+00A0 — no U+0020, no U+202F", () => {
     const html = renderIsland(props({ asOfMs: STARTS - 3 * ONE_DAY_MS }));
     const time = timeLineText(html);
-    expect(time).toContain("&nbsp;");
-    expect(time.replace(/&nbsp;/g, "")).not.toMatch(/\s/);
+    expect(time).toContain("\u00A0");
+    expect(time.replace(/\u00A0/g, "")).not.toMatch(/\s/);
   });
 
   it("PROVEN, not ICU-trusted: under a stubbed Intl that emits a PLAIN space, the render still carries only &nbsp;", () => {
     class FakeDTF {
-      constructor(_locale?: unknown, _opts?: unknown) {}
+      constructor() {}
       format() {
         return "1:11 PM"; // the ICU-78.3 shape checker C11 measured — a plain U+0020
       }
@@ -285,12 +290,12 @@ describe("blocks — the when group (M1): the day on one line, the time on the n
     const html = renderIsland(props({ asOfMs: STARTS - 3 * ONE_DAY_MS }));
     const time = timeLineText(html);
     expect(time).not.toMatch(/ /);
-    expect(time).toContain("1:11&nbsp;PM&nbsp;MDT");
+    expect(time).toContain("1:11\u00A0PM\u00A0MDT");
   });
 
   it("…and under a stubbed Intl that emits U+202F (the other ICU shape), it still lands on U+00A0", () => {
     class FakeDTF {
-      constructor(_locale?: unknown, _opts?: unknown) {}
+      constructor() {}
       format() {
         return "1:11 PM";
       }
@@ -305,7 +310,7 @@ describe("blocks — the when group (M1): the day on one line, the time on the n
     const html = renderIsland(props({ asOfMs: STARTS - 3 * ONE_DAY_MS }));
     const time = timeLineText(html);
     expect(time).not.toMatch(/ /);
-    expect(time).toContain("1:11&nbsp;PM&nbsp;MDT");
+    expect(time).toContain("1:11\u00A0PM\u00A0MDT");
   });
 
   afterEach(() => {

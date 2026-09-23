@@ -1,38 +1,49 @@
-/* eslint-disable @next/next/no-img-element -- reuses the existing headshot
-   asset exactly as sections.tsx's About() does; not an optimizer candidate. */
+/* eslint-disable @next/next/no-img-element -- the host portrait is an
+   existing house asset, exactly as sections.tsx's About() uses its own;
+   not an optimizer candidate. */
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PaletteVars from "@/components/PaletteVars";
+import CosmicSky from "@/components/CosmicSky";
 import ReadingHeroCountdown from "@/components/ReadingHeroCountdown";
+import ReadingStage from "@/components/reading/ReadingStage";
+import Stage2Details from "@/components/reading/Stage2Details";
+import ReadingSignUp from "@/components/rooms/ReadingSignUp";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
-import { readingDoorHref } from "@/lib/reading-room";
-import { cartridge } from "@/brand/cartridge";
+import { getStage1State } from "@/lib/stage1";
+import { getItem } from "@/lib/store";
+import { dollars } from "@/lib/money-words";
 
 /**
- * TASK-391 (block 968,088) — THE SATURDAY READING PAGE. One new public page
- * at `/reading`: Love's weekly live book reading, structured after the
- * Kajabi reference's SHAPE alone (§14.3.1 — never its words or images).
- * Every date/time word here is COMPUTED from the schedule source
- * (`reading-schedule.ts`) — never a literal weekday or clock time; Love
- * retypes the day at `/a/site/reading` and this page follows, no redeploy.
+ * TASK-391 (block 968,088) + TASK-438 (block 968,222; HOLD LIFTED block
+ * 968,269) — THE READING PAGE, now the STAGE itself. `/reading` opens on
+ * the approved round-3 sky band (the house living sky + the home hero's
+ * own drifting nebula, one shared rule): the derived kicker, "Read with
+ * Love", the blocks countdown, and ReadingStage — Stage 1 as a one-way
+ * house Jitsi room, phase-only SSR (the phase from `getStage1State()`,
+ * never a room, never a host URL). The three old room CTAs are RETIRED —
+ * there is no second door anywhere on this page.
+ *
+ * Under the band: the public "Stay in the know" sign-up (M4 — the
+ * letters, never a door), "What you will experience" as M3's three lines
+ * (the weekday DERIVED, the pass price from the live store item), and the
+ * host with her real portrait. Every date/time word is still COMPUTED
+ * from the schedule source — never a literal weekday or clock time.
  *
  * Freshness (Astra fold 3, RULED): DYNAMIC, not cached — the exact
- * `force-dynamic` pattern `src/app/rooms/[slug]/page.tsx:22` already uses —
- * so `getSiteConfig()` runs fresh on every request and a saved schedule
- * change shows on the very next reload.
- *
- * Decision C (AMENDED): `feat/task-388-reading-sign-up-block` is unmerged
- * at cut time (zero commits ahead of main) — the page ships with the
- * reading-door CTA alone, no second door.
+ * `force-dynamic` pattern `src/app/rooms/[slug]/page.tsx:22` already
+ * uses — so `getSiteConfig()` and `getStage1State()` run fresh on every
+ * request and a saved schedule change (or a Publish) shows on the very
+ * next reload.
  */
 
 export const metadata: Metadata = {
   title: "Read with Love — One Cocreation",
-  description: "Join Love's weekly live book reading — the day, the countdown, and one door in.",
+  description: "Join Love's weekly live book reading — the day, the countdown, and the stage itself.",
 };
 
 export const dynamic = "force-dynamic";
@@ -56,102 +67,111 @@ function deriveReading(
   return { asOfMs, next };
 }
 
+/** The one-week pass, derived-or-dashed from the LIVE store item — its
+ *  OWN title and effective fiat price (sale when one rides), never a
+ *  page-local number. A shelf read failure dashes the pass (the page
+ *  never 500s on a courtesy). */
+async function deriveWeekPass(): Promise<{ name: string; price: string } | null> {
+  try {
+    const item = await getItem("weekly-one-week");
+    const eff = item?.sale ?? item?.price;
+    if (item?.status !== "live" || !eff?.fiat) return null;
+    return { name: item.title, price: dollars(eff.fiat.amount, eff.fiat.currency) };
+  } catch {
+    return null;
+  }
+}
+
 export default async function ReadingPage() {
   /* The same raw-cookie session read every public page with a signed-in
      variant already does (rooms/[slug]/page.tsx:82, home page.tsx:34) —
      never cookies() (it URL-encodes an email handle's own "@" and the
-     token fails its own signature, home page.tsx's TASK-210 finding). */
+     token fails its own signature, home page.tsx's TASK-210 finding).
+     The page itself renders no signed-in branch — the islands read their
+     own session client-side — but the read stays: the response is
+     honestly per-visitor, the house idiom every public page keeps. */
   const session = sessionsFromCookieHeader((await headers()).get("cookie"))[0] ?? null;
-  const signedIn = !!session;
+  void session;
 
   const config = await getSiteConfig();
   const schedule = config.reading ?? DEFAULT_READING_SCHEDULE;
   const { asOfMs, next } = deriveReading(schedule);
+  const stage1Phase = (await getStage1State()).phase;
+  const weekPass = await deriveWeekPass();
 
-  const door = readingDoorHref(signedIn);
-  const ctaLabel = signedIn ? "Enter the reading room" : "Sign in to join";
   const recurrenceLabel = next ? weekdayName(next.startsAtMs, schedule.tz) : null;
-
-  const cta = door && (
-    <div className="kit-btn-row kitx-actions">
-      <a className="kit-btn kit-btn-main kit-btn-sm" href={door}>
-        {ctaLabel}
-      </a>
-    </div>
-  );
 
   return (
     <>
       <SiteHeader />
       <PaletteVars />
       <main className="center kitx-balanced">
-        {/* HERO — title, the computed date line (or the honest off/soon
-            words, decisions A/B), one CTA (item 2). */}
-        <section className="wrap kitx-flow">
-          <h1 className="kit-h1">Read with Love</h1>
-          <ReadingHeroCountdown schedule={schedule} next={next} asOfMs={asOfMs} variant="hero" />
-          {cta}
+        {/* THE STAGE BAND — the approved round-3 look: the house living
+            sky + the home hero's own nebula (one shared kit rule), the
+            derived kicker, the blocks countdown, and the stage itself. */}
+        <section className="keep-dark sky-veil sky-stage sky-nebula" id="stage">
+          <CosmicSky />
+          <div className="wrap kitx-flow">
+            <p className="kicker">{recurrenceLabel ? `Live every ${recurrenceLabel} · free` : "Readings with Love · free"}</p>
+            <h1 className="kit-h1">Read with Love</h1>
+            <ReadingHeroCountdown schedule={schedule} next={next} asOfMs={asOfMs} variant="blocks" />
+            <ReadingStage
+              initialPhase={stage1Phase}
+              next={next}
+              scheduleTz={schedule.tz}
+              jitsiDomain={config.meeting.jitsiDomain}
+              stage2Details={<Stage2Details weekPass={weekPass} />}
+            />
+          </div>
         </section>
 
-        {/* PREMISE + the "Next reading." card (items 3/4) — Love's video
-            explanation and the mobile graphic are NEW, believed assets not
-            yet delivered; both slots render nothing at all (honest
-            absence), never a placeholder box. */}
-        <section className="wrap kitx-flow">
-          <h2 className="kit-h2">Join me weekly</h2>
-          <p className="kit-body">
-            Join me weekly for a live book reading in my own room. Sign in and the room knows you. It will all be
-            right here.
-          </p>
+        {/* STAY IN THE KNOW (M4) — the letters, never a second door; only
+            while there is a reading to remind about. */}
+        {schedule.on && next && (
+          <section className="kitx-section kitx-section-first">
+            <div className="wrap">
+              <ReadingSignUp variant="public" state={{ kind: "upcoming", startsAtMs: next.startsAtMs, endsAtMs: next.endsAtMs }} />
+            </div>
+          </section>
+        )}
 
-          <div className="kit-card kit-card-body kitx-flow">
-            <ReadingHeroCountdown schedule={schedule} next={next} asOfMs={asOfMs} variant="card" />
-            {recurrenceLabel && (
-              <p className="kit-body">{`Every ${recurrenceLabel}, live in Love’s room — free for every member.`}</p>
-            )}
-            {door && (
-              <div className="room-card-doors">
-                <div className="kit-btn-row kitx-actions">
-                  <a className="kit-btn kit-btn-main kit-btn-sm" href={door}>
-                    {ctaLabel}
+        {/* WHAT YOU WILL EXPERIENCE — M3's three lines: the weekday
+            DERIVED (never the mock's literal), the clock living once at
+            the top, the pass price from the live store item. */}
+        <section className="kitx-section">
+          <div className="wrap kitx-flow">
+            <h2 className="kit-h2">What you will experience</h2>
+            <ul className="kit-list">
+              <li>{recurrenceLabel ? `Every ${recurrenceLabel}, a live reading from Love's book` : "A live reading from Love's book"}</li>
+              <li>Free to watch from anywhere. Nothing to install</li>
+              <li>{`Join the discussion after: a live group video call with Love, with any membership${weekPass ? ` or the ${weekPass.price} Weekly Chronicles pass` : ""}`}</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* THE HOST — the real portrait beside her words, and the one
+            bottom button back UP to the stage (Stage 1, never Stage 2). */}
+        <section className="kitx-section">
+          <div className="wrap">
+            <div className="kitx-host">
+              <div className="kitx-photo">
+                <img src="/images/love-sidelook.webp" alt="Love" width={519} height={676} />
+              </div>
+              <div className="kit-stack">
+                <h2 className="kit-h2">Love</h2>
+                <p className="kit-text-quiet">Founder of One Cocreation</p>
+                <p className="kit-body">Join me weekly for a live book reading in my own room.</p>
+                <div className="kit-btn-row">
+                  <a className="kit-btn kit-btn-main kit-btn-sm" href="#stage">
+                    Back to the reading ↑
                   </a>
                 </div>
               </div>
-            )}
-          </div>
-        </section>
-
-        {/* WHAT YOU WILL EXPERIENCE (item 5) — the recurrence item is
-            DERIVED from the schedule's own weekday (never the mock's own
-            hard-coded recurrence phrasing); derive-or-dash when off (no
-            next occurrence to name a weekday from). The other three are
-            the mock's own words, unchanged. */}
-        <section className="wrap kitx-flow">
-          <h2 className="kit-h2">What you will experience</h2>
-          <ul className="feat">
-            <li>A live book reading</li>
-            {recurrenceLabel && <li>{`Every ${recurrenceLabel}`}</li>}
-            <li>Live in Love’s room</li>
-            <li>Free for every member</li>
-          </ul>
-          {cta}
-        </section>
-
-        {/* THE HOST (item 6) — existing site imagery only (the same square
-            headshot About()'s own story section already uses), never the
-            Kajabi page's. */}
-        <section className="wrap kitx-flow">
-          <div className="kitx-mark">
-            <img src={cartridge.portraits.headshot} alt="Love — founder of One Cocreation" width={88} height={88} />
-          </div>
-          <div className="kit-stack">
-            <h2 className="kit-h2">Love</h2>
-            <p className="kit-body">Founder of One Cocreation</p>
-            <p className="kit-body">Join me weekly for a live book reading in my own room.</p>
+            </div>
           </div>
         </section>
       </main>
-      {/* FOOTER (item 7) — the real SiteFooter, exactly as home mounts it
+      {/* FOOTER — the real SiteFooter, exactly as home mounts it
           (src/app/page.tsx:65/:88); never a page-local reimplementation. */}
       <SiteFooter />
     </>

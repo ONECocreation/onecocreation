@@ -196,7 +196,7 @@ describe("ReadingSignUpCard — T-438 variant=\"public\" (the /reading page's si
     );
     expect(html).toContain("kit-signup");
     expect(html).toContain("Stay in the know");
-    expect(html).toContain("A reminder the morning of each reading, and Love's letters when something fun is on.");
+    expect(html).toContain("A reminder the morning of each reading, and Love&#x27;s letters when something fun is on.");
     expect(html).toContain('class="kit-inline-form"');
     expect(html).toContain('id="reading-sign-up-email"');
     expect(html).toContain("Keep me posted");
