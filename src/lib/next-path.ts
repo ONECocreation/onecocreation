@@ -1,16 +1,29 @@
+/* the fixed origin every candidate resolves against — never
+   window.location.origin (vitest runs node, no window) and never a
+   Host/x-forwarded-host header (welcome/page.tsx is a server component) */
+const SENTINEL = "https://next-path.invalid";
+
 /**
- * THE `next` PATH'S SAFETY RULE (TASK-156, 0018.06.17 a₿): the free-reading
- * door carries `?next=/rooms/weekly-reading` through the sign-in card so a
- * new soul lands IN the reading room the moment the code matches. A query
- * param is visitor-controlled, so only same-origin absolute paths pass —
- * protocol-relative //host, full URLs, backslash tricks and empty strings
- * all fall back to null and the caller walks its own default (/me, the
- * welcome path).
+ * THE `next` PATH'S SAFETY RULE (TASK-156, 0018.06.17 a₿; hardened TASK-442,
+ * 0018.07.05 a₿): `?next=` is visitor-controlled and URLSearchParams decodes
+ * it BEFORE any check runs — %09 arrives as a real tab, %5C as a real
+ * backslash. The WHATWG parser behind every navigation strips tab/CR/LF
+ * outright, treats `\` as `/`, and normalises dot-segments, so `/..//host`
+ * becomes protocol-relative `//host`. The rule: anything that isn't a
+ * non-empty string (a repeated ?next= reaches the server as an array) falls
+ * to null; any C0 control, DEL or backslash anywhere falls to null; the path
+ * must start with `/` but not `//`; and it must resolve against the fixed
+ * sentinel without changing origin or gaining a `//` pathname. What passes
+ * returns BYTE-IDENTICAL — returning u.pathname + search + hash would itself
+ * mint `//host` out of `/..//host`. Null sends the caller to its own default
+ * (/me, the welcome path).
  */
-export function safeNextPath(raw: string | null | undefined): string | null {
-  if (!raw) return null;
+export function safeNextPath(raw: unknown): string | null {
+  if (typeof raw !== "string" || raw === "") return null;
+  if (/[\u0000-\u001f\u007f\\]/.test(raw)) return null;
   if (!raw.startsWith("/") || raw.startsWith("//")) return null;
-  if (raw.includes("\\")) return null;
+  const u = new URL(raw, SENTINEL);
+  if (u.origin !== SENTINEL || u.pathname.startsWith("//")) return null;
   return raw;
 }
 
