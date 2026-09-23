@@ -34,7 +34,9 @@ What the lane builds:
 `work-claims/task-442.md` (this file, first commit),
 `src/lib/next-path.ts`,
 `src/app/login/signer-return/page.tsx` (the `const next =` line and one import only),
-`tests/next-path-open-redirect.test.ts` (NEW).
+`tests/next-path-open-redirect.test.ts` (NEW),
+`REGISTER.md` (the lane's report file, last commit — no SUMMARY.md, no LANE-DONE;
+the orchestrator files those).
 
 READ-ONLY (grounding only, never edited): `src/components/door/DoorSheet.tsx`,
 `src/components/door/SignInCard.tsx`, `src/components/door/door-machine.ts`,
