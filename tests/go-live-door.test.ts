@@ -56,6 +56,10 @@ const renderRoom = (props: Partial<Parameters<typeof GoLiveRoom>[0]> = {}) =>
          studioDirectorLink stays pinned below at the builder level — the
          builder is not retired, only its call-sites' handling changed. */
       studioDirector: "https://onecocreation.test/a/studio/room/onecocreation-studio",
+      /* TASK-440: the standing studio's guest door arrives SIGNED from the
+         server (the card can never sign client-side) — a fixture token
+         stands in for /a/studio's own derivation. */
+      studioGuestDoor: "https://onecocreation.test/meet/studio/onecocreation_studio?invite=123.abcdef",
       sessions: [],
       meeting: MEETING,
       youtube: "https://www.youtube.com/@Onecocreation",

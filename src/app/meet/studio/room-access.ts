@@ -3,6 +3,7 @@ import { getBooking } from "@/lib/booking-orders";
 import { getService } from "@/lib/booking";
 import { studioRoomKey } from "@/lib/live";
 import { studioGuestLink, isStudioNamespaceRoom, vdoBase } from "@/lib/live-links";
+import { verifyStudioInvite } from "@/lib/studio/invite-token";
 
 /**
  * THE IN-SITE ROOM'S ONE ACCESS READ (TASK-297, 0018.06.25 a₿ · block
@@ -39,6 +40,15 @@ import { studioGuestLink, isStudioNamespaceRoom, vdoBase } from "@/lib/live-link
  * DIRECTLY as the iframe src — never behind a same-origin redirect:
  * Chromium does not delegate camera/mic permissions through a 302
  * inside an iframe (A/B proven this lane, 0018.06.25).
+ *
+ * TASK-440 (block 968,222): resolution alone is no longer admission.
+ * `standing` marks the rooms that are Love's own (the registry's, the
+ * local protected list), and `studioEntryAllowed` is the ONE decision —
+ * a standing room opens for an operator or a verified `studio-invite`
+ * token only; a signed-out `?join=1` and a bare member session get the
+ * closed card, and the page never reaches the mint for them. The local
+ * list keeps protection up through a registry outage (VERIFY-astra
+ * one-way V 4.3).
  */
 
 export interface StudioRoomAccess {
@@ -48,6 +58,46 @@ export interface StudioRoomAccess {
   title: string | null;
   /** the registry entry's note line; null when there isn't one */
   note: string | null;
+  /** TASK-440: a STANDING room — a registry entry (every registry room is
+   *  standing) or a room on the LOCAL protected list below. Standing rooms
+   *  open for an operator or a verified invite ONLY
+   *  (`studioEntryAllowed`) — never for an anonymous `?join=1`, and never
+   *  on a member session alone. */
+  standing: boolean;
+}
+
+/** TASK-440 (the Admiral: "the security leak is big. and needs to be
+ *  fixed.") — the LOCAL protected-room list: the standing studio's BOTH
+ *  identities (the underscore-native room VDO always makes, and the
+ *  hyphen-typed registry spelling that sanitize-matches it). Protection
+ *  must never depend on the registry answering: a failed fetch falls
+ *  through to namespace admission (derive-or-dash), and this list is what
+ *  keeps a locally known standing room CLOSED through that outage — never
+ *  a downgrade to ad-hoc admission. */
+function localProtectedStudioRooms(prefix: string): string[] {
+  return [`${prefix}_studio`, `${prefix}-studio`];
+}
+
+/** TASK-440 — the ONE admission decision for `/meet/studio/<room>`,
+ *  computed ONCE before anything renders (and before
+ *  `mintStudioFrameTarget` is ever called):
+ *
+ *   · a STANDING room (Love's own studio, any registry room, the local
+ *     list) → an operator, or a VERIFIED invite bound to this exact room.
+ *     A member session alone NEVER opens a standing room;
+ *   · a booking room → today's admission (the unguessable id IS the
+ *     capability — the /meet/[bookingId] law);
+ *   · any other namespace room → today's admission (an ad-hoc co-create
+ *     room: the name is the capability — the accepted residual, T-442+
+ *     hardens it). */
+export function studioEntryAllowed(
+  access: StudioRoomAccess,
+  room: string,
+  entry: { operator: boolean; invite?: string | null },
+): boolean {
+  if (!access.standing) return true;
+  if (entry.operator) return true;
+  return verifyStudioInvite(room, entry.invite);
 }
 
 /** the fork's sanitizeRoomName (lib.js:3747-3758), mirrored for matching —
@@ -85,20 +135,22 @@ export async function resolveStudioRoom(room: string): Promise<StudioRoomAccess 
     for (const [id, entry] of Object.entries(registry)) {
       if (id.startsWith("_")) continue; // the file's own "_comment" key (TASK-262)
       if (sanitizeRoomId(id) === wanted) {
-        return { kind: "registry", title: entry?.title?.trim() || null, note: entry?.note?.trim() || null };
+        return { kind: "registry", title: entry?.title?.trim() || null, note: entry?.note?.trim() || null, standing: true };
       }
     }
   }
 
   if (isStudioNamespaceRoom(room, prefix)) {
-    return { kind: "namespace", title: null, note: null };
+    /* TASK-440: the LOCAL list decides standing here — the registry's
+       answer (or its silence) never downgrades a protected room */
+    return { kind: "namespace", title: null, note: null, standing: localProtectedStudioRooms(prefix).includes(room) };
   }
 
   const booking = await getBooking(room);
   if (booking && booking.state === "confirmed") {
     const service = await getService(booking.serviceId);
     if (service?.meetingRail?.kind === "vdo") {
-      return { kind: "booking", title: booking.serviceTitle?.trim() || null, note: null };
+      return { kind: "booking", title: booking.serviceTitle?.trim() || null, note: null, standing: false };
     }
   }
 

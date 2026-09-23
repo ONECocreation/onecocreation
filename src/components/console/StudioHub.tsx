@@ -164,6 +164,7 @@ export default function StudioHub({
           rooms={goLiveRooms}
           studioVdo={vdo}
           studioDirector={director}
+          studioGuestDoor={guestDoor}
           sessions={goLiveSessions}
           meeting={meeting}
           youtube={youtube}

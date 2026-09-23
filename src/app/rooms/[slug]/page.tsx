@@ -9,7 +9,7 @@ import { ROOMS } from "@/lib/matrix-rooms";
 import { rosterForRequest } from "@/lib/matrix";
 import { getPin } from "@/lib/room-pins";
 import { getSiteConfig } from "@/lib/site-config";
-import { liveRoomName, studioVdoLinks, studioGuestCameraLink, studioRoomKey } from "@/lib/live";
+import { liveRoomName, studioVdoLinks, studioGuestCameraLink } from "@/lib/live";
 import { getStudioDoc } from "@/lib/studio/roster";
 import { studioSceneKind, type StudioSceneId } from "@/lib/studio/scenes";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
@@ -110,16 +110,29 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
   /* TASK-245: the same pass-through shape as jitsiDomain/liveRoom above —
    * the Stage's video slot needs the meeting rail to know which studio to
    * mount, and (on the vdo rail) the studio's own room name, T-243's ONE
-   * derivation (studioVdoLinks), never re-spelled here. */
+   * derivation (studioVdoLinks), never re-spelled here. TASK-440: called
+   * with NO key — the unkeyed builder derives nothing (live-links.ts's
+   * `key` is a pass-through parameter, never computed here). */
   const studioVdo = studioVdoLinks(switches.meeting.vdoRoomPrefix, switches.meeting.vdoHost);
 
-  /* TASK-305: the SAME key every other door into this room carries (T-292
-     DESIGN.md §4.1) — `studioVdo.room` above never itself needs a key
-     (it's a bare room name, not a link), but the camera door and the
-     Stage's view tiles below both mint links into the room and must. No
-     SEAT_SECRET (local dev) → undefined, every link mints unkeyed
-     (derive-or-dash, live.ts's studioRoomKey docblock). */
-  const roomKey = studioRoomKey(studioVdo.room) ?? undefined;
+  /* TASK-440 (block 968,222 — the Admiral: "let's make it dark so no one
+     gets the pssword."): what THIS page controls — it derives and sends
+     NO studio key, in EVERY rail, door and live state — no rail-and-door
+     exception, no "live now" exception. Every signed-in member (the free
+     Heart Field included) used to receive `roomKey` here, and
+     room+password is one distinct VDO room, so that one key opened Love's
+     own studio, her director seat and her camera seat. No key-producing
+     helper is called on this page, and no keyed camera/view/push/gallery
+     link is serialized. (T-305's `roomKey` derivation — live.ts's
+     `studioRoomKey` over `studioVdo.room` — was retired by this ruling,
+     and the `roomKey` client prop with it.)
+     THE HONEST RESIDUAL: the READ-ONLY stage slot (RoomVideoSlot.tsx:323)
+     gates on rail/live/host/room — never on a key — so while the rail is
+     vdo and Love is live it still mounts an UNKEYED view iframe into the
+     unkeyed twin room (:386). That frame shows nothing of Love's keyed
+     studio (room+password is a different room), but it IS a broadcast
+     frame on the page — the stage is dark in CONTENT, not absent, until
+     Heart Field has its own room. */
 
   /* TASK-245: the gallery's on-camera set — derived, never fabricated. No
    * signal anywhere answers "is this soul's camera on right now" (the
@@ -179,7 +192,15 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
       const viewerHandle = norm(session.handle);
       const mine = onCameraMxids.find((mxid) => norm(mxid.slice(1, mxid.indexOf(":"))) === viewerHandle);
       if (mine) {
-        cameraDoor = studioGuestCameraLink(switches.meeting.vdoHost, studioVdo.room, mine.slice(1, mine.indexOf(":")), roomKey);
+        /* TASK-440: minted UNKEYED — this page sends no studio key (the
+           DARK ruling above); the door pushes into the unkeyed room, the
+           same one the keyless stage watches, never Love's keyed studio.
+           THE HONEST RESIDUAL: pre-T-440 the SAME key rode both sides, so
+           "Love named you as today's guest" reached her show; now this
+           door no longer reaches Love's v2-keyed director desk (her desk
+           never sees the unkeyed twin) — the named-guest camera path is
+           dark with the stage until Heart Field has its own room. */
+        cameraDoor = studioGuestCameraLink(switches.meeting.vdoHost, studioVdo.room, mine.slice(1, mine.indexOf(":")));
       }
     }
   }
@@ -208,7 +229,6 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
           rail={switches.meeting.rail}
           vdoHost={switches.meeting.vdoHost}
           studioRoom={studioVdo.room}
-          roomKey={roomKey}
           onCameraMxids={onCameraMxids}
           stageMxids={stageMxids}
           cameraDoor={cameraDoor}

@@ -73,7 +73,7 @@ import type { TodaySession } from "@/lib/live";
 // the duplication instead. Re-exported below so tests/go-live-door.test.ts's
 // existing `import { guestMeetingLink } from "@/app/a/live/go-live-room"`
 // keeps resolving.
-import { guestSlug, guestMeetingLink, meetStudioUrl } from "@/lib/live-links";
+import { guestSlug, guestMeetingLink } from "@/lib/live-links";
 // TASK-235: scenes.ts is pure shape (no fs, no env) — StudioRoom.tsx
 // already imports it as a client component, so this stays inside the
 // client-bundle law the file's docblock states above.
@@ -89,6 +89,22 @@ export type GoLiveDoorId = "read" | "youtube" | "call" | "cocreate";
  *  open door closes it. */
 export function nextOpenDoor(current: GoLiveDoorId | null, next: GoLiveDoorId): GoLiveDoorId | null {
   return current === next ? null : next;
+}
+
+/** TASK-440 (VERIFY-astra one-way V 4.5): the normalized co-create name
+ *  `studio` is RESERVED — `guestSlug("studio")` folded into the vdo
+ *  namespace IS the standing studio (`<prefix>_studio`), so an unsigned
+ *  co-create door built from it would knock on Love's own room. The
+ *  builder answers `reserved: true` and NO link; the card says so in
+ *  words and offers no unsigned copy action. Other names derive exactly
+ *  as before. */
+export function cocreateGuestDoor(
+  rail: "jitsi" | "vdo",
+  name: string,
+  meeting: GoLiveMeeting,
+): { link: string | null; reserved: boolean } {
+  if (guestSlug(name) === "studio") return { link: null, reserved: true };
+  return { link: guestMeetingLink(rail, name, meeting), reserved: false };
 }
 
 /* ── the feed shapes ───────────────────────────────────────────────────── */
@@ -156,6 +172,7 @@ export default function GoLiveRoom({
   rooms,
   studioVdo,
   studioDirector,
+  studioGuestDoor,
   sessions,
   meeting,
   youtube,
@@ -170,6 +187,12 @@ export default function GoLiveRoom({
    *  live-links.ts's directorDeskUrl) — the keyed studio URL no longer
    *  rides this href; the desk route's own server mints it. */
   studioDirector: string;
+  /** TASK-440: the standing studio's SIGNED guest door (/a/studio
+   *  page.tsx's own derivation, plumbed through StudioHub) — a standing
+   *  room opens for a verified invite only, and a client component can
+   *  never sign (the secret is server-only), so this card no longer
+   *  builds the door itself. */
+  studioGuestDoor: string;
   sessions: TodaySession[];
   meeting: GoLiveMeeting;
   youtube: string;
@@ -319,11 +342,12 @@ export default function GoLiveRoom({
     : null;
   const railsDark = feed ? !feed.matrixConfigured || !feed.vaultConfigured : false;
   const vaultDark = feed ? !feed.vaultConfigured : false; // TASK-236: after-hours never needs the matrix bot
-  const guestLink = guestMeetingLink(guestRail, guestName, meeting);
+  const { link: guestLink, reserved: guestNameReserved } = cocreateGuestDoor(guestRail, guestName, meeting);
   /* TASK-297: the studio's guest door, ONE derivation for both surfaces
      on the YouTube card — the SITE url, never the studio host (T-292
-     DESIGN.md §2 Page B). */
-  const studioGuestDoor = meetStudioUrl(meeting.siteOrigin, studioVdo.room);
+     DESIGN.md §2 Page B). TASK-440: SIGNED on the server (/a/studio's own
+     derivation, the studioGuestDoor prop) — this card no longer builds
+     the door client-side. */
   const afterHours = feed?.state.afterHours ?? null;
   const afterHoursRoomTitle = afterHours
     ? afterHoursRooms.find((r) => r.slug === afterHours.room)?.title ?? afterHours.room
@@ -586,7 +610,13 @@ export default function GoLiveRoom({
                   ))}
                   {meeting.rail === guestRail && <Chip tone="lavender">the config&apos;s rail</Chip>}
                 </div>
-                {guestLink ? (
+                {guestNameReserved ? (
+                  /* TASK-440: the /a uniformity law — ONE state, said once,
+                     under the words (kit-text-quiet), and no unsigned copy
+                     action beside it (the CopyDoor below rides guestLink,
+                     which is null here). */
+                  <p className="kit-text-quiet">That name is reserved for Love&apos;s studio.</p>
+                ) : guestLink ? (
                   <label style={{ display: "block" }}>
                     <span style={fieldLabel}>the guest link (derived, never stored)</span>
                     <input readOnly value={guestLink} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".74rem" }} />

@@ -3,6 +3,7 @@ import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { studioVdoLinks } from "@/lib/live";
 import { meetStudioUrl } from "@/lib/live-links";
+import { withStudioInvite } from "@/lib/studio/invite-token";
 import { getStudioDoc } from "@/lib/studio/roster";
 import { sendStudioInvite } from "@/lib/mail-studio-invite";
 
@@ -16,7 +17,9 @@ export const dynamic = "force-dynamic";
  * origin) — the guest door only, keyless by construction, and nothing the
  * client sends can steer it (the body carries no URL at all). One member
  * per call, every time: an array or list-shaped body is refused outright,
- * never partially sent.
+ * never partially sent. TASK-440: the door is SIGNED with a 7-day invite
+ * token (the standing room admits an operator or a verified invite only);
+ * the token is never the room key, and a failed mint sends no letter.
  */
 export async function POST(request: Request) {
   if (!operatorFromCookieHeader(request.headers.get("cookie"))) {
@@ -42,14 +45,24 @@ export async function POST(request: Request) {
 
   /* the guest door, derived the SAME way /a/studio derives it — the room id
      doesn't depend on the room key (page.tsx's own T-305 note), so the
-     unkeyed derivation is the honest one for a keyless door */
+     unkeyed derivation is the honest one for a keyless door.
+     TASK-440: the door is SIGNED — the standing room it opens now admits
+     an operator or a verified invite only, so the letter's link carries a
+     7-day `?invite=` token (never the room key). A failed mint sends NO
+     letter: an unsigned standing-room door is never mailed. */
   const proto = request.headers.get("x-forwarded-proto") ?? "http";
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "localhost";
   const origin = `${proto}://${host}`;
 
   const [doc, config] = await Promise.all([getStudioDoc(), getSiteConfig()]);
   const vdo = studioVdoLinks(config.meeting.vdoRoomPrefix, config.meeting.vdoHost);
-  const joinUrl = meetStudioUrl(origin, vdo.room);
+  const joinUrl = withStudioInvite(meetStudioUrl(origin, vdo.room), vdo.room);
+  if (!joinUrl) {
+    return NextResponse.json(
+      { ok: false, reason: "the invite could not be signed — the seat secret is dark" },
+      { status: 503 },
+    );
+  }
 
   const result = await sendStudioInvite({
     to: email,
