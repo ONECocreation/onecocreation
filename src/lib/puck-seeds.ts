@@ -456,7 +456,7 @@ const homeContent: Block[] = [
     hm.panel([
       hm.eyebrow("Support This Work — Gently"),
       hm.heading("Tend the Field", "h2"),
-      hm.rich("A gift lands with Love <b style=\"color:var(--gold-deep)\">whole</b> — no platform between, no cut taken. Give in bitcoin or simply in dollars; bitcoin is an option here, never a demand."),
+      hm.rich("A gift lands with Love. Give in bitcoin or simply in dollars; bitcoin is an option here, never a demand."),
       hm.note("── live tip jar stays code-side ──"),
       hm.heading("Three Doors", "h3"),
       hm.text("Give forward, follow along, read with me."),
@@ -620,7 +620,7 @@ const supportContent: Block[] = [
     su.eyebrow("Support This Work — Gently", "center"),
     su.stacked("TEND", "THE FIELD", "h1", "center"),
     su.text(cartridge.constellation, "center", st({ kerning: 6, size: 20, spaceAbove: 6 })),
-    su.rich("Everything here — the sessions, the rooms, the letters — is held by one pair of hands. A gift lands with Love <b style=\"color:var(--gold-deep)\">whole</b>: no platform between, no cut taken. Choose the jar it fills.", "center"),
+    su.rich("Everything here — the sessions, the rooms, the letters — is held by one pair of hands. A gift lands with Love. Choose the jar it fills.", "center"),
   ]),
   su.band("plain", "theme", [
     su.panel([

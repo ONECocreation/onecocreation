@@ -37,6 +37,11 @@ import path from "path";
  *     968,198): the source contains "Pay in bitcoin — it travels on-chain,
  *     straight to the artist's own wallet." and never again "quick as a
  *     breath on lightning".
+ *  6. No "no cut taken" promise in the gifts seeds (Amendment, block
+ *     968,211 — the Admiral: "ok to strike that no cut taken words").
+ *     Square takes a card fee, so the promise is false for card gifts.
+ *     Scope: SEEDS.home band 6 and SEEDS.support; the live copies in
+ *     sections.tsx and support/page.tsx are T-422's.
  */
 
 const ROOT = process.cwd();
@@ -98,5 +103,13 @@ describe("TASK-420 — the seeds carry the basket's words (no lightning rides a 
     const src = read("src/components/store/BuyPanel.tsx");
     expect(src).toContain("Pay in bitcoin — it travels on-chain, straight to the artist's own wallet.");
     expect(src).not.toContain("quick as a breath on lightning");
+  });
+
+  it("6. no \"no cut taken\" promise in the gifts seeds (amendment, block 968,211)", async () => {
+    const { SEEDS } = await import("@/lib/puck-seeds");
+    expect(JSON.stringify(SEEDS.support.content), "SEEDS.support promises no cut").not.toMatch(/no cut taken/);
+    const seeds = read("src/lib/puck-seeds.ts");
+    const band6 = seeds.slice(seeds.indexOf("// 6 - tend the field"), seeds.indexOf("// 7 - the free meditation"));
+    expect(band6, "the home tend-the-field band promises no cut").not.toMatch(/no cut taken/);
   });
 });
