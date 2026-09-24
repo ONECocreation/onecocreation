@@ -424,6 +424,42 @@ describe("T-453 (SECURITY) — the payment return never signs anyone in", () => 
     expect((await dl(tagged.id, taggedKey)).status).toBe(403); // a key never opens a key-member's order
   });
 
+  it("the feed tells the page whether this browser owns the order (the return no longer signs in — the page offers the way in)", async () => {
+    const { recordChargeEvent, getOrder } = await import("@/lib/store");
+    const { mintOrderKey } = await import("@/lib/order-receipt");
+    const { makeMemberToken } = await import("@/lib/member-auth");
+    const order = await makeOrder();
+    await recordChargeEvent(order.id, { type: "settled", chargeId: "ch_fixture" });
+    const key = mintOrderKey((await getOrder(order.id))!, "return")!;
+    expect((await (await getOrderFeed(order.id, key)).json()).order.viewerOwns).toBe(false);
+    const cookie = `pa-fren=${makeMemberToken("soul@example.com", "email")}`;
+    expect((await (await getOrderFeed(order.id, key, cookie)).json()).order.viewerOwns).toBe(true);
+    const page = await fs.readFile(path.join(process.cwd(), "src/components/store/OrderStatus.tsx"), "utf8");
+    expect(page).toContain("order.viewerOwns === false");
+    expect(page).toContain("Sign in with that email");
+  });
+
+  it("a guest's membership order (no file) gets the receipt letter's signed door — the link that signs them in", async () => {
+    const { sendOrderReceipt } = await import("@/lib/order-receipt");
+    const order = await makeOrder({
+      state: "settled",
+      lineItems: [{ itemId: "evening-star-fixture", title: "Evening Star", qty: 1 }],
+      entitlementSubject: "soul@example.com@email",
+    });
+    const res = await sendOrderReceipt(order as never);
+    expect(res).toEqual({ sent: true });
+    const html = sentMail[0].html;
+    expect(html).toMatch(new RegExp(`${SITE}/store/order/${order.id}\\?key=[0-9]+\\.l\\.[a-f0-9]{64}`));
+    expect(html).toContain("this link signs you in");
+  });
+
+  it("hardening: a session token whose expiry isn't digits never verifies (NaN used to read as never-expiring)", async () => {
+    const crypto = await import("crypto");
+    const { sessionsFromCookieHeader } = await import("@/lib/member-auth");
+    const sig = crypto.createHmac("sha256", "test-seat-secret").update("soul|email|never").digest("hex");
+    expect(sessionsFromCookieHeader(`pa-fren=soul.email.never.${sig}`)).toEqual([]);
+  });
+
   it("every return URL mints a RETURN key — the three checkout call sites, source pin", async () => {
     const store = await fs.readFile(path.join(process.cwd(), "src/app/api/store/checkout/route.ts"), "utf8");
     const cart = await fs.readFile(path.join(process.cwd(), "src/app/api/cart/checkout/route.ts"), "utf8");

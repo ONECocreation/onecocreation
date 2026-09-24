@@ -57,6 +57,8 @@ interface OrderView {
   settledAtMs?: number;
   /** a downloadable exists for this order — label + owner lock, never a path */
   deliverable?: { label: string; locked?: boolean; href?: string };
+  /** T-453: this browser is signed in as the order's owner */
+  viewerOwns?: boolean;
 }
 
 /** Buyer-honest copy per state — processing is a first-class wait, not a spinner. */
@@ -93,9 +95,9 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
      too (the amount as paid rides the ONE display law below). Hooked with
      the others — the early returns below must never sit above a hook. */
   const [receiptPrefer] = useMoneyPrefer({ btc: true, card: true });
-  /* TASK-173 — the receipt letter's signed key rides the page URL
-     (?key=…); every status poll carries it, and the orders route pours the
-     buyer's email session when it verifies (same cookie as the code door). */
+  /* TASK-173 → T-453 — a signed key rides the page URL (?key=…); every
+     status poll carries it. The orders route opens THIS order with any valid
+     key, and signs the buyer in only for the receipt letter's key. */
   const keyRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -229,6 +231,17 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
         </p>
         {order.entitlementSubject && (
           <p style={{ margin: "4px 0 0", fontSize: ".8rem", color: "var(--info, #5f4b96)" }}>unlocks for {prettySubject(order.entitlementSubject)}</p>
+        )}
+        {/* T-453: returning from the payment page no longer signs anyone in
+            (it can't prove the inbox). A guest who isn't signed in as the
+            order's email gets the way in here — unless the locked-download
+            block below already offers it. */}
+        {settledFine && buyerEmail && order.viewerOwns === false && !order.deliverable?.locked && (
+          <p className="kit-text-quiet">
+            Not signed in as {buyerEmail} yet.{" "}
+            <a href={`/login?next=${encodeURIComponent(`/store/order/${order.id}`)}`}>Sign in with that email</a> to use
+            what you bought.
+          </p>
         )}
         <p style={{ margin: "10px 0 0", fontSize: ".76rem", color: "var(--muted, #897f97)" }}>
           {/* TASK-173 — never dashes when the record carries a time: the BFT

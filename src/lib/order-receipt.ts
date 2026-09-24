@@ -28,9 +28,9 @@ import { liveAdapter } from "./payments";
  * 2. THE KEY (unlock without a second ceremony): a per-order signed token,
  *    HMAC over the order id + the buyer's email with the house secret
  *    (SEAT_SECRET — the same one the sessions ride), 90-day expiry (never
- *    shorter than the 30-day session it opens). Deterministic, so the Square
- *    return URL at checkout and the receipt letter at settle carry the SAME
- *    key. The email never travels in the token — it is re-derived from the
+ *    shorter than the 30-day session it opens). Deterministic per
+ *    (order, email, expiry window, PURPOSE) — since T-453 the return URL and
+ *    the letter carry DIFFERENT keys (see below). The email never travels in the token — it is re-derived from the
  *    order at verify time (and survives the PII purge via the
  *    entitlementSubject, which is never purged). Guard: the key only ever
  *    unlocks that ONE order's email session; log nothing but the order id.
@@ -184,6 +184,15 @@ export async function buildReceiptLetter(order: OrderRecord): Promise<{ subject:
         door = `Your download door — signed for you alone, no sign-in needed:\n[Open your download](${siteBase()}/store/order/${order.id}?key=${key})`;
       }
       break;
+    }
+  }
+  /* T-453: a guest's order with no file (a membership, a seat) still gets
+     its signed door — the return from the payment page no longer signs the
+     buyer in, and this link does (it travelled into their inbox). */
+  if (!door && order.entitlementSubject?.endsWith("@email")) {
+    const key = mintOrderKey(order, "letter");
+    if (key) {
+      door = `Your order page — this link signs you in, so please keep this email to yourself:\n[Open your order](${siteBase()}/store/order/${order.id}?key=${key})`;
     }
   }
 

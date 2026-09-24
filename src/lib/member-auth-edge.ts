@@ -82,7 +82,8 @@ export async function verifySessionTokenEdge(raw: string): Promise<{ handle: str
   const space = parts.pop()!;
   const handle = parts.join(".");
   if (!handle || !space || !exp || !sig) return null;
-  if (Date.now() > Number(exp)) return null;
+  /* T-453 hardening: digits only (member-auth.ts's own rule) */
+  if (!/^\d{1,16}$/.test(exp) || Date.now() > Number(exp)) return null;
   const expected = await hmac(`${handle}|${space}|${exp}`);
   if (!hexEqual(expected, sig)) return null;
   return { handle, space };

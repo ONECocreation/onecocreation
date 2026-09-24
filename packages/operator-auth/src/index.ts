@@ -130,7 +130,8 @@ export function createOperatorAuth(config: OperatorAuthConfig) {
     if (!token) return null;
     const [pubkey, exp, sig] = token.split(".");
     if (!pubkey || !exp || !sig) return null;
-    if (Date.now() > Number(exp)) return null;
+    /* T-453 hardening: the expiry must be digits (NaN never expired) */
+    if (!/^\d{1,16}$/.test(exp) || Date.now() > Number(exp)) return null;
     const expected = hmac(`${pubkey}|${exp}`);
     try {
       if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;

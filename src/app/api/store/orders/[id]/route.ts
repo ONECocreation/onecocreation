@@ -33,14 +33,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
   if (!order) return NextResponse.json({ ok: false, reason: "no such order" }, { status: 404 });
 
-  /* TASK-173 (0018.06.17 a₿) — THE SIGNED KEY: the receipt letter and the
-     Square return URL carry ?key=, an HMAC over order id + buyer email
-     (order-receipt.ts). A valid key proves this browser is the buyer's, so
-     this answer pours the SAME email session the sign-in code would — same
-     cookie, same helper, no new auth path — and already reads unlocked.
-     A wrong/missing key changes nothing: today's honest locked state.
-     The key only ever unlocks THIS order's email session; nothing is logged
-     here but the order id. */
+  /* TASK-173 → T-453 (block 968,393) — THE SIGNED KEY: the receipt letter
+     and the processor's return URL carry ?key=, an HMAC over order id +
+     buyer email + a PURPOSE (order-receipt.ts). The checkout never proves
+     the typed email, so a key proves only that this browser holds THIS
+     order's link — never that it owns the inbox. Hence: ANY valid key opens
+     this order's receipt and (for an email order) its download; ONLY a
+     letter key — it travelled INTO the inbox — pours that email's session,
+     and never an operator's seat. Do not widen this: before T-453 the
+     return key poured the session, which let anyone who paid sign in as
+     the email they typed (an operator seat for an operator address). A
+     wrong/missing key changes nothing; nothing is logged but the order id. */
   const key = new URL(request.url).searchParams.get("key") ?? "";
   const unlocked = key ? verifyOrderKey(order, key) : ({ ok: false } as const);
   let sessions = sessionsFromRequest(request);
@@ -116,6 +119,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         lineItems: order.lineItems,
         priceSnapshot: order.priceSnapshot,
         entitlementSubject: order.entitlementSubject,
+        /* T-453: is this browser signed in as the order's owner? (the page
+           offers "sign in" when it isn't — the return no longer does it) */
+        viewerOwns: order.entitlementSubject
+          ? sessions.some((s) => `${s.handle}@${s.space}` === order.entitlementSubject)
+          : false,
         createdAtMs: order.createdAtMs,
         settledAtMs: order.settledAtMs,
         deliverable,

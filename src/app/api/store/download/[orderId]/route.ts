@@ -16,7 +16,9 @@ export const dynamic = "force-dynamic";
  * with the owner's hardening (~0018.04.24): a shared receipt link shows
  * the receipt, never the file. When the order carries entitlementSubject
  * (every digital/package purchase does — checkout requires sign-in), the
- * download ALSO demands a live member session for that very tag. Orders
+ * download ALSO demands a live member session for that very tag — or, since
+ * T-453, that order's own key for an email buyer's order (the return key no
+ * longer signs anyone in, so the paying browser downloads by key). Orders
  * without a subject that somehow carry a deliverable stay capability-only
  * — that's the documented fallback; digital/package + subject is the
  * sanctioned pairing.
