@@ -136,6 +136,11 @@ function toPolled(d: {
 
 export interface PlaygroundIslandBodyProps {
   wire: PolledState;
+  /** T-454: the wire hasn't answered yet AND the server read the stage open
+   *  — the body shows the neutral waiting frame (no words, no buttons, no
+   *  room) instead of the closed card. Fail-closed still: nothing joins
+   *  before the click's own fresh answer. */
+  pending?: boolean;
   /** non-null = in the call (M19d) — the room from the CLICK's fresh
    *  answer, never the poll's */
   joinedRoom: string | null;
@@ -159,6 +164,7 @@ const BOOK_ALT = "Love's book, its pages curling into a heart, a fairy and a dra
 
 export function PlaygroundIslandBody({
   wire,
+  pending = false,
   joinedRoom,
   left,
   nameSnapshot,
@@ -205,6 +211,15 @@ export function PlaygroundIslandBody({
       <span className="kit-stage-chip">Live</span>
     </div>
   );
+
+  /* T-454 — BEFORE THE FIRST ANSWER, with the server's own read saying the
+     stage is open: the book waits in the frame, and nothing on the page
+     says "closed" or sends the visitor away while the wire is on its way
+     (for a paid member that first answer includes a server-side check of
+     the meet host, up to ~3 s). */
+  if (pending) {
+    return <div className="kit-stage">{waitingMedia}</div>;
+  }
 
   /* LEFT WHILE STILL OPEN (K124's words riding M19c's frame — no M-scene
      exists, decision G). Only while the wire still says open; a closed
@@ -447,6 +462,7 @@ export default function PlaygroundIsland({
       <PlaygroundBand band={band} />
       <PlaygroundIslandBody
         wire={wire}
+        pending={!answered && initialDecision !== "hidden"}
         joinedRoom={joinedRoom}
         left={left}
         nameSnapshot={nameSnapshot}

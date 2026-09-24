@@ -125,7 +125,7 @@ export default function Stage2Card() {
                 carries no package name, so the words name no tier letter
                 and no price — the door itself speaks the package. */}
             <div className="kit-text-quiet">
-              Weekly Intuitive and above can come in. New joins stop at midnight Mountain — Close stops them sooner. Ending the call is still yours.
+              Weekly Intuitive and above can come in. New joins stop at midnight Mountain. When you finish: press Close first, then End meeting for all in the call.
             </div>
             <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => act("close")}>
               {busy ? "Closing…" : "Close Stage 2"}

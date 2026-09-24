@@ -136,7 +136,11 @@ export default async function ReadingPage() {
             <ul className="kit-list">
               <li>{recurrenceLabel ? `Every ${recurrenceLabel}, a live reading from Love's book` : "A live reading from Love's book"}</li>
               <li>Free to watch from anywhere. Nothing to install</li>
-              <li>{`Join the discussion after: a live group video call with Love, with any membership${weekPass ? ` or the ${weekPass.price} Weekly Chronicles pass` : ""}`}</li>
+              {/* T-454: the real floor, in the Playground page's own words —
+                  "any membership" read true to a free Heart Field member who
+                  then met the paid gate (this page stays free of the paywall's
+                  logic, so the name rides as words, as the Playground's list does) */}
+              <li>{`Join the discussion after: the Playground, a live group video call with Love, with every membership from Weekly Intuitive up${weekPass ? `, or a ${weekPass.price} one-week pass` : ""}`}</li>
             </ul>
           </div>
         </section>

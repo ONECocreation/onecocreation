@@ -139,8 +139,11 @@ describe("the /reading page — the sky band and the approved structure", () => 
     expect(src).toContain('"kit-list"');
     expect(src).toContain("a live reading from Love's book");
     expect(src).toContain("Free to watch from anywhere. Nothing to install");
-    expect(src).toContain("Join the discussion after: a live group video call with Love, with any membership");
-    expect(src).toContain("Weekly Chronicles pass");
+    /* T-454: the real floor, the Playground page's own words (was "with any
+       membership" + a literal pass name) */
+    expect(src).toContain("Join the discussion after: the Playground, a live group video call with Love, with every membership from Weekly Intuitive up");
+    expect(src).toContain("one-week pass");
+    expect(src).not.toContain("with any membership");
     /* TASK-449 (decision D): the pass's live store read lives in
        src/lib/week-pass.ts now — one home, imported, never two copies */
     expect(src).toContain('from "@/lib/week-pass"');

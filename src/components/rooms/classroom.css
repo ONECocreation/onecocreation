@@ -56,7 +56,7 @@
 /* TASK-392 (block 968,091+): Stage 2's own region, the identical
    mechanism T-236 already used for .cl-area-after-hours — a new named
    area, not a new ruleset. */
-.cl-area-stage2 { grid-area: stage2; }
+.cl-area-stage2 { grid-area: stage2; min-width: 0; } /* T-454: the Story time wrapper is the grid item now — without min-width:0 its nowrap button widened the whole stage past a 320 px phone */
 .cl-area-resources { grid-area: resources; }
 .cl-area-chat { grid-area: chat; }
 .cl-area-people { grid-area: people; }
