@@ -325,4 +325,12 @@
 .kit-signup .kit-h2{margin:0;font-size:1.5rem}
 .kit-signup .kit-text-quiet{margin:0}
 .kit-inline-form{display:flex;gap:10px;align-items:flex-end;justify-content:center;flex-wrap:wrap;width:100%;max-width:520px}
-.kit-inline-form .kit-field{flex:1 1 240px;max-width:none;text-align:left}
+/* Only forms with a field become grids; the member's button-only form stays flex. */
+.kit-inline-form:has(>.kit-field){display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;gap:6px 10px}
+.kit-inline-form .kit-field{display:contents;text-align:left}
+.kit-inline-form .kit-field-label{grid-column:1;grid-row:1}
+.kit-inline-form .kit-field-input{grid-column:1;grid-row:2;min-width:0;box-sizing:border-box;width:100%}
+.kit-inline-form .kit-field .kit-field-error{grid-column:1;grid-row:3;text-align:left}
+.kit-inline-form:has(>.kit-field)>.kit-btn{grid-column:2;grid-row:2;align-self:stretch;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+@media (max-width:640px){.kit-inline-form:has(>.kit-field){grid-template-columns:minmax(0,1fr)}
+  .kit-inline-form:has(>.kit-field)>.kit-btn{grid-column:1;grid-row:auto;justify-self:center;margin-top:4px}}
