@@ -1,7 +1,7 @@
 {
   "css": {
     "src/app/cartridge.css": {
-      "important": 24,
+      "important": 25,
       "serif": 0
     },
     "src/app/cartridges.css": {

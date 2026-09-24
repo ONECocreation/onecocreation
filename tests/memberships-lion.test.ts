@@ -67,16 +67,16 @@ describe("/memberships designer branch wears the lion page", () => {
     expect(src.split('<main className="lions-gate-dark lion-in-band">').length - 1).toBe(1);
     expect(src.split('<main className="lions-gate-dark">').length - 1).toBe(1);
   });
-  it("the designer main keeps only the night veil; dawn's more specific rule keeps its lion", () => {
+  it("the designer bands reveal the page's night lion with dawn's unchanged framing", () => {
     const css = readFileSync("src/app/cartridge.css", "utf8");
-    const modifier = css.match(/(?:^|\n)main\.lions-gate-dark\.lion-in-band\s*\{([^}]*)\}/);
-    expect(modifier).not.toBeNull();
-    expect(modifier![1].trim()).toBe("background:linear-gradient(rgba(10,10,20,.62), rgba(10,10,20,.78));");
-    expect(modifier![1]).not.toMatch(/url\(|!important/);
-    // Equal class/attribute weight, but dawn's html + main outrank main alone.
+    expect(css).toContain('main.lions-gate-dark.lion-in-band section{background:transparent!important}');
+    expect(css).not.toMatch(/(?:^|\n)main\.lions-gate-dark\.lion-in-band\s*\{/);
+    const night = css.match(/(?:^|\n)\.lions-gate-dark\s*\{([^}]*)\}/);
+    expect(night).not.toBeNull();
+    expect(night![1]).toContain('url("/images/lions-gate.webp") center top / cover no-repeat');
     const dawn = css.match(/(?:^|\n)html\[data-oc-theme="light"\] main\.lions-gate-dark\s*\{([^}]*)\}/);
     expect(dawn).not.toBeNull();
-    expect(dawn![1]).toContain('url("/images/lions-gate.webp") center top / cover no-repeat');
+    expect(dawn![1]).toBe('\n  background:\n    linear-gradient(rgba(251,246,239,.82), rgba(251,246,239,.9)),\n    url("/images/lions-gate.webp") center top / cover no-repeat;\n');
     expect(css).toContain('html[data-oc-theme="light"] main.lions-gate-dark section{background:transparent!important}');
   });
 });
