@@ -13,7 +13,10 @@ import crypto from "node:crypto";
  * `:67-71,84-93`) and `pwyc-letters.ts`'s offer token (`:29,42-45`):
  *
  *  · TOKEN: `<exp>.<hex sig>` with `exp` INSIDE the MAC payload
- *    `studio-invite|<room>|<exp>` — the label is domain-separated from
+ *    `studio-invite:v2|<room>|<exp>` (T-455: the v1 label
+ *    `studio-invite|…` had a member session's exact shape — see
+ *    INVITE_LABEL; never go back to a label a handle can spell) — the
+ *    label is domain-separated from
  *    `studio-room-key:` (live.ts), `studio-overlay:` (overlay-token.ts)
  *    and `offer|` (pwyc-letters.ts), and the room binding means a token
  *    minted for one room verifies for no other;
@@ -58,9 +61,6 @@ function hmac(payload: string): string {
   return crypto.createHmac("sha256", secret()!).update(payload).digest("hex");
 }
 
-/** Mint the invite for ONE room — `<exp>.<hex sig>`, exp inside the MAC.
- *  Null when the house secret is dark (the door fails closed, never
- *  lies). `nowMs` rides the mint only — verify takes no clock. */
 /** T-455 (SECURITY): the MAC label. A member session signs
  *  `<handle>|<space>|<exp>` with the same house secret, and the old label
  *  `studio-invite|<room>|<exp>` was exactly that shape — a tag named
@@ -70,6 +70,9 @@ function hmac(payload: string): string {
  *  Love sends fresh ones (they last seven days anyway). */
 const INVITE_LABEL = "studio-invite:v2";
 
+/** Mint the invite for ONE room — `<exp>.<hex sig>`, exp inside the MAC.
+ *  Null when the house secret is dark (the door fails closed, never
+ *  lies). `nowMs` rides the mint only — verify takes no clock. */
 export function mintStudioInvite(room: string, nowMs = Date.now()): string | null {
   if (!secret()) return null;
   const exp = nowMs + STUDIO_INVITE_TTL_MS;

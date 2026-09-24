@@ -60,8 +60,34 @@ describe("the session mints sign a KNOWN space only", () => {
     const claim = await fs.readFile(path.join(process.cwd(), "src/app/api/member/claim/route.ts"), "utf8");
     expect(claim).toMatch(/const space = normalizeSpace\(/);
     const session = await fs.readFile(path.join(process.cwd(), "src/app/api/member/session/route.ts"), "utf8");
-    expect(session).toContain("const space = rawSpace ? normalizeSpace(rawSpace) : \"\";");
-    expect(session).not.toMatch(/const space = \(body\.space/);
+    /* the door-switch signs a NEW token only with the normalized space; the
+       raw space still matches a door the cookie already holds (an email door) */
+    expect(session).toContain("const mintSpace = normalizeSpace(space);");
+    expect(session).toContain("tokens = [makeMemberToken(handle, mintSpace), ...sessions.map((x) => x.token)];");
+    expect(session).not.toContain("makeMemberToken(handle, space)");
+  });
+});
+
+describe("the door-switch still moves a door the cookie already holds (the review's regression)", () => {
+  it("a key member switches back to their EMAIL door: 200, the email door first, nothing new signed for it", async () => {
+    const { makeMemberToken, MEMBER_COOKIE } = await import("@/lib/member-auth");
+    const { PUT } = await import("@/app/api/member/session/route");
+    const key = makeMemberToken("alice", "onecocreation");
+    const email = makeMemberToken("alice@example.com", "email");
+    const res = await PUT(
+      new Request("http://localhost/api/member/session", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", cookie: `${MEMBER_COOKIE}=${key}~${email}` },
+        body: JSON.stringify({ handle: "alice@example.com", space: "email" }),
+      }),
+    );
+    const body = await res.json();
+    expect(res.status, JSON.stringify(body)).toBe(200);
+    expect(body.space).toBe("email");
+    const cookie = res.headers.get("set-cookie") ?? "";
+    const { sessionsFromCookieHeader } = await import("@/lib/member-auth");
+    const order = sessionsFromCookieHeader(cookie).map((s) => `${s.handle}@${s.space}`);
+    expect(order[0]).toBe("alice@example.com@email");
   });
 });
 
