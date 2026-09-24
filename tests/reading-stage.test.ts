@@ -16,8 +16,8 @@ import Stage2Details from "@/components/reading/Stage2Details";
  *
  * The phase-control law (Amendment 1's Tests): each phase has exactly ONE
  * primary control — closed has none, published has "Watch Love live",
- * watching has only the two small kit-btn-quiet tools (Full screen and
- * Leave), failed has "Try again", ended has "Watch again" only while the
+ * watching has no page control (Jitsi owns fullscreen and hang-up),
+ * failed has "Try again", ended has "Watch again" only while the
  * room is still published. The book art is in closed, published and
  * ended; there is no <img> of it while watching (JitsiViewer replaces it
  * in the SAME frame).
@@ -47,8 +47,7 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     left: false,
     onWatch: () => {},
     onTryAgain: () => {},
-    onLeave: () => {},
-    onFullScreen: () => {},
+    onViewerEnded: () => {},
     onLeaveStage2: () => {},
     onJoinStage2: () => {},
     ...overrides,
@@ -126,7 +125,7 @@ describe("published, not yet watching — one tap starts her picture and sound",
   });
 });
 
-describe("watching — JitsiViewer replaces the book in the same frame; two small tools, not a bar", () => {
+describe("watching — JitsiViewer replaces the book; its toolbar is the only control", () => {
   const html = render(bodyProps({ phase: "published", watching: true, room: ROOM }));
 
   it("the viewer is mounted, the book's <img> is GONE, the LIVE chip stays", () => {
@@ -135,11 +134,11 @@ describe("watching — JitsiViewer replaces the book in the same frame; two smal
     expect(html).toContain("kit-stage-chip");
   });
 
-  it("the controls area is slim and holds ONLY the two kit-btn-quiet tools: Full screen and Leave", () => {
-    expect(html).toContain("kit-stage-controls-slim");
-    expect(count(html, "kit-btn-quiet")).toBe(2);
-    expect(html).toContain("Full screen");
-    expect(html).toContain("Leave");
+  it("no page controls row, Full screen or Leave button under the viewer", () => {
+    expect(html).not.toContain("kit-stage-controls");
+    expect(count(html, "kit-btn-quiet")).toBe(0);
+    expect(html).not.toContain("Full screen");
+    expect(html).not.toMatch(/<button\b[^>]*>\s*Leave\s*<\/button>/);
     expect(count(html, "kit-btn-main")).toBe(0);
     expect(html).not.toContain("One tap");
   });
@@ -307,9 +306,12 @@ describe("the island's own wiring — source pins (the repo runs no jsdom)", () 
     expect(src).not.toContain('from "@/components/reading/Stage2Details"');
   });
 
-  it("the Full screen tool calls requestFullscreen on the frame", async () => {
+  it("Jitsi owns fullscreen and hang-up; the page retains the viewer-ended path only", async () => {
     const src = await read(STAGE);
-    expect(src).toContain("requestFullscreen");
+    expect(src).not.toContain("requestFullscreen");
+    expect(src).not.toMatch(/\bonLeave\b|\bonFullScreen\b|function leave\(|function fullScreen\(/);
+    expect(src).toContain("onEnded={onViewerEnded}");
+    expect(src).toContain("onViewerEnded={viewerEnded}");
   });
 
   it("SSR hands the phase only — no room, no host URL, no moderator data in the props (phase-only SSR)", async () => {

@@ -24,6 +24,17 @@ const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8")
 const VIEWER = "src/components/reading/JitsiViewer.tsx";
 const JITSIROOM = "src/components/booking/JitsiRoom.tsx";
 
+describe("JitsiViewer — viewer-only storage isolation", () => {
+  it("host-page storage and moderator-toast suppression ship together", async () => {
+    const src = await read(VIEWER);
+    expect(src).toContain("useHostPageLocalStorage: true");
+    expect(src).toContain('disabledNotifications: ["notify.moderator"]');
+    const stage2 = await read(JITSIROOM);
+    expect(stage2).not.toContain("useHostPageLocalStorage");
+    expect(stage2).not.toContain("disabledNotifications");
+  });
+});
+
 describe("JitsiViewer — it never asks for the viewer's own media", () => {
   it("no initial getUserMedia, both tracks born muted, no prejoin step", async () => {
     const src = await read(VIEWER);
