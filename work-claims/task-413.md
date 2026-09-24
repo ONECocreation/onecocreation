@@ -13,6 +13,7 @@ OWNS:
 - src/app/memberships/page.tsx (designer main class string only)
 - src/app/cartridge.css (additive modifier rule and its comment only)
 - tests/memberships-lion.test.ts (flipped source pins and modifier/dawn arm only)
+- tests/studio-publish.test.ts (the ONE published-designer className pin only) — added by Number One at the gate (the builder flagged it out of scope, correctly)
 
 The designer main keeps its night veil but leaves the lion to the Band.
 The hand-built main, dawn rules, seed, asset and drift ceilings remain untouched.
