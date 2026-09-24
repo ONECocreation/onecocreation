@@ -1,5 +1,8 @@
 import { ROOMS, type MatrixRoom } from "./matrix-rooms.ts";
 
+// Admiral's ruling, block 968,335: every reading door opens the public reading page.
+export const READING_PAGE_PATH = "/reading";
+
 /**
  * THE READING ROOM, DERIVED ONCE (TASK-210, 0018.06.23 a₿) — the free
  * reading's room and every door that leads to it. Pure and client-safe

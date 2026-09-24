@@ -99,7 +99,7 @@ describe("the Read with Love letter (TASK-126 + TASK-132)", () => {
     await sendReadWithLoveLetter("reader@example.com");
     expect(sent).toHaveLength(1);
     expect(sent[0].subject).toBe("Read with Love — your seat");
-    expect(sent[0].html).toContain('href="https://meet.onecocreation.com/read-with-love"');
+    expect(sent[0].html).toContain(`href="${(await import("@/lib/subscribers")).siteBase()}/reading"`);
     expect(sent[0].html).toContain("moderator"); // guests wait for Love — said in the letter
     expect(sent[0].html.toLowerCase()).not.toContain("zoom");
     expect(sent[0].html).not.toContain("Unzip Into the New You");
@@ -111,7 +111,7 @@ describe("the Read with Love letter (TASK-126 + TASK-132)", () => {
     try {
       const { sendReadWithLoveLetter } = await leadMagnet();
       await sendReadWithLoveLetter("reader@example.com");
-      expect(sent[0].html).toContain('href="https://site.example.invalid/rooms/heart-field"');
+      expect(sent[0].html).toContain('href="https://site.example.invalid/reading"');
       expect(sent[0].html).toContain("Join the reading on the stage");
       expect(sent[0].html).not.toContain("vdo.onecocreation.com"); // the studio host never rides in the letter
       expect(sent[0].html).not.toContain("?room=");
@@ -125,20 +125,20 @@ describe("the Read with Love letter (TASK-126 + TASK-132)", () => {
 
   it("the studio rail's link is the free reading room's path — one derivation with the letter toolbar (T-227)", async () => {
     meeting.rail = "vdo";
-    const { READING_ROOM_PATH } = await import("@/lib/reading-room");
+    const { READING_PAGE_PATH, READING_ROOM_PATH } = await import("@/lib/reading-room");
     const { siteBase } = await import("@/lib/subscribers");
     const { sendReadWithLoveLetter } = await leadMagnet();
     await sendReadWithLoveLetter("reader@example.com");
     expect(READING_ROOM_PATH).toBe("/rooms/heart-field");
-    expect(sent[0].html).toContain(`href="${siteBase()}${READING_ROOM_PATH}"`);
+    expect(sent[0].html).toContain(`href="${siteBase()}${READING_PAGE_PATH}"`);
   });
 
   it("no rail configured → the honest 'coming' line", async () => {
     meeting.rail = "static";
     const { sendReadWithLoveLetter } = await leadMagnet();
     await sendReadWithLoveLetter("reader@example.com");
-    expect(sent[0].html).toContain("The room link is coming");
-    expect(sent[0].html).toContain("before the first reading.");
+    expect(sent[0].html).toContain(`href="${(await import("@/lib/subscribers")).siteBase()}/reading"`);
+    expect(sent[0].html).not.toContain("The room link is coming");
     expect(sent[0].html.toLowerCase()).not.toContain("zoom");
   });
 

@@ -93,7 +93,7 @@ describe("buildMenu's default — Community is a header, not a switch", () => {
     const community = menu.find((m) => m.label === "Community");
     expect(community).toBeTruthy();
     expect(community?.subs?.map((s) => s.label)).toEqual(
-      expect.arrayContaining(["News & letters", "Free meditation", "11:11 Live with Love", "The reading room"]),
+      expect.arrayContaining(["News & letters", "Free meditation", "11:11 Live with Love", "Read with Love"]),
     );
     // TASK-213: "Classes & rooms" split into two doors — Classes (still
     // classes-gated) and The reading room (always on, its own gate)
@@ -110,7 +110,7 @@ describe("buildMenu's default — Community is a header, not a switch", () => {
     const community = buildMenu(c).find((m) => m.label === "Community");
     expect(community?.subs?.map((s) => s.label)).not.toContain("News & letters");
     expect(community?.subs?.map((s) => s.label)).toContain("Classes");
-    expect(community?.subs?.map((s) => s.label)).toContain("The reading room");
+    expect(community?.subs?.map((s) => s.label)).toContain("Read with Love");
     expect(community?.subs?.map((s) => s.label)).toContain("Free meditation");
     expect(community?.subs?.map((s) => s.label)).toContain("11:11 Live with Love");
   });
