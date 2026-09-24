@@ -416,14 +416,14 @@ describe("no room string outside the call — a guard that CAN fail (pickup fix)
 describe("the band follows the wire (pickup fix — the page read it once per request)", () => {
   const WHEN = "Saturday, October 3 · 1:11 PM MDT";
 
-  it("closed: the Stage 2 kicker, the next reading's derived line, no quiet line", () => {
+  it("closed: the closed-now kicker, the next reading's derived line, no quiet line", () => {
     expect(playgroundBand("hidden", false, null, WHEN)).toEqual({
-      kicker: "The Playground · Stage 2",
+      kicker: "The Playground · closed now",
       whenDay: "Opens right after the next reading",
       whenTime: WHEN,
       quiet: null,
     });
-    expect(playgroundBand(null, false, "Fixture Weekly", WHEN).kicker).toBe("The Playground · Stage 2");
+    expect(playgroundBand(null, false, "Fixture Weekly", WHEN).kicker).toBe("The Playground · closed now");
   });
 
   it("open to a visitor who can't join yet (signin / package): open now, the members line", () => {
@@ -469,6 +469,42 @@ describe("the band follows the wire (pickup fix — the page read it once per re
     expect(page).toContain("initialDecision={initialDecision}");
     expect(page).toContain("closedWhen={closedWhen}");
     expect(page).toContain("tierName={tierName}");
+  });
+});
+
+describe("T-451 — the Playground page never says \"Stage 2\" (the Admiral, block 968,393: \"playground\")", () => {
+  it("no rendered state of the body or the band carries the words Stage 2", () => {
+    const states: Array<Partial<PlaygroundIslandBodyProps>> = [
+      { wire: { decision: null, reachable: null, pkg: null } },
+      { wire: { decision: "hidden", reachable: null, pkg: null } },
+      { wire: { decision: "signin", reachable: null, pkg: null } },
+      { wire: { decision: "package", reachable: null, pkg: PKG } },
+      { wire: { decision: "open", reachable: true, pkg: null } },
+      { wire: { decision: "open", reachable: false, pkg: null } },
+      { wire: { decision: "open", reachable: true, pkg: null }, left: true },
+      { wire: { decision: "open", reachable: false, pkg: null }, left: true },
+      { wire: { decision: "open", reachable: true, pkg: null }, joinedRoom: ROOM },
+    ];
+    for (const st of states) {
+      expect(render(bodyProps(st)), JSON.stringify(st)).not.toContain("Stage 2");
+    }
+    for (const d of [null, "hidden", "signin", "package", "open"] as const) {
+      for (const inCall of [false, true]) {
+        const html = renderToStaticMarkup(
+          createElement(PlaygroundBand, { band: playgroundBand(d, inCall, "Fixture Weekly", "Saturday · 1:11 PM MDT") }),
+        );
+        expect(html, `${d} ${inCall}`).not.toContain("Stage 2");
+      }
+    }
+  });
+
+  it("the unreachable words and the closed card name the Playground", () => {
+    expect(render(bodyProps({ wire: { decision: "open", reachable: false, pkg: null } }))).toContain(
+      "The Playground isn&#x27;t answering right now.",
+    );
+    expect(render(bodyProps({ wire: { decision: "hidden", reachable: null, pkg: null } }))).toContain(
+      "when Love turns it on",
+    );
   });
 });
 

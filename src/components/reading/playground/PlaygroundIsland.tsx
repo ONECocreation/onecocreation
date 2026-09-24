@@ -87,7 +87,7 @@ export function playgroundBand(
       quiet: "A live video call with Love, for members",
     };
   }
-  return { kicker: "The Playground · Stage 2", whenDay: "Opens right after the next reading", whenTime: closedWhen, quiet: null };
+  return { kicker: "The Playground · closed now", whenDay: "Opens right after the next reading", whenTime: closedWhen, quiet: null };
 }
 
 /** The band itself — the page's kicker, h1 and when-lines, rendered by the
@@ -225,7 +225,7 @@ export function PlaygroundIslandBody({
               </button>
             </div>
           ) : (
-            <p className="kit-body">Stage 2 isn&apos;t answering right now.</p>
+            <p className="kit-body">The Playground isn&apos;t answering right now.</p>
           )}
           {note && <p className="kit-text-quiet">{note}</p>}
         </div>
@@ -252,7 +252,7 @@ export function PlaygroundIslandBody({
               </p>
             </>
           ) : (
-            <p className="kit-body">Stage 2 isn&apos;t answering right now.</p>
+            <p className="kit-body">The Playground isn&apos;t answering right now.</p>
           )}
           {note && <p className="kit-text-quiet">{note}</p>}
         </div>
@@ -320,7 +320,7 @@ export function PlaygroundIslandBody({
     <div className="kit-card kit-card-body kitx-flow kit-stage2-card">
       <h2 className="kit-h2">The Playground is closed right now</h2>
       <p className="kit-body">
-        It opens right after each reading, when Love turns on Stage 2. Keep the reading open: a banner shows there the
+        It opens right after each reading, when Love turns it on. Keep the reading open: a banner shows there the
         moment it opens.
       </p>
       <div className="kit-btn-row kitx-actions">
