@@ -36,7 +36,11 @@ vi.mock("@/lib/entitlement", () => ({
 vi.mock("@/lib/member-links", () => ({ memberGroup: vi.fn(async (s: string) => groups.get(s) ?? [s]) }));
 vi.mock("@/lib/member-tier", () => ({
   tierForSubject: vi.fn(async () => groupTier),
-  emailForSubject: vi.fn(async (s: string) => (s.endsWith("@email") ? s.slice(0, -"@email".length) : null)),
+  /* the real one walks the linked group for an email door (member-tier.ts) */
+  emailForSubject: vi.fn(async (s: string) => {
+    const door = (groups.get(s) ?? [s]).find((d) => d.endsWith("@email"));
+    return door ? door.slice(0, -"@email".length) : null;
+  }),
 }));
 vi.mock("@/lib/matrix", () => ({
   mxidForSubject: (s: string) => `@${s}`,
@@ -111,6 +115,28 @@ describe("the operator's revoke (T-452)", () => {
     expect(body.reason).toBe("that door holds no tier of its own");
     expect(revoked).toEqual([]);
     expect(kicked).toEqual([]);
+  });
+
+  it("linked, but the other door holds nothing (an email linked only for letters): main's kind letter still goes out", async () => {
+    groups.set(KEYDOOR, [KEYDOOR, EMAIL]);
+    grants.set(KEYDOOR, "B");
+    groupTier = null; // after the revoke, the group holds nothing
+    const { status, body } = await revoke(KEYDOOR);
+    expect(status).toBe(200);
+    expect(body.linked).toBe(1);
+    expect(body.stillHolds).toBeNull();
+    expect(letters).toEqual([{ to: "sam@example.com", tier: "B" }]);
+  });
+
+  it("linked, and what they still hold can't be read: no letter (unknown is never 'closed')", async () => {
+    const { tierForSubject } = await import("@/lib/member-tier");
+    vi.mocked(tierForSubject).mockRejectedValueOnce(new Error("KV blip"));
+    groups.set(EMAIL, [EMAIL, KEYDOOR]);
+    grants.set(EMAIL, "C");
+    const { status, body } = await revoke(EMAIL);
+    expect(status).toBe(200);
+    expect(letters).toEqual([]);
+    expect(body.letter).toContain("no letter sent");
   });
 
   it("the only door: kicked, revoked, and the kind letter names the tier it held (main's path)", async () => {

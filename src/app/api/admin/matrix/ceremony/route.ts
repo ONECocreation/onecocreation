@@ -147,20 +147,25 @@ export async function POST(request: Request) {
     await revokeTier(ownKey);
 
     /* T-452: with linked sign-ins, the automatic "membership closed" letter
-       could be false (another door may still hold a tier), so it isn't sent
-       — the answer says what the member still reads as, and the operator
-       writes by hand. Informational reads: a failure here changes nothing. */
+       could be false (another door may still hold a tier). It is held back
+       when the member still reads as holding a tier, or when that couldn't
+       be read; when the read says they now hold nothing, main's letter goes
+       out as before (a key member who linked an email only for letters).
+       memberGroup reads leniently: a failed links read counts as "no linked
+       doors" and takes main's letter path, exactly as main did. */
     let linked = 0;
     let stillHolds: Awaited<ReturnType<typeof tierFor>> = null;
+    let readOk = false;
     try {
       const { memberGroup } = await import("@/lib/member-links");
       const { tierForSubject } = await import("@/lib/member-tier");
       linked = (await memberGroup(body.subject)).length - 1;
       if (linked > 0) stillHolds = await tierForSubject(body.subject);
+      readOk = true;
     } catch {
-      /* unknown — the letter below stays unsent for a linked member */
+      /* unknown — a linked member's letter stays unsent */
     }
-    if (linked > 0) {
+    if (linked > 0 && (stillHolds !== null || !readOk)) {
       const still = stillHolds ? ` and still reads as ${stillHolds}` : "";
       return NextResponse.json({
         ok: true,
@@ -178,7 +183,7 @@ export async function POST(request: Request) {
       const to = await emailForSubject(body.subject);
       if (to) { await sendRevokeLetter(to, held, false); letter = `kind letter queued to ${to}`; }
     } catch { letter = "letter failed to queue — resend by hand"; }
-    return NextResponse.json({ ok: true, revoked: held, stillHolds: null, linked: 0, rooms, letter });
+    return NextResponse.json({ ok: true, revoked: held, stillHolds: null, linked, rooms, letter });
   }
 
   const headers = { Authorization: `Bearer ${c.token}`, "Content-Type": "application/json" };
