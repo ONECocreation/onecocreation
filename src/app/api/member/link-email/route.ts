@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   } catch {
     /* T-452: the link store couldn't be read — nothing was written (a
        failed read never becomes an empty list saved over every link) */
-    return NextResponse.json({ ok: false, reason: "couldn't save the link just now — try again" }, { status: 503 });
+    return NextResponse.json({ ok: false, reason: "couldn't save the link just now — ask for a new code and try again" }, { status: 503 });
   }
   try {
     await addSubscriber(email, "welcome-link");

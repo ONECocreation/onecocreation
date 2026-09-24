@@ -62,7 +62,17 @@ export async function unlinkMember(subject: string): Promise<void> {
 
 /** Every subject linked (transitively) to this one, self included. */
 export async function memberGroup(subject: string): Promise<string[]> {
-  const pairs = await readPairs();
+  return groupFrom(await readPairs(), subject);
+}
+
+/** T-452: the same group, read STRICTLY — for a destructive decision (the
+ *  operator's revoke), a failed read must stop the action, never shrink the
+ *  group to the door itself. */
+export async function memberGroupStrict(subject: string): Promise<string[]> {
+  return groupFrom(await readPairsStrict(), subject);
+}
+
+function groupFrom(pairs: [string, string][], subject: string): string[] {
   const group = new Set([subject]);
   let grew = true;
   while (grew) {
