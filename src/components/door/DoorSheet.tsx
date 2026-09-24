@@ -330,7 +330,7 @@ export default function DoorSheet({
   const copy = DOOR_COPY[state];
 
   return (
-    <div style={card} role="dialog" aria-label="Sign in">
+    <div className={mount === "sheet" ? "oc-pv-dark" : undefined} style={card} role="dialog" aria-label="Sign in">
       {copy && <p style={headline}>{copy.title}</p>}
 
       {state === "sign-in" && !signerOpen && (
@@ -342,7 +342,7 @@ export default function DoorSheet({
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com" aria-label="Email address" style={field}
             />
-            <button className="btn btn-rose" type="submit" disabled={busy} style={{ width: "100%", boxSizing: "border-box" }}>
+            <button className="kit-btn kit-btn-main kit-btn-sm" type="submit" disabled={busy} style={{ width: "100%", boxSizing: "border-box" }}>
               {busy ? copy.busyCta : copy.cta}
             </button>
           </form>
@@ -350,7 +350,7 @@ export default function DoorSheet({
           <p style={{ ...quietNote, margin: "16px 0 8px" }}>{keyNoteFor(hasNostr, android)}</p>
           <button
             type="button" onClick={signInWithKey} disabled={busy}
-            className="btn btn-ghost btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
+            className="kit-btn kit-btn-second kit-btn-sm" style={{ width: "100%", boxSizing: "border-box" }}
           >
             {DOOR_KEY_CTA}
           </button>
@@ -367,7 +367,7 @@ export default function DoorSheet({
           </p>
           <SignerDoors kind="login" submit={submitSignedKey} next={nextPathFromLocation() ?? undefined} />
           <p style={{ margin: "14px 0 0" }}>
-            <button type="button" className="btn-quiet" onClick={() => { setSignerOpen(false); setNote(null); }}>
+            <button type="button" className="kit-btn kit-btn-quiet" onClick={() => { setSignerOpen(false); setNote(null); }}>
               ← the email door
             </button>
           </p>
@@ -386,12 +386,12 @@ export default function DoorSheet({
               placeholder="••••••" aria-label="Sign-in code"
               style={{ ...field, letterSpacing: ".35em", fontSize: "1.2rem" }}
             />
-            <button className="btn" type="submit" disabled={busy || code.length !== 6} style={{ width: "100%", boxSizing: "border-box" }}>
+            <button className="kit-btn kit-btn-main kit-btn-sm" type="submit" disabled={busy || code.length !== 6} style={{ width: "100%", boxSizing: "border-box" }}>
               {busy ? copy.busyCta : copy.cta}
             </button>
           </form>
           <p style={{ margin: "14px 0 0" }}>
-            <button type="button" className="btn-quiet" onClick={() => { setCode(""); setNote(null); go({ type: "back" }); }}>
+            <button type="button" className="kit-btn kit-btn-quiet" onClick={() => { setCode(""); setNote(null); go({ type: "back" }); }}>
               {DOOR_BACK}
             </button>
           </p>
@@ -408,19 +408,19 @@ export default function DoorSheet({
                 placeholder="your name" aria-label="Your name" maxLength={20}
                 style={{ flex: 1, minWidth: 0, textAlign: "right", border: "none", outline: "none", background: "transparent", color: "var(--field-ink)", padding: "10px 2px", fontSize: "1rem" }}
               />
-              <span style={{ fontWeight: 700, whiteSpace: "nowrap", color: "var(--info, #9d86d9)" }}>{DOOR_NAME_SUFFIX}</span>
+              <span style={{ fontWeight: 700, whiteSpace: "nowrap", color: "var(--field-ink)" }}>{DOOR_NAME_SUFFIX}</span>
             </div>
             <p aria-live="polite" style={{ margin: 0, minHeight: "1.2em", fontSize: ".74rem", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>
               {avail === "checking" && <span style={{ color: "var(--muted)" }}>checking…</span>}
               {avail === "free" && <span style={{ color: "var(--ok, #7fb98f)" }}>✓ this name is free</span>}
               {avail === "taken" && <span style={{ color: "var(--err, #E7899E)" }}>✗ {availReason ?? "not available — try another"}</span>}
             </p>
-            <button className="btn" type="submit" disabled={busy || wish.trim().length < 3 || avail === "taken"} style={{ width: "100%", boxSizing: "border-box" }}>
+            <button className="kit-btn kit-btn-main kit-btn-sm" type="submit" disabled={busy || wish.trim().length < 3 || avail === "taken"} style={{ width: "100%", boxSizing: "border-box" }}>
               {busy ? copy.busyCta : copy.cta}
             </button>
           </form>
           <p style={{ margin: "12px 0 0" }}>
-            <button type="button" className="btn-quiet" onClick={() => { keyEvent.current = null; setWish(""); setNote(null); go({ type: "back" }); }}>
+            <button type="button" className="kit-btn kit-btn-quiet" onClick={() => { keyEvent.current = null; setWish(""); setNote(null); go({ type: "back" }); }}>
               ← back
             </button>
           </p>
@@ -430,7 +430,7 @@ export default function DoorSheet({
       {state === "in" && (
         <>
           <p style={bodyNote}>{copy.note}</p>
-          <button className="btn" onClick={finish} style={{ width: "100%", boxSizing: "border-box" }}>
+          <button className="kit-btn kit-btn-main kit-btn-sm" onClick={finish} style={{ width: "100%", boxSizing: "border-box" }}>
             {copy.cta}
           </button>
         </>
