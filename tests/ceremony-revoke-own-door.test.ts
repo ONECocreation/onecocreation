@@ -3,49 +3,39 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 /**
  * T-452 (block 968,393): the operator's revoke.
  *  - It reads THIS door's OWN grant (the key it revokes), never the highest
- *    across linked doors — or it would report "revoked C" and send an
+ *    across linked doors — or it would report "revoked C" and write an
  *    Evening Star closing letter while C stays live on a linked door.
- *  - Everything is read BEFORE anything is written (the linked group,
- *    strictly, and the other grants): a failed read answers 503 with nothing
- *    changed.
- *  - EVERY sign-in of the member leaves every gated room (each door has its
- *    own Matrix account); the next login re-invites exactly what the group
- *    still holds. The implementation review caught the first draft keeping
- *    every room when a linked door held a LOWER tier.
- *  - The kind letter goes only when the group now holds less than the tier
- *    revoked.
- * Seams mocked at the module boundary; tierSatisfies / isTier stay REAL.
+ *  - The kick and the revoke are main's (this door's account leaves the
+ *    gated rooms; the next sign-in re-invites what the member still holds).
+ *    Two rebuilt drafts that kicked the whole linked group were rejected by
+ *    review (one kicked nothing on a lower linked tier; the next could kick
+ *    the bot seat when the Admiral's own sign-in is linked) — reaching every
+ *    linked account is a follow-up lane.
+ *  - With linked sign-ins no automatic "membership closed" letter goes out;
+ *    the answer says what the member still reads as.
  */
 
-const grants = new Map<string, string>();
+const grants = new Map<string, "A" | "B" | "C">();
 const groups = new Map<string, string[]>();
 const revoked: string[] = [];
 const letters: { to: string; tier: string }[] = [];
 const kicked: string[] = [];
-let groupReadFails = false;
+let groupTier: "A" | "B" | "C" | null = null;
 
 vi.mock("@/lib/operator-auth", () => ({ operatorFromCookieHeader: () => "operator-fixture" }));
 vi.mock("@/lib/matrix-rooms", () => ({ ROOMS: [] }));
 vi.mock("@/lib/registry", () => ({ getEntry: vi.fn(async () => null) }));
-vi.mock("@/lib/entitlement", async (importOriginal) => {
-  const real = await importOriginal<typeof import("@/lib/entitlement")>();
-  return {
-    ...real,
-    normalizeNpub: () => null,
-    tierFor: vi.fn(async (k: string) => grants.get(k) ?? null),
-    revokeTier: vi.fn(async (k: string) => {
-      revoked.push(k);
-      grants.delete(k);
-    }),
-  };
-});
-vi.mock("@/lib/member-links", () => ({
-  memberGroupStrict: vi.fn(async (s: string) => {
-    if (groupReadFails) throw new Error("links KV down");
-    return groups.get(s) ?? [s];
+vi.mock("@/lib/entitlement", () => ({
+  normalizeNpub: () => null,
+  tierFor: vi.fn(async (k: string) => grants.get(k) ?? null),
+  revokeTier: vi.fn(async (k: string) => {
+    revoked.push(k);
+    grants.delete(k);
   }),
 }));
+vi.mock("@/lib/member-links", () => ({ memberGroup: vi.fn(async (s: string) => groups.get(s) ?? [s]) }));
 vi.mock("@/lib/member-tier", () => ({
+  tierForSubject: vi.fn(async () => groupTier),
   emailForSubject: vi.fn(async (s: string) => (s.endsWith("@email") ? s.slice(0, -"@email".length) : null)),
 }));
 vi.mock("@/lib/matrix", () => ({
@@ -84,37 +74,38 @@ beforeEach(() => {
   revoked.length = 0;
   letters.length = 0;
   kicked.length = 0;
-  groupReadFails = false;
-  groups.set(EMAIL, [EMAIL, KEYDOOR]);
-  groups.set(KEYDOOR, [KEYDOOR, EMAIL]);
+  groupTier = null;
 });
 
 describe("the operator's revoke (T-452)", () => {
-  it("THE REVIEW'S BLOCKER: revoke Evening Star while a linked door holds Weekly Intuitive → every sign-in leaves every gated room, and the letter names Evening Star", async () => {
+  it("revoke Evening Star on a door linked to a Weekly Intuitive door: reports C, kicks this door's account, NO automatic letter", async () => {
+    groups.set(EMAIL, [EMAIL, KEYDOOR]);
     grants.set(EMAIL, "C");
-    grants.set(KEYDOOR, "A");
+    groupTier = "A"; // what the group reads as after the revoke
     const { status, body } = await revoke(EMAIL);
     expect(status).toBe(200);
     expect(body.revoked).toBe("C");
     expect(body.stillHolds).toBe("A");
+    expect(body.linked).toBe(1);
     expect(revoked).toEqual([EMAIL]);
-    expect(kicked.sort()).toEqual([`@${EMAIL}`, `@${KEYDOOR}`].sort());
-    expect(letters).toEqual([{ to: "sam@example.com", tier: "C" }]);
+    expect(kicked).toEqual([`@${EMAIL}`]);
+    expect(letters).toEqual([]);
+    expect(body.letter).toContain("still reads as A");
   });
 
-  it("revoke Weekly Intuitive while a linked door holds Evening Star → reports A, no closing letter (the rooms re-invite on their next sign-in)", async () => {
+  it("revoke Weekly Intuitive on a door linked to an Evening Star door: reports A (never the linked C)", async () => {
+    groups.set(EMAIL, [EMAIL, KEYDOOR]);
     grants.set(EMAIL, "A");
-    grants.set(KEYDOOR, "C");
-    const { status, body } = await revoke(EMAIL);
-    expect(status).toBe(200);
+    groupTier = "C";
+    const { body } = await revoke(EMAIL);
     expect(body.revoked).toBe("A");
     expect(body.stillHolds).toBe("C");
     expect(letters).toEqual([]);
-    expect(body.letter).toContain("still hold C");
   });
 
-  it("a door with no tier of its own is a 404 — even when a linked door holds one — and nothing is written", async () => {
-    grants.set(KEYDOOR, "C");
+  it("a door with no tier of its own is a 404 — even when a linked door holds one — and nothing happens", async () => {
+    groups.set(EMAIL, [EMAIL, KEYDOOR]);
+    groupTier = "C";
     const { status, body } = await revoke(EMAIL);
     expect(status).toBe(404);
     expect(body.reason).toBe("that door holds no tier of its own");
@@ -122,24 +113,14 @@ describe("the operator's revoke (T-452)", () => {
     expect(kicked).toEqual([]);
   });
 
-  it("the linked group can't be read → 503 BEFORE any write: nothing revoked, nobody kicked, no letter", async () => {
-    grants.set(EMAIL, "B");
-    groupReadFails = true;
-    const { status } = await revoke(EMAIL);
-    expect(status).toBe(503);
-    expect(revoked).toEqual([]);
-    expect(kicked).toEqual([]);
-    expect(letters).toEqual([]);
-  });
-
-  it("the only door: revoked, its rooms closed, the kind letter names the tier it held", async () => {
-    groups.clear();
+  it("the only door: kicked, revoked, and the kind letter names the tier it held (main's path)", async () => {
     grants.set("solo@example.com@email", "B");
     const { status, body } = await revoke("solo@example.com@email");
     expect(status).toBe(200);
     expect(body.revoked).toBe("B");
-    expect(body.stillHolds).toBeNull();
+    expect(body.linked).toBe(0);
     expect(kicked).toEqual(["@solo@example.com@email"]);
+    expect(revoked).toEqual(["solo@example.com@email"]);
     expect(letters).toEqual([{ to: "solo@example.com", tier: "B" }]);
   });
 });

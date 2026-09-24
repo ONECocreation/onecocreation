@@ -122,79 +122,63 @@ export async function POST(request: Request) {
   // stays theirs — they're still a member). The kind letter is still owed
   // to the mail rail (logged in the run book), so the caller is told.
   if (body.action === "revoke" && body.subject) {
-    const { revokeTier, normalizeNpub, tierFor, tierSatisfies, isTier } = await import("@/lib/entitlement");
+    const { revokeTier, normalizeNpub, tierFor } = await import("@/lib/entitlement");
     const { removeFromTierRooms, mxidForSubject } = await import("@/lib/matrix");
     const { getEntry } = await import("@/lib/registry");
-    const { memberGroupStrict } = await import("@/lib/member-links");
-    type OwnGrant = { key: string | null; tier: Awaited<ReturnType<typeof tierFor>> };
-    /* a door's OWN grant, the same key order tierForSubject reads: the
-       registry npub's grant, else the subject string's */
-    const ownGrantOf = async (subject: string): Promise<OwnGrant> => {
-      const at = subject.lastIndexOf("@");
-      const [h, sp] = at > 0 ? [subject.slice(0, at), subject.slice(at + 1)] : [subject, ""];
-      const hex = sp && sp !== "email" ? normalizeNpub((await getEntry(h, sp))?.npub) : null;
-      const hexTier = hex ? await tierFor(hex) : null;
-      if (hexTier) return { key: hex, tier: hexTier };
-      return { key: subject, tier: await tierFor(subject) };
-    };
-
     /* T-452: revoke reads THIS door's OWN grant — the key it revokes —
-       never tierForSubject (the highest across linked doors), or it would
-       report "revoked C" and send an Evening Star closing letter while the
-       C grant stays live on a linked door. */
-    const own = await ownGrantOf(body.subject);
-    const held = own.tier;
-    if (!own.key || !held) {
+       never tierForSubject (the highest across linked doors, since T-452),
+       or it would report "revoked C" and write an Evening Star closing
+       letter while the C grant stays live on a linked door. Same key order
+       as tierForSubject: the registry npub's grant, else the subject's. */
+    const at = body.subject.lastIndexOf("@");
+    const [h, sp] = [body.subject.slice(0, at), body.subject.slice(at + 1)];
+    const hex = sp === "email" ? null : normalizeNpub((await getEntry(h, sp))?.npub);
+    const hexTier = hex ? await tierFor(hex) : null;
+    const ownKey = hexTier ? hex : body.subject;
+    const held = hexTier ?? (await tierFor(body.subject));
+    if (!ownKey || !held) {
       return NextResponse.json({ ok: false, reason: "that door holds no tier of its own" }, { status: 404 });
     }
+    /* the kick and the revoke are main's, unchanged: THIS door's account
+       leaves the gated rooms, and the next sign-in re-invites whatever the
+       member still holds (reaching every linked door's account is a
+       follow-up lane — see T-452's PR) */
+    const rooms = await removeFromTierRooms(mxidForSubject(body.subject), { reason: "membership ended" });
+    await revokeTier(ownKey);
 
-    /* EVERYTHING is read before anything is written: the linked group
-       (strictly — a failed read must never pass for "no other doors") and
-       the highest tier any OTHER grant still holds. A read that fails stops
-       the revoke here, with nothing changed. */
-    let group: string[];
-    let stillHolds: typeof held | null = null;
+    /* T-452: with linked sign-ins, the automatic "membership closed" letter
+       could be false (another door may still hold a tier), so it isn't sent
+       — the answer says what the member still reads as, and the operator
+       writes by hand. Informational reads: a failure here changes nothing. */
+    let linked = 0;
+    let stillHolds: Awaited<ReturnType<typeof tierFor>> = null;
     try {
-      group = await memberGroupStrict(body.subject);
-      for (const s of group) {
-        const g = s === body.subject ? own : await ownGrantOf(s);
-        if (g.key === own.key) continue; // the grant being revoked (two tags of one key share it)
-        if (isTier(g.tier) && !tierSatisfies(stillHolds, g.tier)) stillHolds = g.tier;
-      }
+      const { memberGroup } = await import("@/lib/member-links");
+      const { tierForSubject } = await import("@/lib/member-tier");
+      linked = (await memberGroup(body.subject)).length - 1;
+      if (linked > 0) stillHolds = await tierForSubject(body.subject);
     } catch {
-      return NextResponse.json(
-        { ok: false, reason: "couldn't read this member's other sign-ins — nothing changed, try again" },
-        { status: 503 },
-      );
+      /* unknown — the letter below stays unsent for a linked member */
     }
-
-    await revokeTier(own.key);
-
-    /* The rooms: EVERY sign-in of this member leaves every gated room —
-       each door has its own Matrix account, and the login rail re-invites
-       exactly the rooms of whatever tier the group still holds on its next
-       sign-in (over-kick heals itself; a missed kick would leave paid rooms
-       open). */
-    const rooms = [];
-    for (const s of group) {
-      rooms.push(...(await removeFromTierRooms(mxidForSubject(s), { reason: "membership ended" })));
+    if (linked > 0) {
+      const still = stillHolds ? ` and still reads as ${stillHolds}` : "";
+      return NextResponse.json({
+        ok: true,
+        revoked: held,
+        stillHolds,
+        linked,
+        rooms,
+        letter: `no letter sent — this member has ${linked} linked sign-in${linked === 1 ? "" : "s"}${still}; check before writing to them`,
+      });
     }
-
-    /* The kind letter goes only when something really closed for them: the
-       group now holds less than the tier revoked. */
-    let letter: string;
-    if (tierSatisfies(stillHolds, held)) {
-      letter = `no letter — they still hold ${stillHolds} through a linked sign-in`;
-    } else {
-      letter = "no email door — tell them yourself";
-      try {
-        const { emailForSubject } = await import("@/lib/member-tier");
-        const { sendRevokeLetter } = await import("@/lib/entitlement-fulfil");
-        const to = await emailForSubject(body.subject);
-        if (to) { await sendRevokeLetter(to, held, false); letter = `kind letter queued to ${to}`; }
-      } catch { letter = "letter failed to queue — resend by hand"; }
-    }
-    return NextResponse.json({ ok: true, revoked: held, stillHolds, rooms, letter });
+    let letter = "no email door — tell them yourself";
+    try {
+      const { emailForSubject } = await import("@/lib/member-tier");
+      const { sendRevokeLetter } = await import("@/lib/entitlement-fulfil");
+      const to = await emailForSubject(body.subject);
+      if (to) { await sendRevokeLetter(to, held, false); letter = `kind letter queued to ${to}`; }
+    } catch { letter = "letter failed to queue — resend by hand"; }
+    return NextResponse.json({ ok: true, revoked: held, stillHolds: null, linked: 0, rooms, letter });
   }
 
   const headers = { Authorization: `Bearer ${c.token}`, "Content-Type": "application/json" };
