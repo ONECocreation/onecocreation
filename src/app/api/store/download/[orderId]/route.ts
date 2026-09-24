@@ -5,6 +5,7 @@ import { Readable } from "stream";
 import { head } from "@vercel/blob";
 import { getOrder, getItem } from "@/lib/store";
 import { sessionsFromRequest } from "@/lib/member-auth";
+import { verifyOrderKey } from "@/lib/order-receipt";
 import { blobStoreEnabled } from "@/lib/registry";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,9 @@ export const dynamic = "force-dynamic";
  * with the owner's hardening (~0018.04.24): a shared receipt link shows
  * the receipt, never the file. When the order carries entitlementSubject
  * (every digital/package purchase does — checkout requires sign-in), the
- * download ALSO demands a live member session for that very tag. Orders
+ * download ALSO demands a live member session for that very tag — or, since
+ * T-453, that order's own key for an email buyer's order (the return key no
+ * longer signs anyone in, so the paying browser downloads by key). Orders
  * without a subject that somehow carry a deliverable stay capability-only
  * — that's the documented fallback; digital/package + subject is the
  * sanctioned pairing.
@@ -67,9 +70,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ orde
   // own session — ANY of the signed-in sessions may match (up to 8 ride
   // the cookie; sessions[0]-only would be silent ambiguity, per spec)
   if (order.entitlementSubject) {
-    const owned = sessionsFromRequest(request).some(
-      (s) => `${s.handle}@${s.space}` === order.entitlementSubject
-    );
+    /* T-453: an email buyer's own order key (the receipt letter's or the
+       payment return's) opens THIS order's file without a session — the
+       return key no longer pours one. A key never opens a key-member's
+       (handle@space) order: that still needs the tag's own session. */
+    const key = new URL(request.url).searchParams.get("key") ?? "";
+    const unlocked = key ? verifyOrderKey(order, key) : ({ ok: false } as const);
+    const owned =
+      sessionsFromRequest(request).some((s) => `${s.handle}@${s.space}` === order.entitlementSubject) ||
+      (unlocked.ok && order.entitlementSubject === `${unlocked.email}@email`);
     if (!owned) {
       return NextResponse.json(
         { ok: false, reason: `this download belongs to ${order.entitlementSubject} — sign in with that key` },

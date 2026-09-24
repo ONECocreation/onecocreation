@@ -130,7 +130,8 @@ export function createOperatorAuth(config: OperatorAuthConfig) {
     if (!token) return null;
     const [pubkey, exp, sig] = token.split(".");
     if (!pubkey || !exp || !sig) return null;
-    if (Date.now() > Number(exp)) return null;
+    /* T-453 hardening: the expiry must be digits (NaN never expired) */
+    if (!/^\d{1,16}$/.test(exp) || Date.now() > Number(exp)) return null;
     const expected = hmac(`${pubkey}|${exp}`);
     try {
       if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
@@ -148,6 +149,13 @@ export function createOperatorAuth(config: OperatorAuthConfig) {
       .split(",")
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean);
+  }
+
+  /** Is this address on the email-seat allowlist? (T-453: an order key
+   *  must never pour an operator's email seat — that seat is earned only
+   *  through the real email sign-in code.) */
+  function isOperatorEmail(email: string): boolean {
+    return operatorEmails().includes(email.trim().toLowerCase());
   }
 
   /** The FIRST allowlisted email seat anywhere in the fren cookie — a door
@@ -191,6 +199,7 @@ export function createOperatorAuth(config: OperatorAuthConfig) {
     verifyOperatorToken,
     operatorFromCookieHeader,
     hasOperatorEmailSeat,
+    isOperatorEmail,
   };
 }
 

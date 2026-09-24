@@ -91,7 +91,9 @@ function parseToken(raw: string): { handle: string; space: string } | null {
   const space = parts.pop()!;
   const handle = parts.join(".");
   if (!handle || !space || !exp || !sig) return null;
-  if (Date.now() > Number(exp)) return null;
+  /* T-453 hardening: the expiry must be digits — a non-numeric exp made
+     Number(exp) NaN, and `Date.now() > NaN` is false: never expired */
+  if (!/^\d{1,16}$/.test(exp) || Date.now() > Number(exp)) return null;
   const expected = hmac(`${handle}|${space}|${exp}`);
   try {
     if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;

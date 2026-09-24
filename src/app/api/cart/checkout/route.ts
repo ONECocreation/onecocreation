@@ -379,7 +379,7 @@ export async function POST(request: Request) {
       amount: snapshot.amount,
       currency: snapshot.currency,
       buyerEmail: body.contact?.email,
-      redirectUrl: orderDoorUrl(order, origin), // T-173: the basket's return carries the signed key too
+      redirectUrl: orderDoorUrl(order, origin, "return"), // T-173: the basket's return carries the signed key too — a RETURN key since T-453 (never a session)
       description: basketDescription(order.lineItems),
       referenceId: order.id.slice(0, 8),
       // TASK-224 — card rail only; buildSquarePaymentLinkBody() re-checks the
