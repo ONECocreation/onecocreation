@@ -15,10 +15,11 @@ import JitsiViewer from "@/components/reading/JitsiViewer";
  * (`stage1WatchTarget` — a click past a close, a midnight-Denver expiry,
  * or a rotation never replays a stale room).
  *
- * The phase-control law (Amendment 1): each phase has exactly ONE primary
- * control — closed has none, published has "Watch Love live", watching has
- * only the two small kit-btn-quiet tools (Full screen and Leave), failed
- * has "Try again", left-while-published (K122 item 8 — a hangup is not an
+ * The phase-control law (block 968,349): closed has no page control,
+ * published has "Watch Love live", watching has no page control because
+ * Jitsi's toolbar (fullscreen + hang-up) is the control — the Admiral:
+ * redundant with the player's own hover buttons. Failed has "Try again",
+ * left-while-published (K122 item 8 — a hangup is not an
  * ending) has "Watch again", ended has "Watch again" only while the room
  * is still published. The book art is in closed, published and ended;
  * there is no <img> of it while watching (JitsiViewer replaces it in the
@@ -76,16 +77,14 @@ export interface ReadingStageBodyProps {
   countdownWhen: React.ReactNode;
   onWatch: () => void;
   onTryAgain: () => void;
-  onLeave: () => void;
-  onFullScreen: () => void;
   onLeaveStage2: () => void;
   onJoinStage2: (room: string) => void;
-  /** the frame Full screen requests — the island owns the ref. */
+  /** retained for the unchanged Stage 2 frame binding. */
   frameRef?: React.RefObject<HTMLDivElement | null>;
   /** JitsiViewer's farewell events (its hangup, or the host ending the
    *  call) — the island re-reads the stage's fresh truth: left-while-
-   *  published, or ended (K122 item 8); defaults to Leave. */
-  onViewerEnded?: () => void;
+   *  published, or ended (K122 item 8). */
+  onViewerEnded: () => void;
   /** JitsiViewer's script-load failure — the island marks failed. */
   onViewerFailed?: () => void;
 }
@@ -137,8 +136,6 @@ export function ReadingStageBody({
   countdownWhen,
   onWatch,
   onTryAgain,
-  onLeave,
-  onFullScreen,
   onLeaveStage2,
   onJoinStage2,
   frameRef,
@@ -179,7 +176,7 @@ export function ReadingStageBody({
                 <JitsiViewer
                   domain={jitsiDomain}
                   room={room}
-                  onEnded={onViewerEnded ?? onLeave}
+                  onEnded={onViewerEnded}
                   onFailed={onViewerFailed ?? (() => {})}
                 />
                 <span className="kit-stage-chip">Live</span>
@@ -190,18 +187,7 @@ export function ReadingStageBody({
                 {phase === "published" && !ended && !failed && <span className="kit-stage-chip">Live</span>}
               </div>
             )}
-            {watching && room ? (
-              <div className="kit-stage-controls kit-stage-controls-slim">
-                <div className="kit-stage-tools">
-                  <button type="button" className="kit-btn kit-btn-quiet" onClick={onFullScreen}>
-                    Full screen
-                  </button>
-                  <button type="button" className="kit-btn kit-btn-quiet" onClick={onLeave}>
-                    Leave
-                  </button>
-                </div>
-              </div>
-            ) : failed ? (
+            {watching && room ? null : failed ? (
               <div className="kit-stage-controls">
                 <p className="kit-body">The picture didn&apos;t open just now — the reading itself is fine on our side.</p>
                 <div className="kit-btn-row">
@@ -401,21 +387,9 @@ export default function ReadingStage({
       });
   }
 
-  function leave() {
-    setWatching(false); // a Leave is never an ending — the stage may still be live
-  }
-
   function tryAgain() {
     setFailed(false);
     void watch();
-  }
-
-  function fullScreen() {
-    try {
-      void frameRef.current?.requestFullscreen();
-    } catch {
-      /* the tool is a courtesy — the viewer stays exactly where they were */
-    }
   }
 
   function joinStage2(roomName: string) {
@@ -445,8 +419,6 @@ export default function ReadingStage({
       countdownWhen={countdownWhen}
       onWatch={() => void watch()}
       onTryAgain={tryAgain}
-      onLeave={leave}
-      onFullScreen={fullScreen}
       onLeaveStage2={leaveStage2}
       onJoinStage2={joinStage2}
       frameRef={frameRef}

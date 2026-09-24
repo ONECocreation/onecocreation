@@ -257,6 +257,21 @@ describe("ReadingSignUp — T-438 public-variant source pins (the machine and th
   });
 });
 
+describe("public sign-up row — decision (a), field-only grid", () => {
+  it("label, shared input/button row, and error have separate tracks; the member form stays flex", async () => {
+    const css = await read("src/app/kit.css");
+    expect(css).toContain(".kit-inline-form{display:flex;gap:10px;align-items:flex-end;justify-content:center;flex-wrap:wrap;width:100%;max-width:520px}");
+    expect(css).toContain(".kit-inline-form:has(>.kit-field){display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;gap:6px 10px}");
+    expect(css).toContain(".kit-inline-form .kit-field{display:contents;text-align:left}");
+    expect(css).toContain(".kit-inline-form .kit-field-label{grid-column:1;grid-row:1}");
+    expect(css).toContain(".kit-inline-form .kit-field-input{grid-column:1;grid-row:2;min-width:0;box-sizing:border-box;width:100%}");
+    expect(css).toContain(".kit-inline-form .kit-field .kit-field-error{grid-column:1;grid-row:3;text-align:left}");
+    expect(css).toContain(".kit-inline-form:has(>.kit-field)>.kit-btn{grid-column:2;grid-row:2;align-self:stretch;display:flex;align-items:center;justify-content:center;box-sizing:border-box}");
+    expect(css).toContain("@media (max-width:640px){.kit-inline-form:has(>.kit-field){grid-template-columns:minmax(0,1fr)}");
+    expect(css).toContain(".kit-inline-form:has(>.kit-field)>.kit-btn{grid-column:1;grid-row:auto;justify-self:center;margin-top:4px}");
+  });
+});
+
 describe("ReadingSignUp — the default, hook-wired export", () => {
   it("state:'off' renders nothing, whatever the session (Ground)", () => {
     const props: { state: NoticeState } = { state: { kind: "off" } };
