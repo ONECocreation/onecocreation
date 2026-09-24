@@ -1,4 +1,4 @@
-import { READING_ROOM_PATH } from "@/lib/reading-room";
+import { READING_PAGE_PATH } from "@/lib/reading-room";
 import { ROOMS } from "@/lib/matrix-rooms";
 /**
  * TASK-185 Phase B — THE DOOR's state machine, as ruled (the Admiral,
@@ -107,7 +107,7 @@ export const MEMBER_MENU: readonly { label: string; href: string }[] = [
      that package met a package wall. The member's reading room is the FREE
      one — the same derivation as the home card (T-174: minTier "all", the
      Heart Field Commons). Derive-or-dash: no free room → no row. */
-  ...(READING_ROOM_PATH ? [{ label: "The reading room", href: READING_ROOM_PATH }] : []),
+  { label: "Read with Love", href: READING_PAGE_PATH },
 ];
 
 /** K7 (0018.06.17 a₿) — real or bot: ONE honest badge wherever a soul is

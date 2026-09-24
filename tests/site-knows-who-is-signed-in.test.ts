@@ -109,11 +109,11 @@ describe("TASK-210 — one reading room, three doors", () => {
 
   it("the member menu's 'The reading room' row leads to the free room's Stage — never the tier-B Chronicles wall (01:11:02)", async () => {
     const { MEMBER_MENU } = await import("@/components/door/door-machine");
-    const { READING_ROOM_PATH } = await import("@/lib/reading-room");
-    const row = MEMBER_MENU.find((i) => i.label === "The reading room")!;
+    const { READING_PAGE_PATH } = await import("@/lib/reading-room");
+    const row = MEMBER_MENU.find((i) => i.label === "Read with Love")!;
     expect(row).toBeTruthy();
-    expect(row.href).toBe(READING_ROOM_PATH);
-    expect(row.href).toBe("/rooms/heart-field");
+    expect(row.href).toBe(READING_PAGE_PATH);
+    expect(row.href).toBe("/reading");
     expect(row.href).not.toBe("/rooms/weekly-reading");
   });
 

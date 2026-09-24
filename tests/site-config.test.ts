@@ -152,7 +152,7 @@ describe("the switches — the nav MENU is built from them", () => {
     expect(community?.subs?.map((s) => s.label)).not.toContain("Classes & rooms");
     expect(community?.subs?.map((s) => s.label)).not.toContain("Classes");
     // the reading room rides regardless of the classes switch — its own door
-    expect(community?.subs?.map((s) => s.label)).toContain("The reading room");
+    expect(community?.subs?.map((s) => s.label)).toContain("Read with Love");
     // Support carries only itself — the old stand-ins are gone for good
     expect(menu.find((m) => m.label === "Support")?.subs).toBeUndefined();
   });
@@ -167,7 +167,7 @@ describe("the switches — the nav MENU is built from them", () => {
     const community = menu.find((m) => m.label === "Community");
     expect(community?.subs?.map((s) => s.label)).toContain("Free meditation");
     expect(community?.subs?.map((s) => s.label)).toContain("Classes");
-    expect(community?.subs?.map((s) => s.label)).toContain("The reading room");
+    expect(community?.subs?.map((s) => s.label)).toContain("Read with Love");
     expect(menu.find((m) => m.label === "Support")?.subs).toBeUndefined();
   });
 });

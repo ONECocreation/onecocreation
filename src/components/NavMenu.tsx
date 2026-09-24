@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { SiteConfig } from "@/lib/site-config";
-import { READING_ROOM_PATH } from "@/lib/reading-room";
+import { READING_PAGE_PATH, READING_ROOM_PATH } from "@/lib/reading-room";
 
 /**
  * The consolidated nav (Admiral, 0018.05.13): main doors with sub-menus, so
@@ -87,7 +87,7 @@ export const PAGE_CATALOG: {
      own presence in the registry (derive-or-dash), same as Free meditation
      and 11:11. Omitted entirely when no free room exists — the editor's
      picker never offers a dead page. */
-  ...(READING_ROOM_PATH ? [{ href: READING_ROOM_PATH, label: "The reading room" }] : []),
+  ...(READING_ROOM_PATH ? [{ href: READING_ROOM_PATH, label: "Heart Field" }] : []),
 ];
 
 /** The switch (if any) a given href needs ON to show publicly. Unknown
@@ -188,7 +188,7 @@ export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
       { label: "Free meditation", href: "/meditation" },
       { label: "11:11 Live with Love", href: "/contact" },
       ...(s?.features.classes ? [{ label: "Classes", href: "/classes" }] : []),
-      ...(READING_ROOM_PATH ? [{ label: "The reading room", href: READING_ROOM_PATH }] : []),
+      { label: "Read with Love", href: READING_PAGE_PATH },
     ],
   });
   menu.push({ label: "Support", href: "/support" });

@@ -3,7 +3,7 @@ import { sendMail, brandShell } from "@/lib/mail";
 import { enqueue } from "@/lib/mail-queue";
 import { getLetterOverride, bodyToHtml, letterHtml, LETTER_DEFAULTS } from "@/lib/letters";
 import { getSiteConfig } from "@/lib/site-config";
-import { READING_ROOM_PATH } from "@/lib/reading-room";
+import { READING_PAGE_PATH, READING_ROOM_PATH } from "@/lib/reading-room";
 
 /**
  * THE WELCOME LETTERS, one home (Love's walk found the gap, 0018.05.15):
@@ -74,12 +74,7 @@ export async function sendReadWithLoveLetter(email: string): Promise<void> {
      attribute */
   const esc = (url: string) => url.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
   const onStage = !override && meeting.rail === "vdo" && READING_ROOM_PATH !== null;
-  const roomUrl = override
-    ?? (meeting.rail === "jitsi"
-      ? `https://${meeting.jitsiDomain}/read-with-love`
-      : onStage
-        ? `${siteBase()}${READING_ROOM_PATH}`
-        : null);
+  const roomUrl = override ?? `${siteBase()}${READING_PAGE_PATH}`;
   const pill = (href: string, words: string) =>
     `<p style="margin:22px 0;"><a href="${esc(href)}"
           style="background:#b4862b;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;">

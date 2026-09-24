@@ -120,7 +120,7 @@ describe("the new-key test — the server's own words", () => {
 describe("the member menu — the whole of it", () => {
   it("welcome (ruling 1: /welcome linked), my library, calendar, the reading room — sign out renders beside them in DoorButton", () => {
     /* TASK-211 (0018.06.23 a₿, Love's call #18): "My sessions" → "Calendar" */
-    expect(MEMBER_MENU.map((i) => i.label)).toEqual(["Welcome", "My library", "Calendar", "The reading room"]);
+    expect(MEMBER_MENU.map((i) => i.label)).toEqual(["Welcome", "My library", "Calendar", "Read with Love"]);
     expect(MEMBER_MENU[0]!.href).toBe("/welcome");
     for (const i of MEMBER_MENU) expect(i.href.startsWith("/")).toBe(true);
   });
