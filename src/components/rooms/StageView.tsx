@@ -278,7 +278,12 @@ export default function StageView({
           <p className="kit-text-quiet">{storyNote}</p>
         )}
         {slug === READING_ROOM_SLUG && storyOpen && !live && !stage2Room && !storyRoom && (
-          <StoryTimePill onWatch={() => void storyTime()} />
+          /* the bare div keeps the pill CONTENT-SIZED — a direct grid
+             child would stretch full-width, and the room's own pill
+             idiom (RoomVideoSlot's) is inline */
+          <div>
+            <StoryTimePill onWatch={() => void storyTime()} />
+          </div>
         )}
         {resources.length > 0 && (
           <div role="region" className="cl-region cl-area-resources" aria-label="Resources">
