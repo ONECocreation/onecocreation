@@ -5,6 +5,7 @@ import { Readable } from "stream";
 import { head } from "@vercel/blob";
 import { getOrder, getItem } from "@/lib/store";
 import { sessionsFromRequest } from "@/lib/member-auth";
+import { verifyOrderKey } from "@/lib/order-receipt";
 import { blobStoreEnabled } from "@/lib/registry";
 
 export const dynamic = "force-dynamic";
@@ -67,9 +68,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ orde
   // own session — ANY of the signed-in sessions may match (up to 8 ride
   // the cookie; sessions[0]-only would be silent ambiguity, per spec)
   if (order.entitlementSubject) {
-    const owned = sessionsFromRequest(request).some(
-      (s) => `${s.handle}@${s.space}` === order.entitlementSubject
-    );
+    /* T-453: an email buyer's own order key (the receipt letter's or the
+       payment return's) opens THIS order's file without a session — the
+       return key no longer pours one. A key never opens a key-member's
+       (handle@space) order: that still needs the tag's own session. */
+    const key = new URL(request.url).searchParams.get("key") ?? "";
+    const unlocked = key ? verifyOrderKey(order, key) : ({ ok: false } as const);
+    const owned =
+      sessionsFromRequest(request).some((s) => `${s.handle}@${s.space}` === order.entitlementSubject) ||
+      (unlocked.ok && order.entitlementSubject === `${unlocked.email}@email`);
     if (!owned) {
       return NextResponse.json(
         { ok: false, reason: `this download belongs to ${order.entitlementSubject} — sign in with that key` },

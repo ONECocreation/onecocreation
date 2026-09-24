@@ -124,7 +124,7 @@ export async function POST(request: Request) {
       buyerEmail: order.contact?.email,
       /* TASK-173 — the return URL carries the order's signed key, so the
          buyer's own browser lands unlocked the moment PAID lands */
-      redirectUrl: orderDoorUrl(order, origin),
+      redirectUrl: orderDoorUrl(order, origin, "return"),
       // TASK-223 (Love's call #7): the buyer's Square receipt line-item name
       // + reference — the single item's own title, the house's own order
       // reference convention (order.id.slice(0, 8), same as /a/money).
@@ -257,7 +257,7 @@ export async function POST(request: Request) {
     currency: snapshot.currency,
     buyerEmail: body.contact?.email,
     /* TASK-173 — the key rides the return URL (see the retry path above) */
-    redirectUrl: orderDoorUrl(order, origin),
+    redirectUrl: orderDoorUrl(order, origin, "return"),
     // TASK-223 — same convention as the retry path above.
     description: order.lineItems.map((l) => l.title).join(", ").slice(0, 500),
     referenceId: order.id.slice(0, 8),

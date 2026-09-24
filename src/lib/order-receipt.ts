@@ -34,7 +34,24 @@ import { liveAdapter } from "./payments";
  *    order at verify time (and survives the PII purge via the
  *    entitlementSubject, which is never purged). Guard: the key only ever
  *    unlocks that ONE order's email session; log nothing but the order id.
+ *
+ * T-453 (block 968,393, SECURITY): the checkout's typed email is never
+ * proven, and the return URL's key used to pour that email's 30-day session
+ * into WHATEVER browser paid — type an operator's email, pay for the
+ * cheapest item, and the return landed an operator seat. Keys now carry a
+ * PURPOSE, bound into the HMAC:
+ *   - "letter" rides the receipt letter INTO the buyer's inbox — opening it
+ *     proves the inbox, so it may pour that email's session;
+ *   - "return" rides the processor's return URL to the paying browser — it
+ *     proves only that this browser holds this order's link, so it unlocks
+ *     THIS order's receipt and download and never a session.
+ * A key minted before T-453 (no purpose) verifies as "return". No order key
+ * ever pours an operator email seat (the orders route's guard).
  */
+
+/** What a key may do — see the T-453 note above. */
+export type OrderKeyPurpose = "letter" | "return";
+const PURPOSE_TAG: Record<OrderKeyPurpose, "l" | "r"> = { letter: "l", return: "r" };
 
 /** ~90 days: comfortably past the 30-day session it opens (spec floor: 30). */
 export const ORDER_KEY_TTL_MS = 90 * 24 * 60 * 60 * 1000;
@@ -64,39 +81,52 @@ export function buyerEmailOf(order: OrderRecord): string | null {
  *  before the order settles and the letter uses at settle; one deterministic
  *  answer per (order, email, expiry window). Null when the house secret is
  *  dark (sign-ins would be too) — the door degrades, never lies. */
-export function mintOrderKeyFor(orderId: string, email: string, nowMs = Date.now()): string | null {
+export function mintOrderKeyFor(
+  orderId: string,
+  email: string,
+  purpose: OrderKeyPurpose,
+  nowMs = Date.now(),
+): string | null {
   if (!secret()) return null;
   const exp = nowMs + ORDER_KEY_TTL_MS;
-  return `${exp}.${hmac(`${orderId}|${email}|${exp}`)}`;
+  return `${exp}.${PURPOSE_TAG[purpose]}.${hmac(`${orderId}|${email}|${exp}|${purpose}`)}`;
 }
 
-export function mintOrderKey(order: OrderRecord, nowMs = Date.now()): string | null {
+export function mintOrderKey(order: OrderRecord, purpose: OrderKeyPurpose, nowMs = Date.now()): string | null {
   const email = buyerEmailOf(order);
-  return email ? mintOrderKeyFor(order.id, email, nowMs) : null;
+  return email ? mintOrderKeyFor(order.id, email, purpose, nowMs) : null;
 }
 
 /** Verify a presented key against the order's OWN derived email. Answers the
- *  email it unlocks so the caller never re-derives it — the key opens that
- *  one order's email session and nothing else. */
-export function verifyOrderKey(order: OrderRecord, key: string): { ok: true; email: string } | { ok: false } {
+ *  email it unlocks and the key's PURPOSE, so the caller never re-derives
+ *  either — only a "letter" key may open a session (T-453). A pre-T-453
+ *  key (no purpose segment) verifies as "return". */
+export function verifyOrderKey(
+  order: OrderRecord,
+  key: string,
+): { ok: true; email: string; purpose: OrderKeyPurpose } | { ok: false } {
   const email = buyerEmailOf(order);
   if (!email || !secret()) return { ok: false };
-  const m = key.match(/^(\d+)\.([a-f0-9]{64})$/);
-  if (!m) return { ok: false };
-  const exp = Number(m[1]);
+  const tagged = key.match(/^(\d+)\.([lr])\.([a-f0-9]{64})$/);
+  const legacy = tagged ? null : key.match(/^(\d+)\.([a-f0-9]{64})$/);
+  if (!tagged && !legacy) return { ok: false };
+  const exp = Number((tagged ?? legacy)![1]);
   if (!Number.isFinite(exp) || Date.now() > exp) return { ok: false };
-  const expected = hmac(`${order.id}|${email}|${exp}`);
+  const purpose: OrderKeyPurpose = tagged ? (tagged[2] === "l" ? "letter" : "return") : "return";
+  const presented = tagged ? tagged[3] : legacy![2];
+  const expected = tagged ? hmac(`${order.id}|${email}|${exp}|${purpose}`) : hmac(`${order.id}|${email}|${exp}`);
   try {
-    if (!crypto.timingSafeEqual(Buffer.from(m[2]), Buffer.from(expected))) return { ok: false };
+    if (!crypto.timingSafeEqual(Buffer.from(presented), Buffer.from(expected))) return { ok: false };
   } catch {
     return { ok: false };
   }
-  return { ok: true, email };
+  return { ok: true, email, purpose };
 }
 
-/** The receipt-page door the letter and the return URL carry. */
-export function orderDoorUrl(order: OrderRecord, base: string): string {
-  const key = mintOrderKey(order);
+/** The receipt-page door with its key. The checkout's processor return URL
+ *  passes "return"; the receipt letter mints its own "letter" key. */
+export function orderDoorUrl(order: OrderRecord, base: string, purpose: OrderKeyPurpose): string {
+  const key = mintOrderKey(order, purpose);
   return `${base}/store/order/${order.id}${key ? `?key=${key}` : ""}`;
 }
 
@@ -149,7 +179,7 @@ export async function buildReceiptLetter(order: OrderRecord): Promise<{ subject:
   for (const li of order.lineItems) {
     const item = await getItem(li.itemId);
     if (item?.media?.deliverable) {
-      const key = mintOrderKey(order);
+      const key = mintOrderKey(order, "letter");
       if (key) {
         door = `Your download door — signed for you alone, no sign-in needed:\n[Open your download](${siteBase()}/store/order/${order.id}?key=${key})`;
       }

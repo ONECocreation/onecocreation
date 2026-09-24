@@ -21,6 +21,13 @@ import path from "path";
  *     code sets); a wrong key stays locked, no cookie.
  *  6. BuyPanel's words promise the receipt-page door (source pin, the
  *     house's read-the-source pattern).
+ *  7. T-453 (SECURITY, block 968,393): keys carry a PURPOSE. The processor's
+ *     return URL carries a "return" key — it unlocks THIS order's receipt and
+ *     download and NEVER pours a session (the checkout's typed email is never
+ *     proven, so a return-key session was an account — and, for an operator
+ *     address, a console — for anyone who paid). Only the receipt letter's
+ *     "letter" key pours the email session, and never an operator's seat.
+ *     A pre-T-453 key verifies as "return".
  *
  * All network is a stubbed global fetch (a stateful fixture KV + the Square
  * API); nodemailer is mocked at the seam and captures sends. Every
@@ -195,7 +202,7 @@ describe("the receipt letter — once per order, words carrying the door", () =>
     const html = sentMail[0].html;
     expect(html).toContain("Thank You Wake Up Affirmations");
     expect(html).toContain("$11"); // 1100 minor units, whole dollars
-    const door = new RegExp(`${SITE}/store/order/${order.id}\\?key=[0-9]+\\.[a-f0-9]{64}`);
+    const door = new RegExp(`${SITE}/store/order/${order.id}\\?key=[0-9]+\\.l\\.[a-f0-9]{64}`); // a LETTER key (T-453)
     expect(html).toMatch(door);
     // THE LEAK RULE — the paid file's pointer never rides the letter
     expect(html).not.toContain("fixture-meditation.mp3");
@@ -219,27 +226,41 @@ describe("the key — HMAC over order id + buyer email, one order's session only
     const order = await makeOrder();
     const other = await makeOrder();
 
-    const key = mintOrderKey(order)!;
-    expect(key).toMatch(/^\d+\.[a-f0-9]{64}$/);
+    const key = mintOrderKey(order, "letter")!;
+    expect(key).toMatch(/^\d+\.l\.[a-f0-9]{64}$/);
     expect(buyerEmailOf(order)).toBe("soul@example.com");
 
     const ok = verifyOrderKey(order, key);
-    expect(ok).toEqual({ ok: true, email: "soul@example.com" });
+    expect(ok).toEqual({ ok: true, email: "soul@example.com", purpose: "letter" });
+    expect(verifyOrderKey(order, mintOrderKey(order, "return")!)).toEqual({ ok: true, email: "soul@example.com", purpose: "return" });
 
     // tampered signature refuses
     const tampered = `${key.slice(0, -1)}${key.endsWith("0") ? "1" : "0"}`;
     expect(verifyOrderKey(order, tampered)).toEqual({ ok: false });
 
     // another order's key refuses — the key only ever unlocks its OWN order
-    const foreign = mintOrderKey(other)!;
+    const foreign = mintOrderKey(other, "letter")!;
     expect(verifyOrderKey(order, foreign)).toEqual({ ok: false });
 
     // an expired key refuses (minted 91 days ago against the 90-day life)
-    const stale = mintOrderKeyFor(order.id, "soul@example.com", Date.now() - 91 * 24 * 3600 * 1000)!;
+    const stale = mintOrderKeyFor(order.id, "soul@example.com", "letter", Date.now() - 91 * 24 * 3600 * 1000)!;
     expect(verifyOrderKey(order, stale)).toEqual({ ok: false });
 
     // garbage refuses
     expect(verifyOrderKey(order, "not-a-key")).toEqual({ ok: false });
+
+    // T-453: the purpose is SIGNED — relabelling a return key as a letter key refuses
+    const ret = mintOrderKey(order, "return")!;
+    expect(verifyOrderKey(order, ret.replace(".r.", ".l."))).toEqual({ ok: false });
+  });
+
+  it("T-453: a pre-purpose (legacy) key still verifies — but only ever as a RETURN key", async () => {
+    const crypto = await import("crypto");
+    const { verifyOrderKey } = await import("@/lib/order-receipt");
+    const order = await makeOrder();
+    const exp = Date.now() + 24 * 3600 * 1000;
+    const sig = crypto.createHmac("sha256", "test-seat-secret").update(`${order.id}|soul@example.com|${exp}`).digest("hex");
+    expect(verifyOrderKey(order, `${exp}.${sig}`)).toEqual({ ok: true, email: "soul@example.com", purpose: "return" });
   });
 });
 
@@ -259,25 +280,25 @@ describe("the Square return URL carries the key", () => {
 
     expect(squareCreateBodies.length).toBe(1);
     const redirect = JSON.parse(squareCreateBodies[0]).checkout_options.redirect_url as string;
-    expect(redirect).toMatch(new RegExp(`^http://localhost/store/order/${data.orderId}\\?key=\\d+\\.[a-f0-9]{64}$`));
+    expect(redirect).toMatch(new RegExp(`^http://localhost/store/order/${data.orderId}\\?key=\\d+\\.r\\.[a-f0-9]{64}$`)); // a RETURN key (T-453)
 
     // the carried key IS the order's key — it verifies against the record
     const { getOrder } = await import("@/lib/store");
     const { verifyOrderKey } = await import("@/lib/order-receipt");
     const order = (await getOrder(data.orderId))!;
     const key = new URL(redirect).searchParams.get("key")!;
-    expect(verifyOrderKey(order, key)).toEqual({ ok: true, email: "soul@example.com" });
+    expect(verifyOrderKey(order, key)).toEqual({ ok: true, email: "soul@example.com", purpose: "return" });
   });
 });
 
 describe("the receipt page's feed — the key unlocks, a wrong key stays honest", () => {
-  it("?key= pours the email-session cookie (the sign-in code's own cookie) and reads unlocked", async () => {
+  it("a LETTER ?key= pours the email-session cookie (the sign-in code's own cookie) and reads unlocked", async () => {
     const { recordChargeEvent, getOrder } = await import("@/lib/store");
     const { mintOrderKey } = await import("@/lib/order-receipt");
     const order = await makeOrder();
     await recordChargeEvent(order.id, { type: "settled", chargeId: "ch_fixture" });
     const settled = (await getOrder(order.id))!;
-    const key = mintOrderKey(settled)!;
+    const key = mintOrderKey(settled, "letter")!;
 
     const { GET } = await import("@/app/api/store/orders/[id]/route");
     const res = await GET(
@@ -311,6 +332,107 @@ describe("the receipt page's feed — the key unlocks, a wrong key stays honest"
     const data = await res.json();
     expect(data.order.deliverable.locked).toBe(true);
     expect(res.headers.get("set-cookie")).toBeNull();
+  });
+});
+
+describe("T-453 (SECURITY) — the payment return never signs anyone in", () => {
+  async function getOrderFeed(orderId: string, key: string, cookie?: string) {
+    const { GET } = await import("@/app/api/store/orders/[id]/route");
+    return GET(
+      new Request(`http://localhost/api/store/orders/${orderId}?key=${encodeURIComponent(key)}`, cookie ? { headers: { cookie } } : undefined),
+      { params: Promise.resolve({ id: orderId }) },
+    );
+  }
+
+  it("THE ATTACK: checkout with an operator's email, land on the return URL → no cookie, no operator seat", async () => {
+    process.env.OPERATOR_EMAILS = "love@onecocreation.test";
+    try {
+      const { POST } = await import("@/app/api/store/checkout/route");
+      const res = await POST(
+        new Request("http://localhost/api/store/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ itemId: "thank-you-wakeup", rail: "card", contact: { email: "love@onecocreation.test" } }),
+        }),
+      );
+      const data = await res.json();
+      const redirect = JSON.parse(squareCreateBodies[0]).checkout_options.redirect_url as string;
+      const key = new URL(redirect).searchParams.get("key")!;
+      // the processor lands the paying browser here (settled or not)
+      const { recordChargeEvent } = await import("@/lib/store");
+      await recordChargeEvent(data.orderId, { type: "settled", chargeId: "ch_fixture" });
+      const feed = await getOrderFeed(data.orderId, key);
+      expect(feed.status).toBe(200);
+      expect(feed.headers.get("set-cookie")).toBeNull();
+      const { operatorFromCookieHeader } = await import("@/lib/operator-auth");
+      expect(operatorFromCookieHeader(feed.headers.get("set-cookie"))).toBeNull();
+    } finally {
+      delete process.env.OPERATOR_EMAILS;
+    }
+  });
+
+  it("a RETURN key for any email pours no session, but opens THIS order's receipt and download", async () => {
+    const { recordChargeEvent, getOrder } = await import("@/lib/store");
+    const { mintOrderKey } = await import("@/lib/order-receipt");
+    const order = await makeOrder();
+    await recordChargeEvent(order.id, { type: "settled", chargeId: "ch_fixture" });
+    const key = mintOrderKey((await getOrder(order.id))!, "return")!;
+    const feed = await getOrderFeed(order.id, key);
+    expect(feed.headers.get("set-cookie")).toBeNull();
+    const data = await feed.json();
+    expect(data.order.deliverable.locked).toBe(false);
+    expect(data.order.deliverable.href).toBe(`/api/store/download/${order.id}?key=${encodeURIComponent(key)}`);
+  });
+
+  it("a LETTER key never pours an OPERATOR's email seat (that seat is earned by the real sign-in code only)", async () => {
+    process.env.OPERATOR_EMAILS = "soul@example.com";
+    try {
+      const { recordChargeEvent, getOrder } = await import("@/lib/store");
+      const { mintOrderKey } = await import("@/lib/order-receipt");
+      const order = await makeOrder();
+      await recordChargeEvent(order.id, { type: "settled", chargeId: "ch_fixture" });
+      const feed = await getOrderFeed(order.id, mintOrderKey((await getOrder(order.id))!, "letter")!);
+      expect(feed.headers.get("set-cookie")).toBeNull();
+      expect((await feed.json()).order.deliverable.locked).toBe(false); // still this order's file
+    } finally {
+      delete process.env.OPERATOR_EMAILS;
+    }
+  });
+
+  it("the download route: an email order opens with its own key and no session; another order's key refuses; a key-member's order still needs the tag's session", async () => {
+    const { recordChargeEvent, getOrder } = await import("@/lib/store");
+    const { mintOrderKey } = await import("@/lib/order-receipt");
+    const { GET } = await import("@/app/api/store/download/[orderId]/route");
+    const dl = (id: string, key?: string) =>
+      GET(new Request(`http://localhost/api/store/download/${id}${key ? `?key=${encodeURIComponent(key)}` : ""}`), {
+        params: Promise.resolve({ orderId: id }),
+      });
+
+    const mine = await makeOrder();
+    await recordChargeEvent(mine.id, { type: "settled", chargeId: "ch_fixture" });
+    const other = await makeOrder();
+    await recordChargeEvent(other.id, { type: "settled", chargeId: "ch_fixture" });
+    const myKey = mintOrderKey((await getOrder(mine.id))!, "return")!;
+
+    expect((await dl(mine.id)).status).toBe(403); // no key, no session: the owner's gate holds
+    expect((await dl(mine.id, myKey)).status).not.toBe(403); // its own key passes the owner's gate
+    expect((await dl(other.id, myKey)).status).toBe(403); // a key opens ONE order only
+
+    const tagged = await makeOrder({ entitlementSubject: "firefly@onecocreation" });
+    await recordChargeEvent(tagged.id, { type: "settled", chargeId: "ch_fixture" });
+    const taggedKey = mintOrderKey((await getOrder(tagged.id))!, "letter")!;
+    expect((await dl(tagged.id, taggedKey)).status).toBe(403); // a key never opens a key-member's order
+  });
+
+  it("every return URL mints a RETURN key — the three checkout call sites, source pin", async () => {
+    const store = await fs.readFile(path.join(process.cwd(), "src/app/api/store/checkout/route.ts"), "utf8");
+    const cart = await fs.readFile(path.join(process.cwd(), "src/app/api/cart/checkout/route.ts"), "utf8");
+    for (const src of [store, cart]) {
+      expect(src).not.toMatch(/orderDoorUrl\(order, origin\)/);
+      expect(src).not.toContain('orderDoorUrl(order, origin, "letter")');
+    }
+    expect(store.match(/orderDoorUrl\(order, origin, "return"\)/g)?.length).toBe(2);
+    expect(cart.match(/orderDoorUrl\(order, origin, "return"\)/g)?.length).toBe(1);
   });
 });
 

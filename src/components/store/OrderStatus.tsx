@@ -56,7 +56,7 @@ interface OrderView {
   createdAtMs: number;
   settledAtMs?: number;
   /** a downloadable exists for this order — label + owner lock, never a path */
-  deliverable?: { label: string; locked?: boolean };
+  deliverable?: { label: string; locked?: boolean; href?: string };
 }
 
 /** Buyer-honest copy per state — processing is a first-class wait, not a spinner. */
@@ -283,7 +283,7 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
           ) : (
             <>
               <div style={{ display: "flex", justifyContent: "center" }}>
-                <a href={`/api/store/download/${order.id}`} className="btn btn-gold btn-sm">
+                <a href={order.deliverable.href ?? `/api/store/download/${order.id}`} className="btn btn-gold btn-sm">
                   ⬇ Download — {order.deliverable.label}
                 </a>
               </div>

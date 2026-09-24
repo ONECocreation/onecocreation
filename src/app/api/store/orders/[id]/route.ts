@@ -8,6 +8,7 @@ import {
   MAX_SESSIONS,
 } from "@/lib/member-auth";
 import { verifyOrderKey } from "@/lib/order-receipt";
+import { isOperatorEmail } from "@/lib/operator-auth";
 import { getAdapter } from "@/lib/payments";
 
 export const dynamic = "force-dynamic";
@@ -44,7 +45,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const unlocked = key ? verifyOrderKey(order, key) : ({ ok: false } as const);
   let sessions = sessionsFromRequest(request);
   let setCookie: string | null = null;
-  if (unlocked.ok && !sessions.some((s) => s.handle === unlocked.email && s.space === "email")) {
+  /* T-453 (SECURITY): only a LETTER key pours the session — the letter went
+     INTO that inbox, so opening it proves the inbox. The processor's return
+     key rode back to whatever browser paid, and the checkout never proves
+     the typed email, so a return key unlocks THIS order's receipt and
+     download (below) and never a session. And no order key ever pours an
+     operator's email seat: that seat is earned only by the real sign-in
+     code (/api/auth/email/*). */
+  const poursSession = unlocked.ok && unlocked.purpose === "letter" && !isOperatorEmail(unlocked.email);
+  if (poursSession && unlocked.ok && !sessions.some((s) => s.handle === unlocked.email && s.space === "email")) {
     const fresh = makeMemberToken(unlocked.email, "email");
     const prior = sessions
       .filter((s) => !(s.space === "email" && s.handle === unlocked.email))
@@ -76,15 +85,23 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   // locked mirrors the download route's owner gate: a subject-bound order
   // opens only for the buying tag's own session — a shared receipt link
   // shows the receipt, never a live download affordance.
-  let deliverable: { label: string; locked: boolean } | undefined;
+  /* T-453: a valid key (either purpose) opens THIS order's download when the
+     order belongs to that very email — the same file the key's session used
+     to open, now without a session. A key-member's order (subject =
+     handle@space) still needs that tag's own session, as before. The href
+     carries the key only when the key is what opened it. */
+  const keyOwnsOrder = unlocked.ok && order.entitlementSubject === `${unlocked.email}@email`;
+  let deliverable: { label: string; locked: boolean; href: string } | undefined;
   for (const li of order.lineItems) {
     const item = await getItem(li.itemId);
     const d = item?.media?.deliverable;
     if (d?.blobPath) {
-      const locked = order.entitlementSubject
-        ? !sessions.some((s) => `${s.handle}@${s.space}` === order.entitlementSubject)
-        : false;
-      deliverable = { label: d.label || li.title, locked };
+      const sessionOwns = order.entitlementSubject
+        ? sessions.some((s) => `${s.handle}@${s.space}` === order.entitlementSubject)
+        : true;
+      const locked = !(sessionOwns || keyOwnsOrder);
+      const href = `/api/store/download/${order.id}${!sessionOwns && keyOwnsOrder ? `?key=${encodeURIComponent(key)}` : ""}`;
+      deliverable = { label: d.label || li.title, locked, href };
       break;
     }
   }

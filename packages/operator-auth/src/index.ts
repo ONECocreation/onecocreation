@@ -150,6 +150,13 @@ export function createOperatorAuth(config: OperatorAuthConfig) {
       .filter(Boolean);
   }
 
+  /** Is this address on the email-seat allowlist? (T-453: an order key
+   *  must never pour an operator's email seat — that seat is earned only
+   *  through the real email sign-in code.) */
+  function isOperatorEmail(email: string): boolean {
+    return operatorEmails().includes(email.trim().toLowerCase());
+  }
+
   /** The FIRST allowlisted email seat anywhere in the fren cookie — a door
    *  switch, a key login, or a store-order claim can all re-order the
    *  cookie's up-to-8 tokens, so the email seat isn't necessarily slot 0
@@ -191,6 +198,7 @@ export function createOperatorAuth(config: OperatorAuthConfig) {
     verifyOperatorToken,
     operatorFromCookieHeader,
     hasOperatorEmailSeat,
+    isOperatorEmail,
   };
 }
 

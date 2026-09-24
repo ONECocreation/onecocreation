@@ -19,6 +19,7 @@ export const {
   verifyOperatorToken,
   operatorFromCookieHeader,
   hasOperatorEmailSeat,
+  isOperatorEmail,
 } = createOperatorAuth({
   npubsEnv: "OPERATOR_NPUBS",
   emailsEnv: "OPERATOR_EMAILS",
