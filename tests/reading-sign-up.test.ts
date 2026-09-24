@@ -265,10 +265,10 @@ describe("public sign-up row — decision (a), field-only grid", () => {
     expect(css).toContain(".kit-inline-form .kit-field{display:contents;text-align:left}");
     expect(css).toContain(".kit-inline-form .kit-field-label{grid-column:1;grid-row:1}");
     expect(css).toContain(".kit-inline-form .kit-field-input{grid-column:1;grid-row:2;min-width:0;box-sizing:border-box;width:100%}");
-    expect(css).toContain(".kit-inline-form .kit-field-error{grid-column:1;grid-row:3;text-align:left}");
+    expect(css).toContain(".kit-inline-form .kit-field .kit-field-error{grid-column:1;grid-row:3;text-align:left}");
     expect(css).toContain(".kit-inline-form:has(>.kit-field)>.kit-btn{grid-column:2;grid-row:2;align-self:stretch;display:flex;align-items:center;justify-content:center;box-sizing:border-box}");
     expect(css).toContain("@media (max-width:640px){.kit-inline-form:has(>.kit-field){grid-template-columns:minmax(0,1fr)}");
-    expect(css).toContain(".kit-inline-form:has(>.kit-field)>.kit-btn{grid-column:1;grid-row:4;justify-self:center;margin-top:4px}");
+    expect(css).toContain(".kit-inline-form:has(>.kit-field)>.kit-btn{grid-column:1;grid-row:auto;justify-self:center;margin-top:4px}");
   });
 });
 
