@@ -20,6 +20,7 @@ import { renderToStaticMarkup } from "react-dom/server";
  */
 
 const STAGE_VIEW = "src/components/rooms/StageView.tsx";
+const STORY_PILL = "src/components/rooms/StoryTimePill.tsx";
 const READING_STAGE = "src/components/reading/ReadingStage.tsx";
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
 
@@ -118,8 +119,8 @@ describe("the click authorizes — a fresh re-check through the imported stage1W
     const click = clickBlock(await read(STAGE_VIEW));
     /* the ONLY non-null setStoryRoom in the whole file rides the target guard */
     const src = await read(STAGE_VIEW);
-    const mounts = src.match(/setStoryRoom\((?!null\))/g) ?? [];
-    expect(mounts).toEqual(["setStoryRoom(target);".replace(";", "")]);
+    const mounts = [...src.matchAll(/setStoryRoom\(([^)]*)\)/g)].map((m) => m[1]).filter((a) => a !== "null");
+    expect(mounts).toEqual(["target"]);
     expect(click).toMatch(/if \(target &&/);
   });
 
@@ -135,17 +136,19 @@ describe("the pill — the room's own btn btn-gold idiom, honest precedence", ()
     expect(src).toContain("slug === READING_ROOM_SLUG && storyOpen && !live && !stage2Room && !storyRoom");
   });
 
-  it("is a plain btn btn-gold button — the ● Story time copy, NO inline style (the 3/2/0 drift ceiling holds)", async () => {
+  it("is a plain btn btn-gold button — the ● Story time copy, NO inline style, in its OWN leaf (the census law)", async () => {
+    /* the operator census ratchets StageView's buttonFamilies at 1 and the
+       write mode never raises — the button element lives in
+       StoryTimePill.tsx, which enters at the new-file allowance */
+    const pill = await read(STORY_PILL);
+    expect(pill).toContain('<button type="button" className="btn btn-gold" onClick={onWatch}>');
+    expect(pill).toContain("● Story time");
+    expect(pill).not.toContain("style=");
+    /* StageView itself gains NO button element and NO style block this lane */
     const src = await read(STAGE_VIEW);
-    const pill = src.indexOf("● Story time");
-    expect(pill, "the pill's copy is missing").toBeGreaterThan(-1);
-    const open = src.lastIndexOf("<button", pill);
-    const tag = src.slice(open, src.indexOf(">", pill) + 1);
-    expect(tag).toContain('type="button"');
-    expect(tag).toContain('className="btn btn-gold"');
-    expect(tag).not.toContain("style=");
-    /* StageView gains no style block at all this lane */
+    expect(src.match(/<button/g)?.length ?? 0).toBe(1); // the TASK-392 Leave Stage 2 reset only
     expect(src.match(/style=\{\{/g)?.length ?? 0).toBe(3);
+    expect(src).toContain("<StoryTimePill onWatch={() => void storyTime()} />");
   });
 
   it("the room's own live show and a joined Stage 2 outrank the pill (ruling E)", async () => {
