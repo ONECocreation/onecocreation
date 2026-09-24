@@ -283,10 +283,10 @@ html[data-oc-theme="light"],.oc-pv-light{  --panel:rgba(255,255,255,.6); --edge:
   --oc-effect-c:rgba(173,84,112,.05); /* the dawn rose */
 }
 
-/* the nebula breathes behind the void — a slow drift, barely there */
-.hero::before{content:"";position:absolute;inset:-12%;z-index:0;
-  background:url("/images/consciouscuts/nebula.webp") center / cover no-repeat;
-  opacity:.16;animation:nebula-drift 70s ease-in-out infinite alternate}
+/* the nebula breathes behind the void — a slow drift, barely there. The
+   RULE moved to kit.css (TASK-438, block 968,230: the reading look shares
+   it as .sky-nebula::before,.hero::before, body byte-identical — home
+   renders exactly as before); the keyframes stay here, their birthplace. */
 @keyframes nebula-drift{
   from{transform:translate3d(-2.5%,-1.5%,0) scale(1.04)}
   to{transform:translate3d(2.5%,2%,0) scale(1.12)}

@@ -1,7 +1,6 @@
 import { sendMail, capRemaining, onceWithin, brandShell, type OutgoingMail } from "@/lib/mail";
 import { siteBase, unsubscribeUrl, isSubscribed, listSubscribersByTag, markReadingConfirmed } from "@/lib/subscribers";
 import { getSiteConfig } from "@/lib/site-config";
-import { READING_ROOM_PATH } from "@/lib/reading-room";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { zonedDateParts } from "@/lib/booking-time";
 
@@ -45,9 +44,10 @@ import { zonedDateParts } from "@/lib/booking-time";
  *  R5 — one schedule policy: `getSiteConfig().reading ?? DEFAULT_READING_SCHEDULE`
  *       — absent config uses the default (which is `on: true`); only an
  *       explicit `on: false` silences the day-of letter.
- *  R6 — `READING_ROOM_PATH` is `string | null`. Null (no free room in the
- *       registry) links `/reading` (TASK-391, on main) instead, and says
- *       the room link follows — never a broken `${siteBase()}null`.
+ *  R6 — the letters' Stage door is the `/reading` page itself, always
+ *       (TASK-438, block 968,222: Stage 1 lives ON the page now — the
+ *       reading is watched there, so both letters link it directly, never
+ *       a member-room path).
  *  R7 — the wall-clock (02:00 gate) and the clock-in-words are both built
  *       here with `Intl.DateTimeFormat` directly (`hour12: false` for the
  *       gate, an "24" hour folded to 0) — `booking-time.ts`'s own
@@ -105,24 +105,17 @@ function zonedWallClockMinutes(instantMs: number, tz: string): number {
   return (Number(at.hour) % 24) * 60 + Number(at.minute);
 }
 
-/* ── the Stage door (R6: READING_ROOM_PATH may be null) ───────────────── */
+/* ── the Stage door (R6: the /reading page itself, always) ────────────── */
 
 function readingPill(href: string, words: string): string {
   return `<p style="margin:22px 0;"><a href="${esc(href)}" style="background:#b4862b;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;">${words}</a></p>`;
 }
 
-/** The Stage link both letters share, the same way `lead-magnet.ts:81`
- *  builds it (`siteBase() + READING_ROOM_PATH`). R6: no free room in the
- *  registry means `READING_ROOM_PATH` is `null` — the letter links the
- *  public `/reading` page (TASK-391, on main) instead of building a
- *  broken `${siteBase()}null` href, and says so honestly rather than
- *  pretending the Stage door is ready. */
+/** The Stage link both letters share: the public `/reading` page, ALWAYS
+ *  (R6 — Stage 1 is watched ON the page now, so the letter's door is the
+ *  page itself, never a room path). */
 function stageDoorHtml(words: string): string {
-  if (READING_ROOM_PATH) {
-    return readingPill(`${siteBase()}${READING_ROOM_PATH}`, words);
-  }
-  return `${readingPill(`${siteBase()}/reading`, "See the reading")}
-       <p>The Stage room link is still on its way — the room link follows as soon as it's set.</p>`;
+  return readingPill(`${siteBase()}/reading`, words);
 }
 
 /* ── the two pure builders ──────────────────────────────────────────── */

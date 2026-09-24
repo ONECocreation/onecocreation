@@ -154,6 +154,109 @@ describe("ReadingSignUpCard — the three real render states (renderToStaticMark
   });
 });
 
+describe("ReadingSignUpCard — T-438 byte-identity law: the room variant (the DEFAULT) is untouched, byte for byte", () => {
+  it("member render is byte-identical to the captured pre-T-438 fixture", () => {
+    const html = renderToStaticMarkup(
+      createElement(ReadingSignUpCard, { kind: "member", memberEmail: "reader@example.com" }),
+    );
+    expect(html).toBe(
+      '<div class="kit-card"><div class="kit-card-body"><div class="center kit-stack"><p class="kit-h2">Hold your seat.</p><div><button type="button" class="kit-btn kit-btn-main kit-btn-sm">Count me in for the reading</button></div><p class="kit-text-quiet">Free for every member — no extra letters, just your seat.</p></div></div></div>',
+    );
+  });
+
+  it("member-key render is byte-identical to the captured pre-T-438 fixture", () => {
+    const html = renderToStaticMarkup(createElement(ReadingSignUpCard, { kind: "member-key", memberEmail: null }));
+    expect(html).toBe(
+      '<div class="kit-card"><div class="kit-card-body"><form class="center kit-stack"><p class="kit-h2">Hold your seat.</p><div class="kit-field"><label for="reading-sign-up-email" class="kit-field-label">Email</label><input id="reading-sign-up-email" class="kit-field-input" type="email" required="" value=""/></div><div><button type="submit" class="kit-btn kit-btn-main kit-btn-sm">Count me in for the reading</button></div><p class="kit-text-quiet">Your key doesn&#x27;t carry an email on file — leave one here for the reading list.</p></form></div></div>',
+    );
+  });
+
+  it("guest render is byte-identical to the captured pre-T-438 fixture (the /news door stays, room-side)", () => {
+    const html = renderToStaticMarkup(createElement(ReadingSignUpCard, { kind: "guest", memberEmail: null }));
+    expect(html).toBe(
+      '<div class="kit-card"><div class="kit-card-body"><form class="center kit-stack"><p class="kit-h2">Hold your seat.</p><div class="kit-field"><label for="reading-sign-up-email" class="kit-field-label">Email</label><input id="reading-sign-up-email" class="kit-field-input" type="email" required="" value=""/></div><div><button type="submit" class="kit-btn kit-btn-main kit-btn-sm">Join the reading</button></div><p class="kit-text-quiet">Free once you&#x27;re signed in — leave your email to hold your seat.</p><p class="kit-text-quiet">Already getting our letters? Find them at <a href="/news">News &amp; Letters</a>.</p></form></div></div>',
+    );
+  });
+
+  it("an explicit variant=\"room\" renders the same bytes as the default", () => {
+    const implicit = renderToStaticMarkup(
+      createElement(ReadingSignUpCard, { kind: "guest", memberEmail: null }),
+    );
+    const explicit = renderToStaticMarkup(
+      createElement(ReadingSignUpCard, { kind: "guest", memberEmail: null, variant: "room" }),
+    );
+    expect(explicit).toBe(implicit);
+  });
+});
+
+describe("ReadingSignUpCard — T-438 variant=\"public\" (the /reading page's sign-up card)", () => {
+  it("guest: the public card — 'Stay in the know', the reminder line, kit-inline-form, 'Keep me posted', none of the room's words", () => {
+    const html = renderToStaticMarkup(
+      createElement(ReadingSignUpCard, { kind: "guest", memberEmail: null, variant: "public" }),
+    );
+    expect(html).toContain("kit-signup");
+    expect(html).toContain("Stay in the know");
+    expect(html).toContain("A reminder the morning of each reading, and Love&#x27;s letters when something fun is on.");
+    expect(html).toContain('class="kit-inline-form"');
+    expect(html).toContain('id="reading-sign-up-email"');
+    expect(html).toContain("Keep me posted");
+    expect(html).toContain("kit-btn kit-btn-main kit-btn-sm");
+    expect(html.match(/id="reading-sign-up-email"/g)?.length).toBe(1);
+    expect(html).not.toContain("Hold your seat");
+    expect(html).not.toContain("no extra letters");
+    expect(html).not.toContain("/news");
+    expect(html).not.toContain("Sign in");
+  });
+
+  it("member: the one-tap 'Keep me posted' button, no field at all", () => {
+    const html = renderToStaticMarkup(
+      createElement(ReadingSignUpCard, { kind: "member", memberEmail: "reader@example.com", variant: "public" }),
+    );
+    expect(html).toContain("kit-signup");
+    expect(html).toContain("Stay in the know");
+    expect(html).toContain("Keep me posted");
+    expect(html).not.toContain("<input");
+    expect(html).not.toContain("Hold your seat");
+    expect(html).not.toContain("/news");
+  });
+
+  it("member-key: the field, never a silent skip — 'Keep me posted' on the submit", () => {
+    const html = renderToStaticMarkup(
+      createElement(ReadingSignUpCard, { kind: "member-key", memberEmail: null, variant: "public" }),
+    );
+    expect(html).toContain('id="reading-sign-up-email"');
+    expect(html).toContain("Keep me posted");
+    expect(html).not.toContain("Hold your seat");
+    expect(html).not.toContain("/news");
+  });
+});
+
+describe("ReadingSignUp — T-438 public-variant source pins (the machine and the submit path are SHARED, not forked)", () => {
+  const SRC_PATH = "src/components/rooms/ReadingSignUp.tsx";
+
+  it("both components take variant?: \"room\" | \"public\" defaulting to \"room\"", async () => {
+    const src = await read(SRC_PATH);
+    expect(src).toContain('variant?: "room" | "public"');
+    expect(src.match(/variant = "room"/g)?.length).toBe(2);
+  });
+
+  it("the success copy is OUTCOME_COPY unchanged — the public variant promises the same words, never a new promise", async () => {
+    const src = await read(SRC_PATH);
+    expect(src).toContain("OUTCOME_COPY[submit.outcome]");
+  });
+
+  it("the same submit path — postReadingSignUp posts {email, source:'reading'} — serves both variants", async () => {
+    const src = await read(SRC_PATH);
+    expect(src.match(/postReadingSignUp\(/g)!.length).toBeGreaterThanOrEqual(2); // definition + the one shared caller
+    expect(src).toContain('source: "reading"');
+  });
+
+  it("K122 item 13 — the off-gate belongs to the ROOM variant only: the public variant shows in every schedule state (the one door that works without a date; the room render stays byte-identical)", async () => {
+    const src = await read(SRC_PATH);
+    expect(src).toContain('state.kind === "off" && variant === "room"');
+  });
+});
+
 describe("ReadingSignUp — the default, hook-wired export", () => {
   it("state:'off' renders nothing, whatever the session (Ground)", () => {
     const props: { state: NoticeState } = { state: { kind: "off" } };
@@ -165,6 +268,17 @@ describe("ReadingSignUp — the default, hook-wired export", () => {
       state: { kind: "upcoming", startsAtMs: Date.now() + 86_400_000, endsAtMs: Date.now() + 90_000_000 },
     };
     expect(renderToStaticMarkup(createElement(ReadingSignUp, props))).toBe("");
+  });
+
+  it("T-438 + K122 item 13: variant=\"public\" — off no longer gates the card (it shows in every schedule state); under renderToStaticMarkup both states still render nothing ONLY because the session is unchecked (the loading law, never the off-gate)", () => {
+    expect(
+      renderToStaticMarkup(createElement(ReadingSignUp, { state: { kind: "off" }, variant: "public" })),
+    ).toBe("");
+    const upcoming: { state: NoticeState; variant: "public" } = {
+      state: { kind: "upcoming", startsAtMs: Date.now() + 86_400_000, endsAtMs: Date.now() + 90_000_000 },
+      variant: "public",
+    };
+    expect(renderToStaticMarkup(createElement(ReadingSignUp, upcoming))).toBe("");
   });
 });
 
