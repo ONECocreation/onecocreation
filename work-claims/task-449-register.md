@@ -141,6 +141,21 @@ Playground island. G: the banner has no idle motion and no click effect.
 - Red confirmed before the build (the two lane files failing).
 - Final: oc-gate.sh — vitest 223 files / 2801 tests passed; scripts 5/5
   zero failed; eslint 0; tsc 0; next build ok; GATES GREEN.
+- After the pickup hardening below: oc-gate.sh re-run — vitest 223 files /
+  2801 tests passed; scripts 5/5 zero failed; eslint 0; tsc 0; build ok;
+  GATES GREEN (block 968,369).
+
+## Pickup hardening (the security seat's optional finding 2, taken)
+
+`PolledState`/`toPolled` in PlaygroundIsland.tsx no longer carry `room` at
+all — the field is removed, not nulled — so the display state structurally
+cannot hold a room; the join path already rode only the click's fresh
+answer (`fresh.room` → `joinedRoom`), which is unchanged. Stage2Door.tsx's
+own PolledState keeps its room (read-only file, its join reads the polled
+state by design). The `room={` count pin at
+tests/reading-playground.test.ts:135 keeps its expectation of 1 (the
+in-call mount is still the only one); the twelve `wire:` fixture literals
+were re-trued to the narrower shape, never deleted.
 
 ## Shots (hand-back)
 

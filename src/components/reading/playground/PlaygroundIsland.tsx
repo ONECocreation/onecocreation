@@ -52,15 +52,16 @@ export interface PlaygroundIslandProps {
 }
 
 /** The wire body `/api/stage2` answers with, as display state (Stage2Door's
- *  own shape: `decision` is the contract; the rest rides along). */
+ *  own shape minus one field: `decision` is the contract; `reachable` and
+ *  `pkg` ride along; `room` is NOT here — the display state structurally
+ *  cannot hold a room, the join rides only the click's own fresh answer). */
 interface PolledState {
   decision: Stage2Decision | null;
   reachable: boolean | null;
-  room: string | null;
   pkg: Stage2PackageDoor | null;
 }
 
-const CLOSED: PolledState = { decision: null, reachable: null, room: null, pkg: null };
+const CLOSED: PolledState = { decision: null, reachable: null, pkg: null };
 /** Stage2Door's own cadence (Stage2Door.tsx:66). */
 const POLL_MS = 20_000;
 
@@ -68,13 +69,11 @@ function toPolled(d: {
   decision?: Stage2Decision;
   open?: boolean;
   reachable?: boolean | null;
-  room?: string | null;
   package?: Stage2PackageDoor | null;
 }): PolledState {
   return {
     decision: d.decision ?? (d.open ? "open" : "hidden"),
     reachable: d.reachable ?? null,
-    room: d.room ?? null,
     pkg: d.package ?? null,
   };
 }

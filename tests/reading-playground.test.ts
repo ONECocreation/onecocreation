@@ -49,7 +49,7 @@ const ROWS = createElement("ul", { className: "kit-rows" }, createElement("li", 
 
 function bodyProps(overrides: Partial<PlaygroundIslandBodyProps>): PlaygroundIslandBodyProps {
   return {
-    wire: { decision: null, reachable: null, room: null, pkg: null },
+    wire: { decision: null, reachable: null, pkg: null },
     joinedRoom: null,
     left: false,
     nameSnapshot: "Guest",
@@ -248,8 +248,8 @@ describe("the price rows link their names (the derive-every-word law, rendered)"
 describe("the five states render the wire (ruling words, rendered)", () => {
   it("closed (M19e) — hidden AND pre-poll both read closed, with the rows and the way back to the reading", () => {
     for (const wire of [
-      { decision: null, reachable: null, room: null, pkg: null },
-      { decision: "hidden" as const, reachable: null, room: null, pkg: null },
+      { decision: null, reachable: null, pkg: null },
+      { decision: "hidden" as const, reachable: null, pkg: null },
     ]) {
       const html = render(bodyProps({ wire }));
       expect(html).toContain("The Playground is closed right now");
@@ -261,7 +261,7 @@ describe("the five states render the wire (ruling words, rendered)", () => {
   });
 
   it("signed out (M19a) — Sign in returns to /reading/playground; the memberships second; the rows up", () => {
-    const html = render(bodyProps({ wire: { decision: "signin", reachable: null, room: null, pkg: null } }));
+    const html = render(bodyProps({ wire: { decision: "signin", reachable: null, pkg: null } }));
     expect(html).toContain("Come up and talk with Love");
     expect(html).toContain('href="/login?next=%2Freading%2Fplayground"');
     expect(html).toContain("Sign in");
@@ -272,7 +272,7 @@ describe("the five states render the wire (ruling words, rendered)", () => {
   });
 
   it("free member (M19b, ruling 3) — the derived tier-B package is the ONE main, the memberships second, Try one week quiet nevermind-weight", () => {
-    const html = render(bodyProps({ wire: { decision: "package", reachable: null, room: null, pkg: PKG } }));
+    const html = render(bodyProps({ wire: { decision: "package", reachable: null, pkg: PKG } }));
     expect(html).toContain("Heart Field · your free membership");
     expect(html).toContain("The Playground comes with a paid membership");
     expect(count(html, "kit-btn-main")).toBe(1);
@@ -288,14 +288,14 @@ describe("the five states render the wire (ruling words, rendered)", () => {
 
   it("free member WITHOUT the week offer (pkg.week null — the offer is optional): the quiet option simply doesn't render", () => {
     const html = render(
-      bodyProps({ wire: { decision: "package", reachable: null, room: null, pkg: { ...PKG, week: null } } }),
+      bodyProps({ wire: { decision: "package", reachable: null, pkg: { ...PKG, week: null } } }),
     );
     expect(html).not.toContain("Try one week");
     expect(count(html, "kit-btn-main")).toBe(1);
   });
 
   it("entitled and reachable (M19c, ruling 4) — the stage frame, the Live chip, ONE kit-btn-main reading Join Love, and NO room string before the click", () => {
-    const html = render(bodyProps({ wire: { decision: "open", reachable: true, room: ROOM, pkg: null } }));
+    const html = render(bodyProps({ wire: { decision: "open", reachable: true, pkg: null } }));
     expect(html).toContain("kit-stage-media");
     expect(html).toContain("kit-stage-chip");
     expect(count(html, "kit-btn-main")).toBe(1);
@@ -306,7 +306,7 @@ describe("the five states render the wire (ruling words, rendered)", () => {
   });
 
   it("open but UNREACHABLE — the honest words, never a room", () => {
-    const html = render(bodyProps({ wire: { decision: "open", reachable: false, room: null, pkg: null } }));
+    const html = render(bodyProps({ wire: { decision: "open", reachable: false, pkg: null } }));
     expect(html).toContain("isn&#x27;t answering right now");
     expect(html).not.toContain("Join Love");
     expect(html).not.toContain(ROOM);
@@ -314,7 +314,7 @@ describe("the five states render the wire (ruling words, rendered)", () => {
 
   it("in the call (M19d, ruling 4) — JitsiRoom under the known-by name in the 3:4-capable frame, and NO page button anywhere under it", () => {
     const html = render(
-      bodyProps({ wire: { decision: "open", reachable: true, room: ROOM, pkg: null }, joinedRoom: ROOM, nameSnapshot: "Firefly" }),
+      bodyProps({ wire: { decision: "open", reachable: true, pkg: null }, joinedRoom: ROOM, nameSnapshot: "Firefly" }),
     );
     expect(html).toContain("kit-stage-media--playground");
     expect(html).toContain("opening the room"); // JitsiRoom's own loading line
@@ -324,7 +324,7 @@ describe("the five states render the wire (ruling words, rendered)", () => {
 
   it("left while still open (decision G — K124's words riding M19c's frame): You left the Playground + the way back in", () => {
     const html = render(
-      bodyProps({ wire: { decision: "open", reachable: true, room: ROOM, pkg: null }, left: true }),
+      bodyProps({ wire: { decision: "open", reachable: true, pkg: null }, left: true }),
     );
     expect(html).toContain("You left the Playground");
     expect(html).toContain("Join Love");
@@ -334,14 +334,14 @@ describe("the five states render the wire (ruling words, rendered)", () => {
 
   it("…but left + a poll that says closed reads CLOSED honestly (the left words never outlive the open truth)", () => {
     const html = render(
-      bodyProps({ wire: { decision: "hidden", reachable: null, room: null, pkg: null }, left: true }),
+      bodyProps({ wire: { decision: "hidden", reachable: null, pkg: null }, left: true }),
     );
     expect(html).toContain("The Playground is closed right now");
     expect(html).not.toContain("You left the Playground");
   });
 
   it("a failed fresh answer's note shows in words (Stage2Door's own shape)", () => {
-    const html = render(bodyProps({ wire: { decision: "signin", reachable: null, room: null, pkg: null }, note: "could not add — try again" }));
+    const html = render(bodyProps({ wire: { decision: "signin", reachable: null, pkg: null }, note: "could not add — try again" }));
     expect(html).toContain("could not add — try again");
   });
 });
