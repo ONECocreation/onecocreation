@@ -544,6 +544,10 @@ html[data-oc-theme="light"] .hero:not(.keep-dark)::after{background:linear-gradi
     linear-gradient(rgba(10,10,20,.62), rgba(10,10,20,.78)),
     url("/images/lions-gate.webp") center top / cover no-repeat;
 }
+/* The designer band's lion tells the night alone — no double lion behind it.
+   Keep the page's veil; dawn's html[data-oc-theme="light"] main.lions-gate-dark
+   outranks this modifier by its extra type selector and restores the page lion. */
+main.lions-gate-dark.lion-in-band{background:linear-gradient(rgba(10,10,20,.62), rgba(10,10,20,.78));}
 .lions-gate-dark .sec-h{color:#F4ECFF}
 .lions-gate-dark p{color:#D9D2E4}
 /* LIONS GATE AT DAWN (Admiral, 0018.06.24 a₿: "the lion on light view used
