@@ -14,6 +14,11 @@ export async function POST(request: Request) {
   if (!body?.a || !body?.b || body.a === body.b) {
     return NextResponse.json({ ok: false, reason: "two different member subjects required" }, { status: 400 });
   }
-  await linkMembers(body.a, body.b);
+  try {
+    await linkMembers(body.a, body.b);
+  } catch {
+    /* T-452: the link store couldn't be read — nothing was written */
+    return NextResponse.json({ ok: false, reason: "couldn't read the links just now — nothing changed, try again" }, { status: 503 });
+  }
   return NextResponse.json({ ok: true });
 }
