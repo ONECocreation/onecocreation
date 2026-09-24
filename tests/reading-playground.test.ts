@@ -221,13 +221,13 @@ describe("the member-menu line (ruling 5)", () => {
     expect(rowAt).toBeLessThan(signOutAt);
   });
 
-  it("the menu line never outlives its truth: a rejected read and a closed menu both clear it (pickup fix)", async () => {
+  it("the menu line: a rejected read clears it; a closed menu KEEPS it for the next opening (T-454 — no late row above sign-out)", async () => {
     const src = await read(DOOR);
     const at = src.indexOf('fetch("/api/stage2", { cache: "no-store" })');
     const effect = src.slice(at, src.indexOf("}, [open]);", at));
     expect(effect).toMatch(/\.catch\(\(\) => \{\s*if \(alive\) setPlaygroundOpen\(false\);\s*\}\)/);
     const cleanup = effect.slice(effect.indexOf("return () => {"));
-    expect(cleanup).toContain("setPlaygroundOpen(false);");
+    expect(cleanup).not.toContain("setPlaygroundOpen(");
   });
 
   it("the style hoist: one module-level menuRowStyle shared by the map rows and the Playground row (design-drift numbers never rise)", async () => {

@@ -102,7 +102,7 @@ export function Stage1CardBody({ state, busy, error, onAct }: Stage1CardBodyProp
           <span>
             The one-way stage — Prepare mints the room privately, Publish lets viewers in, Close ends it.
             {state.phase === "published" &&
-              " New joins stop at midnight Mountain. Close removes our viewers on their next poll. End meeting for all ends the call."}
+              " New joins stop at midnight Mountain. When you finish: press Close first (it removes our viewers on their next poll), then End meeting for all in the call."}
             {stateLine}
           </span>
           <span className="kit-rows-end">{lifecycleControl}</span>

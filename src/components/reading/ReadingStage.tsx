@@ -312,7 +312,9 @@ export default function ReadingStage({
       fetch("/api/stage2", { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => {
-          if (alive) setPlaygroundOpen(d?.ok && d.open === true);
+          /* T-454: a failed read keeps the last-known state (it used to
+             write undefined — a state change, a re-render) */
+          if (alive && d?.ok) setPlaygroundOpen(d.open === true);
         })
         .catch(() => {
           /* a missed poll leaves the last-known display state */
@@ -359,7 +361,13 @@ export default function ReadingStage({
      reading has ended": the stage's own fresh truth decides. Still
      published -> "You left the reading." + Watch again; only a closed or
      expired stage shows the ended words. */
-  function viewerEnded() {
+  /* T-454: STABLE identities — JitsiViewer's boot effect depends on
+     [domain, room, onEnded, onFailed], so a new function on any re-render
+     tore every watcher's picture down and rejoined the room. T-449's
+     banner poll made that re-render real: the moment Love opened the
+     Playground, every /reading watcher dropped and rejoined (the same bug
+     T-450's pickup fixed in StageView). Setters and markEnded are stable. */
+  const viewerEnded = useCallback(() => {
     setWatching(false);
     setRoom(null);
     fetch("/api/stage1", { cache: "no-store" })
@@ -377,7 +385,12 @@ export default function ReadingStage({
            fallback, never a "still live" claim on a guess */
         markEnded();
       });
-  }
+  }, [markEnded]);
+
+  const viewerFailed = useCallback(() => {
+    setWatching(false);
+    setFailed(true);
+  }, []);
 
   function tryAgain() {
     setFailed(false);
@@ -400,10 +413,7 @@ export default function ReadingStage({
       onWatch={() => void watch()}
       onTryAgain={tryAgain}
       onViewerEnded={viewerEnded}
-      onViewerFailed={() => {
-        setWatching(false);
-        setFailed(true);
-      }}
+      onViewerFailed={viewerFailed}
     />
   );
 }

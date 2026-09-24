@@ -220,7 +220,8 @@ export default function StageView({
         setStoryNote(null); // a successful mount retires the honest note
       }
     } catch {
-      setStoryNote("The reading's picture couldn't load here — try again.");
+      /* T-454: a click that fails after Stage 2 took the stage says nothing */
+      if (!stage2RoomRef.current) setStoryNote("The reading's picture couldn't load here — try again.");
     }
   }
 
@@ -256,6 +257,7 @@ export default function StageView({
     stage2RoomRef.current = room;
     setStoryRoom(null);
     setStoryDomain(null);
+    setStoryNote(null); // T-454: nothing to "try again" during Stage 2
     setStage2Room(room);
   }, []);
   useEffect(() => {

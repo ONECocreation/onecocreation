@@ -87,9 +87,8 @@ export default function DoorButton() {
   /* TASK-449 (ruling 5): while the menu is open, read the Playground's
      open truth once and on the same 20 s cadence Stage2Door polls at — a
      failed read renders NO line (derive-or-dash: a line that can't know
-     its truth says nothing). Pickup fix: a rejected fetch and a closed
-     menu both clear the line, so a stale "open" never survives into the
-     next opening. */
+     its truth says nothing). Pickup fix: a rejected fetch clears the line.
+     T-454: a closed menu keeps it, re-verified on the next opening. */
   useEffect(() => {
     if (open !== "menu") return;
     let alive = true;
@@ -108,7 +107,9 @@ export default function DoorButton() {
     return () => {
       alive = false;
       clearInterval(id);
-      setPlaygroundOpen(false);
+      /* T-454: the last value is KEPT across closes — clearing it made the
+         row arrive late above the sign-out row on every opening (a
+         misclick trap); the next read re-verifies it and a failed read clears it */
     };
   }, [open]);
 

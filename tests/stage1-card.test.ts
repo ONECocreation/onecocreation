@@ -135,7 +135,7 @@ describe("published", () => {
     expect(lifecycle).toContain('data-state="published"');
     expect(lifecycle).toContain("Close");
     expect(html).toContain(
-      "New joins stop at midnight Mountain. Close removes our viewers on their next poll. End meeting for all ends the call.",
+      "New joins stop at midnight Mountain. When you finish: press Close first (it removes our viewers on their next poll), then End meeting for all in the call.",
     );
   });
 });
