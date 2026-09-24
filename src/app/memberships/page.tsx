@@ -81,7 +81,7 @@ export default async function MembershipsPage() {
             text), and its first Band takes the lion as its own ground when
             the published snapshot carries none — the same field the
             hand-built page below and the home section hold. */}
-        <main className="lions-gate-dark"><Render config={config} data={applyLionToPuck(puck as Data)} /></main>
+        <main className="lions-gate-dark lion-in-band"><Render config={config} data={applyLionToPuck(puck as Data)} /></main>
         <SiteFooter />
         {/* STUDIO P2: popup host rides both branches of this page */}
         <PopupHost />
