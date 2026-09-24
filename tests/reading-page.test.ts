@@ -189,20 +189,36 @@ describe("the page itself — source pins (async server component, headers()-dep
     expect(src).toContain("config.reading ?? DEFAULT_READING_SCHEDULE");
   });
 
-  it("the CTA href is readingDoorHref(signedIn) — never a hardcoded room path, and the label follows the visitor", async () => {
+  it("Stage 1 is phase-only SSR: the page mounts ReadingStage with the phase from getStage1State() — never a room path, never a client-only door", async () => {
     const src = await read(PAGE_PATH);
-    expect(src).toContain('from "@/lib/reading-room"');
-    expect(src).toContain("readingDoorHref(signedIn)");
-    expect(src).toContain('"Enter the reading room"');
-    expect(src).toContain('"Sign in to join"');
+    expect(src).toContain('from "@/components/reading/ReadingStage"');
+    expect(src).toContain("(await getStage1State()).phase");
+    expect(src).not.toContain("readingDoorHref");
     expect(src).not.toMatch(/href="\/rooms\//);
+    expect(src).not.toContain("Enter the reading room");
+    expect(src).not.toContain("Sign in to join");
   });
 
-  it("decision C (amended): no ReadingSignUp, no second door competing with the reading door", async () => {
+  it("the countdown rides INSIDE ReadingStage as server-composed nodes (K122 item 6a — the stage2Details idiom, the island owns the phase), and the page derives the FOLLOWING reading for the ended words (K122 item 7)", async () => {
     const src = await read(PAGE_PATH);
-    expect(src).not.toContain("ReadingSignUp");
-    expect(src).not.toContain("Join the letters");
+    expect(src).toContain("countdown={");
+    expect(src).toContain("countdownWhen={");
+    expect(src).toContain("nextReading(schedule, next.endsAtMs)");
+    expect(src).toContain("following={");
+  });
+
+  it("the public sign-up card: ReadingSignUp variant=\"public\" exactly once — the letters, never a second door", async () => {
+    const src = await read(PAGE_PATH);
+    expect(src.match(/<ReadingSignUp /g)?.length).toBe(1);
+    expect(src).toContain('variant="public"');
     expect(src).not.toMatch(/href="\/news"/);
+  });
+
+  it("K122 item 13 — Stay in the know mounts in EVERY schedule state: never gated on schedule.on && next, the date-less state is { kind: \"off\" }, and the kicker falls back to 'Readings with Love · free'", async () => {
+    const src = await read(PAGE_PATH);
+    expect(src).not.toContain("schedule.on && next");
+    expect(src).toContain('{ kind: "off" }');
+    expect(src).toContain("Readings with Love · free");
   });
 
   it("no tier or payment logic anywhere on this page", async () => {
@@ -225,10 +241,10 @@ describe("the page itself — source pins (async server component, headers()-dep
     expect(src.match(/<SiteFooter/g)?.length).toBe(1);
   });
 
-  it("the theme contract: house/kit classes and the five RULED kitx- classes only, no inline style anywhere", async () => {
+  it("the theme contract: house/kit classes and the seven RULED kitx- classes only, no inline style anywhere", async () => {
     const src = await read(PAGE_PATH);
     expect(src).not.toMatch(/style=\{\{/);
-    for (const cls of ["kitx-balanced", "kitx-flow", "kitx-actions", "kitx-mark"]) {
+    for (const cls of ["kitx-balanced", "kitx-flow", "kitx-host", "kitx-section"]) {
       expect(src).toContain(cls);
     }
   });
@@ -249,12 +265,12 @@ describe("no literal weekday name and no \"1:11\" — the page AND its one helpe
   }
 });
 
-describe("the design-drift theme contract — kit.css carries exactly the five RULED kitx- rules", () => {
-  it("every kitx- class the page/island use is defined in kit.css, and no sixth kitx- class exists", async () => {
+describe("the design-drift theme contract — kit.css carries exactly the seven RULED kitx- rules", () => {
+  it("every kitx- class the page/island use is defined in kit.css, and no eighth kitx- class exists", async () => {
     const css = await read("src/app/kit.css");
     const defined = [...css.matchAll(/\.kitx-([a-z]+)/g)].map((m) => m[0]);
     const unique = [...new Set(defined)].sort();
-    expect(unique).toEqual([".kitx-actions", ".kitx-balanced", ".kitx-flow", ".kitx-mark", ".kitx-photo"].sort());
+    expect(unique).toEqual([".kitx-actions", ".kitx-balanced", ".kitx-flow", ".kitx-host", ".kitx-mark", ".kitx-photo", ".kitx-section"].sort());
   });
 });
 

@@ -38,7 +38,6 @@ const onceWithinCalls = vi.hoisted(() => [] as Array<{ key: string; windowMs: nu
 const subscribedState = vi.hoisted(() => new Set<string>());
 const recordsState = vi.hoisted(() => [] as SubscriberRecord[]);
 const markCalls = vi.hoisted(() => [] as string[]);
-const roomState = vi.hoisted(() => ({ path: "/rooms/heart-field" as string | null }));
 const readingTagControl = vi.hoisted(() => ({ outcome: "joined" as "joined" | "already" | "unsubscribed" }));
 const siteConfigState = vi.hoisted(() => ({ reading: undefined as ReadingSchedule | undefined }));
 
@@ -86,21 +85,6 @@ vi.mock("@/lib/site-config", async (importActual) => {
   };
 });
 
-// R6: READING_ROOM_PATH is a module-level constant on the real module — a
-// getter here is what lets a single test flip it to null and back, since a
-// plain re-exported value would be frozen at whatever the factory saw once.
-// Every other export (roomPath, freeRoom, etc. — site-config.ts and
-// lead-magnet.ts both need them transitively) rides the real module.
-vi.mock("@/lib/reading-room", async (importActual) => {
-  const actual = await importActual<typeof import("@/lib/reading-room")>();
-  return {
-    ...actual,
-    get READING_ROOM_PATH() {
-      return roomState.path;
-    },
-  };
-});
-
 vi.mock("@/lib/mail-queue", () => ({
   tick: async () => ({ sent: 0, failed: 0, requeued: 0, remainingInQueue: 0, capLeftThisHour: 100 }),
 }));
@@ -125,7 +109,6 @@ beforeEach(() => {
   subscribedState.clear();
   recordsState.length = 0;
   markCalls.length = 0;
-  roomState.path = "/rooms/heart-field";
   readingTagControl.outcome = "joined";
   siteConfigState.reading = undefined;
 });
@@ -153,23 +136,22 @@ const DAY_PRIOR_15Z = Date.parse("2026-09-22T15:00:00.000Z"); // Tuesday 9:00 AM
 /* ═══════════════════════ the two pure builders ═══════════════════════ */
 
 describe("readingConfirmationLetter — the pure builder", () => {
-  it("carries the subject, the Stage link built from siteBase()+READING_ROOM_PATH, and an unsubscribe URL", async () => {
+  it("carries the subject, the /reading Stage link, and an unsubscribe URL", async () => {
     const { readingConfirmationLetter } = await lib();
     const mail = readingConfirmationLetter("reader@example.com");
     expect(mail.to).toBe("reader@example.com");
     expect(mail.subject).toBe("You're on the list for the reading");
-    expect(mail.html).toContain(`href="${SITE}/rooms/heart-field"`);
+    expect(mail.html).toContain(`href="${SITE}/reading"`);
     expect(mail.unsubscribeUrl).toBeTruthy();
     expect(mail.html).toContain(mail.unsubscribeUrl!);
   });
 
-  it("R6: no free room in the registry (READING_ROOM_PATH null) links /reading and says the room link follows — never a broken siteBase()+null href", async () => {
-    roomState.path = null;
+  it("T-438: the door is ALWAYS /reading — never a /rooms/ href, whatever the registry holds (Stage 1 lives on the page now)", async () => {
     const { readingConfirmationLetter } = await lib();
     const mail = readingConfirmationLetter("reader@example.com");
     expect(mail.html).toContain(`href="${SITE}/reading"`);
+    expect(mail.html).not.toContain("/rooms/");
     expect(mail.html).not.toContain(`${SITE}null`);
-    expect(mail.html.toLowerCase()).toContain("room link follows");
   });
 });
 
@@ -180,16 +162,16 @@ describe("readingDayOfLetter — the pure builder", () => {
     expect(mail.subject).toBe("Don't forget — the reading is today");
     expect(mail.html).toContain("today at 1:11 PM Mountain");
     expect(mail.html).not.toMatch(/this morning|tonight/i);
-    expect(mail.html).toContain(`href="${SITE}/rooms/heart-field"`);
+    expect(mail.html).toContain(`href="${SITE}/reading"`);
     expect(mail.unsubscribeUrl).toBeTruthy();
     expect(mail.html).toContain(mail.unsubscribeUrl!);
   });
 
-  it("R6: no free room in the registry links /reading instead of a broken siteBase()+null href", async () => {
-    roomState.path = null;
+  it("T-438: the door is ALWAYS /reading — never a /rooms/ href, whatever the registry holds", async () => {
     const { readingDayOfLetter } = await lib();
     const mail = readingDayOfLetter("reader@example.com", STARTS_AT_MS, "America/Denver");
     expect(mail.html).toContain(`href="${SITE}/reading"`);
+    expect(mail.html).not.toContain("/rooms/");
     expect(mail.html).not.toContain(`${SITE}null`);
   });
 });
@@ -198,6 +180,13 @@ describe("reading-letters.ts never hardcodes a weekday (grep-lintable)", () => {
   it("the source file names no weekday literally — the schedule source decides the day, never the code", () => {
     const src = fs.readFileSync(path.join(process.cwd(), "src/lib/reading-letters.ts"), "utf8");
     expect(src).not.toMatch(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/);
+  });
+
+  it("T-438: the source no longer imports the room registry — the letters' Stage door is the /reading page itself", () => {
+    const src = fs.readFileSync(path.join(process.cwd(), "src/lib/reading-letters.ts"), "utf8");
+    expect(src).not.toContain("@/lib/reading-room");
+    expect(src).not.toContain("READING_ROOM_PATH");
+    expect(src).not.toContain("/rooms/");
   });
 });
 
@@ -332,6 +321,16 @@ describe("sendReadingDayOf — per-recipient send (R1/R2/R3)", () => {
 /* ═══════════════════════ the tick's added call ═══════════════════════ */
 
 describe("enqueueReadingDayOf — the day-of gate (R5, decision A's tick, the pure function of schedule/nowMs/once-marker)", () => {
+  /* the send path's R1 rule re-reads the REAL clock at the moment of the
+     send (sendReadingDayOf: Date.now() >= startsAtMs -> skippedLate), so
+     these fixtures must HOLD the clock at the fixture tick — without it
+     the suite goes red the instant real time passes 2026-09-23 19:11 UTC
+     (detonated under the K122 fix round, block 968,284). */
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(TICK_15Z);
+  });
+
   it("fires at a 15:00-UTC-shaped tick on the occurrence's zone-day, with capacity, for every reading-tagged subscriber", async () => {
     subscribedState.add("a@example.com");
     subscribedState.add("b@example.com");
