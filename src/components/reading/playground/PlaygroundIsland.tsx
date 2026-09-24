@@ -49,6 +49,62 @@ export interface PlaygroundIslandProps {
   /** the server-composed Stage2Details rows (the server-composed-nodes
    *  idiom — the rail's dynamic imports can never enter a client bundle) */
   stage2Rows: React.ReactNode;
+  /** the band's first paint — the server's own read of the same rail
+   *  (words only; the body stays fail-closed until the wire answers) */
+  initialDecision: Stage2Decision;
+  /** the closed band's derived next-reading line (null: schedule off) */
+  closedWhen: string | null;
+  /** the visitor's package name when their tier clears the door (the
+   *  "You're in" line), else null */
+  tierName: string | null;
+}
+
+/** The band's words (pickup fix round, block 968,393): the kicker, the
+ *  when-lines and the quiet line follow the SAME decision the island
+ *  renders — the server read them once per request before, so a publish
+ *  or unpublish under a seated visitor left the band contradicting the
+ *  stage (K122 item 6a's ruling on /reading: only the island knows the
+ *  phase). In the call the quiet line drops (M19d draws it null). */
+export function playgroundBand(
+  decision: Stage2Decision | null,
+  inCall: boolean,
+  tierName: string | null,
+  closedWhen: string | null,
+): { kicker: string; whenDay: string; whenTime: string | null; quiet: string | null } {
+  if (decision === "open") {
+    return {
+      kicker: "The Playground · live now",
+      whenDay: "Right after the reading",
+      whenTime: null,
+      quiet: inCall ? null : tierName ? `You're in: ${tierName}` : "A live video call with Love, for members",
+    };
+  }
+  if (decision === "signin" || decision === "package") {
+    return {
+      kicker: "The Playground · open now",
+      whenDay: "Right after the reading",
+      whenTime: null,
+      quiet: "A live video call with Love, for members",
+    };
+  }
+  return { kicker: "The Playground · Stage 2", whenDay: "Opens right after the next reading", whenTime: closedWhen, quiet: null };
+}
+
+/** The band itself — the page's kicker, h1 and when-lines, rendered by the
+ *  island so they move with the wire (fragment children: the sky band's
+ *  `.kitx-flow>.kicker` rules still reach them). */
+export function PlaygroundBand({ band }: { band: ReturnType<typeof playgroundBand> }) {
+  return (
+    <>
+      <p className="kicker">{band.kicker}</p>
+      <h1 className="kit-h1">The Playground with Love</h1>
+      <div className="kit-when">
+        <p className="kit-when-day">{band.whenDay}</p>
+        {band.whenTime && <p className="kit-when-time">{band.whenTime}</p>}
+        {band.quiet && <p className="kit-text-quiet">{band.quiet}</p>}
+      </div>
+    </>
+  );
 }
 
 /** The wire body `/api/stage2` answers with, as display state (Stage2Door's
@@ -124,13 +180,19 @@ export function PlaygroundIslandBody({
     return (
       <div className="kit-stage">
         <div className="kit-stage-media kit-stage-media--playground">
-          <JitsiRoom
-            domain={jitsiDomain}
-            room={joinedRoom}
-            displayName={nameSnapshot}
-            height="100%"
-            onEnded={onCallEnded}
-          />
+          {/* pickup fix: the media box is a centring grid, so a bare
+              JitsiRoom shrank to its iframe's 300 px default — the
+              existing .kit-stage-viewer (absolute, inset 0) fills the
+              frame, exactly as JitsiViewer does on /reading */}
+          <div className="kit-stage-viewer">
+            <JitsiRoom
+              domain={jitsiDomain}
+              room={joinedRoom}
+              displayName={nameSnapshot}
+              height="100%"
+              onEnded={onCallEnded}
+            />
+          </div>
           <span className="kit-stage-chip">Live · the Playground</span>
         </div>
       </div>
@@ -153,11 +215,19 @@ export function PlaygroundIslandBody({
         {waitingMedia}
         <div className="kit-stage-controls">
           <p className="kit-body">You left the Playground.</p>
-          <div className="kit-btn-row">
-            <button type="button" className="kit-btn kit-btn-main" disabled={joining} onClick={onJoinClick}>
-              {joining ? "Joining…" : "Join Love"}
-            </button>
-          </div>
+          {/* pickup fix: the way back in honours the wire like the open
+              branch does — unreachable reads the honest words, and a
+              failed re-check's note is said, never swallowed */}
+          {wire.reachable ? (
+            <div className="kit-btn-row">
+              <button type="button" className="kit-btn kit-btn-main" disabled={joining} onClick={onJoinClick}>
+                {joining ? "Joining…" : "Join Love"}
+              </button>
+            </div>
+          ) : (
+            <p className="kit-body">Stage 2 isn&apos;t answering right now.</p>
+          )}
+          {note && <p className="kit-text-quiet">{note}</p>}
         </div>
       </div>
     );
@@ -264,8 +334,19 @@ export function PlaygroundIslandBody({
   );
 }
 
-export default function PlaygroundIsland({ jitsiDomain, observerHref, observerName, stage2Rows }: PlaygroundIslandProps) {
+export default function PlaygroundIsland({
+  jitsiDomain,
+  observerHref,
+  observerName,
+  stage2Rows,
+  initialDecision,
+  closedWhen,
+  tierName,
+}: PlaygroundIslandProps) {
   const [wire, setWire] = useState<PolledState>(CLOSED);
+  /* the band follows the server's read until the wire first answers,
+     then the wire alone (the body is fail-closed from the start) */
+  const [answered, setAnswered] = useState(false);
   const [joinedRoom, setJoinedRoom] = useState<string | null>(null);
   const [nameSnapshot, setNameSnapshot] = useState("Guest");
   const [left, setLeft] = useState(false);
@@ -283,7 +364,10 @@ export default function PlaygroundIsland({ jitsiDomain, observerHref, observerNa
       fetch("/api/stage2", { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => {
-          if (alive && d?.ok) setWire(toPolled(d));
+          if (alive && d?.ok) {
+            setWire(toPolled(d));
+            setAnswered(true);
+          }
         })
         .catch(() => {
           /* a missed poll leaves the last-known display state — the
@@ -311,6 +395,7 @@ export default function PlaygroundIsland({ jitsiDomain, observerHref, observerNa
       const fresh = res.ok ? await res.json() : null;
       if (fresh?.ok) {
         setWire(toPolled(fresh));
+        setAnswered(true);
         if (fresh.decision === "open" && fresh.reachable && fresh.room) {
           const session = await readSession();
           setNameSnapshot(readingViewerName(session));
@@ -355,22 +440,27 @@ export default function PlaygroundIsland({ jitsiDomain, observerHref, observerNa
     setLeft(true);
   }, []);
 
+  const band = playgroundBand(answered ? wire.decision : initialDecision, joinedRoom !== null, tierName, closedWhen);
+
   return (
-    <PlaygroundIslandBody
-      wire={wire}
-      joinedRoom={joinedRoom}
-      left={left}
-      nameSnapshot={nameSnapshot}
-      joining={joining}
-      weekBusy={weekBusy}
-      note={note}
-      jitsiDomain={jitsiDomain}
-      observerHref={observerHref}
-      observerName={observerName}
-      stage2Rows={stage2Rows}
-      onJoinClick={() => void join()}
-      onTryWeek={(itemId) => void tryWeek(itemId)}
-      onCallEnded={callEnded}
-    />
+    <>
+      <PlaygroundBand band={band} />
+      <PlaygroundIslandBody
+        wire={wire}
+        joinedRoom={joinedRoom}
+        left={left}
+        nameSnapshot={nameSnapshot}
+        joining={joining}
+        weekBusy={weekBusy}
+        note={note}
+        jitsiDomain={jitsiDomain}
+        observerHref={observerHref}
+        observerName={observerName}
+        stage2Rows={stage2Rows}
+        onJoinClick={() => void join()}
+        onTryWeek={(itemId) => void tryWeek(itemId)}
+        onCallEnded={callEnded}
+      />
+    </>
   );
 }

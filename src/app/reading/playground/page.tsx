@@ -13,7 +13,7 @@ import { tierForSubject } from "@/lib/member-tier";
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { getStage2State } from "@/lib/stage2";
-import { STAGE2_MIN_TIER } from "@/lib/stage2-access";
+import { STAGE2_MIN_TIER, type Stage2Decision } from "@/lib/stage2-access";
 import { TIERS, tierSatisfies, type Tier } from "@/lib/entitlement";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { deriveWeekPass } from "@/lib/week-pass";
@@ -28,13 +28,15 @@ import { deriveWeekPass } from "@/lib/week-pass";
  * else — the server decides, the page never shows a room name or a raw
  * call link to a viewer the rail refuses.
  *
- * The band's words follow the same rail server-side (phase-only display —
- * the island still re-decides everything live): closed reads "The
- * Playground · Stage 2" with the next reading's derived date; open reads
- * "The Playground · open now"; an ENTITLED member (the same
+ * The band's words (pickup fix round, block 968,393) live in the ISLAND
+ * (PlaygroundIsland.playgroundBand) so they move with the wire — a band
+ * read once here contradicted the stage after a publish or unpublish
+ * (K122 item 6a's ruling on /reading). This page hands over only the
+ * ingredients: the server's own first-paint read of the rail
+ * (`initialDecision`), the closed band's derived next-reading line, and
+ * the visitor's package name when their tier clears the door (the same
  * tierForSubject/tierSatisfies composition rooms/[slug]/page.tsx:91
- * already rides, never a re-implementation) reads "The Playground · live
- * now" and "You're in: <their package>". The prices stand under every
+ * already rides, never a re-implementation). The prices stand under every
  * gate state — the Stage2Details rows, server-composed (reading/page.tsx's
  * own idiom) and handed to the island as a node.
  *
@@ -83,9 +85,11 @@ export default async function PlaygroundPage() {
 
   /* the band's per-visitor line — the rail's own helpers, fail-quiet to
      the plainer band on any membership-check blip (the display never
-     500s; the island's door stays the rail's strict reader) */
+     500s; the island's door stays the rail's strict reader). Read even
+     while closed: the island's band may flip to open under a seated
+     visitor without a reload. */
   let visitorTier: Tier | null = null;
-  if (session && published) {
+  if (session) {
     try {
       visitorTier = await tierForSubject(`${session.handle}@${session.space}`);
     } catch {
@@ -101,19 +105,17 @@ export default async function PlaygroundPage() {
   const observerHref = observerPage ? `/packages/${observerPage.slug}` : "/memberships";
   const observerName = TIERS.B.name;
 
-  const kicker = !published ? "The Playground · Stage 2" : entitled ? "The Playground · live now" : "The Playground · open now";
-  const whenDay = published ? "Right after the reading" : "Opens right after the next reading";
+  /* the band's first paint — the server's read of the same rail (words
+     only: the island's body stays fail-closed until the wire answers) */
+  const initialDecision: Stage2Decision = !published ? "hidden" : entitled ? "open" : session ? "package" : "signin";
   /* the closed band names the next reading, DERIVED (never a literal
      weekday or clock time — reading/page.tsx's law); every gap inside
      clock-plus-zone a U+00A0 so the clock never splits */
   const nbsp = (s: string) => s.replace(/\s/g, " ");
-  const whenTime =
-    !published && next ? `${dayLabel(next.startsAtMs, schedule.tz)} · ${nbsp(`${clockAt(next.startsAtMs, schedule.tz)} ${zoneLabel(next.startsAtMs, schedule.tz)}`)}` : null;
-  const quiet = !published
-    ? null
-    : entitled && visitorTier
-      ? `You're in: ${TIERS[visitorTier].name}`
-      : "A live video call with Love, for members";
+  const closedWhen = next
+    ? `${dayLabel(next.startsAtMs, schedule.tz)} · ${nbsp(`${clockAt(next.startsAtMs, schedule.tz)} ${zoneLabel(next.startsAtMs, schedule.tz)}`)}`
+    : null;
+  const tierName = entitled && visitorTier ? TIERS[visitorTier].name : null;
 
   return (
     <>
@@ -126,18 +128,15 @@ export default async function PlaygroundPage() {
         <section className="keep-dark sky-veil sky-stage sky-nebula" id="stage">
           <CosmicSky />
           <div className="wrap kitx-flow">
-            <p className="kicker">{kicker}</p>
-            <h1 className="kit-h1">The Playground with Love</h1>
-            <div className="kit-when">
-              <p className="kit-when-day">{whenDay}</p>
-              {whenTime && <p className="kit-when-time">{whenTime}</p>}
-              {quiet && <p className="kit-text-quiet">{quiet}</p>}
-            </div>
+            {/* the kicker, h1 and when-lines ride inside the island now */}
             <PlaygroundIsland
               jitsiDomain={config.meeting.jitsiDomain}
               observerHref={observerHref}
               observerName={observerName}
               stage2Rows={<Stage2Rows weekPass={weekPass} />}
+              initialDecision={initialDecision}
+              closedWhen={closedWhen}
+              tierName={tierName}
             />
           </div>
         </section>

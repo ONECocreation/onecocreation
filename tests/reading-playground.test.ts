@@ -3,7 +3,12 @@ import { promises as fs } from "fs";
 import path from "path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { PlaygroundIslandBody, type PlaygroundIslandBodyProps } from "@/components/reading/playground/PlaygroundIsland";
+import {
+  PlaygroundIslandBody,
+  PlaygroundBand,
+  playgroundBand,
+  type PlaygroundIslandBodyProps,
+} from "@/components/reading/playground/PlaygroundIsland";
 import Stage2Details from "@/components/reading/Stage2Details";
 import { readingViewerName } from "@/lib/session-read";
 import { TIERS, type Tier } from "@/lib/entitlement";
@@ -106,6 +111,12 @@ describe("the route and its derivations (the page source)", () => {
   it("deriveWeekPass lives in src/lib/week-pass.ts (decision D — one home, never two copies) and /reading imports it", async () => {
     const lib = await read(WEEK_PASS);
     expect(lib).toContain("export async function deriveWeekPass");
+    /* the store-read pins travelled WITH the function (pickup fix — at base
+       reading-look pinned these on the page; the move had dropped them) */
+    expect(lib).toContain('getItem("weekly-one-week")');
+    expect(lib).toContain("item?.sale ?? item?.price");
+    expect(lib).toContain('item?.status !== "live"');
+    expect(lib).toContain("dollars(eff.fiat.amount, eff.fiat.currency)");
     const reading = await read(READING_PAGE);
     expect(reading).toContain('from "@/lib/week-pass"');
     expect(reading).not.toContain("function deriveWeekPass");
@@ -208,6 +219,15 @@ describe("the member-menu line (ruling 5)", () => {
     expect(menuAt).toBeLessThan(mapAt);
     expect(mapAt).toBeLessThan(rowAt);
     expect(rowAt).toBeLessThan(signOutAt);
+  });
+
+  it("the menu line never outlives its truth: a rejected read and a closed menu both clear it (pickup fix)", async () => {
+    const src = await read(DOOR);
+    const at = src.indexOf('fetch("/api/stage2", { cache: "no-store" })');
+    const effect = src.slice(at, src.indexOf("}, [open]);", at));
+    expect(effect).toMatch(/\.catch\(\(\) => \{\s*if \(alive\) setPlaygroundOpen\(false\);\s*\}\)/);
+    const cleanup = effect.slice(effect.indexOf("return () => {"));
+    expect(cleanup).toContain("setPlaygroundOpen(false);");
   });
 
   it("the style hoist: one module-level menuRowStyle shared by the map rows and the Playground row (design-drift numbers never rise)", async () => {
@@ -317,6 +337,13 @@ describe("the five states render the wire (ruling words, rendered)", () => {
       bodyProps({ wire: { decision: "open", reachable: true, pkg: null }, joinedRoom: ROOM, nameSnapshot: "Firefly" }),
     );
     expect(html).toContain("kit-stage-media--playground");
+    /* pickup fix: the call FILLS the frame — JitsiRoom sits inside the
+       existing .kit-stage-viewer (absolute, inset 0), never as a bare
+       child of the centring grid (which shrank it to a 300 px strip) */
+    const media = html.indexOf("kit-stage-media--playground");
+    const viewer = html.indexOf('class="kit-stage-viewer"');
+    expect(viewer).toBeGreaterThan(media);
+    expect(html.indexOf("opening the room")).toBeGreaterThan(viewer);
     expect(html).toContain("opening the room"); // JitsiRoom's own loading line
     expect(html).not.toContain("kit-btn");
     expect(html).not.toContain("Join Love");
@@ -332,6 +359,26 @@ describe("the five states render the wire (ruling words, rendered)", () => {
     expect(html).not.toContain(ROOM);
   });
 
+  it("left + UNREACHABLE reads the honest words — never a Join Love that silently does nothing (pickup fix)", () => {
+    const html = render(bodyProps({ wire: { decision: "open", reachable: false, pkg: null }, left: true }));
+    expect(html).toContain("You left the Playground");
+    expect(html).toContain("isn&#x27;t answering right now");
+    expect(html).not.toContain("Join Love");
+    expect(html).not.toContain("kit-btn-main");
+  });
+
+  it("left + a failed re-check says its note (pickup fix — the left branch swallowed it)", () => {
+    const html = render(
+      bodyProps({
+        wire: { decision: "open", reachable: true, pkg: null },
+        left: true,
+        note: "The Playground couldn't be reached just now — try again.",
+      }),
+    );
+    expect(html).toContain("You left the Playground");
+    expect(html).toContain("couldn&#x27;t be reached just now");
+  });
+
   it("…but left + a poll that says closed reads CLOSED honestly (the left words never outlive the open truth)", () => {
     const html = render(
       bodyProps({ wire: { decision: "hidden", reachable: null, pkg: null }, left: true }),
@@ -343,6 +390,85 @@ describe("the five states render the wire (ruling words, rendered)", () => {
   it("a failed fresh answer's note shows in words (Stage2Door's own shape)", () => {
     const html = render(bodyProps({ wire: { decision: "signin", reachable: null, pkg: null }, note: "could not add — try again" }));
     expect(html).toContain("could not add — try again");
+  });
+});
+
+describe("no room string outside the call — a guard that CAN fail (pickup fix)", () => {
+  it("even a wire that smuggles a room (cast past the type) renders no room in any pre-click state", () => {
+    const states: Array<Partial<PlaygroundIslandBodyProps>> = [
+      { wire: { decision: null, reachable: null, pkg: null } },
+      { wire: { decision: "hidden", reachable: null, pkg: null } },
+      { wire: { decision: "signin", reachable: null, pkg: null } },
+      { wire: { decision: "package", reachable: null, pkg: PKG } },
+      { wire: { decision: "open", reachable: true, pkg: null } },
+      { wire: { decision: "open", reachable: false, pkg: null } },
+      { wire: { decision: "open", reachable: true, pkg: null }, left: true },
+    ];
+    for (const st of states) {
+      const wire = { ...st.wire, room: ROOM } as unknown as PlaygroundIslandBodyProps["wire"];
+      const html = render(bodyProps({ ...st, wire }));
+      expect(html, JSON.stringify(st)).not.toContain(ROOM);
+      expect(html, JSON.stringify(st)).not.toContain(DOMAIN);
+    }
+  });
+});
+
+describe("the band follows the wire (pickup fix — the page read it once per request)", () => {
+  const WHEN = "Saturday, October 3 · 1:11 PM MDT";
+
+  it("closed: the Stage 2 kicker, the next reading's derived line, no quiet line", () => {
+    expect(playgroundBand("hidden", false, null, WHEN)).toEqual({
+      kicker: "The Playground · Stage 2",
+      whenDay: "Opens right after the next reading",
+      whenTime: WHEN,
+      quiet: null,
+    });
+    expect(playgroundBand(null, false, "Fixture Weekly", WHEN).kicker).toBe("The Playground · Stage 2");
+  });
+
+  it("open to a visitor who can't join yet (signin / package): open now, the members line", () => {
+    for (const d of ["signin", "package"] as const) {
+      expect(playgroundBand(d, false, null, WHEN)).toEqual({
+        kicker: "The Playground · open now",
+        whenDay: "Right after the reading",
+        whenTime: null,
+        quiet: "A live video call with Love, for members",
+      });
+    }
+  });
+
+  it("entitled: live now + You're in; in the call the quiet line drops (M19d draws it null)", () => {
+    expect(playgroundBand("open", false, "Fixture Weekly", WHEN)).toEqual({
+      kicker: "The Playground · live now",
+      whenDay: "Right after the reading",
+      whenTime: null,
+      quiet: "You're in: Fixture Weekly",
+    });
+    expect(playgroundBand("open", true, "Fixture Weekly", WHEN).quiet).toBeNull();
+    /* a tier read that blipped server-side falls back to the plain line */
+    expect(playgroundBand("open", false, null, WHEN).quiet).toBe("A live video call with Love, for members");
+  });
+
+  it("the band renders kicker → h1 → when-lines, the sky band's own classes", () => {
+    const html = renderToStaticMarkup(createElement(PlaygroundBand, { band: playgroundBand("hidden", false, null, WHEN) }));
+    expect(html.indexOf('class="kicker"')).toBeLessThan(html.indexOf('class="kit-h1"'));
+    expect(html.indexOf('class="kit-h1"')).toBeLessThan(html.indexOf('class="kit-when"'));
+    expect(html).toContain("The Playground with Love");
+    expect(html).toContain(WHEN);
+  });
+
+  it("the island drives the band off the wire once it answers (the server's read only before), and the page renders none itself", async () => {
+    const island = await read(ISLAND);
+    expect(island).toContain(
+      "playgroundBand(answered ? wire.decision : initialDecision, joinedRoom !== null, tierName, closedWhen)",
+    );
+    expect(island.match(/setAnswered\(true\)/g)?.length).toBe(2); // the poll's answer and the click's fresh answer
+    const page = await read(PAGE);
+    expect(page).not.toContain('className="kicker"');
+    expect(page).not.toContain('className="kit-h1"');
+    expect(page).toContain("initialDecision={initialDecision}");
+    expect(page).toContain("closedWhen={closedWhen}");
+    expect(page).toContain("tierName={tierName}");
   });
 });
 
