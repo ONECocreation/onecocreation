@@ -1,19 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import RoomVideoSlot from "./RoomVideoSlot";
 import RoomPresence, { type RosterResult } from "./RoomPresence";
 import StageChat from "./StageChat";
 import { deriveResources, ResourcesCard } from "./LessonPathView";
 import AfterHoursDoor, { type AfterHoursFeed } from "./AfterHoursDoor";
 import Stage2Door from "./Stage2Door";
+import StoryTimePill from "./StoryTimePill";
 import JitsiRoom from "../booking/JitsiRoom";
+import JitsiViewer from "../reading/JitsiViewer";
+import { stage1WatchTarget } from "../reading/ReadingStage";
 import { READING_ROOM_SLUG } from "@/lib/reading-room";
 import type { MaterialItem } from "@/lib/class-materials";
 import type { RoomPin } from "@/lib/room-pins";
 import type { RoomGate } from "@/lib/room-access";
 import type { StudioSceneId } from "@/lib/studio/scenes";
 import type { Tier } from "@/lib/entitlement";
+
+/**
+ * TASK-450 pickup (Number One's fix round, block 968,393): the stage's ONE
+ * precedence decision, pure — a joined Stage 2 owns the video region, else
+ * a playing story, else the room's own slot; the chat steps aside ONLY
+ * while the story owns the stage (ruling 2), never during Stage 2 even if
+ * a story room lingers for one render. Exported so the static tests can
+ * drive every combination without running effects.
+ */
+export function storyStage(s: { stage2Room: string | null; storyRoom: string | null; chatHidden: boolean }) {
+  const video: "stage2" | "story" | "slot" = s.stage2Room ? "stage2" : s.storyRoom ? "story" : "slot";
+  return { video, chatOff: s.chatHidden || video === "story" };
+}
 
 /**
  * THE STAGE (TASK-184, 0018.06.18 a₿ — the Admiral's three-rooms ruling:
@@ -122,6 +138,24 @@ export default function StageView({
    *  gives its parent no ended/failed callback, confirmed absent this
    *  session — this is the ONLY reset path, not a redundant one). */
   const [stage2Room, setStage2Room] = useState<string | null>(null);
+  /* TASK-450 (block 968,370; K124 §T-450 + the Admiral's ruling 2, block
+   *  968,357 — "the story time pill button added to the heartfield … the
+   *  stage in the heartfield … leave the chat off for now in that stage
+   *  area"): while Stage 1 is published, the free reading room offers the
+   *  reading on its OWN stage — the same one-way JitsiViewer /reading
+   *  uses (Guest by design: the one-way embed has no roster to be named
+   *  on, so no name prop is ever handed over). `storyOpen` is DISPLAY-ONLY
+   *  (the poll below, fail-closed from its closed initial state);
+   *  `storyRoom` + `storyDomain` mount ONLY from the click's own fresh
+   *  re-check — the wire's jitsiDomain rides WITH the room name, the pair
+   *  never splits (api/stage1/route.ts's own comment). `storyNote` is the
+   *  one-line honest word when the picture can't load. */
+  const [storyOpen, setStoryOpen] = useState(false);
+  const [storyRoom, setStoryRoom] = useState<string | null>(null);
+  const [storyDomain, setStoryDomain] = useState<string | null>(null);
+  const [storyNote, setStoryNote] = useState<string | null>(null);
+  /* the joined Stage 2 room as the click handler sees it (pickup fix) */
+  const stage2RoomRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (gated) return; // the gate closed — no fetch, same law as the Lesson Path
@@ -132,6 +166,108 @@ export default function StageView({
       .catch(() => { if (alive) setItems([]); });
     return () => { alive = false; };
   }, [slug, gated]);
+
+  /* TASK-450: ONE new poll, gated to the reading room's slug (the same
+     guard the Stage2Door mount wears below) — ClassroomView.tsx's
+     /api/live idiom verbatim: 20 s, no-store, a missed/failed poll keeps
+     the last-known display state and NEVER mounts anything. The poll's
+     only say is whether the Story time pill renders; the click below is
+     the only mount path (the fail-closed law). */
+  useEffect(() => {
+    if (slug !== READING_ROOM_SLUG) return;
+    let alive = true;
+    function poll() {
+      fetch("/api/stage1", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (!alive || !d?.ok) return;
+          const open = d.phase === "published";
+          setStoryOpen(open);
+          /* pickup fix: the stage closed under a playing story — the
+             viewer leaves on THIS poll (stage1.ts closeStage1: "the
+             viewers' own next poll is what removes them"; ReadingStage's
+             own published→closed branch), and the note retires with it */
+          if (!open) {
+            setStoryRoom(null);
+            setStoryDomain(null);
+            setStoryNote(null);
+          }
+        })
+        .catch(() => {});
+    }
+    poll();
+    const timer = setInterval(poll, 20_000);
+    return () => { alive = false; clearInterval(timer); };
+  }, [slug]);
+
+  /* TASK-450: the pill's CLICK authorizes — a FRESH, uncached re-check at
+     the instant of the click, mounted only through the imported
+     stage1WatchTarget (ReadingStage.tsx's own Watch pattern; the house's
+     one-decision law — imported, never re-implemented here). A null
+     target mounts NOTHING: the stage moved under the click, and the
+     poll's next tick retires the pill if it closed. */
+  async function storyTime() {
+    try {
+      const res = await fetch("/api/stage1", { cache: "no-store" });
+      const body = res.ok ? ((await res.json()) as Parameters<typeof stage1WatchTarget>[0]) : null;
+      const target = stage1WatchTarget(body);
+      /* pickup fix: a Stage 2 join that landed while this fetch was in
+         flight owns the stage — the late answer mounts nothing */
+      if (stage2RoomRef.current) return;
+      if (target && typeof body?.jitsiDomain === "string" && body.jitsiDomain.length > 0) {
+        setStoryRoom(target);
+        setStoryDomain(body.jitsiDomain);
+        setStoryNote(null); // a successful mount retires the honest note
+      }
+    } catch {
+      setStoryNote("The reading's picture couldn't load here — try again.");
+    }
+  }
+
+  /* TASK-450: the hangup (the viewer's own OR the host ending the call)
+     IS the way back — JitsiViewer's own toolbar (fullscreen + hangup) is
+     the whole control surface, no page buttons under the stage (the
+     Admiral's Jitsi-toolbar-only law, block 968,349). */
+  /* pickup fix: STABLE identities — JitsiViewer's boot effect depends on
+     [domain, room, onEnded, onFailed], and ClassroomView's 20 s /api/live
+     tick re-renders this component; plain functions here tore the viewer
+     down and rejoined the room on every tick (ReadingStage's own
+     useCallback idiom, markEnded). Setter-only bodies, so [] is exact. */
+  const storyEnded = useCallback(() => {
+    setStoryRoom(null);
+    setStoryDomain(null);
+  }, []);
+
+  /* TASK-450: the script itself failed to load — the stage clears and
+     the honest one-line note stands where the pill stood until the next
+     successful mount. */
+  const storyFailed = useCallback(() => {
+    setStoryRoom(null);
+    setStoryDomain(null);
+    setStoryNote("The reading's picture couldn't load here — try again.");
+  }, []);
+
+  /* pickup fix: joining Stage 2 hands it the whole stage — the story's
+     room is forgotten, so Leave Stage 2 lands on the room's own slot (and
+     the pill, if the reading is still on) and NEVER remounts a stale
+     Stage 1 room without a fresh click (ReadingStage.joinStage2's
+     setWatching(false)). The ref lets an in-flight storyTime() see it. */
+  const joinStage2 = useCallback((room: string) => {
+    stage2RoomRef.current = room;
+    setStoryRoom(null);
+    setStoryDomain(null);
+    setStage2Room(room);
+  }, []);
+  useEffect(() => {
+    stage2RoomRef.current = stage2Room;
+  }, [stage2Room]);
+
+  /* TASK-450 (ruling 2 — "leave the chat off for now in that stage
+     area"): the chat steps aside ONLY while the reading owns the stage;
+     every other state (nothing playing, Stage 2 joined, the operator's
+     saved switch either way) renders exactly as today. LOCAL to this
+     component — the switch and ClassroomView are untouched. */
+  const { chatOff } = storyStage({ stage2Room, storyRoom, chatHidden: !!chatHidden });
 
   const resources = deriveResources(items ?? []);
 
@@ -145,7 +281,7 @@ export default function StageView({
           <p style={{ margin: "6px 0 0", whiteSpace: "pre-line", color: "var(--ink-body)", fontSize: ".9rem" }}>{pin.text}</p>
         </div>
       )}
-      <div className={`cl-grid-stage${chatHidden ? " cl-grid-stage--no-chat" : ""}`}>
+      <div className={`cl-grid-stage${chatOff ? " cl-grid-stage--no-chat" : ""}`}>
         <div role="region" className="cl-region cl-area-video" data-region="video" aria-label="Video">
           {stage2Room ? (
             <>
@@ -158,6 +294,16 @@ export default function StageView({
               </button>
               <JitsiRoom domain={jitsiDomain ?? ""} room={stage2Room} displayName={undefined} />
             </>
+          ) : storyRoom ? (
+            /* TASK-450: the reading on the room's OWN stage — the same
+               one-way JitsiViewer as /reading (Guest, the T-448 keys,
+               untouched), framed by the reading's own .kit-stage-media
+               (an EXISTING class: the viewer is position:absolute and
+               needs a positioned 16:9 parent; no new CSS, no inline
+               style — the drift ceiling holds). */
+            <div className="kit-stage-media">
+              <JitsiViewer domain={storyDomain ?? ""} room={storyRoom} onEnded={storyEnded} onFailed={storyFailed} />
+            </div>
           ) : (
             <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roomKey={roomKey} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={fullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} />
           )}
@@ -167,8 +313,34 @@ export default function StageView({
             room's own Stage — and since block 968,218 (the Admiral's
             ruling 1) the ROUTE admits tier A and above only; the tier
             check lives in /api/stage2, never in this component. */}
+        {/* pickup fix: ONE wrapper holds the stage2 grid area for the
+            note, the pill and the door — bare grid children auto-placed
+            into whichever row sat empty (below chat when the after-hours
+            door, Stage 2 and resources all showed). Existing classes
+            only: the area's own class + the kit's column flow. The pill
+            leads: the reading comes first and plays in the stage above. */}
         {slug === READING_ROOM_SLUG && (
-          <Stage2Door jitsiDomain={jitsiDomain ?? ""} joined={!!stage2Room} onJoin={setStage2Room} signedIn={signedIn} />
+          <div className="cl-area-stage2 kitx-flow">
+            {/* TASK-450: the Story time pill rides BESIDE the Stage 2 door
+                under the same slug guard (RoomVideoSlot's "● Join Live
+                Session" is the pill idiom — the button itself lives in
+                StoryTimePill.tsx: the operator census ratchets THIS file's
+                buttonFamilies at 1, fewer-never-more). Precedence is honest:
+                the room's OWN live show owns its stage (!live), a joined
+                Stage 2 owns it (!stage2Room), and a playing reading IS the
+                stage (!storyRoom). The honest note stands where the pill
+                stood until the next successful mount. */}
+            {storyNote && !storyRoom && <p className="kit-text-quiet">{storyNote}</p>}
+            {storyOpen && !live && !stage2Room && !storyRoom && (
+              /* the bare div keeps the pill CONTENT-SIZED — a flex child
+                 would stretch full-width, and the room's own pill idiom
+                 (RoomVideoSlot's) is inline */
+              <div>
+                <StoryTimePill onWatch={() => void storyTime()} />
+              </div>
+            )}
+            <Stage2Door jitsiDomain={jitsiDomain ?? ""} joined={!!stage2Room} onJoin={joinStage2} signedIn={signedIn} />
+          </div>
         )}
         {resources.length > 0 && (
           <div role="region" className="cl-region cl-area-resources" aria-label="Resources">
@@ -176,8 +348,10 @@ export default function StageView({
           </div>
         )}
         {/* TASK-387: hidden means NO chat column at all -- not mounting
-            the region, never reaching into StageChat/RoomView. */}
-        {!chatHidden && (
+            the region, never reaching into StageChat/RoomView.
+            TASK-450: the gate consumes the LOCAL chatOff — the chat steps
+            aside while the reading owns the stage, and ONLY then. */}
+        {!chatOff && (
           <div role="region" className="cl-region cl-area-chat" data-region="chat" aria-label="Chat">
             <StageChat slug={slug} alias={alias} title={title} kind={kind} />
           </div>
