@@ -233,6 +233,10 @@
    (the live picture stays 16:9) */
 @media (max-width:640px){.kit-stage-media.kit-stage-waiting{aspect-ratio:1400/1017}
   .kit-stage-waiting>img{-webkit-mask-image:none;mask-image:none}}
+/* TASK-449 decision B (the Admiral rules at pickup; the lean ships): on a
+   phone the Playground's IN-CALL frame stands 3:4 — the mockup's proposal,
+   ONE modifier class, never an inline ratio */
+@media (max-width:640px){.kit-stage-media--playground{aspect-ratio:3/4}}
 .kit-stage-chip{position:absolute;top:14px;left:14px;display:inline-flex;gap:8px;align-items:center;
   padding:6px 12px;border-radius:999px;background:color-mix(in srgb,var(--band-1) 78%,transparent);color:var(--ink-strong);
   font-size:.72rem;font-weight:700;line-height:1;letter-spacing:.18em;text-transform:uppercase}
@@ -261,6 +265,9 @@
 .kit-rows{list-style:none;margin:0;padding:0;text-align:left;border-top:1px solid var(--glass-edge)}
 .kit-rows>li{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--glass-edge)}
 .kit-rows b{display:block;color:var(--ink-strong);font-weight:700}
+/* TASK-449 (block 968,364): the tier names in the rows are package links
+   now — they keep the row's own ink, underlined (compose()'s one rule) */
+.kit-rows b a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 .kit-rows em{display:block;font-style:normal;font-size:.88rem;color:var(--muted);line-height:1.45}
 .kit-rows-end{font-variant-numeric:tabular-nums;color:var(--ink-strong);font-weight:700;white-space:nowrap}
 /* the operator Stage 1 card at narrow widths (K122 item 1): each row

@@ -9,14 +9,12 @@ import PaletteVars from "@/components/PaletteVars";
 import CosmicSky from "@/components/CosmicSky";
 import ReadingHeroCountdown from "@/components/ReadingHeroCountdown";
 import ReadingStage from "@/components/reading/ReadingStage";
-import Stage2Details from "@/components/reading/Stage2Details";
 import ReadingSignUp from "@/components/rooms/ReadingSignUp";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { getStage1State } from "@/lib/stage1";
-import { getItem } from "@/lib/store";
-import { dollars } from "@/lib/money-words";
+import { deriveWeekPass } from "@/lib/week-pass";
 
 /**
  * TASK-391 (block 968,088) + TASK-438 (block 968,222; HOLD LIFTED block
@@ -67,21 +65,6 @@ function deriveReading(
   return { asOfMs, next };
 }
 
-/** The one-week pass, derived-or-dashed from the LIVE store item — its
- *  OWN title and effective fiat price (sale when one rides), never a
- *  page-local number. A shelf read failure dashes the pass (the page
- *  never 500s on a courtesy). */
-async function deriveWeekPass(): Promise<{ name: string; price: string } | null> {
-  try {
-    const item = await getItem("weekly-one-week");
-    const eff = item?.sale ?? item?.price;
-    if (item?.status !== "live" || !eff?.fiat) return null;
-    return { name: item.title, price: dollars(eff.fiat.amount, eff.fiat.currency) };
-  } catch {
-    return null;
-  }
-}
-
 export default async function ReadingPage() {
   /* The same raw-cookie session read every public page with a signed-in
      variant already does (rooms/[slug]/page.tsx:82, home page.tsx:34) —
@@ -119,15 +102,15 @@ export default async function ReadingPage() {
             <p className="kicker">{recurrenceLabel ? `Live every ${recurrenceLabel} · free` : "Readings with Love · free"}</p>
             <h1 className="kit-h1">Read with Love</h1>
             {/* the countdown rides INSIDE the island now (K122 item 6a —
-                the stage2Details idiom): only the island knows the phase,
-                so only it can stop the counting when the stage goes live */}
+                the server-composed-nodes idiom): only the island knows the
+                phase, so only it can stop the counting when the stage
+                goes live */}
             <ReadingStage
               initialPhase={stage1Phase}
               next={next}
               following={following}
               scheduleTz={schedule.tz}
               jitsiDomain={config.meeting.jitsiDomain}
-              stage2Details={<Stage2Details weekPass={weekPass} />}
               countdown={<ReadingHeroCountdown schedule={schedule} next={next} asOfMs={asOfMs} variant="blocks" />}
               countdownWhen={<ReadingHeroCountdown schedule={schedule} next={next} asOfMs={asOfMs} variant="blocks" whenOnly />}
             />

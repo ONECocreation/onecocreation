@@ -2,8 +2,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import JitsiRoom from "@/components/booking/JitsiRoom";
-import Stage2Door from "@/components/rooms/Stage2Door";
+import Link from "next/link";
 import JitsiViewer from "@/components/reading/JitsiViewer";
 
 /**
@@ -25,19 +24,18 @@ import JitsiViewer from "@/components/reading/JitsiViewer";
  * there is no <img> of it while watching (JitsiViewer replaces it in the
  * SAME frame).
  *
- * THE SINGLE-EMBED CONDITIONAL (StageView.tsx:150-163's pattern): joining
- * Stage 2 unmounts the Stage 1 viewer and mounts the UNCHANGED JitsiRoom
- * in its place — one embed on the page at a time; "Leave Stage 2 · back
- * to the reading" is always visible while joined and re-polls at once
- * (never an auto-restart of Stage 1).
+ * THE PLAYGROUND BANNER (TASK-449, block 968,364; AMENDMENT 1 block
+ * 968,366): Stage 2 has its own address now — /reading/playground. The
+ * in-place Stage 2 card and the single-embed branch are REPLACED by this
+ * banner, shown in EVERY phase (watching, ended, closed — K124 §3) while
+ * the island's own 20 s `/api/stage2` poll says Stage 2 is open
+ * (`d?.ok && d.open === true`, the anonymous-safe key), gone the poll
+ * after Love closes. Ruling 1's words, no arrow, no emoji, no idle
+ * motion, no click effect. The banner is display only — the Playground
+ * page's island re-decides everything at its own door.
  *
  * `ReadingStageBody` is the pure presentation (renderToStaticMarkup
  * tests); the default export owns the fetching.
- *
- * The Stage 2 details arrive PRE-RENDERED from the server page
- * (`stage2Details`) — Stage2Details reads the entitlement rail, whose
- * dynamic `redis` import can never enter a client bundle, so this island
- * only decides the card's visibility and never imports it.
  */
 
 export interface ReadingStageProps {
@@ -48,8 +46,6 @@ export interface ReadingStageProps {
   following: { startsAtMs: number; endsAtMs: number } | null;
   scheduleTz: string;
   jitsiDomain: string;
-  /** the server-rendered Stage2Details — visibility is the island's only say */
-  stage2Details: React.ReactNode;
   /** the server-composed blocks countdown — rendered only while CLOSED
    *  (K122 item 6a: the counting stops the moment the phase says otherwise) */
   countdown: React.ReactNode;
@@ -67,20 +63,16 @@ export interface ReadingStageBodyProps {
    *  the reading." + Watch again, never the ended words */
   left: boolean;
   room: string | null;
-  stage2Room: string | null;
   jitsiDomain: string;
   nextWords: string | null;
-  /** the server-rendered Stage2Details (null renders nothing extra) */
-  stage2Details: React.ReactNode;
+  /** the Playground banner's open truth (the island's own /api/stage2
+   *  poll) — the banner shows in every phase while Stage 2 is open */
+  playgroundOpen: boolean;
   /** the server-composed countdown nodes — see ReadingStageProps */
   countdown: React.ReactNode;
   countdownWhen: React.ReactNode;
   onWatch: () => void;
   onTryAgain: () => void;
-  onLeaveStage2: () => void;
-  onJoinStage2: (room: string) => void;
-  /** retained for the unchanged Stage 2 frame binding. */
-  frameRef?: React.RefObject<HTMLDivElement | null>;
   /** JitsiViewer's farewell events (its hangup, or the host ending the
    *  call) — the island re-reads the stage's fresh truth: left-while-
    *  published, or ended (K122 item 8). */
@@ -128,131 +120,108 @@ export function ReadingStageBody({
   ended,
   left,
   room,
-  stage2Room,
   jitsiDomain,
   nextWords,
-  stage2Details,
+  playgroundOpen,
   countdown,
   countdownWhen,
   onWatch,
   onTryAgain,
-  onLeaveStage2,
-  onJoinStage2,
-  frameRef,
   onViewerEnded,
   onViewerFailed,
 }: ReadingStageBodyProps) {
-  /* the Stage 2 card's visibility (K122 item 10 — the approved sheets):
-     once the viewer is WATCHING (the live sheet), once it has ended, and
-     for the whole time Stage 2 itself is joined — the published first
-     paint (the open sheet) has none */
-  const showStage2Card = watching || ended || stage2Room !== null;
   return (
     <>
       {/* the countdown rides the island now (K122 item 6a): the cells only
           while closed, the when-lines until ended, NEITHER in ended */}
       {phase === "closed" && !ended ? countdown : !ended ? countdownWhen : null}
-      {stage2Room ? (
-        /* THE SINGLE-EMBED CONDITIONAL — Stage 2 rides the SAME frame,
-           the Stage 1 viewer is gone */
-        <div className="kit-stage" ref={frameRef}>
+      {phase === "published" && !ended && <p className="kit-body kit-stage-live-line">Love is live now</p>}
+      <div className="kit-stage">
+        {watching && room ? (
           <div className="kit-stage-media">
-            <JitsiRoom domain={jitsiDomain} room={stage2Room} height="100%" />
+            <JitsiViewer
+              domain={jitsiDomain}
+              room={room}
+              onEnded={onViewerEnded}
+              onFailed={onViewerFailed ?? (() => {})}
+            />
+            <span className="kit-stage-chip">Live</span>
           </div>
-          <div className="kit-stage-controls kit-stage-controls-slim">
-            <div className="kit-stage-tools">
-              <button type="button" className="kit-btn kit-btn-quiet" onClick={onLeaveStage2}>
-                Leave Stage 2 · back to the reading
+        ) : (
+          <div className="kit-stage-media kit-stage-waiting">
+            <img src="/images/reading-book.webp" alt={BOOK_ALT} width="1400" height="1017" />
+            {phase === "published" && !ended && !failed && <span className="kit-stage-chip">Live</span>}
+          </div>
+        )}
+        {watching && room ? null : failed ? (
+          <div className="kit-stage-controls">
+            <p className="kit-body">The picture didn&apos;t open just now — the reading itself is fine on our side.</p>
+            <div className="kit-btn-row">
+              <button type="button" className="kit-btn kit-btn-main" onClick={onTryAgain}>
+                Try again
               </button>
             </div>
           </div>
-        </div>
-      ) : (
-        <>
-          {phase === "published" && !ended && <p className="kit-body kit-stage-live-line">Love is live now</p>}
-          <div className="kit-stage" ref={frameRef}>
-            {watching && room ? (
-              <div className="kit-stage-media">
-                <JitsiViewer
-                  domain={jitsiDomain}
-                  room={room}
-                  onEnded={onViewerEnded}
-                  onFailed={onViewerFailed ?? (() => {})}
-                />
-                <span className="kit-stage-chip">Live</span>
-              </div>
-            ) : (
-              <div className="kit-stage-media kit-stage-waiting">
-                <img src="/images/reading-book.webp" alt={BOOK_ALT} width="1400" height="1017" />
-                {phase === "published" && !ended && !failed && <span className="kit-stage-chip">Live</span>}
-              </div>
-            )}
-            {watching && room ? null : failed ? (
-              <div className="kit-stage-controls">
-                <p className="kit-body">The picture didn&apos;t open just now — the reading itself is fine on our side.</p>
-                <div className="kit-btn-row">
-                  <button type="button" className="kit-btn kit-btn-main" onClick={onTryAgain}>
-                    Try again
-                  </button>
-                </div>
-              </div>
-            ) : ended ? (
-              <div className="kit-stage-controls">
-                <p className="kit-body">The reading has ended — thank you for being here.</p>
-                {/* K122 item 13 — with no date (the schedule off) the words
-                    promise one soon instead of naming one */}
-                <p className="kit-text-quiet">
-                  {nextWords ? `The next reading is ${nextWords}.` : "Love will share the next reading date soon."}
-                </p>
-                {phase === "published" && (
-                  <div className="kit-btn-row">
-                    <button type="button" className="kit-btn kit-btn-main" onClick={onWatch}>
-                      Watch again
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : left ? (
-              /* K122 item 8 — the viewer's own hangup on a STILL-PUBLISHED
-                 stage: honest words and the way back in, never the ended words */
-              <div className="kit-stage-controls">
-                <p className="kit-body">You left the reading.</p>
-                <div className="kit-btn-row">
-                  <button type="button" className="kit-btn kit-btn-main" onClick={onWatch}>
-                    Watch again
-                  </button>
-                </div>
-              </div>
-            ) : phase === "published" ? (
-              <div className="kit-stage-controls">
-                <div className="kit-btn-row">
-                  <button type="button" className="kit-btn kit-btn-main" onClick={onWatch}>
-                    Watch Love live
-                  </button>
-                </div>
-                <p className="kit-text-quiet">One tap starts her picture and sound.</p>
-              </div>
-            ) : (
-              <div className="kit-stage-controls">
-                <p className="kit-body">
-                  The reading is live to watch, free. Want to join the discussion? Stay after for a live group video
-                  call with Love.
-                </p>
-                <p className="kit-text-quiet">Your Watch button appears right here when Love goes live.</p>
+        ) : ended ? (
+          <div className="kit-stage-controls">
+            <p className="kit-body">The reading has ended — thank you for being here.</p>
+            {/* K122 item 13 — with no date (the schedule off) the words
+                promise one soon instead of naming one */}
+            <p className="kit-text-quiet">
+              {nextWords ? `The next reading is ${nextWords}.` : "Love will share the next reading date soon."}
+            </p>
+            {phase === "published" && (
+              <div className="kit-btn-row">
+                <button type="button" className="kit-btn kit-btn-main" onClick={onWatch}>
+                  Watch again
+                </button>
               </div>
             )}
           </div>
-        </>
-      )}
-      {showStage2Card && (
+        ) : left ? (
+          /* K122 item 8 — the viewer's own hangup on a STILL-PUBLISHED
+             stage: honest words and the way back in, never the ended words */
+          <div className="kit-stage-controls">
+            <p className="kit-body">You left the reading.</p>
+            <div className="kit-btn-row">
+              <button type="button" className="kit-btn kit-btn-main" onClick={onWatch}>
+                Watch again
+              </button>
+            </div>
+          </div>
+        ) : phase === "published" ? (
+          <div className="kit-stage-controls">
+            <div className="kit-btn-row">
+              <button type="button" className="kit-btn kit-btn-main" onClick={onWatch}>
+                Watch Love live
+              </button>
+            </div>
+            <p className="kit-text-quiet">One tap starts her picture and sound.</p>
+          </div>
+        ) : (
+          <div className="kit-stage-controls">
+            <p className="kit-body">
+              The reading is live to watch, free. Want to join the discussion? Stay after for a live group video
+              call with Love.
+            </p>
+            <p className="kit-text-quiet">Your Watch button appears right here when Love goes live.</p>
+          </div>
+        )}
+      </div>
+      {/* THE PLAYGROUND BANNER (TASK-449 — ruling 1's words, no arrow):
+          after the stage, in every phase, only while Stage 2 is open */}
+      {playgroundOpen && (
         <div className="kit-card kit-card-body kitx-flow kit-stage2-card">
-          {stage2Details}
-          <Stage2Door
-            jitsiDomain={jitsiDomain}
-            joined={stage2Room !== null}
-            onJoin={onJoinStage2}
-            signInHref="/login?next=%2Freading"
-          />
+          <p className="kicker">Stage 2 · the Playground</p>
+          <h2 className="kit-h2">Want an encore?</h2>
+          <p className="kit-body">
+            Love is opening the Playground now: a live video call right after the reading. Come up and talk with her.
+          </p>
+          <div className="kit-btn-row kitx-actions">
+            <Link href="/reading/playground" className="kit-btn kit-btn-main kit-btn-sm">
+              Go to the Playground
+            </Link>
+          </div>
         </div>
       )}
     </>
@@ -267,7 +236,6 @@ export default function ReadingStage({
   following,
   scheduleTz,
   jitsiDomain,
-  stage2Details,
   countdown,
   countdownWhen,
 }: ReadingStageProps) {
@@ -282,10 +250,10 @@ export default function ReadingStage({
      never meets Date.now() in render), and only ever rendered in the
      ended branch, so SSR and the first client paint agree */
   const [nextWords, setNextWords] = useState<string | null>(null);
-  const [stage2Room, setStage2Room] = useState<string | null>(null);
+  /* TASK-449 — the banner's own open truth (display only; the Playground
+     page's island re-decides at its own door) */
+  const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const phaseRef = useRef(phase);
-  const frameRef = useRef<HTMLDivElement | null>(null);
-  const pollNow = useRef<() => void>(() => {});
 
   /* K122 item 7 + the purity law — the ended words name the NEXT reading
      (the FOLLOWING occurrence once the clock is at or past next's start),
@@ -325,7 +293,6 @@ export default function ReadingStage({
              click's own fresh fetch is what actually mounts a room */
         });
     }
-    pollNow.current = poll;
     poll();
     const id = setInterval(poll, POLL_MS);
     return () => {
@@ -333,6 +300,31 @@ export default function ReadingStage({
       clearInterval(id);
     };
   }, [markEnded]);
+
+  /* TASK-449 — the Playground banner's own poll (the same 20 s cadence
+     the Stage 2 door uses; a sibling poll, not a shared one): the banner
+     shows in EVERY phase while Stage 2 is open and goes the poll after
+     Love closes. The anonymous-safe key is `d.open` — an anonymous
+     visitor learns only whether the door is open, never a room. */
+  useEffect(() => {
+    let alive = true;
+    function poll() {
+      fetch("/api/stage2", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (alive) setPlaygroundOpen(d?.ok && d.open === true);
+        })
+        .catch(() => {
+          /* a missed poll leaves the last-known display state */
+        });
+    }
+    poll();
+    const id = setInterval(poll, POLL_MS);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, []);
 
   /* the Watch click's OWN fresh, uncached re-check at the instant of the
      click — the poll above is display only, never the authorization */
@@ -392,17 +384,6 @@ export default function ReadingStage({
     void watch();
   }
 
-  function joinStage2(roomName: string) {
-    /* the single-embed conditional — the Stage 1 viewer unmounts HERE */
-    setWatching(false);
-    setStage2Room(roomName);
-  }
-
-  function leaveStage2() {
-    setStage2Room(null);
-    pollNow.current(); // the reading's own fresh truth at once — never an auto-restart
-  }
-
   return (
     <ReadingStageBody
       phase={phase}
@@ -411,17 +392,13 @@ export default function ReadingStage({
       ended={ended}
       left={left}
       room={room}
-      stage2Room={stage2Room}
       jitsiDomain={jitsiDomain}
       nextWords={nextWords}
-      stage2Details={stage2Details}
+      playgroundOpen={playgroundOpen}
       countdown={countdown}
       countdownWhen={countdownWhen}
       onWatch={() => void watch()}
       onTryAgain={tryAgain}
-      onLeaveStage2={leaveStage2}
-      onJoinStage2={joinStage2}
-      frameRef={frameRef}
       onViewerEnded={viewerEnded}
       onViewerFailed={() => {
         setWatching(false);

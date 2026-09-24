@@ -35,11 +35,17 @@ export default function JitsiRoom({
   domain,
   room,
   displayName,
+  onEnded,
   height = "72vh",
 }: {
   domain: string;
   room: string;
   displayName?: string;
+  /** TASK-449 (block 968,364): optional end signal — the Playground
+   *  island's left-while-open state needs to know the call ended (the
+   *  same two farewell events JitsiViewer reports). Existing consumers
+   *  pass nothing and render byte-identical. */
+  onEnded?: () => void;
   /** TASK-146: optional, defaults to /meet's original literal so /meet
    *  renders byte-identical without passing it — the classroom slot and
    *  /live pass their own to fit a smaller embed frame. */
@@ -86,8 +92,8 @@ export default function JitsiRoom({
       api = a;
       setState("live");
       // both farewell paths land HERE, not on jit.si
-      a.addListener("readyToClose", () => { if (live) setState("ended"); });
-      a.addListener("videoConferenceLeft", () => { if (live) setState("ended"); });
+      a.addListener("readyToClose", () => { if (live) { setState("ended"); onEnded?.(); } });
+      a.addListener("videoConferenceLeft", () => { if (live) { setState("ended"); onEnded?.(); } });
     };
 
     if (window.JitsiMeetExternalAPI) boot();
@@ -100,7 +106,7 @@ export default function JitsiRoom({
       document.body.appendChild(s);
     }
     return () => { live = false; api?.dispose(); };
-  }, [domain, room, displayName]);
+  }, [domain, room, displayName, onEnded]);
 
   if (state === "ended") {
     return (
