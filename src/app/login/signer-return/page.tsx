@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { nip19 } from "nostr-tools";
 import { applyMemberSession } from "@/hooks/useMemberSession";
 import { CHALLENGE_ENDPOINT } from "@/lib/signer-doors";
+import { safeNextPath } from "@/lib/next-path";
 import DoorSheet from "@/components/door/DoorSheet";
 import { isUnnamedKeyReason } from "@/components/door/door-machine";
 
@@ -36,7 +37,7 @@ function SignerReturn() {
   const rawEvent = params.get("event");
   const rawNext = params.get("next");
   /* same-origin paths only — a callback param is not a teleporter */
-  const next = rawNext && /^\/(?!\/)/.test(rawNext) ? rawNext : null;
+  const next = safeNextPath(rawNext);
 
   useEffect(() => {
     if (ran.current) return; // one submission per landing, StrictMode included
