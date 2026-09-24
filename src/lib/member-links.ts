@@ -28,15 +28,27 @@ async function kv(cmd: unknown[]): Promise<unknown> {
 
 async function readPairs(): Promise<[string, string][]> {
   try {
-    const raw = (await kv(["GET", KEY])) as string | null;
-    return raw ? (JSON.parse(raw) as [string, string][]) : [];
+    return await readPairsStrict();
   } catch {
     return [];
   }
 }
 
+/** T-452: the WRITERS read strictly — a failed read must never become an
+ *  empty list that the write then saves over every stored link (every
+ *  linked paid member would read as unpaid: the "refused at the door"
+ *  symptom). The reader (memberGroup) stays lenient: a blip narrows one
+ *  answer to the door itself, it never erases anything. */
+async function readPairsStrict(): Promise<[string, string][]> {
+  const raw = (await kv(["GET", KEY])) as string | null;
+  if (!raw) return [];
+  const parsed = JSON.parse(raw) as unknown;
+  if (!Array.isArray(parsed)) throw new Error("member links: stored value is not a list");
+  return parsed as [string, string][];
+}
+
 export async function linkMembers(a: string, b: string): Promise<void> {
-  const pairs = await readPairs();
+  const pairs = await readPairsStrict();
   if (!pairs.some(([x, y]) => (x === a && y === b) || (x === b && y === a))) {
     pairs.push([a, b]);
     await kv(["SET", KEY, JSON.stringify(pairs)]);
@@ -44,7 +56,7 @@ export async function linkMembers(a: string, b: string): Promise<void> {
 }
 
 export async function unlinkMember(subject: string): Promise<void> {
-  const pairs = (await readPairs()).filter(([x, y]) => x !== subject && y !== subject);
+  const pairs = (await readPairsStrict()).filter(([x, y]) => x !== subject && y !== subject);
   await kv(["SET", KEY, JSON.stringify(pairs)]);
 }
 

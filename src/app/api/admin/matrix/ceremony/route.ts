@@ -51,8 +51,9 @@ export async function GET(request: Request) {
     }
   }
 
-  // ?subject=… — trace one member: their tier as the login rail sees it,
-  // their derived mxid, and their membership in each room
+  // ?subject=… — trace one member: THIS door's own grant (tierFor — the
+  // login rail itself reads tierForSubject, the highest across linked
+  // doors, T-452), their derived mxid, and their membership in each room
   const subject = new URL(request.url).searchParams.get("subject");
   let trace: unknown = null;
   if (subject && c) {
@@ -113,16 +114,38 @@ export async function POST(request: Request) {
   // to the mail rail (logged in the run book), so the caller is told.
   if (body.action === "revoke" && body.subject) {
     const { tierForSubject } = await import("@/lib/member-tier");
-    const { revokeTier, normalizeNpub } = await import("@/lib/entitlement");
+    const { revokeTier, normalizeNpub, tierFor } = await import("@/lib/entitlement");
     const { removeFromTierRooms, mxidForSubject } = await import("@/lib/matrix");
     const { getEntry } = await import("@/lib/registry");
-    const held = await tierForSubject(body.subject);
-    if (!held) return NextResponse.json({ ok: false, reason: "that soul holds no tier" }, { status: 404 });
+    /* T-452: revoke reads THIS door's OWN grant — the same key it revokes —
+       never tierForSubject (the highest across linked doors), or it would
+       report "revoked C" and send an Evening Star closing letter while the
+       C grant stays live on a linked door. Same key order as tierForSubject:
+       the registry npub's grant, else the subject string's. */
     const at = body.subject.lastIndexOf("@");
     const [h, sp] = [body.subject.slice(0, at), body.subject.slice(at + 1)];
-    const grantKey = sp === "email" ? body.subject : normalizeNpub((await getEntry(h, sp))?.npub);
+    const hex = sp === "email" ? null : normalizeNpub((await getEntry(h, sp))?.npub);
+    const hexTier = hex ? await tierFor(hex) : null;
+    const ownKey = hexTier ? hex : body.subject;
+    const held = hexTier ?? (await tierFor(body.subject));
+    if (!ownKey || !held) {
+      return NextResponse.json({ ok: false, reason: "that door holds no tier of its own" }, { status: 404 });
+    }
+    await revokeTier(ownKey);
+    /* still a member through a linked door? Then the gated rooms stay
+       theirs and no "membership closed" letter goes out — the answer says
+       so, and closing the other door is a second, deliberate revoke. */
+    const stillHolds = await tierForSubject(body.subject);
+    if (stillHolds) {
+      return NextResponse.json({
+        ok: true,
+        revoked: held,
+        stillHolds,
+        rooms: [],
+        letter: `no letter — they still hold ${stillHolds} through a linked sign-in`,
+      });
+    }
     const rooms = await removeFromTierRooms(mxidForSubject(body.subject), { reason: "membership ended" });
-    if (grantKey) await revokeTier(grantKey);
     let letter = "no email door — tell them yourself";
     try {
       const { emailForSubject } = await import("@/lib/member-tier");
@@ -130,7 +153,7 @@ export async function POST(request: Request) {
       const to = await emailForSubject(body.subject);
       if (to) { await sendRevokeLetter(to, held, false); letter = `kind letter queued to ${to}`; }
     } catch { letter = "letter failed to queue — resend by hand"; }
-    return NextResponse.json({ ok: true, revoked: held, rooms, letter });
+    return NextResponse.json({ ok: true, revoked: held, stillHolds: null, rooms, letter });
   }
 
   const headers = { Authorization: `Bearer ${c.token}`, "Content-Type": "application/json" };

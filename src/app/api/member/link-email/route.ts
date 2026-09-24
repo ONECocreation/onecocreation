@@ -26,7 +26,13 @@ export async function POST(request: Request) {
   if (!(await verifyCode(email, code))) {
     return NextResponse.json({ ok: false, reason: "that code didn't match — try again" }, { status: 401 });
   }
-  await linkMembers(`${fren.handle}@${fren.space}`, `${email}@email`);
+  try {
+    await linkMembers(`${fren.handle}@${fren.space}`, `${email}@email`);
+  } catch {
+    /* T-452: the link store couldn't be read — nothing was written (a
+       failed read never becomes an empty list saved over every link) */
+    return NextResponse.json({ ok: false, reason: "couldn't save the link just now — try again" }, { status: 503 });
+  }
   try {
     await addSubscriber(email, "welcome-link");
   } catch {
