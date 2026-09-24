@@ -28,12 +28,12 @@ const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8")
 describe("19 · the reading gets its own door under Community", () => {
   it("the door reuses reading-room.ts's ONE string source — never a second spelling", async () => {
     const src = await read("src/components/NavMenu.tsx");
-    expect(src).toContain('import { READING_ROOM_PATH } from "@/lib/reading-room"');
+    expect(src).toContain('import { READING_PAGE_PATH, READING_ROOM_PATH } from "@/lib/reading-room"');
     // both PAGE_CATALOG and buildDefaultMenu's Community subs read the SAME constant
     const catalogIdx = src.indexOf("export const PAGE_CATALOG");
     const menuIdx = src.indexOf("export function buildDefaultMenu");
     expect(src.slice(catalogIdx, menuIdx)).toContain("READING_ROOM_PATH");
-    expect(src.slice(menuIdx)).toContain('label: "The reading room", href: READING_ROOM_PATH');
+    expect(src.slice(menuIdx)).toContain('label: "Read with Love", href: READING_PAGE_PATH');
   });
 
   it("buildDefaultMenu: Community carries Classes AND The reading room as two separate doors", async () => {
@@ -43,14 +43,14 @@ describe("19 · the reading gets its own door under Community", () => {
     c.features.classes = true;
     const community = buildDefaultMenu(c).find((m) => m.label === "Community");
     expect(community?.subs?.map((s) => s.label)).toContain("Classes");
-    expect(community?.subs?.map((s) => s.label)).toContain("The reading room");
+    expect(community?.subs?.map((s) => s.label)).toContain("Read with Love");
     expect(community?.subs?.find((s) => s.label === "Classes")?.href).toBe("/classes");
-    expect(community?.subs?.find((s) => s.label === "The reading room")?.href).toBe("/rooms/heart-field");
+    expect(community?.subs?.find((s) => s.label === "Read with Love")?.href).toBe("/reading");
     // classes OFF: Classes drops, the reading room stays — its own, independent door
     c.features.classes = false;
     const community2 = buildMenu(c).find((m) => m.label === "Community");
     expect(community2?.subs?.map((s) => s.label)).not.toContain("Classes");
-    expect(community2?.subs?.map((s) => s.label)).toContain("The reading room");
+    expect(community2?.subs?.map((s) => s.label)).toContain("Read with Love");
   });
 
   it("the reading room is editable in the menu editor — PAGE_CATALOG carries it with no feature gate", async () => {
@@ -58,7 +58,7 @@ describe("19 · the reading gets its own door under Community", () => {
     const { READING_ROOM_PATH } = await import("@/lib/reading-room");
     const entry = PAGE_CATALOG.find((p) => p.href === READING_ROOM_PATH);
     expect(entry).toBeTruthy();
-    expect(entry?.label).toBe("The reading room");
+    expect(entry?.label).toBe("Heart Field");
     expect(entry?.feature).toBeUndefined(); // gated only by the room's own presence, not a switch
   });
 
