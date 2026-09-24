@@ -176,6 +176,8 @@ describe("the pill — the room's own btn btn-gold idiom, honest precedence", ()
       expect(at, piece).toBeGreaterThan(open);
       expect(at, piece).toBeLessThan(resources);
     }
+    /* the pill leads: the reading comes first and plays in the stage above */
+    expect(src.indexOf("<StoryTimePill")).toBeLessThan(src.indexOf("<Stage2Door"));
     const StageView = (await import("@/components/rooms/StageView")).default;
     expect(renderToStaticMarkup(createElement(StageView, PROPS))).toContain('class="cl-area-stage2 kitx-flow"');
     /* any other room: no wrapper, no Stage 2 door, no pill — byte-for-byte today */

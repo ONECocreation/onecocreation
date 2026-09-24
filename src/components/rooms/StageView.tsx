@@ -314,22 +314,22 @@ export default function StageView({
             ruling 1) the ROUTE admits tier A and above only; the tier
             check lives in /api/stage2, never in this component. */}
         {/* pickup fix: ONE wrapper holds the stage2 grid area for the
-            door, the note and the pill — bare grid children auto-placed
+            note, the pill and the door — bare grid children auto-placed
             into whichever row sat empty (below chat when the after-hours
             door, Stage 2 and resources all showed). Existing classes
-            only: the area's own class + the kit's column flow. */}
+            only: the area's own class + the kit's column flow. The pill
+            leads: the reading comes first and plays in the stage above. */}
         {slug === READING_ROOM_SLUG && (
           <div className="cl-area-stage2 kitx-flow">
-            <Stage2Door jitsiDomain={jitsiDomain ?? ""} joined={!!stage2Room} onJoin={joinStage2} signedIn={signedIn} />
-        {/* TASK-450: the Story time pill rides BESIDE the Stage 2 door
-            under the same slug guard (RoomVideoSlot's "● Join Live
-            Session" is the pill idiom — the button itself lives in
-            StoryTimePill.tsx: the operator census ratchets THIS file's
-            buttonFamilies at 1, fewer-never-more). Precedence is honest:
-            the room's OWN live show owns its stage (!live), a joined
-            Stage 2 owns it (!stage2Room), and a playing reading IS the
-            stage (!storyRoom). The honest note stands where the pill
-            stood until the next successful mount. */}
+            {/* TASK-450: the Story time pill rides BESIDE the Stage 2 door
+                under the same slug guard (RoomVideoSlot's "● Join Live
+                Session" is the pill idiom — the button itself lives in
+                StoryTimePill.tsx: the operator census ratchets THIS file's
+                buttonFamilies at 1, fewer-never-more). Precedence is honest:
+                the room's OWN live show owns its stage (!live), a joined
+                Stage 2 owns it (!stage2Room), and a playing reading IS the
+                stage (!storyRoom). The honest note stands where the pill
+                stood until the next successful mount. */}
             {storyNote && !storyRoom && <p className="kit-text-quiet">{storyNote}</p>}
             {storyOpen && !live && !stage2Room && !storyRoom && (
               /* the bare div keeps the pill CONTENT-SIZED — a flex child
@@ -339,6 +339,7 @@ export default function StageView({
                 <StoryTimePill onWatch={() => void storyTime()} />
               </div>
             )}
+            <Stage2Door jitsiDomain={jitsiDomain ?? ""} joined={!!stage2Room} onJoin={joinStage2} signedIn={signedIn} />
           </div>
         )}
         {resources.length > 0 && (
