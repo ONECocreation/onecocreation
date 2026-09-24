@@ -5,7 +5,7 @@ import {
   joinSessionTokens,
   MEMBER_COOKIE,
 } from "@/lib/member-auth";
-import { getEntry } from "@/lib/registry";
+import { getEntry, normalizeSpace } from "@/lib/registry";
 import { OPERATOR_COOKIE } from "@/lib/operator-auth";
 import { spaceForHost } from "@/lib/identity-config";
 
@@ -78,7 +78,10 @@ export async function PUT(request: Request) {
     return Response.json({ ok: false, reason: "invalid request" }, { status: 400 });
   }
   const handle = (body.handle ?? "").trim().toLowerCase();
-  const space = (body.space ?? "").trim().toLowerCase();
+  const rawSpace = (body.space ?? "").trim().toLowerCase();
+  /* T-455 (SECURITY): mint with the KNOWN space the lookup below resolves
+     to — the raw request space used to be signed into the new session */
+  const space = rawSpace ? normalizeSpace(rawSpace) : "";
   if (!handle || !space) {
     return Response.json({ ok: false, reason: "handle and space required" }, { status: 400 });
   }

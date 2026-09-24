@@ -61,10 +61,19 @@ function hmac(payload: string): string {
 /** Mint the invite for ONE room — `<exp>.<hex sig>`, exp inside the MAC.
  *  Null when the house secret is dark (the door fails closed, never
  *  lies). `nowMs` rides the mint only — verify takes no clock. */
+/** T-455 (SECURITY): the MAC label. A member session signs
+ *  `<handle>|<space>|<exp>` with the same house secret, and the old label
+ *  `studio-invite|<room>|<exp>` was exactly that shape — a tag named
+ *  "studio-invite" had the site sign a valid invite into any room. A member
+ *  handle can never contain ":" (the registry's handle rule), so this label
+ *  can never be a member payload. Invites minted before T-455 stop opening;
+ *  Love sends fresh ones (they last seven days anyway). */
+const INVITE_LABEL = "studio-invite:v2";
+
 export function mintStudioInvite(room: string, nowMs = Date.now()): string | null {
   if (!secret()) return null;
   const exp = nowMs + STUDIO_INVITE_TTL_MS;
-  return `${exp}.${hmac(`studio-invite|${room}|${exp}`)}`;
+  return `${exp}.${hmac(`${INVITE_LABEL}|${room}|${exp}`)}`;
 }
 
 /** Verify a presented invite against THIS room: shape, expiry from the
@@ -76,7 +85,7 @@ export function verifyStudioInvite(room: string, token: string | null | undefine
   if (!m) return false;
   const exp = Number(m[1]);
   if (!Number.isFinite(exp) || Date.now() > exp) return false;
-  const expected = hmac(`studio-invite|${room}|${exp}`);
+  const expected = hmac(`${INVITE_LABEL}|${room}|${exp}`);
   try {
     return crypto.timingSafeEqual(Buffer.from(m[2]), Buffer.from(expected));
   } catch {

@@ -1,6 +1,6 @@
 import { verifyEvent } from "nostr-tools";
 import { nip19 } from "nostr-tools";
-import { claimHandle } from "@/lib/registry";
+import { claimHandle, normalizeSpace } from "@/lib/registry";
 import { spaceForHost } from "@/lib/identity-config";
 import { effectiveMempoolNode, MEMPOOL_URL_DEFAULT } from "@/lib/nodeconfig";
 import { makeMemberToken, MEMBER_COOKIE } from "@/lib/member-auth";
@@ -54,8 +54,14 @@ export async function POST(request: Request) {
   }
 
   // The registration page says which space it issues from; host is the fallback
-  const space =
-    typeof body.space === "string" ? body.space : spaceForHost(request.headers.get("host")).space;
+  /* T-455 (SECURITY): the session is signed with a KNOWN space only — the
+     raw request string used to ride into makeMemberToken, so a caller could
+     have the site sign `<handle>|<anything>|<exp>` (a studio invite for any
+     room, with the tag "studio-invite"). The registry already stored the
+     normalized space; now the session says the same. */
+  const space = normalizeSpace(
+    typeof body.space === "string" ? body.space : spaceForHost(request.headers.get("host")).space,
+  );
   const result = await claimHandle(body.handle, body.npub, space, await currentTipHeight());
   if (!result.ok) {
     return Response.json(result, { status: 409 });
