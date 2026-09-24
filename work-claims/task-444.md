@@ -22,7 +22,8 @@ Owned implementation
 - tests/reading-doors.test.ts: new red-first contract tests.
 - Brief-named existing tests: changed door assertions only when broken.
 - work-claims/task-444.md and work-claims/task-444-register.md.
-- WORK-CLAIM.md: explicit user requirement for the root claim.
+- tests/site-config.test.ts: the two default-Community label pins (:155, :170) only — added by Number One at the gate (the builder flagged it out of scope, correctly).
+- NOT WORK-CLAIM.md: the root file is T-165's legacy claim; Number One restored it byte-identical to main at the gate.
 
 Sequence: claim commit → red test commit → build commit → pins commit → gates → register commit.
 
