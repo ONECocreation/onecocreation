@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { insertAtCaret, insertHeroLine, insertLink, insertReadingRoomLink, toggleMark } from "@/lib/letter-marks";
-import { READING_ROOM_PATH } from "@/lib/reading-room";
+import { READING_PAGE_PATH } from "@/lib/reading-room";
 import { cartridge } from "@/brand/cartridge";
 import { glassCard, field } from "@/components/console/glass";
 
@@ -182,7 +182,7 @@ export default function LettersRoom() {
    * READING_ROOM_PATH (reading-room.ts's own derivation, the Commons Stage
    * `/rooms/heart-field`) rides straight in, never typed by hand. */
   function insertReadingRoom() {
-    applyMark(insertReadingRoomLink(currentSelection(), READING_ROOM_PATH));
+    applyMark(insertReadingRoomLink(currentSelection(), READING_PAGE_PATH));
   }
   /* TASK-227: the hero banner directive — cartridge.hero.heavenEarth, the
    * curvy purple-and-black "Where Heaven and Earth Meet" script (confirmed

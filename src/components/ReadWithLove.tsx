@@ -1,7 +1,6 @@
 "use client";
 
-import useMemberSession from "@/hooks/useMemberSession";
-import { readingDoorHref } from "@/lib/reading-room";
+import { READING_PAGE_PATH } from "@/lib/reading-room";
 
 /* eslint-disable @next/next/no-img-element -- the habitat's own art, not an
    optimizer candidate (same idiom as sections.tsx's portrait) */
@@ -23,8 +22,7 @@ import { readingDoorHref } from "@/lib/reading-room";
 export { READING_ROOM_SLUG, READING_ROOM_PATH, readingDoorHref } from "@/lib/reading-room";
 
 export default function ReadWithLove() {
-  const { member } = useMemberSession();
-  const href = readingDoorHref(!!member);
+  const href = READING_PAGE_PATH;
   const body = (
     <>
       <div className="habitat">
@@ -49,7 +47,7 @@ export default function ReadWithLove() {
         <p>Join me weekly for a live book reading in my own room.</p>
         {href && (
           <span className="wild-cta">
-            {member ? "Enter the reading room" : "Sign in — the reading is free"}
+            Go to the reading
           </span>
         )}
       </div>
