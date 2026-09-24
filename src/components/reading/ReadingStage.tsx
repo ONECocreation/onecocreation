@@ -111,7 +111,11 @@ export function readingShownNext(
   return next;
 }
 
-const BOOK_ALT = "Love's book, its pages curling into a heart, a fairy and a dragon drawn in gold";
+/* T-456 (block 968,445, the Admiral): until Love goes live, /reading waits
+   on the cover of the book she is reading ("Love BOOK.jpeg"). The
+   Playground, the home page and the Heart Field keep the heart-book art. */
+const COVER_SRC = "/images/reading-love-cover.jpg";
+const COVER_ALT = "Love, by Leo Buscaglia: the word LOVE in white over a swirling violet and rose nebula";
 
 export function ReadingStageBody({
   phase,
@@ -148,8 +152,8 @@ export function ReadingStageBody({
             <span className="kit-stage-chip">Live</span>
           </div>
         ) : (
-          <div className="kit-stage-media kit-stage-waiting">
-            <img src="/images/reading-book.webp" alt={BOOK_ALT} width="1400" height="1017" />
+          <div className="kit-stage-media kit-stage-waiting kit-stage-waiting--cover">
+            <img src={COVER_SRC} alt={COVER_ALT} width="600" height="358" />
             {phase === "published" && !ended && !failed && <span className="kit-stage-chip">Live</span>}
           </div>
         )}

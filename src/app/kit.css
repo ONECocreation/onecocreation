@@ -233,6 +233,11 @@
    (the live picture stays 16:9) */
 @media (max-width:640px){.kit-stage-media.kit-stage-waiting{aspect-ratio:1400/1017}
   .kit-stage-waiting>img{-webkit-mask-image:none;mask-image:none}}
+/* T-456 — a full-bleed book cover waits instead (/reading): it fills the
+   frame edge to edge with no melt (its title reaches the sides the mask
+   fades), and on a phone the frame takes the cover's own shape */
+.kit-stage-waiting--cover>img{object-fit:cover;-webkit-mask-image:none;mask-image:none}
+@media (max-width:640px){.kit-stage-media.kit-stage-waiting--cover{aspect-ratio:600/358}}
 /* TASK-449 decision B (the Admiral rules at pickup; the lean ships): on a
    phone the Playground's IN-CALL frame stands 3:4 — the mockup's proposal,
    ONE modifier class, never an inline ratio */
