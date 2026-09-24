@@ -59,6 +59,13 @@ export default function JitsiViewer({
         height: "100%",
         userInfo: { displayName: "Guest" },
         configOverwrite: {
+          /* block 968,345: Chrome's same-site frames share storage; a host
+             login remembered on meet.onecocreation.com made a viewer a
+             moderator. Use the host PAGE's storage, not the meet site's. */
+          useHostPageLocalStorage: true,
+          /* Ships ONLY together with useHostPageLocalStorage above; this
+             viewer-only suppression must never hide Love's login signal. */
+          disabledNotifications: ["notify.moderator"],
           /* the viewer's own media is never requested */
           disableInitialGUM: true,
           startWithAudioMuted: true,
