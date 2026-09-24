@@ -141,3 +141,36 @@ Playground island. G: the banner has no idle motion and no click effect.
 - Red confirmed before the build (the two lane files failing).
 - Final: oc-gate.sh — vitest 223 files / 2801 tests passed; scripts 5/5
   zero failed; eslint 0; tsc 0; next build ok; GATES GREEN.
+
+## Shots (hand-back)
+
+All at 1440 + 390, dark + dawn, on the lane's ports 4850-4853, under
+/home/pac/dev/kimi/outbox/task-449/shots/:
+
+- closed/ — harness, no seeds: /reading closed phase with NO banner;
+  /reading/playground's closed card (M19e).
+- banner-signin/ — harness, stage2 published: /reading closed phase WITH
+  the banner; /reading/playground's signed-out state (M19a).
+- banner-full/ — harness, stage2 published, --full-page: the whole banner
+  card in frame ("Want an encore?" kept per AMENDMENT 1).
+- package/ — harness, the real fixture member cookie (free): M19b with
+  the derived Observer main button. The quiet "Try one week" button is
+  honestly ABSENT here: the fixture store:catalog is empty, so
+  stage2PackageDoor()'s week is null and the button correctly hides.
+- stubbed/ — the two states the ONE harness cannot produce without a real
+  connection to the meet host (watching-phase banner; in-call), shot by
+  outbox/task-449/shots-stubbed.sh + shots-stubbed.cjs (outbox-only, never
+  the repo): every meet-host request is intercepted and answered with a
+  stub window.JitsiMeetExternalAPI that renders a placeholder and never
+  opens a socket; __jitsiStub.fire("videoConferenceLeft") drives the
+  left-while-open state. The fixture member is made paid by two
+  fixture-only artifacts that die with the run: a temp
+  data/onecocreation-registry.json entry (registry's file driver) and a
+  KV tier-A grant — both removed by the trap; the worktree is clean after.
+  The /api/stage2 route's own reachability probe did HEAD the real
+  meet.onecocreation.com once per entitled poll — that is the route's
+  production behaviour, not the browser's, and no Jitsi script or call
+  ever loaded.
+- Watching note: stage 1 waits for the "Watch Love live" tap, so the
+  watching banner shot never needed the stub for stage 1 itself; the
+  interception was armed regardless.
