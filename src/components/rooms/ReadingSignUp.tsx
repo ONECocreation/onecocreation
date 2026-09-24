@@ -101,13 +101,25 @@ export async function postReadingSignUp(
 
 /** The three real render kinds — never `"loading"`, which `ReadingSignUp`
  *  itself renders `null` for, before this ever mounts (Ground, see the
- *  module docblock above for why this is a NAMED export). */
+ *  module docblock above for why this is a NAMED export).
+ *
+ * TASK-438 (block 968,222; HOLD LIFTED block 968,269): `variant` —
+ * `"room"` (the DEFAULT, byte-identical to the pre-T-438 render: the
+ * "Hold your seat." card ReadingNotice mounts inside the room) or
+ * `"public"` (the /reading page's own "Stay in the know" card: the
+ * approved round-3 look's kit-signup/kit-inline-form shape, none of the
+ * room's words, no /news door — the page itself carries the reading).
+ * The machine (`reduceSubmit`), the submit path (`postReadingSignUp`,
+ * posting `{ email, source: "reading" }`) and the success copy
+ * (`OUTCOME_COPY`) are SHARED, never forked. */
 export function ReadingSignUpCard({
   kind,
   memberEmail,
+  variant = "room",
 }: {
   kind: Exclude<SignUpKind, "loading">;
   memberEmail: string | null;
+  variant?: "room" | "public";
 }) {
   const [email, setEmail] = useState("");
   const [submit, dispatch] = useReducer(reduceSubmit, INITIAL_SUBMIT_STATE);
@@ -122,12 +134,83 @@ export function ReadingSignUpCard({
   }
 
   if (submit.kind === "done") {
+    if (variant === "public") {
+      return (
+        <Card className="kit-signup">
+          <div className="kit-stack">
+            <h2 className="kit-h2">Stay in the know</h2>
+            <p>{OUTCOME_COPY[submit.outcome]}</p>
+          </div>
+        </Card>
+      );
+    }
     return (
       <Card>
         <div className="center kit-stack">
           <p className="kit-h2">Hold your seat.</p>
           <p>{OUTCOME_COPY[submit.outcome]}</p>
         </div>
+      </Card>
+    );
+  }
+
+  if (variant === "public") {
+    /* the /reading page's own card (the approved round-3 look): "Stay in
+       the know", the reminder line, one field + one button in a row — the
+       room's words ("Hold your seat", the /news letters door, the sign-in
+       nudges) belong to the room, never to the page */
+    const quietLine = (
+      <p className="kit-text-quiet">A reminder the morning of each reading, and Love&apos;s letters when something fun is on.</p>
+    );
+    if (kind === "member" && memberEmail) {
+      return (
+        <Card className="kit-signup">
+          <div className="kit-stack">
+            <h2 className="kit-h2">Stay in the know</h2>
+            {quietLine}
+          </div>
+          <form
+            className="kit-inline-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitEmail(memberEmail);
+            }}
+          >
+            <Button type="submit" disabled={submit.kind === "pending"} sm>
+              {submit.kind === "pending" ? "Keeping you posted…" : "Keep me posted"}
+            </Button>
+            {submit.kind === "error" && <p className="kit-field-error">{submit.message}</p>}
+          </form>
+        </Card>
+      );
+    }
+    return (
+      <Card className="kit-signup">
+        <div className="kit-stack">
+          <h2 className="kit-h2">Stay in the know</h2>
+          {quietLine}
+        </div>
+        <form
+          className="kit-inline-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitEmail(email);
+          }}
+        >
+          <Field
+            id="reading-sign-up-email"
+            label="Email"
+            type="email"
+            required
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={submit.kind === "error" ? submit.message : undefined}
+          />
+          <Button type="submit" disabled={submit.kind === "pending"} sm>
+            {submit.kind === "pending" ? "Keeping you posted…" : "Keep me posted"}
+          </Button>
+        </form>
       </Card>
     );
   }
@@ -207,13 +290,18 @@ export function ReadingSignUpCard({
   );
 }
 
-export default function ReadingSignUp({ state }: { state: NoticeState }) {
+export default function ReadingSignUp({ state, variant = "room" }: { state: NoticeState; variant?: "room" | "public" }) {
   const { member, checked } = useMemberSession();
 
-  if (state.kind === "off") return null;
+  /* the off-gate is the ROOM variant's (K122 item 13): the public variant
+     shows in EVERY schedule state — it is the one door that works without
+     a date, and its words name none. The room render stays byte-identical. */
+  if (state.kind === "off" && variant === "room") return null;
 
   const kind = classifySignUpKind({ checked, member: member ? { space: member.space } : null });
   if (kind === "loading") return null; // Ground: never flash the form before the session resolves
 
-  return <ReadingSignUpCard kind={kind} memberEmail={kind === "member" && member ? member.handle : null} />;
+  return (
+    <ReadingSignUpCard kind={kind} memberEmail={kind === "member" && member ? member.handle : null} variant={variant} />
+  );
 }
