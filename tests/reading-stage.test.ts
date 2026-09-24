@@ -4,15 +4,21 @@ import path from "path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ReadingStageBody, stage1WatchTarget, type ReadingStageBodyProps } from "@/components/reading/ReadingStage";
-import Stage2Details from "@/components/reading/Stage2Details";
 
 /**
  * TASK-438 (block 968,222; HOLD LIFTED block 968,269) — `ReadingStage.tsx`,
  * the /reading island: Watch, then room 2. The PURE `ReadingStageBody` is
  * rendered through renderToStaticMarkup across every phase (the repo runs
  * no jsdom — Stage2DoorBody's own precedent); the island's wiring (the
- * 20 s poll, the click-time fresh fetch, the single-embed conditional) is
- * pinned at the source and through the pure `stage1WatchTarget` helper.
+ * 20 s polls, the click-time fresh fetch) is pinned at the source and
+ * through the pure `stage1WatchTarget` helper.
+ *
+ * TASK-449 (block 968,364; AMENDMENT 1 block 968,366): the in-place Stage
+ * 2 card and the single-embed branch are REPLACED by the Playground
+ * banner — shown in every phase while Stage 2 is open (the island's own
+ * 20 s `/api/stage2` poll), gone the poll after Love closes. The pins of
+ * that replaced shape were rewritten in this lane's red pass; every other
+ * pin below is byte-identical to base.
  *
  * The phase-control law (Amendment 1's Tests): each phase has exactly ONE
  * primary control — closed has none, published has "Watch Love live",
@@ -38,18 +44,15 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     failed: false,
     ended: false,
     room: null,
-    stage2Room: null,
+    playgroundOpen: false,
     jitsiDomain: DOMAIN,
     nextWords: null,
-    stage2Details: null,
     countdown: null,
     countdownWhen: null,
     left: false,
     onWatch: () => {},
     onTryAgain: () => {},
     onViewerEnded: () => {},
-    onLeaveStage2: () => {},
-    onJoinStage2: () => {},
     ...overrides,
   };
 }
@@ -81,14 +84,7 @@ describe("closed — the book waits, the welcome words, no control at all", () =
 });
 
 describe("published, not yet watching — one tap starts her picture and sound", () => {
-  const html = render(
-    bodyProps({
-      phase: "published",
-      room: ROOM,
-      /* the page (server) pre-renders the details — the island never imports them */
-      stage2Details: createElement(Stage2Details, { weekPass: { name: "Weekly Chronicles — One Week Pass", price: "$11" } }),
-    }),
-  );
+  const html = render(bodyProps({ phase: "published", room: ROOM }));
 
   it("the 'Love is live now' line, the LIVE chip on the book, exactly ONE kit-btn-main: Watch Love live", () => {
     expect(html).toContain("Love is live now");
@@ -105,23 +101,10 @@ describe("published, not yet watching — one tap starts her picture and sound",
     expect(html).not.toContain("<iframe");
   });
 
-  it("the Stage 2 card does NOT ride the published first paint (K122 item 10 — the open sheet has none), and nothing about a camera or a microphone is said anywhere", () => {
-    expect(html).not.toContain("Join the discussion");
-    expect(html).not.toContain("Stage 2 · after the reading");
+  it("no banner while the Playground is closed (playgroundOpen false), and nothing about a camera or a microphone is said anywhere", () => {
+    expect(html).not.toContain("Want an encore?");
+    expect(html).not.toContain("Stage 2 · the Playground");
     expect(html).not.toMatch(/camera|microphone/i);
-  });
-
-  it("…the card appears once WATCHING (the round-3 live sheet), still below the frame", () => {
-    const live = render(
-      bodyProps({
-        phase: "published",
-        watching: true,
-        room: ROOM,
-        stage2Details: createElement(Stage2Details, { weekPass: { name: "Weekly Chronicles — One Week Pass", price: "$11" } }),
-      }),
-    );
-    expect(live).toContain("Join the discussion");
-    expect(live).toContain("Stage 2 · after the reading");
   });
 });
 
@@ -187,18 +170,34 @@ describe("ended — the book, the ended words, the next date; Watch again only w
   });
 });
 
-describe("the Stage-2 branch — the single-embed conditional (StageView.tsx:150-163's pattern)", () => {
-  const html = render(bodyProps({ phase: "published", stage2Room: "oc-fedcba9876543210" }));
-
-  it("the unchanged JitsiRoom mounts in place of Stage 1 — no viewer, no book, no Watch", () => {
-    expect(html).toContain("opening the room");
-    expect(html).not.toContain("kit-stage-viewer");
-    expect(html).not.toContain("/images/reading-book.webp");
-    expect(html).not.toContain("Watch Love live");
+describe("the Playground banner (TASK-449) — open-only, in EVERY phase, after the stage", () => {
+  it("while Stage 2 is open the banner shows: watching, ended, closed and published alike (K124 §3)", () => {
+    for (const over of [
+      { phase: "closed" },
+      { phase: "published", room: ROOM },
+      { phase: "published", watching: true, room: ROOM },
+      { phase: "closed", ended: true, nextWords: "Wednesday, September 30" },
+    ] as const) {
+      const html = render(bodyProps({ ...over, playgroundOpen: true }));
+      expect(html).toContain("Stage 2 · the Playground");
+      expect(html).toContain("Want an encore?");
+      expect(html).toContain("Go to the Playground");
+      expect(html).toContain('href="/reading/playground"');
+      expect(html).not.toContain("Go to the Playground →"); // ruling 1: no arrow
+    }
   });
 
-  it("Leave Stage 2 · back to the reading is ALWAYS visible (the only reset path)", () => {
-    expect(html).toContain("Leave Stage 2 · back to the reading");
+  it("closed Stage 2 (playgroundOpen false) renders NO banner in any phase", () => {
+    for (const over of [
+      { phase: "closed" },
+      { phase: "published", room: ROOM },
+      { phase: "published", watching: true, room: ROOM },
+      { phase: "closed", ended: true, nextWords: "Wednesday, September 30" },
+    ] as const) {
+      const html = render(bodyProps({ ...over, playgroundOpen: false }));
+      expect(html).not.toContain("Want an encore?");
+      expect(html).not.toContain("/reading/playground");
+    }
   });
 });
 
@@ -296,13 +295,29 @@ describe("the island's own wiring — source pins (the repo runs no jsdom)", () 
     expect(fetches.length).toBeGreaterThanOrEqual(2); // the poll AND the click-time re-check
   });
 
-  it("Stage 2 mounts with signInHref=\"/login?next=%2Freading\" (the brief's Build 5)", async () => {
+  it("the banner replaced the Stage 2 card + single-embed branch (TASK-449): banner words and its own /api/stage2 poll; none of the replaced shape survives", async () => {
     const src = await read(STAGE);
-    expect(src).toContain('signInHref="/login?next=%2Freading"');
-    expect(src).toContain('from "@/components/rooms/Stage2Door"');
-    /* the island NEVER imports Stage2Details — it reads the entitlement
-       rail (whose dynamic `redis` import can never enter a client bundle),
-       so the server page pre-renders it and hands it in as a ReactNode */
+    expect(src).toContain("Stage 2 · the Playground");
+    expect(src).toContain("Want an encore?");
+    expect(src).toContain("Go to the Playground");
+    expect(src).toContain('href="/reading/playground"');
+    expect(src).not.toContain("Go to the Playground →");
+    expect(src).toContain('fetch("/api/stage2", { cache: "no-store" })');
+    for (const gone of [
+      "showStage2Card",
+      "stage2Room",
+      "stage2Details",
+      "Leave Stage 2",
+      "Stage2Door",
+      "onJoinStage2",
+      "onLeaveStage2",
+      'from "@/components/rooms/Stage2Door"',
+      'from "@/components/booking/JitsiRoom"',
+    ]) {
+      expect(src).not.toContain(gone);
+    }
+    /* the island NEVER imports Stage2Details — the rail's dynamic `redis`
+       import can never enter a client bundle */
     expect(src).not.toContain('from "@/components/reading/Stage2Details"');
   });
 

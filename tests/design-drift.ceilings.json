@@ -429,6 +429,11 @@
       "colours": 0,
       "styledButtons": 0
     },
+    "src/app/reading/playground/page.tsx": {
+      "styleBlocks": 0,
+      "colours": 0,
+      "styledButtons": 0
+    },
     "src/app/retreats/[id]/page.tsx": {
       "styleBlocks": 9,
       "colours": 0,
@@ -1125,7 +1130,7 @@
       "styledButtons": 0
     },
     "src/components/door/DoorButton.tsx": {
-      "styleBlocks": 9,
+      "styleBlocks": 8,
       "colours": 6,
       "styledButtons": 0
     },
@@ -1187,6 +1192,11 @@
     "src/components/me/MemberQuickCards.tsx": {
       "styleBlocks": 12,
       "colours": 24,
+      "styledButtons": 0
+    },
+    "src/components/reading/playground/PlaygroundIsland.tsx": {
+      "styleBlocks": 0,
+      "colours": 0,
       "styledButtons": 0
     },
     "src/components/rooms/AfterHoursDoor.tsx": {

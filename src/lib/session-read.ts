@@ -34,3 +34,11 @@ export async function readSession(): Promise<MemberSession | null> {
   }
   return { handle: d.handle, space, name };
 }
+
+/** readSession's email-local-part fallback is private, not a known-by name. */
+export function readingViewerName(session: MemberSession | null): string {
+  if (!session?.name.trim()) return "Guest";
+  if (session.name.includes("@")) return "Guest";
+  if (session.space === "email" && session.name === session.handle.split("@")[0]) return "Guest";
+  return session.name;
+}

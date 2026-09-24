@@ -106,11 +106,13 @@ describe("the /reading page — the sky band and the approved structure", () => 
     expect(src).toContain("(await getStage1State()).phase");
     expect(src).toContain("initialPhase={");
     expect(src).toContain("<ReadingStage");
-    /* the server page pre-renders Stage2Details and hands it INTO the
-       island as a ReactNode — the entitlement rail (dynamic `redis`
-       import) stays on the server, never in the client bundle */
-    expect(src).toContain('from "@/components/reading/Stage2Details"');
-    expect(src).toContain("<Stage2Details");
+    /* TASK-449: the stage2Details prop is RETIRED (the Playground page is
+       Stage2Details' only consumer now); the week-pass derivation moved
+       to its one home, src/lib/week-pass.ts (decision D) */
+    expect(src).toContain('from "@/lib/week-pass"');
+    expect(src).toContain("deriveWeekPass()");
+    expect(src).not.toContain("stage2Details");
+    expect(src).not.toContain('from "@/components/reading/Stage2Details"');
   });
 
   it("mounts ReadingSignUp variant=public EXACTLY ONCE as its own kitx-section-first under the sky band (M4) — still never a /news href", async () => {
@@ -139,8 +141,10 @@ describe("the /reading page — the sky band and the approved structure", () => 
     expect(src).toContain("Free to watch from anywhere. Nothing to install");
     expect(src).toContain("Join the discussion after: a live group video call with Love, with any membership");
     expect(src).toContain("Weekly Chronicles pass");
-    expect(src).toContain('getItem("weekly-one-week")');
-    expect(src).toContain("dollars(");
+    /* TASK-449 (decision D): the pass's live store read lives in
+       src/lib/week-pass.ts now — one home, imported, never two copies */
+    expect(src).toContain('from "@/lib/week-pass"');
+    expect(src).not.toContain("function deriveWeekPass");
   });
 
   it("the host section is .kitx-host with the real portrait, and the one bottom button reads 'Back to the reading ↑' to #stage (Stage 1, never Stage 2)", async () => {
@@ -402,11 +406,11 @@ describe("Stage2Details — the round-3 heading and the derive-every-word law", 
     expect(html).toContain("Right after the reading, Love opens a live group video call. Come talk with her.");
   });
 
-  it("one row per tier — the name and monthly price from TIERS, the tagline from TIER_PAGES", () => {
+  it("one row per tier — the name LINKED to its TIER_PAGES page (TASK-449), the monthly price from TIERS, the tagline from TIER_PAGES", () => {
     const html = renderDetails(null);
     for (const t of ["A", "B", "C"] as Tier[]) {
-      expect(html).toContain(`<b>${TIERS[t].name}</b>`);
       const page = TIER_PAGES.find((p) => p.tier === t)!;
+      expect(html).toContain(`<b><a href="/packages/${page.slug}">${TIERS[t].name}</a></b>`);
       expect(html).toContain(page.tagline);
       expect(html).toContain(`$${TIERS[t].priceUsd} / month`);
     }
@@ -415,12 +419,15 @@ describe("Stage2Details — the round-3 heading and the derive-every-word law", 
     expect(html).not.toContain("once");
   });
 
-  it("the pass row rides the live store item's OWN name and price (swap the fixture price and watch it follow)", () => {
+  it("the pass row rides the live store item's OWN name and price, linked to the tier-A page (swap the fixture price and watch it follow)", () => {
     const html = renderDetails({ name: "Weekly Chronicles — One Week Pass", price: "$12.50" });
-    expect(html).toContain("<b>Weekly Chronicles — One Week Pass</b>");
+    const pageA = TIER_PAGES.find((p) => p.tier === "A")!;
+    expect(html).toContain(`<b><a href="/packages/${pageA.slug}">Weekly Chronicles — One Week Pass</a></b>`);
     expect(html).toContain("$12.50 once");
     expect(html).not.toContain("$11 once");
-    expect(html).toContain(`One week of ${TIERS.A.name}, Stage 2 included.`);
+    /* AMENDMENT 1 (block 968,366): the encore's visible name is the
+       Playground */
+    expect(html).toContain(`One week of ${TIERS.A.name}, the Playground included.`);
     const rows = html.match(/<li>/g) ?? [];
     expect(rows).toHaveLength(4);
   });

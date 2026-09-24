@@ -24,12 +24,34 @@ import { MEMBER_MENU, proofFor } from "./door-machine";
    level until the next profile fetch confirms it from the server */
 let lastKnownBy: string | null = null;
 
+/* TASK-449 (block 968,364 — the design-drift law on this recorded file):
+   the menu-row style is hoisted to ONE module-level const shared by the
+   MEMBER_MENU rows and the Playground row alike, so adding the line never
+   raises the file's style-block count; the S2-pinned always-night ink
+   (#ECE3C9, the existing literal) rides the shared const. */
+const menuRowStyle = {
+  display: "block", padding: "9px 18px",
+  /* TASK-210 shot bench, 390px: house.css's `.nav-tail a` phone rule
+     (max-width 34vw + ellipsis, meant for the header's own chips) reaches
+     these rows and clipped "What's yours now" / "The reading room" to
+     "WHAT'S YO…" — the menu's rows are not tail chips; they keep their
+     whole words */
+  maxWidth: "none", overflow: "visible", textOverflow: "clip",
+  color: "#ECE3C9", /* S2: pinned — same always-night ink as today's menu */
+  fontSize: ".8rem", letterSpacing: ".04em", textTransform: "uppercase",
+  textDecoration: "none",
+} as const;
+
 export default function DoorButton() {
   const { member: session, checked, signOut } = useMemberSession();
   const [open, setOpen] = useState<"sheet" | "menu" | null>(null);
   /* the known-by name (Love's ask, carried over from FrenBadge): an email
      member's chip says who they ARE once the names are claimed */
   const [knownBy, setKnownBy] = useState<string | null>(lastKnownBy);
+  /* TASK-449 (ruling 5): the Playground menu line's open truth — fetched
+     only while the menu is open (decision E: a header-level always-on
+     poll for every signed-in page was rejected as waste) */
+  const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,6 +81,34 @@ export default function DoorButton() {
     return () => {
       document.removeEventListener("click", close);
       document.removeEventListener("keydown", esc);
+    };
+  }, [open]);
+
+  /* TASK-449 (ruling 5): while the menu is open, read the Playground's
+     open truth once and on the same 20 s cadence Stage2Door polls at — a
+     failed read renders NO line (derive-or-dash: a line that can't know
+     its truth says nothing). Pickup fix: a rejected fetch and a closed
+     menu both clear the line, so a stale "open" never survives into the
+     next opening. */
+  useEffect(() => {
+    if (open !== "menu") return;
+    let alive = true;
+    function poll() {
+      fetch("/api/stage2", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (alive) setPlaygroundOpen(d?.ok && d.open === true);
+        })
+        .catch(() => {
+          if (alive) setPlaygroundOpen(false);
+        });
+    }
+    poll();
+    const id = setInterval(poll, 20_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+      setPlaygroundOpen(false);
     };
   }, [open]);
 
@@ -155,22 +205,23 @@ export default function DoorButton() {
               role="menuitem"
               href={i.href}
               onClick={() => setOpen(null)}
-              style={{
-                display: "block", padding: "9px 18px",
-                /* TASK-210 shot bench, 390px: house.css's `.nav-tail a` phone rule
-                   (max-width 34vw + ellipsis, meant for the header's own chips)
-                   reaches these rows and clipped "What's yours now" / "The
-                   reading room" to "WHAT'S YO…" — the menu's rows are not
-                   tail chips; they keep their whole words */
-                maxWidth: "none", overflow: "visible", textOverflow: "clip",
-                color: "#ECE3C9", /* S2: pinned — same always-night ink as today's menu */
-                fontSize: ".8rem", letterSpacing: ".04em", textTransform: "uppercase",
-                textDecoration: "none",
-              }}
+              style={menuRowStyle}
             >
               {i.label}
             </Link>
           ))}
+          {/* TASK-449 (ruling 5) — the Playground line, only while Stage 2
+              is open; it rides the SAME shared row style as the map rows */}
+          {playgroundOpen && (
+            <Link
+              role="menuitem"
+              href="/reading/playground"
+              onClick={() => setOpen(null)}
+              style={menuRowStyle}
+            >
+              The Playground · open now
+            </Link>
+          )}
           <button
             role="menuitem"
             onClick={async () => {
