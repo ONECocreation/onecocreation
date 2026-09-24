@@ -17,6 +17,14 @@ import { renderToStaticMarkup } from "react-dom/server";
  * is pinned at SOURCE level and the chat-off law at source level AND on
  * the static render's default state (storyRoom starts null — both
  * chatHidden shapes re-asserted here so the pin travels with the lane).
+ *
+ * Pickup fix round (Number One, block 968,393): the stage's precedence is
+ * the pure exported `storyStage` — every storyRoom/stage2Room/chatHidden
+ * combination is driven through it below (brief Test 4's story-set state,
+ * plus the story + Stage 2 overlap the review caught). The 20 s rejoin
+ * (unstable onEnded/onFailed identities re-running JitsiViewer's boot
+ * effect) is an effect-level bug no static render can see; its guard is
+ * the useCallback shape pinned at source.
  */
 
 const STAGE_VIEW = "src/components/rooms/StageView.tsx";
@@ -48,7 +56,7 @@ function pollBlock(src: string): string {
 function clickBlock(src: string): string {
   const start = src.indexOf("async function storyTime()");
   expect(start, "the storyTime click handler is missing").toBeGreaterThan(-1);
-  const end = src.indexOf("function storyEnded(", start);
+  const end = src.indexOf("const storyEnded = useCallback(", start);
   expect(end, "the click handler's end is missing").toBeGreaterThan(-1);
   return src.slice(start, end);
 }
@@ -76,11 +84,24 @@ describe("the poll — one new 20 s display-only read, gated to the Heart Field 
     expect(poll).toContain("if (slug !== READING_ROOM_SLUG) return;");
   });
 
-  it("is DISPLAY-ONLY: it sets storyOpen, never a room — the click alone mounts", async () => {
+  it("is DISPLAY-ONLY: it sets storyOpen and can only CLEAR a room, never mount one — the click alone mounts", async () => {
     const poll = pollBlock(await read(STAGE_VIEW));
-    expect(poll).toContain('setStoryOpen(d.phase === "published")');
-    expect(poll).not.toContain("setStoryRoom");
+    expect(poll).toContain('const open = d.phase === "published";');
+    expect(poll).toContain("setStoryOpen(open);");
+    const roomWrites = [...poll.matchAll(/setStoryRoom\(([^)]*)\)/g)].map((m) => m[1]);
+    expect(roomWrites).toEqual(["null"]);
     expect(poll).not.toContain("JitsiViewer");
+  });
+
+  it("a closed answer retires a playing story on THIS poll (stage1.ts closeStage1's contract) and the note with it", async () => {
+    const poll = pollBlock(await read(STAGE_VIEW));
+    const closed = poll.slice(poll.indexOf("if (!open) {"));
+    expect(poll).toContain("if (!open) {");
+    expect(closed).toContain("setStoryRoom(null);");
+    expect(closed).toContain("setStoryDomain(null);");
+    expect(closed).toContain("setStoryNote(null);");
+    /* a failed or non-ok poll clears nothing — it returns before the write */
+    expect(poll).toContain("if (!alive || !d?.ok) return;");
   });
 
   it("starts closed — no pill until a published answer arrives (fail-closed by construction)", async () => {
@@ -124,6 +145,13 @@ describe("the click authorizes — a fresh re-check through the imported stage1W
     expect(click).toMatch(/if \(target &&/);
   });
 
+  it("a Stage 2 join that landed while the click's fetch was in flight wins — the late answer mounts nothing", async () => {
+    const click = clickBlock(await read(STAGE_VIEW));
+    const guard = click.indexOf("if (stage2RoomRef.current) return;");
+    expect(guard).toBeGreaterThan(-1);
+    expect(guard).toBeLessThan(click.indexOf("setStoryRoom(target);"));
+  });
+
   it("the wire's jitsiDomain rides WITH the room name — the pair never splits", async () => {
     const click = clickBlock(await read(STAGE_VIEW));
     expect(click).toContain("setStoryDomain(body.jitsiDomain);");
@@ -133,7 +161,26 @@ describe("the click authorizes — a fresh re-check through the imported stage1W
 describe("the pill — the room's own btn btn-gold idiom, honest precedence", () => {
   it("renders only under the slug guard + a published poll answer + a free stage", async () => {
     const src = await read(STAGE_VIEW);
-    expect(src).toContain("slug === READING_ROOM_SLUG && storyOpen && !live && !stage2Room && !storyRoom");
+    const wrapper = src.indexOf('<div className="cl-area-stage2 kitx-flow">');
+    expect(src.slice(src.lastIndexOf("{slug === READING_ROOM_SLUG && (", wrapper), wrapper)).toContain("slug === READING_ROOM_SLUG");
+    expect(src).toContain("{storyOpen && !live && !stage2Room && !storyRoom && (");
+  });
+
+  it("the door, the note and the pill share ONE wrapper in the stage2 grid area — never bare, auto-placed grid children", async () => {
+    const src = await read(STAGE_VIEW);
+    const open = src.indexOf('<div className="cl-area-stage2 kitx-flow">');
+    const resources = src.indexOf("{resources.length > 0 && (");
+    expect(open).toBeGreaterThan(-1);
+    for (const piece of ["<Stage2Door", "{storyNote && !storyRoom &&", "<StoryTimePill"]) {
+      const at = src.indexOf(piece);
+      expect(at, piece).toBeGreaterThan(open);
+      expect(at, piece).toBeLessThan(resources);
+    }
+    const StageView = (await import("@/components/rooms/StageView")).default;
+    expect(renderToStaticMarkup(createElement(StageView, PROPS))).toContain('class="cl-area-stage2 kitx-flow"');
+    /* any other room: no wrapper, no Stage 2 door, no pill — byte-for-byte today */
+    const other = renderToStaticMarkup(createElement(StageView, { ...PROPS, slug: "evening-star" }));
+    expect(other).not.toContain("cl-area-stage2");
   });
 
   it("is a plain btn btn-gold button — the ● Story time copy, NO inline style, in its OWN leaf (the census law)", async () => {
@@ -153,21 +200,36 @@ describe("the pill — the room's own btn btn-gold idiom, honest precedence", ()
 
   it("the room's own live show and a joined Stage 2 outrank the pill (ruling E)", async () => {
     const src = await read(STAGE_VIEW);
-    const pillLine = src.slice(src.indexOf("slug === READING_ROOM_SLUG && storyOpen"));
+    const pillLine = src.slice(src.indexOf("{storyOpen && !live"));
     expect(pillLine).toContain("!live");
     expect(pillLine).toContain("!stage2Room");
   });
 });
 
 describe("chat off in the story-time stage state ONLY (ruling 2's 'for now')", () => {
-  it("a LOCAL chatOff = chatHidden || storyRoom !== null — the operator's switch and ClassroomView untouched", async () => {
+  it("a LOCAL chatOff from the pure storyStage — the operator's switch and ClassroomView untouched", async () => {
     const src = await read(STAGE_VIEW);
-    expect(src).toContain("const chatOff = chatHidden || storyRoom !== null;");
+    expect(src).toContain("const { chatOff } = storyStage({ stage2Room, storyRoom, chatHidden: !!chatHidden });");
     expect(src).toContain('`cl-grid-stage${chatOff ? " cl-grid-stage--no-chat" : ""}`');
     expect(src).toContain("{!chatOff && (");
     const classroom = await read("src/components/rooms/ClassroomView.tsx");
     expect(classroom).not.toContain("storyRoom");
     expect(classroom).not.toContain("stage1");
+  });
+
+  it("storyStage — every combination (brief Test 4's story-set state + the Stage 2 overlap)", async () => {
+    const { storyStage } = await import("@/components/rooms/StageView");
+    const R = "oc-fixture-room";
+    /* nothing playing: today's shapes, the operator's switch alone decides */
+    expect(storyStage({ stage2Room: null, storyRoom: null, chatHidden: false })).toEqual({ video: "slot", chatOff: false });
+    expect(storyStage({ stage2Room: null, storyRoom: null, chatHidden: true })).toEqual({ video: "slot", chatOff: true });
+    /* the story owns the stage: the chat steps aside */
+    expect(storyStage({ stage2Room: null, storyRoom: R, chatHidden: false })).toEqual({ video: "story", chatOff: true });
+    /* a joined Stage 2 outranks a lingering story room: Stage 2 owns the
+       stage and the chat is BACK (ruling 2 — chat off in the story state only) */
+    expect(storyStage({ stage2Room: R, storyRoom: R, chatHidden: false })).toEqual({ video: "stage2", chatOff: false });
+    expect(storyStage({ stage2Room: R, storyRoom: null, chatHidden: false })).toEqual({ video: "stage2", chatOff: false });
+    expect(storyStage({ stage2Room: R, storyRoom: null, chatHidden: true })).toEqual({ video: "stage2", chatOff: true });
   });
 
   it("no story playing (the static render's default): chatHidden=false mounts the chat region, no modifier", async () => {
@@ -210,11 +272,27 @@ describe("the swap and the way back — the reading on the room's own stage", ()
     expect(branch).not.toContain("<Link");
   });
 
+  it("onEnded and onFailed keep STABLE identities — JitsiViewer's boot effect depends on them (the 20 s rejoin)", async () => {
+    const src = await read(STAGE_VIEW);
+    expect(src).not.toContain("function storyEnded(");
+    expect(src).not.toContain("function storyFailed(");
+    for (const name of ["storyEnded", "storyFailed"]) {
+      const at = src.indexOf(`const ${name} = useCallback(`);
+      expect(at, name).toBeGreaterThan(-1);
+      /* setter-only bodies, so the deps list is exactly [] */
+      const close = src.indexOf("}, [", at);
+      expect(src.slice(close, close + 7), name).toBe("}, []);");
+    }
+    /* the viewer's own effect still lists them — why the identities matter */
+    const viewer = await read("src/components/reading/JitsiViewer.tsx");
+    expect(viewer).toContain("}, [domain, room, onEnded, onFailed]);");
+  });
+
   it("onEnded is the way back and onFailed clears the stage with the honest one-line note", async () => {
     const src = await read(STAGE_VIEW);
-    const ended = src.indexOf("function storyEnded(");
+    const ended = src.indexOf("const storyEnded = useCallback(");
     expect(src.slice(ended, ended + 200)).toContain("setStoryRoom(null);");
-    const failed = src.indexOf("function storyFailed(");
+    const failed = src.indexOf("const storyFailed = useCallback(");
     expect(src.slice(failed, failed + 300)).toContain("setStoryRoom(null);");
     expect(src.slice(failed, failed + 300)).toContain("The reading's picture couldn't load here — try again.");
   });
@@ -224,8 +302,22 @@ describe("the swap and the way back — the reading on the room's own stage", ()
     expect(src).toContain("Leave Stage 2 · back to the reading");
     expect(src).toContain('<JitsiRoom domain={jitsiDomain ?? ""} room={stage2Room} displayName={undefined} />');
     expect(src).toContain(
-      '<Stage2Door jitsiDomain={jitsiDomain ?? ""} joined={!!stage2Room} onJoin={setStage2Room} signedIn={signedIn} />',
+      '<Stage2Door jitsiDomain={jitsiDomain ?? ""} joined={!!stage2Room} onJoin={joinStage2} signedIn={signedIn} />',
     );
+  });
+
+  it("joining Stage 2 forgets the story's room — Leave Stage 2 never remounts a stale Stage 1 room (ReadingStage.joinStage2)", async () => {
+    const src = await read(STAGE_VIEW);
+    const at = src.indexOf("const joinStage2 = useCallback((room: string) => {");
+    expect(at).toBeGreaterThan(-1);
+    const body = src.slice(at, src.indexOf("}, []);", at));
+    expect(body).toContain("stage2RoomRef.current = room;");
+    expect(body).toContain("setStoryRoom(null);");
+    expect(body).toContain("setStoryDomain(null);");
+    expect(body.indexOf("setStoryRoom(null);")).toBeLessThan(body.indexOf("setStage2Room(room);"));
+    /* the Leave button still only clears Stage 2 — the room's own slot (and
+       the pill, if the reading is on) comes back, never an auto-restart */
+    expect(src).toContain("onClick={() => setStage2Room(null)}");
   });
 
   it("the viewer joins as Guest — no name prop is ever handed to JitsiViewer (the one-way design)", async () => {
