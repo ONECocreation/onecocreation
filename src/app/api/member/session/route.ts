@@ -5,7 +5,7 @@ import {
   joinSessionTokens,
   MEMBER_COOKIE,
 } from "@/lib/member-auth";
-import { getEntry } from "@/lib/registry";
+import { getEntry, normalizeSpace } from "@/lib/registry";
 import { OPERATOR_COOKIE } from "@/lib/operator-auth";
 import { spaceForHost } from "@/lib/identity-config";
 
@@ -78,7 +78,9 @@ export async function PUT(request: Request) {
     return Response.json({ ok: false, reason: "invalid request" }, { status: 400 });
   }
   const handle = (body.handle ?? "").trim().toLowerCase();
-  const space = (body.space ?? "").trim().toLowerCase();
+  /* the door as the cookie already holds it — moving an existing token
+     signs nothing new, so the raw space (e.g. "email") matches here */
+  let space = (body.space ?? "").trim().toLowerCase();
   if (!handle || !space) {
     return Response.json({ ok: false, reason: "handle and space required" }, { status: 400 });
   }
@@ -96,12 +98,17 @@ export async function PUT(request: Request) {
   } else {
     /* same-key door: the requested tag must belong to an npub that already
        has a live session in this browser */
-    const target = await getEntry(handle, space);
+    /* T-455 (SECURITY): a NEW token is signed with the KNOWN space the
+       lookup resolves to — never the raw request space (a caller could have
+       the site sign `<handle>|<anything>|<exp>`) */
+    const mintSpace = normalizeSpace(space);
+    const target = await getEntry(handle, mintSpace);
     if (target) {
       for (const s of sessions) {
         const owned = await getEntry(s.handle, s.space);
         if (owned?.npub && owned.npub === target.npub) {
-          tokens = [makeMemberToken(handle, space), ...sessions.map((x) => x.token)];
+          tokens = [makeMemberToken(handle, mintSpace), ...sessions.map((x) => x.token)];
+          space = mintSpace;
           break;
         }
       }

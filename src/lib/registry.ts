@@ -42,7 +42,9 @@ export function blobStoreEnabled(): boolean {
   );
 }
 
-function normalizeSpace(space?: string): string {
+/** A space the house knows, or the house's own — never a raw string from a
+ *  request (T-455: the session mint signs whatever space it is handed). */
+export function normalizeSpace(space?: string): string {
   const s = (space ?? SPACE_NAME).toLowerCase();
   return (KNOWN_SPACES as readonly string[]).includes(s) ? s : SPACE_NAME;
 }
@@ -67,6 +69,13 @@ const RESERVED = new Set([
   "wallet",
   "bitcoin",
   "satoshi",
+  /* T-455 (SECURITY): the labels other signed tokens start with — a member
+     session signs `<handle>|<space>|<exp>` with the same house secret, so a
+     tag named like a token label was a way to have the site sign that token */
+  "studio-invite",
+  "studio-overlay",
+  "studio-room-key",
+  "offer",
 ]);
 
 const HANDLE_RE = /^[a-z0-9](?:[a-z0-9-]{1,18})[a-z0-9]$/;
