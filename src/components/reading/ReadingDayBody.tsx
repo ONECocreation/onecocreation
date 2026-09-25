@@ -4,34 +4,48 @@ import type { EncoreFloorDoor, QaDoor } from "@/lib/reading-day-doors";
 import ReadingDayUnlockButton from "./ReadingDayUnlockButton";
 
 /**
- * THE READING DAY BRICK (TASK-467, block 968,561) — Love, the call with
- * her, Thu 2026-09-24 (walk-968482/walk.txt, 42:41–45:03): "just put this
- * whole room brick right in the other on the weekly reading page … with
- * three buttons of the times … the reading, then the second stage, then
- * the q&a." Drawn in the Heart Field room brick's own shell — the exact
- * `card room-card` classes `PackageRoomsCard.tsx` pins verbatim — holding
- * THREE rows instead of one package's rooms-list-plus-one-door: the
+ * THE READING DAY BRICK (TASK-467, block 968,561; TASK-469, block
+ * 968,567) — Love, the call with her, Thu 2026-09-24
+ * (walk-968482/walk.txt, 42:41–45:03): "just put this whole room brick
+ * right in the other on the weekly reading page … with three buttons of
+ * the times … the reading, then the second stage, then the q&a." Drawn
+ * in the Heart Field room brick's own shell — the exact `card room-card`
+ * classes `PackageRoomsCard.tsx` pins verbatim — holding FOUR rows
+ * instead of one package's rooms-list-plus-one-door: the
  * `kit-rows`/`kit-rows-end` grid `Stage1Card.tsx`/`Stage2Details.tsx`
  * already use elsewhere on this same page (one row, one control, on the
  * row's own right edge — the /a uniformity law's own shape, reused here
  * on the public side).
  *
+ * TASK-469 (block 968,567): Love, passed on by the Admiral: "will you
+ * make a 12:12 button that is linked straight to the stage where
+ * everyone gets to see everyone? I wanna have housewarming with
+ * introductions and movement before the reading." The Admiral: "yes lets
+ * cut the 12:12 room." The two-way call needs no code (Love opens the
+ * live room from /a/studio; every signed-in visitor on
+ * `/rooms/heart-field` gets it) — this adds only a new FIRST row, free,
+ * no lock, the exact two buttons the Reading row already carries,
+ * pointed at the same door.
+ *
  * PURE presentation over already-derived props — no fetch, no
  * `Date.now()`, renderToStaticMarkup-testable for every state
- * (`tests/reading-day-467.test.ts`). `ReadingDay.tsx` (the async server
- * wrapper) is the only caller and the only place that reads the session,
- * the schedule, and the live store/entitlement sources.
+ * (`tests/reading-day-467.test.ts`, `tests/housewarming-469.test.ts`).
+ * `ReadingDay.tsx` (the async server wrapper) is the only caller and the
+ * only place that reads the session, the schedule, and the live
+ * store/entitlement sources.
  */
 
 export interface ReadingDayBodyProps {
   /** the reading schedule's own IANA zone — every clock word below reads
    *  through it, never a second zone */
   tz: string;
+  housewarmingStartsAtMs: number;
   readingStartsAtMs: number;
   encoreStartsAtMs: number;
   qaStartsAtMs: number;
-  /** row 1 only — rows 2/3 gate on entitlement alone (the cart itself
-   *  meets a signed-out visitor with its own sign-in gate, spec's words) */
+  /** rows 1 and 2 only — rows 3/4 gate on entitlement alone (the cart
+   *  itself meets a signed-out visitor with its own sign-in gate, spec's
+   *  words) */
   signedIn: boolean;
   encoreEntitled: boolean;
   encoreFloor: EncoreFloorDoor;
@@ -44,6 +58,7 @@ export interface ReadingDayBodyProps {
 
 export default function ReadingDayBody({
   tz,
+  housewarmingStartsAtMs,
   readingStartsAtMs,
   encoreStartsAtMs,
   qaStartsAtMs,
@@ -58,7 +73,28 @@ export default function ReadingDayBody({
     <div className="card room-card kit-day">
       <h2 className="kit-h2">The day&apos;s agenda</h2>
       <ul className="kit-rows" aria-label="The day's agenda">
-        {/* ROW 1 — the reading itself, free, in the Heart Field */}
+        {/* ROW 1 — the Housewarming (TASK-469, block 968,567): free, no
+            lock, before the reading, the same door as Row 2 (the two-way
+            call itself is Love's own /a/studio action, no code here) */}
+        <li>
+          <span>
+            <b>{`${clockWords(housewarmingStartsAtMs, tz)} · The Housewarming`}</b>
+            <em>Free. Introductions and movement with Love. Everyone&apos;s on camera.</em>
+          </span>
+          <span className="kit-rows-end">
+            {signedIn ? (
+              <Link className="kit-btn kit-btn-main kit-btn-sm" href="/rooms/heart-field">
+                Go to the Heart Field
+              </Link>
+            ) : (
+              <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">
+                Sign me up
+              </Link>
+            )}
+          </span>
+        </li>
+
+        {/* ROW 2 — the reading itself, free, in the Heart Field */}
         <li>
           <span>
             <b>{`${clockWords(readingStartsAtMs, tz)} · The Reading`}</b>
@@ -77,7 +113,7 @@ export default function ReadingDayBody({
           </span>
         </li>
 
-        {/* ROW 2 — the Encore in the Playground */}
+        {/* ROW 3 — the Encore in the Playground */}
         <li>
           <span>
             <b>{`${clockWords(encoreStartsAtMs, tz)} · The Encore in the Playground`}</b>
@@ -113,7 +149,7 @@ export default function ReadingDayBody({
           </span>
         </li>
 
-        {/* ROW 3 — the channeled Q&A with Love */}
+        {/* ROW 4 — the channeled Q&A with Love */}
         <li>
           <span>
             <b>{`${clockWords(qaStartsAtMs, tz)} · The Q&A with Love`}</b>

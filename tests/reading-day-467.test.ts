@@ -42,6 +42,9 @@ const TZ = "America/Denver";
 const READING_MS = Date.parse("2026-09-23T19:11:00.000Z");
 const ENCORE_MS = Date.parse("2026-09-23T20:22:00.000Z"); // 2:22 PM MDT, same day
 const QA_MS = Date.parse("2026-09-23T21:33:00.000Z"); // 3:33 PM MDT, same day
+// TASK-469 (block 968,567): 12:12 PM MDT, same day, before the reading —
+// this fixture's own bodyProps() now carries the Housewarming row too.
+const HOUSEWARMING_MS = Date.parse("2026-09-23T18:12:00.000Z");
 
 function item(over: Partial<StoreItem>): StoreItem {
   return {
@@ -187,6 +190,7 @@ const QA_OFFER_LIVE = { itemId: QA_ITEM_ID, passLive: true, price: "$33.33", eve
 function bodyProps(overrides: Partial<ReadingDayBodyProps>): ReadingDayBodyProps {
   return {
     tz: TZ,
+    housewarmingStartsAtMs: HOUSEWARMING_MS,
     readingStartsAtMs: READING_MS,
     encoreStartsAtMs: ENCORE_MS,
     qaStartsAtMs: QA_MS,

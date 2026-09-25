@@ -1,10 +1,11 @@
 import { wallClockToUtc, zonedDateParts } from "./booking-time.ts";
 
 /**
- * THE DAY'S AGENDA (TASK-467, block 968,561) — the ONLY place the Reading
- * Day brick's two clock times and its one store item id are written.
- * Every other file that needs one of these three values IMPORTS it from
- * here; nothing else hardcodes them (tests/reading-day-467.test.ts pins
+ * THE DAY'S AGENDA (TASK-467, block 968,561; TASK-469, block 968,567) —
+ * the ONLY place the Reading Day brick's three clock times and its one
+ * store item id are written. Every other file that needs one of these
+ * four values IMPORTS it from here; nothing else hardcodes them
+ * (tests/reading-day-467.test.ts and tests/housewarming-469.test.ts pin
  * this).
  *
  * The call with Love, Thu 2026-09-24 (briefings/walk-968482/walk.txt,
@@ -20,11 +21,27 @@ import { wallClockToUtc, zonedDateParts } from "./booking-time.ts";
  * "2:22 PM MDT," and "they can even buy the q&a for the one time 33, or
  * if they are part of the evening star they get q&a included."
  *
- * Both clock times are WALL CLOCK "HH:MM" (24h) in the reading schedule's
- * OWN zone (`ReadingSchedule.tz`) — not a UTC offset, the same law
- * `booking-time.ts`'s own docblock names, and both happen to be two of
- * `slotsFor`'s own "five sacred numbers" (booking-time.ts:324-336).
+ * Love, passed on by the Admiral (block 968,567): "will you make a 12:12
+ * button that is linked straight to the stage where everyone gets to see
+ * everyone? I wanna have housewarming with introductions and movement
+ * before the reading." The Admiral, same block: "yes lets cut the 12:12
+ * room." The two-way call itself needs no code here — Love opens the
+ * live room from /a/studio at 12:12 and every signed-in visitor on
+ * `/rooms/heart-field` gets it; this file only carries the clock number
+ * the new row reads.
+ *
+ * All three clock times are WALL CLOCK "HH:MM" (24h) in the reading
+ * schedule's OWN zone (`ReadingSchedule.tz`) — not a UTC offset, the same
+ * law `booking-time.ts`'s own docblock names, and all three happen to be
+ * three of `slotsFor`'s own "five sacred numbers" (booking-time.ts:324-336).
  */
+
+/** The Housewarming — 12:12 PM, the reading's own day. Love, block
+ *  968,567: "will you make a 12:12 button that is linked straight to the
+ *  stage where everyone gets to see everyone? I wanna have housewarming
+ *  with introductions and movement before the reading." The Admiral,
+ *  same block: "yes lets cut the 12:12 room." */
+export const HOUSEWARMING_TIME = "12:12";
 
 /** The Encore in the Playground — 2:22 PM, the reading's own day. */
 export const ENCORE_TIME = "14:22";
