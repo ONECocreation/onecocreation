@@ -114,8 +114,13 @@ describe("the route and its derivations (the page source)", () => {
     const lib = await read(WEEK_PASS);
     expect(lib).toContain("export async function deriveWeekPass");
     /* the store-read pins travelled WITH the function (pickup fix — at base
-       reading-look pinned these on the page; the move had dropped them) */
-    expect(lib).toContain('getItem("weekly-one-week")');
+       reading-look pinned these on the page; the move had dropped them).
+       TASK-465 (block 968,561): the item id is DERIVED off Stage 2's own
+       floor now (STAGE2_MIN_TIER + TIER_PAGES), never the hardcoded
+       weekly-one-week literal — the Admiral raised the floor to Observer. */
+    expect(lib).not.toContain('getItem("weekly-one-week")');
+    expect(lib).toContain("STAGE2_MIN_TIER");
+    expect(lib).toMatch(/TIER_PAGES\.find\(\(p\) => p\.tier === STAGE2_MIN_TIER\)/);
     expect(lib).toContain("item?.sale ?? item?.price");
     expect(lib).toContain('item?.status !== "live"');
     expect(lib).toContain("dollars(eff.fiat.amount, eff.fiat.currency)");

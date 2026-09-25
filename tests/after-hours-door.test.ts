@@ -243,7 +243,8 @@ describe("GET /api/live — afterHours resolved into words", () => {
     const json = await (await GET()).json();
     expect(json.afterHours).toEqual({
       room: "weekly-reading",
-      roomTitle: "Chronicles: Weekly Reading",
+      // TASK-465 (block 968,561): weekly-reading's own title is "The Playground" now
+      roomTitle: "The Playground",
       package: "Observer",
       packageSlug: "observer",
       at: 1750003600,

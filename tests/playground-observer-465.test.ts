@@ -57,6 +57,11 @@ describe("STAGE2_MIN_TIER — ruling A/B, block 968,561: the floor moves to Obse
     expect(STAGE2_MIN_TIER).toBe("B");
   });
 
+  it("STAGE2_FLOOR_NAME reads the floor's own display name — Observer, not Weekly Intuitive", async () => {
+    const { STAGE2_FLOOR_NAME } = await import("@/lib/stage2-access");
+    expect(STAGE2_FLOOR_NAME).toBe("Observer");
+  });
+
   it("decideStage2: tier A alone no longer satisfies the floor (package); B and C do (open)", async () => {
     const { decideStage2 } = await import("@/lib/stage2-access");
     expect(decideStage2(true, { signedIn: true, tier: "A" })).toBe("package");
@@ -236,9 +241,11 @@ describe("Stage2Door.tsx — no em dash anywhere visible, no Weekly Intuitive as
     expect(src).not.toContain("couldn't be reached just now — try again");
   });
 
-  it("no visible em dash survives anywhere in the file's rendered states", async () => {
+  it("no visible em dash survives in the states this lane's words touch (package, Try-one-week, unreachable)", async () => {
+    /* the "signin" state's dash (signInDoorLine, room-access.ts) is a
+       SHARED helper across five room doors — out of this lane's OWNS,
+       untouched, and not part of the Admiral's block 968,561 example */
     const states = [
-      { decision: "signin" },
       { decision: "package", pkg: { name: "Observer", href: "/packages/observer", week: null } },
       { decision: "package", pkg: { name: "Observer", href: "/packages/observer", week: { itemId: "observer-one-week", price: "$22" } } },
       { decision: "open", reachable: true },
@@ -259,10 +266,36 @@ describe("Stage2Door.tsx — no em dash anywhere visible, no Weekly Intuitive as
 describe("PlaygroundIsland.tsx — Observer floor, no em dash (ruling A/C)", () => {
   const ISLAND = "src/components/reading/playground/PlaygroundIsland.tsx";
 
-  it("never hardcodes Weekly Intuitive as the floor — the signin and package paragraphs derive observerName", async () => {
-    const src = await read(ISLAND);
-    expect(src).not.toContain("Weekly Intuitive");
-    expect(src).toMatch(/\{observerName\}/);
+  it("the signin and package paragraphs render the passed observerName, never a hardcoded Weekly Intuitive", async () => {
+    const { PlaygroundIslandBody } = await import("@/components/reading/playground/PlaygroundIsland");
+    const base = {
+      joinedRoom: null,
+      left: false,
+      nameSnapshot: "Guest",
+      joining: false,
+      weekBusy: false,
+      note: null,
+      jitsiDomain: "meet.test.invalid",
+      observerHref: "/packages/observer",
+      observerName: "OBSERVER-FIXTURE",
+      stage2Rows: null,
+      onJoinClick: () => {},
+      onTryWeek: () => {},
+      onCallEnded: () => {},
+    };
+    const signin = renderToStaticMarkup(
+      h(PlaygroundIslandBody, { ...base, wire: { decision: "signin", reachable: null, pkg: null } } as never),
+    );
+    expect(signin).toContain("OBSERVER-FIXTURE");
+    expect(signin).not.toContain("Weekly Intuitive");
+    const pkg = renderToStaticMarkup(
+      h(PlaygroundIslandBody, {
+        ...base,
+        wire: { decision: "package", reachable: null, pkg: { name: "x", href: "/x", week: null } },
+      } as never),
+    );
+    expect(pkg).toContain("OBSERVER-FIXTURE");
+    expect(pkg).not.toContain("Weekly Intuitive");
   });
 
   it("the Try-one-week button label carries no em dash", async () => {
@@ -279,10 +312,11 @@ describe("PlaygroundIsland.tsx — Observer floor, no em dash (ruling A/C)", () 
 });
 
 describe("/reading and /reading/playground — the floor name is DERIVED, never a Weekly Intuitive literal", () => {
-  it("/reading's list line derives TIERS[STAGE2_MIN_TIER].name", async () => {
+  it("/reading's list line derives stage2-access.ts's STAGE2_FLOOR_NAME (never entitlement.ts's TIERS directly — this page's own no-tier-logic law)", async () => {
     const src = await read("src/app/reading/page.tsx");
     expect(src).not.toContain("from Weekly Intuitive up");
-    expect(src).toMatch(/TIERS\[STAGE2_MIN_TIER\]\.name/);
+    expect(src).toMatch(/STAGE2_FLOOR_NAME/);
+    expect(src).not.toMatch(/\bTIERS\b/);
   });
 
   it("/reading/playground's list line uses the page's own observerName, never a literal Weekly Intuitive", async () => {

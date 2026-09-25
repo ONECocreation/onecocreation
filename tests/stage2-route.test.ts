@@ -98,10 +98,12 @@ beforeAll(async () => {
 
 beforeEach(() => {
   mockTier.mockReset();
-  /* TASK-439: this suite's "carries the room" cases run as a tier-A
-     (Weekly Intuitive) member — the free-member and throw cases live in
-     tests/stage2-paid-door.test.ts. */
-  mockTier.mockResolvedValue("A");
+  /* TASK-439: this suite's "carries the room" cases run as a member who
+     satisfies Stage 2's floor — the free-member and throw cases live in
+     tests/stage2-paid-door.test.ts. TASK-465 (block 968,561) raised the
+     floor to tier B (Observer); tier A no longer satisfies it (that case
+     is its own test in stage2-paid-door.test.ts now). */
+  mockTier.mockResolvedValue("B");
   transport = fakeTransport();
   transport.seedSiteConfig(DOMAIN);
   process.env.KV_REST_API_URL = "https://kv.test.local/exec";

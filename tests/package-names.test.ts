@@ -73,10 +73,11 @@ describe("puck-seeds.ts — the six seed lines carry the real tier names", () =>
     expect(src).not.toMatch(/Package [ABC]/);
   });
 
-  it("the Classes column's three suffixes equal the three real names, room titles untouched", async () => {
+  it("the Classes column's suffixes equal the real names (TASK-465, block 968,561 re-trued: The Playground moved to Observer's own room, clair-senses's line dropped as hidden)", async () => {
     const src = await read("src/lib/puck-seeds.ts");
-    expect(src).toContain(`✦ The Playground · ${TIERS.A.name}`);
-    expect(src).toContain(`✦ Chronicles: Weekly Reading · ${TIERS.B.name}`);
+    expect(src).toContain(`✦ The Playground · ${TIERS.B.name}`);
+    expect(src).not.toContain(`✦ The Playground · ${TIERS.A.name}`);
+    expect(src).not.toContain("Chronicles: Weekly Reading");
     expect(src).toContain(`✦ Quantum Healing — Deep Dive · ${TIERS.C.name}`);
   });
 

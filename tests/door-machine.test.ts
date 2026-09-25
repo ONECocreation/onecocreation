@@ -99,7 +99,12 @@ describe("the door's landing rule (TASK-259: isNew wins over next)", () => {
 describe("continueLabel — /welcome's continue door (TASK-259)", () => {
   it("a known room path names the room by its real title", () => {
     expect(continueLabel("/rooms/heart-field")).toBe("Continue to The Heart Field");
-    expect(continueLabel("/rooms/weekly-reading")).toBe("Continue to Chronicles: Weekly Reading");
+    // TASK-465 (block 968,561): weekly-reading is "The Playground" now
+    expect(continueLabel("/rooms/weekly-reading")).toBe("Continue to The Playground");
+  });
+
+  it("a HIDDEN room's own slug never gets named — the plain word instead (TASK-465, block 968,561)", () => {
+    expect(continueLabel("/rooms/clair-senses")).toBe("Continue");
   });
 
   it("an unknown room slug, a non-room path, or no path falls back to the plain word", () => {

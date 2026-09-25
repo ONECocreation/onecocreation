@@ -140,8 +140,12 @@ describe("the /reading page — the sky band and the approved structure", () => 
     expect(src).toContain("a live reading from Love's book");
     expect(src).toContain("Free to watch from anywhere. Nothing to install");
     /* T-454: the real floor, the Playground page's own words (was "with any
-       membership" + a literal pass name) */
-    expect(src).toContain("Join the discussion after: the Playground, a live group video call with Love, with every membership from Weekly Intuitive up");
+       membership" + a literal pass name). TASK-465 (block 968,561): the
+       floor name is DERIVED (stage2-access.ts's STAGE2_FLOOR_NAME) — the
+       Admiral raised it to Observer, so the literal "Weekly Intuitive"
+       would now be wrong. */
+    expect(src).toContain("Join the discussion after: the Playground, a live group video call with Love, with every membership from ${STAGE2_FLOOR_NAME} up");
+    expect(src).not.toContain("from Weekly Intuitive up");
     expect(src).toContain("one-week pass");
     expect(src).not.toContain("with any membership");
     /* TASK-449 (decision D): the pass's live store read lives in

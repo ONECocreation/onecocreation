@@ -12,14 +12,29 @@ import type { Stage2DoorBodyProps } from "@/components/rooms/Stage2Door";
  * TASK-460 (block 968,543 — decision cw-playground-where, option B): the
  * Weekly Intuitive room becomes THE PLAYGROUND, and its own room gets a
  * plain "Join the Playground call" door (never wired into the room's OWN
- * stage/embed — that was option C, not ruled). Pins for every Build item:
- *  1. ROOMS' own title (matrix-rooms.ts:19) — id/slug/kind/minTier
- *     unchanged.
+ * stage/embed — that was option C, not ruled).
+ *
+ * TASK-465 (block 968,561) REVERSES the room pick: the Admiral, "weekly
+ * intuitive room for clair senses room can be hidden for now. we are only
+ * going to have the playground in that room area" — the Playground moved
+ * to `#weekly-reading` (Observer, tier B); `#clair-senses` goes back to
+ * "Clair Senses" and hides from every public listing. Sections 1-3 below
+ * are re-trued for the new room; sections 4-5 (Stage2Door's own words,
+ * the admin route, Stage2Card) are unaffected by WHICH room hosts the
+ * door and stand as TASK-460 left them except where TASK-465's own
+ * no-em-dash ruling (C) touches Stage2Door's words directly (see
+ * tests/stage2-door.test.ts and tests/playground-observer-465.test.ts for
+ * those pins — not duplicated here).
+ *
+ * Pins for every Build item:
+ *  1. ROOMS' own titles (matrix-rooms.ts) — id/kind/minTier unchanged for
+ *     both rooms; clair-senses gains `hidden: true`.
  *  2. puck-seeds.ts's seed line (re-trued alongside package-names.test.ts's
- *     own pin at :78 — the two suites cover the same literal on purpose).
+ *     own pin — the two suites cover the same literal on purpose).
  *  3. PlaygroundDoor.tsx (new leaf, the operator-census seam T-450 already
  *     proved — see StoryTimePill.tsx's own docblock) renders ONLY in
- *     `clair-senses`, never in the Heart Field or any other room.
+ *     `weekly-reading` now, never in the Heart Field, clair-senses, or any
+ *     other room.
  *  4. Stage2Door.tsx carries no member-facing "Stage 2" words anywhere;
  *     Love's own Stage2Card keeps its words (untouched, not pinned here).
  *  5. admin/stage2/route.ts's SEC-4 wrap (mirrors admin/stage1's own,
@@ -37,17 +52,28 @@ const read = (rel: string) => fs.readFile(path.join(ROOT, rel), "utf8");
 // 1 — ROOMS' own title
 // ---------------------------------------------------------------------------
 
-describe("matrix-rooms.ts — the Weekly Intuitive room's title (Build 1)", () => {
-  it('the clair-senses room reads "The Playground" — id, slug, kind and minTier untouched', () => {
-    const room = ROOMS.find((r) => r.id === "#clair-senses:onecocreation.com");
-    expect(room, "clair-senses room missing from ROOMS").toBeDefined();
+describe("matrix-rooms.ts — the room titles after TASK-465's reversal (block 968,561)", () => {
+  it('weekly-reading now reads "The Playground" — id, kind and minTier untouched, not hidden', () => {
+    const room = ROOMS.find((r) => r.id === "#weekly-reading:onecocreation.com");
+    expect(room, "weekly-reading room missing from ROOMS").toBeDefined();
     expect(room!.title).toBe("The Playground");
     expect(room!.kind).toBe("class");
-    expect(room!.minTier).toBe("A");
+    expect(room!.minTier).toBe("B");
+    expect(room!.hidden).toBeUndefined();
   });
 
-  it('no room anywhere still reads "Clair Senses — Foundations"', () => {
+  it('clair-senses reads "Clair Senses" (no dash) and is hidden — id, kind and minTier untouched', () => {
+    const room = ROOMS.find((r) => r.id === "#clair-senses:onecocreation.com");
+    expect(room, "clair-senses room missing from ROOMS").toBeDefined();
+    expect(room!.title).toBe("Clair Senses");
+    expect(room!.kind).toBe("class");
+    expect(room!.minTier).toBe("A");
+    expect(room!.hidden).toBe(true);
+  });
+
+  it('no room anywhere still reads "Clair Senses — Foundations" or "Chronicles: Weekly Reading"', () => {
     expect(ROOMS.some((r) => r.title === "Clair Senses — Foundations")).toBe(false);
+    expect(ROOMS.some((r) => r.title === "Chronicles: Weekly Reading")).toBe(false);
   });
 });
 
@@ -55,11 +81,13 @@ describe("matrix-rooms.ts — the Weekly Intuitive room's title (Build 1)", () =
 // 2 — puck-seeds.ts's seed line
 // ---------------------------------------------------------------------------
 
-describe("puck-seeds.ts — the Classes column names The Playground (Build 2)", () => {
-  it('the seed line reads "✦ The Playground · Weekly Intuitive"', async () => {
+describe("puck-seeds.ts — the Classes column names The Playground on weekly-reading (Build 2, re-trued TASK-465)", () => {
+  it('the seed line reads "✦ The Playground · Observer" — the clair-senses line is gone (hidden, not listed)', async () => {
     const src = await read("src/lib/puck-seeds.ts");
-    expect(src).toContain(`✦ The Playground · ${TIERS.A.name}`);
+    expect(src).toContain(`✦ The Playground · ${TIERS.B.name}`);
+    expect(src).not.toContain(`✦ The Playground · ${TIERS.A.name}`);
     expect(src).not.toContain("Clair Senses — Foundations");
+    expect(src).not.toContain("Chronicles: Weekly Reading");
   });
 });
 
@@ -67,14 +95,18 @@ describe("puck-seeds.ts — the Classes column names The Playground (Build 2)", 
 // 3 — PlaygroundDoor.tsx + its mount, ONLY in clair-senses
 // ---------------------------------------------------------------------------
 
-describe("PlaygroundDoor.tsx — the Weekly Intuitive room's own door (Build 3)", () => {
-  it("renders the join link and the quiet line, on the kit's main button, no legacy classes or inline style", async () => {
+describe("PlaygroundDoor.tsx — the Playground room's own door (Build 3, re-trued TASK-465)", () => {
+  it("renders the join link and the quiet line, on the kit's main button, no legacy classes or inline style, no em dash", async () => {
     const PlaygroundDoor = (await import("@/components/rooms/PlaygroundDoor")).default;
     const html = renderToStaticMarkup(h(PlaygroundDoor));
     expect(html).toContain('href="/reading/playground"');
     expect(html).toContain("Join the Playground call");
-    expect(html).toContain("Love opens the call after the reading.");
-    expect(html).toContain("Weekly Intuitive members and up.");
+    /* TASK-465 (block 968,561): the door now sits INSIDE the Observer room
+       itself, so the old "it's here for Weekly Intuitive members and up"
+       qualifier is redundant and dropped, not translated. */
+    expect(html).toContain("Love opens the Playground call right after the reading.");
+    expect(html).not.toContain("Weekly Intuitive");
+    expect(html).not.toContain("—");
     expect(html).toContain("kit-btn kit-btn-main kit-btn-sm");
     expect(html).toContain("kit-text-quiet");
     expect(html).not.toContain('class="btn');
@@ -100,26 +132,36 @@ describe("PlaygroundDoor.tsx — the Weekly Intuitive room's own door (Build 3)"
     expect(src).not.toContain('"clair-senses"');
   });
 
-  it('PLAYGROUND_ROOM_SLUG is "clair-senses", defined beside READING_ROOM_SLUG', async () => {
+  it('PLAYGROUND_ROOM_SLUG is "weekly-reading" (TASK-465, block 968,561 — moved from clair-senses), defined beside READING_ROOM_SLUG', async () => {
     const { PLAYGROUND_ROOM_SLUG, READING_ROOM_SLUG } = await import("@/lib/reading-room");
-    expect(PLAYGROUND_ROOM_SLUG).toBe("clair-senses");
+    expect(PLAYGROUND_ROOM_SLUG).toBe("weekly-reading");
+    expect(PLAYGROUND_ROOM_SLUG).not.toBe("clair-senses");
     expect(READING_ROOM_SLUG).not.toBe(PLAYGROUND_ROOM_SLUG);
     const src = await read("src/lib/reading-room.ts");
     expect(src.indexOf("READING_ROOM_SLUG")).toBeLessThan(src.indexOf("PLAYGROUND_ROOM_SLUG"));
   });
 });
 
-describe("StageView — the door renders ONLY for clair-senses (Build 3)", () => {
+describe("StageView — the door renders ONLY for weekly-reading now (Build 3, re-trued TASK-465)", () => {
   const BASE = { live: false, roster: null } as const;
-  const CLAIR = { slug: "clair-senses", alias: "#clair-senses:onecocreation.com", title: "The Playground", kind: "class" as const, ...BASE };
+  const PLAYGROUND = { slug: "weekly-reading", alias: "#weekly-reading:onecocreation.com", title: "The Playground", kind: "class" as const, ...BASE };
+  const CLAIR = { slug: "clair-senses", alias: "#clair-senses:onecocreation.com", title: "Clair Senses", kind: "class" as const, ...BASE };
   const HEART_FIELD = { slug: "heart-field", alias: "#heart-field:onecocreation.com", title: "The Heart Field", kind: "community" as const, ...BASE };
   const OTHER = { slug: "evening-star", alias: "#inner-sanctum:onecocreation.com", title: "Evening Star — Inner Sanctum", kind: "community" as const, ...BASE };
 
-  it("clair-senses renders the join link and the quiet line", async () => {
+  it("weekly-reading renders the join link and the quiet line", async () => {
     const StageView = (await import("@/components/rooms/StageView")).default;
-    const html = renderToStaticMarkup(h(StageView, CLAIR));
+    const html = renderToStaticMarkup(h(StageView, PLAYGROUND));
     expect(html).toContain('href="/reading/playground"');
     expect(html).toContain("Join the Playground call");
+  });
+
+  it("clair-senses (hidden now) no longer renders the door — the Playground moved off it", async () => {
+    const StageView = (await import("@/components/rooms/StageView")).default;
+    const html = renderToStaticMarkup(h(StageView, CLAIR));
+    expect(html).not.toContain('href="/reading/playground"');
+    expect(html).not.toContain("Join the Playground call");
+    expect(html).not.toContain("cl-area-stage2");
   });
 
   it("the Heart Field renders unchanged — no Playground join link, its own Stage 2 door area untouched", async () => {

@@ -148,11 +148,12 @@ describe("Stage2DoorBody — every decision, rendered pure", () => {
     expect(html).not.toContain(encodeURIComponent("/rooms/"));
   });
 
-  it("package renders the Playground's OWN line (Amendment 2, A8; re-trued TASK-460) and the link labelled exactly 'See the package' (A6) to the package's own page", async () => {
+  it("package renders the Playground's OWN line (Amendment 2, A8; re-trued TASK-460, TASK-465) and the link labelled exactly 'See the package' (A6) to the package's own page", async () => {
     const html = await renderBody({ decision: "package", pkg: { ...PKG, week: null } });
     /* A8: the shared packageDoorLine reads wrong for the Playground — it is
-       the BOTTOM tier that opens it, and a one-week pass opens it too */
-    expect(html).toContain("The Playground comes with every membership, from Weekly Intuitive up.");
+       the BOTTOM tier that opens it, and a one-week pass opens it too.
+       TASK-465 (block 968,561, ruling C — no em dash): one plain sentence. */
+    expect(html).toContain("The Playground comes with every membership from Weekly Intuitive up.");
     expect(html).not.toContain("and everything above it");
     expect(html).not.toContain("one-week pass");
     /* A6: the line above already names the package, so the label says
@@ -163,10 +164,11 @@ describe("Stage2DoorBody — every decision, rendered pure", () => {
     expect(html).toContain('href="/packages/weekly-intuitive"');
   });
 
-  it("package with the week offer: the A8 line gains the one-week-pass clause, and a kit button reads 'Try one week — $11' (Amendment A3)", async () => {
+  it("package with the week offer: the A8 line gains the one-week-pass clause as its OWN sentence, and a kit button reads 'Try one week for $11' (Amendment A3; TASK-465 ruling C: no em dash)", async () => {
     const html = await renderBody({ decision: "package", pkg: { ...PKG, week: WEEK } });
-    expect(html).toContain("The Playground comes with every membership, from Weekly Intuitive up — or with a one-week pass.");
-    expect(html).toContain("Try one week — $11");
+    expect(html).toContain("The Playground comes with every membership from Weekly Intuitive up. Or try it with a one-week pass.");
+    expect(html).toContain("Try one week for $11");
+    expect(html).not.toContain("—");
     const btn = html.match(/<button[^>]*>[^<]*Try one week[^<]*<\/button>/);
     expect(btn, "the Try-one-week button not found").not.toBeNull();
     expect(btn![0]).toContain("kit-btn");
