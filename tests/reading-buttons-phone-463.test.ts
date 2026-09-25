@@ -45,9 +45,9 @@ describe("TASK-463 — the closed state's Heart Field link is the small kit butt
     );
   });
 
-  it("the live state's primary Watch Love live keeps the full-size button (it fits a 390 px phone)", () => {
+  it("the live state's primary Watch Love live is the small button too, since TASK-464 (block 968,548)", () => {
     expect(render({ phase: "published", room: "shot-room" })).toMatch(
-      /<a class="kit-btn kit-btn-main" href="\/rooms\/heart-field">\s*Watch Love live\s*<\/a>/,
+      /<a class="kit-btn kit-btn-main kit-btn-sm" href="\/rooms\/heart-field">\s*Watch Love live\s*<\/a>/,
     );
   });
 });

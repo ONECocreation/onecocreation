@@ -30,10 +30,12 @@ import JitsiViewer from "@/components/reading/JitsiViewer";
  * every Watch control now LINKS there instead of mounting the stream in
  * place). Every control that used to call `onWatch` (published, ended-
  * while-published, left-while-published) is now a `Link` to
- * `/rooms/heart-field` with the same label and the same `kit-btn
- * kit-btn-main` class — the room's own door does the sign-in + return
- * trip (`middleware.ts` + `door-machine.ts`, unread here). The closed
- * state gains its own such link, "Go to the Heart Field". `onWatch` and
+ * `/rooms/heart-field` with the same label; the class was uniform `kit-btn
+ * kit-btn-main` until TASK-464 (block 968,548) added `kit-btn-sm` to the
+ * published control alone (ended/left keep the full-size class) — the
+ * room's own door does the sign-in + return trip (`middleware.ts` +
+ * `door-machine.ts`, unread here). The closed state gains its own such
+ * link, "Go to the Heart Field". `onWatch` and
  * the click-time fresh-fetch `watch()` stay wired (still reachable from
  * Try again → tryAgain() → watch()) — dead-path removal of the in-place
  * viewer mount is the after-Saturday tidy lane, not this one.
@@ -215,8 +217,11 @@ export function ReadingStageBody({
              Field now — this link sends the visitor there; the room's own
              door does the sign-in + return trip. */
           <div className="kit-stage-controls">
+            {/* TASK-464: the small kit button — kit-btn never wraps, and at
+                full size this label ran 3 px past the card on a 360 px
+                phone */}
             <div className="kit-btn-row">
-              <Link href="/rooms/heart-field" className="kit-btn kit-btn-main">
+              <Link href="/rooms/heart-field" className="kit-btn kit-btn-main kit-btn-sm">
                 Watch Love live
               </Link>
             </div>
@@ -250,7 +255,7 @@ export function ReadingStageBody({
           after the stage, in every phase, only while Stage 2 is open */}
       {playgroundOpen && (
         <div className="kit-card kit-card-body kitx-flow kit-stage2-card">
-          <p className="kicker">Stage 2 · the Playground</p>
+          <p className="kicker">The Playground</p>
           <h2 className="kit-h2">Want an encore?</h2>
           <p className="kit-body">
             Love is opening the Playground now: a live video call right after the reading. Come up and talk with her.

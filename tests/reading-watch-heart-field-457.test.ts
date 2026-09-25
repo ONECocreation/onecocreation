@@ -54,9 +54,11 @@ function render(p: ReadingStageBodyProps): string {
 describe("published — Watch Love live is a link to the Heart Field, never an in-place mount", () => {
   const html = render(bodyProps({ phase: "published", room: ROOM }));
 
-  it('renders exactly one kit-btn-main link, href="/rooms/heart-field", labelled "Watch Love live"', () => {
+  it('renders exactly one kit-btn-main link (the small size since TASK-464), href="/rooms/heart-field", labelled "Watch Love live"', () => {
     expect(html).toMatch(
-      new RegExp(`<a class="kit-btn kit-btn-main" href="${HEART_FIELD_HREF.replace("/", "\\/")}">\\s*Watch Love live\\s*<\\/a>`),
+      new RegExp(
+        `<a class="kit-btn kit-btn-main kit-btn-sm" href="${HEART_FIELD_HREF.replace("/", "\\/")}">\\s*Watch Love live\\s*<\\/a>`,
+      ),
     );
   });
 
