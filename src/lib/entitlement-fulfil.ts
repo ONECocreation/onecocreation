@@ -1,7 +1,7 @@
 import type { OrderRecord } from "./store";
 import { getEntry } from "./registry";
 import { getItem } from "./store";
-import { grantTier, revokeTier, getEntitlement, linkMxid, isTier, normalizeNpub, type Tier } from "./entitlement";
+import { grantTier, revokeTier, getEntitlement, linkMxid, isTier, normalizeNpub, isLapsedPassOrder, type Tier } from "./entitlement";
 import { inviteToTierRooms, removeFromTierRooms, matrixConfigured, isMxid, mxidForSubject, type RoomOutcome } from "./matrix";
 import { emailForSubject } from "./member-tier";
 import { TIERS } from "./entitlement";
@@ -134,6 +134,13 @@ export async function settleEntitlementFromOrder(order: OrderRecord): Promise<Fu
 
     case "refunded":
     case "disputed": {
+      // TASK-462 round 4 (block 968,548): this order may be a taster pass
+      // that had ALREADY LAPSED before this refund/dispute ever arrived —
+      // the membership under it is not this order's to close. Checked
+      // FIRST, before anything reads or touches rooms/tier/letters at all.
+      if (await isLapsedPassOrder(npub, order.id)) {
+        return { ...NOTHING, tier, note: "the refunded pass had already ended; the membership under it stays" };
+      }
       const held = await getEntitlement(npub);
       // rooms first — revoking would lose the tier that names them
       const rooms = held?.mxid && matrixConfigured() && isMxid(held.mxid)
