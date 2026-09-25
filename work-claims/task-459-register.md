@@ -135,3 +135,7 @@ store-cards): 100/100 green, no re-truing needed anywhere. No shots taken
 
 Final HEAD: this register's own commit — reported in the hand-back
 message.
+
+## Review fix (Number One, block 968,543)
+The adversarial review (two lenses) found nothing blocking and one genuine miss outside the brief's anchor list: the home Services() line `sections.tsx:451` (and its seed twin `puck-seeds.ts:451`) said "pay in sats or dollars", unconditionally, on the card path. Now "Pick a session → choose a real open time → pay → confirmed with a calendar file, held with love." (true on every rail, no rail read needed). Pinned by one new test in `tests/card-path-words-459.test.ts` (15 tests now).
+Noted, not changed (after Saturday / read-only): a line that ALREADY carries a sats offer still prints "your offer: N sats" (CartPanel.tsx:332) and the anyOffer banner "your sats come straight back" (:485-486); the checkout 409 words mention "pay by bitcoin" (api/cart/checkout:114). With bitcoin off no new offer can be made, so these only reach a buyer holding an offer from before.

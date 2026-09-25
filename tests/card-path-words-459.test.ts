@@ -75,6 +75,16 @@ describe("TASK-459 — the four bitcoin/no-cut sentences are gone from the live 
     expect(src).toMatch(/Your package opens its doors\./);
   });
 
+  it("sections.tsx + SEEDS.home: the sessions line says \"pay\", never \"pay in sats or dollars\" (review catch, block 968,543)", async () => {
+    const src = read("src/components/sections.tsx");
+    expect(src).not.toMatch(/pay in sats or dollars/i);
+    expect(src).toContain("choose a real open time → pay → confirmed with a calendar file");
+    const { SEEDS } = await import("@/lib/puck-seeds");
+    const flat = JSON.stringify(SEEDS.home);
+    expect(flat).not.toMatch(/pay in sats or dollars/i);
+    expect(flat).toContain("choose a real open time → pay → confirmed with a calendar file");
+  });
+
   it("support/page.tsx: no \"no cut taken\", the jar sentence stays grammatical", () => {
     const src = read("src/app/support/page.tsx");
     expect(src).not.toMatch(FORBIDDEN.noCutTaken);

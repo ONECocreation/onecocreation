@@ -448,7 +448,7 @@ export async function Services() {
           ))}
         </div>
         <p className="center reveal" style={{ margin: "30px auto 0", maxWidth: 640, fontSize: ".88rem", color: "var(--muted)" }}>
-          Pick a session → choose a real open time → pay in sats or dollars → confirmed with a calendar file, held with love.
+          Pick a session → choose a real open time → pay → confirmed with a calendar file, held with love.
         </p>
       </div>
     </section>

@@ -448,7 +448,7 @@ const homeContent: Block[] = [
     hm.heading("Sessions with Love", "h2", "center", st({ color: "ink" })),
     hm.text("The Way of the Heart, one-on-one. Sessions where you don’t have to keep up conversation. Pick a time — you’re held.", "center", st({ color: "muted" })),
     hm.note("── live sessions shelf stays code-side (the real booking cards) ──"),
-    hm.text("Pick a session → choose a real open time → pay in sats or dollars → confirmed with a calendar file, held with love.", "center", st({ color: "muted", size: 15 })),
+    hm.text("Pick a session → choose a real open time → pay → confirmed with a calendar file, held with love.", "center", st({ color: "muted", size: 15 })),
   ]), "home-services"),
 
   // 6 - tend the field
