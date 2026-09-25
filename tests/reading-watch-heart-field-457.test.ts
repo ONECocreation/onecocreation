@@ -56,7 +56,7 @@ describe("published — Watch Love live is a link to the Heart Field, never an i
 
   it('renders exactly one kit-btn-main link, href="/rooms/heart-field", labelled "Watch Love live"', () => {
     expect(html).toMatch(
-      new RegExp(`<a[^>]*href="${HEART_FIELD_HREF.replace("/", "\\/")}"[^>]*class="kit-btn kit-btn-main"[^>]*>\\s*Watch Love live\\s*<\\/a>`),
+      new RegExp(`<a class="kit-btn kit-btn-main" href="${HEART_FIELD_HREF.replace("/", "\\/")}">\\s*Watch Love live\\s*<\\/a>`),
     );
   });
 
@@ -76,7 +76,7 @@ describe("closed — Go to the Heart Field", () => {
 
   it('renders exactly one kit-btn-main link, href="/rooms/heart-field", labelled "Go to the Heart Field"', () => {
     expect(html).toMatch(
-      new RegExp(`<a[^>]*href="${HEART_FIELD_HREF.replace("/", "\\/")}"[^>]*class="kit-btn kit-btn-main"[^>]*>\\s*Go to the Heart Field\\s*<\\/a>`),
+      new RegExp(`<a class="kit-btn kit-btn-main" href="${HEART_FIELD_HREF.replace("/", "\\/")}">\\s*Go to the Heart Field\\s*<\\/a>`),
     );
   });
 
