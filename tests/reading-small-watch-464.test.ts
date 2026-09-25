@@ -87,7 +87,7 @@ describe("TASK-464's full-size Watch again — SUPERSEDED by TASK-466 (block 968
   it("published, ended-while-published: no Watch again at all — TASK-466 replaced it with the Playground link", () => {
     const html = render(bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30" }));
     expect(html).not.toContain("Watch again");
-    expect(html).toContain("Watch part two in the Playground");
+    expect(html).toContain("Watch part two");
     expect(html).toMatch(/<a class="kit-btn kit-btn-main kit-btn-sm" href="\/reading\/playground">/);
   });
 

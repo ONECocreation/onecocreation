@@ -182,7 +182,7 @@ describe("ended — the book, the ended words, the next date; TASK-466 (block 96
     expect(html).toContain("Wednesday, September 30");
     expect(count(html, "kit-btn-main")).toBe(1);
     expect(html).not.toContain("Watch again");
-    expect(html).toContain("Watch part two in the Playground");
+    expect(html).toContain("Watch part two");
     expect(html).toContain('href="/reading/playground"');
   });
 
@@ -192,7 +192,7 @@ describe("ended — the book, the ended words, the next date; TASK-466 (block 96
     expect(html).toContain("Thank you for being here.");
     expect(html).not.toContain("Watch again");
     expect(html).not.toContain("<button");
-    expect(html).toContain("Watch part two in the Playground");
+    expect(html).toContain("Watch part two");
     expect(html).toContain('href="/reading/playground"');
   });
 

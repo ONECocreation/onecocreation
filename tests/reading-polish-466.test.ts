@@ -42,7 +42,7 @@ const ROOM = "oc-0123456789abcdef";
 const DOMAIN = "meet.reading-polish-fixture.invalid";
 const FLOOR_NAME = TIERS[STAGE2_MIN_TIER].name;
 const PLAYGROUND_HREF = "/reading/playground";
-const PLAYGROUND_LABEL = "Watch part two in the Playground";
+const PLAYGROUND_LABEL = "Watch part two";
 const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
 
 function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyProps {
@@ -133,7 +133,7 @@ describe("TASK-466 ruling 2 — no em dash in any rendered phase's text", () => 
 });
 
 describe("TASK-466 ruling 1 — the ended card drops Watch again for one Playground door", () => {
-  it("published-underneath ended: no Watch again, exactly one /reading/playground link labelled \"Watch part two in the Playground\"", () => {
+  it("published-underneath ended: no Watch again, exactly one /reading/playground link labelled \"Watch part two\"", () => {
     const html = render(bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30" }));
     expect(html).not.toContain("Watch again");
     expect([...html.matchAll(new RegExp(PLAYGROUND_HREF.replace("/", "\\/"), "g"))]).toHaveLength(1);

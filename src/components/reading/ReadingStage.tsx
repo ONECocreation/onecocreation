@@ -59,9 +59,13 @@ import JitsiViewer from "@/components/reading/JitsiViewer";
  * sentence loses its own dash the same way. (3) "Watch again" is RETIRED
  * on the ended card — there is no replay right now — replaced in BOTH
  * ended variants (still published, or closed underneath) by one link
- * onward to part two, `/reading/playground` ("Watch part two in the
- * Playground"). That page already owns sign-in, the package door and the
- * join for real; this link and its lock are display only. A visitor who
+ * onward to part two, `/reading/playground` ("Watch part two" — measured
+ * short on purpose: the longer "…in the Playground" phrasing rendered
+ * ~382px wide and bled past the card on a 360px phone at kit-btn-sm, the
+ * same clipping shape TASK-463/464 already found and fixed by resizing;
+ * here the fix is the words themselves). That page already owns sign-in,
+ * the package door and the join for real; this link and its lock are
+ * display only. A visitor who
  * doesn't yet clear the Playground's floor (`playgroundLock`, computed
  * server-side in reading/page.tsx the exact way `/api/stage2/route.ts`'s
  * GET does — never re-implemented here) sees a quiet lock glyph ahead of
@@ -180,8 +184,8 @@ const COVER_SRC = "/images/reading-love-cover.jpg";
 const COVER_ALT = "Love, by Leo Buscaglia: the word LOVE in white over a swirling violet and rose nebula";
 
 /* TASK-466 (block 968,561, ruling 1) — the ended card's lock glyph: a
-   quiet inline padlock ahead of "Watch part two in the Playground" for a
-   visitor who doesn't clear its floor yet. Decorative only (aria-hidden)
+   quiet inline padlock ahead of "Watch part two" for a visitor who
+   doesn't clear the Playground's floor yet. Decorative only (aria-hidden)
    — the words underneath still say who it's for IN WORDS, never the icon
    alone (the legibility doctrine). The house's own inline-SVG shape
    (WildDoors.tsx's INSTAGRAM_GLYPH): no icon dependency, `currentColor`
@@ -266,9 +270,18 @@ export function ReadingStageBody({
             {!playgroundOpen && (
               <>
                 <div className="kit-btn-row">
+                  {/* the label is "Watch part two" (not the longer "…in
+                      the Playground") — measured: at kit-btn-sm the
+                      longer phrase rendered ~382px wide and bled ~34px
+                      past the card on a 360px phone (overflow:hidden
+                      clipped both ends of the words, the same shape as
+                      TASK-463/464's own findings). "Watch part two"
+                      renders well inside the card at every width shot;
+                      the destination names itself the moment the link
+                      lands on /reading/playground. */}
                   <Link href="/reading/playground" className="kit-btn kit-btn-main kit-btn-sm">
                     {playgroundLock.locked && PLAYGROUND_LOCK_ICON}
-                    Watch part two in the Playground
+                    Watch part two
                   </Link>
                 </div>
                 {playgroundLock.locked && (

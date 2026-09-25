@@ -105,7 +105,7 @@ describe("ended-while-published: TASK-466 (block 968,561) retired Watch again fo
     expect(html).not.toMatch(/<button[^>]*>\s*Watch again/);
     expect(html).not.toContain("Watch again");
     expect(html).not.toContain(HEART_FIELD_HREF);
-    expect(html).toContain("Watch part two in the Playground");
+    expect(html).toContain("Watch part two");
     expect(html).toContain("/reading/playground");
   });
 
