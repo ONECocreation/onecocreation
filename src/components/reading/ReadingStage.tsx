@@ -50,6 +50,34 @@ import JitsiViewer from "@/components/reading/JitsiViewer";
  * motion, no click effect. The banner is display only — the Playground
  * page's island re-decides everything at its own door.
  *
+ * TASK-466 (block 968,561) — the Admiral's three notes on the block
+ * picture: (1) every button on the card is the SAME size now — "Try
+ * again" and the ended/left "Watch again" pick up `kit-btn-sm` too, the
+ * one class every other control here already carries; (2) the ended
+ * sentence's em dash is slop — it is now two sentences, "The reading has
+ * ended." then, on its own line, "Thank you for being here."; the failed
+ * sentence loses its own dash the same way. (3) "Watch again" is RETIRED
+ * on the ended card — there is no replay right now — replaced in BOTH
+ * ended variants (still published, or closed underneath) by one link
+ * onward to part two, `/reading/playground` ("Watch part two in the
+ * Playground"). That page already owns sign-in, the package door and the
+ * join for real; this link and its lock are display only. A visitor who
+ * doesn't yet clear the Playground's floor (`playgroundLock`, computed
+ * server-side in reading/page.tsx the exact way `/api/stage2/route.ts`'s
+ * GET does — never re-implemented here) sees a quiet lock glyph ahead of
+ * the label and, in words underneath (never the icon alone — the
+ * legibility doctrine), who it's for. The ended card's own link steps
+ * aside when the Playground banner is ALREADY showing its own door
+ * (`playgroundOpen`) — never two Playground buttons on one page. The
+ * "left" state (K122 item 8) is untouched beyond the size: rejoining the
+ * LIVE show is not a replay, so its Heart Field link and label stay.
+ * Every button row here was ALREADY centered by kit.css
+ * (`.kit-stage-controls .kit-btn-row` and the banner's own `.kitx-
+ * actions`) — no new centering rule was needed. `tests/reading-
+ * polish-466.test.ts` carries this lane's own new pins; `reading-
+ * stage.test.ts`, `reading-watch-heart-field-457.test.ts` and `reading-
+ * small-watch-464.test.ts` carry the re-trued old-shape pins.
+ *
  * `ReadingStageBody` is the pure presentation (renderToStaticMarkup
  * tests); the default export owns the fetching.
  */
@@ -68,6 +96,16 @@ export interface ReadingStageProps {
   /** the when-lines companion — rendered while live/failed/left, never in
    *  ended (the ended words name the date themselves) */
   countdownWhen: React.ReactNode;
+  /** TASK-466 (block 968,561) — the server's own read of whether THIS
+   *  visitor already clears the Playground's floor, computed in reading/
+   *  page.tsx the exact way `/api/stage2/route.ts`'s GET does
+   *  (`tierForSubject` then `tierSatisfies` against `STAGE2_MIN_TIER`) —
+   *  never re-implemented here. Display only: the ended card's Playground
+   *  link always goes to `/reading/playground`, which re-decides for
+   *  real. `floorName` reads `TIERS[STAGE2_MIN_TIER].name` — never a
+   *  literal tier name, so the words stay true once TASK-465 moves the
+   *  floor from A to B. */
+  playgroundLock: { locked: boolean; floorName: string };
 }
 
 export interface ReadingStageBodyProps {
@@ -84,6 +122,10 @@ export interface ReadingStageBodyProps {
   /** the Playground banner's open truth (the island's own /api/stage2
    *  poll) — the banner shows in every phase while Stage 2 is open */
   playgroundOpen: boolean;
+  /** TASK-466 — see ReadingStageProps. Read only on the ended card's own
+   *  Playground link: locked shows the lock glyph + the quiet floor
+   *  words, entitled shows neither. */
+  playgroundLock: { locked: boolean; floorName: string };
   /** the server-composed countdown nodes — see ReadingStageProps */
   countdown: React.ReactNode;
   countdownWhen: React.ReactNode;
@@ -137,6 +179,20 @@ export function readingShownNext(
 const COVER_SRC = "/images/reading-love-cover.jpg";
 const COVER_ALT = "Love, by Leo Buscaglia: the word LOVE in white over a swirling violet and rose nebula";
 
+/* TASK-466 (block 968,561, ruling 1) — the ended card's lock glyph: a
+   quiet inline padlock ahead of "Watch part two in the Playground" for a
+   visitor who doesn't clear its floor yet. Decorative only (aria-hidden)
+   — the words underneath still say who it's for IN WORDS, never the icon
+   alone (the legibility doctrine). The house's own inline-SVG shape
+   (WildDoors.tsx's INSTAGRAM_GLYPH): no icon dependency, `currentColor`
+   so it always matches the link's own ink. */
+const PLAYGROUND_LOCK_ICON = (
+  <svg className="kit-lock-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+    <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
 export function ReadingStageBody({
   phase,
   watching,
@@ -147,6 +203,7 @@ export function ReadingStageBody({
   jitsiDomain,
   nextWords,
   playgroundOpen,
+  playgroundLock,
   countdown,
   countdownWhen,
   onTryAgain,
@@ -178,36 +235,57 @@ export function ReadingStageBody({
         )}
         {watching && room ? null : failed ? (
           <div className="kit-stage-controls">
-            <p className="kit-body">The picture didn&apos;t open just now — the reading itself is fine on our side.</p>
+            {/* TASK-466: two sentences, no dash (ruling 2's shape) */}
+            <p className="kit-body">The picture didn&apos;t open just now. The reading itself is fine on our side.</p>
             <div className="kit-btn-row">
-              <button type="button" className="kit-btn kit-btn-main" onClick={onTryAgain}>
+              {/* TASK-466: every button here is the small kit button now */}
+              <button type="button" className="kit-btn kit-btn-main kit-btn-sm" onClick={onTryAgain}>
                 Try again
               </button>
             </div>
           </div>
         ) : ended ? (
           <div className="kit-stage-controls">
-            <p className="kit-body">The reading has ended — thank you for being here.</p>
+            {/* TASK-466 (block 968,561, ruling 2): the em dash was slop —
+                two sentences, the second on its own line */}
+            <p className="kit-body">The reading has ended.</p>
+            <p className="kit-body">Thank you for being here.</p>
             {/* K122 item 13 — with no date (the schedule off) the words
                 promise one soon instead of naming one */}
             <p className="kit-text-quiet">
               {nextWords ? `The next reading is ${nextWords}.` : "Love will share the next reading date soon."}
             </p>
-            {phase === "published" && (
-              <div className="kit-btn-row">
-                <Link href="/rooms/heart-field" className="kit-btn kit-btn-main">
-                  Watch again
-                </Link>
-              </div>
+            {/* TASK-466 (block 968,561, ruling 1): "Watch again" is
+                retired in BOTH ended variants (still published, or closed
+                underneath) — there is no replay right now. One door
+                onward instead, to part two; the lock and quiet floor
+                words are display only (the Playground page's own door
+                decides for real). Steps aside only when the banner below
+                is ALREADY showing its own Playground door — never two on
+                one page. */}
+            {!playgroundOpen && (
+              <>
+                <div className="kit-btn-row">
+                  <Link href="/reading/playground" className="kit-btn kit-btn-main kit-btn-sm">
+                    {playgroundLock.locked && PLAYGROUND_LOCK_ICON}
+                    Watch part two in the Playground
+                  </Link>
+                </div>
+                {playgroundLock.locked && (
+                  <p className="kit-text-quiet">Part two is for {playgroundLock.floorName} members and up.</p>
+                )}
+              </>
             )}
           </div>
         ) : left ? (
           /* K122 item 8 — the viewer's own hangup on a STILL-PUBLISHED
-             stage: honest words and the way back in, never the ended words */
+             stage: honest words and the way back in, never the ended
+             words. Rejoining the LIVE show is not a replay (TASK-466
+             left this branch alone beyond the one-size rule). */
           <div className="kit-stage-controls">
             <p className="kit-body">You left the reading.</p>
             <div className="kit-btn-row">
-              <Link href="/rooms/heart-field" className="kit-btn kit-btn-main">
+              <Link href="/rooms/heart-field" className="kit-btn kit-btn-main kit-btn-sm">
                 Watch again
               </Link>
             </div>
@@ -281,6 +359,7 @@ export default function ReadingStage({
   jitsiDomain,
   countdown,
   countdownWhen,
+  playgroundLock,
 }: ReadingStageProps) {
   /* prepared is PRIVATE — a visitor's phase is closed until published */
   const [phase, setPhase] = useState<"closed" | "published">(initialPhase === "published" ? "published" : "closed");
@@ -451,6 +530,7 @@ export default function ReadingStage({
       jitsiDomain={jitsiDomain}
       nextWords={nextWords}
       playgroundOpen={playgroundOpen}
+      playgroundLock={playgroundLock}
       countdown={countdown}
       countdownWhen={countdownWhen}
       onWatch={() => void watch()}

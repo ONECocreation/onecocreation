@@ -255,6 +255,12 @@
 .kit-stage-controls.kit-stage-controls-slim{padding:12px 16px}
 .kit-stage-tools{display:flex;gap:18px;justify-content:center}
 .kit-stage-tools>.kit-btn{padding:6px 10px;font-size:.8rem}
+/* TASK-466 (block 968,561): the ended card's lock glyph — spacing/baseline
+   only, no colour of its own (the icon inherits the link's ink via
+   currentColor). Every button row it sits inside was ALREADY centered by
+   .kit-stage-controls .kit-btn-row above; this is the one new rule this
+   lane needed. */
+.kit-lock-icon{margin-right:6px;vertical-align:-2px}
 
 /* ── the one-way viewer, filling the same media frame the book waited in ── */
 .kit-stage-viewer{position:absolute;inset:0}

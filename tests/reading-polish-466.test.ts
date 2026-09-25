@@ -70,10 +70,11 @@ function render(p: ReadingStageBodyProps): string {
   return renderToStaticMarkup(createElement(ReadingStageBody, p));
 }
 
-/** every class attribute that carries "kit-btn" — button-shaped tags only,
- *  never the unrelated `.kit-btn-row` wrapper or `.kit-stage-chip` pill. */
+/** every class attribute that carries the exact "kit-btn" token — real
+ *  button/link tags only, never the `.kit-btn-row` wrapper (a single,
+ *  different token that merely starts with the same letters). */
 function kitBtnClassAttrs(html: string): string[] {
-  return [...html.matchAll(/class="([^"]*\bkit-btn\b[^"]*)"/g)].map((m) => m[1]);
+  return [...html.matchAll(/class="([^"]*)"/g)].map((m) => m[1]).filter((cls) => cls.split(" ").includes("kit-btn"));
 }
 
 const ALL_PHASES: Array<[string, Partial<ReadingStageBodyProps>]> = [
@@ -87,11 +88,13 @@ const ALL_PHASES: Array<[string, Partial<ReadingStageBodyProps>]> = [
 ];
 
 describe("TASK-466 ruling 3 — one button size everywhere on the card", () => {
-  it("every kit-btn* tag across every phase carries kit-btn-sm", () => {
+  it("every kit-btn* tag across every phase carries kit-btn-sm (watching alone has none — Jitsi's own toolbar is the control)", () => {
     for (const [name, overrides] of ALL_PHASES) {
       const html = render(bodyProps(overrides));
       const classes = kitBtnClassAttrs(html);
-      expect(classes.length, `${name}: expected at least one kit-btn`).toBeGreaterThan(0);
+      if (name !== "watching") {
+        expect(classes.length, `${name}: expected at least one kit-btn`).toBeGreaterThan(0);
+      }
       for (const cls of classes) {
         expect(cls.split(" "), `${name}: "${cls}" is missing kit-btn-sm`).toContain("kit-btn-sm");
       }
