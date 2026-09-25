@@ -79,7 +79,7 @@ export default function ReadingDayBody({
         <li>
           <span>
             <b>{`${clockWords(housewarmingStartsAtMs, tz)} · The Housewarming`}</b>
-            <em>Introductions and movement with Love. Cameras on.</em>
+            <em>Free. Introductions and movement with Love. Everyone&apos;s on camera.</em>
           </span>
           <span className="kit-rows-end">
             {signedIn ? (

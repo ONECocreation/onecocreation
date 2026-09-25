@@ -95,7 +95,9 @@ describe("ReadingDayBody — the Housewarming is the FIRST row, before The Readi
     const row = firstRow(html);
     expect(row).toContain(clockWords(HOUSEWARMING_MS, TZ));
     expect(row).toContain("12:12 PM MDT");
-    expect(row).toContain("Introductions and movement with Love. Cameras on.");
+    // Lumen's word check (block 968,571): "Free." like the Reading row; a description, not a command
+    expect(row).toContain("Free. Introductions and movement with Love. Everyone&#x27;s on camera.");
+    expect(row).not.toContain("Cameras on.");
   });
 });
 

@@ -212,3 +212,9 @@ of six across three). No page-local styles added anywhere.
    no deviation; the new row is a straight copy of the Reading row's own
    shape, so no new CSS, no new component, and no page-mount change were
    needed at all.
+
+## Lumen's word check (block 968,571, verdict FIX, taken)
+
+"Introductions and movement with Love. Cameras on." is now "Free. Introductions and movement with Love. Everyone's on camera."
+- "Free." matches the Reading row. Both are free and both are in the Heart Field.
+- "Everyone's on camera." describes the room, where "Cameras on." read as a command to a shy newcomer.
