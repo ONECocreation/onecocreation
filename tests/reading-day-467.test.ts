@@ -441,7 +441,8 @@ describe("the page source gains only the mount (one import, one bare <ReadingDay
 
   it("sits right before the WHAT YOU WILL EXPERIENCE section, right after the sign-up section", async () => {
     const src = await read(PAGE_PATH);
-    const signUp = src.indexOf("<ReadingSignUp");
+    // TASK-468 replaced the old <ReadingSignUp variant="public"> with the one box
+    const signUp = src.indexOf("<ReadingSignInBox");
     const mount = src.indexOf("<ReadingDay");
     const experience = src.indexOf("WHAT YOU WILL EXPERIENCE");
     expect(signUp).toBeGreaterThan(-1);
@@ -449,9 +450,11 @@ describe("the page source gains only the mount (one import, one bare <ReadingDay
     expect(experience).toBeGreaterThan(mount);
   });
 
-  it("still carries no tier/payment word and no TIERS import — the law this page's own house test pins", async () => {
+  it("still carries no payment word and no TIERS import — the law this page's own house test pins", async () => {
     const src = await read(PAGE_PATH);
-    expect(src).not.toMatch(/\btier\b/i);
+    // TASK-466 gave the page ONE sanctioned tier read (the Playground lock,
+    // pinned in tests/reading-page.test.ts); this lane adds none of its own
+    expect(src.match(/tierForSubject\(/g)?.length ?? 0).toBe(1);
     expect(src).not.toMatch(/\bpayment\b/i);
     expect(src).not.toMatch(/\bTIERS\b/);
   });

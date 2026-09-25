@@ -221,3 +221,11 @@ GATES GREEN
 After seeing the shots:
 - **The Encore button read just "Unlock" beside "Unlock the Q&A".** It now reads "Unlock the Encore", the same shape as the Q&A button. The aria label is "Unlock the Encore with {floor}".
 - **A locked row said nothing about who it was for when the store gave no price.** The shots were blank, since there's no local catalog. Now the Encore row always says "Comes with {floor} and up.", and the price is added when known. The Q&A row always names Evening Star (a link), with its price when known.
+
+## Rebased onto TASK-468 (after #89 and #90 merged)
+
+- `kit.css`: TASK-466 already added the same `.kit-lock-icon` rule, so there is one rule now, shared.
+- `reading/page.tsx`: the imports are now `ReadingSignInBox` (TASK-468) plus `ReadingDay`.
+- Two page pins re-trued in `tests/reading-day-467.test.ts`:
+  - the mount sits after `<ReadingSignInBox`, since the old `<ReadingSignUp` is gone;
+  - the "no tier word" ban became "exactly one `tierForSubject(` call". That one call is TASK-466's approved Playground-lock read, pinned in reading-page.test.ts, and this lane adds none.
