@@ -472,7 +472,7 @@ describe("card words (source pins — OrderStatus.tsx is a client poller; render
 
   it("the door: signed in gets a kit-btn kit-btn-main link to the Heart Field; not signed in gets the door as the sign-in's next", () => {
     expect(src).toContain("settledFine && order.door && order.viewerOwns");
-    expect(src).toContain('<p><a href={order.door} className="kit-btn kit-btn-main">Go to the Heart Field</a></p>');
+    expect(src).toContain('<p><a href={order.door} className="kit-btn kit-btn-main kit-btn-sm">Go to the Heart Field</a></p>');
     expect(src).toContain("The reading and the Playground both open there.");
     expect(src).toContain("`/login?next=${encodeURIComponent(order.door)}`");
     expect(src).toContain("Sign in with {buyerEmail}</a> to go in.");

@@ -318,7 +318,7 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
           {/* design-drift ratchet (tests/design-drift.ceilings.json): no new
               inline style — the outer container's own textAlign:"center"
               already centers an inline-block .kit-btn, no flex wrapper needed */}
-          <p><a href={order.door} className="kit-btn kit-btn-main">Go to the Heart Field</a></p>
+          <p><a href={order.door} className="kit-btn kit-btn-main kit-btn-sm">Go to the Heart Field</a></p>
           <p className="kit-text-quiet">The reading and the Playground both open there.</p>
         </>
       )}
