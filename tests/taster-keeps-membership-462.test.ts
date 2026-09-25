@@ -2,6 +2,53 @@ import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vite
 import { grantTier, getEntitlement, revokeTier, type Entitlement } from "@/lib/entitlement";
 import { classStartingAudience } from "@/lib/live";
 import type { MatrixRoom } from "@/lib/matrix-rooms";
+import type { OrderRecord, StoreItem } from "@/lib/store";
+import { getItem } from "@/lib/store";
+import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
+
+/**
+ * ROUND 4 (block 968,548): the FINAL adversarial review on `8d84694` found
+ * one more confirmed defect in round 3's own "narrowed" `revokeTier` — a
+ * plain, single, NEVER-redelivered refund of an ALREADY-LAPSED taster pass
+ * still closed the permanent membership underneath it and mailed a false
+ * "membership closed" letter naming the WRONG tier, because `revokeTier(npub)`
+ * has no `orderId` to check at all and just blindly closes whatever
+ * `getEntitlement` currently shows. Fix: a new pure `isLapsedPassOrder`
+ * (`entitlement.ts`) reads the RAW record and answers "is `orderId` this
+ * record's own order, already lapsed, with a live grant still under it?" —
+ * `entitlement-fulfil.ts`'s refunded/disputed branch checks it FIRST and, if
+ * true, does nothing at all (no room removal, no revoke, no letter). A
+ * refund of a STILL-LIVE pass, or of the standing grant's own order, is
+ * unaffected — same blunt base close as before this round.
+ *
+ * These integration tests need the fulfil layer's outer boundaries mocked —
+ * `@/lib/store`'s `getItem` and `@/lib/matrix`'s five exports, the same
+ * idiom this file's own round-2 F2 rows used (and the reviewer's own probe,
+ * `probe462final/review.test.ts`, reuses) — while `entitlement.ts` stays
+ * real throughout, backed by the SAME KV fixture as every other test below.
+ */
+const fulfilKicked: { mxid: string; reason?: string }[] = [];
+const fulfilMailed: unknown[] = [];
+
+vi.mock("@/lib/store", () => ({ getItem: vi.fn() }));
+vi.mock("@/lib/matrix", () => ({
+  inviteToTierRooms: vi.fn(async (mxid: string, tier: string) => [{ room: `#room-${tier}`, ok: true }]),
+  removeFromTierRooms: vi.fn(async (mxid: string, opts?: { reason?: string }) => {
+    fulfilKicked.push({ mxid, reason: opts?.reason });
+    return [{ room: "#kicked", ok: true }];
+  }),
+  matrixConfigured: () => true,
+  isMxid: (v: string) => typeof v === "string" && v.startsWith("@"),
+  mxidForSubject: (s: string) => `@${s}`,
+}));
+vi.mock("@/lib/mail-queue", () => ({
+  enqueue: vi.fn(async (items: unknown[]) => {
+    fulfilMailed.push(...items);
+    return items.length;
+  }),
+}));
+
+const mockGetItem = vi.mocked(getItem);
 
 /**
  * TASK-462 (block 968,543): a taster that outranks a live standing grant must
@@ -88,6 +135,22 @@ beforeEach(() => {
   kvSets = new Map();
   vi.useFakeTimers();
   vi.setSystemTime(T0);
+  fulfilKicked.length = 0;
+  fulfilMailed.length = 0;
+  mockGetItem.mockReset();
+  mockGetItem.mockResolvedValue({
+    id: "qa-day-pass",
+    schemaVersion: 2,
+    title: "Q&A Day Pass",
+    blurb: "one day in the Evening Star",
+    images: [],
+    kind: "package",
+    price: { fiat: { amount: 1100, currency: "USD" }, sats: 11_111 },
+    fulfillment: "package",
+    status: "live",
+    entitlementTier: "C",
+    entitlementDays: 1,
+  } satisfies StoreItem);
 });
 
 afterEach(() => {
@@ -374,5 +437,115 @@ describe("classStartingAudience — R3 (round 3, block 968,548): re-derives live
     const bRoom: MatrixRoom = { id: "#test-room-b:onecocreation.com", title: "Test Room B", kind: "community", minTier: "B" };
     const audience = await classStartingAudience(bRoom);
     expect(audience).not.toContain("audience-member-2@example.com");
+  });
+});
+
+const LAPSED_REFUND_NPUB = "lapsed-refund@example.com@email";
+const LAPSED_REFUND_MXID = "@lapsed-refund:matrix.onecocreation.com";
+
+function lapsedRefundOrder(over: Partial<OrderRecord> = {}): OrderRecord {
+  return {
+    id: "order-taster",
+    schemaVersion: 2,
+    state: "refunded",
+    lineItems: [{ itemId: "qa-day-pass", title: "Q&A Day Pass", qty: 1 }],
+    priceSnapshot: { amount: 1100, currency: "USD", at: new Date(T0).toISOString() },
+    adapterId: "square",
+    chargeIds: ["ch_fixture"],
+    entitlementSubject: LAPSED_REFUND_NPUB,
+    contact: { email: "lapsed-refund@example.com" },
+    createdAtMs: T0,
+    events: [],
+    ...over,
+  } as OrderRecord;
+}
+
+describe("settleEntitlementFromOrder — round 4 (block 968,548): a refund of an already-lapsed pass leaves the membership under it alone", () => {
+  it("a single, ordinary refund of an already-lapsed taster pass does nothing at all — no room removal, no revoke, no letter", async () => {
+    await grantTier(LAPSED_REFUND_NPUB, "A", "order-permanent", { mxid: LAPSED_REFUND_MXID }); // paid, permanent Weekly Intuitive
+    await grantTier(LAPSED_REFUND_NPUB, "C", "order-taster", { expiresAtMs: T0 + 1 * DAY }); // the Q&A day pass, under=A
+
+    vi.setSystemTime(T0 + 3 * DAY); // the pass lapsed days ago — member correctly reads A
+    expect((await getEntitlement(LAPSED_REFUND_NPUB))?.tier).toBe("A");
+
+    vi.setSystemTime(T0 + 7 * DAY); // a week later, Love refunds the long-dead pass order — one ordinary delivery
+    const result = await settleEntitlementFromOrder(lapsedRefundOrder());
+
+    expect(result.note).toBe("the refunded pass had already ended; the membership under it stays");
+    expect(result.revoked).toBe(false);
+    expect(result.granted).toBe(false);
+    expect(result.rooms).toEqual([]);
+
+    const rec = await getEntitlement(LAPSED_REFUND_NPUB);
+    expect(rec?.tier).toBe("A");
+    expect(rec?.orderId).toBe("order-permanent");
+    expect(rec?.revokedAtMs).toBeUndefined();
+
+    expect(fulfilKicked).toEqual([]); // no room removal at all
+    expect(fulfilMailed).toEqual([]); // no closing letter
+  });
+
+  it("a redelivered refund of the same lapsed order, and a dispute of it, are both no-ops — A stands every time", async () => {
+    await grantTier(LAPSED_REFUND_NPUB, "A", "order-permanent", { mxid: LAPSED_REFUND_MXID });
+    await grantTier(LAPSED_REFUND_NPUB, "C", "order-taster", { expiresAtMs: T0 + 1 * DAY });
+    vi.setSystemTime(T0 + 3 * DAY); // lapsed
+
+    await settleEntitlementFromOrder(lapsedRefundOrder()); // first delivery
+    expect((await getEntitlement(LAPSED_REFUND_NPUB))?.tier).toBe("A");
+
+    await settleEntitlementFromOrder(lapsedRefundOrder()); // Square/BTCPay redelivers the SAME refunded event
+    expect((await getEntitlement(LAPSED_REFUND_NPUB))?.tier).toBe("A");
+
+    await settleEntitlementFromOrder(lapsedRefundOrder({ state: "disputed" })); // a dispute of the same, already-refunded order
+    const rec = await getEntitlement(LAPSED_REFUND_NPUB);
+    expect(rec?.tier).toBe("A");
+    expect(rec?.orderId).toBe("order-permanent");
+    expect(rec?.revokedAtMs).toBeUndefined();
+
+    // the guard reads only the raw record, which this whole path never
+    // writes — nothing here can ever behave differently on a later call
+    expect(fulfilKicked).toEqual([]);
+    expect(fulfilMailed).toEqual([]);
+  });
+
+  it("refunding the taster's order WHILE the pass is still LIVE takes today's base behavior — revoked, letter names the pass (the known, disclosed gap)", async () => {
+    await grantTier(LAPSED_REFUND_NPUB, "A", "order-permanent", { mxid: LAPSED_REFUND_MXID });
+    await grantTier(LAPSED_REFUND_NPUB, "C", "order-taster", { expiresAtMs: T0 + 1 * DAY }); // still live — no lapse yet
+
+    const result = await settleEntitlementFromOrder(lapsedRefundOrder()); // refunded WHILE C is still live
+
+    expect(result.revoked).toBe(true);
+    expect(result.tier).toBe("C"); // held.tier at refund time was the live pass
+    expect(await getEntitlement(LAPSED_REFUND_NPUB)).toBeNull(); // CLOSED — the permanent A underneath is lost too: disclosed, unfixed (do not add a live-pass fallback)
+    expect(fulfilKicked).toEqual([{ mxid: LAPSED_REFUND_MXID, reason: "refunded" }]);
+    expect(fulfilMailed.length).toBe(1);
+    expect(JSON.stringify(fulfilMailed[0])).toContain("Evening Star"); // TIERS.C.name — names the pass, since it was still live and truly held
+  });
+
+  it("refunding the STANDING grant's own order after the pass lapsed still closes everything — a real refund", async () => {
+    await grantTier(LAPSED_REFUND_NPUB, "A", "order-permanent", { mxid: LAPSED_REFUND_MXID });
+    await grantTier(LAPSED_REFUND_NPUB, "C", "order-taster", { expiresAtMs: T0 + 1 * DAY });
+    vi.setSystemTime(T0 + 3 * DAY); // the pass lapsed — reads A
+
+    mockGetItem.mockResolvedValue({
+      id: "weekly-permanent",
+      schemaVersion: 2,
+      title: "Weekly Intuitive",
+      blurb: "",
+      images: [],
+      kind: "package",
+      price: { fiat: { amount: 3300, currency: "USD" }, sats: 55_555 },
+      fulfillment: "package",
+      status: "live",
+      entitlementTier: "A",
+    } satisfies StoreItem);
+
+    const result = await settleEntitlementFromOrder(
+      lapsedRefundOrder({ id: "order-permanent", lineItems: [{ itemId: "weekly-permanent", title: "Weekly Intuitive", qty: 1 }] }),
+    );
+
+    expect(result.revoked).toBe(true);
+    expect(result.tier).toBe("A");
+    expect(await getEntitlement(LAPSED_REFUND_NPUB)).toBeNull(); // genuinely refunded — closes as it should
   });
 });
