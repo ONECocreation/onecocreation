@@ -37,6 +37,13 @@ import { ReadingStageBody, stage1WatchTarget, type ReadingStageBodyProps } from 
  * re-trued below; every other assertion in this file is unaffected because
  * the labels and `kit-btn-main` class held. `tests/reading-watch-heart-
  * field-457.test.ts` carries this lane's own new pins.
+ *
+ * TASK-464 (block 968,548) — the Admiral's two answers: the published
+ * "Watch Love live" link picks up `kit-btn-sm` (it bled 3 px past its card
+ * on a 360 px phone, same shape as TASK-463's "Go to the Heart Field");
+ * "Watch again" (ended/left) and "Try again" are untouched. The Playground
+ * banner's kicker drops "Stage 2 · " and reads "The Playground" alone.
+ * `tests/reading-small-watch-464.test.ts` carries this lane's own new pins.
  */
 
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
@@ -115,6 +122,10 @@ describe("published, not yet watching — Watch Love live sends the visitor to t
 
   it("no banner while the Playground is closed (playgroundOpen false), and nothing about a camera or a microphone is said anywhere", () => {
     expect(html).not.toContain("Want an encore?");
+    // TASK-464 (block 968,548) re-true: the kicker is "The Playground" now
+    // (was "Stage 2 · the Playground") — it renders only inside the banner,
+    // so this playgroundOpen:false render must carry NEITHER string.
+    expect(html).not.toContain("The Playground");
     expect(html).not.toContain("Stage 2 · the Playground");
     expect(html).not.toMatch(/camera|microphone/i);
   });
@@ -191,7 +202,9 @@ describe("the Playground banner (TASK-449) — open-only, in EVERY phase, after 
       { phase: "closed", ended: true, nextWords: "Wednesday, September 30" },
     ] as const) {
       const html = render(bodyProps({ ...over, playgroundOpen: true }));
-      expect(html).toContain("Stage 2 · the Playground");
+      // TASK-464 (block 968,548): the kicker dropped "Stage 2 · "
+      expect(html).toContain('<p class="kicker">The Playground</p>');
+      expect(html).not.toContain("Stage 2 · the Playground");
       expect(html).toContain("Want an encore?");
       expect(html).toContain("Go to the Playground");
       expect(html).toContain('href="/reading/playground"');
@@ -309,7 +322,9 @@ describe("the island's own wiring — source pins (the repo runs no jsdom)", () 
 
   it("the banner replaced the Stage 2 card + single-embed branch (TASK-449): banner words and its own /api/stage2 poll; none of the replaced shape survives", async () => {
     const src = await read(STAGE);
-    expect(src).toContain("Stage 2 · the Playground");
+    // TASK-464 (block 968,548): the kicker dropped "Stage 2 · "
+    expect(src).toContain('<p className="kicker">The Playground</p>');
+    expect(src).not.toContain("Stage 2 · the Playground");
     expect(src).toContain("Want an encore?");
     expect(src).toContain("Go to the Playground");
     expect(src).toContain('href="/reading/playground"');

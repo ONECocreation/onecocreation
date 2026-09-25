@@ -29,8 +29,10 @@ import { TIER_PAGES } from "@/lib/tiers-content";
  * runs no jsdom — Stage2DoorBody's own precedent); the wiring is pinned
  * at the source.
  *
- * Ruling words pinned here: banner `Stage 2 · the Playground` /
- * `Want an encore?` / `Go to the Playground` (no arrow); free member's
+ * Ruling words pinned here: banner `The Playground` (TASK-464, block
+ * 968,548 — was `Stage 2 · the Playground` until the Admiral dropped the
+ * "Stage 2 · " prefix) / `Want an encore?` / `Go to the Playground` (no
+ * arrow); free member's
  * MAIN is the derived tier-B package, "Try one week" is quiet
  * nevermind-weight; the paid button reads `Join Love`; in-call there is
  * NO page button under the call (ruling 4). No literal tier slug or price
@@ -172,7 +174,8 @@ describe("the known-by name (readingViewerName, ported verbatim from 179fce8 —
 describe("the banner replaced the /reading Stage 2 card (the seam)", () => {
   it("ReadingStage carries the banner — ruling-1 words, no arrow — and its own /api/stage2 poll", async () => {
     const src = await read(STAGE);
-    expect(src).toContain("Stage 2 · the Playground");
+    expect(src).toContain('<p className="kicker">The Playground</p>');
+    expect(src).not.toContain("Stage 2 · the Playground");
     expect(src).toContain("Want an encore?");
     expect(src).toContain("Go to the Playground");
     expect(src).toContain('href="/reading/playground"');
