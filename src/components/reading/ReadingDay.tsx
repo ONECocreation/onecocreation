@@ -5,7 +5,7 @@ import { tierSatisfies, type Tier } from "@/lib/entitlement";
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { STAGE2_MIN_TIER } from "@/lib/stage2-access";
-import { ENCORE_TIME, QA_TIME, sameDayAt } from "@/lib/reading-day";
+import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt } from "@/lib/reading-day";
 import { encoreFloorDoor, qaDoor } from "@/lib/reading-day-doors";
 import { ROOMS } from "@/lib/matrix-rooms";
 import ReadingDayBody from "./ReadingDayBody";
@@ -64,6 +64,7 @@ export default async function ReadingDay() {
   return (
     <ReadingDayBody
       tz={schedule.tz}
+      housewarmingStartsAtMs={sameDayAt(next.startsAtMs, schedule.tz, HOUSEWARMING_TIME)}
       readingStartsAtMs={next.startsAtMs}
       encoreStartsAtMs={sameDayAt(next.startsAtMs, schedule.tz, ENCORE_TIME)}
       qaStartsAtMs={sameDayAt(next.startsAtMs, schedule.tz, QA_TIME)}
