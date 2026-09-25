@@ -258,3 +258,10 @@ PID, never `pkill -f`.
    sign-in lane per the brief.
 2. `code-door-limit.ts:25`'s `CODE_DOOR_HELD` copy carries an em dash;
    worth a follow-up copy-only fix under the file's own owner.
+
+## Number One's review fixes (block 968,561)
+
+After seeing the code-step shot at 390:
+- **The code step said nothing about where the code went.** It now reads "A code is on its way to your inbox. It works for ten minutes. Sent to **{email}**." These are the /login sheet's own words, without its dash.
+- **A mistyped email was a dead end.** There was no way back short of reloading. Now a quiet line reads "Wrong email? Use a different one". It's a link, the same shape as the Nostr key pointer on the email step, so the box keeps one button size.
+- **The "subscribe-unknown" note pointed at a button that wasn't on screen.** It now says "Reload this page to try Keep me posted again." After a reload the visitor is a signed-in member, and the reused card shows that button.

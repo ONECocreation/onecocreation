@@ -94,6 +94,11 @@ export const NOSTR_KEY_POINTER = "Have a Nostr key? ";
 export const NOSTR_KEY_LINK_LABEL = "Sign in with your Nostr key";
 export const NOSTR_KEY_HREF = "/login?next=%2Freading";
 export const BOX_HEADING = "Sign me up. Keep me posted.";
+/* the code step says where the code went and how long it works (the
+   /login sheet's own note, door-machine.ts, without its dash) */
+export const CODE_SENT_LINE = "A code is on its way to your inbox. It works for ten minutes.";
+export const DIFFERENT_EMAIL_POINTER = "Wrong email? ";
+export const DIFFERENT_EMAIL_LINK_LABEL = "Use a different one";
 /* the exact promise ReadingSignUp.tsx's own public card already keeps
    (its own `quietLine`) — reused verbatim so this box never states a
    second promise (Ground). */
@@ -114,7 +119,7 @@ export type SignInOutcome = ReadingTagOutcome | "subscribe-unknown";
  *  doesn't actually know that. */
 const BOX_OUTCOME_COPY: Record<SignInOutcome, string> = {
   ...OUTCOME_COPY,
-  "subscribe-unknown": "You're signed in. The list didn't confirm just now, so try Keep me posted again from here.",
+  "subscribe-unknown": "You're signed in. The letters list didn't answer just now. Reload this page to try Keep me posted again.",
 };
 
 /** Step one — the exact /api/auth/email/start contract (EmailDoor.tsx's
@@ -290,22 +295,45 @@ export function ReadingSignInCard({ member, justJoined, initialStep = "email", o
       )}
 
       {step === "code" && (
-        <form className="kit-inline-form" onSubmit={submitCode}>
-          <Field
-            id="reading-signin-code"
-            label="Sign-in code"
-            inputMode="numeric"
-            pattern="\d{6}"
-            required
-            placeholder="••••••"
-            value={code}
-            onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
-            error={note ?? undefined}
-          />
-          <Button type="submit" sm disabled={busy || code.length !== 6}>
-            {busy ? CODE_BUSY_CTA : CODE_CTA}
-          </Button>
-        </form>
+        <>
+          <p className="kit-text-quiet">
+            {CODE_SENT_LINE} Sent to <b>{email}</b>.
+          </p>
+          <form className="kit-inline-form" onSubmit={submitCode}>
+            <Field
+              id="reading-signin-code"
+              label="Sign-in code"
+              inputMode="numeric"
+              pattern="\d{6}"
+              required
+              placeholder="••••••"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+              error={note ?? undefined}
+            />
+            <Button type="submit" sm disabled={busy || code.length !== 6}>
+              {busy ? CODE_BUSY_CTA : CODE_CTA}
+            </Button>
+          </form>
+          {/* a mistyped email is never a dead end. The same quiet pointer
+              line as the Nostr key link on the email step, so the box keeps
+              one button size (the /login sheet's back door, as a link). */}
+          <p className="kit-text-quiet">
+            {DIFFERENT_EMAIL_POINTER}
+            <a
+              href="#sign-up"
+              onClick={(e) => {
+                e.preventDefault();
+                if (busy) return;
+                setStep("email");
+                setCode("");
+                setNote(null);
+              }}
+            >
+              {DIFFERENT_EMAIL_LINK_LABEL}
+            </a>
+          </p>
+        </>
       )}
     </Card>
   );

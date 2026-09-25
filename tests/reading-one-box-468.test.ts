@@ -51,6 +51,26 @@ describe("ReadingSignInCard — the code step renders in the SAME box", () => {
   });
 });
 
+describe("ReadingSignInCard — the code step says where the code went and never strands a mistyped email (Number One's review)", () => {
+  it("names the inbox and the ten minutes, with no dash", () => {
+    const html = renderToStaticMarkup(createElement(ReadingSignInCard, { member: null, initialStep: "code" }));
+    expect(html).toContain("A code is on its way to your inbox. It works for ten minutes.");
+    expect(html).toContain("Sent to <b>");
+  });
+
+  it("carries the quiet 'Wrong email? Use a different one' link, a link and not a second button size", () => {
+    const html = renderToStaticMarkup(createElement(ReadingSignInCard, { member: null, initialStep: "code" }));
+    expect(html).toContain("Wrong email? ");
+    expect(html).toMatch(/<a href="#sign-up">Use a different one<\/a>/);
+    expect(html).not.toContain("kit-btn-quiet");
+  });
+
+  it("the letters-list miss points at something on screen after a reload, never a button that isn't there", async () => {
+    const src = await fs.readFile(path.join(process.cwd(), "src/components/rooms/ReadingSignInBox.tsx"), "utf8");
+    expect(src).toContain("Reload this page to try Keep me posted again.");
+  });
+});
+
 describe("startEmailCode / verifyAndSubscribe — the fetch orchestration (mocked fetch, no jsdom)", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
