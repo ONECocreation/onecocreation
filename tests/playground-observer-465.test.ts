@@ -361,3 +361,16 @@ describe("week-pass.ts — deriveWeekPass follows Stage 2's own floor, never a h
     expect(pass).toEqual({ name: "Observer — One Week Pass", price: "$22" });
   });
 });
+
+describe("Stage2Rows — the Playground's ways in start at the floor (review fix, block 968,561)", () => {
+  it("lists Observer and Evening Star, never Weekly Intuitive, and the week row names the floor tier", async () => {
+    const { Stage2Rows } = await import("@/components/reading/Stage2Details");
+    const noWeek = renderToStaticMarkup(h(Stage2Rows, { weekPass: null }));
+    expect(noWeek).toContain("Observer");
+    expect(noWeek).toContain("Evening Star");
+    expect(noWeek).not.toContain("Weekly Intuitive");
+    const withWeek = renderToStaticMarkup(h(Stage2Rows, { weekPass: { name: "PASS-FIXTURE", price: "$9" } }));
+    expect(withWeek).toContain("One week of Observer, the Playground included.");
+    expect(withWeek).not.toContain("Weekly Intuitive");
+  });
+});

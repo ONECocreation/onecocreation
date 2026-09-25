@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { TIERS, type Tier } from "@/lib/entitlement";
+import { TIERS, tierSatisfies, type Tier } from "@/lib/entitlement";
 import { TIER_PAGES } from "@/lib/tiers-content";
+import { STAGE2_MIN_TIER } from "@/lib/stage2-access";
 
 /**
  * STAGE 2 DETAILS (TASK-438, block 968,222; HOLD LIFTED block 968,269) —
@@ -20,10 +21,13 @@ import { TIER_PAGES } from "@/lib/tiers-content";
  * (renderToStaticMarkup-pinned).
  */
 
-/** One row per way in — the shareable part (TASK-449). */
+/** One row per way in — the shareable part (TASK-449). TASK-465 (block
+ *  968,561): the rows start at Stage 2's own floor (`STAGE2_MIN_TIER`) —
+ *  with the floor raised to Observer, a Weekly Intuitive row under "from
+ *  Observer up" named a way in that no longer opens the Playground. */
 export function Stage2Rows({ weekPass }: { weekPass: { name: string; price: string } | null }) {
-  const tiers: Tier[] = ["A", "B", "C"];
-  const weekPage = TIER_PAGES.find((p) => p.tier === "A");
+  const tiers: Tier[] = (["A", "B", "C"] as Tier[]).filter((t) => tierSatisfies(t, STAGE2_MIN_TIER));
+  const weekPage = TIER_PAGES.find((p) => p.tier === STAGE2_MIN_TIER);
   return (
     <ul className="kit-rows" aria-label="What opens the Playground">
       {tiers.map((t) => {
@@ -42,7 +46,7 @@ export function Stage2Rows({ weekPass }: { weekPass: { name: string; price: stri
         <li>
           <span>
             <b>{weekPage ? <Link href={`/packages/${weekPage.slug}`}>{weekPass.name}</Link> : weekPass.name}</b>
-            <em>{`One week of ${TIERS.A.name}, the Playground included.`}</em>
+            <em>{`One week of ${TIERS[STAGE2_MIN_TIER].name}, the Playground included.`}</em>
           </span>
           <span className="kit-rows-end">{`${weekPass.price} once`}</span>
         </li>

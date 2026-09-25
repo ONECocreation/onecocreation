@@ -327,3 +327,30 @@ it).
   "sitemap if any" caveat resolved to nothing to do.
 - Never pushed, never opened a PR, never touched `.env`/secrets, never
   deleted anything — per the house laws.
+
+## Number One's review fixes (block 968,561)
+- The Admiral, answering the floor question: "there is no $22 for the 1 week of the observer." So nothing may promise an Observer week pass that the store doesn't sell:
+  - PlaygroundIsland: the signed-out paragraph drops "Or try it with a one-week pass."
+  - PlaygroundIsland: the package paragraph names "or try one week" only when the wire carries a week offer.
+  - /reading/playground: the list line reads "With every membership from Observer up".
+  - /reading/playground: the meta description is derived from `STAGE2_FLOOR_NAME` and has no dash.
+- `Stage2Rows` (Stage2Details.tsx) is LIVE: it draws the Playground card's tier rows. It still listed Weekly Intuitive at $33 under "from Observer up", which I SAW in the 390 shot. The rows now start at `STAGE2_MIN_TIER`, and the week row links the floor tier's page. The dead default export and its "Stage 2 · after the reading" kicker are untouched. The claim was widened in its own commit.
+- Pins re-trued:
+  - `tests/reading-look.test.ts`, "one row per tier": now floor-up only, 2 rows, with the Weekly Intuitive link pinned absent.
+  - "pass row": floor tier page, "One week of Observer", 3 rows.
+  - ".kit-rows-end": 3 rows.
+  - `tests/reading-playground.test.ts`, "every tier name": floor-up, with Weekly Intuitive pinned absent.
+  - "week row": floor tier page.
+- New pins in `tests/playground-observer-465.test.ts`:
+  - no pass words in the signed-out or no-week package states;
+  - the week words do appear when the wire offers a week;
+  - the playground page's source is clean;
+  - Stage2Rows is floor-up.
+- Shots (local build on :4890, signed out; /api/stage2 forced to signin) at `scratchpad/shots465/`:
+  - `/reading` and `/reading/playground` at 390 and 1440 have 0 overflow.
+  - No "from Weekly Intuitive up", no pass words.
+  - /classes shows "still being prepared" locally (no community config), so the hidden-room listing is covered by tests, not by shots.
+- Em dashes still visible, left for the house-wide sweep lane:
+  - the tier taglines in tiers-content.ts ("The weekly rhythm — live, held, together." and the other two);
+  - /classes's empty-state line;
+  - the "could not add — try again" copies outside this lane.

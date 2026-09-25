@@ -5,7 +5,8 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import ReadingHeroCountdown, { type ReadingHeroCountdownProps } from "@/components/ReadingHeroCountdown";
 import Stage2Details from "@/components/reading/Stage2Details";
-import { TIERS, type Tier } from "@/lib/entitlement";
+import { TIERS, tierSatisfies, type Tier } from "@/lib/entitlement";
+import { STAGE2_MIN_TIER } from "@/lib/stage2-access";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import type { ReadingSchedule } from "@/lib/reading-schedule";
 
@@ -413,36 +414,42 @@ describe("Stage2Details — the round-3 heading and the derive-every-word law", 
     expect(html).toContain("Right after the reading, Love opens a live group video call. Come talk with her.");
   });
 
-  it("one row per tier — the name LINKED to its TIER_PAGES page (TASK-449), the monthly price from TIERS, the tagline from TIER_PAGES", () => {
+  /* TASK-465 (block 968,561): the rows start at Stage 2's own floor — the
+     Admiral raised it to Observer, so Weekly Intuitive is no longer a way
+     in; re-trued from ["A","B","C"] / 3 rows / tier-A week page. */
+  it("one row per tier AT OR ABOVE the floor — the name LINKED to its TIER_PAGES page (TASK-449), the monthly price from TIERS, the tagline from TIER_PAGES", () => {
     const html = renderDetails(null);
-    for (const t of ["A", "B", "C"] as Tier[]) {
+    const floorUp = (["A", "B", "C"] as Tier[]).filter((t) => tierSatisfies(t, STAGE2_MIN_TIER));
+    expect(floorUp).toEqual(["B", "C"]);
+    expect(html).not.toContain(`>${TIERS.A.name}</a>`);
+    for (const t of floorUp) {
       const page = TIER_PAGES.find((p) => p.tier === t)!;
       expect(html).toContain(`<b><a href="/packages/${page.slug}">${TIERS[t].name}</a></b>`);
       expect(html).toContain(page.tagline);
       expect(html).toContain(`$${TIERS[t].priceUsd} / month`);
     }
     const rows = html.match(/<li>/g) ?? [];
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(2);
     expect(html).not.toContain("once");
   });
 
-  it("the pass row rides the live store item's OWN name and price, linked to the tier-A page (swap the fixture price and watch it follow)", () => {
+  it("the pass row rides the live store item's OWN name and price, linked to the FLOOR tier's page (swap the fixture price and watch it follow)", () => {
     const html = renderDetails({ name: "Weekly Chronicles — One Week Pass", price: "$12.50" });
-    const pageA = TIER_PAGES.find((p) => p.tier === "A")!;
-    expect(html).toContain(`<b><a href="/packages/${pageA.slug}">Weekly Chronicles — One Week Pass</a></b>`);
+    const floorPage = TIER_PAGES.find((p) => p.tier === STAGE2_MIN_TIER)!;
+    expect(html).toContain(`<b><a href="/packages/${floorPage.slug}">Weekly Chronicles — One Week Pass</a></b>`);
     expect(html).toContain("$12.50 once");
     expect(html).not.toContain("$11 once");
     /* AMENDMENT 1 (block 968,366): the encore's visible name is the
        Playground */
-    expect(html).toContain(`One week of ${TIERS.A.name}, the Playground included.`);
+    expect(html).toContain(`One week of ${TIERS[STAGE2_MIN_TIER].name}, the Playground included.`);
     const rows = html.match(/<li>/g) ?? [];
-    expect(rows).toHaveLength(4);
+    expect(rows).toHaveLength(3);
   });
 
   it("every row's price rides .kit-rows-end — the one right edge (the /a uniformity law's grid)", () => {
     const html = renderDetails({ name: "Weekly Chronicles — One Week Pass", price: "$11" });
     const rows = html.match(/<li>[\s\S]*?<\/li>/g) ?? [];
-    expect(rows.length).toBe(4);
+    expect(rows.length).toBe(3);
     for (const r of rows) expect(r).toContain("kit-rows-end");
   });
 
