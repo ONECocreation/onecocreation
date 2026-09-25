@@ -75,11 +75,22 @@ describe("PlaygroundDoor.tsx — the Weekly Intuitive room's own door (Build 3)"
     expect(html).toContain("Join the Playground call");
     expect(html).toContain("Love opens the call after the reading.");
     expect(html).toContain("Weekly Intuitive members and up.");
-    expect(html).toContain("kit-btn kit-btn-main");
+    expect(html).toContain("kit-btn kit-btn-main kit-btn-sm");
     expect(html).toContain("kit-text-quiet");
     expect(html).not.toContain('class="btn');
     expect(html).not.toContain("btn-gold");
     expect(html).not.toContain("style=");
+  });
+
+  it("the door's button is the small kit button, like its Stage2Door sibling in the same grid area (review fix: kit-btn-main alone is nowrap at 1.5rem and clips at 390 px)", async () => {
+    const src = await read("src/components/rooms/PlaygroundDoor.tsx");
+    expect(src).toContain('className="kit-btn kit-btn-main kit-btn-sm"');
+  });
+
+  it("StageView's reset control pairs with Stage2Door's 'Join the Playground' — it says the Playground too, never Stage 2", async () => {
+    const src = await read("src/components/rooms/StageView.tsx");
+    expect(src).toContain("Leave the Playground · back to the reading");
+    expect(src).not.toContain("Leave Stage 2 · back to the reading");
   });
 
   it("StageView guards the door behind the named PLAYGROUND_ROOM_SLUG constant — never a second bare 'clair-senses' string", async () => {

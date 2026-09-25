@@ -25,7 +25,7 @@ export default function PlaygroundDoor() {
       <div className="kit-stack">
         <div className="kit-text-quiet">Love opens the call after the reading. It&apos;s here for Weekly Intuitive members and up.</div>
         <div className="kit-btn-row kitx-actions">
-          <Link href="/reading/playground" className="kit-btn kit-btn-main">
+          <Link href="/reading/playground" className="kit-btn kit-btn-main kit-btn-sm">
             Join the Playground call
           </Link>
         </div>

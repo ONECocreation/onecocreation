@@ -246,3 +246,10 @@ and the full suite went green.
 - Deviation #1: is `signInDoorLine("The Playground")` (capitalized, my
   call) right, or did the brief's lowercase `"the Playground"` mean
   something I'm missing? One-word fix either way if I judged wrong.
+
+## Review fix round (Number One, block 968,543)
+- Adversarial review (sonnet, regression + mobile lens) found ONE blocker: `PlaygroundDoor.tsx` used `kit-btn kit-btn-main` without `kit-btn-sm`. `kit-btn` is unconditionally nowrap (kit.css:29, R-071); at 1.5rem uppercase the 24-char label clips inside the Card at 390 px — the T-454 scar class. Fixed: `kit-btn kit-btn-main kit-btn-sm`, same as its Stage2Door sibling in the same grid area. Pinned in `playground-room-460.test.ts`.
+- `StageView.tsx` reset label "Leave Stage 2 · back to the reading" → "Leave the Playground · back to the reading" — the pair of Stage2Door's renamed "Join the Playground". Re-trued `heart-field-story-time.test.ts` (the byte pin on the stage2Room branch; label only, placement unchanged). Pinned in `playground-room-460.test.ts`.
+- HELD for the Admiral (ruled words, not touched): `/reading`'s banner kicker "Stage 2 · the Playground" (`ReadingStage.tsx:250`) is ruling 968,366 words, pinned in `reading-playground.test.ts:175` and `reading-stage.test.ts:194/312`.
+- Dead code noted, not touched: `Stage2Details.tsx` default export (kicker "Stage 2 · after the reading") is imported nowhere — only the named `Stage2Rows` is used.
+- Rebased onto origin/main a176f7c (#81/#82/#83) — clean.

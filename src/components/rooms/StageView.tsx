@@ -293,7 +293,7 @@ export default function StageView({
                   joined, and JitsiRoom.tsx exposes no ended/failed callback
                   to its parent). Never hidden, never conditional. */}
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => setStage2Room(null)}>
-                Leave Stage 2 · back to the reading
+                Leave the Playground · back to the reading
               </button>
               <JitsiRoom domain={jitsiDomain ?? ""} room={stage2Room} displayName={undefined} />
             </>
