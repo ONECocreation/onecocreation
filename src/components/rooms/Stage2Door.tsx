@@ -130,12 +130,15 @@ export function Stage2DoorBody({
                   shared "and everything above it" line reads wrong here;
                   packageDoorLine itself stays untouched for the five room
                   doors that share it). A6: the label says nothing the line
-                  above already says — and fits the kit's 320px box. */}
+                  above already says — and fits the kit's 320px box.
+                  TASK-465 (block 968,561, ruling C — no em dash in visible
+                  copy, "this would be considered slop"): the one-line,
+                  one-dash sentence became two plain sentences. */}
               <div className="kit-body">
                 {pkg
                   ? week
-                    ? `The Playground comes with every membership, from ${pkg.name} up — or with a one-week pass.`
-                    : `The Playground comes with every membership, from ${pkg.name} up.`
+                    ? `The Playground comes with every membership from ${pkg.name} up. Or try it with a one-week pass.`
+                    : `The Playground comes with every membership from ${pkg.name} up.`
                   : packageDoorLine(null)}
               </div>
               {pkg && (
@@ -150,7 +153,7 @@ export function Stage2DoorBody({
                       disabled={weekBusy}
                       onClick={() => onTryWeek(week.itemId)}
                     >
-                      {weekBusy ? "Adding…" : `Try one week — ${week.price}`}
+                      {weekBusy ? "Adding…" : `Try one week for ${week.price}`}
                     </button>
                   )}
                 </div>
@@ -222,10 +225,10 @@ export default function Stage2Door({ joined, onJoin, signInHref }: Stage2DoorPro
           onJoin(fresh.room as string);
         }
       } else {
-        setNote("The Playground couldn't be reached just now — try again.");
+        setNote("The Playground couldn't be reached just now. Try again.");
       }
     } catch {
-      setNote("The Playground couldn't be reached just now — try again.");
+      setNote("The Playground couldn't be reached just now. Try again.");
     } finally {
       setJoining(false);
     }
@@ -248,7 +251,7 @@ export default function Stage2Door({ joined, onJoin, signInHref }: Stage2DoorPro
       window.dispatchEvent(new Event("oc-cart-changed"));
       window.location.assign("/cart");
     } else {
-      setNote(res?.reason ?? "could not add — try again");
+      setNote(res?.reason ?? "could not add. Try again.");
       setWeekBusy(false);
     }
   }

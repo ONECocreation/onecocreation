@@ -233,7 +233,13 @@ describe("TASK-162 — the rooms' live markers (the opens-soon truth)", () => {
     expect(data.ok).toBe(true);
     const quantum = data.rooms.find((r: { slug: string }) => r.slug === "quantum-healing");
     expect(quantum.live).toBe(false);
-    expect(data.rooms.filter((r: { live: boolean | null }) => r.live === true)).toHaveLength(6);
+    /* TASK-465 (block 968,561): clair-senses is hidden now — it never
+       rides this public feed at all, so the feed carries 6 rooms (not 7),
+       5 of them live:true (not 6). roomsLive() itself still probes it
+       (see the test just above this one) — only the FEED narrows. */
+    expect(data.rooms).toHaveLength(6);
+    expect(data.rooms.some((r: { slug: string }) => r.slug === "clair-senses")).toBe(false);
+    expect(data.rooms.filter((r: { live: boolean | null }) => r.live === true)).toHaveLength(5);
   });
 
   it("the shelf paints \"opens soon\" only on the server's own NO — never on silence (source pin)", async () => {

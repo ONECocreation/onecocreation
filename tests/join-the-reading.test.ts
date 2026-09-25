@@ -67,12 +67,12 @@ describe("the hero render (TASK-178, re-trued TASK-437)", () => {
 });
 
 describe("the paid room itself is untouched (TASK-437, the brief's Build 4)", () => {
-  it("the registry still holds Chronicles: Weekly Reading at minTier B", async () => {
+  it("the registry still holds the weekly-reading room at minTier B (TASK-465, block 968,561 re-trued: its title is The Playground now)", async () => {
     const { ROOMS } = await import("@/lib/matrix-rooms");
     const room = ROOMS.find((r) => r.id.slice(1, r.id.indexOf(":")) === "weekly-reading");
     expect(room).toBeTruthy();
     expect(room!.minTier).toBe("B");
-    expect(room!.title).toBe("Chronicles: Weekly Reading");
+    expect(room!.title).toBe("The Playground");
   });
 
   it("the Stage gate behind it (T-174) is byte-identical behavior: signed-out → sign-in door, below B → package door, B/C walk in", async () => {

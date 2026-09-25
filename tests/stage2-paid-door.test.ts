@@ -31,14 +31,16 @@ const CATALOG_KEY = "store:catalog";
 const STATE_KEY = `stage2:state:${TENANT}`;
 const DOMAIN = "meet.stage2-fixture.invalid";
 
+// TASK-465 (block 968,561): the floor is Observer now — the week item
+// moved from weekly-one-week to observer-one-week.
 const WEEK_ITEM = {
-  id: "weekly-one-week",
+  id: "observer-one-week",
   schemaVersion: 2,
-  title: "Weekly Zoom — One Week Pass",
-  blurb: "one week of the Weekly Intuitive",
+  title: "Observer Zoom — One Week Pass",
+  blurb: "one week of the Observer package",
   images: [],
   kind: "package",
-  price: { fiat: { amount: 1100, currency: "USD" }, sats: 11_111 },
+  price: { fiat: { amount: 2200, currency: "USD" }, sats: 22_222 },
   fulfillment: "package",
   status: "live",
 };
@@ -131,9 +133,9 @@ describe("WATCH ITEM 2 — the free member's door: no room key, and the probe ne
     expect("room" in data).toBe(false);
     expect("reachable" in data).toBe(false);
     expect(data.package).toEqual({
-      name: "Weekly Intuitive",
-      href: "/packages/weekly-intuitive",
-      week: { itemId: "weekly-one-week", price: "$11" },
+      name: "Observer",
+      href: "/packages/observer",
+      week: { itemId: "observer-one-week", price: "$22" },
     });
     expect(transport.headCount()).toBe(0);
   });
@@ -149,16 +151,34 @@ describe("WATCH ITEM 2 — the free member's door: no room key, and the probe ne
 
     expect(data.decision).toBe("package");
     expect(data.package.week).toBeNull();
-    expect(data.package.name).toBe("Weekly Intuitive");
+    expect(data.package.name).toBe("Observer");
     expect("room" in data).toBe(false);
     expect("reachable" in data).toBe(false);
     expect(transport.headCount()).toBe(0);
   });
 });
 
-describe("the paid member gets the room — tiers A and C both satisfy the minimum (ruling 1)", () => {
-  it("tier A, published and reachable -> decision open, the room, and the probe DID fire (exactly one HEAD)", async () => {
+describe("tier A alone no longer satisfies the raised floor (TASK-465, block 968,561) — package, no room, no probe", () => {
+  it("tier A, published -> decision package (never open), the probe never fires", async () => {
+    transport.seedWeekItem("live");
     mockTier.mockResolvedValue("A");
+    await publish();
+
+    const res = await memberGet(memberCookie);
+    expectNoStore(res);
+    const data = await res.json();
+
+    expect(data.decision).toBe("package");
+    expect("room" in data).toBe(false);
+    expect("reachable" in data).toBe(false);
+    expect(data.package.name).toBe("Observer");
+    expect(transport.headCount()).toBe(0);
+  });
+});
+
+describe("the paid member gets the room — tiers B and C both satisfy the raised minimum (TASK-465, block 968,561)", () => {
+  it("tier B, published and reachable -> decision open, the room, and the probe DID fire (exactly one HEAD)", async () => {
+    mockTier.mockResolvedValue("B");
     const published = await publish();
 
     const res = await memberGet(memberCookie);

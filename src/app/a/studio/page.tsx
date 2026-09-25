@@ -176,7 +176,7 @@ export default async function StudioRoomPage() {
       guestDoor={guestDoor}
       jitsiDomain={config.meeting.jitsiDomain}
       initialJitsiRoom={initialJitsiRoom}
-      goLiveRooms={ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind, minTier: r.minTier }))}
+      goLiveRooms={ROOMS.filter((r) => !r.hidden).map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind, minTier: r.minTier }))}
       goLiveSessions={confirmedToday(bookings)}
       meeting={{
         rail: config.meeting.rail,

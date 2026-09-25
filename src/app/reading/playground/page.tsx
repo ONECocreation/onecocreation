@@ -13,7 +13,7 @@ import { tierForSubject } from "@/lib/member-tier";
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { getStage2State } from "@/lib/stage2";
-import { STAGE2_MIN_TIER, type Stage2Decision } from "@/lib/stage2-access";
+import { STAGE2_FLOOR_NAME, STAGE2_MIN_TIER, type Stage2Decision } from "@/lib/stage2-access";
 import { TIERS, tierSatisfies, type Tier } from "@/lib/entitlement";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { deriveWeekPass } from "@/lib/week-pass";
@@ -47,7 +47,7 @@ import { deriveWeekPass } from "@/lib/week-pass";
 
 export const metadata: Metadata = {
   title: "The Playground with Love · ONE Cocreation",
-  description: "Join Love's live video call right after the reading — the Playground, with every membership or a one-week pass.",
+  description: `The Playground: Love's live video call right after the reading, with every membership from ${STAGE2_FLOOR_NAME} up.`,
 };
 
 export const dynamic = "force-dynamic";
@@ -149,7 +149,8 @@ export default async function PlaygroundPage() {
             <ul className="kit-list">
               <li>A live video call with Love, right after the reading</li>
               <li>Camera and mic: come up and talk with her</li>
-              <li>With every membership, from Weekly Intuitive up, or a one-week pass</li>
+              {/* TASK-465: no pass clause — "there is no $22 for the 1 week of the observer" (block 968,561) */}
+              <li>{`With every membership from ${observerName} up`}</li>
             </ul>
           </div>
         </section>

@@ -56,9 +56,11 @@ function textOf(node: ReactNode): string {
   return "";
 }
 
-/* a live class room in the fixture: The Playground (clair-senses, minTier A;
-   TASK-460, block 968,543 re-true — the room's TITLE changed, its slug/id
-   did not), doors opened at a fixed UTC instant (the block's UTC line is pure) */
+/* a live class room in the fixture: clair-senses (minTier A; TASK-460,
+   block 968,543, then TASK-465, block 968,561 re-true — the room's own
+   TITLE is "Clair Senses" again now, hidden from public listings but
+   still a real, live-able room; its slug/id never changed), doors opened
+   at a fixed UTC instant (the block's UTC line is pure) */
 const LIVE_STATE = { live: true, kind: "class" as const, room: "clair-senses", startedAt: 1789500000 };
 
 function mockLive(state: unknown) {
@@ -305,7 +307,8 @@ describe("LivePage — the fallback renders BOTH states as today", () => {
       const h1s = findAll(el, (e) => e.type === "h1");
       expect((h1s[0].props as { children?: ReactNode }).children).toBe("Love is live now");
       const flat = textOf(el);
-      expect(flat).toContain("The Playground");
+      // TASK-465 (block 968,561): clair-senses's own title is "Clair Senses" again
+      expect(flat).toContain("Clair Senses");
       expect(flat).toContain("Weekly Intuitive");
       const hrefs = findAll(el, (e) => e.type === "a" || (typeof e.type === "object" && e.type !== null))
         .map((e) => (e.props as { href?: string }).href)
@@ -377,7 +380,8 @@ describe("LivePage published — the SAME widget with the server props injected,
 
       const html = renderToStaticMarkup(renders[0]);
       expect(html).toContain("Love is live now");
-      expect(html).toContain("The Playground");
+      // TASK-465 (block 968,561): clair-senses's own title is "Clair Senses" again
+      expect(html).toContain("Clair Senses");
       expect(html).toContain("Enter the room");
       /* the embed mounted through the block — JitsiRoom's SSR is its
          loading line (the element-level pin lives in the block-face test) */
@@ -430,7 +434,8 @@ describe("LivePage published — the SAME widget with the server props injected,
 
       const html = renderToStaticMarkup(renders[0]);
       expect(html).toContain("Love is live now");
-      expect(html).toContain("The Playground");
+      // TASK-465 (block 968,561): clair-senses's own title is "Clair Senses" again
+      expect(html).toContain("Clair Senses");
       expect(html).toContain("opening the room…");
     } finally {
       vi.doUnmock("@/lib/live");

@@ -11,7 +11,8 @@ import {
 } from "@/components/reading/playground/PlaygroundIsland";
 import Stage2Details from "@/components/reading/Stage2Details";
 import { readingViewerName } from "@/lib/session-read";
-import { TIERS, type Tier } from "@/lib/entitlement";
+import { TIERS, tierSatisfies, type Tier } from "@/lib/entitlement";
+import { STAGE2_MIN_TIER } from "@/lib/stage2-access";
 import { TIER_PAGES } from "@/lib/tiers-content";
 
 /**
@@ -114,8 +115,13 @@ describe("the route and its derivations (the page source)", () => {
     const lib = await read(WEEK_PASS);
     expect(lib).toContain("export async function deriveWeekPass");
     /* the store-read pins travelled WITH the function (pickup fix — at base
-       reading-look pinned these on the page; the move had dropped them) */
-    expect(lib).toContain('getItem("weekly-one-week")');
+       reading-look pinned these on the page; the move had dropped them).
+       TASK-465 (block 968,561): the item id is DERIVED off Stage 2's own
+       floor now (STAGE2_MIN_TIER + TIER_PAGES), never the hardcoded
+       weekly-one-week literal — the Admiral raised the floor to Observer. */
+    expect(lib).not.toContain('getItem("weekly-one-week")');
+    expect(lib).toContain("STAGE2_MIN_TIER");
+    expect(lib).toMatch(/TIER_PAGES\.find\(\(p\) => p\.tier === STAGE2_MIN_TIER\)/);
     expect(lib).toContain("item?.sale ?? item?.price");
     expect(lib).toContain('item?.status !== "live"');
     expect(lib).toContain("dollars(eff.fiat.amount, eff.fiat.currency)");
@@ -245,17 +251,20 @@ describe("the price rows link their names (the derive-every-word law, rendered)"
     createElement(Stage2Details, { weekPass: { name: "Fixture Week Pass", price: "$0" } }),
   );
 
-  it("every tier name is an <a> to its TIER_PAGES slug, the prices still ride TIERS", () => {
-    for (const t of ["A", "B", "C"] as Tier[]) {
+  /* TASK-465 (block 968,561): rows start at the floor (Observer) — re-trued
+     from every tier / the tier-A week page */
+  it("every tier name AT OR ABOVE the floor is an <a> to its TIER_PAGES slug, the prices still ride TIERS", () => {
+    expect(html).not.toContain(`>${TIERS.A.name}</a>`);
+    for (const t of (["A", "B", "C"] as Tier[]).filter((x) => tierSatisfies(x, STAGE2_MIN_TIER))) {
       const slug = TIER_PAGES.find((p) => p.tier === t)!.slug;
       expect(html).toContain(`<a href="/packages/${slug}">${TIERS[t].name}</a>`);
       expect(html).toContain(`$${TIERS[t].priceUsd} / month`);
     }
   });
 
-  it("the week row links to the tier-A page when the pass is on the shelf, and is absent when it is not", () => {
-    const slugA = TIER_PAGES.find((p) => p.tier === "A")!.slug;
-    expect(html).toContain(`<a href="/packages/${slugA}">Fixture Week Pass</a>`);
+  it("the week row links to the FLOOR tier's page when the pass is on the shelf, and is absent when it is not", () => {
+    const floorSlug = TIER_PAGES.find((p) => p.tier === STAGE2_MIN_TIER)!.slug;
+    expect(html).toContain(`<a href="/packages/${floorSlug}">Fixture Week Pass</a>`);
     expect(html).toContain("$0 once");
     const without = renderToStaticMarkup(createElement(Stage2Details, { weekPass: null }));
     expect(without).not.toContain("once");

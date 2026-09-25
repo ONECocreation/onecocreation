@@ -87,9 +87,10 @@ describe("/live — whichever room is live, any kind, embeds", () => {
 });
 
 describe("the Stage's video slot follows the SAME gate as the chat", () => {
+  // TASK-465 (block 968,561): weekly-reading's own title is "The Playground" now
   const PROPS = {
     live: true,
-    roomTitle: "Chronicles: Weekly Reading",
+    roomTitle: "The Playground",
     jitsiDomain: "meet.onecocreation.com",
     liveRoom: "onecocreation-weekly-reading",
   };
@@ -97,7 +98,7 @@ describe("the Stage's video slot follows the SAME gate as the chat", () => {
   it("signed-out → the sign-in door with the room's name, never the embed", async () => {
     const RoomVideoSlot = (await import("@/components/rooms/RoomVideoSlot")).default;
     const html = renderToStaticMarkup(createElement(RoomVideoSlot, { ...PROPS, door: "signin" as const }));
-    expect(html).toContain("Chronicles: Weekly Reading opens for members");
+    expect(html).toContain("The Playground opens for members");
     expect(html).toContain(`/login?next=${encodeURIComponent("/rooms/weekly-reading")}`);
     expect(html).not.toContain("opening the room"); // no embed
     expect(html).not.toContain("Join Live Session");
@@ -129,8 +130,8 @@ describe("the Stage's video slot follows the SAME gate as the chat", () => {
     const RoomVideoSlot = (await import("@/components/rooms/RoomVideoSlot")).default;
     const html = renderToStaticMarkup(createElement(RoomVideoSlot, PROPS));
     expect(html).toContain("opening the room");
-    // "Chronicles: Weekly Reading" is a real registered room — its own
-    // Stage is the only place this component ever mounts, so the pill
+    // "The Playground" is a real registered room (weekly-reading) — its
+    // own Stage is the only place this component ever mounts, so the pill
     // would always have pointed back at the page already open
     expect(html).not.toContain("Join Live Session");
   });

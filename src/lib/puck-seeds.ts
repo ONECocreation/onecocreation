@@ -379,8 +379,11 @@ const homeContent: Block[] = [
       [hm.panel([
         hm.heading("📚 Classes", "h3"),
         hm.list([
-          "✦ The Playground · Weekly Intuitive",
-          "✦ Chronicles: Weekly Reading · Observer",
+          /* TASK-465 (block 968,561): the Playground moved to the Observer
+             room (#weekly-reading); #clair-senses (Weekly Intuitive) is
+             hidden for now, so its line drops rather than renaming in
+             place. */
+          "✦ The Playground · Observer",
           "✦ Quantum Healing — Deep Dive · Evening Star",
         ], "none"),
       ])],

@@ -10,6 +10,13 @@ import { useRoomVantage, type RoomVantage } from "./vantage";
  * a member's stale stored pick resolves to the Stage in vantage.ts
  * (`resolveVantage`), never to a dead tab. Drives `useRoomVantage`'s
  * shared, per-user persisted state.
+ *
+ * TASK-465 (block 968,561): "it will replace that stage button title
+ * called the playground" — the Playground room's OWN Stage tab reads "The
+ * Playground" instead of the plain "Stage" word; every other room keeps
+ * "Stage". The smallest seam: an optional `stageLabel` prop, passed only
+ * by the mount that knows which room this is (ClassroomView.tsx, keyed off
+ * `reading-room.ts`'s `PLAYGROUND_ROOM_SLUG`) — this file stays room-blind.
  */
 const OPTIONS: { id: RoomVantage; label: string }[] = [
   { id: "stage", label: "Stage" },
@@ -17,7 +24,7 @@ const OPTIONS: { id: RoomVantage; label: string }[] = [
   { id: "circle", label: "Events" }, // TASK-211 (0018.06.23 a₿, Love's call #31) renamed this tab
 ];
 
-export default function VantageSwitcher() {
+export default function VantageSwitcher({ stageLabel }: { stageLabel?: string } = {}) {
   const [vantage, setVantage] = useRoomVantage();
   return (
     <div className="cls-vantage" role="group" aria-label="how you'd like to see this room">
@@ -29,7 +36,7 @@ export default function VantageSwitcher() {
           aria-pressed={vantage === o.id}
           onClick={() => setVantage(o.id)}
         >
-          {o.label}
+          {o.id === "stage" && stageLabel ? stageLabel : o.label}
         </button>
       ))}
     </div>
