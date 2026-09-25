@@ -238,6 +238,14 @@ export async function listEntitlements(): Promise<Entitlement[]> {
  * `under`, and `getEntitlement` falls back to it once this taster closes.
  * Every other branch (same tier, lower tier, permanent) is untouched; it
  * only now carries `under` forward (or clears it on a permanent purchase).
+ *
+ * Fix round (F3, block 968,543): when the STANDING grant outranks THIS
+ * purchase, the purchase isn't simply dropped either — the standing grant's
+ * own orderId, tier and expiry stand exactly as they were (this purchase
+ * never becomes the record of the money behind a tier it didn't win), but
+ * the purchase itself becomes the new `under` when it beats whatever `under`
+ * already stands (nothing there yet, a higher rank, or the same rank with
+ * this purchase permanent against a taster `under`) — see `underBeats`.
  */
 export async function grantTier(
   npub: string,
@@ -248,15 +256,19 @@ export async function grantTier(
   if (!safeNpub(npub) || !isTier(tier)) return null;
   const existing = await getEntitlement(npub);
   if (existing && existing.orderId === orderId && existing.tier === tier) return existing; // retry
-  const keep = existing && RANK[existing.tier] > RANK[tier] ? existing.tier : tier;
+  const outranked = existing != null && RANK[existing.tier] > RANK[tier];
+  const keep = outranked ? existing!.tier : tier;
 
+  let finalOrderId = orderId;
   let expiresAtMs: number | undefined;
   let under: Entitlement["under"];
-  if (keep !== tier) {
-    // the standing grant outranks this purchase — its own expiry (if any),
-    // and its own `under` (if any), stand exactly as they were
-    expiresAtMs = existing?.expiresAtMs;
-    under = existing?.under;
+  if (outranked) {
+    // the standing grant outranks this purchase — its own orderId, expiry
+    // stand exactly as they were
+    finalOrderId = existing!.orderId;
+    expiresAtMs = existing!.expiresAtMs;
+    const incoming = { tier, orderId, expiresAtMs: opts?.expiresAtMs };
+    under = underBeats(incoming, existing!.under) ? incoming : existing!.under;
   } else if (opts?.expiresAtMs == null) {
     // a permanent purchase at (or above) the standing tier — no more clock,
     // and nothing left to fall back FROM: a real purchase at this tier or
@@ -283,7 +295,7 @@ export async function grantTier(
   const rec: Entitlement = {
     npub,
     tier: keep,
-    orderId,
+    orderId: finalOrderId,
     grantedAtMs: existing?.grantedAtMs ?? Date.now(),
     mxid: opts?.mxid ?? existing?.mxid,
     expiresAtMs,
@@ -308,32 +320,64 @@ function underFrom(existing: Entitlement): NonNullable<Entitlement["under"]> {
   return RANK[nested.tier] > RANK[own.tier] ? nested : own;
 }
 
+/** Fix round (F3, block 968,543): does `incoming` — a purchase that did NOT
+ *  win the top slot this call — beat the CURRENT `under`, and so become the
+ *  new one? Nothing there yet always loses to something; otherwise a
+ *  strictly higher rank wins, and at the same rank a permanent incoming
+ *  purchase beats a taster `under`. Anything else leaves the existing
+ *  `under` exactly as it was. */
+function underBeats(
+  incoming: { tier: Tier; orderId: string; expiresAtMs?: number },
+  current: Entitlement["under"],
+): boolean {
+  if (!current) return true;
+  if (RANK[incoming.tier] > RANK[current.tier]) return true;
+  if (RANK[incoming.tier] === RANK[current.tier] && incoming.expiresAtMs == null && current.expiresAtMs != null) return true;
+  return false;
+}
+
 /**
  * Refund, dispute, or the artist's own hand → the door closes.
  * Spec: revocation ships WITH the grant, never later — refunds arrive in week
  * one, and a charged-back purchase must not keep access forever.
  *
  * TASK-462 (block 968,543): `orderId` names WHICH order is being revoked.
- * When it matches the live record's own orderId and that record rides on a
- * live `under`, the door doesn't close — it falls back to `under`, the same
- * way a natural expiry does. Any other call (no orderId — the admin
- * ceremony route's own hand — or the `under` grant's own order) closes
- * everything exactly as before.
+ * When it matches the record's own orderId and that record rides on a live
+ * `under`, the door doesn't close — it falls back to `under`, the same way a
+ * natural expiry does. Any other call (no orderId — the admin ceremony
+ * route's own hand — or the `under` grant's own order) closes everything
+ * exactly as before.
+ *
+ * Fix round (F1, block 968,543): this decides from the RAW stored record
+ * (`readRec`), never `getEntitlement`. Refunds usually land AFTER the event
+ * — by the time Love refunds a taster's day pass, it has often already
+ * LAPSED, and `getEntitlement` would already be showing it AS its `under`
+ * (a different orderId, no `under` of its own): the exact match below would
+ * miss it, and the member would be fully closed instead of falling back.
+ * The raw record's own orderId is always the taster's own, live or not.
  */
 export async function revokeTier(npub: string, orderId?: string): Promise<Entitlement | null> {
+  const raw = await readRec(npub);
+  if (raw && !raw.revokedAtMs && orderId && raw.under && raw.orderId === orderId) {
+    const underLive = raw.under.expiresAtMs == null || Date.now() <= raw.under.expiresAtMs;
+    if (underLive) {
+      const fallen: Entitlement = {
+        ...raw,
+        tier: raw.under.tier,
+        orderId: raw.under.orderId,
+        expiresAtMs: raw.under.expiresAtMs,
+        under: undefined,
+      };
+      await write(fallen);
+      return fallen;
+    }
+  }
+  // any other call — no orderId, the `under` grant's own order, an `under`
+  // that's no longer live, or an order that names nothing live at all —
+  // closes exactly as before, against whatever is CURRENTLY live (which may
+  // itself already be a promoted `under`, per getEntitlement's own fallback).
   const rec = await getEntitlement(npub);
   if (!rec) return null;
-  if (orderId && rec.under && rec.orderId === orderId) {
-    const fallen: Entitlement = {
-      ...rec,
-      tier: rec.under.tier,
-      orderId: rec.under.orderId,
-      expiresAtMs: rec.under.expiresAtMs,
-      under: undefined,
-    };
-    await write(fallen);
-    return fallen;
-  }
   const revoked: Entitlement = { ...rec, revokedAtMs: Date.now() };
   await write(revoked);
   return revoked;
