@@ -15,7 +15,9 @@ import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { getStage1State } from "@/lib/stage1";
 import { deriveWeekPass } from "@/lib/week-pass";
-import { STAGE2_FLOOR_NAME } from "@/lib/stage2-access";
+import { STAGE2_FLOOR_NAME, STAGE2_MIN_TIER } from "@/lib/stage2-access";
+import { tierForSubject } from "@/lib/member-tier";
+import { tierSatisfies } from "@/lib/entitlement";
 
 /**
  * TASK-391 (block 968,088) + TASK-438 (block 968,222; HOLD LIFTED block
@@ -71,11 +73,12 @@ export default async function ReadingPage() {
      variant already does (rooms/[slug]/page.tsx:82, home page.tsx:34) —
      never cookies() (it URL-encodes an email handle's own "@" and the
      token fails its own signature, home page.tsx's TASK-210 finding).
-     The page itself renders no signed-in branch — the islands read their
-     own session client-side — but the read stays: the response is
-     honestly per-visitor, the house idiom every public page keeps. */
+     The page itself renders no signed-in BRANCH of its own — the islands
+     read their own session client-side — but the read stays: the
+     response is honestly per-visitor, the house idiom every public page
+     keeps. TASK-466 (block 968,561) is the one exception: `session` now
+     also feeds the ended card's Playground-entitlement read below. */
   const session = sessionsFromCookieHeader((await headers()).get("cookie"))[0] ?? null;
-  void session;
 
   const config = await getSiteConfig();
   const schedule = config.reading ?? DEFAULT_READING_SCHEDULE;
@@ -88,6 +91,28 @@ export default async function ReadingPage() {
   const weekPass = await deriveWeekPass();
 
   const recurrenceLabel = next ? weekdayName(next.startsAtMs, schedule.tz) : null;
+
+  /* TASK-466 (block 968,561, ruling 1) — the ended card's "Watch part two
+     in the Playground" link needs to know whether THIS visitor already
+     clears the Playground's own floor, so someone below it sees the lock
+     + the floor's name instead of a bare door. Computed the exact way
+     `/api/stage2/route.ts`'s GET does (`tierForSubject` then
+     `tierSatisfies` against `STAGE2_MIN_TIER`, the one place that floor
+     is written) — never re-implemented, and it fails CLOSED: any throw
+     reads locked. This is display only; the link always goes to
+     /reading/playground, which re-decides for real (the same "words, not
+     a gate" idiom the Playground page's own band already keeps). */
+  const floorName = STAGE2_FLOOR_NAME; // TASK-465: the floor name comes from stage2-access.ts only
+  let playgroundLocked = true;
+  if (session) {
+    try {
+      const tier = await tierForSubject(`${session.handle}@${session.space}`);
+      playgroundLocked = !tierSatisfies(tier, STAGE2_MIN_TIER);
+    } catch {
+      playgroundLocked = true;
+    }
+  }
+  const playgroundLock = { locked: playgroundLocked, floorName };
 
   return (
     <>
@@ -114,6 +139,7 @@ export default async function ReadingPage() {
               jitsiDomain={config.meeting.jitsiDomain}
               countdown={<ReadingHeroCountdown schedule={schedule} next={next} asOfMs={asOfMs} variant="blocks" />}
               countdownWhen={<ReadingHeroCountdown schedule={schedule} next={next} asOfMs={asOfMs} variant="blocks" whenOnly />}
+              playgroundLock={playgroundLock}
             />
           </div>
         </section>

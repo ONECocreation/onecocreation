@@ -25,6 +25,9 @@ function render(overrides: Partial<ReadingStageBodyProps>): string {
       ended: false,
       room: null,
       playgroundOpen: false,
+      /* TASK-466 (block 968,561): unlocked by default — this suite never
+         renders the ended card (where the lock is read). */
+      playgroundLock: { locked: false, floorName: "Test Tier" },
       jitsiDomain: "meet.example",
       nextWords: null,
       countdown: null,
