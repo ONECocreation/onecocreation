@@ -21,7 +21,11 @@ import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/l
 
 export const dynamic = "force-dynamic";
 
-const bySlug = (slug: string) => ROOMS.find((r) => r.id.slice(1, r.id.indexOf(":")) === slug);
+/* TASK-465 (block 968,561): a room carrying `hidden: true` never resolves
+ * here — a direct visit to its own /rooms/<slug> address notFounds, the
+ * same as any unknown slug. Admin surfaces (go-live, the readiness card)
+ * still operate the room; only this member-facing address is closed. */
+const bySlug = (slug: string) => ROOMS.find((r) => !r.hidden && r.id.slice(1, r.id.indexOf(":")) === slug);
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;

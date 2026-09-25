@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import VantageSwitcher from "./VantageSwitcher";
 import { useRoomVantage } from "./vantage";
+import { PLAYGROUND_ROOM_SLUG } from "@/lib/reading-room";
 import LessonPathView from "./LessonPathView";
 import CircleView from "./CircleView";
 import StageView from "./StageView";
@@ -241,7 +242,9 @@ export default function ClassroomView({ slug, alias, title, kind, pin, jitsiDoma
   return (
     <div>
       <div className="cls-bar">
-        <VantageSwitcher />
+        {/* TASK-465 (block 968,561): the Playground room's own Stage tab
+            reads "The Playground" — every other room keeps "Stage". */}
+        <VantageSwitcher stageLabel={slug === PLAYGROUND_ROOM_SLUG ? "The Playground" : undefined} />
       </div>
 
       {/* TASK-382: the next-reading notice — vantage-independent (shows

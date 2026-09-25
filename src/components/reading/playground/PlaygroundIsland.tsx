@@ -276,13 +276,17 @@ export function PlaygroundIslandBody({
   }
 
   if (wire.decision === "signin") {
-    /* SIGNED OUT (M19a) — Sign in returns here (T-442's safeNextPath rides unchanged) */
+    /* SIGNED OUT (M19a) — Sign in returns here (T-442's safeNextPath rides
+       unchanged). TASK-465 (block 968,561): the floor line names
+       `observerName` (was a literal "Weekly Intuitive" until the Admiral
+       raised Stage 2's floor to Observer), and the old em-dash sentence
+       split into two (ruling C). */
     return (
       <div className="kit-card kit-card-body kitx-flow kit-stage2-card">
         <h2 className="kit-h2">Come up and talk with Love</h2>
         <p className="kit-body">
-          The Playground is a live video call with Love, camera and mic. It comes with every membership, from Weekly
-          Intuitive up, or with a one-week pass.
+          The Playground is a live video call with Love, camera and mic. It comes with every membership from{" "}
+          {observerName} up. Or try it with a one-week pass.
         </p>
         <div className="kit-btn-row kitx-actions">
           <Link href="/login?next=%2Freading%2Fplayground" className="kit-btn kit-btn-main kit-btn-sm">
@@ -308,7 +312,7 @@ export function PlaygroundIslandBody({
       <div className="kit-card kit-card-body kitx-flow kit-stage2-card">
         <p className="kicker">Heart Field · your free membership</p>
         <h2 className="kit-h2">The Playground comes with a paid membership</h2>
-        <p className="kit-body">Join Weekly Intuitive or above, or try one week, and come straight back here to join Love.</p>
+        <p className="kit-body">Join {observerName} or above, or try one week, and come straight back here to join Love.</p>
         <div className="kit-btn-row kitx-actions">
           <Link href={observerHref} className="kit-btn kit-btn-main kit-btn-sm">
             {observerName}
@@ -320,7 +324,7 @@ export function PlaygroundIslandBody({
         {week && (
           <div className="kit-btn-row">
             <button type="button" className="kit-btn kit-btn-quiet" disabled={weekBusy} onClick={() => onTryWeek(week.itemId)}>
-              {weekBusy ? "Adding…" : `Try one week — ${week.price}`}
+              {weekBusy ? "Adding…" : `Try one week for ${week.price}`}
             </button>
           </div>
         )}
@@ -418,10 +422,10 @@ export default function PlaygroundIsland({
           setJoinedRoom(fresh.room as string);
         }
       } else {
-        setNote("The Playground couldn't be reached just now — try again.");
+        setNote("The Playground couldn't be reached just now. Try again.");
       }
     } catch {
-      setNote("The Playground couldn't be reached just now — try again.");
+      setNote("The Playground couldn't be reached just now. Try again.");
     } finally {
       setJoining(false);
     }

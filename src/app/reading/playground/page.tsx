@@ -149,7 +149,7 @@ export default async function PlaygroundPage() {
             <ul className="kit-list">
               <li>A live video call with Love, right after the reading</li>
               <li>Camera and mic: come up and talk with her</li>
-              <li>With every membership, from Weekly Intuitive up, or a one-week pass</li>
+              <li>{`With every membership, from ${observerName} up, or a one-week pass`}</li>
             </ul>
           </div>
         </section>

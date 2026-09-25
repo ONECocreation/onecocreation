@@ -40,12 +40,16 @@ const readingRoom = freeRoom();
 export const READING_ROOM_SLUG: string | null = readingRoom ? roomSlug(readingRoom.id) : null;
 export const READING_ROOM_PATH: string | null = readingRoom ? roomPath(readingRoom.id) : null;
 
-/** TASK-460 (block 968,543 — decision cw-playground-where, option B): the
- *  Weekly Intuitive room's own slug, named once so it never rides as a bare
- *  string twice — the ONE room StageView.tsx opens a "Join the Playground
- *  call" door in (`matrix-rooms.ts`'s own `clair-senses` alias, unchanged;
- *  only the room's TITLE became "The Playground", TASK-460's Build 1). */
-export const PLAYGROUND_ROOM_SLUG = "clair-senses";
+/** TASK-465 (block 968,561) — MOVED from `clair-senses` to
+ *  `weekly-reading`. The Admiral: "weekly intuitive room for clair senses
+ *  room can be hidden for now. we are only going to have the playground in
+ *  that room area" — reversing TASK-460's pick (block 968,543, decision
+ *  cw-playground-where, option B, which put it on `clair-senses`). Named
+ *  once so it never rides as a bare string twice — the ONE room
+ *  StageView.tsx opens a "Join the Playground call" door in
+ *  (`matrix-rooms.ts`'s own `weekly-reading` alias; the room's TITLE is
+ *  "The Playground" there now). */
+export const PLAYGROUND_ROOM_SLUG = "weekly-reading";
 
 /** True iff `pathname` is the reading room's own address — the Admiral's
  *  ruling (block 968,051): arriving at the reading room always opens the

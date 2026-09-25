@@ -15,6 +15,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { getStage1State } from "@/lib/stage1";
 import { deriveWeekPass } from "@/lib/week-pass";
+import { STAGE2_FLOOR_NAME } from "@/lib/stage2-access";
 
 /**
  * TASK-391 (block 968,088) + TASK-438 (block 968,222; HOLD LIFTED block
@@ -139,8 +140,14 @@ export default async function ReadingPage() {
               {/* T-454: the real floor, in the Playground page's own words —
                   "any membership" read true to a free Heart Field member who
                   then met the paid gate (this page stays free of the paywall's
-                  logic, so the name rides as words, as the Playground's list does) */}
-              <li>{`Join the discussion after: the Playground, a live group video call with Love, with every membership from Weekly Intuitive up${weekPass ? `, or a ${weekPass.price} one-week pass` : ""}`}</li>
+                  logic, so the name rides as words, as the Playground's list does).
+                  TASK-465 (block 968,561): the floor name is DERIVED off
+                  Stage 2's own floor (stage2-access.ts's STAGE2_FLOOR_NAME —
+                  a plain name read, no entitlement lookup imported here
+                  directly, keeping this page's own house law clean) — the
+                  Admiral raised the floor to Observer, so a literal
+                  "Weekly Intuitive" would now be wrong. */}
+              <li>{`Join the discussion after: the Playground, a live group video call with Love, with every membership from ${STAGE2_FLOOR_NAME} up${weekPass ? `, or a ${weekPass.price} one-week pass` : ""}`}</li>
             </ul>
           </div>
         </section>

@@ -11,14 +11,35 @@ export interface MatrixRoom {
   title: string;
   kind: "class" | "community";
   minTier: Tier | "all";
+  /** TASK-465 (block 968,561): true = this room is real (still provisioned,
+   *  still ops-manageable) but hidden from every PUBLIC listing — the
+   *  packages shelf, /classes, the Circle vantage, the rooms feed, the
+   *  puck seeds, the door-machine continue label, and a direct visit to
+   *  its own /rooms/<slug> address (which notFounds). Admin surfaces
+   *  (Love's go-live door, the readiness card, membership provisioning)
+   *  are deliberately NOT filtered by this flag — she still operates the
+   *  room even though it's off the public shelf "for now" (the Admiral's
+   *  own words). Absent/false = listed as always. */
+  hidden?: true;
 }
 
 /* ── CONTENT: Love's rooms ──────────────────────────────────────────────── */
+/**
+ * TASK-465 (block 968,561) — THE PLAYGROUND MOVES TO OBSERVER. The
+ * Admiral, having been asked where the room/door should live since
+ * TASK-460 (968,543, decision cw-playground-where, option B) put "The
+ * Playground" on `#clair-senses` (Weekly Intuitive, tier A): "weekly
+ * intuitive room for clair senses room can be hidden for now. we are only
+ * going to have the playground in that room area." So `#clair-senses`
+ * goes back to its own name and hides; `#weekly-reading` (Observer, tier
+ * B) becomes The Playground instead — matching ruling A ("the playground
+ * is for members of the observer or better package").
+ */
 export const ROOMS: MatrixRoom[] = [
   { id: "#heart-field:onecocreation.com", title: "The Heart Field", kind: "community", minTier: "all" },
-  { id: "#clair-senses:onecocreation.com", title: "The Playground", kind: "class", minTier: "A" },
+  { id: "#clair-senses:onecocreation.com", title: "Clair Senses", kind: "class", minTier: "A", hidden: true },
   { id: "#tune-up:onecocreation.com", title: "Daily Tune-Up & Check-ins", kind: "community", minTier: "A" },
-  { id: "#weekly-reading:onecocreation.com", title: "Chronicles: Weekly Reading", kind: "class", minTier: "B" },
+  { id: "#weekly-reading:onecocreation.com", title: "The Playground", kind: "class", minTier: "B" },
   { id: "#observers-circle:onecocreation.com", title: "The Observers' Circle", kind: "community", minTier: "B" },
   { id: "#quantum-healing:onecocreation.com", title: "Quantum Healing — Deep Dive", kind: "class", minTier: "C" },
   { id: "#inner-sanctum:onecocreation.com", title: "Evening Star — Inner Sanctum", kind: "community", minTier: "C" },

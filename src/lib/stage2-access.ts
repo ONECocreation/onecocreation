@@ -5,12 +5,15 @@ import { getItem } from "./store";
 import { dollars } from "./money-words";
 
 /**
- * STAGE 2'S ONE ACCESS DECISION (TASK-439, block 968,218).
+ * STAGE 2'S ONE ACCESS DECISION (TASK-439, block 968,218; RAISED to
+ * Observer by TASK-465, block 968,561).
  *
- * Ruling 1, the Admiral verbatim: "any paid package so that puts it in to
- * the weekly intuitive since that is a base item and gets added to all." —
- * Stage 2's minimum is tier A, and B and C satisfy it (the progressive
- * ladder). `STAGE2_MIN_TIER` below is the ONLY place that minimum is
+ * TASK-465 ruling (the Admiral, block 968,561, verbatim): "the playground
+ * is for members of the observer or better package. users can be
+ * presented with an upgrade option." This REVERSES ruling 1 of block
+ * 968,218 ("any paid package so that puts it in to the weekly intuitive
+ * since that is a base item and gets added to all" — the old floor was
+ * tier A). `STAGE2_MIN_TIER` below is still the ONLY place the minimum is
  * written: the route decides through `decideStage2`, which reuses
  * `room-access.ts`'s `roomGate` — the same helper the Stage's video slot
  * and the room chat already follow — never a re-implementation.
@@ -21,8 +24,18 @@ import { dollars } from "./money-words";
  * route sends the decision and these few strings down the wire instead.
  */
 
-/** Stage 2's minimum tier (ruling 1) — written here and nowhere else. */
-export const STAGE2_MIN_TIER: Tier = "A";
+/** Stage 2's minimum tier (TASK-465, block 968,561) — written here and
+ *  nowhere else. Was "A" (Weekly Intuitive) under TASK-439's ruling 1,
+ *  block 968,218; the Admiral raised the floor to Observer. */
+export const STAGE2_MIN_TIER: Tier = "B";
+
+/** The floor's own display name (`TIERS[STAGE2_MIN_TIER].name`) — a plain
+ *  read, no entitlement check. Lets a page name the floor without
+ *  importing entitlement.ts's `TIERS` directly, which matters for
+ *  `/reading/page.tsx`: it carries its own house law ("no tier or payment
+ *  logic anywhere on this page", `tests/reading-page.test.ts`) that this
+ *  constant's name deliberately keeps clean of the literal token `TIERS`. */
+export const STAGE2_FLOOR_NAME: string = TIERS[STAGE2_MIN_TIER].name;
 
 /** Where the door sends this visitor: nothing, the sign-in door, the
  *  package door, or the room itself. */

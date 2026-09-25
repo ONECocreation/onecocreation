@@ -87,10 +87,13 @@ export function landingFor(opts: { next: string | null; isNew: boolean; mount: "
 /** TASK-259 — `/welcome`'s own continue-door words: a known `/rooms/<slug>`
  *  names the room by its real title (the rooms config, the one source of
  *  truth); anything else is the plain word, never a guessed label built
- *  from the raw path (derive-or-dash). */
+ *  from the raw path (derive-or-dash). TASK-465 (block 968,561): a hidden
+ *  room never gets named here either — its own /rooms/<slug> address
+ *  notFounds, so naming it in a continue button would point at a dead
+ *  door. */
 export function continueLabel(path: string | null): string {
   const slug = path ? /^\/rooms\/([^/?]+)/.exec(path)?.[1] : null;
-  const room = slug ? ROOMS.find((r) => r.id.slice(1, r.id.indexOf(":")) === slug) : null;
+  const room = slug ? ROOMS.find((r) => !r.hidden && r.id.slice(1, r.id.indexOf(":")) === slug) : null;
   return room ? `Continue to ${room.title}` : "Continue";
 }
 

@@ -19,6 +19,13 @@ export const dynamic = "force-dynamic";
  * card reads). true = the room stands · false = the server SAYS it isn't
  * there (the shelf paints "opens soon") · null = the server won't say, and
  * the shelf paints nothing (derive-or-dash — never an invented marker).
+ *
+ * TASK-465 (block 968,561): a room carrying `hidden: true` (matrix-rooms.ts)
+ * never rides this feed — this is the ONE place every public rooms listing
+ * (the packages shelf, /classes, the Circle vantage) reads from, so
+ * filtering here is filtering everywhere at once. `roomsLive()` still
+ * probes every room including hidden ones (an admin ops concern, not a
+ * public-listing one) — only the returned FEED is narrowed.
  */
 export async function GET(request: Request) {
   const fren = memberFromRequest(request);
@@ -28,7 +35,7 @@ export async function GET(request: Request) {
   ]);
   const liveBySlug = new Map(live.map((r) => [r.slug, r.live]));
 
-  const rooms = ROOMS.map((r) => {
+  const rooms = ROOMS.filter((r) => !r.hidden).map((r) => {
     const slug = r.id.slice(1, r.id.indexOf(":"));
     const open = r.minTier === "all" ? !!fren : !!tier && tierSatisfies(tier, r.minTier);
     return {
