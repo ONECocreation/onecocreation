@@ -148,11 +148,11 @@ describe("Stage2DoorBody — every decision, rendered pure", () => {
     expect(html).not.toContain(encodeURIComponent("/rooms/"));
   });
 
-  it("package renders Stage 2's OWN line (Amendment 2, A8) and the link labelled exactly 'See the package' (A6) to the package's own page", async () => {
+  it("package renders the Playground's OWN line (Amendment 2, A8; re-trued TASK-460) and the link labelled exactly 'See the package' (A6) to the package's own page", async () => {
     const html = await renderBody({ decision: "package", pkg: { ...PKG, week: null } });
-    /* A8: the shared packageDoorLine reads wrong for Stage 2 — it is the
-       BOTTOM tier that opens Stage 2, and a one-week pass opens it too */
-    expect(html).toContain("Stage 2 comes with every membership, from Weekly Intuitive up.");
+    /* A8: the shared packageDoorLine reads wrong for the Playground — it is
+       the BOTTOM tier that opens it, and a one-week pass opens it too */
+    expect(html).toContain("The Playground comes with every membership, from Weekly Intuitive up.");
     expect(html).not.toContain("and everything above it");
     expect(html).not.toContain("one-week pass");
     /* A6: the line above already names the package, so the label says
@@ -165,7 +165,7 @@ describe("Stage2DoorBody — every decision, rendered pure", () => {
 
   it("package with the week offer: the A8 line gains the one-week-pass clause, and a kit button reads 'Try one week — $11' (Amendment A3)", async () => {
     const html = await renderBody({ decision: "package", pkg: { ...PKG, week: WEEK } });
-    expect(html).toContain("Stage 2 comes with every membership, from Weekly Intuitive up — or with a one-week pass.");
+    expect(html).toContain("The Playground comes with every membership, from Weekly Intuitive up — or with a one-week pass.");
     expect(html).toContain("Try one week — $11");
     const btn = html.match(/<button[^>]*>[^<]*Try one week[^<]*<\/button>/);
     expect(btn, "the Try-one-week button not found").not.toBeNull();
@@ -178,9 +178,10 @@ describe("Stage2DoorBody — every decision, rendered pure", () => {
     expect(html).not.toContain("Try one");
   });
 
-  it("open + reachable renders the Join button with its words, on the kit's main button", async () => {
+  it("open + reachable renders the Join button with its words, on the kit's main button (re-trued TASK-460: no dash, no 'come up')", async () => {
     const html = await renderBody({ decision: "open", reachable: true });
-    expect(html).toContain("Join Stage 2 — come up");
+    expect(html).toContain("Join the Playground");
+    expect(html).not.toContain("come up");
     expect(html).toContain("kit-btn kit-btn-main kit-btn-sm");
   });
 
@@ -190,14 +191,14 @@ describe("Stage2DoorBody — every decision, rendered pure", () => {
     expect(html).toContain("disabled");
   });
 
-  it("open + unreachable renders today's line, unchanged, and no Join button", async () => {
+  it("open + unreachable renders today's line, unchanged, and no Join button (re-trued TASK-460)", async () => {
     const html = await renderBody({ decision: "open", reachable: false });
-    expect(html).toContain("Stage 2 isn&#x27;t answering right now.");
-    expect(html).not.toContain("Join Stage 2");
+    expect(html).toContain("The Playground isn&#x27;t answering right now.");
+    expect(html).not.toContain("Join the Playground");
   });
 
-  it("a click failure note renders as one kit-text-quiet line", async () => {
-    const html = await renderBody({ decision: "open", reachable: true, note: "Stage 2 couldn't be reached just now — try again." });
+  it("a click failure note renders as one kit-text-quiet line (re-trued TASK-460)", async () => {
+    const html = await renderBody({ decision: "open", reachable: true, note: "The Playground couldn't be reached just now — try again." });
     expect(html).toContain("kit-text-quiet");
     expect(html).toContain("couldn&#x27;t be reached");
   });

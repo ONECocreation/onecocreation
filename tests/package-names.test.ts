@@ -75,7 +75,7 @@ describe("puck-seeds.ts — the six seed lines carry the real tier names", () =>
 
   it("the Classes column's three suffixes equal the three real names, room titles untouched", async () => {
     const src = await read("src/lib/puck-seeds.ts");
-    expect(src).toContain(`✦ Clair Senses — Foundations · ${TIERS.A.name}`);
+    expect(src).toContain(`✦ The Playground · ${TIERS.A.name}`);
     expect(src).toContain(`✦ Chronicles: Weekly Reading · ${TIERS.B.name}`);
     expect(src).toContain(`✦ Quantum Healing — Deep Dive · ${TIERS.C.name}`);
   });
