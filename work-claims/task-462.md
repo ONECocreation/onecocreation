@@ -18,7 +18,9 @@ Owned paths and limits:
 - tests/taster-keeps-membership-462.test.ts — NEW.
 - work-claims/task-462.md and work-claims/task-462-register.md.
 
-Read-only (never touched): matrix.ts, the webhook and checkout routes, the orders route, /a/store, room-access.ts, kit.css, member-tier.ts, src/app/api/admin/matrix/ceremony/route.ts, every other existing test file (existing pins run untouched).
+**Round 3 widening (block 968,548, Number One's own instruction):** OWNS now also includes `src/lib/live.ts`, scoped to exactly ONE function, `classStartingAudience` — it re-derives its own revoked/lapsed liveness check inline and never knew about `under`, so a member whose taster had lapsed dropped out of every room's audience even when their live grant (per `getEntitlement`) is still a standing membership. The fix exports a new pure `liveGrant(rec, now?)` from `entitlement.ts` (holding exactly `getEntitlement`'s revoked/lapsed/`under` decision) and has `classStartingAudience` call it instead of its own inline check. Nothing else in `live.ts` is touched — not `LiveState`, not the letter/mail plumbing, not `emailForGrantKey`.
+
+Read-only (never touched): matrix.ts, the webhook and checkout routes, the orders route, /a/store, room-access.ts, kit.css, member-tier.ts, src/app/api/admin/matrix/ceremony/route.ts, every other existing test file (existing pins run untouched), and everything in `live.ts` outside `classStartingAudience`.
 
 No Matrix changes (brief item 5) — a lapsed/refunded taster still doesn't sweep Matrix rooms beyond the existing tier-room removal on refund; that gap is unchanged and noted in the register, not fixed here.
 
