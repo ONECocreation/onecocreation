@@ -14,6 +14,12 @@ import { useState } from "react";
  * exact inline shape TASK-466's `ReadingStage.tsx` draws (its
  * `PLAYGROUND_LOCK_ICON`), copied here so the two locks match; decorative
  * only (`aria-hidden`), the meaning is the visible label text.
+ *
+ * `label` stays SHORT on purpose (R-071: button text never wraps, and a
+ * long package name measured wider than the card itself on a 360px
+ * phone — see the register). `ariaLabel`, when given, is the fuller
+ * sentence for anyone on a screen reader; sighted visitors read the
+ * short label plus the row's own words right above it.
  */
 
 const LOCK_ICON = (
@@ -23,7 +29,15 @@ const LOCK_ICON = (
   </svg>
 );
 
-export default function ReadingDayUnlockButton({ itemId, label }: { itemId: string; label: string }) {
+export default function ReadingDayUnlockButton({
+  itemId,
+  label,
+  ariaLabel,
+}: {
+  itemId: string;
+  label: string;
+  ariaLabel?: string;
+}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,7 +63,13 @@ export default function ReadingDayUnlockButton({ itemId, label }: { itemId: stri
 
   return (
     <>
-      <button type="button" className="kit-btn kit-btn-main kit-btn-sm" onClick={unlock} disabled={busy}>
+      <button
+        type="button"
+        className="kit-btn kit-btn-main kit-btn-sm"
+        onClick={unlock}
+        disabled={busy}
+        aria-label={ariaLabel}
+      >
         {!busy && LOCK_ICON}
         {busy ? "Adding…" : label}
       </button>

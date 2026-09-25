@@ -92,7 +92,17 @@ export default function ReadingDayBody({
                 Join the Playground
               </Link>
             ) : (
-              <ReadingDayUnlockButton itemId={encoreFloor.itemId} label={`Unlock with ${encoreFloor.name}`} />
+              /* TASK-467: "Unlock with {name}" measured 258–328px at
+                 kit-btn-sm (nowrap, R-071) — wider than the card's own
+                 content width (~308px) on a 360px phone even stacked full
+                 width, and a future tier rename could only make it worse.
+                 The name/price already live in the quiet line above; the
+                 button itself stays short and constant. */
+              <ReadingDayUnlockButton
+                itemId={encoreFloor.itemId}
+                label="Unlock"
+                ariaLabel={`Unlock with ${encoreFloor.name}`}
+              />
             )}
           </span>
         </li>

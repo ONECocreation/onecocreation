@@ -243,9 +243,11 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
 
       if (encoreEntitled) {
         expect(html).toContain("Join the Playground");
-        expect(html).not.toContain("Unlock with");
+        expect(html).not.toContain("</svg>Unlock<");
       } else {
-        expect(html).toContain(`Unlock with ${ENCORE_FLOOR.name}`);
+        expect(html).toContain("</svg>Unlock<"); // the visible label, right after the lock glyph
+        expect(html).toContain(`aria-label="Unlock with ${ENCORE_FLOOR.name}"`); // the fuller words, for a screen reader
+        expect(html).toContain(`Comes with ${ENCORE_FLOOR.name} and up.`); // and in PLAIN sighted text, right above
         expect(html).not.toContain("Join the Playground");
       }
 
@@ -261,12 +263,17 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
 });
 
 describe("ReadingDayBody — the lock icon is aria-hidden, decorative only; the words say who it's for", () => {
-  it("both locked rows carry the lock svg, aria-hidden, and the plain-word label beside it", () => {
+  it("both locked rows carry the lock svg, aria-hidden, and the meaning in plain words (the row's own line, or the button's own label)", () => {
     const html = render(bodyProps({ encoreEntitled: false, qaEntitled: false }));
     const locks = html.match(/class="kit-lock-icon"/g) ?? [];
     expect(locks.length).toBe(2);
     expect(html).toContain('aria-hidden="true"');
-    expect(html).toContain(`Unlock with ${ENCORE_FLOOR.name}`);
+    // the Encore's short "Unlock" label leans on the row's own quiet line
+    // for the plain-word meaning (button text never wraps, R-071 — see
+    // the register: "Unlock with {name}" measured wider than the card)
+    expect(html).toContain("</svg>Unlock<");
+    expect(html).toContain(`Comes with ${ENCORE_FLOOR.name} and up.`);
+    // the Q&A's own label carries the full meaning right in its own words
     expect(html).toContain("Unlock the Q&amp;A");
   });
 

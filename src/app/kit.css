@@ -290,6 +290,17 @@
   .kit-stage1-card .kit-rows>li{grid-template-columns:1fr;gap:8px}
   .kit-stage1-card .kit-rows-end{justify-self:end}
 }
+/* TASK-467 (block 968,561) — the Reading Day brick's own card, the same
+   stacking law as kit-stage1-card just above (measured: a wide button
+   squeezed into the shared two-column grid clipped against the card's
+   own overflow:hidden on a 360px phone), but CENTERED — this card is
+   public-facing, not an admin control panel, and the brief's own words
+   are "rows centered on phones." SCOPED to room-card so Stage2Details'
+   two-column short prices stay untouched. */
+@media (max-width:640px){
+  .room-card .kit-rows>li{grid-template-columns:1fr;gap:8px;text-align:center}
+  .room-card .kit-rows-end{justify-self:center}
+}
 /* disabled controls LOOK disabled (K122 item 3) — scoped to the rows'
    own end cell (:disabled and the honestly-marked aria-disabled anchor),
    never a site-wide kit change */
