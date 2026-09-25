@@ -1,6 +1,6 @@
 import { createHmac } from "crypto";
 import { ROOMS, type MatrixRoom } from "./matrix-rooms";
-import { listEntitlements, tierSatisfies, type Tier } from "./entitlement";
+import { listEntitlements, liveGrant, tierSatisfies, type Tier } from "./entitlement";
 import { enqueue } from "./mail-queue";
 import { brandShell, pill } from "./mail";
 import { siteBase } from "./subscribers";
@@ -279,15 +279,20 @@ async function emailForGrantKey(grantKey: string): Promise<string | null> {
 }
 
 /** Every member whose LIVE grant opens this room and who has an email
- *  door — the same gate semantics as getEntitlement (revoked and lapsed
- *  grants read as nothing), deduped by address. */
+ *  door — the SAME gate decision as getEntitlement (`liveGrant`, TASK-462
+ *  round 3, block 968,548): a revoked or lapsed-with-nothing-live-under
+ *  grant reads as nothing, and a lapsed taster sitting on a still-live
+ *  standing membership reads AS that membership, not as nothing. Before
+ *  round 3 this re-implemented its own revoked/lapsed check inline and
+ *  never knew about `under`, so a permanent member whose taster had lapsed
+ *  silently dropped out of every room's audience. Deduped by address. */
 export async function classStartingAudience(room: MatrixRoom): Promise<string[]> {
   const out = new Set<string>();
   for (const rec of await listEntitlements()) {
-    if (rec.revokedAtMs) continue;
-    if (rec.expiresAtMs != null && Date.now() > rec.expiresAtMs) continue;
-    if (room.minTier !== "all" && !tierSatisfies(rec.tier, room.minTier as Tier)) continue;
-    const em = await emailForGrantKey(rec.npub);
+    const live = liveGrant(rec);
+    if (!live) continue;
+    if (room.minTier !== "all" && !tierSatisfies(live.tier, room.minTier as Tier)) continue;
+    const em = await emailForGrantKey(live.npub);
     if (em) out.add(em);
   }
   return [...out];
