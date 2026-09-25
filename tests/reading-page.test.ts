@@ -207,17 +207,18 @@ describe("the page itself — source pins (async server component, headers()-dep
     expect(src).toContain("following={");
   });
 
-  it("the public sign-up card: ReadingSignUp variant=\"public\" exactly once — the letters, never a second door", async () => {
+  it("TASK-468 (block 968,561): the sign-up/sign-in box — ReadingSignInBox mounted exactly once, ReadingSignUp retired from this page — the letters, never a second door", async () => {
     const src = await read(PAGE_PATH);
-    expect(src.match(/<ReadingSignUp /g)?.length).toBe(1);
-    expect(src).toContain('variant="public"');
+    expect(src).toContain('from "@/components/rooms/ReadingSignInBox"');
+    expect(src.match(/<ReadingSignInBox/g)?.length).toBe(1);
+    expect(src).not.toContain("ReadingSignUp");
     expect(src).not.toMatch(/href="\/news"/);
   });
 
-  it("K122 item 13 — Stay in the know mounts in EVERY schedule state: never gated on schedule.on && next, the date-less state is { kind: \"off\" }, and the kicker falls back to 'Readings with Love · free'", async () => {
+  it("K122 item 13 — the sign-up/sign-in box mounts in EVERY schedule state: never gated on schedule.on && next (TASK-468 carries the law forward, ungated by construction — no next/schedule prop at all), and the kicker falls back to 'Readings with Love · free'", async () => {
     const src = await read(PAGE_PATH);
     expect(src).not.toContain("schedule.on && next");
-    expect(src).toContain('{ kind: "off" }');
+    expect(src).not.toMatch(/\{\s*next\s*&&[\s\S]{0,60}<ReadingSignInBox/);
     expect(src).toContain("Readings with Love · free");
   });
 

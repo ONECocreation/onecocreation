@@ -9,7 +9,7 @@ import PaletteVars from "@/components/PaletteVars";
 import CosmicSky from "@/components/CosmicSky";
 import ReadingHeroCountdown from "@/components/ReadingHeroCountdown";
 import ReadingStage from "@/components/reading/ReadingStage";
-import ReadingSignUp from "@/components/rooms/ReadingSignUp";
+import ReadingSignInBox from "@/components/rooms/ReadingSignInBox";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
@@ -144,13 +144,13 @@ export default async function ReadingPage() {
           </div>
         </section>
 
-        {/* STAY IN THE KNOW (M4) — the letters, never a second door; shown
-            in EVERY schedule state (K122 item 13 — the one door that works
-            without a date): with the schedule off the state is "off" and
-            the public card's words name no date. */}
+        {/* SIGN ME UP · KEEP ME POSTED (TASK-468, block 968,561) — one box,
+            never gated on schedule.on/next (K122 item 13's law carries
+            over: the one door that works without a date); email + code,
+            never a navigation away from /reading. */}
         <section className="kitx-section kitx-section-first">
           <div className="wrap">
-            <ReadingSignUp variant="public" state={next ? { kind: "upcoming", startsAtMs: next.startsAtMs, endsAtMs: next.endsAtMs } : { kind: "off" }} />
+            <ReadingSignInBox />
           </div>
         </section>
 
