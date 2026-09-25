@@ -89,6 +89,7 @@ export default function AfterHoursDoor({
 
   const room = ROOMS.find((r) => r.id.slice(1, r.id.indexOf(":")) === afterHours.room);
   if (!room) return null; // the sanitise upstream should make this unreachable — honest nothing over a guess
+  if (room.hidden) return null; // TASK-465: a hidden room's page 404s, so never a door to it
 
   const gate = roomGate(room.minTier, { signedIn: !!signedIn, tier: viewerTier ?? null });
   const line =

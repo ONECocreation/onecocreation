@@ -24,7 +24,7 @@ interface Stage2AdminState {
   jitsiDomain: string;
 }
 
-export default function Stage2Card() {
+export default function Stage2Card({ floorName }: { floorName: string }) {
   const [state, setState] = useState<Stage2AdminState | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -129,9 +129,11 @@ export default function Stage2Card() {
             <Chip tone="green">PUBLISHED — the door is live</Chip>
             {/* TASK-439 (block 968,218, rulings 1 & 4): the admin GET
                 carries no package name, so the words name no tier letter
-                and no price — the door itself speaks the package. */}
+                and no price — the door itself speaks the package.
+                TASK-465 (block 968,561): the floor's name comes from the
+                server page (STAGE2_FLOOR_NAME), never a literal. */}
             <div className="kit-text-quiet">
-              Weekly Intuitive and above can come in. New joins stop at midnight Mountain. When you finish: press Close first, then End meeting for all in the call.
+              {floorName} and above can come in. New joins stop at midnight Mountain. When you finish: press Close first, then End meeting for all in the call.
             </div>
             <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => act("close")}>
               {busy ? "Closing…" : "Close Stage 2"}

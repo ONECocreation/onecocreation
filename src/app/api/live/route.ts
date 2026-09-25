@@ -34,12 +34,18 @@ export const dynamic = "force-dynamic";
  */
 export async function GET() {
   const state = await getLiveState();
-  const room = state.live && state.room ? roomForSlug(state.room) : undefined;
+  const found = state.live && state.room ? roomForSlug(state.room) : undefined;
+  /* TASK-465 (block 968,561): a hidden room is never named in public. The
+     admin write route already refuses one; this covers a flag set before
+     that. It reads as dark here: no room, no title, no strip. */
+  const hiddenLive = !!found?.hidden;
+  const live = state.live && !hiddenLive;
+  const room = hiddenLive ? undefined : found;
   const doc = await getStudioDoc();
   const scene = studioSceneKind(doc.activeScene) === "full" ? doc.activeScene : null;
   const afterHoursRoom = state.afterHours ? roomForSlug(state.afterHours.room) : undefined;
   const afterHours =
-    state.afterHours && afterHoursRoom && afterHoursRoom.minTier !== "all"
+    live && state.afterHours && afterHoursRoom && afterHoursRoom.minTier !== "all" && !afterHoursRoom.hidden
       ? {
           room: state.afterHours.room,
           roomTitle: afterHoursRoom.title,
@@ -51,11 +57,11 @@ export async function GET() {
   return NextResponse.json(
     {
       ok: true,
-      live: state.live,
-      kind: state.live ? (room?.kind ?? state.kind ?? "class") : null,
-      room: state.live ? (state.room ?? null) : null,
-      roomTitle: state.live ? (room?.title ?? null) : null,
-      startedAt: state.live ? (state.startedAt ?? null) : null,
+      live,
+      kind: live ? (room?.kind ?? state.kind ?? "class") : null,
+      room: live ? (state.room ?? null) : null,
+      roomTitle: live ? (room?.title ?? null) : null,
+      startedAt: live ? (state.startedAt ?? null) : null,
       scene,
       afterHours,
     },

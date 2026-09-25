@@ -354,3 +354,19 @@ it).
   - the tier taglines in tiers-content.ts ("The weekly rhythm — live, held, together." and the other two);
   - /classes's empty-state line;
   - the "could not add — try again" copies outside this lane.
+
+## Number One's fixes for the adversarial review (block 968,561, verdict BLOCK)
+
+The review (sonnet, adversarial) found two blockers. Both are fixed; narrowed, not rebuilt.
+
+1. **A hidden room could still go live and be advertised.** The register's consumer list missed the live path. Love's go-live and after-hours pickers still listed `#clair-senses`. If she picked it, `GET /api/live` named it to every visitor, the header strip said "Love is live · Clair Senses · Join", and the link 404'd, because `bySlug` hides the room.
+   - `api/admin/live/route.ts`: the GET rooms feed skips hidden rooms. POST `open` and `after-hours` refuse one with a 400, before anything posts.
+   - `a/studio/page.tsx`: `goLiveRooms` skips hidden rooms.
+   - `api/live/route.ts`: a flag left live in a hidden room (set before this deploy) reads dark. There is no room, no title and no strip. An after-hours that points at a hidden room reads null.
+   - `AfterHoursDoor.tsx`: draws nothing for a hidden room.
+   - Not changed: `roomForSlug` itself. It feeds the admin close path, room pins and the live-state sanitiser, and Love may still need to close out a hidden room's Matrix side. Also not changed: `/live/page.tsx`. It reads the same flag, but the write route refuses a hidden room now, so only a flag set before deploy could reach it. Left as a known edge.
+2. **Love's Stage 2 card said "Weekly Intuitive and above can come in."** The floor is Observer. The card is a client component and cannot import `stage2-access.ts` (it reads the store). So the server page passes `STAGE2_FLOOR_NAME` through `SiteReadingRoom` to `Stage2Card` as a `floorName` prop.
+
+Tests: new `tests/hidden-room-465.test.ts`. `tests/after-hours-door.test.ts` re-trued: its tier-A target room moved from clair-senses (hidden, now draws no door) to tune-up.
+
+Found in passing, not fixed (not this lane): the admin GET `rooms` feed has no `minTier`. So `go-live-room.tsx`'s after-hours default (`memberRooms.find((r) => r.minTier === "A")`) never matches. It falls to the first listed room, the free Commons, which the write route 400s. Love has to pick a room by hand. This predates this lane.

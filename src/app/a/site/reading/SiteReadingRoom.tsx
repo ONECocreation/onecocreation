@@ -13,7 +13,7 @@ import Stage2Card from "./Stage2Card";
  * the reading room now shows it above the video, off it says 'Stay tuned'
  * instead.
  */
-export default function SiteReadingRoom() {
+export default function SiteReadingRoom({ floorName }: { floorName: string }) {
   return (
     <div className="p-6" style={{ maxWidth: 860 }}>
       <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>The weekly reading</h1>
@@ -26,7 +26,7 @@ export default function SiteReadingRoom() {
       <SectionHead label="Stage 1 — the reading (everyone watches)" />
       <Stage1Card />
       <SectionHead label="Stage 2 — after the reading" />
-      <Stage2Card />
+      <Stage2Card floorName={floorName} />
     </div>
   );
 }

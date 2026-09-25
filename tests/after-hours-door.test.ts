@@ -90,7 +90,7 @@ async function postAdminLive(body: unknown, cookie?: string) {
 describe("getLiveState — afterHours sanitises field-by-field", () => {
   it("keeps a good afterHours (a real member room, a numeric `at`)", async () => {
     kv.seed(JSON.stringify({
-      live: true, kind: "class", room: "clair-senses", startedAt: 1750000000,
+      live: true, kind: "class", room: "tune-up", startedAt: 1750000000,
       afterHours: { room: "weekly-reading", at: 1750003600 },
     }));
     const { getLiveState } = await import("@/lib/live");
@@ -100,7 +100,7 @@ describe("getLiveState — afterHours sanitises field-by-field", () => {
 
   it("drops it when the room isn't in ROOMS", async () => {
     kv.seed(JSON.stringify({
-      live: true, room: "clair-senses",
+      live: true, room: "tune-up",
       afterHours: { room: "not-a-real-room", at: 1750003600 },
     }));
     const { getLiveState } = await import("@/lib/live");
@@ -110,7 +110,7 @@ describe("getLiveState — afterHours sanitises field-by-field", () => {
 
   it("drops it when the target is the free Commons (minTier \"all\")", async () => {
     kv.seed(JSON.stringify({
-      live: true, room: "clair-senses",
+      live: true, room: "tune-up",
       afterHours: { room: "heart-field", at: 1750003600 },
     }));
     const { getLiveState } = await import("@/lib/live");
@@ -120,7 +120,7 @@ describe("getLiveState — afterHours sanitises field-by-field", () => {
 
   it("drops it when `at` isn't a finite number", async () => {
     for (const at of ["soon", Number.NaN, Number.POSITIVE_INFINITY, undefined]) {
-      kv.seed(JSON.stringify({ live: true, room: "clair-senses", afterHours: { room: "weekly-reading", at } }));
+      kv.seed(JSON.stringify({ live: true, room: "tune-up", afterHours: { room: "weekly-reading", at } }));
       const { getLiveState } = await import("@/lib/live");
       const s = await getLiveState();
       expect(s.afterHours).toBeUndefined();
@@ -140,7 +140,7 @@ describe("getLiveState — afterHours sanitises field-by-field", () => {
 
 describe("POST /api/admin/live — action: after-hours / after-hours-clear", () => {
   it("401 without the operator cookie, both actions", async () => {
-    const a = await postAdminLive({ action: "after-hours", room: "clair-senses", minutes: 45 });
+    const a = await postAdminLive({ action: "after-hours", room: "tune-up", minutes: 45 });
     expect(a.status).toBe(401);
     const b = await postAdminLive({ action: "after-hours-clear" });
     expect(b.status).toBe(401);
@@ -159,7 +159,7 @@ describe("POST /api/admin/live — action: after-hours / after-hours-clear", () 
 
   it("400 on an out-of-bounds or non-finite minutes", async () => {
     for (const minutes of [0, 241, -5, Number.NaN, Number.POSITIVE_INFINITY, "45" as unknown as number]) {
-      const r = await postAdminLive({ action: "after-hours", room: "clair-senses", minutes }, operatorCookie);
+      const r = await postAdminLive({ action: "after-hours", room: "tune-up", minutes }, operatorCookie);
       expect(r.status).toBe(400);
     }
   });
@@ -167,13 +167,13 @@ describe("POST /api/admin/live — action: after-hours / after-hours-clear", () 
   it("503 when the vault is dark, even with an otherwise-good body", async () => {
     delete process.env.KV_REST_API_URL;
     delete process.env.KV_REST_API_TOKEN;
-    const r = await postAdminLive({ action: "after-hours", room: "clair-senses", minutes: 45 }, operatorCookie);
+    const r = await postAdminLive({ action: "after-hours", room: "tune-up", minutes: 45 }, operatorCookie);
     expect(r.status).toBe(503);
   });
 
   it("200 with the matrix bot dark — after-hours skips ONLY the matrix gate", async () => {
     // beforeEach already leaves MATRIX_BOT_TOKEN/MATRIX_OCC_ADMIN_TOKEN unset
-    const r = await postAdminLive({ action: "after-hours", room: "clair-senses", minutes: 45 }, operatorCookie);
+    const r = await postAdminLive({ action: "after-hours", room: "tune-up", minutes: 45 }, operatorCookie);
     expect(r.status).toBe(200);
   });
 
@@ -183,24 +183,24 @@ describe("POST /api/admin/live — action: after-hours / after-hours-clear", () 
     // `live !== true`, so an afterHours written against a dark room would
     // never surface on the next read either — this proves the round trip
     // while live, same as the operator's own actual sequence.
-    kv.seed(JSON.stringify({ live: true, kind: "class", room: "clair-senses", startedAt: 1750000000 }));
+    kv.seed(JSON.stringify({ live: true, kind: "class", room: "tune-up", startedAt: 1750000000 }));
     const before = Math.floor(Date.now() / 1000);
-    const r = await postAdminLive({ action: "after-hours", room: "clair-senses", minutes: 45 }, operatorCookie);
+    const r = await postAdminLive({ action: "after-hours", room: "tune-up", minutes: 45 }, operatorCookie);
     expect(r.status).toBe(200);
     const d = await r.json();
     expect(d.ok).toBe(true);
-    expect(d.afterHours.room).toBe("clair-senses");
+    expect(d.afterHours.room).toBe("tune-up");
     expect(d.afterHours.at).toBeGreaterThanOrEqual(before + 45 * 60 - 2);
     expect(d.afterHours.at).toBeLessThanOrEqual(before + 45 * 60 + 5);
 
     const { getLiveState } = await import("@/lib/live");
     const s = await getLiveState();
-    expect(s.afterHours?.room).toBe("clair-senses");
+    expect(s.afterHours?.room).toBe("tune-up");
   });
 
   it("after-hours-clear drops it, the rest of the state carries forward", async () => {
     kv.seed(JSON.stringify({
-      live: true, kind: "class", room: "clair-senses", startedAt: 1750000000,
+      live: true, kind: "class", room: "tune-up", startedAt: 1750000000,
       afterHours: { room: "weekly-reading", at: 1750003600 },
     }));
     const r = await postAdminLive({ action: "after-hours-clear" }, operatorCookie);
@@ -212,13 +212,13 @@ describe("POST /api/admin/live — action: after-hours / after-hours-clear", () 
     const s = await getLiveState();
     expect(s.afterHours).toBeUndefined();
     expect(s.live).toBe(true);
-    expect(s.room).toBe("clair-senses");
+    expect(s.room).toBe("tune-up");
     expect(s.startedAt).toBe(1750000000);
   });
 
   it("GET /api/admin/live carries state.afterHours straight through", async () => {
     kv.seed(JSON.stringify({
-      live: true, room: "clair-senses", afterHours: { room: "weekly-reading", at: 1750003600 },
+      live: true, room: "tune-up", afterHours: { room: "weekly-reading", at: 1750003600 },
     }));
     const { GET } = await import("@/app/api/admin/live/route");
     const res = await GET(new Request("http://test.local/api/admin/live", { headers: { cookie: operatorCookie } }));
@@ -229,7 +229,7 @@ describe("POST /api/admin/live — action: after-hours / after-hours-clear", () 
 
 describe("GET /api/live — afterHours resolved into words", () => {
   it("null when unset", async () => {
-    kv.seed(JSON.stringify({ live: true, room: "clair-senses" }));
+    kv.seed(JSON.stringify({ live: true, room: "tune-up" }));
     const { GET } = await import("@/app/api/live/route");
     const json = await (await GET()).json();
     expect(json.afterHours).toBeNull();
@@ -237,7 +237,7 @@ describe("GET /api/live — afterHours resolved into words", () => {
 
   it("the full shape when set — roomTitle, package (TIERS' name), packageSlug (TIER_PAGES' slug)", async () => {
     kv.seed(JSON.stringify({
-      live: true, room: "clair-senses", afterHours: { room: "weekly-reading", at: 1750003600 },
+      live: true, room: "tune-up", afterHours: { room: "weekly-reading", at: 1750003600 },
     }));
     const { GET } = await import("@/app/api/live/route");
     const json = await (await GET()).json();
@@ -261,9 +261,11 @@ describe("GET /api/live — afterHours resolved into words", () => {
 });
 
 describe("AfterHoursDoor — the Stage's deeper-dive door", () => {
+  /* TASK-465 (block 968,561): clair-senses is hidden now and draws no door,
+     so this suite's tier-A target is tune-up, the tier-A room still shown. */
   const AFTER_HOURS = {
-    room: "clair-senses",
-    roomTitle: "Clair Senses — Foundations",
+    room: "tune-up",
+    roomTitle: "Daily Tune-Up",
     package: "Weekly Intuitive",
     packageSlug: "weekly-intuitive",
   };
@@ -290,8 +292,8 @@ describe("AfterHoursDoor — the Stage's deeper-dive door", () => {
       h(AfterHoursDoor, { afterHours: { ...AFTER_HOURS, at }, signedIn: true, viewerTier: "A" }),
     );
     expect(html).toContain("Weekly Intuitive members — we go deeper in 45 minutes");
-    expect(html).toContain("Go deeper in Clair Senses — Foundations");
-    expect(html).toContain('href="/rooms/clair-senses"');
+    expect(html).toContain("Go deeper in Daily Tune-Up");
+    expect(html).toContain('href="/rooms/tune-up"');
     expect(html).toContain("btn-ghost");
     expect(html).not.toContain("btn-gold");
     expect(html).not.toContain("opens with the");
@@ -306,7 +308,7 @@ describe("AfterHoursDoor — the Stage's deeper-dive door", () => {
     expect(html).toContain("The deeper dive opens with the Weekly Intuitive package"); // Number One follow-through: the stage IS open to them; the dive is the gated room
     expect(html).not.toContain("This stage opens with");
     expect(html).toContain('href="/packages/weekly-intuitive"');
-    expect(html).not.toContain('href="/rooms/clair-senses"');
+    expect(html).not.toContain('href="/rooms/tune-up"');
     expect(html).not.toContain("btn-gold");
   });
 
@@ -316,7 +318,7 @@ describe("AfterHoursDoor — the Stage's deeper-dive door", () => {
     const html = renderToStaticMarkup(
       h(AfterHoursDoor, { afterHours: { ...AFTER_HOURS, at }, signedIn: false, viewerTier: null }),
     );
-    expect(html).toContain("Clair Senses — Foundations opens for members");
+    expect(html).toContain("Daily Tune-Up opens for members");
     expect(html).toContain("Sign in");
     expect(html).not.toContain("btn-gold");
   });

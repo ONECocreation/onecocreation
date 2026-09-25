@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import OperatorGate from "@/components/OperatorGate";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
+import { STAGE2_FLOOR_NAME } from "@/lib/stage2-access";
 import SiteReadingRoom from "./SiteReadingRoom";
 
 /**
@@ -24,5 +25,5 @@ export default async function SiteReadingPage() {
   if (!operator) {
     return <OperatorGate configured={operatorsConfigured()} />;
   }
-  return <SiteReadingRoom />;
+  return <SiteReadingRoom floorName={STAGE2_FLOOR_NAME} />;
 }

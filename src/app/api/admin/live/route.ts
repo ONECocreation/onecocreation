@@ -75,7 +75,9 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: true,
     state,
-    rooms: ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind })),
+    /* TASK-465 (block 968,561): a hidden room ("hidden for now") is never
+       offered to go live in, so it can never be advertised site-wide. */
+    rooms: ROOMS.filter((r) => !r.hidden).map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind })),
     matrixConfigured: matrixConfigured(),
     vaultConfigured: liveStoreConfigured(),
     scene: { active: studio.activeScene, startsAt: studio.startsAt },
@@ -118,7 +120,7 @@ export async function POST(request: Request) {
 
   if (body.action === "after-hours") {
     const room = typeof body.room === "string" ? roomForSlug(body.room) : undefined;
-    if (!room || room.minTier === "all") {
+    if (!room || room.minTier === "all" || room.hidden) {
       return NextResponse.json(
         { ok: false, reason: "after-hours needs one of Love's member rooms — not the free Commons" },
         { status: 400 },
@@ -142,7 +144,7 @@ export async function POST(request: Request) {
 
   if (body.action === "open") {
     const room = typeof body.room === "string" ? roomForSlug(body.room) : undefined;
-    if (!room) {
+    if (!room || room.hidden) {
       return NextResponse.json({ ok: false, reason: "unknown room — pick one of Love's rooms" }, { status: 400 });
     }
     const word = body.message?.trim() || defaultOpeningWord(room);
