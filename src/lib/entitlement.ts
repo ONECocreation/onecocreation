@@ -196,6 +196,35 @@ export async function getEntitlement(npub: string): Promise<Entitlement | null> 
   return liveGrant(rec);
 }
 
+/**
+ * TASK-462 round 4 (block 968,548): true ONLY when `orderId` names this
+ * record's OWN order, that order has already lapsed, and a LIVE standing
+ * grant is still under it — the exact shape of a refund arriving for a
+ * taster pass that had already ended, with a real membership underneath it
+ * that was never refunded. All of these must hold:
+ *   - `safeNpub(npub)`
+ *   - the RAW stored record (`readRec`) exists
+ *   - the record has no `revokedAtMs`
+ *   - `raw.orderId === orderId`
+ *   - `liveGrant(raw, now)` is non-null AND its `orderId !== orderId` —
+ *     the refunded order is the lapsed pass on top, and the member is
+ *     standing on the grant under it.
+ * Reads the RAW record, never `getEntitlement` — this path never WRITES,
+ * so the raw record's shape never changes underneath it, which is what
+ * makes a redelivered or late refund/dispute of the SAME order the same
+ * no-op every time: nothing here depends on when it's called or how many
+ * times. A refund of a STILL-LIVE pass, or of the standing grant's own
+ * order, reads false — those still take today's blunt close.
+ */
+export async function isLapsedPassOrder(npub: string, orderId: string, now: number = Date.now()): Promise<boolean> {
+  if (!safeNpub(npub)) return false;
+  const raw = await readRec(npub);
+  if (!raw || raw.revokedAtMs) return false;
+  if (raw.orderId !== orderId) return false;
+  const live = liveGrant(raw, now);
+  return live != null && live.orderId !== orderId;
+}
+
 /** Just the tier — what a gate check actually wants. */
 export async function tierFor(npub: string): Promise<Tier | null> {
   return (await getEntitlement(npub))?.tier ?? null;
