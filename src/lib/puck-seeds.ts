@@ -323,7 +323,7 @@ const homeContent: Block[] = [
     hm.heading("Memberships", "h2", "center"),
     // PACKAGE_DOORS_WORDS (sections.tsx) carried verbatim, not imported —
     // this seed's own convention keeps every other number/word a literal too
-    hm.text("Three ways into the field — each includes everything before it. Pay monthly in dollars or in bitcoin. Your package opens its doors.", "center"),
+    hm.text("Three ways into the field — each includes everything before it. Your package opens its doors.", "center"),
     hm.threecol(
       [hm.panel([
         hm.img(cartridge.tierArt.A, "Weekly Intuitive", 300, "soft", "center"),
@@ -367,7 +367,7 @@ const homeContent: Block[] = [
         hm.button("See the package", "/packages/evening-star", "gold", "center"),
       ])],
     ),
-    hm.note("How the gate works: pay in bitcoin (or dollars) → your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing."),
+    hm.note("How the gate works: once you pay, your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing."),
   ]), "home-memberships"),
 
   // 3 - the Heart Field — rooms, tier-gated
@@ -448,7 +448,7 @@ const homeContent: Block[] = [
     hm.heading("Sessions with Love", "h2", "center", st({ color: "ink" })),
     hm.text("The Way of the Heart, one-on-one. Sessions where you don’t have to keep up conversation. Pick a time — you’re held.", "center", st({ color: "muted" })),
     hm.note("── live sessions shelf stays code-side (the real booking cards) ──"),
-    hm.text("Pick a session → choose a real open time → pay in sats or dollars → confirmed with a calendar file, held with love.", "center", st({ color: "muted", size: 15 })),
+    hm.text("Pick a session → choose a real open time → pay → confirmed with a calendar file, held with love.", "center", st({ color: "muted", size: 15 })),
   ]), "home-services"),
 
   // 6 - tend the field
@@ -604,12 +604,12 @@ const packagesContent: Block[] = [
        one h1 (one-h1 is an ERROR — the seed must publish clean); the
        promotion is noted here, the house's archival-heading idiom */
     pk.heading("Memberships", "h1", "center"),
-    pk.text("Three ways into the field — each includes everything before it. Pay monthly in dollars or in bitcoin. Your package opens its doors.", "center"),
+    pk.text("Three ways into the field — each includes everything before it. Your package opens its doors.", "center"),
   ], { bgSrc: LION_GROUND }),
   /* a unique id (T-231's collision lesson): the kit consumed pk-0…pk-3 */
   { type: "PackagesGrid", props: { id: "pk-grid" } },
   pk.band("plain", "theme", [
-    pk.note("How the gate works: pay in bitcoin (or dollars) → your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing."),
+    pk.note("How the gate works: once you pay, your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing."),
   ]),
 ];
 
@@ -691,7 +691,7 @@ const storeContent: Block[] = [
   sr.band("plain", "theme", [
     sr.eyebrow("Where Heaven and Earth Meet", "center"),
     sr.stacked("THE", "STORE", "h1", "center"),
-    sr.text("Everything Love makes — sessions, meditations, memberships, and wares. Paid in bitcoin, straight to the artist.", "center"),
+    sr.text("Everything Love makes — sessions, meditations, memberships, and wares. Straight to the artist.", "center"),
     sr.note("── live category pills stay code-side ──"),
   ]),
   sr.band("nebula", "night", [
@@ -1934,7 +1934,7 @@ export const SEEDS: Record<string, PuckPageData> = {
   } } },
   packages: { content: packagesContent, root: { props: {
     title: "Memberships — One Cocreation",
-    description: "Three ways into the field — each includes everything before it. Pay monthly in dollars or in bitcoin.",
+    description: "Three ways into the field — each includes everything before it. Your package opens its doors.",
   } } },
   support: { content: supportContent, root: { props: {
     title: "Support — One Cocreation",
@@ -1946,7 +1946,7 @@ export const SEEDS: Record<string, PuckPageData> = {
   } } },
   store: { content: storeContent, root: { props: {
     title: "Store — One Cocreation",
-    description: "Sessions, meditations, memberships, and wares from One Cocreation — paid in bitcoin, straight to the artist.",
+    description: "Sessions, meditations, memberships, and wares from One Cocreation, straight to the artist.",
   } } },
   retreats: { content: retreatsContent, root: { props: {
     title: "Retreats — One Cocreation",

@@ -274,7 +274,7 @@ export async function Packages() {
       <div className="wrap">
         <p className="kicker center">The Heart Field — Where Heaven and Earth Meet</p>
         <h2 className="center sec-h">Memberships</h2>
-        <p className="lead center">Three ways into the field — each includes everything before it. Pay monthly in dollars or in bitcoin. {PACKAGE_DOORS_WORDS}</p>
+        <p className="lead center">Three ways into the field — each includes everything before it. {PACKAGE_DOORS_WORDS}</p>
         <nav className="tier-pills" aria-label="Membership plans">
           {TIER_PAGES.map((p) => (
             <Link key={p.slug} className="tier-pill" href={`/packages/${p.slug}`}>
@@ -327,7 +327,7 @@ export async function Packages() {
             );
           })}
         </div>
-        <p className="note"><b>How the gate works:</b> pay in bitcoin (or dollars) → your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing.</p>
+        <p className="note"><b>How the gate works:</b> once you pay, your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing.</p>
       </div>
     </section>
   );
@@ -448,7 +448,7 @@ export async function Services() {
           ))}
         </div>
         <p className="center reveal" style={{ margin: "30px auto 0", maxWidth: 640, fontSize: ".88rem", color: "var(--muted)" }}>
-          Pick a session → choose a real open time → pay in sats or dollars → confirmed with a calendar file, held with love.
+          Pick a session → choose a real open time → pay → confirmed with a calendar file, held with love.
         </p>
       </div>
     </section>
@@ -610,8 +610,7 @@ export async function Donations() {
           <p className="kicker">Support This Work — Gently</p>
           <h2 className="sec-h">Tend the Field</h2>
           <p style={{ color: "var(--ink-body)", maxWidth: 640 }}>
-            A gift lands with Love <strong style={{ color: "var(--gold-deep)" }}>whole</strong> — no
-            platform between, no cut taken. {giveLine}
+            A gift lands with Love. {giveLine}
           </p>
           {open && liveJars.length > 0 && <TipJar only={liveJars} />}
 

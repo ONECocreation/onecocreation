@@ -9,7 +9,7 @@ import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 
 export const metadata: Metadata = {
   title: "Memberships — One Cocreation",
-  description: "The packages — classroom doors, community circle, and Love's weekly rhythm. Paid in bitcoin, straight to the artist.",
+  description: "The packages — classroom doors, community circle, and Love's weekly rhythm. Straight to the artist.",
 };
 
 export const dynamic = "force-dynamic";

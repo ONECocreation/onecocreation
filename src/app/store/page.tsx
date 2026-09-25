@@ -17,7 +17,7 @@ import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 
 export const metadata: Metadata = {
   title: "Store — One Cocreation",
-  description: "Sessions, meditations, memberships, and wares from One Cocreation — paid in bitcoin, straight to the artist.",
+  description: "Sessions, meditations, memberships, and wares from One Cocreation, straight to the artist.",
 };
 
 export const dynamic = "force-dynamic";
@@ -97,7 +97,7 @@ export default async function StorePage() {
           <StackedHero kicker="Where Heaven and Earth Meet" lines={[{ t: "THE" }, { t: "STORE", tone: "teal" }]} />
           <p className="lead" style={{ marginBottom: 0 }}>
             Everything Love makes — sessions, meditations, memberships, and wares.
-            Paid in bitcoin, straight to the artist.
+            Straight to the artist.
           </p>
           {groups.length > 1 && (
             <nav className="cat-pills" aria-label="store categories">

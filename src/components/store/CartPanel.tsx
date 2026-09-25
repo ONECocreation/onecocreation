@@ -397,9 +397,14 @@ export default function CartPanel({
               )}
             </div>
 
-            {/* pay what you can — every line may carry an offer (0018.05.14) */}
+            {/* pay what you can — every line may carry an offer (0018.05.14).
+                TASK-459 (block 968,543): the opener only shows while bitcoin
+                is a live rail — a sats offer has no fiat truth, and a card
+                checkout refuses one (/api/cart/checkout:110-118). A line
+                that already carries an offer keeps its own way out on any
+                rail, so nobody gets stuck holding a dead one. */}
             <div style={{ marginTop: 6, fontSize: ".78rem" }}>
-              {offerOpen === lineKey(l) ? (
+              {offerOpen === lineKey(l) && rails.btc ? (
                 <span style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
                   <input
                     value={offerInput}
@@ -415,11 +420,11 @@ export default function CartPanel({
                 <button onClick={() => clearOffer(l)} className="btn-quiet" style={softLink}>
                   remove offer — pay the listed price
                 </button>
-              ) : (
+              ) : rails.btc ? (
                 <button onClick={() => { setOfferOpen(lineKey(l)); setOfferInput(""); }} className="btn-quiet" style={softLink}>
                   pay what you can — make an offer
                 </button>
-              )}
+              ) : null}
             </div>
           </li>
         ))}
