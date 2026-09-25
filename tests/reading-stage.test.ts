@@ -62,6 +62,10 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     ended: false,
     room: null,
     playgroundOpen: false,
+    /* TASK-466 (block 968,561): unlocked by default — this suite pins the
+       pre-existing shape, not the lock itself (tests/reading-polish-
+       466.test.ts owns the locked/unlocked pins). */
+    playgroundLock: { locked: false, floorName: "Test Tier" },
     jitsiDomain: DOMAIN,
     nextWords: null,
     countdown: null,
@@ -167,27 +171,35 @@ describe("failed — the book returns, honest words, Try again, never a raw URL"
   });
 });
 
-describe("ended — the book, the ended words, the next date; Watch again only while still published", () => {
-  it("still published: Watch again is offered", () => {
+describe("ended — the book, the ended words, the next date; TASK-466 (block 968,561) retired Watch again for one Playground door, in BOTH variants", () => {
+  it("still published: the ended words (now two sentences, no dash) and the Playground link, not Watch again", () => {
     const html = render(bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30" }));
     expect(html).toContain("/images/reading-love-cover.jpg");
     expect(html).not.toContain("kit-stage-viewer");
-    expect(html).toContain("The reading has ended — thank you for being here.");
+    expect(html).toContain("The reading has ended.");
+    expect(html).toContain("Thank you for being here.");
+    expect(html).not.toContain("The reading has ended — thank you for being here.");
     expect(html).toContain("Wednesday, September 30");
     expect(count(html, "kit-btn-main")).toBe(1);
-    expect(html).toContain("Watch again");
+    expect(html).not.toContain("Watch again");
+    expect(html).toContain("Watch part two in the Playground");
+    expect(html).toContain('href="/reading/playground"');
   });
 
-  it("closed underneath: the same words, no Watch again, no control", () => {
+  it("closed underneath: the SAME words and the SAME Playground door — TASK-466 dropped the old published-only gate", () => {
     const html = render(bodyProps({ phase: "closed", ended: true, nextWords: "Wednesday, September 30" }));
-    expect(html).toContain("The reading has ended — thank you for being here.");
+    expect(html).toContain("The reading has ended.");
+    expect(html).toContain("Thank you for being here.");
     expect(html).not.toContain("Watch again");
     expect(html).not.toContain("<button");
+    expect(html).toContain("Watch part two in the Playground");
+    expect(html).toContain('href="/reading/playground"');
   });
 
   it("K122 item 13 — ended with NO date (nextWords null, the schedule off): 'Love will share the next reading date soon.', never 'The next reading is …'", () => {
     const html = render(bodyProps({ phase: "closed", ended: true }));
-    expect(html).toContain("The reading has ended — thank you for being here.");
+    expect(html).toContain("The reading has ended.");
+    expect(html).toContain("Thank you for being here.");
     expect(html).toContain("Love will share the next reading date soon.");
     expect(html).not.toContain("The next reading is");
   });
@@ -212,7 +224,7 @@ describe("the Playground banner (TASK-449) — open-only, in EVERY phase, after 
     }
   });
 
-  it("closed Stage 2 (playgroundOpen false) renders NO banner in any phase", () => {
+  it("closed Stage 2 (playgroundOpen false) renders NO banner in any phase (the ended card's OWN Playground door, TASK-466, is not the banner and is asserted separately below)", () => {
     for (const over of [
       { phase: "closed" },
       { phase: "published", room: ROOM },
@@ -221,7 +233,10 @@ describe("the Playground banner (TASK-449) — open-only, in EVERY phase, after 
     ] as const) {
       const html = render(bodyProps({ ...over, playgroundOpen: false }));
       expect(html).not.toContain("Want an encore?");
-      expect(html).not.toContain("/reading/playground");
+      // TASK-466: the ended card carries its own /reading/playground link
+      // when the banner isn't open — the banner-specific string above is
+      // the real pin here; ended is checked on its own terms.
+      if (!over.ended) expect(html).not.toContain("/reading/playground");
     }
   });
 });

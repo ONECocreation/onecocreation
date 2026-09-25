@@ -35,6 +35,9 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     ended: false,
     room: null,
     playgroundOpen: false,
+    /* TASK-466 (block 968,561): unlocked by default — this suite doesn't
+       exercise the lock itself (reading-polish-466.test.ts owns that). */
+    playgroundLock: { locked: false, floorName: "Test Tier" },
     jitsiDomain: DOMAIN,
     nextWords: null,
     countdown: null,
@@ -96,11 +99,14 @@ describe("closed — Go to the Heart Field", () => {
   });
 });
 
-describe("ended-while-published and left-while-published: Watch again is the same Heart Field link, label unchanged", () => {
-  it("ended, still published: Watch again links to /rooms/heart-field", () => {
+describe("ended-while-published: TASK-466 (block 968,561) retired Watch again for the Playground door; left-while-published: Watch again is the same Heart Field link, label unchanged", () => {
+  it("ended, still published: no Watch again anywhere, no /rooms/heart-field link — the ended card now points onward to /reading/playground instead", () => {
     const html = render(bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30" }));
     expect(html).not.toMatch(/<button[^>]*>\s*Watch again/);
-    expect(html).toMatch(new RegExp(`<a[^>]*href="${HEART_FIELD_HREF.replace("/", "\\/")}"[^>]*>\\s*Watch again\\s*<\\/a>`));
+    expect(html).not.toContain("Watch again");
+    expect(html).not.toContain(HEART_FIELD_HREF);
+    expect(html).toContain("Watch part two in the Playground");
+    expect(html).toContain("/reading/playground");
   });
 
   it("left-while-published: Watch again links to /rooms/heart-field", () => {

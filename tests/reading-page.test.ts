@@ -221,11 +221,19 @@ describe("the page itself — source pins (async server component, headers()-dep
     expect(src).toContain("Readings with Love · free");
   });
 
-  it("no tier or payment logic anywhere on this page", async () => {
+  it("no payment logic on this page; the ONE tier read (TASK-466, block 968,561) reuses stage2-access's own composition for the Playground lock, never a re-implementation or a literal tier", async () => {
     const src = await read(PAGE_PATH);
-    expect(src).not.toMatch(/\btier\b/i);
     expect(src).not.toMatch(/\bpayment\b/i);
-    expect(src).not.toMatch(/\bTIERS\b/);
+    // the sanctioned derivation only — the exact functions
+    // /api/stage2/route.ts's GET calls, and the one place the floor is
+    // written (STAGE2_MIN_TIER) — never a page-local gate
+    expect(src).toContain("tierForSubject(");
+    expect(src).toContain("tierSatisfies(");
+    expect(src).toContain("STAGE2_MIN_TIER");
+    expect(src).toContain("TIERS[STAGE2_MIN_TIER]");
+    // never a literal tier letter as a comparison target or a hand-typed gate
+    expect(src).not.toMatch(/tierSatisfies\([^)]*["'][ABC]["']/);
+    expect(src).not.toMatch(/tier\s*===?\s*["'][ABC]["']/);
   });
 
   it("Love's video/graphic slots are honest absences — no <video>, no invented asset path, no placeholder box", async () => {
