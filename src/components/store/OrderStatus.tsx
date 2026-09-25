@@ -85,17 +85,30 @@ const STATE_COPY: Record<string, { label: string; note: string }> = {
   disputed: { label: "IN DISPUTE", note: "the artist is on it." },
 };
 
-/** TASK-458 — the same three transient/close states, worded for a card
- *  buyer (any currency other than "SATS"): no "sats", "invoice",
- *  "on-chain" or ⚡ on a path a card buyer sees. Every other state
- *  (created, charge_created, fulfilled, canceled, refunded, disputed) reads
- *  STATE_COPY unchanged for both rails; underpaid can't happen on card at
- *  all (Square has no partial-payment state), so it is left alone too. */
+/** TASK-458 — the transient/close states, worded for a card buyer (any
+ *  currency other than "SATS"): no "sats", "invoice", "on-chain" or ⚡ on a
+ *  path a card buyer sees. charge_created is the state Square's OPEN order
+ *  reads while a card authorizes (payments.ts mapOrderState) — the buyer
+ *  lands on it straight back from the payment page (review catch). Every
+ *  other state (fulfilled, canceled, refunded, disputed) reads STATE_COPY
+ *  unchanged for both rails; underpaid can't happen on card at all (Square
+ *  has no partial-payment state), so it is left alone too. */
 const FIAT_STATE_COPY: Partial<Record<string, { label: string; note: string }>> = {
+  created: { label: "ORDER OPEN", note: "checkout didn't finish. Start again from your basket." },
+  charge_created: { label: "AWAITING PAYMENT", note: "your card payment isn't through yet. This page updates by itself." },
   settled: { label: "PAID ✓", note: "thank you. Your payment went through." },
   processing: { label: "PROCESSING", note: "Square is finishing your card payment. This page updates by itself." },
   expired: { label: "LINK EXPIRED", note: "no harm, payment links time out. Start again from your basket." },
 };
+
+/** TASK-458 — the one place a state becomes words: a fiat order reads its
+ *  card words first, then the shared table. Exported so the test can walk
+ *  every state a fiat order can be in (a client poller never renders its
+ *  states under renderToStaticMarkup). */
+export function stateCopyFor(state: string, currency: string): { label: string; note: string } {
+  const isFiat = currency !== "SATS";
+  return (isFiat ? FIAT_STATE_COPY[state] : undefined) ?? STATE_COPY[state] ?? { label: state.toUpperCase(), note: "" };
+}
 
 const IN_FLIGHT = ["created", "charge_created", "processing"];
 
@@ -207,7 +220,7 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
 
   /* TASK-458 — a fiat order (anything but SATS) reads the card-rail words. */
   const isFiat = order.priceSnapshot.currency !== "SATS";
-  const copy = (isFiat ? FIAT_STATE_COPY[order.state] : undefined) ?? STATE_COPY[order.state] ?? { label: order.state.toUpperCase(), note: "" };
+  const copy = stateCopyFor(order.state, order.priceSnapshot.currency);
   /* TASK-458 — recharge() never tells the checkout route which rail to
      gate on (no `rail` in its POST body), so it falls through to
      liveAdapter(undefined) — the BITCOIN switch, not the order's own
@@ -264,8 +277,10 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
             (it can't prove the inbox). A guest who isn't signed in as the
             order's email gets the way in here — unless the locked-download
             block below already offers it. TASK-458: a membership order's
-            sign-in leads straight to the door, not back to this receipt. */}
-        {settledFine && buyerEmail && order.viewerOwns === false && !order.deliverable?.locked && (
+            sign-in leads straight to the door, not back to this receipt —
+            and shows even beside a locked download (a mixed basket), since
+            that block's own sign-in carries no door (review catch). */}
+        {settledFine && buyerEmail && order.viewerOwns === false && (order.door || !order.deliverable?.locked) && (
           order.door ? (
             <p className="kit-text-quiet">
               <a href={`/login?next=${encodeURIComponent(order.door)}`}>Sign in with {buyerEmail}</a> to go in.

@@ -148,3 +148,8 @@ commit's diff, run the suite at 3bbe162, then restore.
 
 Final HEAD: this register's own commit — reported in the hand-back
 message.
+
+## Review fix round (Number One, block 968,543)
+- BLOCKER (adversarial review): a card order in `charge_created` — the state Square's OPEN order reads while a card authorizes (`payments.ts` mapOrderState), where the buyer lands straight back from the payment page — fell through to STATE_COPY and read "your invoice is open". `created` likewise read "no invoice yet". Fixed: both added to FIAT_STATE_COPY; the page now resolves words through one exported `stateCopyFor(state, currency)`, and the test walks EVERY state a card order can be in (not just the fiat table's own text).
+- Should-fix (same review): a signed-out buyer of a mixed basket (membership + a locked download) never got the door-aware sign-in, because the old `!order.deliverable?.locked` guard hid it and the lock block's own `/login` link carries no `next`. Fixed: the line shows when `order.door || !order.deliverable?.locked`. Pinned.
+- Rebased onto origin/main a176f7c (#81/#82/#83).

@@ -10,7 +10,8 @@ import { vi } from "vitest";
  * Three things pinned here, matching the brief's three Build items:
  *
  *  1. CARD WORDS — a fiat order (currency !== "SATS") reads FIAT_STATE_COPY
- *     (settled/processing/expired only); a SATS order reads STATE_COPY
+ *     (created/charge_created/settled/processing/expired) through the
+ *     exported stateCopyFor, walked state by state; a SATS order reads STATE_COPY
  *     unchanged. Since OrderStatus.tsx is a "use client" polling component
  *     with no jsdom/testing-library in this repo (renderToStaticMarkup
  *     never runs its effects, so `order` never leaves `null`), these are
@@ -440,6 +441,33 @@ describe("card words (source pins — OrderStatus.tsx is a client poller; render
     for (const bad of ["sats", "invoice", "on-chain", "⚡"]) {
       expect(fiatBlock).not.toContain(bad);
     }
+  });
+
+  it("every state a card order can be in reads no 'sats', 'invoice', 'on-chain' or ⚡ — walked through the one resolver the page uses (review catch: charge_created is where a card buyer lands straight back from Square)", async () => {
+    const { stateCopyFor } = await import("@/components/store/OrderStatus");
+    expect(src).toContain("const copy = stateCopyFor(order.state, order.priceSnapshot.currency);");
+    for (const state of ["created", "charge_created", "processing", "settled", "fulfilled", "expired", "canceled", "refunded", "disputed"]) {
+      for (const currency of ["USD", "EUR"]) {
+        const { label, note } = stateCopyFor(state, currency);
+        const words = `${label} ${note}`.toLowerCase();
+        for (const bad of ["sats", "invoice", "on-chain", "⚡"]) {
+          expect(words, `${currency} ${state}`).not.toContain(bad);
+        }
+      }
+    }
+    expect(stateCopyFor("charge_created", "USD")).toEqual({ label: "AWAITING PAYMENT", note: "your card payment isn't through yet. This page updates by itself." });
+    expect(stateCopyFor("created", "USD")).toEqual({ label: "ORDER OPEN", note: "checkout didn't finish. Start again from your basket." });
+  });
+
+  it("a SATS order resolves through the same function to the unchanged bitcoin words", async () => {
+    const { stateCopyFor } = await import("@/components/store/OrderStatus");
+    expect(stateCopyFor("charge_created", "SATS")).toEqual({ label: "AWAITING PAYMENT", note: "your invoice is open — pay it and this page updates." });
+    expect(stateCopyFor("settled", "SATS").note).toBe("sats landed with the artist. Fulfillment is on its way.");
+    expect(stateCopyFor("expired", "SATS").label).toBe("INVOICE EXPIRED");
+  });
+
+  it("a signed-out buyer of a mixed basket (membership + a locked download) still gets the door-aware sign-in — the lock block's own sign-in carries no next", () => {
+    expect(src).toContain("settledFine && buyerEmail && order.viewerOwns === false && (order.door || !order.deliverable?.locked) && (");
   });
 
   it("the door: signed in gets a kit-btn kit-btn-main link to the Heart Field; not signed in gets the door as the sign-in's next", () => {
