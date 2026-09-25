@@ -110,12 +110,12 @@ export function Stage2DoorBody({
   if (decision === null || decision === "hidden") return null;
   const week = decision === "package" && pkg ? pkg.week : null;
   return (
-    <div role="region" className="cl-region cl-area-stage2" data-region="stage2" aria-label="Stage 2">
+    <div role="region" className="cl-region cl-area-stage2" data-region="stage2" aria-label="The Playground">
       <Card>
         <div className="kit-stack">
           {decision === "signin" && (
             <>
-              <div className="kit-body">{signInDoorLine("Stage 2")}</div>
+              <div className="kit-body">{signInDoorLine("The Playground")}</div>
               <div className="kit-btn-row kitx-actions">
                 <Link href={signInHref} className="kit-btn kit-btn-second kit-btn-sm">
                   Sign in
@@ -134,8 +134,8 @@ export function Stage2DoorBody({
               <div className="kit-body">
                 {pkg
                   ? week
-                    ? `Stage 2 comes with every membership, from ${pkg.name} up — or with a one-week pass.`
-                    : `Stage 2 comes with every membership, from ${pkg.name} up.`
+                    ? `The Playground comes with every membership, from ${pkg.name} up — or with a one-week pass.`
+                    : `The Playground comes with every membership, from ${pkg.name} up.`
                   : packageDoorLine(null)}
               </div>
               {pkg && (
@@ -161,11 +161,11 @@ export function Stage2DoorBody({
             (reachable ? (
               <div className="kit-btn-row kitx-actions">
                 <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled={joining} onClick={onJoinClick}>
-                  {joining ? "Joining…" : "Join Stage 2 — come up"}
+                  {joining ? "Joining…" : "Join the Playground"}
                 </button>
               </div>
             ) : (
-              <div>Stage 2 isn&apos;t answering right now.</div>
+              <div>The Playground isn&apos;t answering right now.</div>
             ))}
           {note && <div className="kit-text-quiet">{note}</div>}
         </div>
@@ -222,10 +222,10 @@ export default function Stage2Door({ joined, onJoin, signInHref }: Stage2DoorPro
           onJoin(fresh.room as string);
         }
       } else {
-        setNote("Stage 2 couldn't be reached just now — try again.");
+        setNote("The Playground couldn't be reached just now — try again.");
       }
     } catch {
-      setNote("Stage 2 couldn't be reached just now — try again.");
+      setNote("The Playground couldn't be reached just now — try again.");
     } finally {
       setJoining(false);
     }

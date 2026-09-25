@@ -8,10 +8,11 @@ import { deriveResources, ResourcesCard } from "./LessonPathView";
 import AfterHoursDoor, { type AfterHoursFeed } from "./AfterHoursDoor";
 import Stage2Door from "./Stage2Door";
 import StoryTimePill from "./StoryTimePill";
+import PlaygroundDoor from "./PlaygroundDoor";
 import JitsiRoom from "../booking/JitsiRoom";
 import JitsiViewer from "../reading/JitsiViewer";
 import { stage1WatchTarget } from "../reading/ReadingStage";
-import { READING_ROOM_SLUG } from "@/lib/reading-room";
+import { READING_ROOM_SLUG, PLAYGROUND_ROOM_SLUG } from "@/lib/reading-room";
 import type { MaterialItem } from "@/lib/class-materials";
 import type { RoomPin } from "@/lib/room-pins";
 import type { RoomGate } from "@/lib/room-access";
@@ -342,6 +343,18 @@ export default function StageView({
               </div>
             )}
             <Stage2Door jitsiDomain={jitsiDomain ?? ""} joined={!!stage2Room} onJoin={joinStage2} signedIn={signedIn} />
+          </div>
+        )}
+        {/* TASK-460 (block 968,543, decision cw-playground-where, option B):
+            the Weekly Intuitive room's own door to the after-reading call —
+            a plain link (PlaygroundDoor.tsx), never wired into this room's
+            OWN stage/embed (that was option C, not ruled). Same unused grid
+            area the reading room's Stage 2 wrapper above rides — the two
+            slugs are mutually exclusive, so the area is never claimed
+            twice. */}
+        {slug === PLAYGROUND_ROOM_SLUG && (
+          <div className="cl-area-stage2 kitx-flow">
+            <PlaygroundDoor />
           </div>
         )}
         {resources.length > 0 && (

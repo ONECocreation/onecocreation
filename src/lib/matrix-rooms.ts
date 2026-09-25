@@ -16,7 +16,7 @@ export interface MatrixRoom {
 /* ── CONTENT: Love's rooms ──────────────────────────────────────────────── */
 export const ROOMS: MatrixRoom[] = [
   { id: "#heart-field:onecocreation.com", title: "The Heart Field", kind: "community", minTier: "all" },
-  { id: "#clair-senses:onecocreation.com", title: "Clair Senses — Foundations", kind: "class", minTier: "A" },
+  { id: "#clair-senses:onecocreation.com", title: "The Playground", kind: "class", minTier: "A" },
   { id: "#tune-up:onecocreation.com", title: "Daily Tune-Up & Check-ins", kind: "community", minTier: "A" },
   { id: "#weekly-reading:onecocreation.com", title: "Chronicles: Weekly Reading", kind: "class", minTier: "B" },
   { id: "#observers-circle:onecocreation.com", title: "The Observers' Circle", kind: "community", minTier: "B" },

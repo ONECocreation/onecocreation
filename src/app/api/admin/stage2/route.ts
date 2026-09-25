@@ -52,9 +52,17 @@ export async function PUT(request: Request) {
     return jsonNoStore({ ok: false, reason: "bad request" }, 400);
   }
   const action = body?.action;
-  if (action === "prepare") await prepareStage2();
-  else if (action === "publish") await publishStage2();
-  else if (action === "close") await closeStage2();
-  else return jsonNoStore({ ok: false, reason: "action must be prepare, publish, or close" }, 400);
+  /* TASK-460 (block 968,543): a write that throws past the handler would
+     answer a bare 500 with NO Cache-Control — a secret-bearing route never
+     rides an intermediary cache, so the failure is CAUGHT and answered
+     no-store, exactly like admin/stage1/route.ts's own SEC-4 block. */
+  try {
+    if (action === "prepare") await prepareStage2();
+    else if (action === "publish") await publishStage2();
+    else if (action === "close") await closeStage2();
+    else return jsonNoStore({ ok: false, reason: "action must be prepare, publish, or close" }, 400);
+  } catch {
+    return jsonNoStore({ ok: false, reason: "the stage store didn't answer — nothing changed" }, 500);
+  }
   return stateResponse();
 }

@@ -50,8 +50,14 @@ export default function Stage2Card() {
         body: JSON.stringify({ action }),
         cache: "no-store",
       });
-      const data = await res.json();
-      if (data.ok) setState({ phase: data.phase, room: data.room, jitsiDomain: data.jitsiDomain });
+      /* TASK-460 (block 968,543): a non-JSON body (a 500 that slipped past
+         Cache-Control, a proxy error page) used to throw straight past this
+         try/finally — read defensively instead, same as the mount effect's
+         own `.then((r) => (r.ok ? r.json() : null))` a few lines up; a
+         parse failure just leaves the card showing its last-known state,
+         nothing changed, never a crash. */
+      const data = await res.json().catch(() => null);
+      if (data?.ok) setState({ phase: data.phase, room: data.room, jitsiDomain: data.jitsiDomain });
     } finally {
       setBusy(false);
     }
