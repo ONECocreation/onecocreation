@@ -114,7 +114,8 @@ describe("/a/studio/page.tsx mounts StudioHub (the desk + the go-live door, one 
   it("renders <StudioHub .../> with the desk's own props AND the go-live door's props", () => {
     const src = read("src/app/a/studio/page.tsx");
     expect(src).toContain("<StudioHub");
-    expect(src).toContain("goLiveRooms={ROOMS.map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind, minTier: r.minTier }))}");
+    // TASK-465 (block 968,561): hidden rooms are never offered to go live in
+    expect(src).toContain("goLiveRooms={ROOMS.filter((r) => !r.hidden).map((r) => ({ slug: slugOfRoom(r), title: r.title, kind: r.kind, minTier: r.minTier }))}");
     expect(src).toContain("goLiveSessions={confirmedToday(bookings)}");
     expect(src).toContain("youtube={LIVE_YOUTUBE}");
   });
