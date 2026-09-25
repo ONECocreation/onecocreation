@@ -42,7 +42,9 @@ const BUSY_WORDS = { prepare: "Preparing…", publish: "Publishing…", close: "
 const PHASE_WORDS = {
   closed: "Closed — no room exists.",
   prepared: "Prepared — the room exists; only the host link below opens it. Viewers see nothing yet.",
-  published: "Published — viewers can watch on /reading.",
+  /* TASK-457 (block 968,543): Love only goes live in the Heart Field now —
+     /reading's Watch controls link there, they don't mount the stream. */
+  published: "Published — members watch in the Heart Field. /reading sends them there.",
 } as const;
 
 /* the host row's OWN state line, said once under its words, in every phase

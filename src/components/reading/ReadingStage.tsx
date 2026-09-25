@@ -24,6 +24,20 @@ import JitsiViewer from "@/components/reading/JitsiViewer";
  * there is no <img> of it while watching (JitsiViewer replaces it in the
  * SAME frame).
  *
+ * TASK-457 (block 968,543) — REVERSAL of the earlier ruling that retired
+ * the Heart Field doors from /reading (the Admiral, block 968,516: Love
+ * only ever goes live in the Heart Field; /reading keeps its own page but
+ * every Watch control now LINKS there instead of mounting the stream in
+ * place). Every control that used to call `onWatch` (published, ended-
+ * while-published, left-while-published) is now a `Link` to
+ * `/rooms/heart-field` with the same label and the same `kit-btn
+ * kit-btn-main` class — the room's own door does the sign-in + return
+ * trip (`middleware.ts` + `door-machine.ts`, unread here). The closed
+ * state gains its own such link, "Go to the Heart Field". `onWatch` and
+ * the click-time fresh-fetch `watch()` stay wired (still reachable from
+ * Try again → tryAgain() → watch()) — dead-path removal of the in-place
+ * viewer mount is the after-Saturday tidy lane, not this one.
+ *
  * THE PLAYGROUND BANNER (TASK-449, block 968,364; AMENDMENT 1 block
  * 968,366): Stage 2 has its own address now — /reading/playground. The
  * in-place Stage 2 card and the single-embed branch are REPLACED by this
@@ -71,6 +85,10 @@ export interface ReadingStageBodyProps {
   /** the server-composed countdown nodes — see ReadingStageProps */
   countdown: React.ReactNode;
   countdownWhen: React.ReactNode;
+  /** TASK-457 (block 968,543): kept for the wired component's click-time
+   *  fresh-fetch (`watch()`, still reachable from Try again) — no control
+   *  in `ReadingStageBody` calls it any more; every former Watch control
+   *  is now a plain `Link` to `/rooms/heart-field`. */
   onWatch: () => void;
   onTryAgain: () => void;
   /** JitsiViewer's farewell events (its hangup, or the host ending the
@@ -129,7 +147,6 @@ export function ReadingStageBody({
   playgroundOpen,
   countdown,
   countdownWhen,
-  onWatch,
   onTryAgain,
   onViewerEnded,
   onViewerFailed,
@@ -176,9 +193,9 @@ export function ReadingStageBody({
             </p>
             {phase === "published" && (
               <div className="kit-btn-row">
-                <button type="button" className="kit-btn kit-btn-main" onClick={onWatch}>
+                <Link href="/rooms/heart-field" className="kit-btn kit-btn-main">
                   Watch again
-                </button>
+                </Link>
               </div>
             )}
           </div>
@@ -188,19 +205,24 @@ export function ReadingStageBody({
           <div className="kit-stage-controls">
             <p className="kit-body">You left the reading.</p>
             <div className="kit-btn-row">
-              <button type="button" className="kit-btn kit-btn-main" onClick={onWatch}>
+              <Link href="/rooms/heart-field" className="kit-btn kit-btn-main">
                 Watch again
-              </button>
+              </Link>
             </div>
           </div>
         ) : phase === "published" ? (
+          /* TASK-457 (block 968,543): Love only ever goes live in the Heart
+             Field now — this link sends the visitor there; the room's own
+             door does the sign-in + return trip. */
           <div className="kit-stage-controls">
             <div className="kit-btn-row">
-              <button type="button" className="kit-btn kit-btn-main" onClick={onWatch}>
+              <Link href="/rooms/heart-field" className="kit-btn kit-btn-main">
                 Watch Love live
-              </button>
+              </Link>
             </div>
-            <p className="kit-text-quiet">One tap starts her picture and sound.</p>
+            <p className="kit-text-quiet">
+              It plays in the Heart Field. Sign in with your email if you haven&apos;t yet. It&apos;s free.
+            </p>
           </div>
         ) : (
           <div className="kit-stage-controls">
@@ -208,7 +230,16 @@ export function ReadingStageBody({
               The reading is live to watch, free. Want to join the discussion? Stay after for a live group video
               call with Love.
             </p>
-            <p className="kit-text-quiet">Your Watch button appears right here when Love goes live.</p>
+            {/* TASK-457 (block 968,543): the closed state gets its own way
+                to the Heart Field too, ahead of the schedule going live */}
+            <div className="kit-btn-row">
+              <Link href="/rooms/heart-field" className="kit-btn kit-btn-main">
+                Go to the Heart Field
+              </Link>
+            </div>
+            <p className="kit-text-quiet">
+              The reading plays in the Heart Field. Your Watch button appears right here when Love goes live.
+            </p>
           </div>
         )}
       </div>
