@@ -150,11 +150,11 @@ describe("the /reading page — the sky band and the approved structure", () => 
     expect(src).not.toContain("function deriveWeekPass");
   });
 
-  it("the host section is .kitx-host with the real portrait, and the one bottom button reads 'Back to the reading ↑' to #stage (Stage 1, never Stage 2)", async () => {
+  it("the host section is .kitx-host with the real portrait, and the one bottom button reads 'Back to the reading' to #stage (no arrow since TASK-463) (Stage 1, never Stage 2)", async () => {
     const src = await read(PAGE);
     expect(src).toContain('"kitx-host"');
     expect(src).toContain("/images/love-sidelook.webp");
-    expect(src).toContain("Back to the reading ↑");
+    expect(src).toContain("Back to the reading");
     expect(src).toContain('href="#stage"');
   });
 });

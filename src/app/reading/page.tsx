@@ -159,7 +159,7 @@ export default async function ReadingPage() {
                 <p className="kit-body">Join me weekly for a live book reading in my own room.</p>
                 <div className="kit-btn-row">
                   <a className="kit-btn kit-btn-main kit-btn-sm" href="#stage">
-                    Back to the reading ↑
+                    Back to the reading
                   </a>
                 </div>
               </div>
