@@ -154,7 +154,14 @@ export async function settleEntitlementFromOrder(order: OrderRecord): Promise<Fu
           if (to && held?.tier) await sendRevokeLetter(to, held.tier, order.state === "refunded");
         } catch { /* the revoke stands; the letter can be resent */ }
       }
-      return { tier: fellBack ? after.tier : (held?.tier ?? tier), granted: false, revoked: !fellBack, rooms };
+      // F2 (fix round, block 968,543): removeFromTierRooms above is
+      // tier-blind — it just kicked the member from EVERY gated room their
+      // OLD tier held. A fallback keeps a tier, so re-invite to the rooms
+      // THAT tier actually holds; the close path above is untouched.
+      const inviteRooms = fellBack
+        ? (held?.mxid && matrixConfigured() && isMxid(held.mxid) ? await inviteToTierRooms(held.mxid, after.tier) : [])
+        : [];
+      return { tier: fellBack ? after.tier : (held?.tier ?? tier), granted: false, revoked: !fellBack, rooms: [...rooms, ...inviteRooms] };
     }
 
     // created / charge_created / processing / expired / underpaid / canceled:
