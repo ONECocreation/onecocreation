@@ -243,10 +243,10 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
 
       if (encoreEntitled) {
         expect(html).toContain("Join the Playground");
-        expect(html).not.toContain("</svg>Unlock<");
+        expect(html).not.toContain("</svg>Unlock the Encore<");
       } else {
-        expect(html).toContain("</svg>Unlock<"); // the visible label, right after the lock glyph
-        expect(html).toContain(`aria-label="Unlock with ${ENCORE_FLOOR.name}"`); // the fuller words, for a screen reader
+        expect(html).toContain("</svg>Unlock the Encore<"); // the visible label, right after the lock glyph
+        expect(html).toContain(`aria-label="Unlock the Encore with ${ENCORE_FLOOR.name}"`); // the fuller words, for a screen reader
         expect(html).toContain(`Comes with ${ENCORE_FLOOR.name} and up.`); // and in PLAIN sighted text, right above
         expect(html).not.toContain("Join the Playground");
       }
@@ -262,16 +262,40 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
   }
 });
 
+describe("ReadingDayBody — a locked row names who it's for even when the store gives no price (Number One's review)", () => {
+  it("no prices at all: the Encore row still says its tier, the Q&A row still names Evening Star", () => {
+    const html = render(
+      bodyProps({
+        encoreEntitled: false,
+        qaEntitled: false,
+        encoreFloor: { ...ENCORE_FLOOR, price: null },
+        qaOffer: { ...QA_OFFER_LIVE, passLive: false, price: null, eveningStar: { ...QA_OFFER_LIVE.eveningStar, price: null } },
+      }),
+    );
+    expect(html).toContain(`Comes with ${ENCORE_FLOOR.name} and up.</em>`);
+    expect(html).toMatch(/Comes with <a href="\/packages\/evening-star">Evening Star<\/a>\.<\/em>/);
+    expect(html).not.toContain("a month");
+    expect(html).not.toContain("—");
+  });
+
+  it("both unlock labels name their part, the same shape", () => {
+    const html = render(bodyProps({ encoreEntitled: false, qaEntitled: false }));
+    expect(html).toContain("</svg>Unlock the Encore<");
+    expect(html).toContain("</svg>Unlock the Q&amp;A<");
+  });
+});
+
 describe("ReadingDayBody — the lock icon is aria-hidden, decorative only; the words say who it's for", () => {
   it("both locked rows carry the lock svg, aria-hidden, and the meaning in plain words (the row's own line, or the button's own label)", () => {
     const html = render(bodyProps({ encoreEntitled: false, qaEntitled: false }));
     const locks = html.match(/class="kit-lock-icon"/g) ?? [];
     expect(locks.length).toBe(2);
     expect(html).toContain('aria-hidden="true"');
-    // the Encore's short "Unlock" label leans on the row's own quiet line
-    // for the plain-word meaning (button text never wraps, R-071 — see
-    // the register: "Unlock with {name}" measured wider than the card)
-    expect(html).toContain("</svg>Unlock<");
+    // the Encore's label names the part ("Unlock the Encore", matching
+    // "Unlock the Q&A"); the tier's name lives in the row's own quiet line
+    // (button text never wraps, R-071; "Unlock with {name}" measured wider
+    // than the card, see the register)
+    expect(html).toContain("</svg>Unlock the Encore<");
     expect(html).toContain(`Comes with ${ENCORE_FLOOR.name} and up.`);
     // the Q&A's own label carries the full meaning right in its own words
     expect(html).toContain("Unlock the Q&amp;A");

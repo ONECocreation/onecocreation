@@ -82,8 +82,14 @@ export default function ReadingDayBody({
           <span>
             <b>{`${clockWords(encoreStartsAtMs, tz)} · The Encore in the Playground`}</b>
             <em>A live group video call with Love, going deeper into the book.</em>
-            {!encoreEntitled && encoreFloor.price && (
-              <em>{`Comes with ${encoreFloor.name} and up. ${encoreFloor.price} a month.`}</em>
+            {/* who it's for is always said; the price rides only when the
+                store answers one (Number One's review, block 968,561) */}
+            {!encoreEntitled && (
+              <em>
+                {encoreFloor.price
+                  ? `Comes with ${encoreFloor.name} and up. ${encoreFloor.price} a month.`
+                  : `Comes with ${encoreFloor.name} and up.`}
+              </em>
             )}
           </span>
           <span className="kit-rows-end">
@@ -100,8 +106,8 @@ export default function ReadingDayBody({
                  button itself stays short and constant. */
               <ReadingDayUnlockButton
                 itemId={encoreFloor.itemId}
-                label="Unlock"
-                ariaLabel={`Unlock with ${encoreFloor.name}`}
+                label="Unlock the Encore"
+                ariaLabel={`Unlock the Encore with ${encoreFloor.name}`}
               />
             )}
           </span>
@@ -113,15 +119,14 @@ export default function ReadingDayBody({
             <b>{`${clockWords(qaStartsAtMs, tz)} · The Q&A with Love`}</b>
             <em>Bring your questions. Love answers live.</em>
             {!qaEntitled && qaOffer.passLive && qaOffer.price && <em>{`${qaOffer.price} once.`}</em>}
-            {!qaEntitled && qaOffer.passLive && qaOffer.eveningStar.price && (
+            {/* Evening Star always named (it includes the Q&A); its price
+                only when the store answers one */}
+            {!qaEntitled && (
               <em>
-                {"Or it comes with "}
+                {qaOffer.passLive && qaOffer.price ? "Or it comes with " : "Comes with "}
                 <Link href={qaOffer.eveningStar.href}>{qaOffer.eveningStar.name}</Link>
-                {`. ${qaOffer.eveningStar.price} a month.`}
+                {qaOffer.eveningStar.price ? `. ${qaOffer.eveningStar.price} a month.` : "."}
               </em>
-            )}
-            {!qaEntitled && !qaOffer.passLive && qaOffer.eveningStar.price && (
-              <em>{`Comes with ${qaOffer.eveningStar.name}. ${qaOffer.eveningStar.price} a month.`}</em>
             )}
           </span>
           <span className="kit-rows-end">

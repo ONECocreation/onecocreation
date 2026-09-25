@@ -215,3 +215,9 @@ tsc 0
 build ok
 GATES GREEN
 ```
+
+## Number One's review fixes (block 968,561)
+
+After seeing the shots:
+- **The Encore button read just "Unlock" beside "Unlock the Q&A".** It now reads "Unlock the Encore", the same shape as the Q&A button. The aria label is "Unlock the Encore with {floor}".
+- **A locked row said nothing about who it was for when the store gave no price.** The shots were blank, since there's no local catalog. Now the Encore row always says "Comes with {floor} and up.", and the price is added when known. The Q&A row always names Evening Star (a link), with its price when known.
