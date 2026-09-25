@@ -234,7 +234,7 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
       const html = render(bodyProps({ signedIn: c.signedIn, encoreEntitled, qaEntitled }));
 
       if (c.signedIn) {
-        expect(html).toContain("Watch in the Heart Field");
+        expect(html).toContain("Go to the Heart Field"); // the stage card's own words for the same door (Lumen, 968,561)
         expect(html).not.toContain("Sign me up");
       } else {
         expect(html).toContain("Sign me up");

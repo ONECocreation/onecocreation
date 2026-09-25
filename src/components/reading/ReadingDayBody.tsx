@@ -67,7 +67,7 @@ export default function ReadingDayBody({
           <span className="kit-rows-end">
             {signedIn ? (
               <Link className="kit-btn kit-btn-main kit-btn-sm" href="/rooms/heart-field">
-                Watch in the Heart Field
+                Go to the Heart Field
               </Link>
             ) : (
               <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">

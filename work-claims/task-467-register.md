@@ -229,3 +229,7 @@ After seeing the shots:
 - Two page pins re-trued in `tests/reading-day-467.test.ts`:
   - the mount sits after `<ReadingSignInBox`, since the old `<ReadingSignUp` is gone;
   - the "no tier word" ban became "exactly one `tierForSubject(` call". That one call is TASK-466's approved Playground-lock read, pinned in reading-page.test.ts, and this lane adds none.
+
+## Lumen's review of the page (block 968,561)
+
+The Reading row's signed-in door now reads "Go to the Heart Field", the stage card's own words for the same door (it read "Watch in the Heart Field").
