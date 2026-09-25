@@ -27,6 +27,16 @@ import { ReadingStageBody, stage1WatchTarget, type ReadingStageBodyProps } from 
  * room is still published. The book art is in closed, published and
  * ended; there is no <img> of it while watching (JitsiViewer replaces it
  * in the SAME frame).
+ *
+ * TASK-457 (block 968,543) — REVERSAL of the ruling that retired the Heart
+ * Field doors from /reading: closed now also carries "Go to the Heart
+ * Field", and every control that used to call `onWatch` (published,
+ * ended-while-published, left-while-published) is now a `Link` to
+ * `/rooms/heart-field` with its label unchanged. The one pin this changed
+ * (published's "One tap starts her picture and sound." quiet line) is
+ * re-trued below; every other assertion in this file is unaffected because
+ * the labels and `kit-btn-main` class held. `tests/reading-watch-heart-
+ * field-457.test.ts` carries this lane's own new pins.
  */
 
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
@@ -83,7 +93,7 @@ describe("closed — the book waits, the welcome words, no control at all", () =
   });
 });
 
-describe("published, not yet watching — one tap starts her picture and sound", () => {
+describe("published, not yet watching — Watch Love live sends the visitor to the Heart Field (TASK-457, block 968,543)", () => {
   const html = render(bodyProps({ phase: "published", room: ROOM }));
 
   it("the 'Love is live now' line, the LIVE chip on the book, exactly ONE kit-btn-main: Watch Love live", () => {
@@ -92,7 +102,9 @@ describe("published, not yet watching — one tap starts her picture and sound",
     expect(html).toContain("/images/reading-book.webp");
     expect(count(html, "kit-btn-main")).toBe(1);
     expect(html).toContain("Watch Love live");
-    expect(html).toContain("One tap starts her picture and sound.");
+    // TASK-457 (block 968,543) re-true: "One tap starts her picture and
+    // sound." (the in-place mount promise) -> the Heart Field hand-off words.
+    expect(html).toContain("It plays in the Heart Field. Sign in with your email if you haven&#x27;t yet. It&#x27;s free.");
   });
 
   it("the first paint carries NO room and NO iframe — the room mounts only on the click's fresh answer", () => {
