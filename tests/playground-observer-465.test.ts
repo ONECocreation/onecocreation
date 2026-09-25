@@ -296,6 +296,25 @@ describe("PlaygroundIsland.tsx — Observer floor, no em dash (ruling A/C)", () 
     );
     expect(pkg).toContain("OBSERVER-FIXTURE");
     expect(pkg).not.toContain("Weekly Intuitive");
+    // no Observer week pass exists (the Admiral, block 968,561: "there is no
+    // $22 for the 1 week of the observer") — no state promises one it can't sell
+    expect(signin).not.toMatch(/one-week pass|try one week/i);
+    expect(pkg).not.toMatch(/one-week pass|try one week/i);
+    const pkgWeek = renderToStaticMarkup(
+      h(PlaygroundIslandBody, {
+        ...base,
+        wire: { decision: "package", reachable: null, pkg: { name: "x", href: "/x", week: { itemId: "w", price: "$9" } } },
+      } as never),
+    );
+    expect(pkgWeek).toContain("or try one week,");
+    expect(pkgWeek).toContain("Try one week for $9");
+  });
+
+  it("/reading/playground's list line and meta description promise no pass (no Observer week pass exists)", async () => {
+    const page = await read("src/app/reading/playground/page.tsx");
+    expect(page).not.toContain("or a one-week pass");
+    expect(page).toContain("<li>{`With every membership from ${observerName} up`}</li>");
+    expect(page).not.toMatch(/description: .*—/);
   });
 
   it("the Try-one-week button label carries no em dash", async () => {

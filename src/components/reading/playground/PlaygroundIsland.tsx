@@ -280,13 +280,15 @@ export function PlaygroundIslandBody({
        unchanged). TASK-465 (block 968,561): the floor line names
        `observerName` (was a literal "Weekly Intuitive" until the Admiral
        raised Stage 2's floor to Observer), and the old em-dash sentence
-       split into two (ruling C). */
+       split into two (ruling C). The one-week-pass sentence is gone: the
+       Admiral, block 968,561, "there is no $22 for the 1 week of the
+       observer" — and a signed-out visitor has no wire week offer to test. */
     return (
       <div className="kit-card kit-card-body kitx-flow kit-stage2-card">
         <h2 className="kit-h2">Come up and talk with Love</h2>
         <p className="kit-body">
           The Playground is a live video call with Love, camera and mic. It comes with every membership from{" "}
-          {observerName} up. Or try it with a one-week pass.
+          {observerName} up.
         </p>
         <div className="kit-btn-row kitx-actions">
           <Link href="/login?next=%2Freading%2Fplayground" className="kit-btn kit-btn-main kit-btn-sm">
@@ -312,7 +314,11 @@ export function PlaygroundIslandBody({
       <div className="kit-card kit-card-body kitx-flow kit-stage2-card">
         <p className="kicker">Heart Field · your free membership</p>
         <h2 className="kit-h2">The Playground comes with a paid membership</h2>
-        <p className="kit-body">Join {observerName} or above, or try one week, and come straight back here to join Love.</p>
+        <p className="kit-body">
+          {week
+            ? `Join ${observerName} or above, or try one week, and come straight back here to join Love.`
+            : `Join ${observerName} or above and come straight back here to join Love.`}
+        </p>
         <div className="kit-btn-row kitx-actions">
           <Link href={observerHref} className="kit-btn kit-btn-main kit-btn-sm">
             {observerName}
