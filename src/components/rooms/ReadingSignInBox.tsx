@@ -109,6 +109,26 @@ export const BOX_QUIET_LINE =
    calls dashes slop") — two short sentences instead. */
 const GENERIC_ERROR = "Something went sideways. Please try again.";
 const BAD_CODE = "That code didn't match. Try again.";
+const NOT_READY = "Email sign-in isn't ready just now. Please try again soon.";
+
+/* The box speaks its OWN words, picked by the route's status, never the
+   route's `reason` string: those are lowercase and several carry an em
+   dash (start/route.ts, verify/route.ts, code-door-limit.ts, all outside
+   this lane). The adversarial review (block 968,561) proved a wrong code
+   showed "that code didn't match — try again" here. */
+export function startErrorWords(status: number): string {
+  if (status === 400) return "That email doesn't look right. Please check it.";
+  if (status === 429) return "Too many codes asked for. Give it a few minutes and try again.";
+  if (status === 502) return "The letter didn't send. Please try again.";
+  if (status === 503) return NOT_READY;
+  return GENERIC_ERROR;
+}
+
+export function verifyErrorWords(status: number): string {
+  if (status === 400 || status === 401) return BAD_CODE;
+  if (status === 503) return NOT_READY;
+  return GENERIC_ERROR;
+}
 
 export type SignInOutcome = ReadingTagOutcome | "subscribe-unknown";
 
@@ -131,9 +151,9 @@ export async function startEmailCode(email: string): Promise<{ ok: true } | { ok
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
     });
-    const data = (await res.json().catch(() => null)) as { ok?: boolean; reason?: string } | null;
+    const data = (await res.json().catch(() => null)) as { ok?: boolean } | null;
     if (res.ok && data?.ok) return { ok: true };
-    return { ok: false, message: data?.reason ?? GENERIC_ERROR };
+    return { ok: false, message: startErrorWords(res.status) };
   } catch {
     return { ok: false, message: GENERIC_ERROR };
   }
@@ -148,7 +168,7 @@ export async function verifyAndSubscribe(
   email: string,
   code: string,
 ): Promise<{ ok: true; handle: string; space: string; outcome: SignInOutcome } | { ok: false; message: string }> {
-  let verifyData: { ok?: boolean; reason?: string; handle?: string; space?: string } | null;
+  let verifyData: { ok?: boolean; handle?: string; space?: string } | null;
   try {
     const res = await fetch("/api/auth/email/verify", {
       method: "POST",
@@ -157,7 +177,7 @@ export async function verifyAndSubscribe(
     });
     verifyData = await res.json().catch(() => null);
     if (!res.ok || !verifyData?.ok) {
-      return { ok: false, message: verifyData?.reason ?? BAD_CODE };
+      return { ok: false, message: verifyErrorWords(res.status) };
     }
   } catch {
     return { ok: false, message: GENERIC_ERROR };

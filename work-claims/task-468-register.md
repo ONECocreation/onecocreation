@@ -265,3 +265,8 @@ After seeing the code-step shot at 390:
 - **The code step said nothing about where the code went.** It now reads "A code is on its way to your inbox. It works for ten minutes. Sent to **{email}**." These are the /login sheet's own words, without its dash.
 - **A mistyped email was a dead end.** There was no way back short of reloading. Now a quiet line reads "Wrong email? Use a different one". It's a link, the same shape as the Nostr key pointer on the email step, so the box keeps one button size.
 - **The "subscribe-unknown" note pointed at a button that wasn't on screen.** It now says "Reload this page to try Keep me posted again." After a reload the visitor is a signed-in member, and the reused card shows that button.
+
+## Number One's fixes for the adversarial review (block 968,561, verdict BLOCK)
+
+- **BLOCKER, fixed: em dashes reached the error note.** The box showed the route's `reason` string word for word. `?? BAD_CODE` only fired on an unreadable body, so a wrong code showed "that code didn't match — try again", and a rate limit showed `CODE_DOOR_HELD` with its dash. Now the box picks its own words by status (`startErrorWords`, `verifyErrorWords`) and never passes on a route's `reason`. The route strings (start/route.ts, verify/route.ts, code-door-limit.ts) are outside this lane and keep their dashes for the other doors (EmailDoor, SignInCard). They go on the house em-dash sweep. The new tests drive the real fetch paths through every status.
+- **Correction to this register:** the line above claiming zero inline `style={{}}` blocks is wrong. There is one, `style={{ marginTop: 16 }}` on the returning-member Watch row. It passes the design-drift gate (new-file allowance 3). Left as is; kit.css has no spacing utility for it.

@@ -127,6 +127,51 @@ describe("startEmailCode / verifyAndSubscribe — the fetch orchestration (mocke
   });
 });
 
+describe("the error note speaks the box's own words, never a route's dashed reason (the adversarial review, block 968,561)", () => {
+  const realFetch = global.fetch;
+  afterEach(() => {
+    global.fetch = realFetch;
+  });
+  function answer(status: number, reason: string) {
+    global.fetch = vi.fn(async () => new Response(JSON.stringify({ ok: false, reason }), { status })) as unknown as typeof fetch;
+  }
+
+  it("a wrong code reads the box's words, not \"that code didn't match — try again\"", async () => {
+    answer(401, "that code didn't match — try again");
+    const r = await verifyAndSubscribe("x@example.com", "000000");
+    expect(r).toEqual({ ok: false, message: "That code didn't match. Try again." });
+  });
+
+  for (const [status, reason] of [
+    [400, "that email doesn't look right"],
+    [429, "too many codes asked for — give it a few minutes and try again"],
+    [502, "the letter didn't send — try again"],
+    [503, "email sign-in isn't wired yet — please use your key, or try again soon"],
+    [500, "anything — at all"],
+  ] as [number, string][]) {
+    it(`start ${status}: no dash, a capital, a full stop`, async () => {
+      answer(status, reason);
+      const r = await startEmailCode("x@example.com");
+      expect(r.ok).toBe(false);
+      const message = (r as { message: string }).message;
+      expect(message).not.toContain("—");
+      expect(message).not.toBe(reason);
+      expect(message).toMatch(/^[A-Z].*\.$/);
+    });
+  }
+
+  for (const status of [400, 401, 503, 500]) {
+    it(`verify ${status}: no dash, never subscribes`, async () => {
+      answer(status, "some route words — with a dash");
+      const r = await verifyAndSubscribe("x@example.com", "123456");
+      expect(r.ok).toBe(false);
+      expect((r as { message: string }).message).not.toContain("—");
+      const calls = (global.fetch as unknown as { mock: { calls: [string][] } }).mock.calls.map((c) => String(c[0]));
+      expect(calls.some((u) => u.includes("/api/subscribe"))).toBe(false);
+    });
+  }
+});
+
 describe("ReadingSignInCard — the joined state (just verified this session)", () => {
   it("shows ONE button, 'Watch in the Heart Field', to /rooms/heart-field", () => {
     const html = renderToStaticMarkup(
