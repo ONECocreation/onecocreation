@@ -117,6 +117,7 @@ stand as history in each docblock this lane touches.
   scope (was already named): confirmed via the full-suite run, no new
   file, listed again here for completeness.
 - `work-claims/task-465.md`, `work-claims/task-465-register.md`.
+- `src/components/reading/Stage2Details.tsx` — WIDENED by Number One's review (block 968,561): `Stage2Rows` is LIVE (the Playground page's tier rows), not dead; it listed Weekly Intuitive under "from Observer up". Rows now start at the floor; the week row names the floor tier. The dead default export stays untouched.
 
 ## READ-ONLY
 
