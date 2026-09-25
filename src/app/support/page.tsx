@@ -86,8 +86,7 @@ export default async function SupportPage() {
             <StackedHero kicker="Support This Work — Gently" lines={[{ t: "TEND" }, { t: "THE FIELD", tone: "teal" }]} constellation />
             <p className="lead" style={{ marginBottom: 0 }}>
               Everything here — the sessions, the rooms, the letters — is held by one pair of hands.
-              A gift lands with Love <b style={{ color: "var(--gold-deep)" }}>whole</b>: no platform
-              between, no cut taken. Choose the jar it fills.
+              A gift lands with Love. Choose the jar it fills.
             </p>
           </div>
         </section>
