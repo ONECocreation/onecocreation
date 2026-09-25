@@ -125,7 +125,7 @@ stand as history in each docblock this lane touches.
   - `src/app/api/live/route.ts`: the public live read never names a hidden room (no room, no title, no after-hours).
   - `src/components/rooms/AfterHoursDoor.tsx`: renders nothing for a hidden room.
   - `src/app/a/site/reading/page.tsx`, `SiteReadingRoom.tsx`, `Stage2Card.tsx`: Love's Stage 2 card names the floor from `STAGE2_FLOOR_NAME` (a prop threaded from the server page; stage2-access.ts cannot enter a client bundle).
-  - `tests/room-doors.test.ts`, `tests/go-live-door.test.ts`, `tests/playground-observer-465.test.ts`: pins for the above.
+  - `tests/hidden-room-465.test.ts` (NEW): pins for the above. `tests/after-hours-door.test.ts` (already owned) re-trues its clair-senses fixtures to a room that is not hidden.
 
 ## READ-ONLY
 
