@@ -55,7 +55,7 @@ export default function ReadingDayBody({
   qaOffer,
 }: ReadingDayBodyProps) {
   return (
-    <div className="card room-card">
+    <div className="card room-card kit-day">
       <h2 className="kit-h2">The day&apos;s agenda</h2>
       <ul className="kit-rows" aria-label="The day's agenda">
         {/* ROW 1 — the reading itself, free, in the Heart Field */}

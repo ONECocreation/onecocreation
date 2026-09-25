@@ -285,6 +285,15 @@ describe("ReadingDayBody — a locked row names who it's for even when the store
   });
 });
 
+describe("ReadingDayBody — the agenda card holds the page's one 800px column", () => {
+  it("carries kit-day, and kit.css caps kit-day at 800px like .kit-stage and .kit-signup", async () => {
+    const html = render(bodyProps({}));
+    expect(html).toContain('class="card room-card kit-day"');
+    const css = await fs.readFile(path.join(process.cwd(), "src/app/kit.css"), "utf8");
+    expect(css).toContain(".kit-day{max-width:800px;margin:0 auto;box-sizing:border-box}");
+  });
+});
+
 describe("ReadingDayBody — the lock icon is aria-hidden, decorative only; the words say who it's for", () => {
   it("both locked rows carry the lock svg, aria-hidden, and the meaning in plain words (the row's own line, or the button's own label)", () => {
     const html = render(bodyProps({ encoreEntitled: false, qaEntitled: false }));
