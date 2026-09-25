@@ -1,11 +1,14 @@
 # TASK-462 register
 
 Base: 9db8532a23e01f705b2fb8a53d8d976f49fa1f99
-Code/pins revision: 76850b1636520b65572963faeef39b04e13a363b (this register rides the final commit on top)
+Code/pins revision: c796f2b (this register rides the final commit on top)
 Builder: Number One
 Block: 968,543
 Brief: /home/pac/dev/briefings/oc-sat-lanes-968543/TASK-462-taster-keeps-membership.md
 Fix round: coordinator message (Number One), block 968,543, F1-F4 below
+Round 3: coordinator message (Number One), block 968,548 — NARROWED, see that section below
+
+**READ THIS FIRST**: round 3 (block 968,548) REMOVED the refund-fallback mechanism that rounds 1 and 2 built (`revokeTier`'s `orderId` parameter, `entitlement-fulfil.ts`'s fallback/re-invite logic, F2 in full) after a confirmed blocker. The "What was built" and "Fix round" sections immediately below describe that now-removed work as HISTORY — what was tried and why it didn't ship. The current, shipping behavior is in "Round 3 — narrowed" further down; read that section for what is actually live on this commit.
 
 ## What was built
 
@@ -39,31 +42,69 @@ New tests (7, all in `tests/taster-keeps-membership-462.test.ts`): F1's lapsed-r
 
 Each of the four fixes was proven red first: F1/F3/F4's tests were added and run together against the round-1 build (4 failed exactly as predicted, 1 test-file-run before any of this round's source edits); F2's two tests were added and run against the round-1 `entitlement-fulfil.ts` (the fallback-reinvite assertion failed, the close-only assertion already passed since that behavior was unchanged) — then each fix applied and re-verified green. Commits: red tests (`903edca`), F1+F3 build (`a3d6758`), F2 build (`76850b1`), each on top of the round-1 commits.
 
+## Round 3 — narrowed (block 968,548)
+
+Two adversarial reviews ran on `ec85417` (round 2's final commit). One CONFIRMED blocker plus two real gaps. Per the production law ("narrow, don't rebuild, when blockers keep coming"), this round REMOVES the refund-fallback mechanism entirely rather than patching it further, fixes the `under` comparator, and closes a `live.ts` seam the round-1/round-2 `under` mechanism had opened.
+
+### What was removed, and why (the redelivery trace)
+
+THE BLOCKER (found by the coordinator; independently reproduced with a throwaway test before touching any code — see the red-tests commit message for the exact trace): round 2's `revokeTier(npub, orderId)` decided by matching `orderId` against the RAW stored record's own `orderId`. A SUCCESSFUL fallback REWRITES that field — the persisted record's `orderId` becomes the `under`'s order, not the taster's, once it falls back. Square and BTCPay both routinely redeliver the same webhook event. Sequence: (1) permanent A + a C day pass; (2) the pass lapses Saturday night; (3) Monday, Love refunds it — `revokeTier(npub, "order-taster")` matches, falls back correctly, the record now reads `{tier: A, orderId: "order-permanent", ...}`; (4) the SAME `refunded` webhook is redelivered — `revokeTier(npub, "order-taster")` is called again, but `raw.orderId` is now `"order-permanent"` — no match — falls through to the close branch — the member's PERMANENT membership is revoked, a false "membership closed" letter goes out, and they're kicked from every room. Confirmed exactly as reported, independently, before any round-3 source edit.
+
+Removed:
+- `revokeTier`'s second parameter and its whole fallback branch — back to base (`9db8532`) byte-for-byte behavior: one argument, `getEntitlement` read, mark revoked.
+- `entitlement-fulfil.ts` restored to base byte-for-byte (`git checkout 9db8532 -- src/lib/entitlement-fulfil.ts`) — the `order.id` pass-through, the fallback/close letter guard, and the re-invite (F2) all went with it, since they existed only to serve the now-removed fallback.
+- The whole round-2 refund-fallback test surface: the "revokeTier — refunding..." describe block (5 tests), the "F1" lapsed-refund test, the "settleEntitlementFromOrder — F2" describe block (2 tests) and its mocks for `@/lib/store`/`@/lib/matrix`/`@/lib/mail-queue`. F3b's assertion (which used the 2-arg `revokeTier` to OBSERVE the fallback) was rewritten to read the raw KV record directly instead — the fact it tests (the standing order's own orderId is preserved, and an outranked purchase is held as `under`) is unchanged; only HOW the test observes it changed, because a permanent top record never naturally lapses and there is no longer a revoke-based fallback to peek through.
+
+What STAYS, unchanged: the EXPIRY fallback — `getEntitlement`/`liveGrant`'s own revoked/lapsed/`under` read — is untouched and is the Saturday must. A taster that outranks a live standing grant still doesn't erase it; it still reads back once the taster's own window closes NATURALLY. Only the REFUND path lost its fallback.
+
+### The comparator rule (R2)
+
+Two more confirmed gaps, both in the `under`-slot comparison, fixed with one new pure function, `betterUnder(a, b, now?)` (`src/lib/entitlement.ts`):
+- **review 3b**: a LAPSED `under` candidate was still winning against a fresh outranked purchase, because the old `underBeats` never checked liveness at all — only rank, then permanence-at-equal-rank. Fixed: liveness is checked FIRST; a lapsed candidate never beats a live one, full stop.
+- **review 3a**: a lower-ranked but PERMANENT purchase was losing to a higher-ranked but still-a-pass `under`, because the old comparator checked rank before permanence. Fixed: permanence is checked SECOND (right after liveness, before rank) — a membership must never be lost to a pass, regardless of tier.
+- Full order: lapsed loses to live; then permanent beats taster; then higher rank; then later `expiresAtMs`; a genuine tie keeps the first-named candidate (`a`).
+
+`underFrom` (this call wins, decide what it rides on) and `underBeats` (this call loses, does it still beat the current `under`) both now delegate to `betterUnder` instead of each carrying its own partial, inconsistent comparison.
+
+**The lane's own 3-layer test was RE-TRUED**: permanent A + a B week pass (under=A) + a C day pass bought while B is live. Rounds 1/2 pinned "B" (the higher rank) surviving once C closes. That pin was ITSELF WRONG per the corrected rule — round 3 re-trues it to "A" (permanent beats a pass, no matter its rank). B's own remaining days are lost, not merely shadowed — an accepted cost of the one-level-only design (see AFTER SATURDAY below), not a new bug.
+
+### The live.ts seam (R3)
+
+`classStartingAudience` (`src/lib/live.ts`) walked `listEntitlements()` and re-implemented its own revoked/lapsed check inline (`if (rec.revokedAtMs) continue; if (rec.expiresAtMs != null && Date.now() > rec.expiresAtMs) continue;`) — it never knew about `under` at all. Since round 1, a permanent member whose taster had lapsed reads as tier A via `getEntitlement`, but `classStartingAudience` was still reading the RAW (lapsed, tier C) record and dropping them from every room's audience, including their own A room. Fixed: `getEntitlement`'s revoked/lapsed/`under` decision is now a new exported pure function, `liveGrant(rec, now?)`; `getEntitlement` is exactly `safeNpub + readRec + liveGrant`, and `classStartingAudience` calls `liveGrant(rec)` directly on each record `listEntitlements` hands it, gating on the returned tier and npub instead of the raw ones. OWNS was widened for this ONE function in its own commit (`fb9a10f`) before the code changed. Nothing else in `live.ts` was touched.
+
+### AFTER SATURDAY (deferred, not built)
+
+1. **Pass-refund fallback, done safely.** A refund of a taster's own order should ideally fall back to the standing membership underneath it (the same shape as the expiry fallback), but doing this safely against webhook redelivery needs a CONSUMED-ORDER marker — a record of which order IDs a revoke has already processed, checked before deciding whether this is a fresh event or a redelivery — so a second delivery of the same event reads as a no-op instead of re-attempting (and mismatching) an exact-orderId fallback. Not built this round; the policy call (is this worth the added state, and where does the marker live/expire) is the Admiral's.
+2. **A purchase outranked by a live taster AND beaten by a permanent `under` contributes nothing — same as base.** E.g., a live C taster sits on a permanent A `under`; a new B taster purchase arrives. It's outranked by C (doesn't win the top slot) and beaten by `under` (`betterUnder` keeps the permanent A over the taster B) — so it is simply dropped, exactly as an outranked purchase was always dropped before TASK-462 existed. Not a regression; confirmed, unchanged, deliberate — worth naming because someone WILL ask "where did that purchase go."
+3. **B's remaining days, lost in the 3-layer case.** Once a taster is bought on top of ANOTHER taster that itself sits on a permanent membership, the middle taster's own remaining window is not reachable again — the design keeps exactly one `under` level, and (post round 3) it's the PERMANENT one that survives, not the more-recently-bought pass. A member in this exact sequence loses whatever days remained on the middle pass. Accepted cost of the "never chain more than one level" rule; not a lane to fix, a fact to know.
+
 ## Pins re-trued
 
-None in either round. No existing test's expected VALUE changed at any point — the 8 pre-existing-behavior rows in the round-1 test file, `tests/entitlement-renewal.test.ts`'s 8 rows, and the fix round's F2 close-only assertion were all already green before their respective builds (they pin unrelated or already-correct behavior). `tests/ceremony-revoke-own-door.test.ts` fully mocks `@/lib/entitlement` and `@/lib/entitlement-fulfil`, so neither round's changes reach it at all — confirmed both rounds.
+Round 3: the lane's own 3-layer test (described above) — round 1/2's expected tier "B" was itself wrong per the corrected comparator rule; re-trued to "A". This is the only pin whose expected VALUE changed across all three rounds — every other addition either introduced a new assertion or re-confirmed already-correct behavior.
 
-## Deviations from the brief
+None in rounds 1 or 2. No existing test's expected VALUE changed at any point — the 8 pre-existing-behavior rows in the round-1 test file, `tests/entitlement-renewal.test.ts`'s 8 rows, and the fix round's F2 close-only assertion were all already green before their respective builds (they pin unrelated or already-correct behavior). `tests/ceremony-revoke-own-door.test.ts` fully mocks `@/lib/entitlement` and `@/lib/entitlement-fulfil`, so neither round's changes reach it at all — confirmed both rounds.
 
-1. **`entitlement-fulfil.ts`'s refund-letter/FulfilResult guard** (described above) — not explicitly asked for in item 4's wording, added because the alternative ships a false "membership closed" letter to a member who still holds a membership. Narrow (a few lines, no new dependency, no Matrix touch); reported here rather than silently expanded scope.
-2. **Item 4's revoke path is built**, matching the test list's "(if built)" case fully, including the ceremony-route-shape (no-orderId) row — `tests/ceremony-revoke-own-door.test.ts` fully mocks `@/lib/entitlement` and `@/lib/entitlement-fulfil`, so it exercises none of this and needed no changes (confirmed: `grep -rln "settleEntitlementFromOrder\|sendRevokeLetter\|revokeTier\b" tests` finds only that one file, and it's mock-only).
-3. No changes were needed outside `entitlement.ts`/`entitlement-fulfil.ts` — the seam-stop in item 4 was never hit.
+## Deviations from the brief (rounds 1-2 history — the mechanism these describe was REMOVED in round 3)
 
-## Item 5 — no Matrix changes (confirmed, noted)
+1. **`entitlement-fulfil.ts`'s refund-letter/FulfilResult guard** (described above) — not explicitly asked for in item 4's wording, added because the alternative ships a false "membership closed" letter to a member who still holds a membership. Narrow (a few lines, no new dependency, no Matrix touch); reported here rather than silently expanded scope. **Round 3: gone — `entitlement-fulfil.ts` is back to base byte-for-byte.**
+2. **Item 4's revoke path is built**, matching the test list's "(if built)" case fully, including the ceremony-route-shape (no-orderId) row — `tests/ceremony-revoke-own-door.test.ts` fully mocks `@/lib/entitlement` and `@/lib/entitlement-fulfil`, so it exercises none of this and needed no changes (confirmed: `grep -rln "settleEntitlementFromOrder\|sendRevokeLetter\|revokeTier\b" tests` finds only that one file, and it's mock-only). **Round 3: `revokeTier` is back to base — one argument, no fallback branch at all.**
+3. No changes were needed outside `entitlement.ts`/`entitlement-fulfil.ts` — the seam-stop in item 4 was never hit. **Round 3 widened this ONE seam deliberately** — `src/lib/live.ts`'s `classStartingAudience`, OWNS extended in its own commit first (see the Round 3 section).
 
-`matrix.ts` was not touched. A lapsed taster already doesn't sweep Matrix rooms; the refund fallback added here has the same shape: `removeFromTierRooms` still runs (unchanged) against the taster's own tier before the revoke/fallback decision, but nothing re-invites the member to the lower tier's rooms when they fall back to `under`. This is the same pre-existing gap as a natural expiry, not widened, not fixed — noted per the brief.
+## Item 5 — no Matrix changes (confirmed, noted; still true after round 3)
+
+`matrix.ts` itself was never touched in any round. Rounds 1-2 added a re-invite call in `entitlement-fulfil.ts` (F2) using the existing `inviteToTierRooms` helper — that whole call site is gone now that `entitlement-fulfil.ts` is back to base. A lapsed OR refunded taster does not sweep/re-sync Matrix rooms beyond the base `removeFromTierRooms` call already in `entitlement-fulfil.ts`'s refund branch; this is the same pre-existing gap as a natural expiry, unchanged by any round.
 
 ## What is lintable
 
 The new test file: every row is a "can only ADD time or tier on top of a membership, never take one away" assertion against the persisted record — confirmed by construction (each `it` name states the invariant it pins).
 
-## Gates (actual output)
+## Gates (actual output — round 3, final)
 
 `~/dev/shortcuts/oc-gate.sh /home/pac/dev/worktrees/task-462`:
 
 ```
  Test Files  230 passed (230)
-      Tests  2904 passed (2904)
+      Tests  2903 passed (2903)
 scripts/calendar-view.test.mjs: 70 passed, 0 failed
 scripts/cartridge-identity.test.mjs: 179 passed, 0 failed
 scripts/console-matrix.test.mjs: 14 passed, 0 failed
@@ -75,19 +116,24 @@ build ok
 GATES GREEN
 ```
 
-Baseline at cut (on 9db8532, before any lane commit): 229 test files / 2884 tests, all green. Round 1 final: 230 files / 2897 tests. Fix round final: 230 files / 2904 tests, all green — the suite grew by exactly this round's own 7 new pins on top of round 1's 13; no existing assertion's expected value changed in either round.
+Baseline at cut (on 9db8532, before any lane commit): 229 test files / 2884 tests, all green. Round 1 final: 230 files / 2897 tests. Round 2 ("Fix round") final: 230 files / 2904 tests. Round 3 (narrowed) final: 230 files / 2903 tests, all green — net -1 versus round 2 in this lane's own file (20 → 19 `it`s): removed 7 refund-fallback tests (the 5-test "revokeTier — refunding..." block including F1, plus the 2-test "settleEntitlementFromOrder — F2" block); added 6 (R1's 2 regression pins, review 3a + review 3b, R3's 2 `classStartingAudience` tests) — the 3-layer test was edited IN PLACE (re-trued, not removed-and-re-added), so it doesn't move the count. No existing assertion outside this lane's own file changed in any round.
 
 ## Verification
 
 Round 1: the new test file was run against the UNMODIFIED `entitlement.ts`/`entitlement-fulfil.ts` before any build edit — 5 of 13 failed exactly on the confirmed bug, 8 already passed (today's unrelated behavior, re-pinned rather than newly asserted).
 
-Fix round: F1/F3/F4's tests (5 new `it`s at that point) were run together against the round-1 build BEFORE any fix-round source edit — 4 failed exactly as predicted (F1's lapsed-refund, F3a/b/c), F4's row already passed (confirming `underFrom` needed no change). F2's two tests were added and run against the round-1 `entitlement-fulfil.ts` next — the fallback-reinvite assertion failed, the close-only assertion already passed. Each fix was then applied and re-verified green in isolation before moving to the next. Neither round's red state was re-proven via an isolated checkout of the red-only commit (the shared stash stack across worktrees made a stash-based re-check unnecessarily risky for a fact already established by direct measurement) — stated plainly rather than implying a checkout-based re-proof happened.
+Round 2 ("fix round"): F1/F3/F4's tests (5 new `it`s at that point) were run together against the round-1 build BEFORE any fix-round source edit — 4 failed exactly as predicted (F1's lapsed-refund, F3a/b/c), F4's row already passed (confirming `underFrom` needed no change at the time). F2's two tests were added and run against the round-1 `entitlement-fulfil.ts` next — the fallback-reinvite assertion failed, the close-only assertion already passed. Each fix was then applied and re-verified green in isolation before moving to the next.
+
+Round 3 (narrowed): the coordinator's blocker was independently reproduced FIRST, via a throwaway test (never committed — written straight into `tests/`, run, confirmed the exact failure mode reported, then moved aside to the session scratchpad rather than deleted, per the never-delete law, since `rm` is blocked by the law-guard hook). Then the full rewritten test file (R1's 2 regression tests, R2's 3 comparator tests including the re-trued 3-layer pin, R3's 2 live.ts tests, F3b's rewrite) was run against the STILL-UNFIXED round-2 `entitlement.ts`/`entitlement-fulfil.ts`/`live.ts` — exactly 4 failed (the re-trued 3-layer test, review 3a, review 3b, the `classStartingAudience` test), 15 passed (R1's two regression tests pass unchanged since they don't exercise the removed 2-arg path; F3a/F3b-rewritten/F3c pass unchanged; every round-1 test passes unchanged). `entitlement.ts` was fixed next (R1 revert + R2 comparator + `liveGrant` export) and re-verified — only the `classStartingAudience` test remained red, exactly as expected since `live.ts` was untouched at that point. `live.ts` was fixed last and the full file went green.
+
+None of the three rounds' red states were re-proven via an isolated checkout of the red-only commit (the shared stash stack across worktrees made a stash-based re-check unnecessarily risky for a fact already established by direct measurement) — stated plainly rather than implying a checkout-based re-proof happened.
 
 Final HEAD: this register's own commit — reported in the hand-back message.
 
 ## Obstacles
 
-- Round 1: item 2's "never chain more than one level" clause (a taster on a taster on a permanent grant, three layers) had no test in the brief's required list. I implemented the compression (`underFrom`) by hand reasoning, unverified. **Resolved this round**: F4's new test confirms `underFrom`'s round-1 logic was already correct — no source change needed, only the test.
-- Fix round F3 surfaced a bug that predates TASK-462 entirely: `grantTier`'s final `rec` object always wrote the INCOMING call's `orderId`, even in the branch where the standing grant wins and that incoming purchase is otherwise fully ignored — clobbering the winning record's own audit trail with a losing purchase's order id. This had no test anywhere in the codebase before this round (`grep -rn "grantTier(" tests` outside this lane's own file returns nothing), so it shipped unnoticed through round 1 too, until F3's own test (checking `revokeTier` against the ORIGINAL order after an outranked purchase) exposed it. Fixed as part of F3; flagged here because it's a correctness fix slightly broader than F3's literal ask (which only mentioned `under`), the same class of judgment call as round 1's letter guard.
-- Confirming F1/F2/F3's "Do NOT change" boundary (a refund of a fully superseded order keeps today's blunt full-revoke) required tracing by hand rather than a dedicated test: the fix's exact-orderId match on the RAW record's own `orderId` only ever matches the record that is CURRENTLY the top slot's own order, live or lapsed — a truly superseded order (compressed out of the `under` chain entirely, e.g. by F4's 3-layer rule, or replaced by a same-tier renewal) can never coincidentally match, so no special-casing was needed and none was added; this is reasoning, not a new pin, so a determined future refactor could still break it silently.
-- No dead ends on the KV/timer test idiom (round 1) or on mocking `@/lib/store`/`@/lib/matrix`/`@/lib/mail-queue` for F2 (round 2) — `tests/entitlement-renewal.test.ts` (T-403) and `tests/stage2-access.test.ts`/`tests/ceremony-revoke-own-door.test.ts` were complete, directly reusable templates for both.
+- **The full history of the 3-layer case is itself the biggest lesson here, worth reading in order.** Round 1: item 2's "never chain more than one level" clause (a taster on a taster on a permanent grant, three layers) had no test in the brief's required list. I implemented the compression (`underFrom`, simple RANK comparison only) by hand reasoning, unverified. Round 2: I wrote F4's test to confirm it, and it PASSED — I reported this as "resolved, no source change needed." That was FALSE CONFIDENCE: the test I wrote merely confirmed round 1's actual (buggy) behavior, it didn't check that behavior was RIGHT. Round 3's adversarial review caught the real bug (permanence must beat rank) that a same-author test could not, because I was checking my own reasoning against my own reasoning. The re-trued pin now enforces the corrected rule. **Lesson for future rounds: a self-written test that merely pins "whatever the code currently does" for a hand-reasoned, unverified branch is not the same as a test that pins "what the code SHOULD do" — say so explicitly when a pin is the former, not the latter, and it's less likely to be reported as "resolved."**
+- Round 2's F3 surfaced a bug that predates TASK-462 entirely (`grantTier`'s final `rec` object always overwrote `orderId` with the incoming call's, even when that call lost) and fixed it as part of F3 without it being literally asked for. Round 3's blocker is a direct descendant of trusting that fix's OWN test (F3b) as sufficient proof: F3b used `revokeTier`'s NEW 2-arg fallback to observe the result, which meant the test only proved the fix worked in combination with a mechanism (the refund fallback) that itself had a live redelivery hole neither round 2's tests nor I caught. Round 3 removed the fallback and rewrote F3b to observe the SAME fact (orderId preservation, `under` correctness) through a raw KV read instead — independent of `revokeTier` entirely, so it no longer depends on a mechanism that might itself be wrong.
+- The old "Do NOT change: a refund of a fully superseded order keeps today's blunt full-revoke" boundary (round 2) is now MOOT rather than satisfied-by-reasoning: `revokeTier` has no `orderId` parameter at all anymore, so EVERY revoke is unconditionally a blunt full-revoke — there is no matching logic left to reason about. Noting this so nobody goes looking for orderId-matching code that no longer exists.
+- No dead ends on the KV/timer test idiom (round 1), on mocking `@/lib/store`/`@/lib/matrix`/`@/lib/mail-queue` for F2 (round 2, since removed), or on `classStartingAudience`'s own idioms (round 3): the `"@email"`-suffixed npub sidesteps `emailForGrantKey`'s registry/nostr lookup entirely (its own explicit shortcut), and the KV fixture needed exactly one more op, `SMEMBERS` (`listEntitlements`'s own read), lifted verbatim from `tests/discovery-checkout.test.ts:242`.
+- The law-guard's `rm` block caught a genuine mistake: I wrote a throwaway blocker-verification test directly into `tests/` instead of the scratchpad first. Moved aside per the never-delete law rather than deleted; worth remembering to write ANY throwaway verification file into the scratchpad directory from the start, never into the repo, so this doesn't come up again.
