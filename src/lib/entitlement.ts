@@ -168,25 +168,32 @@ async function write(rec: Entitlement): Promise<void> {
 
 /* ── reads ──────────────────────────────────────────────────────────────── */
 
-/** The live tier for a registry npub. A revoked grant reads as nothing —
- *  so does a lapsed taster (expiresAtMs in the past): the ONE gate every
- *  tier check funnels through, so a week pass closing needs no separate
- *  sweep.
- *
- *  TASK-462 (block 968,543): a lapsed taster that was sitting on a LIVE
- *  standing grant (`under`) reads AS that grant now, not as nothing — the
- *  membership it was bought on top of was never actually gone, only
- *  shadowed. `under` itself must still be live (no expiry, or not yet past
- *  it); the fallback never chains past that one level. */
-export async function getEntitlement(npub: string): Promise<Entitlement | null> {
-  if (!safeNpub(npub)) return null;
-  const rec = await readRec(npub);
-  if (!rec || rec.revokedAtMs) return null;
-  if (rec.expiresAtMs == null || Date.now() <= rec.expiresAtMs) return rec;
-  if (rec.under && (rec.under.expiresAtMs == null || Date.now() <= rec.under.expiresAtMs)) {
+/** The gate's revoked/lapsed/`under`-fallback decision, pure — round 3
+ *  (block 968,548) pulled this out of `getEntitlement` so `classStartingAudience`
+ *  (`live.ts`) can run the SAME decision over a record it already has in
+ *  hand (from `listEntitlements`) instead of re-implementing its own
+ *  revoked/lapsed check that never knew about `under` (R3: a permanent
+ *  member whose taster had lapsed was dropping out of every room's
+ *  audience). A revoked grant reads as nothing — so does a lapsed taster
+ *  with nothing live to fall back to. `under` itself must still be live (no
+ *  expiry, or not yet past it); the fallback never chains past that one
+ *  level. */
+export function liveGrant(rec: Entitlement, now: number = Date.now()): Entitlement | null {
+  if (rec.revokedAtMs) return null;
+  if (rec.expiresAtMs == null || now <= rec.expiresAtMs) return rec;
+  if (rec.under && (rec.under.expiresAtMs == null || now <= rec.under.expiresAtMs)) {
     return { ...rec, tier: rec.under.tier, orderId: rec.under.orderId, expiresAtMs: rec.under.expiresAtMs, under: undefined };
   }
   return null;
+}
+
+/** The live tier for a registry npub — the ONE gate every tier check
+ *  funnels through, so a week pass closing needs no separate sweep. */
+export async function getEntitlement(npub: string): Promise<Entitlement | null> {
+  if (!safeNpub(npub)) return null;
+  const rec = await readRec(npub);
+  if (!rec) return null;
+  return liveGrant(rec);
 }
 
 /** Just the tier — what a gate check actually wants. */
@@ -305,35 +312,59 @@ export async function grantTier(
   return rec;
 }
 
+type UnderCandidate = { tier: Tier; orderId: string; expiresAtMs?: number };
+
+/**
+ * Round 3 (F3 review, block 968,548): the ONE comparator for the `under`
+ * slot. Two adversarial-review findings collapsed into one rule, in order:
+ *   1. a LAPSED candidate never beats a LIVE one — dead access is worth
+ *      nothing next to standing access, no matter its rank (review 3b: a
+ *      stale `under` was winning over a fresh outranked purchase only
+ *      because the old comparator never checked liveness at all);
+ *   2. between two live (or two lapsed) candidates, a PERMANENT grant beats
+ *      a taster — a membership must never be lost to a pass (review 3a: a
+ *      lower-ranked but PERMANENT purchase was losing to a higher-ranked
+ *      but still-a-pass `under`);
+ *   3. then the higher RANK;
+ *   4. then the later `expiresAtMs` (both tasters, same rank — the longer
+ *      window wins);
+ *   5. a genuine tie keeps `a`.
+ * Pure — no read, no write, just the decision.
+ */
+function betterUnder(a: UnderCandidate, b: UnderCandidate, now: number = Date.now()): UnderCandidate {
+  const liveA = a.expiresAtMs == null || now <= a.expiresAtMs;
+  const liveB = b.expiresAtMs == null || now <= b.expiresAtMs;
+  if (liveA !== liveB) return liveA ? a : b;
+  const permA = a.expiresAtMs == null;
+  const permB = b.expiresAtMs == null;
+  if (permA !== permB) return permA ? a : b;
+  if (RANK[a.tier] !== RANK[b.tier]) return RANK[a.tier] > RANK[b.tier] ? a : b;
+  if (!permA && !permB && a.expiresAtMs !== b.expiresAtMs) return a.expiresAtMs! > b.expiresAtMs! ? a : b;
+  return a;
+}
+
 /** TASK-462: the one grant to fall back to once a taster that outranked
  *  `existing` eventually closes. `existing` is always live here (it came
  *  through `getEntitlement`'s gate), so it always qualifies on its own; when
  *  it ALSO rides on its own `under` (a taster bought on top of a taster),
- *  only one level is ever kept — the higher-ranked of the two that is still
- *  live — never a chain. */
-function underFrom(existing: Entitlement): NonNullable<Entitlement["under"]> {
-  const own = { tier: existing.tier, orderId: existing.orderId, expiresAtMs: existing.expiresAtMs };
+ *  only one level is ever kept — `betterUnder` picks which. */
+function underFrom(existing: Entitlement, now: number = Date.now()): NonNullable<Entitlement["under"]> {
+  const own: UnderCandidate = { tier: existing.tier, orderId: existing.orderId, expiresAtMs: existing.expiresAtMs };
   const nested = existing.under;
   if (!nested) return own;
-  const nestedLive = nested.expiresAtMs == null || Date.now() <= nested.expiresAtMs;
-  if (!nestedLive) return own;
-  return RANK[nested.tier] > RANK[own.tier] ? nested : own;
+  return betterUnder(own, nested, now);
 }
 
-/** Fix round (F3, block 968,543): does `incoming` — a purchase that did NOT
- *  win the top slot this call — beat the CURRENT `under`, and so become the
- *  new one? Nothing there yet always loses to something; otherwise a
- *  strictly higher rank wins, and at the same rank a permanent incoming
- *  purchase beats a taster `under`. Anything else leaves the existing
- *  `under` exactly as it was. */
-function underBeats(
-  incoming: { tier: Tier; orderId: string; expiresAtMs?: number },
-  current: Entitlement["under"],
-): boolean {
+/** Fix round (F3, block 968,543/968,548): does `incoming` — a purchase that
+ *  did NOT win the top slot this call — beat the CURRENT `under`, and so
+ *  become the new one? Nothing there, or a lapsed `current`, always loses to
+ *  something; otherwise `incoming` must win `betterUnder` outright — a tie
+ *  leaves the existing `under` exactly as it was. */
+function underBeats(incoming: UnderCandidate, current: Entitlement["under"], now: number = Date.now()): boolean {
   if (!current) return true;
-  if (RANK[incoming.tier] > RANK[current.tier]) return true;
-  if (RANK[incoming.tier] === RANK[current.tier] && incoming.expiresAtMs == null && current.expiresAtMs != null) return true;
-  return false;
+  const currentLive = current.expiresAtMs == null || now <= current.expiresAtMs;
+  if (!currentLive) return true;
+  return betterUnder(current, incoming, now) === incoming;
 }
 
 /**
@@ -341,41 +372,21 @@ function underBeats(
  * Spec: revocation ships WITH the grant, never later — refunds arrive in week
  * one, and a charged-back purchase must not keep access forever.
  *
- * TASK-462 (block 968,543): `orderId` names WHICH order is being revoked.
- * When it matches the record's own orderId and that record rides on a live
- * `under`, the door doesn't close — it falls back to `under`, the same way a
- * natural expiry does. Any other call (no orderId — the admin ceremony
- * route's own hand — or the `under` grant's own order) closes everything
- * exactly as before.
- *
- * Fix round (F1, block 968,543): this decides from the RAW stored record
- * (`readRec`), never `getEntitlement`. Refunds usually land AFTER the event
- * — by the time Love refunds a taster's day pass, it has often already
- * LAPSED, and `getEntitlement` would already be showing it AS its `under`
- * (a different orderId, no `under` of its own): the exact match below would
- * miss it, and the member would be fully closed instead of falling back.
- * The raw record's own orderId is always the taster's own, live or not.
+ * Round 3 (block 968,548) NARROWED this back to base (`9db8532`) behavior,
+ * byte-for-byte: ANY revoke of ANY order closes the member's access — a
+ * taster pass sitting on a standing membership is not spared. Round 2 tried
+ * an exact-orderId fallback here, but a successful fallback REWRITES this
+ * record's own `orderId` to the `under`'s order, so a routinely-redelivered
+ * `refunded` webhook (Square/BTCPay both do this) no longer matches on its
+ * second delivery, falls through to this same close path, and closes a
+ * member's PERMANENT membership that had already safely fallen back — a
+ * confirmed blocker (two adversarial reviews on `ec85417`). AFTER SATURDAY:
+ * a pass refund falling back to the standing membership instead of closing
+ * it needs a consumed-order marker (a record of which order has already
+ * been revoked) so a redelivered webhook reads as a no-op the second time,
+ * not a second, now-mismatched attempt to find the taster's own order.
  */
-export async function revokeTier(npub: string, orderId?: string): Promise<Entitlement | null> {
-  const raw = await readRec(npub);
-  if (raw && !raw.revokedAtMs && orderId && raw.under && raw.orderId === orderId) {
-    const underLive = raw.under.expiresAtMs == null || Date.now() <= raw.under.expiresAtMs;
-    if (underLive) {
-      const fallen: Entitlement = {
-        ...raw,
-        tier: raw.under.tier,
-        orderId: raw.under.orderId,
-        expiresAtMs: raw.under.expiresAtMs,
-        under: undefined,
-      };
-      await write(fallen);
-      return fallen;
-    }
-  }
-  // any other call — no orderId, the `under` grant's own order, an `under`
-  // that's no longer live, or an order that names nothing live at all —
-  // closes exactly as before, against whatever is CURRENTLY live (which may
-  // itself already be a promoted `under`, per getEntitlement's own fallback).
+export async function revokeTier(npub: string): Promise<Entitlement | null> {
   const rec = await getEntitlement(npub);
   if (!rec) return null;
   const revoked: Entitlement = { ...rec, revokedAtMs: Date.now() };
