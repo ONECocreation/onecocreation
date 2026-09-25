@@ -230,7 +230,9 @@ describe("the page itself — source pins (async server component, headers()-dep
     expect(src).toContain("tierForSubject(");
     expect(src).toContain("tierSatisfies(");
     expect(src).toContain("STAGE2_MIN_TIER");
-    expect(src).toContain("TIERS[STAGE2_MIN_TIER]");
+    // the floor name comes from stage2-access.ts (TASK-465 pins that this
+    // page never reads TIERS itself)
+    expect(src).toContain("STAGE2_FLOOR_NAME");
     // never a literal tier letter as a comparison target or a hand-typed gate
     expect(src).not.toMatch(/tierSatisfies\([^)]*["'][ABC]["']/);
     expect(src).not.toMatch(/tier\s*===?\s*["'][ABC]["']/);
