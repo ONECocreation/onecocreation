@@ -53,6 +53,10 @@ wired into that room's own stage.
   reads ROOMS" — it does, via the real `clair-senses` room lookup; the one
   OTHER "Clair Senses — Foundations" occurrence in this same file, an
   injected literal prop unrelated to ROOMS, is untouched).
+- `tests/heart-field-story-time.test.ts` — one pin re-trued (review fix
+  round, Number One): StageView's reset label "Leave Stage 2 · back to the
+  reading" → "Leave the Playground · back to the reading" (a second
+  one-line hunk in StageView.tsx, label only, placement unchanged).
 - `work-claims/task-460.md`, `work-claims/task-460-register.md`.
 
 ## READ-ONLY (never touched)
