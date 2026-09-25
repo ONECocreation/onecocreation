@@ -72,7 +72,7 @@ describe("closed — the book waits, the welcome words, no control at all", () =
   });
 
   it("the book art is there; no iframe, no chip, no Watch button, no room string, no Stage 2 card", () => {
-    expect(html).toContain("/images/reading-book.webp");
+    expect(html).toContain("/images/reading-love-cover.jpg");
     expect(html).not.toContain("kit-stage-viewer");
     expect(html).not.toContain("kit-stage-chip");
     expect(html).not.toContain("Watch Love live");
@@ -89,7 +89,7 @@ describe("published, not yet watching — one tap starts her picture and sound",
   it("the 'Love is live now' line, the LIVE chip on the book, exactly ONE kit-btn-main: Watch Love live", () => {
     expect(html).toContain("Love is live now");
     expect(html).toContain("kit-stage-chip");
-    expect(html).toContain("/images/reading-book.webp");
+    expect(html).toContain("/images/reading-love-cover.jpg");
     expect(count(html, "kit-btn-main")).toBe(1);
     expect(html).toContain("Watch Love live");
     expect(html).toContain("One tap starts her picture and sound.");
@@ -113,7 +113,7 @@ describe("watching — JitsiViewer replaces the book; its toolbar is the only co
 
   it("the viewer is mounted, the book's <img> is GONE, the LIVE chip stays", () => {
     expect(html).toContain("kit-stage-viewer");
-    expect(html).not.toContain("/images/reading-book.webp");
+    expect(html).not.toContain("/images/reading-love-cover.jpg");
     expect(html).toContain("kit-stage-chip");
   });
 
@@ -131,7 +131,7 @@ describe("failed — the book returns, honest words, Try again, never a raw URL"
   const html = render(bodyProps({ phase: "published", failed: true }));
 
   it("the book, the honest words, exactly one primary control: Try again", () => {
-    expect(html).toContain("/images/reading-book.webp");
+    expect(html).toContain("/images/reading-love-cover.jpg");
     expect(html).not.toContain("kit-stage-viewer");
     expect(count(html, "kit-btn-main")).toBe(1);
     expect(html).toContain("Try again");
@@ -147,7 +147,7 @@ describe("failed — the book returns, honest words, Try again, never a raw URL"
 describe("ended — the book, the ended words, the next date; Watch again only while still published", () => {
   it("still published: Watch again is offered", () => {
     const html = render(bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30" }));
-    expect(html).toContain("/images/reading-book.webp");
+    expect(html).toContain("/images/reading-love-cover.jpg");
     expect(html).not.toContain("kit-stage-viewer");
     expect(html).toContain("The reading has ended — thank you for being here.");
     expect(html).toContain("Wednesday, September 30");
