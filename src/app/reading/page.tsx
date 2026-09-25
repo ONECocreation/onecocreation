@@ -10,6 +10,7 @@ import CosmicSky from "@/components/CosmicSky";
 import ReadingHeroCountdown from "@/components/ReadingHeroCountdown";
 import ReadingStage from "@/components/reading/ReadingStage";
 import ReadingSignInBox from "@/components/rooms/ReadingSignInBox";
+import ReadingDay from "@/components/reading/ReadingDay";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
@@ -151,6 +152,18 @@ export default async function ReadingPage() {
         <section className="kitx-section kitx-section-first">
           <div className="wrap">
             <ReadingSignInBox />
+          </div>
+        </section>
+
+        {/* THE DAY'S AGENDA (TASK-467, block 968,561) — Love's own words on
+            the call: "put this whole room brick right in the other on the
+            weekly reading page … with three buttons of the times." One
+            bare mount, no props: ReadingDay reads the session, the
+            schedule and the live store on its own — every decision behind
+            the three rows lives in its own files, never here. */}
+        <section className="kitx-section">
+          <div className="wrap">
+            <ReadingDay />
           </div>
         </section>
 
