@@ -218,3 +218,10 @@ describe("TASK-466 — source pins: the page computes the lock the sanctioned wa
     expect(src).not.toMatch(/["'](Weekly Intuitive|Observer|Evening Star)["']/);
   });
 });
+
+describe("the lock sits inline in the button (review fix, block 968,561)", () => {
+  it("kit.css makes .kit-lock-icon inline-block — Tailwind preflight's svg{display:block} otherwise drops it onto its own line", async () => {
+    const css = await (await import("fs")).promises.readFile((await import("path")).join(process.cwd(), "src/app/kit.css"), "utf8");
+    expect(css).toContain(".kit-lock-icon{display:inline-block;margin-right:6px;vertical-align:-2px}");
+  });
+});

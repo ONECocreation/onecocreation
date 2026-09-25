@@ -260,7 +260,7 @@
    currentColor). Every button row it sits inside was ALREADY centered by
    .kit-stage-controls .kit-btn-row above; this is the one new rule this
    lane needed. */
-.kit-lock-icon{margin-right:6px;vertical-align:-2px}
+.kit-lock-icon{display:inline-block;margin-right:6px;vertical-align:-2px}
 
 /* ── the one-way viewer, filling the same media frame the book waited in ── */
 .kit-stage-viewer{position:absolute;inset:0}
