@@ -265,8 +265,11 @@ export function ReadingSignInCard({ member, justJoined, initialStep = "email", o
 
   // Case 3 — arrived already signed in: the subscribe outcome is unknown,
   // so REUSE the exact returning-member card ReadingSignUp.tsx's public
-  // variant already has (Keep me posted / already-in — never rebuilt),
-  // plus the option to go watch straight away.
+  // variant already has (Keep me posted / already-in, never rebuilt). No
+  // Heart Field button here: the stage card above already carries that
+  // door, and a button between two cards floated loose in the shots
+  // (Number One's review, block 968,561). The door right after a fresh
+  // sign-in (Case 2) stays.
   if (member) {
     const memberKind = member.space === "email" ? "member" : "member-key";
     return (
@@ -276,11 +279,6 @@ export function ReadingSignInCard({ member, justJoined, initialStep = "email", o
           memberEmail={memberKind === "member" ? member.handle : null}
           variant="public"
         />
-        <div className="center" style={{ marginTop: 16 }}>
-          <Link className="kit-btn kit-btn-main kit-btn-sm" href={HEART_FIELD_HREF}>
-            {WATCH_CTA}
-          </Link>
-        </div>
       </div>
     );
   }

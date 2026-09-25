@@ -200,14 +200,14 @@ describe("ReadingSignInCard — the joined state (just verified this session)", 
 });
 
 describe("ReadingSignInCard — arrived already signed in (outcome unknown): reuse ReadingSignUpCard, don't rebuild it", () => {
-  it("an email member sees the reused public member card (Keep me posted) plus the Watch button", () => {
+  it("an email member sees the reused public member card (Keep me posted), and no second Heart Field button (the stage card above carries it)", () => {
     const html = renderToStaticMarkup(
       createElement(ReadingSignInCard, { member: { handle: "reader@example.com", space: "email" } }),
     );
     expect(html).toContain("Keep me posted");
     expect(html).toContain("kit-signup"); // ReadingSignUpCard's own public-variant class, reused
-    expect(html).toContain(WATCH_CTA);
-    expect(html).toContain(`href="${HEART_FIELD_HREF}"`);
+    expect(html).not.toContain(WATCH_CTA);
+    expect(html).not.toContain(`href="${HEART_FIELD_HREF}"`);
   });
 
   it("a key-signed member sees the reused member-key card (the field, never a silent skip)", () => {
@@ -216,7 +216,7 @@ describe("ReadingSignInCard — arrived already signed in (outcome unknown): reu
     );
     expect(html).toContain("<input");
     expect(html).toContain("Keep me posted");
-    expect(html).toContain(WATCH_CTA);
+    expect(html).not.toContain(WATCH_CTA);
   });
 });
 
