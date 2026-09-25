@@ -97,6 +97,25 @@ stand as history in each docblock this lane touches.
 - `tests/live-puck.test.ts` — the three real-ROOMS-derived "The
   Playground" pins (via `mockLive({ room: "clair-senses" })` → the real
   title lookup) re-trued to "Clair Senses".
+- `tests/community-readiness.test.ts` — WIDENED (discovered running the
+  full suite): the public `/api/matrix/rooms` feed's room count and
+  live:true count re-trued (6 rooms, not 7 — clair-senses is hidden from
+  this feed; `roomsLive()` itself still probes it, untouched).
+- `tests/door-machine.test.ts` — WIDENED: `continueLabel("/rooms/weekly-
+  reading")` re-trued to "Continue to The Playground"; a new case added
+  for the hidden room's own slug (never named).
+- `tests/join-the-reading.test.ts` — WIDENED: the registry pin for
+  weekly-reading's title re-trued to "The Playground".
+- `tests/room-doors.test.ts` — WIDENED: the `RoomVideoSlot` fixture's
+  `roomTitle` re-trued from the old literal to "The Playground" (the
+  component looks the title up against real ROOMS by string equality —
+  the stale fixture stopped matching any room once the title changed).
+- `tests/after-hours-door.test.ts` — WIDENED: one `GET /api/live`
+  `afterHours.roomTitle` pin (a real ROOMS lookup on `weekly-reading`)
+  re-trued to "The Playground".
+- `tests/package-names.test.ts` — WIDENED beyond the claim's original
+  scope (was already named): confirmed via the full-suite run, no new
+  file, listed again here for completeness.
 - `work-claims/task-465.md`, `work-claims/task-465-register.md`.
 
 ## READ-ONLY
