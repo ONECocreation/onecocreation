@@ -379,7 +379,7 @@ const homeContent: Block[] = [
       [hm.panel([
         hm.heading("📚 Classes", "h3"),
         hm.list([
-          "✦ Clair Senses — Foundations · Weekly Intuitive",
+          "✦ The Playground · Weekly Intuitive",
           "✦ Chronicles: Weekly Reading · Observer",
           "✦ Quantum Healing — Deep Dive · Evening Star",
         ], "none"),

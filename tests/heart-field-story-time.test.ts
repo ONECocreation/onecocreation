@@ -301,7 +301,7 @@ describe("the swap and the way back — the reading on the room's own stage", ()
 
   it("the stage2Room branch stays byte-identical (ruling 2 — the Stage 2 door never moves)", async () => {
     const src = await read(STAGE_VIEW);
-    expect(src).toContain("Leave Stage 2 · back to the reading");
+    expect(src).toContain("Leave the Playground · back to the reading"); // T-460: the pair of Stage2Door's "Join the Playground"
     expect(src).toContain('<JitsiRoom domain={jitsiDomain ?? ""} room={stage2Room} displayName={undefined} />');
     expect(src).toContain(
       '<Stage2Door jitsiDomain={jitsiDomain ?? ""} joined={!!stage2Room} onJoin={joinStage2} signedIn={signedIn} />',
