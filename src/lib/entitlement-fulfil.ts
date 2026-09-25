@@ -139,13 +139,22 @@ export async function settleEntitlementFromOrder(order: OrderRecord): Promise<Fu
       const rooms = held?.mxid && matrixConfigured() && isMxid(held.mxid)
         ? await removeFromTierRooms(held.mxid, { reason: order.state === "disputed" ? "payment disputed" : "refunded" })
         : [];
-      await revokeTier(npub);
-      // the kind close (Admiral, 0018.05.18): doors never shut silently
-      try {
-        const to = order.contact?.email ?? (order.entitlementSubject ? await emailForSubject(order.entitlementSubject) : null);
-        if (to && held?.tier) await sendRevokeLetter(to, held.tier, order.state === "refunded");
-      } catch { /* the revoke stands; the letter can be resent */ }
-      return { tier: held?.tier ?? tier, granted: false, revoked: true, rooms };
+      // TASK-462 (block 968,543): THIS order may be a taster pass sitting on
+      // a standing membership — revokeTier falls back to it instead of
+      // closing everything, so what we report (and whether we send the
+      // closing letter) has to say what actually happened, not a blanket
+      // "closed" when the member still holds a membership underneath.
+      const after = await revokeTier(npub, order.id);
+      const fellBack = after != null && !after.revokedAtMs;
+      // the kind close (Admiral, 0018.05.18): doors never shut silently —
+      // but a fallback isn't a close, so no closing letter goes out for one
+      if (!fellBack) {
+        try {
+          const to = order.contact?.email ?? (order.entitlementSubject ? await emailForSubject(order.entitlementSubject) : null);
+          if (to && held?.tier) await sendRevokeLetter(to, held.tier, order.state === "refunded");
+        } catch { /* the revoke stands; the letter can be resent */ }
+      }
+      return { tier: fellBack ? after.tier : (held?.tier ?? tier), granted: false, revoked: !fellBack, rooms };
     }
 
     // created / charge_created / processing / expired / underpaid / canceled:

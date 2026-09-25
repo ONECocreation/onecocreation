@@ -59,6 +59,13 @@ export interface Entitlement {
   /** a TASTER grant only — e.g. the $11 one-week pass. Absent = the open-
    *  ended monthly membership. Read as expired (no access) once past. */
   expiresAtMs?: number;
+  /** TASK-462 (block 968,543): the LIVE standing grant this record sits on
+   *  top of, when this record is itself a taster that outranked it. The gate
+   *  falls back to it once THIS record's own `expiresAtMs` passes, so a
+   *  higher, shorter pass never erases a lower membership underneath it.
+   *  Never chained more than one level deep. Absent = nothing to fall back
+   *  to (old records, and permanent purchases, never carry one). */
+  under?: { tier: Tier; orderId: string; expiresAtMs?: number };
 }
 
 /* ── the vault (same transports as orders and bookings) ─────────────────── */
@@ -164,13 +171,22 @@ async function write(rec: Entitlement): Promise<void> {
 /** The live tier for a registry npub. A revoked grant reads as nothing —
  *  so does a lapsed taster (expiresAtMs in the past): the ONE gate every
  *  tier check funnels through, so a week pass closing needs no separate
- *  sweep. */
+ *  sweep.
+ *
+ *  TASK-462 (block 968,543): a lapsed taster that was sitting on a LIVE
+ *  standing grant (`under`) reads AS that grant now, not as nothing — the
+ *  membership it was bought on top of was never actually gone, only
+ *  shadowed. `under` itself must still be live (no expiry, or not yet past
+ *  it); the fallback never chains past that one level. */
 export async function getEntitlement(npub: string): Promise<Entitlement | null> {
   if (!safeNpub(npub)) return null;
   const rec = await readRec(npub);
   if (!rec || rec.revokedAtMs) return null;
-  if (rec.expiresAtMs != null && Date.now() > rec.expiresAtMs) return null;
-  return rec;
+  if (rec.expiresAtMs == null || Date.now() <= rec.expiresAtMs) return rec;
+  if (rec.under && (rec.under.expiresAtMs == null || Date.now() <= rec.under.expiresAtMs)) {
+    return { ...rec, tier: rec.under.tier, orderId: rec.under.orderId, expiresAtMs: rec.under.expiresAtMs, under: undefined };
+  }
+  return null;
 }
 
 /** Just the tier — what a gate check actually wants. */
@@ -216,6 +232,12 @@ export async function listEntitlements(): Promise<Entitlement[]> {
  * the pass's own length — less the few milliseconds the read took — onto
  * the standing end; once expired, the gate above already reads it as
  * nothing, so the renewal starts fresh instead, no grace days owed.
+ *
+ * TASK-462 (block 968,543): when a taster's tier truly OUTRANKS a live
+ * standing grant, that standing grant is not lost — it rides along as
+ * `under`, and `getEntitlement` falls back to it once this taster closes.
+ * Every other branch (same tier, lower tier, permanent) is untouched; it
+ * only now carries `under` forward (or clears it on a permanent purchase).
  */
 export async function grantTier(
   npub: string,
@@ -229,20 +251,33 @@ export async function grantTier(
   const keep = existing && RANK[existing.tier] > RANK[tier] ? existing.tier : tier;
 
   let expiresAtMs: number | undefined;
+  let under: Entitlement["under"];
   if (keep !== tier) {
-    // the standing grant outranks this purchase — its own expiry (if any) stands
+    // the standing grant outranks this purchase — its own expiry (if any),
+    // and its own `under` (if any), stand exactly as they were
     expiresAtMs = existing?.expiresAtMs;
+    under = existing?.under;
   } else if (opts?.expiresAtMs == null) {
-    // a permanent purchase at (or above) the standing tier — no more clock
+    // a permanent purchase at (or above) the standing tier — no more clock,
+    // and nothing left to fall back FROM: a real purchase at this tier or
+    // higher clears any taster `under` it replaces
     expiresAtMs = undefined;
+    under = undefined;
   } else if (existing?.tier === tier && existing.expiresAtMs == null) {
     // already permanent at this tier — a taster can't downgrade it
     expiresAtMs = undefined;
+    under = existing?.under;
   } else if (existing?.tier === tier && existing.expiresAtMs != null) {
-    // renewal adds: standing end + this pass's own length, less the read's few ms
+    // renewal adds: standing end + this pass's own length, less the read's
+    // few ms — a same-tier renewal keeps `under` exactly as it was
     expiresAtMs = existing.expiresAtMs + (opts.expiresAtMs - Date.now());
+    under = existing?.under;
   } else {
+    // this purchase OUTRANKS the standing grant and carries its own expiry —
+    // the standing grant becomes what the gate falls back to once this
+    // taster closes, so it is never simply overwritten and lost.
     expiresAtMs = opts.expiresAtMs;
+    under = existing ? underFrom(existing) : undefined;
   }
 
   const rec: Entitlement = {
@@ -252,19 +287,53 @@ export async function grantTier(
     grantedAtMs: existing?.grantedAtMs ?? Date.now(),
     mxid: opts?.mxid ?? existing?.mxid,
     expiresAtMs,
+    under,
   };
   await write(rec);
   return rec;
+}
+
+/** TASK-462: the one grant to fall back to once a taster that outranked
+ *  `existing` eventually closes. `existing` is always live here (it came
+ *  through `getEntitlement`'s gate), so it always qualifies on its own; when
+ *  it ALSO rides on its own `under` (a taster bought on top of a taster),
+ *  only one level is ever kept — the higher-ranked of the two that is still
+ *  live — never a chain. */
+function underFrom(existing: Entitlement): NonNullable<Entitlement["under"]> {
+  const own = { tier: existing.tier, orderId: existing.orderId, expiresAtMs: existing.expiresAtMs };
+  const nested = existing.under;
+  if (!nested) return own;
+  const nestedLive = nested.expiresAtMs == null || Date.now() <= nested.expiresAtMs;
+  if (!nestedLive) return own;
+  return RANK[nested.tier] > RANK[own.tier] ? nested : own;
 }
 
 /**
  * Refund, dispute, or the artist's own hand → the door closes.
  * Spec: revocation ships WITH the grant, never later — refunds arrive in week
  * one, and a charged-back purchase must not keep access forever.
+ *
+ * TASK-462 (block 968,543): `orderId` names WHICH order is being revoked.
+ * When it matches the live record's own orderId and that record rides on a
+ * live `under`, the door doesn't close — it falls back to `under`, the same
+ * way a natural expiry does. Any other call (no orderId — the admin
+ * ceremony route's own hand — or the `under` grant's own order) closes
+ * everything exactly as before.
  */
-export async function revokeTier(npub: string): Promise<Entitlement | null> {
+export async function revokeTier(npub: string, orderId?: string): Promise<Entitlement | null> {
   const rec = await getEntitlement(npub);
   if (!rec) return null;
+  if (orderId && rec.under && rec.orderId === orderId) {
+    const fallen: Entitlement = {
+      ...rec,
+      tier: rec.under.tier,
+      orderId: rec.under.orderId,
+      expiresAtMs: rec.under.expiresAtMs,
+      under: undefined,
+    };
+    await write(fallen);
+    return fallen;
+  }
   const revoked: Entitlement = { ...rec, revokedAtMs: Date.now() };
   await write(revoked);
   return revoked;
