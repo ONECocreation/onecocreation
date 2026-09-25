@@ -119,6 +119,14 @@ stand as history in each docblock this lane touches.
 - `work-claims/task-465.md`, `work-claims/task-465-register.md`.
 - `src/components/reading/Stage2Details.tsx` — WIDENED by Number One's review (block 968,561): `Stage2Rows` is LIVE (the Playground page's tier rows), not dead; it listed Weekly Intuitive under "from Observer up". Rows now start at the floor; the week row names the floor tier. The dead default export stays untouched.
 
+- WIDENED by the T-465 adversarial review (block 968,561, verdict BLOCK, two findings):
+  - `src/app/api/admin/live/route.ts`: the GET rooms feed skips hidden rooms; POST `open` and `after-hours` refuse a hidden room (400).
+  - `src/app/a/studio/page.tsx`: the `goLiveRooms` list skips hidden rooms.
+  - `src/app/api/live/route.ts`: the public live read never names a hidden room (no room, no title, no after-hours).
+  - `src/components/rooms/AfterHoursDoor.tsx`: renders nothing for a hidden room.
+  - `src/app/a/site/reading/page.tsx`, `SiteReadingRoom.tsx`, `Stage2Card.tsx`: Love's Stage 2 card names the floor from `STAGE2_FLOOR_NAME` (a prop threaded from the server page; stage2-access.ts cannot enter a client bundle).
+  - `tests/room-doors.test.ts`, `tests/go-live-door.test.ts`, `tests/playground-observer-465.test.ts`: pins for the above.
+
 ## READ-ONLY
 
 Everything else, in particular: `src/lib/entitlement.ts` (TIERS names/
