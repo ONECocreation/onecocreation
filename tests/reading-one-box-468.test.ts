@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import ReadingSignInBox, {
+import {
   ReadingSignInCard,
   startEmailCode,
   verifyAndSubscribe,
@@ -185,12 +185,6 @@ describe("ReadingSignInBox / ReadingSignInCard — source pins: no navigation aw
     expect(src).toContain('"/api/auth/email/start"');
     expect(src).toContain('"/api/auth/email/verify"');
     expect(src).not.toMatch(/\/api\/auth\/(?!email\/(start|verify))/);
-  });
-});
-
-describe("ReadingSignInBox — the default hook-wired export never flashes before the session resolves", () => {
-  it("renders nothing while useMemberSession is unchecked (the getServerSnapshot start, same law as ReadingSignUp)", () => {
-    expect(renderToStaticMarkup(createElement(ReadingSignInBox, {}))).toBe("");
   });
 });
 

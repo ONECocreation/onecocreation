@@ -116,11 +116,11 @@ describe("the /reading page — the sky band and the approved structure", () => 
     expect(src).not.toContain('from "@/components/reading/Stage2Details"');
   });
 
-  it("mounts ReadingSignUp variant=public EXACTLY ONCE as its own kitx-section-first under the sky band (M4) — still never a /news href", async () => {
+  it("TASK-468 (block 968,561): mounts ReadingSignInBox EXACTLY ONCE as its own kitx-section-first under the sky band (M4, ReadingSignUp retired from this page) — still never a /news href", async () => {
     const src = await read(PAGE);
-    const mounts = src.match(/<ReadingSignUp/g) ?? [];
+    const mounts = src.match(/<ReadingSignInBox/g) ?? [];
     expect(mounts).toHaveLength(1);
-    expect(src).toContain('<ReadingSignUp variant="public"');
+    expect(src).not.toContain("ReadingSignUp");
     expect(src).toContain("kitx-section-first");
     expect(src).not.toMatch(/href="\/news"/);
   });
