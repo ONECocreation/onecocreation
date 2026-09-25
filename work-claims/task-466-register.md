@@ -287,3 +287,9 @@ GATES GREEN
    them in the register" instruction; see Follow-ups above for exactly
    why (one is already correct, one has no side-effect-free existing kit
    class to reuse).
+
+## Rebased onto TASK-465 (block 968,561)
+
+This lane now sits on `feat/task-465-playground-observer` (PR #89). Merge #89 first.
+
+One conflict, in the `src/app/reading/page.tsx` import lines. It's resolved as one `stage2-access` import (`STAGE2_FLOOR_NAME, STAGE2_MIN_TIER`) plus `tierSatisfies` from entitlement. `floorName` now reads `STAGE2_FLOOR_NAME` instead of `TIERS[STAGE2_MIN_TIER].name`, because TASK-465 pins that /reading never reads `TIERS` itself. The value is the same ("Observer" since TASK-465).
