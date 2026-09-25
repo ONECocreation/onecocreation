@@ -88,7 +88,9 @@ export const EMAIL_CTA = "Email me a code";
 export const EMAIL_BUSY_CTA = "Sending your code…";
 export const CODE_CTA = "Sign me in";
 export const CODE_BUSY_CTA = "Signing you in…";
-export const WATCH_CTA = "Watch in the Heart Field";
+/* the SAME words the stage card above already uses for the same door
+   (ReadingStage.tsx): one place, one set of words (Lumen's review, 968,561) */
+export const WATCH_CTA = "Go to the Heart Field";
 export const HEART_FIELD_HREF = "/rooms/heart-field";
 export const NOSTR_KEY_POINTER = "Have a Nostr key? ";
 export const NOSTR_KEY_LINK_LABEL = "Sign in with your Nostr key";
@@ -139,6 +141,9 @@ export type SignInOutcome = ReadingTagOutcome | "subscribe-unknown";
  *  doesn't actually know that. */
 const BOX_OUTCOME_COPY: Record<SignInOutcome, string> = {
   ...OUTCOME_COPY,
+  /* the shared card's "You're already in." doubled the box's own "You're
+     in." heading (Lumen's review, 968,561) */
+  already: "You were already on the list for the reading.",
   "subscribe-unknown": "You're signed in. The letters list didn't answer just now. Reload this page to try Keep me posted again.",
 };
 

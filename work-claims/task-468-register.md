@@ -270,3 +270,9 @@ After seeing the code-step shot at 390:
 
 - **BLOCKER, fixed: em dashes reached the error note.** The box showed the route's `reason` string word for word. `?? BAD_CODE` only fired on an unreadable body, so a wrong code showed "that code didn't match — try again", and a rate limit showed `CODE_DOOR_HELD` with its dash. Now the box picks its own words by status (`startErrorWords`, `verifyErrorWords`) and never passes on a route's `reason`. The route strings (start/route.ts, verify/route.ts, code-door-limit.ts) are outside this lane and keep their dashes for the other doors (EmailDoor, SignInCard). They go on the house em-dash sweep. The new tests drive the real fetch paths through every status.
 - **Correction to this register:** the line above claiming zero inline `style={{}}` blocks is wrong. There is one, `style={{ marginTop: 16 }}` on the returning-member Watch row. It passes the design-drift gate (new-file allowance 3). Left as is; kit.css has no spacing utility for it.
+
+## Lumen's review (block 968,561, verdict FIX)
+
+- **Fix A, taken.** The "already" outcome showed "You're already in." under the box's own "You're in." heading. The box now says "You were already on the list for the reading."
+- **The Heart Field door had two labels on one page.** The stage card says "Go to the Heart Field"; the box said "Watch in the Heart Field". Same destination, so the box now uses the stage card's words. Whether the page should carry the door in more than one place after sign-in is for the Admiral to decide, shown in the full-page shots.
+- Her new lesson is L-008 in `Reference/lustr/LUMEN-LEARNING-LOG.md`: a component is reviewed alone but ships beside its neighbours.

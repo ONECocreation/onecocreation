@@ -172,8 +172,24 @@ describe("the error note speaks the box's own words, never a route's dashed reas
   }
 });
 
+describe("Lumen's review (block 968,561): one door, one set of words; no doubled 'in'", () => {
+  it("the box's Heart Field button reads exactly what the stage card's does", async () => {
+    expect(WATCH_CTA).toBe("Go to the Heart Field");
+    const stage = await fs.readFile(path.join(process.cwd(), "src/components/reading/ReadingStage.tsx"), "utf8");
+    expect(stage).toContain("Go to the Heart Field");
+  });
+
+  it("'already' under the 'You're in.' heading never says 'already in'", () => {
+    const html = renderToStaticMarkup(
+      createElement(ReadingSignInCard, { member: { handle: "x@example.com", space: "email" }, justJoined: "already" }),
+    );
+    expect(html).toContain("You were already on the list for the reading.");
+    expect(html).not.toContain("already in");
+  });
+});
+
 describe("ReadingSignInCard — the joined state (just verified this session)", () => {
-  it("shows ONE button, 'Watch in the Heart Field', to /rooms/heart-field", () => {
+  it("shows ONE button, 'Go to the Heart Field' (the stage card's own words), to /rooms/heart-field", () => {
     const html = renderToStaticMarkup(
       createElement(ReadingSignInCard, { member: { handle: "x@example.com", space: "email" }, justJoined: "joined" }),
     );
