@@ -59,9 +59,16 @@ interface OrderView {
   deliverable?: { label: string; locked?: boolean; href?: string };
   /** T-453: this browser is signed in as the order's owner */
   viewerOwns?: boolean;
+  /** TASK-458 — set when any line opens a membership or pass (the SAME
+   *  predicate settleEntitlementFromOrder uses): where that door leads, or
+   *  null when this order buys nothing that opens one. */
+  door?: string | null;
 }
 
-/** Buyer-honest copy per state — processing is a first-class wait, not a spinner. */
+/** Buyer-honest copy per state — processing is a first-class wait, not a
+ *  spinner. These are the SATS-rail words (bitcoin messaging); a fiat order
+ *  reads FIAT_STATE_COPY below instead — the site's card rail never shows
+ *  "sats"/"invoice"/"on-chain"/"⚡" (w482-store-words, block 968,516). */
 const STATE_COPY: Record<string, { label: string; note: string }> = {
   created: { label: "ORDER OPEN", note: "no invoice yet — hit buy again if you bounced." },
   charge_created: { label: "AWAITING PAYMENT", note: "your invoice is open — pay it and this page updates." },
@@ -76,6 +83,18 @@ const STATE_COPY: Record<string, { label: string; note: string }> = {
   canceled: { label: "CANCELED", note: "this order is closed." },
   refunded: { label: "REFUNDED", note: "refund issued by the artist." },
   disputed: { label: "IN DISPUTE", note: "the artist is on it." },
+};
+
+/** TASK-458 — the same three transient/close states, worded for a card
+ *  buyer (any currency other than "SATS"): no "sats", "invoice",
+ *  "on-chain" or ⚡ on a path a card buyer sees. Every other state
+ *  (created, charge_created, fulfilled, canceled, refunded, disputed) reads
+ *  STATE_COPY unchanged for both rails; underpaid can't happen on card at
+ *  all (Square has no partial-payment state), so it is left alone too. */
+const FIAT_STATE_COPY: Partial<Record<string, { label: string; note: string }>> = {
+  settled: { label: "PAID ✓", note: "thank you. Your payment went through." },
+  processing: { label: "PROCESSING", note: "Square is finishing your card payment. This page updates by itself." },
+  expired: { label: "LINK EXPIRED", note: "no harm, payment links time out. Start again from your basket." },
 };
 
 const IN_FLIGHT = ["created", "charge_created", "processing"];
@@ -186,8 +205,17 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
   if (missing) return <p style={{ marginTop: 32, fontSize: ".9rem", color: "var(--muted, #897f97)", textAlign: "center" }}>No such order.</p>;
   if (!order) return <p style={{ marginTop: 32, fontSize: ".9rem", color: "var(--muted, #897f97)", textAlign: "center" }}>reading the order…</p>;
 
-  const copy = STATE_COPY[order.state] ?? { label: order.state.toUpperCase(), note: "" };
-  const canRecharge = ["expired", "underpaid"].includes(order.state);
+  /* TASK-458 — a fiat order (anything but SATS) reads the card-rail words. */
+  const isFiat = order.priceSnapshot.currency !== "SATS";
+  const copy = (isFiat ? FIAT_STATE_COPY[order.state] : undefined) ?? STATE_COPY[order.state] ?? { label: order.state.toUpperCase(), note: "" };
+  /* TASK-458 — recharge() never tells the checkout route which rail to
+     gate on (no `rail` in its POST body), so it falls through to
+     liveAdapter(undefined) — the BITCOIN switch, not the order's own
+     adapter. Proven broken for a fiat retry while the bitcoin rail is off
+     (tests/receipt-door-458.test.ts, "the fiat recharge probe"): the card
+     buyer got a plain basket door instead — see the register's Open
+     Questions for the real fix (out of this lane's OWNS). */
+  const canRecharge = ["expired", "underpaid"].includes(order.state) && !(isFiat && order.state === "expired");
   const settledFine = ["settled", "fulfilled"].includes(order.state);
 
   /* TASK-186 — the amount as paid reads through the ONE display law too. A
@@ -235,13 +263,20 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
         {/* T-453: returning from the payment page no longer signs anyone in
             (it can't prove the inbox). A guest who isn't signed in as the
             order's email gets the way in here — unless the locked-download
-            block below already offers it. */}
+            block below already offers it. TASK-458: a membership order's
+            sign-in leads straight to the door, not back to this receipt. */}
         {settledFine && buyerEmail && order.viewerOwns === false && !order.deliverable?.locked && (
-          <p className="kit-text-quiet">
-            Not signed in as {buyerEmail} yet.{" "}
-            <a href={`/login?next=${encodeURIComponent(`/store/order/${order.id}`)}`}>Sign in with that email</a> to use
-            what you bought.
-          </p>
+          order.door ? (
+            <p className="kit-text-quiet">
+              <a href={`/login?next=${encodeURIComponent(order.door)}`}>Sign in with {buyerEmail}</a> to go in.
+            </p>
+          ) : (
+            <p className="kit-text-quiet">
+              Not signed in as {buyerEmail} yet.{" "}
+              <a href={`/login?next=${encodeURIComponent(`/store/order/${order.id}`)}`}>Sign in with that email</a> to use
+              what you bought.
+            </p>
+          )
         )}
         <p style={{ margin: "10px 0 0", fontSize: ".76rem", color: "var(--muted, #897f97)" }}>
           {/* TASK-173 — never dashes when the record carries a time: the BFT
@@ -259,6 +294,19 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
         </p>
         <p style={{ margin: "4px 0 0", fontSize: ".68rem", color: "var(--muted, #897f97)", opacity: 0.7 }}>order {order.id}</p>
       </div>
+      {/* TASK-458 (w482-email-to-watch) — a settled membership order's own
+          door: signed in as the buyer, straight to the Heart Field (the
+          reading and the Playground both live there). Not signed in is
+          handled above, next to the receipt's sign-in line. */}
+      {settledFine && order.door && order.viewerOwns && (
+        <>
+          {/* design-drift ratchet (tests/design-drift.ceilings.json): no new
+              inline style — the outer container's own textAlign:"center"
+              already centers an inline-block .kit-btn, no flex wrapper needed */}
+          <p><a href={order.door} className="kit-btn kit-btn-main">Go to the Heart Field</a></p>
+          <p className="kit-text-quiet">The reading and the Playground both open there.</p>
+        </>
+      )}
       {/* the paid good itself — gold is right here, this IS the money's worth.
           Locked = the viewer isn't the buying tag (shared link, or signed
           out): an honest lock, never a gold button that would only 403. */}
@@ -313,6 +361,12 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
             {busy ? "Minting…" : "Mint a fresh invoice ⚡"}
           </button>
         </div>
+      )}
+      {/* TASK-458 — a fiat link that expired: the words above already say
+          "start again from your basket"; the button matches (recharge()'s
+          own re-mint doesn't work here — see the isFiat/canRecharge note). */}
+      {isFiat && order.state === "expired" && (
+        <p><a href="/cart" className="btn btn-gold btn-sm">Back to your basket</a></p>
       )}
     </div>
   );

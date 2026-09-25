@@ -10,6 +10,9 @@ import {
 import { verifyOrderKey } from "@/lib/order-receipt";
 import { isOperatorEmail } from "@/lib/operator-auth";
 import { getAdapter } from "@/lib/payments";
+import { isTier } from "@/lib/entitlement";
+import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
+import { READING_ROOM_PATH } from "@/lib/reading-room";
 
 export const dynamic = "force-dynamic";
 
@@ -74,7 +77,24 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const chargeId = order.chargeIds[order.chargeIds.length - 1];
         const state = await adapter.status(chargeId);
         if (state !== order.state && state !== "charge_created") {
-          order = (await recordChargeEvent(order.id, { type: state, chargeId })) ?? order;
+          const flipped = await recordChargeEvent(order.id, { type: state, chargeId });
+          if (flipped) {
+            order = flipped;
+            /* TASK-458 (F-03) — this reconcile poll is the OTHER trigger
+               settleEntitlementFromOrder already documents itself as
+               sharing with the webhook: it reads the order's CURRENT state
+               and re-derives the membership, so calling it here too — and
+               again, later, from the webhook — converges on the same
+               answer (idempotency proven in tests/receipt-door-458.test.ts
+               BEFORE this call was wired in). A settle hiccup never costs
+               the receipt page its answer; the webhook (or the next poll)
+               gets another try. */
+            try {
+              await settleEntitlementFromOrder(order);
+            } catch (err) {
+              console.error(`order ${order.id}: entitlement settle failed —`, err instanceof Error ? err.message : "error");
+            }
+          }
         }
       } catch {
         /* processor unreachable — serve the record of fact, honestly stale */
@@ -109,6 +129,22 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
   }
 
+  /* TASK-458 — the door: does ANY line open a membership or pass? The SAME
+     predicate entitlement-fulfil.ts's bestPackageGrant scans lines with
+     (a "package" item carrying a real tier) — never a second list of item
+     ids, so this can never drift from what settleEntitlementFromOrder
+     actually grants. READING_ROOM_PATH is the one Heart Field address
+     every other door already agrees on (reading-room.ts). */
+  let opensMembership = false;
+  for (const li of order.lineItems) {
+    const item = await getItem(li.itemId);
+    if (item?.kind === "package" && isTier(item.entitlementTier)) {
+      opensMembership = true;
+      break;
+    }
+  }
+  const door = opensMembership ? READING_ROOM_PATH : null;
+
   // the buyer's view — never the full record (no events log, no purge bookkeeping)
   return NextResponse.json(
     {
@@ -127,6 +163,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         createdAtMs: order.createdAtMs,
         settledAtMs: order.settledAtMs,
         deliverable,
+        door,
       },
     },
     setCookie ? { headers: { "Set-Cookie": setCookie } } : undefined,
