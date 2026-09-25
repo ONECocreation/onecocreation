@@ -233,7 +233,10 @@ export function ReadingStageBody({
             {/* TASK-457 (block 968,543): the closed state gets its own way
                 to the Heart Field too, ahead of the schedule going live */}
             <div className="kit-btn-row">
-              <Link href="/rooms/heart-field" className="kit-btn kit-btn-main">
+              {/* TASK-463: the small kit button — kit-btn never wraps, and
+                  at full size this label clipped inside the card on a
+                  360 px phone */}
+              <Link href="/rooms/heart-field" className="kit-btn kit-btn-main kit-btn-sm">
                 Go to the Heart Field
               </Link>
             </div>
