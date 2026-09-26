@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest";
 import type { OrderRecord } from "@/lib/store";
 
 /**
@@ -22,14 +22,24 @@ import type { OrderRecord } from "@/lib/store";
  *
  * Fixture KV: the house idiom (`tests/entitlement-renewal.test.ts`'s
  * `vi.stubGlobal("fetch", …)` over `KV_REST_API_URL`/`KV_REST_API_TOKEN`),
- * extended with SET's `NX` flag and `SMEMBERS` (createOrder/listOrders
- * speak both; the entitlement-renewal fixture didn't need them).
+ * extended with SET's `NX` flag, `SMEMBERS` (createOrder/listOrders speak
+ * both; the entitlement-renewal fixture didn't need them), and SET's `EX`
+ * flag with real expiry (Number One's read after this lane's first build:
+ * Vercel previews share PRODUCTION KV — if a preview sets the backfill
+ * flag while pre-476 `createOrder` is still what's deployed on main, an
+ * order created in that window never gets subject-indexed. The flag now
+ * carries a TTL so a miss like that heals itself; this fixture has to
+ * actually expire keys, not just accept-and-ignore `EX`, to prove it).
  */
 
 const KV_URL = "http://kv.fixture.t476";
 
 let kvStore: Map<string, string>;
 let kvSets: Map<string, Set<string>>;
+/** key -> the epoch ms it expires at (SET … EX <seconds>) — GET (and only
+ *  GET; nothing here needs a background sweep) evicts a stale key on read,
+ *  same as real KV's lazy-expiry behavior. */
+let kvExpiry: Map<string, number>;
 /** every command the fixture saw, in order — lets a test count how many
  *  times the FULL-SCAN key (`store:orders:index`) was SMEMBERS'd */
 let calls: string[][];
@@ -45,15 +55,22 @@ beforeAll(() => {
     if (u !== KV_URL) throw new Error(`unexpected fetch: ${u}`);
     const cmd = (JSON.parse(String(init?.body)) as unknown[]).map(String);
     calls.push(cmd);
-    const [op, key, val, flag] = cmd;
+    const [op, key, val, flag, ttlArg] = cmd;
     let result: unknown = null;
     if (op === "GET") {
+      const exp = kvExpiry.get(key);
+      if (exp !== undefined && Date.now() >= exp) {
+        kvStore.delete(key);
+        kvExpiry.delete(key);
+      }
       result = kvStore.get(key) ?? null;
     } else if (op === "SET") {
       if (flag === "NX" && kvStore.has(key)) {
         result = null;
       } else {
         kvStore.set(key, val);
+        if (flag === "EX" && ttlArg) kvExpiry.set(key, Date.now() + Number(ttlArg) * 1000);
+        else kvExpiry.delete(key);
         result = "OK";
       }
     } else if (op === "SADD") {
@@ -73,6 +90,7 @@ beforeAll(() => {
 beforeEach(() => {
   kvStore = new Map();
   kvSets = new Map();
+  kvExpiry = new Map();
   calls = [];
 });
 
@@ -181,6 +199,49 @@ describe("listOrdersForSubject — the one-time backfill (TASK-476)", () => {
 
     const found = await listOrdersForSubject("racer@onecocreation");
     expect(found.map((o) => o.id).sort()).toEqual([before.id, after.id].sort());
+  });
+});
+
+describe("the backfill flag self-heals via TTL (Number One's read: Vercel previews share prod KV)", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("the built flag is written with SET … EX <seconds>, never a bare SET", async () => {
+    const order = makeOrder({ entitlementSubject: "ttl-check@onecocreation" });
+    await createOrder(order);
+    await listOrdersForSubject("ttl-check@onecocreation"); // flag unset -> runs the backfill, sets it
+
+    const setFlagCalls = calls.filter((c) => c[0] === "SET" && c[1] === "store:orders:by-subject:v1-built");
+    expect(setFlagCalls.length).toBe(1);
+    expect(setFlagCalls[0]).toEqual(["SET", "store:orders:by-subject:v1-built", "1", "EX", "21600"]);
+  });
+
+  it("once the flag expires, the next call re-scans and finds an order created WITHOUT indexing — the exact preview/prod gap the risk describes", async () => {
+    vi.useFakeTimers();
+    const T0 = 1_700_000_000_000;
+    vi.setSystemTime(T0);
+
+    // first call: nothing exists yet, backfill runs (no-op), sets the flag
+    await listOrdersForSubject("heals-later@onecocreation");
+
+    // a "pre-merge production write": an order landing in the (shared) KV
+    // via the OLD createOrder — indexed in the plain ledger only, never
+    // SADDed into its own subject set — while the flag a preview already
+    // set is still standing
+    const missed = makeOrder({ entitlementSubject: "heals-later@onecocreation" });
+    await kv(["SET", `store:order:${missed.id}`, JSON.stringify(missed), "NX"]);
+    await kv(["SADD", "store:orders:index", missed.id]);
+
+    // still inside the 6h window — the index trusts itself, misses it
+    const stillMissing = await listOrdersForSubject("heals-later@onecocreation");
+    expect(stillMissing.map((o) => o.id)).not.toContain(missed.id);
+
+    // 6 hours and 1 second later — the flag has expired
+    vi.setSystemTime(T0 + 21_601_000);
+
+    const healed = await listOrdersForSubject("heals-later@onecocreation");
+    expect(healed.map((o) => o.id)).toContain(missed.id);
   });
 });
 

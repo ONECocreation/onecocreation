@@ -591,8 +591,24 @@ const KV_INDEX = "store:orders:index";
 const subjectIndexKey = (subject: string) => `store:orders:by-subject:${subject}`;
 
 /** Set once the one-time backfill has run — after this, `listOrdersForSubject`
- *  trusts the index alone and never re-scans the whole ledger again. */
+ *  trusts the index alone and never re-scans the whole ledger again.
+ *
+ *  SELF-HEALING (Number One's read, after this lane's first build): Vercel
+ *  previews share PRODUCTION KV. If THIS branch's preview (or a rolling old
+ *  instance) sets this flag, production's still-deployed `createOrder` (the
+ *  pre-476 build, on main, until this merges) does NOT SADD into the
+ *  subject sets — every Q&A pass bought after the flag is set and before
+ *  the merge deploys would be missing from the index, and that buyer gets
+ *  locked out until someone clears the flag by hand. So the flag carries a
+ *  TTL (`SET … EX`, the house pattern — cart.ts/email-auth.ts/ical-busy.ts
+ *  all `String()` their seconds the same way): when it expires, the next
+ *  call re-runs the one full scan and re-SADDs (idempotent), so anything
+ *  missed heals within the window on its own — no hand-clearing needed. */
 const SUBJECT_INDEX_BUILT_KEY = "store:orders:by-subject:v1-built";
+/** 6 hours — long enough that a warm index almost never re-scans, short
+ *  enough that a preview-vs-prod flag collision heals itself well inside
+ *  a single release cycle. */
+const SUBJECT_INDEX_BUILT_TTL_S = 21_600;
 
 type RedisLike = { sendCommand: (cmd: string[]) => Promise<unknown> };
 let redisClient: RedisLike | null = null;
@@ -739,7 +755,7 @@ async function ensureSubjectIndexBuilt(): Promise<void> {
       await kv(["SADD", subjectIndexKey(order.entitlementSubject), order.id]);
     }
   }
-  await kv(["SET", SUBJECT_INDEX_BUILT_KEY, "1"]);
+  await kv(["SET", SUBJECT_INDEX_BUILT_KEY, "1", "EX", String(SUBJECT_INDEX_BUILT_TTL_S)]);
 }
 
 /**
