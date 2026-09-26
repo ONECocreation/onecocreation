@@ -98,6 +98,11 @@ describe("TASK-488: the picture never hides Jitsi's Join button", () => {
     }
   });
 
+  it("a server-side end clears the join (no stale true into the next room)", async () => {
+    expect(await read("src/components/reading/ReadingStage.tsx")).toMatch(/setCameraShown\(false\);[\s\S]{0,300}setJoined\(false\);[\s\S]{0,200}readingShownNext/);
+    expect(await read("src/components/reading/ReadingStageDoor.tsx")).toContain('if (decision !== "open") setJoined(false);');
+  });
+
   it("JitsiRoom resets on boot, flips on videoConferenceJoined, and clears on both farewells", async () => {
     const src = await read("src/components/booking/JitsiRoom.tsx");
     expect(src).toContain("onJoined?.(false);");

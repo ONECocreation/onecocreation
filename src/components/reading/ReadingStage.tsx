@@ -403,6 +403,10 @@ export default function ReadingStage({
     setLeft(false);
     setRoom(null);
     setCameraShown(false);
+    /* TASK-488 review: a server-side end unmounts the room without a Jitsi
+       farewell event, so clear the join here too (the next room starts on
+       its prejoin screen, never under the picture) */
+    setJoined(false);
     const shown = readingShownNext(next, following, Date.now());
     setNextWords(
       shown

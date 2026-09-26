@@ -246,6 +246,9 @@ export default function ReadingStageDoor({
           if (!alive || !d?.ok) return;
           const decision = d.decision ?? (d.open ? "open" : "hidden");
           lastDecision = decision;
+          /* TASK-488 review: a door that closed server-side unmounts the
+             room without a Jitsi farewell event, so clear the join too */
+          if (decision !== "open") setJoined(false);
           setWire({
             decision,
             reachable: d.reachable ?? null,
