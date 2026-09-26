@@ -41,12 +41,25 @@ export interface Stage1State {
    *  midnight-close anchor); null while `closed` or `prepared`, and on a
    *  stored doc written without it (read as `null`). */
   publishedAtMs: number | null;
+  /** TASK-487 (block 968,624+, the Admiral's ruling, option C) — unix
+   *  MILLISECONDS when Love last pressed "Show my camera"; null while
+   *  the picture is up. THE SITE SWITCH is the authority for the /reading
+   *  waiting picture now, never a Jitsi-event guess — resets to null on
+   *  every fresh Prepare mint and on Close, same rules as
+   *  `door-lifecycle.ts`'s own flag. */
+  cameraShownAtMs: number | null;
 }
 
 /** The one KV key this whole lane reads and writes. */
 const KEY = `stage1:state:${TENANT}`;
 
-export const IDLE: Stage1State = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null };
+export const IDLE: Stage1State = {
+  phase: "closed",
+  room: null,
+  openedAtMs: null,
+  publishedAtMs: null,
+  cameraShownAtMs: null,
+};
 
 /** `mintJitsiRoom()`'s own shape, checked again here rather than trusted —
  *  a stored value is never assumed to have come from that function. */
@@ -86,6 +99,7 @@ export async function getStage1State(nowMs: number = Date.now()): Promise<Stage1
       room: parsed.room,
       openedAtMs: typeof parsed.openedAtMs === "number" ? parsed.openedAtMs : null,
       publishedAtMs: typeof parsed.publishedAtMs === "number" ? parsed.publishedAtMs : null,
+      cameraShownAtMs: typeof parsed.cameraShownAtMs === "number" ? parsed.cameraShownAtMs : null,
     };
     return stage2Expired(state, nowMs) ? IDLE : state;
   } catch {
@@ -112,7 +126,13 @@ async function writeStage1State(state: Stage1State): Promise<void> {
 export async function prepareStage1(): Promise<Stage1State> {
   const current = await getStage1State();
   if (current.phase !== "closed") return current;
-  const next: Stage1State = { phase: "prepared", room: mintJitsiRoom(), openedAtMs: Date.now(), publishedAtMs: null };
+  const next: Stage1State = {
+    phase: "prepared",
+    room: mintJitsiRoom(),
+    openedAtMs: Date.now(),
+    publishedAtMs: null,
+    cameraShownAtMs: null,
+  };
   await writeStage1State(next);
   return next;
 }
@@ -141,4 +161,28 @@ export async function publishStage1(): Promise<Stage1State | null> {
 export async function closeStage1(): Promise<Stage1State> {
   await writeStage1State(IDLE);
   return IDLE;
+}
+
+/** TASK-487 — Love's "Show my camera": valid only while published; `null`
+ *  (never written) otherwise — mirrors `door-lifecycle.ts`'s own
+ *  `showCamera()`, hand-kept here since Stage 1 stays its own file.
+ *  Idempotent if already shown. */
+export async function showStage1Camera(): Promise<Stage1State | null> {
+  const current = await getStage1State();
+  if (current.phase !== "published") return null;
+  if (current.cameraShownAtMs !== null) return current;
+  const next: Stage1State = { ...current, cameraShownAtMs: Date.now() };
+  await writeStage1State(next);
+  return next;
+}
+
+/** TASK-487 — "Pause my camera": valid only while published; `null`
+ *  (never written) otherwise. Idempotent if already hidden. */
+export async function hideStage1Camera(): Promise<Stage1State | null> {
+  const current = await getStage1State();
+  if (current.phase !== "published") return null;
+  if (current.cameraShownAtMs === null) return current;
+  const next: Stage1State = { ...current, cameraShownAtMs: null };
+  await writeStage1State(next);
+  return next;
 }

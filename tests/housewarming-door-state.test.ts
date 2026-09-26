@@ -12,7 +12,7 @@ import type { HousewarmingState } from "@/lib/housewarming-door";
  */
 
 const KEY = `housewarming:state:${TENANT}`;
-const IDLE: HousewarmingState = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null };
+const IDLE: HousewarmingState = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null, cameraShownAtMs: null };
 
 function fakeKvStore() {
   const store = new Map<string, string>();
@@ -54,6 +54,7 @@ describe("housewarmingExpired — the midnight close (pure)", () => {
       room: "oc-0123456789abcdef",
       openedAtMs: Date.parse("2026-09-26T18:00:00Z"),
       publishedAtMs: Date.parse("2026-09-26T19:30:00Z"),
+      cameraShownAtMs: null,
     };
     expect(housewarmingExpired(published, Date.parse("2026-09-27T05:59:59Z"))).toBe(false);
     expect(housewarmingExpired(published, Date.parse("2026-09-27T06:00:00Z"))).toBe(true);
@@ -66,7 +67,13 @@ describe("housewarmingExpired — the midnight close (pure)", () => {
 
   it("a non-closed state with NO anchor is expired (fail closed)", async () => {
     const { housewarmingExpired } = await import("@/lib/housewarming-door");
-    const anchorless = { phase: "prepared" as const, room: "oc-0123456789abcdef", openedAtMs: null, publishedAtMs: null };
+    const anchorless = {
+      phase: "prepared" as const,
+      room: "oc-0123456789abcdef",
+      openedAtMs: null,
+      publishedAtMs: null,
+      cameraShownAtMs: null,
+    };
     expect(housewarmingExpired(anchorless, Date.now())).toBe(true);
   });
 });
@@ -193,5 +200,53 @@ describe("prepareHousewarming / publishHousewarming / closeHousewarming — the 
     await closeHousewarming();
     const second = await publishHousewarming();
     expect(second.room).not.toBe(first.room);
+  });
+});
+
+describe("showHousewarmingCamera / hideHousewarmingCamera — TASK-487, valid ONLY while published", () => {
+  it("refused (null, nothing written) while closed", async () => {
+    const { showHousewarmingCamera, getHousewarmingState } = await import("@/lib/housewarming-door");
+    expect(await showHousewarmingCamera()).toBeNull();
+    expect(await getHousewarmingState()).toEqual(IDLE);
+  });
+
+  it("refused (null, nothing written) while merely prepared", async () => {
+    const { prepareHousewarming, showHousewarmingCamera } = await import("@/lib/housewarming-door");
+    const prepared = await prepareHousewarming();
+    expect(await showHousewarmingCamera()).toBeNull();
+    const { getHousewarmingState } = await import("@/lib/housewarming-door");
+    expect(await getHousewarmingState()).toEqual(prepared);
+  });
+
+  it("stamps cameraShownAtMs while published; hideHousewarmingCamera clears it back to null", async () => {
+    const { publishHousewarming, showHousewarmingCamera, hideHousewarmingCamera } = await import("@/lib/housewarming-door");
+    await publishHousewarming();
+    const before = Date.now();
+    const shown = await showHousewarmingCamera();
+    expect(shown?.cameraShownAtMs).toBeGreaterThanOrEqual(before);
+    const hidden = await hideHousewarmingCamera();
+    expect(hidden?.cameraShownAtMs).toBeNull();
+    expect(hidden?.phase).toBe("published");
+    expect(hidden?.room).toBe(shown?.room);
+  });
+
+  it("both are idempotent — a repeat call returns the SAME state, never a second stamp/write", async () => {
+    const { publishHousewarming, showHousewarmingCamera, hideHousewarmingCamera } = await import("@/lib/housewarming-door");
+    await publishHousewarming();
+    const first = await showHousewarmingCamera();
+    const second = await showHousewarmingCamera();
+    expect(second).toEqual(first);
+    const hiddenFirst = await hideHousewarmingCamera();
+    const hiddenSecond = await hideHousewarmingCamera();
+    expect(hiddenSecond).toEqual(hiddenFirst);
+  });
+
+  it("a fresh publish-from-closed always resets cameraShownAtMs to null (never carries a stale show)", async () => {
+    const { publishHousewarming, showHousewarmingCamera, closeHousewarming } = await import("@/lib/housewarming-door");
+    await publishHousewarming();
+    await showHousewarmingCamera();
+    await closeHousewarming();
+    const reopened = await publishHousewarming();
+    expect(reopened.cameraShownAtMs).toBeNull();
   });
 });

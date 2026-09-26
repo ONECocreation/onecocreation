@@ -30,6 +30,21 @@ import { zonedDateParts, DEFAULT_TZ } from "@/lib/booking-time";
  * `stage1.ts`/`stage2.ts` already kept under normal sequential operator
  * clicking. Two truly simultaneous PUTs are still not locked against —
  * unchanged scope, named here as it was in `stage2.ts`'s own docblock.
+ *
+ * TASK-487 (block 968,624+, the Admiral's ruling, option C) — Love's own
+ * flow: she joins the Jitsi call as host with her camera OFF and her mic
+ * ON (guests see her book picture, hear her audio), then presses a third
+ * site button, "Show my camera", when she's ready — and every guest's
+ * cover drops at once. `cameraShownAtMs` (null = hidden, a timestamp =
+ * shown) is THIS SITE SWITCH's own anchor — the authority for the waiting
+ * picture from now on, never a Jitsi-event guess (`JitsiRoom`'s own
+ * `hostVideoReducer` stays in place, unused by this flag). It resets to
+ * `null` on every FRESH room (`prepare()`'s own mint, and `publish()`'s
+ * closed->publish convenience mint) and on `close()` — never carried over
+ * from a stale prior room. `showCamera()`/`hideCamera()` are valid ONLY
+ * while `published` (a caller refuses otherwise, `null`, nothing
+ * written); a read failure fails closed to `IDLE_DOOR` (`cameraShownAtMs:
+ * null`), so the picture stays up on any doubt.
  */
 
 export type DoorPhase = "closed" | "prepared" | "published";
@@ -46,9 +61,20 @@ export interface DoorState {
    *  midnight-close anchor); null while `closed` or `prepared`, and on a
    *  stored doc written without it (read as `null`). */
   publishedAtMs: number | null;
+  /** TASK-487 — unix MILLISECONDS when Love last pressed "Show my
+   *  camera"; null while the picture is up (hidden). Reset to null on
+   *  every fresh mint and on close (see the docblock above); never set
+   *  while `phase !== "published"`. */
+  cameraShownAtMs: number | null;
 }
 
-export const IDLE_DOOR: DoorState = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null };
+export const IDLE_DOOR: DoorState = {
+  phase: "closed",
+  room: null,
+  openedAtMs: null,
+  publishedAtMs: null,
+  cameraShownAtMs: null,
+};
 
 /** `mintJitsiRoom()`'s own shape, checked again here rather than trusted —
  *  a stored value is never assumed to have come from that function. */
@@ -93,6 +119,12 @@ export interface DoorLifecycle {
   publish(): Promise<DoorState | null>;
   /** writes IDLE verbatim from any phase — trivially idempotent. */
   close(): Promise<DoorState>;
+  /** TASK-487 — stamps `cameraShownAtMs`; `null` (never written) unless
+   *  `phase === "published"`; idempotent if already shown. */
+  showCamera(): Promise<DoorState | null>;
+  /** TASK-487 — clears `cameraShownAtMs`; `null` (never written) unless
+   *  `phase === "published"`; idempotent if already hidden. */
+  hideCamera(): Promise<DoorState | null>;
 }
 
 /**
@@ -115,6 +147,7 @@ export function createDoorLifecycle(key: string, opts: { allowPublishFromClosed:
         room: parsed.room,
         openedAtMs: typeof parsed.openedAtMs === "number" ? parsed.openedAtMs : null,
         publishedAtMs: typeof parsed.publishedAtMs === "number" ? parsed.publishedAtMs : null,
+        cameraShownAtMs: typeof parsed.cameraShownAtMs === "number" ? parsed.cameraShownAtMs : null,
       };
       return doorExpired(state, nowMs) ? IDLE_DOOR : state;
     } catch {
@@ -133,7 +166,13 @@ export function createDoorLifecycle(key: string, opts: { allowPublishFromClosed:
   async function prepare(): Promise<DoorState> {
     const current = await getState();
     if (current.phase !== "closed") return current;
-    const next: DoorState = { phase: "prepared", room: mintJitsiRoom(), openedAtMs: Date.now(), publishedAtMs: null };
+    const next: DoorState = {
+      phase: "prepared",
+      room: mintJitsiRoom(),
+      openedAtMs: Date.now(),
+      publishedAtMs: null,
+      cameraShownAtMs: null,
+    };
     await writeState(next);
     return next;
   }
@@ -149,7 +188,13 @@ export function createDoorLifecycle(key: string, opts: { allowPublishFromClosed:
     // current.phase === "closed"
     if (!opts.allowPublishFromClosed) return null;
     const now = Date.now();
-    const next: DoorState = { phase: "published", room: mintJitsiRoom(), openedAtMs: now, publishedAtMs: now };
+    const next: DoorState = {
+      phase: "published",
+      room: mintJitsiRoom(),
+      openedAtMs: now,
+      publishedAtMs: now,
+      cameraShownAtMs: null,
+    };
     await writeState(next);
     return next;
   }
@@ -159,5 +204,27 @@ export function createDoorLifecycle(key: string, opts: { allowPublishFromClosed:
     return IDLE_DOOR;
   }
 
-  return { getState, prepare, publish, close };
+  /** TASK-487: valid only while `published` — a caller must never be able
+   *  to stamp a camera flag on a room nobody has published yet (or that
+   *  has already self-closed past Denver midnight, since `getState`
+   *  already fails that read closed to IDLE). */
+  async function showCamera(): Promise<DoorState | null> {
+    const current = await getState();
+    if (current.phase !== "published") return null;
+    if (current.cameraShownAtMs !== null) return current; // idempotent
+    const next: DoorState = { ...current, cameraShownAtMs: Date.now() };
+    await writeState(next);
+    return next;
+  }
+
+  async function hideCamera(): Promise<DoorState | null> {
+    const current = await getState();
+    if (current.phase !== "published") return null;
+    if (current.cameraShownAtMs === null) return current; // idempotent
+    const next: DoorState = { ...current, cameraShownAtMs: null };
+    await writeState(next);
+    return next;
+  }
+
+  return { getState, prepare, publish, close, showCamera, hideCamera };
 }

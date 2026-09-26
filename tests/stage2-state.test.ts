@@ -20,7 +20,7 @@ import type { Stage2State } from "@/lib/stage2";
  */
 
 const KEY = `stage2:state:${TENANT}`;
-const IDLE: Stage2State = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null };
+const IDLE: Stage2State = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null, cameraShownAtMs: null };
 
 function fakeKvStore() {
   const store = new Map<string, string>();
@@ -66,6 +66,7 @@ describe("stage2Expired — the midnight close, ruling 4 (pure)", () => {
     room: "oc-0123456789abcdef",
     openedAtMs: Date.parse("2026-09-26T18:00:00Z"),
     publishedAtMs: Date.parse("2026-09-26T19:30:00Z"),
+    cameraShownAtMs: null,
   };
 
   it("a summer (MDT) publish lives until Denver midnight, then dies AT midnight — zone arithmetic, not a fixed offset", async () => {
@@ -92,6 +93,7 @@ describe("stage2Expired — the midnight close, ruling 4 (pure)", () => {
       room: "oc-0123456789abcdef",
       openedAtMs: Date.parse("2026-09-26T02:00:00Z"),
       publishedAtMs: null,
+      cameraShownAtMs: null,
     };
     expect(stage2Expired(prepared, Date.parse("2026-09-26T19:00:00Z"))).toBe(true);
   });
@@ -106,6 +108,7 @@ describe("stage2Expired — the midnight close, ruling 4 (pure)", () => {
       room: "oc-0123456789abcdef",
       openedAtMs: Date.parse("2026-09-26T02:00:00Z"),
       publishedAtMs: Date.parse("2026-09-26T19:30:00Z"),
+      cameraShownAtMs: null,
     };
     expect(stage2Expired(state, Date.parse("2026-09-26T19:00:00Z"))).toBe(false);
   });
@@ -117,7 +120,13 @@ describe("stage2Expired — the midnight close, ruling 4 (pure)", () => {
 
   it("a non-closed state with NO anchor is expired (fail closed)", async () => {
     const { stage2Expired } = await import("@/lib/stage2");
-    const anchorless = { phase: "prepared" as const, room: "oc-0123456789abcdef", openedAtMs: null, publishedAtMs: null };
+    const anchorless = {
+      phase: "prepared" as const,
+      room: "oc-0123456789abcdef",
+      openedAtMs: null,
+      publishedAtMs: null,
+      cameraShownAtMs: null,
+    };
     expect(stage2Expired(anchorless, fresh())).toBe(true);
   });
 });
@@ -132,7 +141,13 @@ describe("getStage2State — fail-closed on malformed KV (finding 7)", () => {
     const openedAtMs = fresh();
     kvStore.store.set(KEY, JSON.stringify({ phase: "prepared", room: "oc-0123456789abcdef", openedAtMs }));
     const { getStage2State } = await import("@/lib/stage2");
-    expect(await getStage2State()).toEqual({ phase: "prepared", room: "oc-0123456789abcdef", openedAtMs, publishedAtMs: null });
+    expect(await getStage2State()).toEqual({
+      phase: "prepared",
+      room: "oc-0123456789abcdef",
+      openedAtMs,
+      publishedAtMs: null,
+      cameraShownAtMs: null,
+    });
   });
 
   it("a good published state round-trips", async () => {
@@ -140,7 +155,13 @@ describe("getStage2State — fail-closed on malformed KV (finding 7)", () => {
     const publishedAtMs = fresh();
     kvStore.store.set(KEY, JSON.stringify({ phase: "published", room: "oc-fedcba9876543210", openedAtMs, publishedAtMs }));
     const { getStage2State } = await import("@/lib/stage2");
-    expect(await getStage2State()).toEqual({ phase: "published", room: "oc-fedcba9876543210", openedAtMs, publishedAtMs });
+    expect(await getStage2State()).toEqual({
+      phase: "published",
+      room: "oc-fedcba9876543210",
+      openedAtMs,
+      publishedAtMs,
+      cameraShownAtMs: null,
+    });
   });
 
   it("an out-of-set phase -> IDLE", async () => {
@@ -200,6 +221,7 @@ describe("getStage2State — the midnight close lives HERE, not in the routes (r
       room: "oc-fedcba9876543210",
       openedAtMs: Date.parse("2026-09-26T18:00:00Z"),
       publishedAtMs: Date.parse("2026-09-26T19:30:00Z"),
+      cameraShownAtMs: null,
     });
     /* one second past Denver midnight -> closed, nothing written on read */
     expect(await getStage2State(Date.parse("2026-09-27T06:00:00Z"))).toEqual(IDLE);
@@ -316,5 +338,50 @@ describe("prepareStage2 / publishStage2 / closeStage2 — the three-phase transi
     await prepareStage2();
     const second = await publishStage2();
     expect(second.room).not.toBe(first.room);
+  });
+});
+
+describe("showStage2Camera / hideStage2Camera — TASK-487, valid ONLY while published", () => {
+  it("refused (null, nothing written) while closed", async () => {
+    const { showStage2Camera, getStage2State } = await import("@/lib/stage2");
+    expect(await showStage2Camera()).toBeNull();
+    expect(await getStage2State()).toEqual(IDLE);
+  });
+
+  it("refused (null, nothing written) while merely prepared", async () => {
+    const { prepareStage2, showStage2Camera, getStage2State } = await import("@/lib/stage2");
+    const prepared = await prepareStage2();
+    expect(await showStage2Camera()).toBeNull();
+    expect(await getStage2State()).toEqual(prepared);
+  });
+
+  it("stamps cameraShownAtMs while published; hideStage2Camera clears it back to null", async () => {
+    const { publishStage2, showStage2Camera, hideStage2Camera } = await import("@/lib/stage2");
+    await publishStage2();
+    const before = Date.now();
+    const shown = await showStage2Camera();
+    expect(shown?.cameraShownAtMs).toBeGreaterThanOrEqual(before);
+    const hidden = await hideStage2Camera();
+    expect(hidden?.cameraShownAtMs).toBeNull();
+    expect(hidden?.phase).toBe("published");
+    expect(hidden?.room).toBe(shown?.room);
+  });
+
+  it("both are idempotent — a repeat call returns the SAME state", async () => {
+    const { publishStage2, showStage2Camera, hideStage2Camera } = await import("@/lib/stage2");
+    await publishStage2();
+    const first = await showStage2Camera();
+    expect(await showStage2Camera()).toEqual(first);
+    const hiddenFirst = await hideStage2Camera();
+    expect(await hideStage2Camera()).toEqual(hiddenFirst);
+  });
+
+  it("a fresh publish-from-closed always resets cameraShownAtMs to null", async () => {
+    const { publishStage2, showStage2Camera, closeStage2 } = await import("@/lib/stage2");
+    await publishStage2();
+    await showStage2Camera();
+    await closeStage2();
+    const reopened = await publishStage2();
+    expect(reopened.cameraShownAtMs).toBeNull();
   });
 });

@@ -33,11 +33,22 @@ export interface QaState {
   /** unix MILLISECONDS — when the phase became `published` (the
    *  midnight-close anchor); null while `closed` or `prepared`. */
   publishedAtMs: number | null;
+  /** TASK-487 (block 968,624+, the Admiral's ruling, option C) — unix
+   *  MILLISECONDS when Love last pressed "Show my camera" on this door;
+   *  null while the picture is up. See `door-lifecycle.ts`'s own doc for
+   *  the full reset/authority rules. */
+  cameraShownAtMs: number | null;
 }
 
 const KEY = `qa:state:${TENANT}`;
 
-export const IDLE: QaState = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null };
+export const IDLE: QaState = {
+  phase: "closed",
+  room: null,
+  openedAtMs: null,
+  publishedAtMs: null,
+  cameraShownAtMs: null,
+};
 
 const door = createDoorLifecycle(KEY, { allowPublishFromClosed: true });
 
@@ -70,4 +81,16 @@ export async function publishQa(): Promise<QaState> {
 /** Writes IDLE verbatim regardless of current phase. */
 export async function closeQa(): Promise<QaState> {
   return door.close();
+}
+
+/** TASK-487 — Love's "Show my camera": valid only while published; `null`
+ *  (never written) otherwise. Idempotent if already shown. */
+export async function showQaCamera(): Promise<QaState | null> {
+  return door.showCamera();
+}
+
+/** TASK-487 — "Pause my camera": valid only while published; `null`
+ *  (never written) otherwise. Idempotent if already hidden. */
+export async function hideQaCamera(): Promise<QaState | null> {
+  return door.hideCamera();
 }

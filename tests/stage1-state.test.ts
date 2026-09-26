@@ -23,7 +23,7 @@ import type { Stage1State } from "@/lib/stage1";
 
 const KEY = `stage1:state:${TENANT}`;
 const STAGE2_KEY = `stage2:state:${TENANT}`;
-const IDLE: Stage1State = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null };
+const IDLE: Stage1State = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null, cameraShownAtMs: null };
 
 function fakeKvStore() {
   const store = new Map<string, string>();
@@ -73,7 +73,13 @@ describe("getStage1State — fail-closed on malformed KV (the stage2.ts invarian
     const openedAtMs = fresh();
     kvStore.store.set(KEY, JSON.stringify({ phase: "prepared", room: "oc-0123456789abcdef", openedAtMs }));
     const { getStage1State } = await import("@/lib/stage1");
-    expect(await getStage1State()).toEqual({ phase: "prepared", room: "oc-0123456789abcdef", openedAtMs, publishedAtMs: null });
+    expect(await getStage1State()).toEqual({
+      phase: "prepared",
+      room: "oc-0123456789abcdef",
+      openedAtMs,
+      publishedAtMs: null,
+      cameraShownAtMs: null,
+    });
   });
 
   it("a good published state round-trips", async () => {
@@ -81,7 +87,13 @@ describe("getStage1State — fail-closed on malformed KV (the stage2.ts invarian
     const publishedAtMs = fresh();
     kvStore.store.set(KEY, JSON.stringify({ phase: "published", room: "oc-fedcba9876543210", openedAtMs, publishedAtMs }));
     const { getStage1State } = await import("@/lib/stage1");
-    expect(await getStage1State()).toEqual({ phase: "published", room: "oc-fedcba9876543210", openedAtMs, publishedAtMs });
+    expect(await getStage1State()).toEqual({
+      phase: "published",
+      room: "oc-fedcba9876543210",
+      openedAtMs,
+      publishedAtMs,
+      cameraShownAtMs: null,
+    });
   });
 
   it("an out-of-set phase -> IDLE", async () => {
@@ -166,6 +178,7 @@ describe("getStage1State — the midnight close lives HERE (the imported stage2E
       room: "oc-fedcba9876543210",
       openedAtMs: Date.parse("2026-09-26T18:00:00Z"),
       publishedAtMs: Date.parse("2026-09-26T19:30:00Z"),
+      cameraShownAtMs: null,
     });
     /* one second past Denver midnight -> closed, the stored doc untouched */
     expect(await getStage1State(Date.parse("2026-09-27T06:00:00Z"))).toEqual(IDLE);
@@ -340,6 +353,54 @@ describe("failed writes never report success (the brief's Build 1)", () => {
     }) as unknown as typeof fetch;
     const { closeStage1 } = await import("@/lib/stage1");
     await expect(closeStage1()).rejects.toThrow();
+  });
+});
+
+describe("showStage1Camera / hideStage1Camera — TASK-487, valid ONLY while published", () => {
+  it("refused (null, nothing written) while closed", async () => {
+    const { showStage1Camera, getStage1State } = await import("@/lib/stage1");
+    expect(await showStage1Camera()).toBeNull();
+    expect(await getStage1State()).toEqual(IDLE);
+  });
+
+  it("refused (null, nothing written) while merely prepared", async () => {
+    const { prepareStage1, showStage1Camera, getStage1State } = await import("@/lib/stage1");
+    const prepared = await prepareStage1();
+    expect(await showStage1Camera()).toBeNull();
+    expect(await getStage1State()).toEqual(prepared);
+  });
+
+  it("stamps cameraShownAtMs while published; hideStage1Camera clears it back to null", async () => {
+    const { prepareStage1, publishStage1, showStage1Camera, hideStage1Camera } = await import("@/lib/stage1");
+    await prepareStage1();
+    await publishStage1();
+    const before = Date.now();
+    const shown = await showStage1Camera();
+    expect(shown?.cameraShownAtMs).toBeGreaterThanOrEqual(before);
+    const hidden = await hideStage1Camera();
+    expect(hidden?.cameraShownAtMs).toBeNull();
+    expect(hidden?.phase).toBe("published");
+    expect(hidden?.room).toBe(shown?.room);
+  });
+
+  it("both are idempotent — a repeat call returns the SAME state", async () => {
+    const { prepareStage1, publishStage1, showStage1Camera, hideStage1Camera } = await import("@/lib/stage1");
+    await prepareStage1();
+    await publishStage1();
+    const first = await showStage1Camera();
+    expect(await showStage1Camera()).toEqual(first);
+    const hiddenFirst = await hideStage1Camera();
+    expect(await hideStage1Camera()).toEqual(hiddenFirst);
+  });
+
+  it("a fresh Prepare always resets cameraShownAtMs to null (never carries a stale show)", async () => {
+    const { prepareStage1, publishStage1, showStage1Camera, closeStage1 } = await import("@/lib/stage1");
+    await prepareStage1();
+    await publishStage1();
+    await showStage1Camera();
+    await closeStage1();
+    const reprepared = await prepareStage1();
+    expect(reprepared.cameraShownAtMs).toBeNull();
   });
 });
 
