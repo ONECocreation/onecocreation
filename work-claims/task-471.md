@@ -33,6 +33,7 @@ like `QA_ITEM_ID`'s own pattern.
 
 ## OWNS
 
+- `src/app/kit.css` — EDIT (Number One, Lumen's brand pass L-004): ONE rule, `.kit-day .kit-rows-end>.kit-btn` = one 256px width for every agenda-card button.
 - `src/components/reading/ReadingStage.tsx` — REWRITTEN. Stage 1 mounts
   `JitsiRoom` (booking's two-way embed) in place when published+signedIn;
   never `JitsiViewer`. No more `watching`/`failed`/`onWatch`/`onTryAgain`
