@@ -457,6 +457,44 @@ export function isPurchasable(item: Pick<StoreItem, "status" | "comingSoon">): b
   return item.status === "live" && !item.comingSoon;
 }
 
+/**
+ * TASK-472 FOLLOW-UP (block 968,624, adversarial review — FIX FIRST):
+ * a TASTER (a `package` item with `entitlementDays` — the one-week passes
+ * like `observer-one-week`) grants the SAME tier as its tier's own
+ * standing membership item (`entitlementTier`), via bestPackageGrant() in
+ * entitlement-fulfil.ts. isPurchasable() alone only reads the taster's OWN
+ * `status`/`comingSoon` — flagging the STANDING item comingSoon (the
+ * Admiral's actual ruling: tick it on Observer/Evening Star) left the
+ * taster itself fully purchasable, a side door into the same entitlement.
+ * `entitlementDays` — never `kind`/`id` naming — is what marks a package
+ * item as a taster (store-sections.ts's own `isTasterPass`, mirrored here
+ * so store.ts owns no dependency on it).
+ */
+function isTasterGrant(item: Pick<StoreItem, "kind" | "entitlementDays">): boolean {
+  return item.kind === "package" && (item.entitlementDays ?? 0) > 0;
+}
+
+/**
+ * THE CATALOG-AWARE purchasability law: everywhere a request handler has
+ * (or can cheaply fetch) the WHOLE catalog, this is what decides — never
+ * the single-item isPurchasable() alone for a `package` kind. A taster is
+ * blocked the instant its tier's own standing item(s) are ALL not
+ * purchasable (comingSoon, hidden, or soldout); with no standing item on
+ * the shelf at all for that tier (a data gap, not a ruling), derive-or-
+ * dash says never invent a block. Every OTHER kind (and a tier's own
+ * standing item itself) is unaffected — isPurchasable() alone is still the
+ * whole law for them, so this is a pure narrowing on top, never a second
+ * opinion that could widen anything isPurchasable() already refused.
+ */
+export function isPurchasableIn(item: StoreItem, catalog: readonly StoreItem[]): boolean {
+  if (!isPurchasable(item)) return false;
+  if (!isTasterGrant(item) || !item.entitlementTier) return true;
+  const standing = catalog.filter(
+    (i) => i.kind === "package" && i.entitlementTier === item.entitlementTier && !isTasterGrant(i),
+  );
+  return standing.length === 0 || standing.some((i) => isPurchasable(i));
+}
+
 export async function upsertItem(item: StoreItem): Promise<StoreItem> {
   const normalized = migrateItem(item); // keeps the legacy images mirror in sync
   await withCatalog((doc) => {

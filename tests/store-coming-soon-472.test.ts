@@ -3,6 +3,7 @@ import { isolateCwd } from "./helpers/isolate-cwd";
 import {
   getItem,
   isPurchasable,
+  isPurchasableIn,
   upsertItem,
   validateItem,
   type StoreItem,
@@ -31,6 +32,15 @@ import { tierPageMode } from "@/app/packages/[slug]/page";
  *     badge, and the packages page's tierPageMode() picks "soon" over both
  *     "buy" and "waitlist".
  *  6. none of the new strings carry an em dash (Lumen's L-002, "slop").
+ *  7. FOLLOW-UP (adversarial review, FIX FIRST, same block): a taster
+ *     package item (e.g. `observer-one-week`) grants the SAME tier as its
+ *     tier's own standing item via bestPackageGrant() in
+ *     entitlement-fulfil.ts — isPurchasable() alone only reads the
+ *     taster's OWN flag, leaving it buyable while its tier's standing item
+ *     is comingSoon. `isPurchasableIn(item, catalog)` closes that: cart
+ *     add, an OLD cart's resolve/sweep, cart checkout, and single-item
+ *     checkout all refuse the taster off the TIER's flag alone, while a
+ *     taster whose own tier is fine stays buyable (positive control).
  */
 
 function item(over: Partial<StoreItem>): StoreItem {
@@ -64,6 +74,46 @@ describe("isPurchasable() — the one purchasability law", () => {
 
   it("comingSoon absent (undefined) reads exactly like comingSoon:false", () => {
     expect(isPurchasable(item({ comingSoon: undefined }))).toBe(true);
+  });
+});
+
+describe("isPurchasableIn() — a taster follows its OWN tier's standing item (adversarial-review fix)", () => {
+  const standingB = item({ id: "observer-membership", entitlementTier: "B" });
+  const tasterB = item({ id: "observer-one-week", entitlementTier: "B", entitlementDays: 7, price: { fiat: { amount: 2200, currency: "USD" } } });
+  const standingA = item({ id: "weekly-intuitive-main", entitlementTier: "A" });
+  const tasterA = item({ id: "weekly-one-week", entitlementTier: "A", entitlementDays: 7, price: { fiat: { amount: 1100, currency: "USD" } } });
+  const ordinary = item({ id: "ordinary-meditation", kind: "digital", entitlementTier: undefined });
+
+  it("a taster is refused the instant its tier's own standing item is comingSoon — even though the taster's OWN flag is untouched", () => {
+    const catalog = [{ ...standingB, comingSoon: true }, tasterB];
+    expect(isPurchasableIn(tasterB, catalog)).toBe(false);
+  });
+
+  it("a taster is refused when its tier's standing item is hidden or soldout too, not only comingSoon", () => {
+    expect(isPurchasableIn(tasterB, [{ ...standingB, status: "hidden" }, tasterB])).toBe(false);
+    expect(isPurchasableIn(tasterB, [{ ...standingB, status: "soldout" }, tasterB])).toBe(false);
+  });
+
+  it("a taster stays buyable while its tier's own standing item is live and not comingSoon", () => {
+    const catalog = [standingA, tasterA, { ...standingB, comingSoon: true }, tasterB];
+    expect(isPurchasableIn(tasterA, catalog)).toBe(true);
+  });
+
+  it("the tier's own standing item is judged by isPurchasable() alone — this never widens what that already refused", () => {
+    const catalog = [{ ...standingB, comingSoon: true }, tasterB];
+    expect(isPurchasableIn({ ...standingB, comingSoon: true }, catalog)).toBe(false);
+  });
+
+  it("no standing item on the shelf at all for a taster's tier is a data gap, never an invented block", () => {
+    expect(isPurchasableIn(tasterB, [tasterB])).toBe(true);
+  });
+
+  it("an ordinary (non-package, no entitlementTier) item is unaffected by any of this", () => {
+    expect(isPurchasableIn(ordinary, [ordinary, { ...standingB, comingSoon: true }, tasterB])).toBe(true);
+  });
+
+  it("a taster's own comingSoon/soldout/hidden flag still refuses it directly, tier aside", () => {
+    expect(isPurchasableIn({ ...tasterA, comingSoon: true }, [standingA, { ...tasterA, comingSoon: true }])).toBe(false);
   });
 });
 
@@ -180,10 +230,61 @@ const CATALOG = {
       images: [],
       media: { images: [] },
       kind: "package",
+      entitlementTier: "B",
       price: { sats: 55000, fiat: { amount: 5500, currency: "USD" } },
       fulfillment: "package",
       status: "live",
       comingSoon: true,
+    },
+    {
+      // TASK-472 follow-up (adversarial review): the Observer one-week
+      // TASTER — grants the SAME tier ("B") as observer-membership above,
+      // via bestPackageGrant() in entitlement-fulfil.ts, but carries its
+      // OWN status/comingSoon fields (both untouched/off here) — proving
+      // isPurchasableIn() refuses it off the TIER's flag, not its own.
+      id: "observer-one-week",
+      schemaVersion: 2,
+      title: "Observer — One Week",
+      blurb: "a one-week taste of Observer",
+      images: [],
+      media: { images: [] },
+      kind: "package",
+      entitlementTier: "B",
+      entitlementDays: 7,
+      price: { fiat: { amount: 2200, currency: "USD" } },
+      fulfillment: "package",
+      status: "live",
+    },
+    {
+      // the positive control: tier A's OWN standing item is live and NOT
+      // comingSoon, so tier A's taster stays buyable — proving the fix
+      // narrows, it never blocks a taster whose tier is fine.
+      id: "weekly-intuitive-main",
+      schemaVersion: 2,
+      title: "Weekly Intuitive",
+      blurb: "the standing membership",
+      images: [],
+      media: { images: [] },
+      kind: "package",
+      entitlementTier: "A",
+      price: { fiat: { amount: 3300, currency: "USD" } },
+      fulfillment: "package",
+      status: "live",
+    },
+    {
+      id: "weekly-one-week",
+      schemaVersion: 2,
+      title: "Weekly Intuitive — One Week",
+      blurb: "a one-week taste",
+      images: [],
+      media: { images: [] },
+      kind: "package",
+      entitlementTier: "A",
+      entitlementDays: 7,
+      // sats too — the bitcoin-rail checkout test below is sats-first
+      price: { sats: 11000, fiat: { amount: 1100, currency: "USD" } },
+      fulfillment: "package",
+      status: "live",
     },
     {
       id: "ordinary-meditation",
@@ -308,6 +409,20 @@ describe("POST /api/cart — adding a comingSoon item is refused", () => {
     expect(data.ok).toBe(true);
     expect(data.count).toBe(1);
   });
+
+  it("adversarial-review fix: refuses the Observer TASTER too — its own flag is untouched, only its tier's is comingSoon", async () => {
+    const res = await cartPOST({ itemId: "observer-one-week", qty: 1 }, "oc-cart=cart-472-taster-add");
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ ok: false, reason: "that item isn't on the shelf" });
+  });
+
+  it("a taster whose OWN tier is live and not comingSoon still adds fine (positive control)", async () => {
+    const res = await cartPOST({ itemId: "weekly-one-week", qty: 1 }, "oc-cart=cart-472-taster-ok");
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.ok).toBe(true);
+    expect(data.count).toBe(1);
+  });
 });
 
 describe("GET /api/cart — an OLD cart line for a NOW-comingSoon item is swept", () => {
@@ -317,6 +432,23 @@ describe("GET /api/cart — an OLD cart line for a NOW-comingSoon item is swept"
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.lines).toEqual([]);
+  });
+
+  it("adversarial-review fix: an OLD cart holding the TASTER is swept too, off the tier's flag alone", async () => {
+    seedCart("cart-472-taster-old", [{ itemId: "observer-one-week", qty: 1 }]);
+    const res = await cartGET("oc-cart=cart-472-taster-old");
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.lines).toEqual([]);
+  });
+
+  it("an old cart holding a taster whose tier is fine still resolves (positive control)", async () => {
+    seedCart("cart-472-taster-old-ok", [{ itemId: "weekly-one-week", qty: 1 }]);
+    const res = await cartGET("oc-cart=cart-472-taster-old-ok");
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.lines).toHaveLength(1);
+    expect(data.lines[0].itemId).toBe("weekly-one-week");
   });
 });
 
@@ -330,11 +462,35 @@ describe("POST /api/cart/checkout — refuses a comingSoon line even from an old
       reason: `"observer-membership" left the shelf — remove it and retry`,
     });
   });
+
+  it("adversarial-review fix: 409s for the TASTER too, off its tier's flag alone", async () => {
+    seedCart("cart-472-taster-checkout", [{ itemId: "observer-one-week", qty: 1 }]);
+    const res = await cartCheckoutPOST("oc-cart=cart-472-taster-checkout", { contact: { email: "guest@example.com" } });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({
+      ok: false,
+      reason: `"observer-one-week" left the shelf — remove it and retry`,
+    });
+  });
+
+  it("a taster whose tier is fine checks out fine (positive control)", async () => {
+    seedCart("cart-472-taster-checkout-ok", [{ itemId: "weekly-one-week", qty: 1 }]);
+    const res = await cartCheckoutPOST("oc-cart=cart-472-taster-checkout-ok", { contact: { email: "guest@example.com" } });
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.ok).toBe(true);
+  });
 });
 
 describe("POST /api/store/checkout — the single-item door refuses the same item", () => {
   it("404s 'not on the shelf' for the comingSoon item", async () => {
     const res = await storeCheckoutPOST({ itemId: "observer-membership", contact: { email: "guest@example.com" } });
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ ok: false, reason: "not on the shelf" });
+  });
+
+  it("adversarial-review fix: 404s the TASTER too, off its tier's flag alone", async () => {
+    const res = await storeCheckoutPOST({ itemId: "observer-one-week", contact: { email: "guest@example.com" } });
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ ok: false, reason: "not on the shelf" });
   });
@@ -345,6 +501,13 @@ describe("POST /api/store/checkout — the single-item door refuses the same ite
     const data = await res.json();
     expect(data.ok).toBe(true);
     expect(data.payUrl).toBe("http://btcpay.fixture.472/i/inv_fixture_472");
+  });
+
+  it("a taster whose tier is fine still checks out fine (positive control)", async () => {
+    const res = await storeCheckoutPOST({ itemId: "weekly-one-week", contact: { email: "guest@example.com" } });
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.ok).toBe(true);
   });
 });
 

@@ -8,7 +8,8 @@ import {
   newOrderId,
   ordersConfigured,
   getItem,
-  isPurchasable,
+  isPurchasableIn,
+  listItems,
   type OrderRecord,
   type PriceSnapshot,
   type Price,
@@ -132,6 +133,10 @@ export async function POST(request: Request) {
   // second price lookup. A PWYC/sats basket never reaches the card rail at
   // all (refused above), so this array never needs to represent an offer.
   const squareLines: { name: string; quantity: number; unitAmount: number }[] = [];
+  // TASK-472 follow-up (block 968,624): one catalog read for the whole
+  // checkout pass — isPurchasableIn() needs the tier's OWN standing item
+  // beside a taster's (observer-one-week riding on Observer's own flag).
+  const catalog = await listItems({ includeHidden: true });
 
   for (const l of cart.lines) {
     if (l.serviceGift) {
@@ -229,8 +234,10 @@ export async function POST(request: Request) {
 
     const item = await getItem(l.itemId);
     // TASK-472 (block 968,624): the same purchasability law refuses a
-    // comingSoon item at checkout even if an old cart still holds the line.
-    if (!item || !isPurchasable(item)) {
+    // comingSoon item at checkout even if an old cart still holds the
+    // line — isPurchasableIn() also catches a taster (observer-one-week)
+    // whose tier's own standing item just went comingSoon.
+    if (!item || !isPurchasableIn(item, catalog)) {
       return NextResponse.json({ ok: false, reason: `"${l.itemId}" left the shelf — remove it and retry` }, { status: 409 });
     }
     const eff = item.sale ?? item.price;

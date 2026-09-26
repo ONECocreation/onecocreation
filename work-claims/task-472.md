@@ -21,12 +21,26 @@ L-002/L-003; honest buttons; one button size per surface, L-004).
 The SMALLEST safe design, per the brief: no fourth `ItemStatus`. An
 optional `comingSoon?: boolean` flag rides on TOP of the existing, proven
 `status: "live"` path in `src/lib/store.ts`. A new `isPurchasable(item)`
-helper (`item.status === "live" && !item.comingSoon`) is the ONE law every
-server-side purchasability gate now asks, instead of a bare
-`status !== "live"` — so `comingSoon` narrows "live" further everywhere at
-once (cart add, cart resolve/sweep of an OLD cart, cart checkout, the
-single-item checkout, and the packages page's tier/waitlist fallback), and
-never widens `hidden`/`soldout` back into buyable.
+helper (`item.status === "live" && !item.comingSoon`) is the ONE
+single-item law every server-side purchasability gate now asks, instead of
+a bare `status !== "live"` — so `comingSoon` narrows "live" further
+everywhere at once, and never widens `hidden`/`soldout` back into buyable.
+
+**FOLLOW-UP (adversarial review, same block, FIX FIRST):** a `package`
+item can grant tier access two ways — the tier's own standing membership
+item, or a TASTER (a time-limited pass like `observer-one-week`, marked by
+`entitlementDays`) that grants the identical tier via `bestPackageGrant()`
+in `entitlement-fulfil.ts`. `isPurchasable()` alone only reads an item's
+OWN `status`/`comingSoon` — flagging the standing item comingSoon left its
+taster fully buyable, a side door into the same entitlement. A new
+catalog-aware `isPurchasableIn(item, catalog)` closes it: a taster is
+refused the instant EVERY standing item for its `entitlementTier` is not
+purchasable, with no change to `isPurchasable()` itself and no widening —
+a taster whose own tier is fine, or an item with no `entitlementDays`
+grant at all, is untouched. Every route below now calls
+`isPurchasableIn()`, not `isPurchasable()`, wherever it decides
+purchasability against the live catalog (cart add, cart resolve/sweep of
+an OLD cart, cart checkout, the single-item checkout).
 
 Every surface that would otherwise render a buy/add-to-cart/join control
 for a `comingSoon` item now shows the plain words "Coming soon" instead —
@@ -38,7 +52,9 @@ description are untouched; they render exactly as they did before, because
 
 - `src/lib/store.ts` — EDIT: `comingSoon?: boolean` field on `StoreItem`;
   `validateItem()` type-checks it (boolean or absent); new exported
-  `isPurchasable()` helper (THE one purchasability law).
+  `isPurchasable()` (the single-item law) and `isPurchasableIn(item,
+  catalog)` (the catalog-aware law — a taster follows its own tier's
+  standing item; adversarial-review follow-up).
 - `src/app/api/admin/store/route.ts` — EDIT: the PUT route normalizes
   `comingSoon` to `true` or `undefined` (never a stored `false` — same
   honest-shapes law as `sku`/`bundle`).
@@ -48,16 +64,18 @@ description are untouched; they render exactly as they did before, because
   row so it's visible without opening the editor. **This is the checkbox
   the Admiral/Love tick after deploy** — see "Your actions" below.
 - `src/app/api/cart/route.ts` — EDIT: both the goods-line gate in
-  `resolved()` (drops an OLD cart's line for a newly-comingSoon item, the
-  same sweep a hidden/gone item already gets) and the POST add gate now
-  call `isPurchasable()` instead of `status !== "live"`.
+  `resolved()` (drops an OLD cart's line for a newly-comingSoon item OR
+  taster, the same sweep a hidden/gone item already gets) and the POST add
+  gate now call `isPurchasableIn(item, catalog)` instead of
+  `status !== "live"` — one `listItems({ includeHidden: true })` catalog
+  read per request, reused across every line in `resolved()`.
 - `src/app/api/cart/checkout/route.ts` — EDIT: the basket's goods-line
-  gate calls `isPurchasable()` — refuses even a comingSoon line an old
-  cart is still holding, 409, same honest wording as any other item that
-  "left the shelf."
+  gate calls `isPurchasableIn()` — refuses even a comingSoon (or
+  now-comingSoon-tier taster) line an old cart is still holding, 409, same
+  honest wording as any other item that "left the shelf."
 - `src/app/api/store/checkout/route.ts` — EDIT: the single-item door
-  (BuyPanel → this route) calls `isPurchasable()` too — no second doorway
-  a comingSoon flag forgot to cover.
+  (BuyPanel → this route) calls `isPurchasableIn()` too — no second
+  doorway a comingSoon flag (on the item OR its tier) forgot to cover.
 - `src/app/packages/[slug]/page.tsx` — EDIT: `itemLive()` now means
   `isPurchasable()` (so a comingSoon tier's own upgrade/addon/related
   doors never sneak it in from a sibling page either); new exported pure
@@ -65,8 +83,12 @@ description are untouched; they render exactly as they did before, because
   both "buy" and the pre-order "waitlist" email form; the YES button's
   slot renders the plain label "Coming soon" (shares the "banner" mode's
   one style block, mutually exclusive states); the tier's own one-time
-  taster button (e.g. `observer-one-week`) also stays off while its own
-  tier is comingSoon — no side door around its own "Coming soon."
+  taster BUTTON (e.g. `observer-one-week`) also stays off the display
+  while its own tier is comingSoon (`mode !== "soon"` already excludes
+  it) — no dead click to catch. Untouched by the follow-up round: this
+  file's display gate was already correct; the gap the adversarial review
+  found was a bypass of this UI, straight at the cart/checkout routes,
+  fixed there (see `isPurchasableIn` above) — not owned by this page.
 - `src/components/store/BuyPanel.tsx` — EDIT: a `comingSoon` check ahead
   of (and sharing one style block with) the existing `soldout` branch —
   "Coming soon." in place of the doors, checked first so it always wins.
@@ -75,12 +97,16 @@ description are untouched; they render exactly as they did before, because
   badge sharing the sold-out badge's one style block (mutually exclusive).
   This also covers every doorForItem shelf (`ShelfSection.tsx`,
   `RelatedItems.tsx`) for free — they all render through this one card.
-- `tests/store-coming-soon-472.test.ts` — NEW: `isPurchasable()`,
+- `tests/store-coming-soon-472.test.ts` — NEW/EDIT: `isPurchasable()`,
+  `isPurchasableIn()` (the taster-follows-its-tier law, 7 pure cases),
   `validateItem()`, a catalog persistence round trip (isolateCwd), the
   shelf card model, `tierPageMode()`, an em-dash check on every new
   string, and full route-level refusal tests (cart add, an old cart's
   resolve/sweep, cart checkout, single-item checkout) against a fixture
-  KV + BTCPay catalog.
+  KV + BTCPay catalog that now also carries `observer-one-week` (tier B
+  taster, refused off Observer's own comingSoon flag) and a second tier
+  (`weekly-intuitive-main` / `weekly-one-week`, tier A, NOT comingSoon) as
+  a positive control proving the fix narrows, never blocks a fine taster.
 - `work-claims/task-472.md` — this file.
 
 ## READ-ONLY
@@ -102,10 +128,10 @@ element reuses an existing class or an existing hoisted style const
 ## Your actions
 
 1. Deploy this branch.
-2. Open `/a/store`, find the Observer item, open its editor, tick "coming
-   soon," Save.
-3. Repeat for the Evening Star item.
-4. Confirm on the live site: `/packages/observer` and
+2. In `/a/store`, tick "Coming soon" on Observer and Evening Star; the
+   taster (Observer's one-week pass) follows automatically — no separate
+   tick, no separate step.
+3. Confirm on the live site: `/packages/observer` and
    `/packages/evening-star` show the price, the words, and "Coming soon"
    in the YES button's place; the $11 one-time pass and the $33 Q&A pass
    are untouched.

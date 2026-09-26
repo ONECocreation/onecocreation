@@ -9,7 +9,7 @@ import {
   type CartDoc,
   type CartLine,
 } from "@/lib/cart";
-import { getItem, isPurchasable, stripPrivateMedia } from "@/lib/store";
+import { getItem, isPurchasableIn, listItems, stripPrivateMedia } from "@/lib/store";
 import { getService, readConfig, slotsFor, isValidTz } from "@/lib/booking";
 import { claimSlot, releaseSlot, getClaim, newBookingId } from "@/lib/booking-orders";
 import { busyFeed, subtractBusy } from "@/lib/ical-busy";
@@ -47,6 +47,11 @@ async function resolved(cart: CartDoc) {
   let totalSats = 0;
   let allSats = true;
   const keep: CartLine[] = [];
+  // TASK-472 follow-up (block 968,624): one catalog read for the whole
+  // resolve pass — isPurchasableIn() needs the tier's OWN standing item
+  // beside a taster's, so a comingSoon Observer sweeps observer-one-week
+  // out of an old cart too, not just the tier's own item.
+  const catalog = await listItems({ includeHidden: true });
 
   for (const l of cart.lines) {
     if (l.serviceGift) {
@@ -115,10 +120,11 @@ async function resolved(cart: CartDoc) {
     }
 
     const item = await getItem(l.itemId);
-    // TASK-472 (block 968,624): isPurchasable() also drops a line an old
-    // cart is still holding for an item just flagged comingSoon — the same
-    // sweep that already drops a hidden/gone item, never a silent keep.
-    if (!item || !isPurchasable(item)) continue;
+    // TASK-472 (block 968,624): isPurchasableIn() also drops a line an old
+    // cart is still holding for an item just flagged comingSoon (or a
+    // taster whose tier just went comingSoon) — the same sweep that
+    // already drops a hidden/gone item, never a silent keep.
+    if (!item || !isPurchasableIn(item, catalog)) continue;
     const eff = item.sale ?? item.price;
     const listSats = eff.sats ?? null;
     const lineSats = l.offerSats ?? (listSats != null ? listSats * l.qty : null);
@@ -341,7 +347,12 @@ export async function POST(request: Request) {
     }
   } else {
     const item = await getItem(body.itemId!);
-    if (!item || !isPurchasable(item)) {
+    // TASK-472 follow-up (block 968,624): a fresh catalog read here (never
+    // the resolve pass's `catalog` above — this branch runs standalone,
+    // outside resolved()) so a taster (observer-one-week) is refused the
+    // instant its tier's own standing item is comingSoon, not just its
+    // own flag.
+    if (!item || !isPurchasableIn(item, await listItems({ includeHidden: true }))) {
       return NextResponse.json({ ok: false, reason: "that item isn't on the shelf" }, { status: 404 });
     }
     const qty = clampQty(body.qty ?? 1);
