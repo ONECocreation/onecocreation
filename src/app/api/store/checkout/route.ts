@@ -6,6 +6,8 @@ import {
   attachCharge,
   newOrderId,
   ordersConfigured,
+  isPurchasableIn,
+  listItems,
   type OrderRecord,
   type PriceSnapshot,
 } from "@/lib/store";
@@ -157,7 +159,12 @@ export async function POST(request: Request) {
   }
 
   const item = body.itemId ? await getItem(body.itemId) : null;
-  if (!item || item.status !== "live") {
+  // TASK-472 (block 968,624): a comingSoon item refuses here too — the
+  // single-item door (BuyPanel → this route) never gets a second doorway
+  // a comingSoon flag forgot to cover. isPurchasableIn() also catches a
+  // taster (observer-one-week) whose tier's own standing item is
+  // comingSoon, not just the taster's own flag (adversarial review).
+  if (!item || !isPurchasableIn(item, await listItems({ includeHidden: true }))) {
     return NextResponse.json({ ok: false, reason: "not on the shelf" }, { status: 404 });
   }
 

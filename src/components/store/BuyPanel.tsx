@@ -226,8 +226,16 @@ export default function BuyPanel({
     }
   }
 
-  if (item.status === "soldout") {
-    return <p style={{ marginTop: 24, fontSize: ".9rem", color: "var(--muted, #897f97)" }}>Sold out — back when the artist restocks.</p>;
+  /* TASK-472 (block 968,624 — the Admiral's ruling on Observer/Evening
+     Star): price and words stay above this panel, untouched; only the
+     doors below are replaced — one shared paragraph with soldout below,
+     comingSoon checked first so it always wins if an item were ever both. */
+  if (item.comingSoon || item.status === "soldout") {
+    return (
+      <p style={{ marginTop: 24, fontSize: ".9rem", color: "var(--muted, #897f97)" }}>
+        {item.comingSoon ? "Coming soon." : "Sold out — back when the artist restocks."}
+      </p>
+    );
   }
 
   if (!anyRailLive) {

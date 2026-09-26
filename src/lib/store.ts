@@ -140,6 +140,20 @@ export interface StoreItem {
       admin UI only offers a partner once its API env is configured */
   partner?: "printful" | "fourthwall";
   status: ItemStatus;
+  /**
+   * TASK-472 (block 968,624 — the Admiral's ruling on Observer/Evening
+   * Star): the SMALLEST safe shape, deliberately NOT a fourth ItemStatus
+   * (Astra's warning: a new status crosses validation, persistence,
+   * checkout and old carts — four surfaces to keep in lockstep for one
+   * word). This is an independent flag ON TOP of `status: "live"` — the
+   * item stays fully live (listed, priced, described, never dropped by
+   * listItems()'s hidden-filter) while `comingSoon: true` overrides only
+   * the ONE question every purchase surface already asks — "can this be
+   * bought right now" — via `isPurchasable()` below. Absent (never a
+   * stored `false`) means "not coming soon", same honest-shapes law as
+   * `sku`/`bundle` (api/admin/store/route.ts normalizes it on save).
+   */
+  comingSoon?: boolean;
   entitlementTier?: string;
   /** a TASTER package (the $11/$22 one-week passes) — the grant closes
    *  itself this many days after purchase instead of standing open-ended.
@@ -370,6 +384,9 @@ export function validateItem(item: StoreItem): { ok: true } | { ok: false; reaso
   if (item.description != null && typeof item.description !== "string") {
     return { ok: false, reason: "description as text" };
   }
+  if (item.comingSoon != null && typeof item.comingSoon !== "boolean") {
+    return { ok: false, reason: "comingSoon as true or false" };
+  }
   if (item.category != null && (typeof item.category !== "string" || item.category.length > 64)) {
     return { ok: false, reason: "a category as short text (max 64 chars)" };
   }
@@ -423,6 +440,62 @@ export function validateItem(item: StoreItem): { ok: true } | { ok: false; reaso
     }
   }
   return { ok: true };
+}
+
+/**
+ * TASK-472 (block 968,624) — THE ONE PURCHASABILITY LAW: every surface that
+ * decides whether an item can be bought (cart add, cart resolve/sweep,
+ * cart checkout, the single-item checkout, a tier page's buy/waitlist
+ * fallback) asks THIS, never a bare `status === "live"` on its own — so a
+ * `comingSoon` item is refused everywhere at once, including a line an old
+ * cart is still holding from before the flag was set. `status` still
+ * governs everything it always has (hidden stays hidden, soldout stays
+ * soldout); `comingSoon` only ever narrows "live" further, never widens
+ * hidden/soldout into buyable.
+ */
+export function isPurchasable(item: Pick<StoreItem, "status" | "comingSoon">): boolean {
+  return item.status === "live" && !item.comingSoon;
+}
+
+/**
+ * TASK-472 FOLLOW-UP (block 968,624, adversarial review — FIX FIRST):
+ * a TASTER (a `package` item with `entitlementDays` — the one-week passes
+ * like `observer-one-week`) grants the SAME tier as its tier's own
+ * standing membership item (`entitlementTier`), via bestPackageGrant() in
+ * entitlement-fulfil.ts. isPurchasable() alone only reads the taster's OWN
+ * `status`/`comingSoon` — flagging the STANDING item comingSoon (the
+ * Admiral's actual ruling: tick it on Observer/Evening Star) left the
+ * taster itself fully purchasable, a side door into the same entitlement.
+ * `entitlementDays` — never `kind`/`id` naming — is what marks a package
+ * item as a taster (store-sections.ts's own `isTasterPass`, mirrored here
+ * so store.ts owns no dependency on it).
+ */
+function isTasterGrant(item: Pick<StoreItem, "kind" | "entitlementDays">): boolean {
+  return item.kind === "package" && (item.entitlementDays ?? 0) > 0;
+}
+
+/**
+ * THE CATALOG-AWARE purchasability law: everywhere a request handler has
+ * (or can cheaply fetch) the WHOLE catalog, this is what decides — never
+ * the single-item isPurchasable() alone for a `package` kind. A taster is
+ * blocked the instant its tier's own standing item(s) are ALL not
+ * purchasable (comingSoon, hidden, or soldout); with no standing item on
+ * the shelf at all for that tier (a data gap, not a ruling), derive-or-
+ * dash says never invent a block. Every OTHER kind (and a tier's own
+ * standing item itself) is unaffected — isPurchasable() alone is still the
+ * whole law for them, so this is a pure narrowing on top, never a second
+ * opinion that could widen anything isPurchasable() already refused.
+ */
+export function isPurchasableIn(item: StoreItem, catalog: readonly StoreItem[]): boolean {
+  if (!isPurchasable(item)) return false;
+  if (!isTasterGrant(item) || !item.entitlementTier) return true;
+  const standing = catalog.filter(
+    (i) => i.kind === "package" && i.entitlementTier === item.entitlementTier && !isTasterGrant(i),
+  );
+  /* Number One (review, block 968,624): only the Admiral's "Coming soon"
+     ruling closes the taster. A standing item that is hidden or sold out
+     for its own reasons never silently takes its taster down with it. */
+  return !standing.some((i) => i.comingSoon === true);
 }
 
 export async function upsertItem(item: StoreItem): Promise<StoreItem> {
