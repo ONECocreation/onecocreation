@@ -276,6 +276,7 @@ export default function JitsiRoom({
   height = "72vh",
   guestView,
   onHostVideo,
+  onJoined,
 }: {
   domain: string;
   room: string;
@@ -301,6 +302,13 @@ export default function JitsiRoom({
    *  caller leaves this unset; the listeners below are only added when a
    *  callback is actually passed, so nothing else pays for this. */
   onHostVideo?: (on: boolean) => void;
+  /** TASK-488 (block 968,624, the Admiral's live Q&A test): opt-in ONLY
+   *  for the /reading mounts — false on every boot and on either farewell
+   *  event, true once THIS viewer has actually joined the conference
+   *  (videoConferenceJoined). Until then the viewer sits on Jitsi's own
+   *  prejoin screen, and the book picture must never hide its Join
+   *  button. Every other caller leaves this unset. */
+  onJoined?: (joined: boolean) => void;
 }) {
   const holder = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"loading" | "live" | "ended" | "failed">("loading");
@@ -332,9 +340,12 @@ export default function JitsiRoom({
       );
       api = a;
       setState("live");
+      /* TASK-488: a fresh boot always starts on the prejoin screen */
+      onJoined?.(false);
+      if (onJoined) a.addListener("videoConferenceJoined", () => { if (live) onJoined(true); });
       // both farewell paths land HERE, not on jit.si
-      a.addListener("readyToClose", () => { if (live) { setState("ended"); onEnded?.(); } });
-      a.addListener("videoConferenceLeft", () => { if (live) { setState("ended"); onEnded?.(); } });
+      a.addListener("readyToClose", () => { if (live) { setState("ended"); onJoined?.(false); onEnded?.(); } });
+      a.addListener("videoConferenceLeft", () => { if (live) { setState("ended"); onJoined?.(false); onEnded?.(); } });
 
       /* TASK-479: the /reading guest mounts' own opt-in — see the block
        * comment above `hostVideoReducer`. `hv` is local, mutable state for
@@ -396,7 +407,7 @@ export default function JitsiRoom({
       api?.dispose();
       if (hostVideoTimeout) clearTimeout(hostVideoTimeout);
     };
-  }, [domain, room, displayName, onEnded, guestView, onHostVideo]);
+  }, [domain, room, displayName, onEnded, guestView, onHostVideo, onJoined]);
 
   if (state === "ended") {
     return (

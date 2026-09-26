@@ -143,6 +143,13 @@ export interface ReadingStageBodyProps {
    *  up on any doubt), replacing TASK-479's `hostVideoOn` prop, which this
    *  lane retires from this file. */
   cameraShown?: boolean;
+  /** TASK-488: whether THIS viewer has joined the call yet (JitsiRoom's
+   *  `onJoined`). Before joining they sit on Jitsi's prejoin screen, which
+   *  shows no host video, so the picture stays off it and never hides
+   *  the Join button. Defaults to `true` (the picture rule as before). */
+  joined?: boolean;
+  /** TASK-488: JitsiRoom's own join signal, passed straight through. */
+  onJoined?: (joined: boolean) => void;
 }
 
 /** The wire body `/api/stage1` answers with (its exact four keys). */
@@ -212,6 +219,8 @@ export function ReadingStageBody({
   onRejoin,
   partLabel,
   cameraShown = false,
+  joined = true,
+  onJoined,
 }: ReadingStageBodyProps) {
   /* the ONE gate for mounting the real two-way room: published, signed
      in, not left, not ended, and a room the poll actually gave us. */
@@ -221,7 +230,9 @@ export function ReadingStageBody({
      own site switch says her camera is shown. `cameraShown` defaults
      false (fail CLOSED — the picture stays up on any doubt), replacing
      TASK-479's `hostVideoOn`/Jitsi-event reducer read. */
-  const coverUp = showRoom && !cameraShown;
+  /* TASK-488: and never over Jitsi's prejoin screen — the guest has to
+     see its Join button to come in and hear the music. */
+  const coverUp = showRoom && joined && !cameraShown;
   /* fix round (block 968,624) — the chip ALWAYS names the part (when the
      schedule gives one); "Live · " only rides while actually published
      and not ended, the same condition the old bare "Live" chip used. */
@@ -244,7 +255,7 @@ export function ReadingStageBody({
                   onHostVideo/hostVideoReducer signal. That reducer's CODE
                   stays in JitsiRoom.tsx untouched (other callers may still
                   wire it); this mount just stops using it. */}
-              <JitsiRoom domain={jitsiDomain} room={room as string} onEnded={onRoomEnded} height="100%" guestView />
+              <JitsiRoom domain={jitsiDomain} room={room as string} onEnded={onRoomEnded} onJoined={onJoined} height="100%" guestView />
             </div>
             {coverUp && (
               <div className="kit-stage-cover">
@@ -382,6 +393,8 @@ export default function ReadingStage({
      and whenever the poll doesn't say otherwise. Replaces TASK-479's
      `hostVideoOn`/onHostVideo-reducer state entirely. */
   const [cameraShown, setCameraShown] = useState(false);
+  /* TASK-488: JitsiRoom reports false on every boot, true once joined */
+  const [joined, setJoined] = useState(false);
 
   /* K122 item 7 + the purity law — the ended words name the NEXT reading
      (the FOLLOWING occurrence once the clock is at or past next's start),
@@ -390,6 +403,10 @@ export default function ReadingStage({
     setLeft(false);
     setRoom(null);
     setCameraShown(false);
+    /* TASK-488 review: a server-side end unmounts the room without a Jitsi
+       farewell event, so clear the join here too (the next room starts on
+       its prejoin screen, never under the picture) */
+    setJoined(false);
     const shown = readingShownNext(next, following, Date.now());
     setNextWords(
       shown
@@ -510,6 +527,8 @@ export default function ReadingStage({
       onRejoin={rejoin}
       partLabel={partLabel}
       cameraShown={cameraShown}
+      joined={joined}
+      onJoined={setJoined}
     />
   );
 }

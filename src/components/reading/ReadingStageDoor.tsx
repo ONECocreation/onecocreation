@@ -85,6 +85,12 @@ export interface ReadingStageDoorBodyProps {
    *  (fail CLOSED), replacing TASK-479's `hostVideoOn` prop, which this
    *  lane retires from this file. */
   cameraShown?: boolean;
+  /** TASK-488: whether THIS viewer has joined the call yet (JitsiRoom's
+   *  `onJoined`) — the picture never hides Jitsi's prejoin Join button.
+   *  Defaults to `true` (the picture rule as before). */
+  joined?: boolean;
+  /** TASK-488: JitsiRoom's own join signal, passed straight through. */
+  onJoined?: (joined: boolean) => void;
 }
 
 export function ReadingStageDoorBody({
@@ -98,12 +104,15 @@ export function ReadingStageDoorBody({
   onEnded,
   onRejoin,
   cameraShown = false,
+  joined = true,
+  onJoined,
 }: ReadingStageDoorBodyProps) {
   const showRoom = wire.decision === "open" && wire.reachable === true && !!wire.room && !left;
   /* TASK-487: same rule as ReadingStage.tsx — the book stays over the
      mounted (still-listening) room until Love's own site switch says her
      camera is shown. `cameraShown` defaults false (fail CLOSED). */
-  const coverUp = showRoom && !cameraShown;
+  /* TASK-488: and never over Jitsi's prejoin screen (its Join button) */
+  const coverUp = showRoom && joined && !cameraShown;
   const cap = `${label[0].toUpperCase()}${label.slice(1)}`;
   /* fix round (block 968,624) — the chip ALWAYS names the part (when the
      schedule gives one); "Live · " only rides while the door is actually
@@ -121,7 +130,7 @@ export function ReadingStageDoorBody({
                 site-switch poll), never JitsiRoom's own onHostVideo/
                 hostVideoReducer signal. That reducer's CODE stays in
                 JitsiRoom.tsx untouched; this mount just stops using it. */}
-            <JitsiRoom domain={jitsiDomain} room={wire.room as string} onEnded={onEnded} height="100%" guestView />
+            <JitsiRoom domain={jitsiDomain} room={wire.room as string} onEnded={onEnded} onJoined={onJoined} height="100%" guestView />
           </div>
           {coverUp && (
             <div className="kit-stage-cover">
@@ -216,6 +225,8 @@ export default function ReadingStageDoor({
   const path = doorPath(door);
   const [wire, setWire] = useState<Wire>(CLOSED);
   const [left, setLeft] = useState(false);
+  /* TASK-488: JitsiRoom reports false on every boot, true once joined */
+  const [joined, setJoined] = useState(false);
 
   /* TASK-471 (block 968,624): a recursive setTimeout (never setInterval)
      so the delay before the NEXT fetch can depend on what THIS fetch just
@@ -235,6 +246,9 @@ export default function ReadingStageDoor({
           if (!alive || !d?.ok) return;
           const decision = d.decision ?? (d.open ? "open" : "hidden");
           lastDecision = decision;
+          /* TASK-488 review: a door that closed server-side unmounts the
+             room without a Jitsi farewell event, so clear the join too */
+          if (decision !== "open") setJoined(false);
           setWire({
             decision,
             reachable: d.reachable ?? null,
@@ -277,6 +291,8 @@ export default function ReadingStageDoor({
       onEnded={onEnded}
       onRejoin={onRejoin}
       cameraShown={wire.camera === "shown"}
+      joined={joined}
+      onJoined={setJoined}
     />
   );
 }
