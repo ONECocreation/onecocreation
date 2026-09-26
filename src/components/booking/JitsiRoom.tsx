@@ -124,28 +124,36 @@ export function jitsiEmbedOptions({
 /**
  * TASK-479 (block 968,624+, the Admiral's approved mockup, `t479/mockup.html`):
  * the /reading top screen keeps the book cover over the mounted, still-
- * listening room until Love's camera comes on. Her identity: the
- * participant holding the External API's 'moderator' role who is NOT the
- * local viewer themselves (this embed's own join, reported by
- * `videoConferenceJoined`'s own `id` — FEASIBILITY.md §3 "moderator role").
+ * listening room until Love's camera comes on. TASK-485 (same day): the
+ * Admiral now also joins these rooms as a SECOND moderator (adminpacman,
+ * alongside Love) — a "the FIRST moderator seen is THE host" rule breaks
+ * the moment either of them can be the one to arrive muted first (the
+ * Admiral before Love, or Love dropping and rejoining after him): that lone
+ * tracked "host" reads muted, and the OTHER moderator's later, real unmute
+ * has nobody left to attach to, so the cover rides over a genuinely live
+ * room. There is no single "host" identity to hold any more — every
+ * REMOTE participant holding the External API's 'moderator' role (never
+ * the local viewer themselves — this embed's own join, reported by
+ * `videoConferenceJoined`'s own `id`) is tracked in a small map, and the
+ * cover shows only when EVERY tracked moderator reads muted.
+ *
  * Deliberately NOT the "moderator AND displayName" combination FEASIBILITY.md
  * §3 floats as the sturdier interim signal: `displayName` is free text any
  * guest's own prejoin screen lets them type (FEASIBILITY.md §3's own
  * "a guest COULD type 'Love'" risk) — adding it back in here would only
  * narrow WHICH moderator we trust, never harden the check, since the
  * moderator flag is still the thing actually granting the identity. The
- * durable fix is the JWT plan's own moderator claim (briefings/jitsi-jwt-968269/);
- * until then, moderator-only plus "never adopt a second moderator while the
- * first is still tracked" (see `participantRoleChanged` below) is the
- * chosen interim shape.
+ * durable fix is the JWT plan's own moderator claim (briefings/jitsi-jwt-968269/).
  *
  * FAIL OPEN throughout (FEASIBILITY.md §6): unknown, ambiguous, or gone
  * always means SHOW THE VIDEO, never trap a viewer behind a still picture.
- * `videoOn` starts `true` and only ever turns `false` on an EXPLICIT
- * muted-video signal from the participant already identified as the host —
- * merely joining, or merely becoming the moderator, says nothing about the
- * camera by itself (§6: "the host's camera starting unmuted is not
- * guaranteed to fire an event... default to video if unsure").
+ * `videoOn` is `true` whenever the tracked-moderators map is EMPTY (nobody
+ * known yet) OR any entry in it reads `true` — a newly identified
+ * moderator defaults to `true` (unknown = on) and only ever flips to
+ * `false` on an EXPLICIT muted-video signal for that specific id (§6:
+ * "the host's camera starting unmuted is not guaranteed to fire an
+ * event... default to video if unsure", now per moderator rather than
+ * per single host).
  *
  * A pure reducer so the state machine can be pinned hard without a script
  * tag, a DOM, or a live Jitsi server (none exist in this environment —
@@ -153,24 +161,32 @@ export function jitsiEmbedOptions({
  */
 export interface HostVideoState {
   /** this embed's own participant id (from `videoConferenceJoined`) —
-   *  never treated as a possible host, however its role reads. */
+   *  never added to `moderators`, however its role reads. */
   localId: string | null;
-  /** the one participant currently trusted as the host (moderator, not
-   *  local) — null when nobody's been identified yet, or the identified
-   *  host left / lost the role. */
-  hostId: string | null;
+  /** every REMOTE participant currently holding the moderator role,
+   *  keyed by id, valued by whether THEIR video currently reads on.
+   *  A newly identified moderator enters as `true` (unknown = on, fail
+   *  open) and only flips to `false` on an explicit muted-video signal
+   *  for that same id. Removed entirely on `participantLeft` or losing
+   *  the role — never left behind as a stale entry. */
+  moderators: Record<string, boolean>;
   /** what the /reading screen shows: true -> the real video, false -> the
-   *  cover stays over the mounted (still audible) room. */
+   *  cover stays over the mounted (still audible) room. Derived from
+   *  `moderators` on every transition (`computeVideoOn` below) — never
+   *  set independently, so it can never drift from the map. */
   videoOn: boolean;
-  /** true once an explicit participantMuted(video) signal has arrived for
-   *  the identified host — guards the safety timeout from undoing a real,
-   *  still-current signal (see `hostVideoReducer`'s "timeout" case). */
+  /** true once ANY explicit participantMuted(video) signal has ever been
+   *  applied to ANY tracked moderator this boot cycle — guards the safety
+   *  timeout from undoing a real, still-current picture (see
+   *  `hostVideoReducer`'s "timeout" case). A one-way latch: once the wire
+   *  has proven it can deliver a real signal, later removals (a
+   *  moderator leaving, or the map going empty) never un-prove that. */
   sawMuteSignal: boolean;
 }
 
 export const initialHostVideoState: HostVideoState = {
   localId: null,
-  hostId: null,
+  moderators: {},
   videoOn: true,
   sawMuteSignal: false,
 };
@@ -192,63 +208,61 @@ export function hostEventParticipantId(data: { id?: string; participantId?: stri
 }
 
 /** 20 seconds from OUR OWN join (`videoConferenceJoined`) — if by then no
- *  host has ever been identified at all, the safety net below drops any
- *  assumption of a cover rather than risk trapping a viewer on a broken or
- *  older build that never fires the events this lane relies on. It never
- *  overrides a REAL, still-current mute signal (`sawMuteSignal`) — Love's
- *  camera can legitimately stay off far longer than 20 seconds; only the
- *  UNCERTAIN case times out. */
+ *  moderator has ever been identified at all, the safety net below drops
+ *  any assumption of a cover rather than risk trapping a viewer on a
+ *  broken or older build that never fires the events this lane relies on.
+ *  It never overrides a REAL, still-current mute signal (`sawMuteSignal`)
+ *  — a moderator's camera can legitimately stay off far longer than 20
+ *  seconds; only the UNCERTAIN case times out. */
 export const HOST_VIDEO_SAFETY_TIMEOUT_MS = 20_000;
+
+/** `videoOn` = the map is empty (nobody known -> fail open) OR any tracked
+ *  moderator currently reads on. The cover shows only when the map is
+ *  non-empty AND every entry in it is `false`. */
+function computeVideoOn(moderators: Record<string, boolean>): boolean {
+  const ids = Object.keys(moderators);
+  if (ids.length === 0) return true;
+  return ids.some((id) => moderators[id]);
+}
 
 export function hostVideoReducer(state: HostVideoState, event: HostVideoEvent): HostVideoState {
   switch (event.type) {
     case "videoConferenceJoined":
       return { ...state, localId: event.id || state.localId };
     case "participantRoleChanged": {
-      if (!event.id || event.id === state.localId) return state; // never trust our own role
+      if (!event.id || event.id === state.localId) return state; // the local participant is never counted
       if (event.role === "moderator") {
-        if (event.id === state.hostId) return state; // already tracking this one
-        if (state.hostId) {
-          /* a SECOND moderator arriving while we already track one — never
-           * adopt them as a replacement host. This was the reported
-           * blocker: Love (the real host) mutes video (cover up, a real
-           * confirmed signal), a second participant is handed/reports
-           * 'moderator' too, and the naive "last moderator wins" rule used
-           * to overwrite hostId to the second id WITHOUT resetting
-           * videoOn/sawMuteSignal — Love's later real unmute then failed
-           * the `event.id !== state.hostId` guard in "participantMuted"
-           * below and was silently dropped, leaving the cover stuck over
-           * a live host for the rest of the call. The only paths that may
-           * change who we track are the identified host's OWN lost-role
-           * (below) or leaving (participantLeft) — never a second
-           * participant's role report while the first is still present. */
-          return state;
-        }
-        // no host tracked yet — fail open still holds (videoOn/sawMuteSignal
-        // are already true/false); if this branch is ever reached with a
-        // DIFFERENT id already tracked, reset explicitly too (belt and
-        // braces — see the guard above that makes this the normal case).
-        return { ...state, hostId: event.id, videoOn: true, sawMuteSignal: false };
+        if (event.id in state.moderators) return state; // already tracked
+        // a newly identified moderator — unknown = on (fail open) until an
+        // explicit mute signal for THIS id says otherwise
+        const moderators = { ...state.moderators, [event.id]: true };
+        return { ...state, moderators, videoOn: computeVideoOn(moderators) };
       }
-      if (event.id === state.hostId) {
-        // the identified host lost the role (e.g. handed off) — fail open
-        return { ...state, hostId: null, videoOn: true, sawMuteSignal: false };
+      // lost the moderator role (e.g. handed off) — stop tracking them
+      if (event.id in state.moderators) {
+        const moderators = { ...state.moderators };
+        delete moderators[event.id];
+        return { ...state, moderators, videoOn: computeVideoOn(moderators) };
       }
       return state;
     }
     case "participantMuted": {
       if (event.mediaType !== "video") return state;
-      if (!state.hostId || event.id !== state.hostId) return state; // a non-host's events are ignored
-      return { ...state, videoOn: !event.isMuted, sawMuteSignal: true };
+      if (!(event.id in state.moderators)) return state; // a non-moderator's events are ignored
+      const moderators = { ...state.moderators, [event.id]: !event.isMuted };
+      return { ...state, moderators, videoOn: computeVideoOn(moderators), sawMuteSignal: true };
     }
     case "participantJoined":
       // presence alone says nothing about the camera (FEASIBILITY.md §6)
       return state;
-    case "participantLeft":
-      if (event.id !== state.hostId) return state;
-      return { ...state, hostId: null, videoOn: true, sawMuteSignal: false };
+    case "participantLeft": {
+      if (!(event.id in state.moderators)) return state;
+      const moderators = { ...state.moderators };
+      delete moderators[event.id];
+      return { ...state, moderators, videoOn: computeVideoOn(moderators) };
+    }
     case "timeout":
-      return state.sawMuteSignal ? state : { ...state, videoOn: true };
+      return state.sawMuteSignal ? state : { ...state, moderators: {}, videoOn: true };
     default:
       return state;
   }
