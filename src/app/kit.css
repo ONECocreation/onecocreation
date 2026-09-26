@@ -290,6 +290,20 @@
   .kit-stage1-card .kit-rows>li{grid-template-columns:1fr;gap:8px}
   .kit-stage1-card .kit-rows-end{justify-self:end}
 }
+/* TASK-475 (block 968,624) — RoomsCard folds Stage 1's old two
+   one-control rows (the stage's lifecycle, and its host link) into ONE
+   row per door carrying BOTH controls (Open/Close, plus Join on camera)
+   on the same right edge. The shared .kit-rows-end above is plain
+   inline text with no layout of its own, so two buttons there would
+   overlap instead of sitting side by side — this rule gives the pair a
+   small flex row, wrapping to stack under narrow widths, SCOPED to
+   .kit-rooms-card so every other .kit-rows-end (Stage2Details, the
+   Reading Day brick) is untouched. */
+.kit-rooms-card .kit-rows-end{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:768px){
+  .kit-rooms-card .kit-rows>li{grid-template-columns:1fr;gap:8px}
+  .kit-rooms-card .kit-rows-end{justify-self:end}
+}
 /* TASK-467 (block 968,561) — the Reading Day brick's own card, the same
    stacking law as kit-stage1-card just above (measured: a wide button
    squeezed into the shared two-column grid clipped against the card's

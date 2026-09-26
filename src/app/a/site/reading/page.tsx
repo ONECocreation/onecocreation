@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import OperatorGate from "@/components/OperatorGate";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
-import { STAGE2_FLOOR_NAME } from "@/lib/stage2-access";
 import SiteReadingRoom from "./SiteReadingRoom";
 
 /**
@@ -10,6 +9,11 @@ import SiteReadingRoom from "./SiteReadingRoom";
  * Same server operator-gate shape as every other /a/site/* room
  * (community-door/page.tsx, about-videos/page.tsx): no operator cookie,
  * the door renders instead of the room.
+ *
+ * TASK-475 (block 968,624): `SiteReadingRoom` no longer takes a
+ * `floorName` prop — the combined rooms card doesn't name Stage 2's floor
+ * on its row (`STAGE2_FLOOR_NAME` still lives in `stage2-access.ts`, read
+ * by `/reading` itself).
  */
 
 export const metadata: Metadata = {
@@ -25,5 +29,5 @@ export default async function SiteReadingPage() {
   if (!operator) {
     return <OperatorGate configured={operatorsConfigured()} />;
   }
-  return <SiteReadingRoom floorName={STAGE2_FLOOR_NAME} />;
+  return <SiteReadingRoom />;
 }

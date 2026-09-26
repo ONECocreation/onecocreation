@@ -177,11 +177,14 @@ describe("Love's Stage 2 card names the floor from STAGE2_FLOOR_NAME", () => {
     expect(src).not.toContain("Weekly Intuitive and above");
   });
 
-  it("the server page threads STAGE2_FLOOR_NAME through SiteReadingRoom to the card", () => {
+  it("TASK-475 (block 968,624): SiteReadingRoom no longer threads floorName — Stage2Card is retired from the page, kept in place but unimported (house law: never deleted)", () => {
     const page = read("src/app/a/site/reading/page.tsx");
-    expect(page).toContain('import { STAGE2_FLOOR_NAME } from "@/lib/stage2-access";');
-    expect(page).toContain("<SiteReadingRoom floorName={STAGE2_FLOOR_NAME} />");
-    expect(read("src/app/a/site/reading/SiteReadingRoom.tsx")).toContain("<Stage2Card floorName={floorName} />");
+    expect(page).not.toContain('from "@/lib/stage2-access"');
+    expect(page).toContain("<SiteReadingRoom />");
+    const room = read("src/app/a/site/reading/SiteReadingRoom.tsx");
+    expect(room).not.toContain('from "./Stage2Card"');
+    expect(room).not.toContain('from "./Stage1Card"');
+    expect(room).toContain('from "./RoomsCard"');
   });
 
   it("the two client files never import stage2-access (it reads the store, server only)", () => {
