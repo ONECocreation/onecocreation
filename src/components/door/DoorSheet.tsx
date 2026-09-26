@@ -15,6 +15,9 @@ import {
   DOOR_KEY_CTA,
   DOOR_KEY_NOTE,
   DOOR_NAME_SUFFIX,
+  DOOR_SEND_CONFIRMATION,
+  DOOR_SEND_TIMEOUT_MS,
+  DOOR_SEND_TIMEOUT_NOTE,
   DoorState,
   isUnnamedKeyReason,
   landingFor,
@@ -111,18 +114,26 @@ export default function DoorSheet({
     if (busy) return;
     setBusy(true);
     setNote(null);
+    /* block 968,624 — a slow relay fails HONESTLY on the client side too:
+       25s, then an uncertain-outcome note (never "failed" — the server's
+       send may still land, see DOOR_SEND_TIMEOUT_NOTE's own comment). */
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), DOOR_SEND_TIMEOUT_MS);
     try {
       const res = await fetch("/api/auth/email/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim() }),
+        signal: controller.signal,
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; reason?: string } | null;
       if (res.ok && data?.ok) go({ type: "code-sent" });
       else setNote(data?.reason ?? "the letter didn't send — try again");
-    } catch {
-      setNote("couldn't reach the server — check your connection and try again");
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") setNote(DOOR_SEND_TIMEOUT_NOTE);
+      else setNote("couldn't reach the server — check your connection and try again");
     } finally {
+      clearTimeout(timer);
       setBusy(false);
     }
   }
@@ -377,7 +388,7 @@ export default function DoorSheet({
       {state === "code" && (
         <>
           <p style={bodyNote}>
-            {copy.note} Sent to <b style={{ color: "var(--ink-strong)" }}>{email}</b>.
+            <b>{DOOR_SEND_CONFIRMATION}</b> {copy.note} Sent to <b style={{ color: "var(--ink-strong)" }}>{email}</b>.
           </p>
           <form onSubmit={verifyCode} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <input

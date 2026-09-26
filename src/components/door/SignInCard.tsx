@@ -18,6 +18,9 @@ import {
   DOOR_COPY,
   DOOR_KEY_CTA,
   DOOR_NAME_SUFFIX,
+  DOOR_SEND_CONFIRMATION,
+  DOOR_SEND_TIMEOUT_MS,
+  DOOR_SEND_TIMEOUT_NOTE,
   DoorState,
   isUnnamedKeyReason,
   landingFor,
@@ -167,18 +170,26 @@ export default function SignInCard({
     if (busy) return;
     setBusy(true);
     setNote(null);
+    /* block 968,624 — a slow relay fails HONESTLY on the client side too:
+       25s, then an uncertain-outcome note (never "failed" — the server's
+       send may still land, see DOOR_SEND_TIMEOUT_NOTE's own comment). */
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), DOOR_SEND_TIMEOUT_MS);
     try {
       const res = await fetch("/api/auth/email/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim() }),
+        signal: controller.signal,
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; reason?: string } | null;
       if (res.ok && data?.ok) go({ type: "code-sent" });
       else setNote(data?.reason ?? "the letter didn't send — try again");
-    } catch {
-      setNote("couldn't reach the server — check your connection and try again");
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") setNote(DOOR_SEND_TIMEOUT_NOTE);
+      else setNote("couldn't reach the server — check your connection and try again");
     } finally {
+      clearTimeout(timer);
       setBusy(false);
     }
   }
@@ -444,7 +455,7 @@ export default function SignInCard({
       {state === "code" && (
         <>
           <p className="kit-body" style={{ marginBottom: 12 }}>
-            {copy.note} Sent to <strong>{email}</strong>.
+            <strong>{DOOR_SEND_CONFIRMATION}</strong> {copy.note} Sent to <strong>{email}</strong>.
           </p>
           <form onSubmit={verifyCode} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <Field
