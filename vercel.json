@@ -8,6 +8,14 @@
     {
       "path": "/api/mail/tick",
       "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/mail/tick",
+      "schedule": "5 8 * * *"
+    },
+    {
+      "path": "/api/mail/tick",
+      "schedule": "5 9 * * *"
     }
   ]
 }
