@@ -3,7 +3,15 @@ import { siteBase, unsubscribeUrl, isSubscribed, listSubscribersByTag, markReadi
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { zonedDateParts } from "@/lib/booking-time";
-import { EDITABLE_LETTERS, getLetterOverride, letterHtml } from "@/lib/letters";
+import {
+  AUTO_SLOT_BUILTIN,
+  EDITABLE_LETTERS,
+  composedLetterKeys,
+  getAutoSlotLetter,
+  getLetterOverride,
+  letterHtml,
+  type LetterAutoSlot,
+} from "@/lib/letters";
 
 /**
  * TASK-389 — the two reading emails: a confirmation on sign-up, and a
@@ -197,16 +205,51 @@ async function composedLetterMailFor(email: string, key: string): Promise<Outgoi
   }
 }
 
-/** The confirmation actually sent: Love's `weekly-reading-with-love` when
- *  it has words, the built-in `readingConfirmationLetter` otherwise. */
-export async function buildReadingConfirmationLetter(email: string): Promise<OutgoingMail> {
-  return (await composedLetterMailFor(email, READING_CONFIRMATION_LETTER_KEY)) ?? readingConfirmationLetter(email);
+/* ── T-482 part 2: the "Sends automatically" slot overrides the hardcoded
+ * default above, when the operator has set one from `/a/letters/[key]`.
+ * `effectiveAutoSlot()` is the ONE place both this file's send path and
+ * the admin route's own GET resolve a slot's three-way state — never
+ * re-derived twice (review, block 968,624+). */
+
+/** The hardcoded default per slot (Part 1's own two constants) — the one
+ *  small map both `effectiveAutoSlot()` and the admin route's GET read,
+ *  named here since these two constants are this file's own. */
+export const READING_AUTO_DEFAULTS: Record<LetterAutoSlot, string> = {
+  "reading-confirm": READING_CONFIRMATION_LETTER_KEY,
+  "reading-dayof": READING_DAYOF_LETTER_KEY,
+};
+
+/** The letter key ACTUALLY riding `slot` today: the literal
+ *  `AUTO_SLOT_BUILTIN` when Love's letters are explicitly off for this
+ *  slot (the built-in words send — never the hardcoded default either),
+ *  the composed letter itself when one is set, or — absent, or a
+ *  stale/non-composed key (a deleted or renamed letter; review BLOCKER: a
+ *  slot naming a non-composed key is ignored and treated as unset) — the
+ *  hardcoded default. */
+export async function effectiveAutoSlot(slot: LetterAutoSlot): Promise<string> {
+  const raw = await getAutoSlotLetter(slot); // fails closed to null on a KV error
+  if (raw === AUTO_SLOT_BUILTIN) return AUTO_SLOT_BUILTIN;
+  if (raw && (await composedLetterKeys()).includes(raw)) return raw;
+  return READING_AUTO_DEFAULTS[slot];
 }
 
-/** The day-of letter actually sent: Love's `weekly-reading-with-love-2`
- *  when it has words, the built-in `readingDayOfLetter` otherwise. */
+/** The confirmation actually sent: `effectiveAutoSlot("reading-confirm")`
+ *  — Love's own letter (the slot's pick, or the hardcoded default when
+ *  no slot is set), the built-in `readingConfirmationLetter` when the
+ *  slot is explicitly turned off, or (either has no words yet) that same
+ *  built-in fallback. */
+export async function buildReadingConfirmationLetter(email: string): Promise<OutgoingMail> {
+  const key = await effectiveAutoSlot("reading-confirm");
+  if (key === AUTO_SLOT_BUILTIN) return readingConfirmationLetter(email);
+  return (await composedLetterMailFor(email, key)) ?? readingConfirmationLetter(email);
+}
+
+/** The day-of letter actually sent: `effectiveAutoSlot("reading-dayof")`
+ *  — the same triad. */
 export async function buildReadingDayOfLetter(email: string, startsAtMs: number, tz: string): Promise<OutgoingMail> {
-  return (await composedLetterMailFor(email, READING_DAYOF_LETTER_KEY)) ?? readingDayOfLetter(email, startsAtMs, tz);
+  const key = await effectiveAutoSlot("reading-dayof");
+  if (key === AUTO_SLOT_BUILTIN) return readingDayOfLetter(email, startsAtMs, tz);
+  return (await composedLetterMailFor(email, key)) ?? readingDayOfLetter(email, startsAtMs, tz);
 }
 
 /* ── the two send paths (R1: direct sendMail, never a post-drain enqueue) ── */

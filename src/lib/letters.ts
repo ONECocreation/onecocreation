@@ -242,6 +242,76 @@ export async function saveLetterOverride(k: string, v: LetterOverride | null): P
   else await kv(["SET", key(k), JSON.stringify(v)]);
 }
 
+/* ── TASK-482: the two automatic-send slots ────────────────────────────────
+ * `reading-letters.ts` sends two automated letters (the sign-up
+ * confirmation, the 2 a.m. day-of letter), each with a HARDCODED default
+ * composed-letter key (T-482's own hotfix). A slot here, when set, moves
+ * that automatic send onto a DIFFERENT letter instead — a slot may hold
+ * ONLY a composed letter, never a seeded one (review BLOCKER, block
+ * 968,624+: order-receipt, pwyc-accept, pwyc-decline, offer-love-notify
+ * and welcome all carry {{placeholders}} that would go out raw to every
+ * soul; `isComposedLetterKey` below is the gate both the admin route's
+ * PUT and `reading-letters.ts`'s own resolution enforce).
+ *
+ * Storage: ONE KV key PER SLOT (`letters:auto:<slot>`) — never a single
+ * whole-doc blob (the review's SHOULD-FIX: a whole-doc read-modify-write
+ * let a write to one slot silently erase a concurrent write to the
+ * other; the OLD whole-doc key, plain `letters:auto`, was never live in
+ * production, so this is a straight replacement — no migration needed).
+ * Three raw states per slot: ABSENT (the hardcoded default applies), the
+ * literal `AUTO_SLOT_BUILTIN` (Love's letters explicitly OFF, the
+ * built-in words send, never the default either), or a composed
+ * letter's key. `reading-letters.ts`'s `effectiveAutoSlot()` is the ONE
+ * place both the send path and the admin route's GET resolve that triad
+ * — never re-derived twice. */
+
+export const AUTO_SLOTS = ["reading-confirm", "reading-dayof"] as const;
+export type LetterAutoSlot = (typeof AUTO_SLOTS)[number];
+export type LetterAutoSlots = Partial<Record<LetterAutoSlot, string>>;
+
+/** Love's letters are explicitly OFF for a slot carrying this value — the
+ *  built-in words send, and (unlike an absent slot) never the hardcoded
+ *  default either. A LEADING UNDERSCORE, deliberately: `SLUG_RE` below
+ *  (`^[a-z0-9]...`) can never produce or accept a key starting with one,
+ *  so no composed letter's slug can ever collide with this sentinel
+ *  (re-review, block 968,624+ — the first draft used the plain word
+ *  "builtin", and `slugify("BuiltIn")` gives exactly "builtin": a letter
+ *  actually titled that would have silently traded places with the
+ *  sentinel). The PUT below still checks for this explicitly too —
+ *  belt and suspenders, never trusting the slug shape alone. */
+export const AUTO_SLOT_BUILTIN = "__builtin" as const;
+
+const autoSlotKey = (slot: LetterAutoSlot) => `letters:auto:${slot}`;
+
+/** One slot's raw value — a composed letter's key, the literal
+ *  `AUTO_SLOT_BUILTIN`, or `null` (absent: the hardcoded default
+ *  applies). Fails closed to `null` on a KV error; each slot's own key
+ *  is read independently, so one slot's outage never blanks the other's
+ *  real value. */
+export async function getAutoSlotLetter(slot: LetterAutoSlot): Promise<string | null> {
+  try {
+    return ((await kv(["GET", autoSlotKey(slot)])) as string | null) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Write ONE slot's raw value directly — a composed letter's key, the
+ *  literal `AUTO_SLOT_BUILTIN`, or `null` (clears it back to absent — the
+ *  hardcoded default applies again). Touches only THIS slot's own KV
+ *  key: a concurrent write to the OTHER slot can never lose this one
+ *  (the review's SHOULD-FIX). */
+export async function setAutoSlotRaw(slot: LetterAutoSlot, value: string | null): Promise<void> {
+  if (value === null) await kv(["DEL", autoSlotKey(slot)]);
+  else await kv(["SET", autoSlotKey(slot), value]);
+}
+
+/** Composed letters only — the sole set a slot may ever hold (review
+ *  BLOCKER: a seeded letter's `{{placeholders}}` would go out raw). */
+export async function isComposedLetterKey(k: string): Promise<boolean> {
+  return (await composedLetterKeys()).includes(k);
+}
+
 /* ── TASK-131: letters Love composes herself ───────────────────────────────
  * The registry is a JSON list of keys (creation order) at letters:composed;
  * each letter's words ride the SAME override vault as the seeded six

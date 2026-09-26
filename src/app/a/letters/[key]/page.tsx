@@ -25,6 +25,15 @@ interface Segment {
   count: number;
 }
 
+/** T-482: the two automatic sends this letter can ride — "" means neither. */
+type AutoSlot = "" | "reading-confirm" | "reading-dayof";
+
+const AUTO_SLOT_STATE_WORDS: Record<AutoSlot, string> = {
+  "": "Not automatic yet.",
+  "reading-confirm": "Sent when someone signs up for the reading.",
+  "reading-dayof": "Sent reading-day morning at 2 a.m.",
+};
+
 /** The drip's honest pace: past the hourly cap the queue spans whole hours.
  *  Module scope so react's render-purity rule reads it as a plain helper. */
 function estimateFinish(n: number, cap: number): Date | null {
@@ -42,6 +51,12 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   const [typed, setTyped] = useState("");
   const [note, setNote] = useState("");
   const [deliveries, setDeliveries] = useState<{ to: string; when: string }[]>([]);
+
+  // T-482: the "Sends automatically" row — which slot (if any) THIS letter
+  // currently holds, and the in-flight guard for saving a change to it.
+  const [autoSlot, setAutoSlot] = useState<AutoSlot>("");
+  const [savingSlot, setSavingSlot] = useState(false);
+  const [slotNote, setSlotNote] = useState("");
 
   /* TASK-214: "the receipt sent 3× on 3 clicks" — the panel had no in-flight
    * guard. A ref (not state) is the guard itself: state updates are async
@@ -68,19 +83,53 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   }
 
   useEffect(() => {
-    fetch("/api/admin/letters")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (!d?.ok) return;
+    Promise.all([
+      fetch("/api/admin/letters").then((r) => (r.ok ? r.json() : null)),
+      fetch("/api/admin/letters/slots").then((r) => (r.ok ? r.json() : null)),
+    ])
+      .then(([d, s]) => {
+        if (!d?.ok) {
+          setLetter(null);
+          return;
+        }
         const segs: Segment[] = d.segments ?? [];
         const capVal: number = d.mailHourlyCap ?? 100;
         setLetter((d.letters ?? []).find((l: ApiLetter) => l.key === key) ?? null);
         setSegments(segs);
         setCap(capVal);
-        updateEstimate(segs.find((s) => s.source === "all")?.count ?? 0, capVal);
+        updateEstimate(segs.find((seg) => seg.source === "all")?.count ?? 0, capVal);
+        // s.slots is the EFFECTIVE key per slot (the hardcoded default
+        // applied when no slot was ever set) — this letter's row shows
+        // itself selected whenever ITS key is the effective holder,
+        // default-riding or explicit alike.
+        const slots: { "reading-confirm"?: string; "reading-dayof"?: string } = s?.ok ? (s.slots ?? {}) : {};
+        setAutoSlot(slots["reading-confirm"] === key ? "reading-confirm" : slots["reading-dayof"] === key ? "reading-dayof" : "");
       })
       .catch(() => setLetter(null));
   }, [key]);
+
+  /** T-482: move this letter onto (or off) an automatic-send slot. An
+   *  optimistic set, reverted on a rejection — the same shape as every
+   *  other one-control-per-row save on this page. */
+  async function changeAutoSlot(next: AutoSlot) {
+    const prev = autoSlot;
+    setAutoSlot(next);
+    setSavingSlot(true);
+    setSlotNote("");
+    try {
+      const d = await fetch("/api/admin/letters/slots", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, slot: next }),
+      }).then((r) => r.json()).catch(() => null);
+      if (!d?.ok) {
+        setAutoSlot(prev);
+        setSlotNote(d?.reason ?? "could not save");
+      }
+    } finally {
+      setSavingSlot(false);
+    }
+  }
 
   const subject = letter?.override?.subject ?? letter?.default?.subject ?? letter?.title ?? "";
   const hasBody = !!(letter?.override?.body ?? letter?.default?.body)?.trim();
@@ -178,6 +227,27 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
           <p className="mt-2" style={{ fontSize: ".75rem", color: "var(--muted)" }}>
             This letter has no words yet — <Link href="/a/letters" style={{ textDecoration: "underline", color: "var(--info)" }}>write it in the room</Link> before sending.
           </p>
+        )}
+        {/* T-482: only a letter Love composes may ride an automatic send
+            (review BLOCKER — a seeded letter's {{placeholders}} would go
+            out raw) — the row shows only on a composed letter's own page.
+            ONE state per row, said once, under the row's words; ONE
+            control per row, on the same right edge in every state — the
+            /a uniformity law, `.kit-rows`' own grid (Stage1Card's idiom).
+            A save error REPLACES the state line, never adds a second one. */}
+        {letter.kind === "composed" && (
+          <ul className="kit-rows mt-2">
+            <li data-row="auto-slot">
+              <span>{slotNote || AUTO_SLOT_STATE_WORDS[autoSlot]}</span>
+              <span className="kit-rows-end">
+                <select value={autoSlot} onChange={(e) => changeAutoSlot(e.target.value as AutoSlot)} disabled={savingSlot} className="kit-field-input">
+                  <option value="">Not automatic</option>
+                  <option value="reading-confirm">When someone signs up for the reading</option>
+                  <option value="reading-dayof">Reading-day morning (2 a.m.)</option>
+                </select>
+              </span>
+            </li>
+          </ul>
         )}
       </div>
 

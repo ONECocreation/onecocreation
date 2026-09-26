@@ -48,6 +48,8 @@ it overrides Part 1's hardcoded default for that send.
 - `tests/reading-letters-composed-482.test.ts` — NEW (Part 1): pins the
   named default keys, the fallback triad (missing / empty / KV error),
   and that the send paths route through the composed-letter builders.
+- `src/app/kit.css` — EDIT (walk fix): a `.kit-rows` row whose end is a
+  `<select>` stacks to one column at <=640px so the select fits the card.
 - `tests/letters-auto-slots-482.test.ts` — NEW (Part 2): the slot store,
   the admin route's auth gate, and slot-overrides-default.
 

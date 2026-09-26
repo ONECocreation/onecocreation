@@ -301,6 +301,13 @@
 .kit-rows b a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 .kit-rows em{display:block;font-style:normal;font-size:.88rem;color:var(--muted);line-height:1.45}
 .kit-rows-end{font-variant-numeric:tabular-nums;color:var(--ink-strong);font-weight:700;white-space:nowrap}
+/* T-482 walk: a row whose control is a <select> (the letters room's
+   "Sends automatically") sizes to its longest option, wider than a phone
+   card. At phone width the row stacks and the select takes the row. */
+@media (max-width:640px){
+  .kit-rows>li:has(>.kit-rows-end>select){grid-template-columns:1fr;gap:8px}
+  .kit-rows-end>select{width:100%;max-width:100%}
+}
 /* the operator Stage 1 card at narrow widths (K122 item 1): each row
    stacks — words, then the state line, then the control on the row's
    right edge, identical for every row in every state. SCOPED to the
