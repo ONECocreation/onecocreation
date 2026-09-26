@@ -242,6 +242,62 @@ export async function saveLetterOverride(k: string, v: LetterOverride | null): P
   else await kv(["SET", key(k), JSON.stringify(v)]);
 }
 
+/* ── TASK-482: the two automatic-send slots ────────────────────────────────
+ * `reading-letters.ts` sends two automated letters (the sign-up
+ * confirmation, the 2 a.m. day-of letter), each with a HARDCODED default
+ * composed-letter key (T-482's own hotfix). A slot here, when set, moves
+ * that automatic send onto a DIFFERENT letter instead — one small JSON doc
+ * (`letters:auto`), no more than one letter per slot, the whole doc
+ * overwritten on every save (never merged field-by-field, so a stale read
+ * can never resurrect a cleared slot). Reads fail CLOSED to "no slot" on a
+ * KV error — `reading-letters.ts`'s own hardcoded default (or, under
+ * that, the built-in words) is always the fallback, never a crash. */
+
+export const AUTO_SLOTS = ["reading-confirm", "reading-dayof"] as const;
+export type LetterAutoSlot = (typeof AUTO_SLOTS)[number];
+export type LetterAutoSlots = Partial<Record<LetterAutoSlot, string>>;
+
+const AUTO_SLOTS_KEY = "letters:auto";
+
+export async function getAutoSlots(): Promise<LetterAutoSlots> {
+  try {
+    const raw = (await kv(["GET", AUTO_SLOTS_KEY])) as string | null;
+    return raw ? (JSON.parse(raw) as LetterAutoSlots) : {};
+  } catch {
+    return {};
+  }
+}
+
+/** The one letter key (if any) currently riding a given slot — the send
+ *  path's own override-the-hardcoded-default lookup. Fails closed to
+ *  `null` ("no slot") on any KV error. */
+export async function getAutoSlotLetter(slot: LetterAutoSlot): Promise<string | null> {
+  const slots = await getAutoSlots();
+  return slots[slot] ?? null;
+}
+
+/** The slot (if any) a given letter currently holds — for that letter's
+ *  own `/a/letters/[key]` page to show its row's state. */
+export async function getLetterAutoSlotOf(key: string): Promise<LetterAutoSlot | null> {
+  const slots = await getAutoSlots();
+  for (const slot of AUTO_SLOTS) if (slots[slot] === key) return slot;
+  return null;
+}
+
+/** Move `key` onto `slot` (or off every slot, when `slot` is null). A slot
+ *  holds at most one letter and a letter holds at most one slot, so
+ *  choosing a slot here first clears whatever letter held it, and clears
+ *  THIS letter off any other slot it used to occupy — never two rows
+ *  claiming the same automatic send, never one letter double-booked. */
+export async function setLetterAutoSlot(key: string, slot: LetterAutoSlot | null): Promise<void> {
+  const slots = await getAutoSlots();
+  for (const s of AUTO_SLOTS) {
+    if (slots[s] === key) delete slots[s];
+  }
+  if (slot) slots[slot] = key;
+  await kv(["SET", AUTO_SLOTS_KEY, JSON.stringify(slots)]);
+}
+
 /* ── TASK-131: letters Love composes herself ───────────────────────────────
  * The registry is a JSON list of keys (creation order) at letters:composed;
  * each letter's words ride the SAME override vault as the seeded six

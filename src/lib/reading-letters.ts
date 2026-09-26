@@ -3,7 +3,7 @@ import { siteBase, unsubscribeUrl, isSubscribed, listSubscribersByTag, markReadi
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { zonedDateParts } from "@/lib/booking-time";
-import { EDITABLE_LETTERS, getLetterOverride, letterHtml } from "@/lib/letters";
+import { EDITABLE_LETTERS, getAutoSlotLetter, getLetterOverride, letterHtml, type LetterAutoSlot } from "@/lib/letters";
 
 /**
  * TASK-389 — the two reading emails: a confirmation on sign-up, and a
@@ -197,16 +197,28 @@ async function composedLetterMailFor(email: string, key: string): Promise<Outgoi
   }
 }
 
-/** The confirmation actually sent: Love's `weekly-reading-with-love` when
- *  it has words, the built-in `readingConfirmationLetter` otherwise. */
-export async function buildReadingConfirmationLetter(email: string): Promise<OutgoingMail> {
-  return (await composedLetterMailFor(email, READING_CONFIRMATION_LETTER_KEY)) ?? readingConfirmationLetter(email);
+/* ── T-482 part 2: the "Sends automatically" slot overrides the hardcoded
+ * default above, when the operator has set one from `/a/letters/[key]`. */
+
+async function resolvedLetterKey(slot: LetterAutoSlot, hardcodedDefault: string): Promise<string> {
+  const slotted = await getAutoSlotLetter(slot); // fails closed to null on a KV error
+  return slotted ?? hardcodedDefault;
 }
 
-/** The day-of letter actually sent: Love's `weekly-reading-with-love-2`
- *  when it has words, the built-in `readingDayOfLetter` otherwise. */
+/** The confirmation actually sent: the operator's slot pick if one is set,
+ *  else the hardcoded `weekly-reading-with-love` default, else (either has
+ *  no words yet) the built-in `readingConfirmationLetter`. */
+export async function buildReadingConfirmationLetter(email: string): Promise<OutgoingMail> {
+  const key = await resolvedLetterKey("reading-confirm", READING_CONFIRMATION_LETTER_KEY);
+  return (await composedLetterMailFor(email, key)) ?? readingConfirmationLetter(email);
+}
+
+/** The day-of letter actually sent: the operator's slot pick if one is
+ *  set, else the hardcoded `weekly-reading-with-love-2` default, else
+ *  (either has no words yet) the built-in `readingDayOfLetter`. */
 export async function buildReadingDayOfLetter(email: string, startsAtMs: number, tz: string): Promise<OutgoingMail> {
-  return (await composedLetterMailFor(email, READING_DAYOF_LETTER_KEY)) ?? readingDayOfLetter(email, startsAtMs, tz);
+  const key = await resolvedLetterKey("reading-dayof", READING_DAYOF_LETTER_KEY);
+  return (await composedLetterMailFor(email, key)) ?? readingDayOfLetter(email, startsAtMs, tz);
 }
 
 /* ── the two send paths (R1: direct sendMail, never a post-drain enqueue) ── */
