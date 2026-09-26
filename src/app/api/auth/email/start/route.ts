@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, reason: "that email doesn't look right" }, { status: 400 });
   }
 
-  /* K7 — the code door's meter (TASK-185 Phase B): three codes per email
+  /* K7 — the code door's meter (TASK-185 Phase B): MAX_SENDS (ten) codes per email
      per ten-minute window, then the door holds with an honest 429 — no
      captcha, no flooded inbox. */
   if (sendVerdict(await countSend(email)) === "hold") {
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     console.error("sign-in code send failed:", err);
-    return NextResponse.json({ ok: false, reason: "the letter didn't send — try again" }, { status: 502 });
+    return NextResponse.json({ ok: false, reason: "The letter didn't send. Try again." }, { status: 502 });
   }
   return NextResponse.json({ ok: true });
 }

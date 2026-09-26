@@ -2,7 +2,7 @@
  * TASK-185 Phase B · K7 (0018.06.17 a₿) — real or bot: the code door's
  * meter. A real inbox answers ONE code; a script asks for a hundred. The
  * meter counts codes SENT to one email inside one window (the code's own
- * ten-minute life) and holds the door past three — the honest limit, no
+ * ten-minute life) and holds the door past MAX_SENDS (ten since block 968,624), the honest limit, no
  * third-party captcha (the Admiral: keep it simple). The verify side is
  * already metered (src/lib/email-auth.ts burns the window after five wrong
  * tries); this meter guards the SEND, so a bot can't turn Love's mailer
@@ -11,10 +11,18 @@
  * Self-contained on purpose: this lane's sanctioned exception covers
  * src/app/api/auth/email/** ONLY, so the meter speaks the same KV REST
  * protocol as src/lib/email-auth.ts without touching that unowned file.
+ *
+ * Block 968,624 (the Admiral's ruling, VERDICT-968624.md/L4-TRACE.md §4
+ * item 1): 3 was too tight against the OTHER half of this lane's fix
+ * (mail.ts's transport timeout, S4's honest sending/sent states) — a
+ * visitor who saw "stuck" and pressed again was burning the meter for a
+ * UI problem, not abuse. Raised to 10, same 600s window. Ship this
+ * ALONGSIDE the transport timeout, never alone (§6): without the timeout,
+ * a hung relay now burns 10 real send attempts instead of 3.
  */
 
 export const SEND_WINDOW_S = 600; // the code's own ten-minute life
-export const MAX_SENDS = 3;
+export const MAX_SENDS = 10;
 
 /** allow | hold — the whole decision, pure and pinned by tests. */
 export function sendVerdict(sends: number): "allow" | "hold" {

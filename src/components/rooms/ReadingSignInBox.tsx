@@ -36,7 +36,8 @@ import { classifySignUpKind, type ReadingTagOutcome } from "./reading-sign-up-st
  * SignInCard.tsx already call, nothing new server-side:
  *   start:  POST /api/auth/email/start  {email}       -> {ok, reason?}
  *           (src/app/api/auth/email/start/route.ts:10-49) — the code-door
- *           meter (code-door-limit.ts, 3 sends/10 min) rides untouched.
+ *           meter (code-door-limit.ts, 10 sends/10 min as of block 968,624)
+ *           rides untouched by this component.
  *   verify: POST /api/auth/email/verify {email, code} -> {ok, handle,
  *           space} + Set-Cookie (src/app/api/auth/email/verify/
  *           route.ts:30-78) — the SAME real member-session cookie
@@ -99,6 +100,21 @@ export const BOX_HEADING = "Sign me up. Keep me posted.";
 /* the code step says where the code went and how long it works (the
    /login sheet's own note, door-machine.ts, without its dash) */
 export const CODE_SENT_LINE = "A code is on its way to your inbox. It works for ten minutes.";
+/* block 968,624 (VERDICT-968624.md / L4-TRACE.md §4 item 2, ASTRA-REVIEW.md
+   L4 "No false success") — the code step is reachable ONLY after
+   startEmailCode() resolves { ok: true } below, so this confirmation is
+   honest wherever it renders: it never appears before the server actually
+   accepted the send. The box's own words, same law as CODE_SENT_LINE. */
+export const CODE_SENT_CONFIRMATION = "Code sent. Check your inbox.";
+/* A client fetch timeout for the send-code call (mail.ts's own transport
+   timeout is the other half of this fix). A client-side abort does NOT
+   cancel a server-side SMTP send already under way (VERDICT-968624:
+   "client abort does not cancel server-side SMTP; retrying can deliver
+   multiple codes") — so this never claims failure, only an honest,
+   uncertain outcome. */
+const SEND_TIMEOUT_MS = 25_000;
+export const SEND_TIMEOUT_MESSAGE =
+  "This is taking longer than usual. Check your inbox before trying again.";
 export const DIFFERENT_EMAIL_POINTER = "Wrong email? ";
 export const DIFFERENT_EMAIL_LINK_LABEL = "Use a different one";
 /* the exact promise ReadingSignUp.tsx's own public card already keeps
@@ -150,17 +166,23 @@ const BOX_OUTCOME_COPY: Record<SignInOutcome, string> = {
 /** Step one — the exact /api/auth/email/start contract (EmailDoor.tsx's
  *  own `start`, SignInCard.tsx's own `sendCode`). */
 export async function startEmailCode(email: string): Promise<{ ok: true } | { ok: false; message: string }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
   try {
     const res = await fetch("/api/auth/email/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
+      signal: controller.signal,
     });
     const data = (await res.json().catch(() => null)) as { ok?: boolean } | null;
     if (res.ok && data?.ok) return { ok: true };
     return { ok: false, message: startErrorWords(res.status) };
-  } catch {
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") return { ok: false, message: SEND_TIMEOUT_MESSAGE };
     return { ok: false, message: GENERIC_ERROR };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -320,7 +342,7 @@ export function ReadingSignInCard({ member, justJoined, initialStep = "email", o
       {step === "code" && (
         <>
           <p className="kit-text-quiet">
-            {CODE_SENT_LINE} Sent to <b>{email}</b>.
+            <strong>{CODE_SENT_CONFIRMATION}</strong> {CODE_SENT_LINE} Sent to <b>{email}</b>.
           </p>
           <form className="kit-inline-form" onSubmit={submitCode}>
             <Field

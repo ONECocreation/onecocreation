@@ -21,9 +21,9 @@ describe("the code door's meter (K7 — real or bot)", () => {
     expect(sendVerdict(100)).toBe("hold");
   });
 
-  it("the window is the code's own ten-minute life; the cap is three sends", () => {
+  it("the window is the code's own ten-minute life; the cap is ten sends (block 968,624, raised from 3)", () => {
     expect(SEND_WINDOW_S).toBe(600);
-    expect(MAX_SENDS).toBe(3);
+    expect(MAX_SENDS).toBe(10);
   });
 
   it("the held answer is honest words, never a captcha", () => {

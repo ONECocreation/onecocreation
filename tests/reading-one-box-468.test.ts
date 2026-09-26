@@ -145,7 +145,7 @@ describe("the error note speaks the box's own words, never a route's dashed reas
   for (const [status, reason] of [
     [400, "that email doesn't look right"],
     [429, "too many codes asked for — give it a few minutes and try again"],
-    [502, "the letter didn't send — try again"],
+    [502, "The letter didn't send. Try again."],
     [503, "email sign-in isn't wired yet — please use your key, or try again soon"],
     [500, "anything — at all"],
   ] as [number, string][]) {

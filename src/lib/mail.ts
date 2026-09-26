@@ -52,6 +52,15 @@ function transportFor(persona: MailPersona): nodemailer.Transporter | null {
     port,
     secure: port === 465,
     auth: { user: c.user, pass: c.pass },
+    /* block 968,624 (VERDICT-968624.md / L4-TRACE.md §2, Candidate A) — a
+     * slow relay used to hang past nodemailer's own 2-minute default, far
+     * longer than a visitor waits or a serverless function runs, so the
+     * door read as "stuck" instead of failing. These three fail the
+     * request fast and honestly: connect (TCP), greeting (SMTP banner),
+     * and the whole socket's idle ceiling once talking. */
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
   });
 }
 

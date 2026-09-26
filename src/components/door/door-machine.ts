@@ -163,3 +163,21 @@ export const DOOR_KEY_NOTE =
 export const DOOR_KEY_CTA = "Sign in with my key";
 export const DOOR_BACK = "← a different email";
 export const DOOR_NAME_SUFFIX = "@onecocreation";
+
+/** Block 968,624 (VERDICT-968624.md / L4-TRACE.md §4 item 2, ASTRA-REVIEW.md
+ *  L4 "No false success") — the "code" state above is reachable ONLY from a
+ *  successful `code-sent` event (`reduce()`), so this confirmation is
+ *  honest wherever a caller renders it: it never appears before the server
+ *  actually accepted the send. Pure data, kept beside DOOR_COPY so
+ *  DoorSheet.tsx and SignInCard.tsx render the same words in lockstep. */
+export const DOOR_SEND_CONFIRMATION = "Code sent. Check your inbox.";
+
+/** A client fetch timeout for the send-code call. A slow relay must fail
+ *  fast (mail.ts's own transport timeout is the other half of this), but a
+ *  client-side abort does NOT cancel a server-side SMTP send already under
+ *  way (VERDICT-968624: "client abort does not cancel server-side SMTP;
+ *  retrying can deliver multiple codes") — so this note never claims
+ *  failure, only an honest, uncertain outcome. */
+export const DOOR_SEND_TIMEOUT_MS = 25_000;
+export const DOOR_SEND_TIMEOUT_NOTE =
+  "This is taking longer than usual. Check your inbox before trying again.";
