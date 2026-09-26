@@ -43,14 +43,21 @@ function fakeTransport() {
       return new Response(null, { status: reachable });
     }
     const cmd = JSON.parse(String(init?.body)) as unknown[];
-    const [op, key, value, member] = cmd as [string, string, string?, string?];
+    const [op, key, value] = cmd as [string, string, string?];
     if (op === "SET") {
       kv.set(key, value as string);
       return new Response(JSON.stringify({ result: "OK" }), { status: 200 });
     }
     if (op === "SADD") {
+      // TASK-476: real SADD calls are 3 elements (op, key, member) — same
+      // shape as SET's (op, key, value) above, so the member being added
+      // is `value` (index 2), never a 4th `member` slot nothing ever
+      // sends. Pre-476 this branch was never exercised by a real code
+      // path (every pre-existing test seeded orders straight into the
+      // index via seedOrder()); TASK-476's own subject-index SADD is the
+      // first real caller, and it caught the stale destructure.
       const existing = JSON.parse(kv.get(key) ?? "[]") as string[];
-      if (!existing.includes(member as string)) existing.push(member as string);
+      if (!existing.includes(value as string)) existing.push(value as string);
       kv.set(key, JSON.stringify(existing));
       return new Response(JSON.stringify({ result: 1 }), { status: 200 });
     }
