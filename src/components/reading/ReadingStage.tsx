@@ -233,11 +233,11 @@ export function ReadingStageBody({
             <div className="kit-btn-row">
               <ReadingPartSelectLink part={3}>
                 {playgroundLock.locked && PLAYGROUND_LOCK_ICON}
-                Watch part two
+                Watch the Book Talk
               </ReadingPartSelectLink>
             </div>
             {playgroundLock.locked && (
-              <p className="kit-text-quiet">Part two is for {playgroundLock.floorName} members and up.</p>
+              <p className="kit-text-quiet">The Book Talk is for {playgroundLock.floorName} members and up.</p>
             )}
           </div>
         ) : left ? (

@@ -132,7 +132,7 @@ export default function ReadingDayBody({
             are UNCHANGED — only the visible words moved). */}
         <li>
           <span>
-            <b>{`${clockWords(encoreStartsAtMs, tz)} · The book talk`}</b>
+            <b>{`${clockWords(encoreStartsAtMs, tz)} · The Book Talk`}</b>
             <em>A live group video call with Love, going deeper into the book.</em>
             {/* who it's for is always said; the price rides only when the
                 store answers one (Number One's review, block 968,561).
@@ -153,7 +153,7 @@ export default function ReadingDayBody({
             {encoreEntitled ? (
               /* TASK-473: picks Part 3 for the top screen, never a Link
                  to /reading/playground (that address is retired here). */
-              <ReadingPartSelectLink part={3}>Join the book talk</ReadingPartSelectLink>
+              <ReadingPartSelectLink part={3}>Join the Book Talk</ReadingPartSelectLink>
             ) : (
               /* TASK-467: "Unlock with {name}" measured 258–328px at
                  kit-btn-sm (nowrap, R-071) — wider than the card's own
@@ -163,8 +163,9 @@ export default function ReadingDayBody({
                  button itself stays short and constant. */
               <ReadingDayUnlockButton
                 itemId={encoreFloor.itemId}
-                label="Unlock the book talk"
-                ariaLabel={`Unlock the book talk with ${encoreFloor.name}`}
+                label="Unlock the Book Talk"
+                ariaLabel={`Unlock the Book Talk with ${encoreFloor.name}`}
+                variant={signedIn ? "second" : "main"}
               />
             )}
           </span>
@@ -193,7 +194,11 @@ export default function ReadingDayBody({
                  (ReadingStageDoor, door="qa") — never a Link to /rooms. */
               <ReadingPartSelectLink part={4}>Join the Q&A</ReadingPartSelectLink>
             ) : (
-              <ReadingDayUnlockButton itemId={qaOffer.itemId} label="Unlock the Q&A" />
+              <ReadingDayUnlockButton
+                itemId={qaOffer.itemId}
+                label="Unlock the Q&A"
+                variant={signedIn ? "second" : "main"}
+              />
             )}
           </span>
         </li>

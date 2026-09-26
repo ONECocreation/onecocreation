@@ -29,7 +29,7 @@ function bodyProps(overrides: Partial<ReadingStageDoorBodyProps>): ReadingStageD
     wire: CLOSED,
     jitsiDomain: DOMAIN,
     whenWords: null,
-    label: "the book talk",
+    label: "the Book Talk",
     partLabel: null,
     notOwned: NOT_OWNED,
     left: false,
@@ -54,7 +54,7 @@ describe("ReadingStageDoorBody — closed (the default, and a 404/failed T-475 r
   it("the waiting picture, the part's time, no room, no controls beyond the words", () => {
     const html = render(bodyProps({ whenWords: "2:22 PM MDT" }));
     expect(html).toContain("/images/reading-love-cover.jpg");
-    expect(html).toContain("The book talk is not live yet.");
+    expect(html).toContain("The Book Talk is not live yet.");
     expect(html).toContain("Opens 2:22 PM MDT.");
     expect(html).not.toContain("kit-stage-viewer");
     expect(html).not.toContain(ROOM);
@@ -62,7 +62,7 @@ describe("ReadingStageDoorBody — closed (the default, and a 404/failed T-475 r
 
   it("no date (schedule off): no 'Opens …' line at all", () => {
     const html = render(bodyProps({}));
-    expect(html).toContain("The book talk is not live yet.");
+    expect(html).toContain("The Book Talk is not live yet.");
     expect(html).not.toContain("Opens");
   });
 });
@@ -71,7 +71,7 @@ describe("ReadingStageDoorBody — signed out (door open, no session)", () => {
   it("the page's own sign-in, never a bare join", () => {
     const wire: Wire = { decision: "signin", reachable: null, room: null };
     const html = render(bodyProps({ wire }));
-    expect(html).toContain("The book talk is live now. Sign in with your email and come straight back here to join it.");
+    expect(html).toContain("The Book Talk is live now. Sign in with your email and come straight back here to join it.");
     expect(html).toMatch(/<a class="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">\s*Sign me up\s*<\/a>/);
     expect(html).not.toContain("kit-stage-viewer");
   });
@@ -107,7 +107,7 @@ describe("ReadingStageDoorBody — live (owned, published, reachable)", () => {
   it("unreachable: honest words, never a guessed room", () => {
     const wire: Wire = { decision: "open", reachable: false, room: null };
     const html = render(bodyProps({ wire }));
-    expect(html).toContain("The book talk isn&#x27;t answering right now.");
+    expect(html).toContain("The Book Talk can&#x27;t connect right now.");
     expect(html).not.toContain("kit-stage-viewer");
   });
 
@@ -120,15 +120,15 @@ describe("ReadingStageDoorBody — live (owned, published, reachable)", () => {
 
 describe("ReadingStageDoorBody — fix round (block 968,624, the Admiral's Chrome walk): the chip always names the part", () => {
   it("closed: the chip shows the part label, no 'Live' prefix", () => {
-    const html = render(bodyProps({ partLabel: "2:22 PM MDT · The book talk" }));
-    expect(html).toContain('<span class="kit-stage-chip">2:22 PM MDT · The book talk</span>');
+    const html = render(bodyProps({ partLabel: "2:22 PM MDT · The Book Talk" }));
+    expect(html).toContain('<span class="kit-stage-chip">2:22 PM MDT · The Book Talk</span>');
   });
 
   it("open but unreachable — the exact regression the Admiral hit: the chip STILL says which part, not just 'Live'", () => {
     const wire: Wire = { decision: "open", reachable: false, room: null };
-    const html = render(bodyProps({ wire, partLabel: "2:22 PM MDT · The book talk" }));
-    expect(html).toContain('<span class="kit-stage-chip">Live · 2:22 PM MDT · The book talk</span>');
-    expect(html).toContain("The book talk isn&#x27;t answering right now.");
+    const html = render(bodyProps({ wire, partLabel: "2:22 PM MDT · The Book Talk" }));
+    expect(html).toContain('<span class="kit-stage-chip">Live · 2:22 PM MDT · The Book Talk</span>');
+    expect(html).toContain("The Book Talk can&#x27;t connect right now.");
   });
 
   it("live and mounted: the chip rides beside the real viewer, 'Live · ' plus the part label", () => {
@@ -150,8 +150,8 @@ describe("ReadingStageDoorBody — left, while still published (K122 item 8's ow
   it("'You left {label}.' plus one in-page Back button — never a link, never the room", () => {
     const wire: Wire = { decision: "open", reachable: true, room: ROOM };
     const html = render(bodyProps({ wire, left: true }));
-    expect(html).toContain("You left the book talk.");
-    expect(html).toMatch(/<button[^>]*class="kit-btn kit-btn-main kit-btn-sm"[^>]*>\s*Back to the book talk\s*<\/button>/);
+    expect(html).toContain("You left the Book Talk.");
+    expect(html).toMatch(/<button[^>]*class="kit-btn kit-btn-main kit-btn-sm"[^>]*>\s*Back to the Book Talk\s*<\/button>/);
     expect(html).not.toContain("kit-stage-viewer");
     expect(html).not.toContain("<a ");
   });

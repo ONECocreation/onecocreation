@@ -19,6 +19,7 @@ import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt, clockWords } from "
 import { encoreFloorDoor, qaDoor } from "@/lib/reading-day-doors";
 import { getStage1State } from "@/lib/stage1";
 import { getStage2State } from "@/lib/stage2";
+import { getQaState, IDLE as QA_IDLE } from "@/lib/qa-door";
 import { STAGE2_FLOOR_NAME, STAGE2_MIN_TIER } from "@/lib/stage2-access";
 import { tierForSubject } from "@/lib/member-tier";
 import { tierSatisfies, type Tier } from "@/lib/entitlement";
@@ -167,23 +168,32 @@ export default async function ReadingPage() {
 
   /* TASK-473 — the default selection: "the part whose door is open (the
      latest opened), else the next part by time" (ACTIONS.md item 2).
-     Stage 2's own state is read directly (server function, never the
-     public route) so `openedAtMs` is a real timestamp, not a guess. Part
-     4's own door (T-475, /api/qa-door) has no server-side reader yet —
-     course change, block 968,624 — so it reads closed here until that
-     lane lands; the client's own poll (ReadingStageDoor/
-     ReadingDayOpenNotice) picks it up live once it exists. */
+     Stage 2's and the Q&A door's own state are read directly (server
+     functions, never the public routes) so `openedAtMs` is a real
+     timestamp, not a guess. */
   const encoreStartsAtMs = next ? sameDayAt(next.startsAtMs, schedule.tz, ENCORE_TIME) : null;
   const qaStartsAtMs = next ? sameDayAt(next.startsAtMs, schedule.tz, QA_TIME) : null;
   const housewarmingStartsAtMs = next ? sameDayAt(next.startsAtMs, schedule.tz, HOUSEWARMING_TIME) : null;
   let defaultPart: ReadingPart = 1;
   if (next && encoreStartsAtMs !== null && qaStartsAtMs !== null && housewarmingStartsAtMs !== null) {
     const stage2State = await getStage2State();
+    /* fix round (block 968,624) — fails CLOSED on a throw: a broken vault
+       reads as the Q&A door's own IDLE (closed), never a guessed-open
+       door. getQaState() already fails closed internally (the same
+       createDoorLifecycle law stage1/stage2 keep); this catch is
+       belt-and-braces against a future regression, the same defensive
+       shape the stage1 route keeps around a call built never to throw. */
+    let qaState = QA_IDLE;
+    try {
+      qaState = await getQaState();
+    } catch {
+      qaState = QA_IDLE;
+    }
     const doors: PartDoorInfo[] = [
       { part: 1, title: "The Housewarming", startsAtMs: housewarmingStartsAtMs, open: stage1Phase === "published", openedAtMs: stage1State.publishedAtMs },
       { part: 2, title: "The Reading", startsAtMs: next.startsAtMs, open: stage1Phase === "published", openedAtMs: stage1State.publishedAtMs },
-      { part: 3, title: "The book talk", startsAtMs: encoreStartsAtMs, open: stage2State.phase === "published", openedAtMs: stage2State.publishedAtMs },
-      { part: 4, title: "The Q&A", startsAtMs: qaStartsAtMs, open: false, openedAtMs: null },
+      { part: 3, title: "The Book Talk", startsAtMs: encoreStartsAtMs, open: stage2State.phase === "published", openedAtMs: stage2State.publishedAtMs },
+      { part: 4, title: "The Q&A", startsAtMs: qaStartsAtMs, open: qaState.phase === "published", openedAtMs: qaState.publishedAtMs },
     ];
     defaultPart = defaultReadingPart(doors, asOfMs);
   }

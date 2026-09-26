@@ -70,7 +70,7 @@ describe("ReadingStageDeck — exactly one screen mounts, chosen by the selectio
     for (const part of [1, 2] as const) {
       const html = renderDeck(part);
       expect(html).toContain("The reading is live to watch, free.");
-      expect(html).not.toContain("The book talk is not live yet.");
+      expect(html).not.toContain("The Book Talk is not live yet.");
       expect(html).not.toContain("The Q&amp;A is not live yet.");
     }
   });
@@ -82,16 +82,16 @@ describe("ReadingStageDeck — exactly one screen mounts, chosen by the selectio
     expect(chip2).toContain('<span class="kit-stage-chip">1:11 PM MDT · The Reading</span>');
   });
 
-  it("fix round: parts 3 and 4 each carry their own stage chip too, e.g. '2:22 PM MDT · The book talk'", () => {
+  it("fix round: parts 3 and 4 each carry their own stage chip too, e.g. '2:22 PM MDT · The Book Talk'", () => {
     const chip3 = renderDeck(3);
-    expect(chip3).toContain('<span class="kit-stage-chip">2:22 PM MDT · The book talk</span>');
+    expect(chip3).toContain('<span class="kit-stage-chip">2:22 PM MDT · The Book Talk</span>');
     const chip4 = renderDeck(4);
     expect(chip4).toContain('<span class="kit-stage-chip">3:33 PM MDT · The Q&amp;A with Love</span>');
   });
 
-  it("part 3: the book talk's own screen — never ReadingStage's own words, never Part 4's", () => {
+  it("part 3: the Book Talk's own screen — never ReadingStage's own words, never Part 4's", () => {
     const html = renderDeck(3);
-    expect(html).toContain("The book talk is not live yet.");
+    expect(html).toContain("The Book Talk is not live yet.");
     expect(html).toContain("Opens 2:22 PM MDT.");
     expect(html).not.toContain("The reading is live to watch, free.");
     expect(html).not.toContain("The Q&amp;A is not live yet.");
@@ -102,7 +102,7 @@ describe("ReadingStageDeck — exactly one screen mounts, chosen by the selectio
     expect(html).toContain("The Q&amp;A is not live yet.");
     expect(html).toContain("Opens 3:33 PM MDT.");
     expect(html).not.toContain("The reading is live to watch, free.");
-    expect(html).not.toContain("The book talk is not live yet.");
+    expect(html).not.toContain("The Book Talk is not live yet.");
   });
 
   it("every part renders exactly ONE .kit-stage root — never two screens stacked", () => {

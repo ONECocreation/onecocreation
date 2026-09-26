@@ -9,7 +9,9 @@ Worktree: /home/pac/dev/worktrees/task-473
 Base: feat/task-471 @ 06e4b29 (rebased onto it mid-lane after task-471
 gained review fixes — see the rebase note below), then rebased AGAIN onto
 origin/main @ c8ca7d6 (Number One's own rebase, block 968,624 — this
-lane's own tip became 3be591e before the fix round below).
+lane's own tip became 3be591e before the first fix round), then rebased a
+THIRD time onto feat/task-475 @ 1580c15 (T-475 = PR #98, merged first) —
+this lane's own tip became b99a132 before the SECOND fix round below.
 
 The Admiral's flow ruling: "there will be an agenda item that shows what
 time each class is. for the end user they will stay on /reading. and love
@@ -82,6 +84,10 @@ New files:
 - `work-claims/task-473.md` — this claim.
 
 Edited files:
+- `src/components/reading/ReadingDayUnlockButton.tsx` — SECOND fix round
+  (block 968,624), widened into OWNS: new optional `variant?: "main" |
+  "second"` prop (default `"main"`, unchanged for every OTHER caller —
+  `ReadingStagePart3`/`4.tsx`'s own not-owned card, which never passes it).
 - `src/app/reading/page.tsx` — wraps the stage band + agenda in
   `ReadingPartProvider` (default part computed once, server-side, from
   Stage 1/Stage 2's real state — Part 4's door has no server-side reader
@@ -245,13 +251,67 @@ rendered words + its real pick link), `tests/reading-return-path-473.test.ts`
 (widened: the em-dash grep across every touched file, plus
 `ReadingPassReturnLink` rendered in all three states).
 
+## SECOND FIX ROUND (block 968,624, on top of feat/task-475 @ 1580c15; tip b99a132 before this round)
+
+T-475 (PR #98) merged first and landed `src/lib/qa-door.ts` (the real
+`getQaState()`, mirroring `stage1.ts`/`stage2.ts`'s own three-phase
+lifecycle) and `src/lib/qa-entitlement.ts` (`qaEntitled(subject, tier)`,
+which `ReadingDay.tsx` now calls — left untouched, per instruction).
+
+1. **Only the chosen pick shines.** `ReadingDayUnlockButton.tsx` gained an
+   optional `variant?: "main" | "second"` prop (default `"main"` — every
+   OTHER caller, `ReadingStagePart3`/`4.tsx`'s own not-owned card, is
+   unchanged). `ReadingDayBody.tsx`'s two Unlock call sites now pass
+   `variant={signedIn ? "second" : "main"}`: signed in, rows 1/2 already
+   shine one pick (`ReadingPartSelectLink`), so Unlock reads
+   `kit-btn-second` instead of shining a second button; signed out, no
+   pick exists on the card at all (rows 1/2 show Sign me up), so Unlock
+   keeps `kit-btn-main`, unchanged.
+2. **The server default now sees the real Q&A door.** `page.tsx` imports
+   `getQaState`/`IDLE as QA_IDLE` from `src/lib/qa-door.ts` (T-475's new
+   file) and reads it the SAME way Stage 1/2 already are — `open:
+   qaState.phase === "published"`, `openedAtMs: qaState.publishedAtMs` —
+   replacing the old hardcoded `open: false, openedAtMs: null`. Wrapped in
+   its own try/catch defaulting to `QA_IDLE` (fails closed on a throw,
+   belt-and-braces — `getQaState()` already fails closed internally, the
+   same `createDoorLifecycle` law stage1/stage2 keep).
+3. **Lumen's copy notes, carried through every place they show:**
+   a. `reading-parts.ts`'s `PART_TITLES[3]` is now `"The Book Talk"`
+      (was `"The book talk"`), matching the other three titles. Propagated
+      to: the stage chip (`ReadingStagePart3.tsx`'s own `partLabel`), the
+      notice (reads `PART_TITLES` already, automatic), the agenda row's
+      bold title and its two buttons ("Join the Book Talk", "Unlock the
+      Book Talk" — `ReadingDayBody.tsx`), and `ReadingStageDoor.tsx`'s own
+      `label` prop for Part 3 ("the Book Talk," so its internal sentences
+      — "You left the Book Talk.", "The Book Talk is not live yet." — read
+      consistently with the chip right above them, not just the four
+      places named literally).
+   b. `ReadingStage.tsx`'s ended card: "Watch part two" → "Watch the Book
+      Talk"; its own lock line "Part two is for {floor} members and up."
+      → "The Book Talk is for {floor} members and up." (same "one name"
+      principle, not just the button text).
+   c. `ReadingStageDoor.tsx`'s unreachable-door line: "isn't answering
+      right now" → "can't connect right now" (both doors, Part 3 and
+      Part 4, share this one string).
+
+Every pre-existing test this round's casing/wording/variant changes
+touched was re-trued: `tests/reading-day-467.test.ts` (added a direct
+assertion for the new `variant` behavior, both signed states),
+`tests/reading-parts-473.test.ts`, `tests/reading-polish-466.test.ts`,
+`tests/reading-small-watch-464.test.ts`, `tests/reading-stage.test.ts`,
+`tests/reading-stage-deck-473.test.ts`, `tests/reading-stage-door-473.test.ts`,
+`tests/reading-watch-heart-field-457.test.ts`. New coverage:
+`tests/reading-page.test.ts` gained a source pin proving `page.tsx` reads
+the real `getQaState()` (phase/publishedAtMs, the try/catch fail-closed
+shape) instead of the old hardcoded `false`.
+
 ## Gate
 
 `bash /home/pac/dev/shortcuts/oc-gate.sh /home/pac/dev/worktrees/task-473`:
 
 ```
-Test Files  251 passed (251)
-     Tests  3279 passed (3279)
+Test Files  257 passed (257)
+     Tests  3358 passed (3358)
 scripts/calendar-view.test.mjs: 70 passed, 0 failed
 scripts/cartridge-identity.test.mjs: 179 passed, 0 failed
 scripts/console-matrix.test.mjs: 14 passed, 0 failed
@@ -354,3 +414,20 @@ GATES GREEN
    `.next`) stayed up through the gate's own rebuild**, per instruction —
    confirmed reachable (200) after `GATES GREEN`; not restarted, not
    touched.
+8. **(second fix round) The title-case propagation touched more strings
+   than the four literally named.** Once `PART_TITLES[3]` became "The
+   Book Talk," leaving `ReadingStageDoor.tsx`'s own `label` prop
+   ("the book talk," lowercase) unchanged would have put "The Book Talk"
+   on the chip directly above sentences reading "The book talk is not
+   live yet." on the SAME screen — an inconsistency the instruction's own
+   words ("carry it through every place it shows") argued against even
+   though `label`'s specific sentences weren't named. Propagated there
+   too (`label="the Book Talk"`), and to `ReadingStage.tsx`'s own lock
+   line ("Part two is for…" → "The Book Talk is for…") for the same
+   reason ("Same room, one name").
+9. **(second fix round) T-475's own merge landed real backend files this
+   lane depends on but doesn't own** — `src/lib/qa-door.ts`,
+   `src/lib/qa-entitlement.ts`, `src/app/api/qa-door/route.ts` — all READ
+   ONLY here (imported, never edited); `ReadingDay.tsx`'s own
+   `qaEntitled(subject, tier)` line was left exactly as T-475 wrote it,
+   per instruction.

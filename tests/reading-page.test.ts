@@ -278,6 +278,22 @@ describe("the page itself — source pins (async server component, headers()-dep
       expect(src).toContain(cls);
     }
   });
+
+  it("fix round (block 968,624): the default selection reads the REAL Q&A door (src/lib/qa-door.ts), never a hardcoded closed — the same phase/publishedAtMs shape stage1/stage2 already read, fails closed on a throw", async () => {
+    const src = await read(PAGE_PATH);
+    expect(src).toContain('import { getQaState, IDLE as QA_IDLE } from "@/lib/qa-door"');
+    expect(src).toContain("await getQaState()");
+    expect(src).toContain('open: qaState.phase === "published"');
+    expect(src).toContain("openedAtMs: qaState.publishedAtMs");
+    // fails CLOSED on a throw — never lets a broken vault read as open
+    const qaBlock = src.slice(src.indexOf("let qaState = QA_IDLE;"), src.indexOf("const doors: PartDoorInfo[]"));
+    expect(qaBlock).toContain("try {");
+    expect(qaBlock).toContain("qaState = await getQaState();");
+    expect(qaBlock).toContain("} catch {");
+    expect(qaBlock).toContain("qaState = QA_IDLE;");
+    // never the old hardcoded literal
+    expect(src).not.toContain("open: false, openedAtMs: null }");
+  });
 });
 
 describe("no literal weekday name and no \"1:11\" — the page AND its one helper island (the schedule computes it, never the source)", () => {

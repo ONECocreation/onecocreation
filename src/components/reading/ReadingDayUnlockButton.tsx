@@ -20,6 +20,17 @@ import { useState } from "react";
  * phone — see the register). `ariaLabel`, when given, is the fuller
  * sentence for anyone on a screen reader; sighted visitors read the
  * short label plus the row's own words right above it.
+ *
+ * Fix round (block 968,624, the Admiral's Chrome walk) — "only the chosen
+ * pick shines": on the agenda card (ReadingDayBody.tsx), a signed-in
+ * visitor always has exactly ONE shining pick already (`ReadingPartSelectLink`
+ * on rows 1/2), so an Unlock button rendered `kit-btn-main` too would
+ * shine right alongside it. `variant` (default `"main"` — every OTHER
+ * caller, the top screen's own not-owned card in
+ * `ReadingStagePart3`/`4.tsx`, keeps the old look unchanged, since there
+ * a lone Unlock button has no pick to compete with) lets the ONE caller
+ * that DOES have a pick nearby (ReadingDayBody, signed in) ask for
+ * `kit-btn-second` instead — never a second literal class string.
  */
 
 const LOCK_ICON = (
@@ -33,10 +44,13 @@ export default function ReadingDayUnlockButton({
   itemId,
   label,
   ariaLabel,
+  variant = "main",
 }: {
   itemId: string;
   label: string;
   ariaLabel?: string;
+  /** fix round (block 968,624) — see the module docblock */
+  variant?: "main" | "second";
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +79,7 @@ export default function ReadingDayUnlockButton({
     <>
       <button
         type="button"
-        className="kit-btn kit-btn-main kit-btn-sm"
+        className={`kit-btn kit-btn-${variant} kit-btn-sm`}
         onClick={unlock}
         disabled={busy}
         aria-label={ariaLabel}

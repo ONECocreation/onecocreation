@@ -26,21 +26,21 @@ export default function ReadingStagePart3({ jitsiDomain, encoreFloor, whenWords 
      own label, built from the SAME `whenWords` the agenda row's own title
      reads ("2:22 PM MDT · The book talk," the reviewer's own example) —
      never a second clockWords() call. */
-  const partLabel = whenWords ? `${whenWords} · The book talk` : null;
+  const partLabel = whenWords ? `${whenWords} · The Book Talk` : null;
   const notOwned = (
     <>
       <p className="kit-body">
         {encoreFloor.price
           ? encoreFloor.passLive
-            ? `Unlock the book talk for ${encoreFloor.price}, once.`
+            ? `Unlock the Book Talk for ${encoreFloor.price}, once.`
             : `Comes with ${encoreFloor.name} and up. ${encoreFloor.price} a month.`
           : `Comes with ${encoreFloor.name} and up.`}
       </p>
       <div className="kit-btn-row">
         <ReadingDayUnlockButton
           itemId={encoreFloor.itemId}
-          label="Unlock the book talk"
-          ariaLabel={`Unlock the book talk with ${encoreFloor.name}`}
+          label="Unlock the Book Talk"
+          ariaLabel={`Unlock the Book Talk with ${encoreFloor.name}`}
         />
       </div>
     </>
@@ -51,7 +51,7 @@ export default function ReadingStagePart3({ jitsiDomain, encoreFloor, whenWords 
       door="stage2"
       jitsiDomain={jitsiDomain}
       whenWords={whenWords}
-      label="the book talk"
+      label="the Book Talk"
       partLabel={partLabel}
       notOwned={notOwned}
     />

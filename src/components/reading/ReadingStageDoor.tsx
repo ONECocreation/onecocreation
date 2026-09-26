@@ -109,7 +109,7 @@ export function ReadingStageDoorBody({
               </div>
             </>
           ) : wire.decision === "open" ? (
-            <p className="kit-body">{`${cap} isn't answering right now.`}</p>
+            <p className="kit-body">{`${cap} can't connect right now.`}</p>
           ) : wire.decision === "package" ? (
             notOwned
           ) : wire.decision === "signin" ? (

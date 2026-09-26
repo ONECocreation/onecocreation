@@ -66,7 +66,7 @@ export const CLOSED_FLAGS: OpenFlags = { part1: false, part2: false, part3: fals
 export const PART_TITLES: Record<ReadingPart, string> = {
   1: "The Housewarming",
   2: "The Reading",
-  3: "The book talk",
+  3: "The Book Talk",
   4: "The Q&A",
 };
 

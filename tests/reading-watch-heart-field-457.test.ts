@@ -78,7 +78,7 @@ describe("TASK-471 (block 968,624) — the Heart Field door is retired from the 
     expect(html).not.toMatch(/<button[^>]*>\s*Watch again/);
     expect(html).not.toContain("Watch again");
     expect(html).not.toContain("/rooms/heart-field");
-    expect(html).toContain("Watch part two");
+    expect(html).toContain("Watch the Book Talk");
     expect(html).not.toContain("/reading/playground");
     expect(html).toContain('href="#stage"');
   });

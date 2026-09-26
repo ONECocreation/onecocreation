@@ -248,7 +248,7 @@ describe("ReadingDayBody — the three rows carry their own computed times and n
     expect(html).toContain(clockWords(ENCORE_MS, TZ));
     expect(html).toContain(clockWords(QA_MS, TZ));
     expect(html).toContain("The Reading");
-    expect(html).toContain("The book talk");
+    expect(html).toContain("The Book Talk");
     expect(html).toContain("The Q&amp;A with Love");
   });
 });
@@ -286,13 +286,18 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
 
       if (encoreEntitled) {
         // fix round (block 968,624): "Join the book talk" (was "Go to the book talk")
-        expect(html).toContain("Join the book talk");
-        expect(html).not.toContain("</svg>Unlock the book talk<");
+        expect(html).toContain("Join the Book Talk");
+        expect(html).not.toContain("</svg>Unlock the Book Talk<");
       } else {
-        expect(html).toContain("</svg>Unlock the book talk<"); // the visible label, right after the lock glyph
-        expect(html).toContain(`aria-label="Unlock the book talk with ${ENCORE_FLOOR.name}"`); // the fuller words, for a screen reader
+        expect(html).toContain("</svg>Unlock the Book Talk<"); // the visible label, right after the lock glyph
+        expect(html).toContain(`aria-label="Unlock the Book Talk with ${ENCORE_FLOOR.name}"`); // the fuller words, for a screen reader
         expect(html).toContain(`Comes with ${ENCORE_FLOOR.name} and up.`); // and in PLAIN sighted text, right above
-        expect(html).not.toContain("Join the book talk");
+        expect(html).not.toContain("Join the Book Talk");
+        // fix round (block 968,624): "only the chosen pick shines" — signed
+        // in, a pick already shines on rows 1/2, so Unlock reads
+        // kit-btn-second; signed out, no pick exists, Unlock stays kit-btn-main
+        const unlockBtn = html.match(/<button[^>]*>[\s\S]*?Unlock the Book Talk/)?.[0] ?? "";
+        expect(unlockBtn).toContain(c.signedIn ? "kit-btn-second" : "kit-btn-main");
       }
 
       if (qaEntitled) {
@@ -324,7 +329,7 @@ describe("ReadingDayBody — a locked row names who it's for even when the store
 
   it("both unlock labels name their part, the same shape", () => {
     const html = render(bodyProps({ encoreEntitled: false, qaEntitled: false }));
-    expect(html).toContain("</svg>Unlock the book talk<");
+    expect(html).toContain("</svg>Unlock the Book Talk<");
     expect(html).toContain("</svg>Unlock the Q&amp;A<");
   });
 });
@@ -356,8 +361,8 @@ describe("ReadingDayBody — TASK-471 (block 968,624): the $11 one-time pass, wh
     expect(STAGE2_MIN_TIER).toBe("A");
     expect(tierSatisfies("A", STAGE2_MIN_TIER)).toBe(true);
     const html = render(bodyProps({ encoreEntitled: tierSatisfies("A", STAGE2_MIN_TIER) }));
-    expect(html).toContain("Join the book talk");
-    expect(html).not.toContain("Unlock the book talk");
+    expect(html).toContain("Join the Book Talk");
+    expect(html).not.toContain("Unlock the Book Talk");
   });
 });
 
@@ -380,7 +385,7 @@ describe("ReadingDayBody — the lock icon is aria-hidden, decorative only; the 
     // "Unlock the Q&A"); the tier's name lives in the row's own quiet line
     // (button text never wraps, R-071; "Unlock with {name}" measured wider
     // than the card, see the register)
-    expect(html).toContain("</svg>Unlock the book talk<");
+    expect(html).toContain("</svg>Unlock the Book Talk<");
     expect(html).toContain(`Comes with ${ENCORE_FLOOR.name} and up.`);
     // the Q&A's own label carries the full meaning right in its own words
     expect(html).toContain("Unlock the Q&amp;A");

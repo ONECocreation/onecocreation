@@ -75,9 +75,9 @@ describe("TASK-464/471 — every surviving button on the card is the small kit b
     expect(html).toMatch(/<button[^>]*class="kit-btn kit-btn-main kit-btn-sm"[^>]*>\s*Back to the reading\s*<\/button>/);
   });
 
-  it("ended, published underneath: Watch part two is kit-btn-sm, picks Part 3 in-page (never /reading/playground)", () => {
+  it("ended, published underneath: Watch the Book Talk is kit-btn-sm, picks Part 3 in-page (never /reading/playground)", () => {
     const html = render(bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30" }));
-    expect(html).toContain("Watch part two");
+    expect(html).toContain("Watch the Book Talk");
     // fix round (block 968,624): the shining/second class now depends on
     // the shared selection (outside any Provider this file's own bare
     // render defaults to Part 1 selected, so Part 3's own pick reads

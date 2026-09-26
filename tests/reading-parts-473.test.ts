@@ -18,7 +18,7 @@ import {
 const DOORS: PartDoorInfo[] = [
   { part: 1, title: "The Housewarming", startsAtMs: 1_000, open: false, openedAtMs: null },
   { part: 2, title: "The Reading", startsAtMs: 2_000, open: false, openedAtMs: null },
-  { part: 3, title: "The book talk", startsAtMs: 3_000, open: false, openedAtMs: null },
+  { part: 3, title: "The Book Talk", startsAtMs: 3_000, open: false, openedAtMs: null },
   { part: 4, title: "The Q&A", startsAtMs: 4_000, open: false, openedAtMs: null },
 ];
 
@@ -69,7 +69,7 @@ describe("latestOpenPart / openDoorNotice — the courtesy line, never gating", 
 
   it("a notice names the open part, but only when it ISN'T the one already selected (fix round, block 968,624: returns {part, title} — the CALLER builds the words + a real pick link, never a finished string)", () => {
     const flags: OpenFlags = { part1: false, part2: false, part3: true, part4: false };
-    expect(openDoorNotice(flags, 1)).toEqual({ part: 3, title: "The book talk" });
+    expect(openDoorNotice(flags, 1)).toEqual({ part: 3, title: "The Book Talk" });
     expect(openDoorNotice(flags, 3)).toBeNull(); // already looking at it
   });
 

@@ -26,7 +26,7 @@ const PAGE = "src/app/reading/page.tsx";
 const ROOM = "oc-0123456789abcdef";
 const DOMAIN = "meet.reading-polish-fixture.invalid";
 const FLOOR_NAME = TIERS[STAGE2_MIN_TIER].name;
-const PART3_LABEL = "Watch part two";
+const PART3_LABEL = "Watch the Book Talk";
 const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
 
 function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyProps {
@@ -110,7 +110,7 @@ describe("TASK-466 ruling 2 — no em dash in any rendered phase's text", () => 
 });
 
 describe("TASK-466 ruling 1 — the ended card drops Watch again for one in-page Part 3 pick (TASK-473, block 968,624: never /reading/playground any more)", () => {
-  it("published-underneath ended: no Watch again, exactly one #stage pick labelled \"Watch part two\"", () => {
+  it("published-underneath ended: no Watch again, exactly one #stage pick labelled \"Watch the Book Talk\"", () => {
     const html = render(bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30" }));
     expect(html).not.toContain("Watch again");
     expect(html).not.toContain("/reading/playground");
@@ -138,7 +138,7 @@ describe("TASK-466 ruling 1 — the ended card drops Watch again for one in-page
       bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30", playgroundLock: { locked: true, floorName: FLOOR_NAME } }),
     );
     expect(html).toMatch(/<svg[^>]*aria-hidden="true"[^>]*>/);
-    expect(html).toContain(`Part two is for ${FLOOR_NAME} members and up.`);
+    expect(html).toContain(`The Book Talk is for ${FLOOR_NAME} members and up.`);
   });
 
   it("unlocked: neither the lock svg nor the floor words render", () => {
