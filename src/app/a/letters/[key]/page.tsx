@@ -69,7 +69,7 @@ function estimateFinish(n: number, cap: number): Date | null {
  * route's GET) per list send: queued at publish time, sent/dropped live
  * as `tick()` drains the queue. The panel polls it, never the raw queue. */
 
-interface SendRecord {
+export interface SendRecord {
   sendId: string;
   queued: number;
   sent: number;
@@ -126,6 +126,18 @@ export function listSendOutcomeLine(o: ListSendOutcome): string {
 export function pollShouldStop(startedAtMs: number, nowMs: number, rec: { sent: number; dropped: number; queued: number }): boolean {
   if (rec.sent + rec.dropped >= rec.queued) return true;
   return nowMs - startedAtMs >= 30 * 60_000;
+}
+
+/** T-484 (review round, item 3) — after a reload, `recentSends` (newest
+ *  first, exactly how `?key=` hands them back) may hold a send that was
+ *  still draining when the tab closed; with no poll running its line
+ *  would freeze forever. The newest one that has NOT resolved
+ *  (`sent+dropped<queued`) and is NOT yet past the poll's own 30-minute
+ *  stop rule (`pollShouldStop`, the SAME rule a live poll obeys, never a
+ *  second one) is the one worth re-arming; `null` when every send is
+ *  either done or too old to still be worth watching. */
+export function sendToReArm(sends: SendRecord[], nowMs: number): SendRecord | null {
+  return sends.find((s) => s.sent + s.dropped < s.queued && !pollShouldStop(s.createdAtMs, nowMs, s)) ?? null;
 }
 
 export type TestSendOutcome = { kind: "idle" } | { kind: "sending" } | { kind: "ok"; to: string } | { kind: "err"; reason: string };
@@ -219,8 +231,18 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         const slots: { "reading-confirm"?: string; "reading-dayof"?: string } = s?.ok ? (s.slots ?? {}) : {};
         setAutoSlot(slots["reading-confirm"] === key ? "reading-confirm" : slots["reading-dayof"] === key ? "reading-dayof" : "");
         // T-484: the last few sends for THIS letter — visible after a
-        // reload with no send in flight to poll.
-        if (sendsRes?.ok) setRecentSends(sendsRes.sends ?? []);
+        // reload. The NEWEST one that isn't done yet (sent+dropped<queued)
+        // AND is still under 30 minutes old re-arms the poll (item 3, the
+        // review round) — otherwise a send still draining when the tab
+        // reloads shows a frozen line that never updates again.
+        const sends: SendRecord[] = sendsRes?.ok ? (sendsRes.sends ?? []) : [];
+        setRecentSends(sends);
+        const unfinished = sendToReArm(sends, Date.now());
+        if (unfinished) {
+          pollStartRef.current = unfinished.createdAtMs;
+          setListOutcome({ kind: "progress", queued: unfinished.queued, sent: unfinished.sent, dropped: unfinished.dropped });
+          setActiveSendId(unfinished.sendId);
+        }
       })
       .catch(() => setLetter(null));
   }, [key]);
@@ -241,7 +263,10 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
 
   useEffect(() => {
     if (!activeSendId) return;
-    pollStartRef.current = Date.now();
+    // pollStartRef is set by the CALLER (a fresh send, or the reload's own
+    // re-arm above) to the send's real createdAtMs, never Date.now() here —
+    // the 30-minute stop rule is anchored to the send's own age, immune to
+    // a reload restarting the clock.
     const id = setInterval(() => {
       pollSendStatus(activeSendId);
     }, POLL_EVERY_MS);
@@ -314,14 +339,16 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         setListOutcome({ kind: "queued", queued: d.queued, scheduledFor: d.scheduledFor });
         setTyped("");
         if (d.sendId) {
+          const createdAtMs = Date.now();
           setRecentSends((prev) => [
-            { sendId: d.sendId, queued: d.queued, sent: 0, dropped: 0, segment: d.segment, scheduledFor: d.scheduledFor, createdAtMs: Date.now() },
+            { sendId: d.sendId, queued: d.queued, sent: 0, dropped: 0, segment: d.segment, scheduledFor: d.scheduledFor, createdAtMs },
             ...prev.filter((s) => s.sendId !== d.sendId),
           ].slice(0, 5));
+          pollStartRef.current = createdAtMs; // the 30-minute stop rule's own anchor
           setActiveSendId(d.sendId); // starts the poll effect above
         }
       } else if (d?.expected !== undefined) {
-        setListOutcome({ kind: "err", reason: `the list moved — it is now ${d.expected}; retype the count` });
+        setListOutcome({ kind: "err", reason: `The list changed. It has ${d.expected} people now. Type ${d.expected} to send.` });
       } else {
         setListOutcome({ kind: "err", reason: d?.reason ?? "send failed" });
       }
@@ -402,7 +429,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
           </button>
         </div>
         {testOutcome.kind !== "idle" && (
-          <p aria-live="polite" className={testOutcome.kind === "err" ? "kit-note kit-note-err" : "kit-note"}>{testSendOutcomeLine(testOutcome)}</p>
+          <p aria-live="polite" className={testOutcome.kind === "err" ? "kit-note kit-note-err" : testOutcome.kind === "ok" ? "kit-note kit-note-ok" : "kit-note"}>{testSendOutcomeLine(testOutcome)}</p>
         )}
       </div>
 
@@ -447,14 +474,16 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
           </div>
         )}
         {listOutcome.kind !== "idle" && (
-          <p aria-live="polite" className={listOutcome.kind === "err" ? "kit-note kit-note-err" : "kit-note"}>{listSendOutcomeLine(listOutcome)}</p>
+          <p aria-live="polite" className={
+            listOutcome.kind === "err" ? "kit-note kit-note-err" : listOutcome.kind === "queued" || listOutcome.kind === "progress" ? "kit-note kit-note-ok" : "kit-note"
+          }>{listSendOutcomeLine(listOutcome)}</p>
         )}
 
         {recentSends.length > 0 && (
           <ul className="kit-sends-list">
             {recentSends.map((s) => (
               <li key={s.sendId} className="kit-note">
-                {new Date(s.createdAtMs).toLocaleString()} — {s.segment === "all" ? "all" : s.segment} — Sent to {s.sent}
+                {new Date(s.createdAtMs).toLocaleString()} · {s.segment === "all" ? "all" : s.segment} · Sent to {s.sent}
                 {s.dropped > 0 ? ` (${s.dropped} dropped)` : ""} of {s.queued}
               </li>
             ))}

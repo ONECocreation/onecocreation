@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
-import { listSendOutcomeLine, testSendOutcomeLine, pollShouldStop, type ListSendOutcome, type TestSendOutcome } from "@/app/a/letters/[key]/page";
+import { listSendOutcomeLine, testSendOutcomeLine, pollShouldStop, sendToReArm, type ListSendOutcome, type TestSendOutcome, type SendRecord } from "@/app/a/letters/[key]/page";
 
 /**
  * TASK-484 — the send panel's own status line, pinned at the model (the
@@ -105,10 +105,60 @@ describe("pollShouldStop — the poll's own stop rule (every 15s, stop when done
   });
 });
 
+describe("sendToReArm — re-arms polling after a reload (review round, item 3)", () => {
+  const NOW = Date.parse("2026-09-26T12:00:00.000Z");
+  function send(over: Partial<SendRecord>): SendRecord {
+    return { sendId: "x", queued: 6, sent: 6, dropped: 0, segment: "all", scheduledFor: "next tick", createdAtMs: NOW, ...over };
+  }
+
+  it("no sends at all: nothing to re-arm", () => {
+    expect(sendToReArm([], NOW)).toBeNull();
+  });
+
+  it("every send already done: nothing to re-arm — a frozen 'Sent to all N.' line is correct, not stale", () => {
+    const sends = [send({ sendId: "a", sent: 6, dropped: 0 }), send({ sendId: "b", sent: 4, dropped: 2 })];
+    expect(sendToReArm(sends, NOW)).toBeNull();
+  });
+
+  it("the newest unfinished send (still under 30 minutes old) re-arms — this is the fix: it used to never poll again after a reload", () => {
+    const sends = [
+      send({ sendId: "newest", sent: 2, dropped: 0, createdAtMs: NOW - 5 * 60_000 }),
+      send({ sendId: "older-done", sent: 6, dropped: 0, createdAtMs: NOW - 20 * 60_000 }),
+    ];
+    expect(sendToReArm(sends, NOW)?.sendId).toBe("newest");
+  });
+
+  it("an unfinished send past the 30-minute stop rule is left alone — the poll's own age limit still applies after a reload", () => {
+    const sends = [send({ sendId: "stale", sent: 1, dropped: 0, createdAtMs: NOW - 31 * 60_000 })];
+    expect(sendToReArm(sends, NOW)).toBeNull();
+  });
+
+  it("picks the FIRST unfinished match in the given (newest-first) order — never scans past it for a better one", () => {
+    const sends = [
+      send({ sendId: "first-unfinished", sent: 3, dropped: 0, createdAtMs: NOW - 1 * 60_000 }),
+      send({ sendId: "second-unfinished", sent: 1, dropped: 0, createdAtMs: NOW - 2 * 60_000 }),
+    ];
+    expect(sendToReArm(sends, NOW)?.sendId).toBe("first-unfinished");
+  });
+});
+
 describe("the /a uniformity law, at the source (one state line, aria-live, error REPLACES, no em dash/arrow/emoji in a label)", () => {
   it("both status lines carry aria-live=\"polite\" and reuse kit.css's .kit-note (no per-page style object)", () => {
-    expect(SRC).toContain('aria-live="polite" className={testOutcome.kind === "err" ? "kit-note kit-note-err" : "kit-note"}');
-    expect(SRC).toContain('aria-live="polite" className={listOutcome.kind === "err" ? "kit-note kit-note-err" : "kit-note"}');
+    expect(SRC).toContain(
+      'aria-live="polite" className={testOutcome.kind === "err" ? "kit-note kit-note-err" : testOutcome.kind === "ok" ? "kit-note kit-note-ok" : "kit-note"}',
+    );
+    expect(SRC).toContain(
+      'listOutcome.kind === "err" ? "kit-note kit-note-err" : listOutcome.kind === "queued" || listOutcome.kind === "progress" ? "kit-note kit-note-ok" : "kit-note"',
+    );
+  });
+
+  it("a success state (test's ok, list's queued/progress) applies .kit-note-ok — success looks different from a failure, never muted like before (review round)", () => {
+    expect(SRC).toContain('testOutcome.kind === "ok" ? "kit-note kit-note-ok"');
+    expect(SRC).toContain('listOutcome.kind === "queued" || listOutcome.kind === "progress" ? "kit-note kit-note-ok"');
+    // --ok clears 4.5:1 against --ground in BOTH themes (measured, WCAG
+    // relative-luminance formula): dark #7fb98f/#141021 ≈ 8.21:1, dawn
+    // #3c6b49/#FCF7F0 ≈ 5.81:1 — both comfortably above --err's own
+    // already-shipped precedent (7.52:1 / 5.10:1) on the same ground.
   });
 
   it("each button's status line sits immediately after that SAME button's own markup — never the other control's", () => {
@@ -128,6 +178,19 @@ describe("the /a uniformity law, at the source (one state line, aria-live, error
   });
 
   it("no em dash, arrow, or emoji rides any button label or the status-line copy this lane wrote", () => {
+    // the recent-sends <li> markup (item 2 of the review round: it used to
+    // carry two em dashes — " · " is the house separator instead) and the
+    // 409 wording (item 2's first bullet: the OLD "the list moved — it is
+    // now N; retype the count" is now "The list changed. It has N people
+    // now. Type N to send.") are pulled straight from the SOURCE, never
+    // retyped by hand here, so a future edit that reintroduces either em
+    // dash trips this guard without anyone updating a second copy of the
+    // words.
+    const liMatch = SRC.match(/<li key=\{s\.sendId\}[\s\S]*?<\/li>/);
+    expect(liMatch, "the recent-sends <li> markup was not found at its expected shape").toBeTruthy();
+    const the409Match = SRC.match(/setListOutcome\(\{ kind: "err", reason: `[^`]*\$\{d\.expected\}[^`]*` \}\);/);
+    expect(the409Match, "the 409 wording was not found at its expected shape").toBeTruthy();
+
     const newLabelsAndCopy = [
       "SEND TEST COPY",
       "Sending…",
@@ -138,6 +201,8 @@ describe("the /a uniformity law, at the source (one state line, aria-live, error
       "your time",
       "Sent to",
       "Test copy queued for",
+      liMatch![0],
+      the409Match![0],
     ];
     for (const s of newLabelsAndCopy) {
       expect(s, `"${s}" carries an em dash`).not.toMatch(/—/);
@@ -148,5 +213,14 @@ describe("the /a uniformity law, at the source (one state line, aria-live, error
 
   it("no drain-the-queue-now fetch lives in this panel — the VPS crontab's own tick is the only drain", () => {
     expect(SRC).not.toContain("/api/mail/tick");
+  });
+
+  it("the mount effect actually calls sendToReArm and anchors pollStartRef to the send's own createdAtMs, never Date.now() at reload time", () => {
+    expect(SRC).toContain("const unfinished = sendToReArm(sends, Date.now());");
+    expect(SRC).toContain("pollStartRef.current = unfinished.createdAtMs;");
+    expect(SRC).toContain("setActiveSendId(unfinished.sendId);");
+    // the interval effect itself must never reset the anchor on a re-run —
+    // that would let a reload's re-arm silently extend the 30-minute cap
+    expect(SRC).not.toContain("pollStartRef.current = Date.now();");
   });
 });
