@@ -10,9 +10,16 @@ export const dynamic = "force-dynamic";
  * 2 a.m. reading-day letter): which composed letter, if any, rides each
  * one. `reading-letters.ts`'s `effectiveAutoSlot()` is the ONE place both
  * the send path and this route resolve a slot's three-way state (a
- * composed letter, the literal "builtin", or the hardcoded default) —
- * this route never re-derives it. Gated exactly like every other
- * `/api/admin/letters/*` route.
+ * composed letter, the literal `AUTO_SLOT_BUILTIN` sentinel, or the
+ * hardcoded default) — this route never re-derives it. Gated exactly
+ * like every other `/api/admin/letters/*` route.
+ *
+ * `AUTO_SLOT_BUILTIN` is a leading-underscore string, unslugifiable
+ * (`SLUG_RE` in letters.ts starts `^[a-z0-9]`) so no composed letter's
+ * key can ever collide with it by title alone — the PUT below still
+ * refuses it explicitly as a `key`, belt and suspenders (re-review,
+ * block 968,624+: the first sentinel, the plain word "builtin", WAS a
+ * valid slug — `slugify("BuiltIn")` gives exactly that).
  */
 
 function gate(request: Request): NextResponse | null {
@@ -39,15 +46,19 @@ export async function GET(request: Request) {
  *  letter may ride a slot (review BLOCKER: a seeded letter's
  *  `{{placeholders}}` would go out raw to every sign-up). Every OTHER
  *  slot `key` effectively holds today (its own hardcoded default
- *  counts) is written the literal "builtin", never left absent — an
- *  absent slot would just silently fall back to `key` again (the
- *  review's second BLOCKER: "Not automatic" on the default letter did
- *  nothing, because clearing to absent re-adopted the same default). */
+ *  counts) is written the literal `AUTO_SLOT_BUILTIN`, never left
+ *  absent — an absent slot would just silently fall back to `key` again
+ *  (the review's second BLOCKER: "Not automatic" on the default letter
+ *  did nothing, because clearing to absent re-adopted the same
+ *  default). The sentinel itself is NEVER accepted as a `key` — even
+ *  though it can never be a real letter's slug (letters.ts's
+ *  `SLUG_RE`), this checks it directly rather than trusting that shape
+ *  alone (the re-review's own instruction). */
 export async function PUT(request: Request) {
   const denied = gate(request);
   if (denied) return denied;
   const body = (await request.json().catch(() => null)) as { key?: string; slot?: string } | null;
-  if (!body?.key || !(await isLetterKey(body.key))) {
+  if (!body?.key || body.key === AUTO_SLOT_BUILTIN || !(await isLetterKey(body.key))) {
     return NextResponse.json({ ok: false, reason: "unknown letter" }, { status: 400 });
   }
   const wantSlot: LetterAutoSlot | null = body.slot ? (body.slot as LetterAutoSlot) : null;

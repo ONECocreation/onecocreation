@@ -43,8 +43,8 @@ vi.mock("@/lib/subscribers", async (importActual) => {
  * which composed letter, if any, rides each automatic send
  * ("reading-confirm" | "reading-dayof"). Three raw states per slot:
  * absent (the hardcoded default applies), the literal `AUTO_SLOT_BUILTIN`
- * ("builtin" — Love's letters explicitly off), or a composed letter's
- * key. `effectiveAutoSlot()` (reading-letters.ts) resolves that triad for
+ * sentinel (Love's letters explicitly off), or a composed letter's key.
+ * `effectiveAutoSlot()` (reading-letters.ts) resolves that triad for
  * BOTH the send path and this admin route's GET.
  *
  * Fixed by this revision:
@@ -55,10 +55,14 @@ vi.mock("@/lib/subscribers", async (importActual) => {
  *  - BLOCKER 2: the default letter's row must show its OWN slot as
  *    active (GET returns the EFFECTIVE key, default applied), and
  *    choosing "Not automatic" on it must actually turn Love's letters
- *    off (writes the literal "builtin" — never a silent fallback to the
- *    SAME letter via an absent slot).
+ *    off (writes the literal `AUTO_SLOT_BUILTIN` sentinel — never a
+ *    silent fallback to the SAME letter via an absent slot).
  *  - SHOULD-FIX: each slot is its OWN KV key — two writes to DIFFERENT
  *    slots can never clobber each other (no whole-doc read-modify-write).
+ *  - RE-REVIEW: the sentinel moved from the plain word "builtin" (a
+ *    VALID composed-letter slug — `slugify("BuiltIn")` gives exactly
+ *    that) to `"__builtin"`, which `SLUG_RE` can never produce or
+ *    accept — see the dedicated describe below.
  *
  * The KV rail is the same in-memory REST stub `tests/letters-send.test.ts`
  * uses (GET/SET/DEL over a plain Map), so `@/lib/letters` runs for real;
@@ -160,7 +164,7 @@ describe("the letters:auto:<slot> raw store — one KV key per slot", () => {
   it("setAutoSlotRaw can write the literal AUTO_SLOT_BUILTIN sentinel", async () => {
     const { setAutoSlotRaw, getAutoSlotLetter, AUTO_SLOT_BUILTIN } = await import("@/lib/letters");
     await setAutoSlotRaw("reading-confirm", AUTO_SLOT_BUILTIN);
-    expect(await getAutoSlotLetter("reading-confirm")).toBe("builtin");
+    expect(await getAutoSlotLetter("reading-confirm")).toBe(AUTO_SLOT_BUILTIN);
   });
 
   it("SHOULD-FIX: two concurrent writes to DIFFERENT slots never clobber each other", async () => {
@@ -197,6 +201,63 @@ describe("isComposedLetterKey — a slot's only eligible set", () => {
   });
 });
 
+/* ═══ the "builtin" collision (re-review, block 968,624+) ═══════════════
+ * The FIRST sentinel was the plain word "builtin" — a VALID composed-
+ * letter slug (`slugify("BuiltIn")` gives exactly "builtin"), so a
+ * letter titled that way would have silently traded places with the
+ * sentinel: her words gone, the built-in ones sent, while the page kept
+ * claiming her letter was selected. The sentinel is now `"__builtin"`
+ * (leading underscore, unslugifiable) — a letter keyed literally
+ * "builtin" is an ordinary composed letter, fully able to hold a slot. */
+describe('the "builtin" collision is closed — a letter keyed exactly "builtin" is ordinary', () => {
+  it('slugify("BuiltIn") really does collide with the OLD sentinel word — the bug this fix closes', async () => {
+    const { slugify } = await import("@/lib/letters");
+    expect(slugify("BuiltIn")).toBe("builtin");
+  });
+
+  it('AUTO_SLOT_BUILTIN is never a valid letter slug (SLUG_RE forbids the leading underscore)', async () => {
+    const { AUTO_SLOT_BUILTIN } = await import("@/lib/letters");
+    expect(AUTO_SLOT_BUILTIN).toBe("__builtin");
+    expect(/^[a-z0-9][a-z0-9-]{0,63}$/.test(AUTO_SLOT_BUILTIN)).toBe(false);
+  });
+
+  it('a composed letter keyed exactly "builtin" can hold a slot, and its OWN words are sent — not the built-in fallback', async () => {
+    const { createLetter, saveLetterOverride } = await import("@/lib/letters");
+    await createLetter({ key: "builtin", title: "Built In", audience: "list" });
+    await saveLetterOverride("builtin", {
+      subject: "Her letter, keyed builtin",
+      body: "This is a real composed letter whose key happens to be the word builtin.",
+      audience: "members",
+    });
+
+    const slotsPUT = (await import("@/app/api/admin/letters/slots/route")).PUT;
+    const putRes = await slotsPUT(
+      req("/api/admin/letters/slots", { method: "PUT", body: JSON.stringify({ key: "builtin", slot: "reading-confirm" }) }),
+    );
+    expect(await putRes.json()).toEqual({ ok: true });
+
+    const { effectiveAutoSlot, buildReadingConfirmationLetter } = await import("@/lib/reading-letters");
+    expect(await effectiveAutoSlot("reading-confirm")).toBe("builtin"); // the LETTER's key, not the sentinel
+
+    sent.length = 0;
+    onceWithinClaims.clear();
+    const mail = await buildReadingConfirmationLetter("reader@example.com");
+    expect(mail.subject).toBe("Her letter, keyed builtin");
+    expect(mail.html).toContain("This is a real composed letter whose key happens to be the word builtin.");
+  });
+
+  it("the PUT refuses the sentinel itself as a key — never accepted as a letter", async () => {
+    const { AUTO_SLOT_BUILTIN } = await import("@/lib/letters");
+    const slotsPUT = (await import("@/app/api/admin/letters/slots/route")).PUT;
+    const res = await slotsPUT(
+      req("/api/admin/letters/slots", { method: "PUT", body: JSON.stringify({ key: AUTO_SLOT_BUILTIN, slot: "reading-confirm" }) }),
+    );
+    expect(res.status).toBe(400);
+    const { getAutoSlotLetter } = await import("@/lib/letters");
+    expect(await getAutoSlotLetter("reading-confirm")).toBeNull(); // nothing written
+  });
+});
+
 /* ═══════════════════ effectiveAutoSlot — the one resolution ═══════════════ */
 
 describe("effectiveAutoSlot (reading-letters.ts) — the three-way resolution", () => {
@@ -219,7 +280,7 @@ describe("effectiveAutoSlot (reading-letters.ts) — the three-way resolution", 
     await setAutoSlotRaw("reading-confirm", AUTO_SLOT_BUILTIN);
     const { effectiveAutoSlot, READING_CONFIRMATION_LETTER_KEY } = await import("@/lib/reading-letters");
     const effective = await effectiveAutoSlot("reading-confirm");
-    expect(effective).toBe("builtin");
+    expect(effective).toBe(AUTO_SLOT_BUILTIN);
     expect(effective).not.toBe(READING_CONFIRMATION_LETTER_KEY);
   });
 
@@ -295,7 +356,7 @@ describe("/api/admin/letters/slots", () => {
     });
   });
 
-  it("BLOCKER 2: choosing 'Not automatic' on the DEFAULT letter writes the literal builtin, never leaves it absent", async () => {
+  it("BLOCKER 2: choosing 'Not automatic' on the DEFAULT letter writes the literal builtin sentinel, never leaves it absent", async () => {
     const { READING_CONFIRMATION_LETTER_KEY } = await import("@/lib/reading-letters");
     await composeDefault(READING_CONFIRMATION_LETTER_KEY, "Weekly Reading with Love"); // production reality: it already IS a composed letter
     const res = await (await slotsPUT())(
@@ -303,22 +364,22 @@ describe("/api/admin/letters/slots", () => {
     );
     expect(await res.json()).toEqual({ ok: true });
 
-    const { getAutoSlotLetter } = await import("@/lib/letters");
-    expect(await getAutoSlotLetter("reading-confirm")).toBe("builtin"); // explicit, not absent
+    const { getAutoSlotLetter, AUTO_SLOT_BUILTIN } = await import("@/lib/letters");
+    expect(await getAutoSlotLetter("reading-confirm")).toBe(AUTO_SLOT_BUILTIN); // explicit, not absent
 
     const getRes = await (await slotsGET())(req("/api/admin/letters/slots"));
     const body = (await getRes.json()) as { slots: Record<string, string> };
-    expect(body.slots["reading-confirm"]).toBe("builtin");
+    expect(body.slots["reading-confirm"]).toBe(AUTO_SLOT_BUILTIN);
     expect(body.slots["reading-confirm"]).not.toBe(READING_CONFIRMATION_LETTER_KEY); // never fell back to the same letter
   });
 
-  it("moving a letter onto a DIFFERENT slot vacates the one it held (explicit builtin, not absent)", async () => {
+  it("moving a letter onto a DIFFERENT slot vacates the one it held (explicit builtin sentinel, not absent)", async () => {
     const key = await composeLetter("Roaming Letter");
     await (await slotsPUT())(req("/api/admin/letters/slots", { method: "PUT", body: JSON.stringify({ key, slot: "reading-confirm" }) }));
     await (await slotsPUT())(req("/api/admin/letters/slots", { method: "PUT", body: JSON.stringify({ key, slot: "reading-dayof" }) }));
 
-    const { getAutoSlotLetter } = await import("@/lib/letters");
-    expect(await getAutoSlotLetter("reading-confirm")).toBe("builtin");
+    const { getAutoSlotLetter, AUTO_SLOT_BUILTIN } = await import("@/lib/letters");
+    expect(await getAutoSlotLetter("reading-confirm")).toBe(AUTO_SLOT_BUILTIN);
     expect(await getAutoSlotLetter("reading-dayof")).toBe(key);
   });
 

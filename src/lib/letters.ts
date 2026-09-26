@@ -256,12 +256,14 @@ export async function saveLetterOverride(k: string, v: LetterOverride | null): P
  * Storage: ONE KV key PER SLOT (`letters:auto:<slot>`) — never a single
  * whole-doc blob (the review's SHOULD-FIX: a whole-doc read-modify-write
  * let a write to one slot silently erase a concurrent write to the
- * other). Three raw states per slot: ABSENT (the hardcoded default
- * applies), the literal `AUTO_SLOT_BUILTIN` ("builtin" — Love's letters
- * explicitly OFF, the built-in words send, never the default either), or
- * a composed letter's key. `reading-letters.ts`'s `effectiveAutoSlot()` is
- * the ONE place both the send path and the admin route's GET resolve that
- * triad — never re-derived twice. */
+ * other; the OLD whole-doc key, plain `letters:auto`, was never live in
+ * production, so this is a straight replacement — no migration needed).
+ * Three raw states per slot: ABSENT (the hardcoded default applies), the
+ * literal `AUTO_SLOT_BUILTIN` (Love's letters explicitly OFF, the
+ * built-in words send, never the default either), or a composed
+ * letter's key. `reading-letters.ts`'s `effectiveAutoSlot()` is the ONE
+ * place both the send path and the admin route's GET resolve that triad
+ * — never re-derived twice. */
 
 export const AUTO_SLOTS = ["reading-confirm", "reading-dayof"] as const;
 export type LetterAutoSlot = (typeof AUTO_SLOTS)[number];
@@ -269,8 +271,15 @@ export type LetterAutoSlots = Partial<Record<LetterAutoSlot, string>>;
 
 /** Love's letters are explicitly OFF for a slot carrying this value — the
  *  built-in words send, and (unlike an absent slot) never the hardcoded
- *  default either. */
-export const AUTO_SLOT_BUILTIN = "builtin" as const;
+ *  default either. A LEADING UNDERSCORE, deliberately: `SLUG_RE` below
+ *  (`^[a-z0-9]...`) can never produce or accept a key starting with one,
+ *  so no composed letter's slug can ever collide with this sentinel
+ *  (re-review, block 968,624+ — the first draft used the plain word
+ *  "builtin", and `slugify("BuiltIn")` gives exactly "builtin": a letter
+ *  actually titled that would have silently traded places with the
+ *  sentinel). The PUT below still checks for this explicitly too —
+ *  belt and suspenders, never trusting the slug shape alone. */
+export const AUTO_SLOT_BUILTIN = "__builtin" as const;
 
 const autoSlotKey = (slot: LetterAutoSlot) => `letters:auto:${slot}`;
 
