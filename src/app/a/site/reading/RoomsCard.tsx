@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Card from "@/components/kit/Card";
+import { jitsiRoomUrl, type DoorBusy, type DoorConfig, type DoorRowState } from "./rooms-config";
 
 /**
  * THE ONE HOST AREA (TASK-475, block 968,624) — the Admiral's ruling: "i
@@ -34,27 +35,79 @@ import Card from "@/components/kit/Card";
  * (named) is the pure presentation over explicit per-door state, so
  * `tests/rooms-card.test.ts` renders every phase directly — this repo's
  * vitest runs no jsdom.
+ *
+ * TASK-486 (block 968,624+, Love's one-tap email links): the ONE-CLICK
+ * OPEN logic above (`fetchDoorState`/`openDoor`/`closeDoor`, the pure GET/
+ * PUT chain `putAction` always rode) is now exported — `/a/site/reading/
+ * go/[door]`'s own `useDoorRoom` hook calls the SAME functions for a
+ * single door, never a copy of the publish-then-prepare-fallback chain.
+ * `DOORS` moves here too (was a local const on `SiteReadingRoom.tsx`) so
+ * both that page and the go/[door] route read the one config array. Every
+ * literal call site (`putAction(door.adminPath, "publish")` etc.) is
+ * unmoved text, only re-homed into named exports — `tests/rooms-card.
+ * test.ts`'s own source pins read the same bytes either way. The one row
+ * addition — a quiet "Room link" under the state line — rides as a THIRD
+ * child of the `<li>` (its own `<span className="kit-row-link">`, never
+ * inside the first span the state-line test pins, never inside
+ * `kit-rows-end` the two-control test pins).
+ *
+ * REVIEW FIX (block 968,624+, T-486): THE DOUBLE-TAP RACE. `busy` state
+ * alone doesn't guard `open`/`close` — `setBusy` is batched, so two taps
+ * before the next render both slip past the `disabled` check and both
+ * reach `openDoor`/`closeDoor`, which can PREPARE TWO DIFFERENT ROOMS —
+ * Love then gets sent to whichever one lost the race. `runExclusive`
+ * below is the shared in-flight lock, backed by a real `useRef`: a
+ * second call while the first is still running returns `null`
+ * immediately, never runs `fn`, and the lock always clears in `finally`.
+ * `RoomsCard`'s own `open`/`close` wrap through it, one ref PER DOOR (via
+ * `recordLock` over a single `useRef<Record<string, boolean>>({})`, so
+ * two different doors never block each other, but open+close on the
+ * SAME door do); `useDoorRoom.ts` wraps through it with its own single
+ * `useRef(false)`, shared the same way between its own open+close (one
+ * door, one lock).
+ *
+ * BLOCKER FIX (block 968,624+, T-486, a real `next build`+`next start`
+ * Chrome walk): `DOORS`/`DoorConfig`/`DoorRowState`/`DoorBusy`/
+ * `jitsiRoomUrl` moved OUT of this file into `./rooms-config.ts`, a
+ * plain module with no `"use client"`. This file is `"use client"` —
+ * `go/[door]/page.tsx` (a SERVER component) imported `DOORS` from here
+ * and called `.find()` on it; on the server a client module's exports
+ * are opaque client references, not the real array, and it 500'd:
+ * "TypeError: h.DOORS.find is not a function". Vitest's plain-node
+ * runner never enforces that boundary, so every test passed; only the
+ * real build caught it. Every value the server needs now imports from
+ * `./rooms-config` directly — never through this file, even by
+ * re-export, which would just relocate the same trap.
  */
 
-export interface DoorConfig {
-  /** a stable key AND the door's admin route suffix source — never
-   *  guessed from the label */
-  id: string;
-  /** the row's own words, e.g. "Free room · 12:12 Housewarming and 1:11
-   *  Reading" */
-  label: string;
-  /** the operator route this row's door answers to, e.g.
-   *  "/api/admin/stage1" */
-  adminPath: string;
+export type Lock = { current: boolean };
+
+/** The in-flight lock every open/close caller shares — see the docblock
+ *  above. Returns `fn()`'s result, or `null` immediately without ever
+ *  calling `fn` when a call is already running. */
+export async function runExclusive<T>(lock: Lock, fn: () => Promise<T>): Promise<T | null> {
+  if (lock.current) return null;
+  lock.current = true;
+  try {
+    return await fn();
+  } finally {
+    lock.current = false;
+  }
 }
 
-export interface DoorRowState {
-  phase: "closed" | "prepared" | "published";
-  room: string | null;
-  jitsiDomain: string;
+/** A `{ current }` view of one key in a Record-backed ref — lets
+ *  `RoomsCard`'s single `useRef<Record<string, boolean>>({})` hand
+ *  `runExclusive` a per-door lock without a ref per door. */
+export function recordLock(store: { current: Record<string, boolean> }, key: string): Lock {
+  return {
+    get current() {
+      return store.current[key] ?? false;
+    },
+    set current(v: boolean) {
+      store.current[key] = v;
+    },
+  };
 }
-
-export type DoorBusy = "open" | "close" | null;
 
 /* the ONE state line per row, said once, under the words, in the ONE
    quiet <em> (the /a uniformity law — Number One's Chrome walk caught a
@@ -107,7 +160,7 @@ export function DoorRow({ door, state, busy, error, onOpen, onClose }: DoorRowPr
   const joinControl = state?.room ? (
     <a
       className="kit-btn kit-btn-second kit-btn-sm"
-      href={`https://${state.jitsiDomain}/${state.room}#config.p2p.enabled=false&config.showChatPermissionsModeratorSetting=true`}
+      href={jitsiRoomUrl({ jitsiDomain: state.jitsiDomain, room: state.room })}
       target="_blank"
       rel="noreferrer"
     >
@@ -130,6 +183,15 @@ export function DoorRow({ door, state, busy, error, onOpen, onClose }: DoorRowPr
       <span className="kit-rows-end">
         {lifecycleControl}
         {joinControl}
+      </span>
+      {/* TASK-486: the quiet one-tap email link, under the state line but
+         OUTSIDE both the words span (the state-line test pins that span
+         to exactly <b>/<em>) and kit-rows-end (the two-control test pins
+         that span to exactly two controls) — its own third child, its own
+         grid cell (kit.css's `.kit-rows>li` auto-places it under column
+         1, `.kit-rooms-card .kit-row-link` tightens the gap). */}
+      <span className="kit-row-link">
+        <a href={`/a/site/reading/go/${door.id}`}>Room link</a>
       </span>
     </li>
   );
@@ -175,19 +237,67 @@ async function putAction(adminPath: string, action: "prepare" | "publish" | "clo
   return { res, data } as { res: Response; data: { ok: boolean; phase?: DoorRowState["phase"]; room?: string | null; jitsiDomain?: string; reason?: string } | null };
 }
 
+/* TASK-486: the pure GET read every poll (RoomsCard's mount loop AND the
+   go/[door] page's own hook) shares — a plain read, never a mutation, so
+   an email scanner opening the go page's link is always safe. */
+export async function fetchDoorState(door: DoorConfig): Promise<DoorRowState | null> {
+  try {
+    const r = await fetch(door.adminPath, { cache: "no-store" });
+    const d = r.ok ? await r.json() : null;
+    if (d?.ok) return { phase: d.phase, room: d.room, jitsiDomain: d.jitsiDomain };
+  } catch {
+    /* the caller keeps the last-known truth */
+  }
+  return null;
+}
+
+export type DoorActionOutcome = { ok: true; state: DoorRowState } | { ok: false; reason: string };
+
+/* TASK-486: the ONE-CLICK OPEN chain, pulled out of the component's own
+   `open` callback so `useDoorRoom` (go/[door]) calls the exact same
+   publish-then-prepare-fallback logic — never a second copy of it. No
+   door id is ever special-cased here (door-agnostic, config-driven, same
+   as before this move). */
+export async function openDoor(door: DoorConfig): Promise<DoorActionOutcome> {
+  const first = await putAction(door.adminPath, "publish");
+  if (first.data?.ok) {
+    return { ok: true, state: { phase: first.data.phase!, room: first.data.room!, jitsiDomain: first.data.jitsiDomain! } };
+  }
+  /* the door refused publish from closed (Stage 1's own law, 409) —
+     prepare, then publish, in this SAME call */
+  const prepared = await putAction(door.adminPath, "prepare");
+  if (!prepared.data?.ok) {
+    return { ok: false, reason: prepared.data?.reason ?? `the room refused (${prepared.res.status})` };
+  }
+  const published = await putAction(door.adminPath, "publish");
+  if (published.data?.ok) {
+    return { ok: true, state: { phase: published.data.phase!, room: published.data.room!, jitsiDomain: published.data.jitsiDomain! } };
+  }
+  return { ok: false, reason: published.data?.reason ?? `the room refused (${published.res.status})` };
+}
+
+/** TASK-486: the close chain, same shape as `openDoor`. */
+export async function closeDoor(door: DoorConfig): Promise<DoorActionOutcome> {
+  const { res, data } = await putAction(door.adminPath, "close");
+  if (data?.ok) {
+    return { ok: true, state: { phase: data.phase!, room: data.room!, jitsiDomain: data.jitsiDomain! } };
+  }
+  return { ok: false, reason: data?.reason ?? `the room refused (${res.status})` };
+}
+
 export default function RoomsCard({ doors }: { doors: DoorConfig[] }) {
   const [states, setStates] = useState<Record<string, DoorRowState | null>>({});
   const [busy, setBusy] = useState<Record<string, DoorBusy>>({});
   const [errors, setErrors] = useState<Record<string, string | null>>({});
+  /* the double-tap race's fix (review, T-486): one in-flight lock PER
+     DOOR, so two taps on the SAME row before the next render can't both
+     reach openDoor/closeDoor, but two different rows never block each
+     other. */
+  const locksRef = useRef<Record<string, boolean>>({});
 
   const refresh = useCallback(async (door: DoorConfig) => {
-    try {
-      const r = await fetch(door.adminPath, { cache: "no-store" });
-      const d = r.ok ? await r.json() : null;
-      if (d?.ok) setStates((s) => ({ ...s, [door.id]: { phase: d.phase, room: d.room, jitsiDomain: d.jitsiDomain } }));
-    } catch {
-      /* the rows keep the last-known truth */
-    }
+    const s = await fetchDoorState(door);
+    if (s) setStates((prev) => ({ ...prev, [door.id]: s }));
   }, []);
 
   useEffect(() => {
@@ -207,60 +317,48 @@ export default function RoomsCard({ doors }: { doors: DoorConfig[] }) {
 
   const open = useCallback(
     async (door: DoorConfig) => {
-      setBusy((b) => ({ ...b, [door.id]: "open" }));
-      setErrors((e) => ({ ...e, [door.id]: null }));
-      try {
-        const first = await putAction(door.adminPath, "publish");
-        if (first.data?.ok) {
-          setStates((s) => ({ ...s, [door.id]: { phase: first.data!.phase!, room: first.data!.room!, jitsiDomain: first.data!.jitsiDomain! } }));
-          return;
-        }
-        /* the door refused publish from closed (Stage 1's own law, 409) —
-           prepare, then publish, in this SAME click */
-        const prepared = await putAction(door.adminPath, "prepare");
-        if (!prepared.data?.ok) {
-          setErrors((e) => ({ ...e, [door.id]: prepared.data?.reason ?? `the room refused (${prepared.res.status})` }));
+      await runExclusive(recordLock(locksRef, door.id), async () => {
+        setBusy((b) => ({ ...b, [door.id]: "open" }));
+        setErrors((e) => ({ ...e, [door.id]: null }));
+        try {
+          const outcome = await openDoor(door);
+          if (outcome.ok) {
+            setStates((s) => ({ ...s, [door.id]: outcome.state }));
+          } else {
+            setErrors((e) => ({ ...e, [door.id]: outcome.reason }));
+            await refresh(door);
+          }
+        } catch {
+          setErrors((e) => ({ ...e, [door.id]: "the room didn't answer, try again" }));
           await refresh(door);
-          return;
+        } finally {
+          setBusy((b) => ({ ...b, [door.id]: null }));
         }
-        const published = await putAction(door.adminPath, "publish");
-        if (published.data?.ok) {
-          setStates((s) => ({
-            ...s,
-            [door.id]: { phase: published.data!.phase!, room: published.data!.room!, jitsiDomain: published.data!.jitsiDomain! },
-          }));
-        } else {
-          setErrors((e) => ({ ...e, [door.id]: published.data?.reason ?? `the room refused (${published.res.status})` }));
-          await refresh(door);
-        }
-      } catch {
-        setErrors((e) => ({ ...e, [door.id]: "the room didn't answer, try again" }));
-        await refresh(door);
-      } finally {
-        setBusy((b) => ({ ...b, [door.id]: null }));
-      }
+      });
     },
     [refresh],
   );
 
   const close = useCallback(
     async (door: DoorConfig) => {
-      setBusy((b) => ({ ...b, [door.id]: "close" }));
-      setErrors((e) => ({ ...e, [door.id]: null }));
-      try {
-        const { res, data } = await putAction(door.adminPath, "close");
-        if (data?.ok) {
-          setStates((s) => ({ ...s, [door.id]: { phase: data.phase!, room: data.room!, jitsiDomain: data.jitsiDomain! } }));
-        } else {
-          setErrors((e) => ({ ...e, [door.id]: data?.reason ?? `the room refused (${res.status})` }));
+      await runExclusive(recordLock(locksRef, door.id), async () => {
+        setBusy((b) => ({ ...b, [door.id]: "close" }));
+        setErrors((e) => ({ ...e, [door.id]: null }));
+        try {
+          const outcome = await closeDoor(door);
+          if (outcome.ok) {
+            setStates((s) => ({ ...s, [door.id]: outcome.state }));
+          } else {
+            setErrors((e) => ({ ...e, [door.id]: outcome.reason }));
+            await refresh(door);
+          }
+        } catch {
+          setErrors((e) => ({ ...e, [door.id]: "the room didn't answer, try again" }));
           await refresh(door);
+        } finally {
+          setBusy((b) => ({ ...b, [door.id]: null }));
         }
-      } catch {
-        setErrors((e) => ({ ...e, [door.id]: "the room didn't answer, try again" }));
-        await refresh(door);
-      } finally {
-        setBusy((b) => ({ ...b, [door.id]: null }));
-      }
+      });
     },
     [refresh],
   );

@@ -2,7 +2,8 @@
 
 import { SectionHead } from "@/components/console/glass";
 import ReadingScheduleCard from "./ReadingScheduleCard";
-import RoomsCard, { type DoorConfig } from "./RoomsCard";
+import RoomsCard from "./RoomsCard";
+import { DOORS } from "./rooms-config";
 
 /**
  * /a/site/reading — the WEEKLY READING sub-room (TASK-381, block 968,047+;
@@ -24,13 +25,14 @@ import RoomsCard, { type DoorConfig } from "./RoomsCard";
  * together because both read Stage 1's one door; the stage1 row below
  * narrows to "Reading · 1:11" (Part 2 alone). `RoomsCard.tsx` itself needs
  * no edit — it was already door-agnostic, config-driven.
+ *
+ * TASK-486 (block 968,624+): `DOORS` moved into `./rooms-config.ts` (a
+ * plain module, no `"use client"`, importable from the server-side
+ * `go/[door]/page.tsx` too — see that file's own docblock for the
+ * client/server boundary trap this avoids) so both this page and the
+ * go/[door] route read the SAME array, never a second, driftable copy
+ * of the four doors.
  */
-const DOORS: DoorConfig[] = [
-  { id: "housewarming", label: "Housewarming · 12:12", adminPath: "/api/admin/housewarming-door" },
-  { id: "stage1", label: "Reading · 1:11", adminPath: "/api/admin/stage1" },
-  { id: "stage2", label: "Book Talk · 2:22", adminPath: "/api/admin/stage2" },
-  { id: "qa", label: "Q&A · 3:33", adminPath: "/api/admin/qa-door" },
-];
 
 export default function SiteReadingRoom() {
   return (

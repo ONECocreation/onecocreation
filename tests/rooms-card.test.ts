@@ -3,7 +3,8 @@ import { promises as fs } from "fs";
 import path from "path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { RoomsCardBody, type RoomsCardBodyProps, type DoorConfig, type DoorRowState } from "@/app/a/site/reading/RoomsCard";
+import { RoomsCardBody, type RoomsCardBodyProps } from "@/app/a/site/reading/RoomsCard";
+import type { DoorConfig, DoorRowState } from "@/app/a/site/reading/rooms-config";
 
 /**
  * TASK-475 (block 968,624) — `RoomsCard.tsx`, the ONE host area on
@@ -66,7 +67,17 @@ function row(html: string, id: string): string {
   return m![0];
 }
 
-const controlsIn = (rowHtml: string) => (rowHtml.match(/<button|<a /g) ?? []).length;
+/* TASK-486 (block 968,624+): a quiet "Room link" rides as the row's own
+   THIRD `<li>` child now (RoomsCard.tsx's own docblock) — outside this
+   span entirely, so "the same two controls" below is scoped to the
+   right-edge cluster it always meant, not the whole row. */
+function rowsEndOf(rowHtml: string): string {
+  const m = rowHtml.match(/<span class="kit-rows-end">[\s\S]*?<\/span>/);
+  expect(m, "kit-rows-end is missing").not.toBeNull();
+  return m![0];
+}
+
+const controlsIn = (rowHtml: string) => (rowsEndOf(rowHtml).match(/<button|<a /g) ?? []).length;
 
 describe("four rows, one component, one config array", () => {
   it("renders exactly four rows, one per door id, in order (TASK-481: the Housewarming's own row, first)", () => {
@@ -93,6 +104,19 @@ describe("four rows, one component, one config array", () => {
     const src = await read(CARD);
     expect(src).toMatch(/doors\.map\(/);
     expect(src.match(/<DoorRow\s/g)?.length).toBe(1);
+  });
+});
+
+describe("TASK-486 — each row also carries a quiet Room link to its go/[door] page", () => {
+  it("every row's Room link points at /a/site/reading/go/<door id>, outside the two-control cluster", () => {
+    const html = render(bodyProps());
+    for (const d of DOORS) {
+      const r = row(html, d.id);
+      expect(r).toContain(`href="/a/site/reading/go/${d.id}"`);
+      expect(r).toContain(">Room link<");
+      // exactly one anchor/button beyond the two the right-edge cluster owns
+      expect((r.match(/<button|<a /g) ?? []).length).toBe(controlsIn(r) + 1);
+    }
   });
 });
 
@@ -249,6 +273,12 @@ describe("the default export's own wiring — source pins (no jsdom)", () => {
     expect(src).toContain('method: "PUT"');
     expect(src).toContain("JSON.stringify({ action })");
     expect(src).toContain('cache: "no-store"');
+  });
+
+  it("the double-tap race's fix (review, T-486): open/close wrap through runExclusive, one lock per door", async () => {
+    const src = await read(CARD);
+    expect(src).toContain("useRef<Record<string, boolean>>({})");
+    expect(src.match(/runExclusive\(recordLock\(locksRef, door\.id\),/g)?.length).toBe(2);
   });
 });
 
