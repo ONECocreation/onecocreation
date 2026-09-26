@@ -52,7 +52,11 @@ Three builds:
   closed->publish convenience path Stage 2 has.
 - `src/lib/qa-entitlement.ts` — NEW: `qaEntitled(subject, tier)` + a pure
   core (`qaEntitledFromOrders`) tests can hit without KV.
-- `src/app/api/qa-door/route.ts` — NEW: the member door.
+- `src/app/api/qa-door/route.ts` — NEW: the member door. Matches
+  `/api/stage2`'s own GET wire shape field for field (T-473's
+  `ReadingStageDoor.tsx` polls it expecting that exact contract) and
+  reuses `probeJitsiReachable` imported from `/api/stage2/route.ts`
+  rather than a second copy.
 - `src/app/api/admin/qa-door/route.ts` — NEW: the operator door.
 - `src/components/reading/ReadingDay.tsx` — EDIT: ONE line — its
   `qaEntitled` prop now calls `qaEntitled(subject, tier)` instead of
