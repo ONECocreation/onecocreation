@@ -492,7 +492,10 @@ export function isPurchasableIn(item: StoreItem, catalog: readonly StoreItem[]):
   const standing = catalog.filter(
     (i) => i.kind === "package" && i.entitlementTier === item.entitlementTier && !isTasterGrant(i),
   );
-  return standing.length === 0 || standing.some((i) => isPurchasable(i));
+  /* Number One (review, block 968,624): only the Admiral's "Coming soon"
+     ruling closes the taster. A standing item that is hidden or sold out
+     for its own reasons never silently takes its taster down with it. */
+  return !standing.some((i) => i.comingSoon === true);
 }
 
 export async function upsertItem(item: StoreItem): Promise<StoreItem> {

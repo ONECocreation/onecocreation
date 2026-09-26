@@ -89,9 +89,9 @@ describe("isPurchasableIn() — a taster follows its OWN tier's standing item (a
     expect(isPurchasableIn(tasterB, catalog)).toBe(false);
   });
 
-  it("a taster is refused when its tier's standing item is hidden or soldout too, not only comingSoon", () => {
-    expect(isPurchasableIn(tasterB, [{ ...standingB, status: "hidden" }, tasterB])).toBe(false);
-    expect(isPurchasableIn(tasterB, [{ ...standingB, status: "soldout" }, tasterB])).toBe(false);
+  it("only comingSoon closes a taster: a hidden or soldout standing item leaves it alone (review, block 968,624)", () => {
+    expect(isPurchasableIn(tasterB, [{ ...standingB, status: "hidden" }, tasterB])).toBe(true);
+    expect(isPurchasableIn(tasterB, [{ ...standingB, status: "soldout" }, tasterB])).toBe(true);
   });
 
   it("a taster stays buyable while its tier's own standing item is live and not comingSoon", () => {
