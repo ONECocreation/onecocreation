@@ -11,6 +11,30 @@ import { glassCard, field, SectionHead } from "@/components/console/glass";
  * later, and type the exact headcount back before a list send fires. After
  * the send, one delivery line per member. When N outruns the hourly cap the
  * panel says when the drip will finish — the queue's pace, told honestly.
+ *
+ * T-484 (walk item S7) — TRACE: the Admiral pressed the list send and saw
+ * NO confirmation; the queue afterwards held 2 items, not 6. Reading the
+ * route + this panel end to end, every ROUTE outcome already produced a
+ * `note` string (a 409, a 429 dedupe, the success line) — but the panel
+ * only ever recorded it into ONE shared `note` state also used for the
+ * TEST button, and rendered it in only ONE place, under the LIST section,
+ * `var(--muted)` throughout (success and failure alike — no visual break
+ * between "it worked" and "it didn't"). A test click's own outcome landed
+ * in that same variable and, if the operator had scrolled the list
+ * section out of view (a long segment list, a small screen), a quiet
+ * muted line easily reads as nothing at all — the likeliest account of
+ * "saw no confirmation" without a captured screenshot of the exact moment.
+ * The 2-of-6 count is most consistent with the 409 path actually firing:
+ * `segments` (the panel's LIVE counts) is fetched once, at page load;
+ * `list.length` at the SEND route is read fresh, at click time — a soul
+ * unsubscribing or a stale tab between those two moments would show 6,
+ * confirm 6, and have the route refuse with "type the exact count" against
+ * the NOW-current 2 (or vice-versa) — a real send never firing, the
+ * queue's 2 items being unrelated leftovers, not this click's own send.
+ * Building real send-tracking (below) makes this class of doubt structurally
+ * impossible: every outcome is now a REPLACED, colored, aria-live line next
+ * to its own button, and a real send's own progress is read back from the
+ * vault, never inferred from the queue's raw depth.
  */
 interface ApiLetter {
   key: string;
@@ -40,6 +64,103 @@ function estimateFinish(n: number, cap: number): Date | null {
   return n > cap ? new Date(Date.now() + Math.ceil(n / cap) * 3_600_000) : null;
 }
 
+/* ═══════════════════════ T-484 — the real sent state ═══════════════════
+ * One `SendRecord` (mail-queue.ts's own shape, read back through the send
+ * route's GET) per list send: queued at publish time, sent/dropped live
+ * as `tick()` drains the queue. The panel polls it, never the raw queue. */
+
+export interface SendRecord {
+  sendId: string;
+  queued: number;
+  sent: number;
+  dropped: number;
+  segment: string;
+  scheduledFor: string;
+  createdAtMs: number;
+}
+
+/** "5:55 AM" — `iso`'s own clock in `timeZone` (undefined = the viewer's
+ *  own, whatever the browser/runtime is set to). A pure read of `Intl`,
+ *  never a live timer. */
+function clockWords(iso: string, timeZone?: string): string {
+  return new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+}
+
+export type ListSendOutcome =
+  | { kind: "idle" }
+  | { kind: "sending" }
+  | { kind: "err"; reason: string }
+  | { kind: "queued"; queued: number; scheduledFor: string }
+  | { kind: "progress"; queued: number; sent: number; dropped: number };
+
+/** The ONE line the list-send control shows for every outcome (the /a
+ *  uniformity law: one state, said once). "next tick" reads as "goes out
+ *  within 10 minutes" — the VPS crontab's own cadence (no "send now" drain
+ *  lives in this panel); a real `at` schedule reads in Mountain AND the
+ *  viewer's own clock, since the two are rarely the same soul's zone. */
+export function listSendOutcomeLine(o: ListSendOutcome): string {
+  switch (o.kind) {
+    case "idle":
+      return "";
+    case "sending":
+      return "Sending…";
+    case "err":
+      return o.reason;
+    case "queued": {
+      const who = o.queued === 1 ? "person" : "people";
+      if (o.scheduledFor === "next tick") return `Queued for ${o.queued} ${who}. Goes out within 10 minutes.`;
+      return `Scheduled for ${clockWords(o.scheduledFor, "America/Denver")} Mountain (${clockWords(o.scheduledFor)} your time).`;
+    }
+    case "progress": {
+      const who = o.queued === 1 ? "person" : "people";
+      if (o.sent + o.dropped >= o.queued) return `Sent to all ${o.queued} ${who}.`;
+      return `Sent to ${o.sent} of ${o.queued}.`;
+    }
+  }
+}
+
+/** The poll's own stop rule — done (every queued copy resolved, sent or
+ *  dropped) or 30 minutes have passed since the send, whichever comes
+ *  first. A pure function of the numbers; the interval that calls it is
+ *  the only "live timer" in this file. */
+export function pollShouldStop(startedAtMs: number, nowMs: number, rec: { sent: number; dropped: number; queued: number }): boolean {
+  if (rec.sent + rec.dropped >= rec.queued) return true;
+  return nowMs - startedAtMs >= 30 * 60_000;
+}
+
+/** T-484 (review round, item 3) — after a reload, `recentSends` (newest
+ *  first, exactly how `?key=` hands them back) may hold a send that was
+ *  still draining when the tab closed; with no poll running its line
+ *  would freeze forever. The newest one that has NOT resolved
+ *  (`sent+dropped<queued`) and is NOT yet past the poll's own 30-minute
+ *  stop rule (`pollShouldStop`, the SAME rule a live poll obeys, never a
+ *  second one) is the one worth re-arming; `null` when every send is
+ *  either done or too old to still be worth watching. */
+export function sendToReArm(sends: SendRecord[], nowMs: number): SendRecord | null {
+  return sends.find((s) => s.sent + s.dropped < s.queued && !pollShouldStop(s.createdAtMs, nowMs, s)) ?? null;
+}
+
+export type TestSendOutcome = { kind: "idle" } | { kind: "sending" } | { kind: "ok"; to: string } | { kind: "err"; reason: string };
+
+/** The test button's own line, right beside it — never shared with the
+ *  list send's line below (the original miss: one `note` variable served
+ *  both controls, so a test click's own confirmation could land far from
+ *  the button that caused it). */
+export function testSendOutcomeLine(o: TestSendOutcome): string {
+  switch (o.kind) {
+    case "idle":
+      return "";
+    case "sending":
+      return "Sending…";
+    case "ok":
+      return `Test copy queued for ${o.to}.`;
+    case "err":
+      return o.reason;
+  }
+}
+
+const POLL_EVERY_MS = 15_000;
+
 export default function LetterSendPanel({ params }: { params: Promise<{ key: string }> }) {
   const { key } = use(params);
   const [letter, setLetter] = useState<ApiLetter | null | undefined>(undefined);
@@ -49,8 +170,11 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   const [testTo, setTestTo] = useState("");
   const [sendAt, setSendAt] = useState("");
   const [typed, setTyped] = useState("");
-  const [note, setNote] = useState("");
-  const [deliveries, setDeliveries] = useState<{ to: string; when: string }[]>([]);
+  const [testOutcome, setTestOutcome] = useState<TestSendOutcome>({ kind: "idle" });
+  const [listOutcome, setListOutcome] = useState<ListSendOutcome>({ kind: "idle" });
+  const [recentSends, setRecentSends] = useState<SendRecord[]>([]);
+  const [activeSendId, setActiveSendId] = useState<string | null>(null);
+  const pollStartRef = useRef<number>(0);
 
   // T-482: the "Sends automatically" row — which slot (if any) THIS letter
   // currently holds, and the in-flight guard for saving a change to it.
@@ -65,7 +189,8 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
    * two rapid clicks sees the flag already up and returns before any fetch
    * fires. `sending` (state) drives the visible disabled attribute — belt
    * and suspenders, same shape as the send route's own onceWithin() guard
-   * (mail.ts) on the wire. */
+   * (mail.ts) on the wire. ONE guard for both buttons (test and list) — a
+   * test copy and a real send were never meant to race each other either. */
   const sendingRef = useRef(false);
   const [sending, setSending] = useState(false);
 
@@ -86,8 +211,9 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
     Promise.all([
       fetch("/api/admin/letters").then((r) => (r.ok ? r.json() : null)),
       fetch("/api/admin/letters/slots").then((r) => (r.ok ? r.json() : null)),
+      fetch(`/api/admin/letters/send?key=${encodeURIComponent(key)}`).then((r) => (r.ok ? r.json() : null)),
     ])
-      .then(([d, s]) => {
+      .then(([d, s, sendsRes]) => {
         if (!d?.ok) {
           setLetter(null);
           return;
@@ -104,9 +230,48 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         // default-riding or explicit alike.
         const slots: { "reading-confirm"?: string; "reading-dayof"?: string } = s?.ok ? (s.slots ?? {}) : {};
         setAutoSlot(slots["reading-confirm"] === key ? "reading-confirm" : slots["reading-dayof"] === key ? "reading-dayof" : "");
+        // T-484: the last few sends for THIS letter — visible after a
+        // reload. The NEWEST one that isn't done yet (sent+dropped<queued)
+        // AND is still under 30 minutes old re-arms the poll (item 3, the
+        // review round) — otherwise a send still draining when the tab
+        // reloads shows a frozen line that never updates again.
+        const sends: SendRecord[] = sendsRes?.ok ? (sendsRes.sends ?? []) : [];
+        setRecentSends(sends);
+        const unfinished = sendToReArm(sends, Date.now());
+        if (unfinished) {
+          pollStartRef.current = unfinished.createdAtMs;
+          setListOutcome({ kind: "progress", queued: unfinished.queued, sent: unfinished.sent, dropped: unfinished.dropped });
+          setActiveSendId(unfinished.sendId);
+        }
       })
       .catch(() => setLetter(null));
   }, [key]);
+
+  /** T-484: one send's own tally, read back — merges into `recentSends`
+   *  (so the history list stays live while a send is in flight, with no
+   *  second fetch) and stops the interval once `pollShouldStop()` says so. */
+  async function pollSendStatus(sendId: string) {
+    const d = await fetch(`/api/admin/letters/send?sendId=${encodeURIComponent(sendId)}`)
+      .then((r) => r.json())
+      .catch(() => null);
+    if (!d?.ok) return; // a transient fetch hiccup — try again next tick, never clear the line
+    const rec: SendRecord = { sendId, queued: d.queued, sent: d.sent, dropped: d.dropped, segment: d.segment, scheduledFor: d.scheduledFor, createdAtMs: d.createdAtMs };
+    setListOutcome({ kind: "progress", queued: rec.queued, sent: rec.sent, dropped: rec.dropped });
+    setRecentSends((prev) => [rec, ...prev.filter((s) => s.sendId !== sendId)].slice(0, 5));
+    if (pollShouldStop(pollStartRef.current, Date.now(), rec)) setActiveSendId(null);
+  }
+
+  useEffect(() => {
+    if (!activeSendId) return;
+    // pollStartRef is set by the CALLER (a fresh send, or the reload's own
+    // re-arm above) to the send's real createdAtMs, never Date.now() here —
+    // the 30-minute stop rule is anchored to the send's own age, immune to
+    // a reload restarting the clock.
+    const id = setInterval(() => {
+      pollSendStatus(activeSendId);
+    }, POLL_EVERY_MS);
+    return () => clearInterval(id);
+  }, [activeSendId]);
 
   /** T-482: move this letter onto (or off) an automatic-send slot. An
    *  optimistic set, reverted on a rejection — the same shape as every
@@ -140,14 +305,14 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
     if (sendingRef.current) return; // one click in flight at a time
     sendingRef.current = true;
     setSending(true);
-    setNote("");
+    setTestOutcome({ kind: "sending" });
     try {
       const d = await fetch("/api/admin/letters/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key, testTo }),
       }).then((r) => r.json()).catch(() => null);
-      setNote(d?.ok ? `test copy queued for ${testTo}` : (d?.reason ?? "test send failed"));
+      setTestOutcome(d?.ok ? { kind: "ok", to: testTo } : { kind: "err", reason: d?.reason ?? "test send failed" });
     } finally {
       sendingRef.current = false;
       setSending(false);
@@ -158,8 +323,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
     if (sendingRef.current) return; // one click in flight at a time
     sendingRef.current = true;
     setSending(true);
-    setNote("");
-    setDeliveries([]);
+    setListOutcome({ kind: "sending" });
     try {
       const d = await fetch("/api/admin/letters/send", {
         method: "POST",
@@ -172,16 +336,21 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         }),
       }).then((r) => r.json()).catch(() => null);
       if (d?.ok) {
-        setNote(
-          `queued to ${d.queued} souls (${d.segment}) · ${d.scheduledFor === "next tick" ? "goes out on the next tick" : `scheduled for ${new Date(d.scheduledFor).toLocaleString()}`}` +
-            (d.estimatedFinish ? ` · the drip finishes ≈ ${new Date(d.estimatedFinish).toLocaleString()}` : ""),
-        );
-        setDeliveries((d.recipients ?? []).map((to: string) => ({ to, when: d.scheduledFor })));
+        setListOutcome({ kind: "queued", queued: d.queued, scheduledFor: d.scheduledFor });
         setTyped("");
+        if (d.sendId) {
+          const createdAtMs = Date.now();
+          setRecentSends((prev) => [
+            { sendId: d.sendId, queued: d.queued, sent: 0, dropped: 0, segment: d.segment, scheduledFor: d.scheduledFor, createdAtMs },
+            ...prev.filter((s) => s.sendId !== d.sendId),
+          ].slice(0, 5));
+          pollStartRef.current = createdAtMs; // the 30-minute stop rule's own anchor
+          setActiveSendId(d.sendId); // starts the poll effect above
+        }
       } else if (d?.expected !== undefined) {
-        setNote(`the list moved — it is now ${d.expected}; retype the count`);
+        setListOutcome({ kind: "err", reason: `The list changed. It has ${d.expected} people now. Type ${d.expected} to send.` });
       } else {
-        setNote(d?.reason ?? "send failed");
+        setListOutcome({ kind: "err", reason: d?.reason ?? "send failed" });
       }
     } finally {
       sendingRef.current = false;
@@ -256,9 +425,12 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         <div className="flex flex-wrap items-center gap-2">
           <input value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="you@example.com" type="email" className="console-field" style={field} />
           <button onClick={sendTest} disabled={sending || !testTo.includes("@") || !hasBody} className="btn btn-sm">
-            {sending ? "SENDING…" : "SEND TEST COPY"}
+            {testOutcome.kind === "sending" ? "SENDING…" : "SEND TEST COPY"}
           </button>
         </div>
+        {testOutcome.kind !== "idle" && (
+          <p aria-live="polite" className={testOutcome.kind === "err" ? "kit-note kit-note-err" : testOutcome.kind === "ok" ? "kit-note kit-note-ok" : "kit-note"}>{testSendOutcomeLine(testOutcome)}</p>
+        )}
       </div>
 
       <SectionHead label="Send to the list — pick the door" />
@@ -291,7 +463,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
                 className="ml-2 console-field" style={{ ...field, width: 96 }} />
             </label>
             <button onClick={sendList} disabled={sending || !confirmed || !hasBody} className="btn btn-sm">
-              {sending ? "SENDING…" : sendAt ? `SCHEDULE TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}` : `SEND TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}`}
+              {listOutcome.kind === "sending" ? "SENDING…" : sendAt ? `SCHEDULE TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}` : `SEND TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}`}
             </button>
             {finish && (
               <p style={{ fontSize: ".75rem", color: "var(--muted)" }}>
@@ -301,14 +473,18 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
             )}
           </div>
         )}
-        {note && <p className="mt-2" style={{ fontSize: ".75rem", color: "var(--muted)" }}>{note}</p>}
+        {listOutcome.kind !== "idle" && (
+          <p aria-live="polite" className={
+            listOutcome.kind === "err" ? "kit-note kit-note-err" : listOutcome.kind === "queued" || listOutcome.kind === "progress" ? "kit-note kit-note-ok" : "kit-note"
+          }>{listSendOutcomeLine(listOutcome)}</p>
+        )}
 
-        {deliveries.length > 0 && (
-          <ul className="mt-3" style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: 4,
-            borderTop: "1px solid rgba(139,118,196,.18)", paddingTop: 8 }}>
-            {deliveries.map((d) => (
-              <li key={d.to} style={{ fontSize: ".75rem", color: "var(--ink-body)" }}>
-                ✉ {d.to} — {d.when === "next tick" ? "next tick" : `scheduled ${new Date(d.when).toLocaleString()}`} · remembered in their mailbox
+        {recentSends.length > 0 && (
+          <ul className="kit-sends-list">
+            {recentSends.map((s) => (
+              <li key={s.sendId} className="kit-note">
+                {new Date(s.createdAtMs).toLocaleString()} · {s.segment === "all" ? "all" : s.segment} · Sent to {s.sent}
+                {s.dropped > 0 ? ` (${s.dropped} dropped)` : ""} of {s.queued}
               </li>
             ))}
           </ul>

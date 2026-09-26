@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { addSubscriber, addReadingTag, validEmail, subscribersConfigured } from "@/lib/subscribers";
 import { mailConfigured } from "@/lib/mail";
 import { sendLeadMagnetLetter, sendReadWithLoveLetter, enqueueDayTwoWelcome } from "@/lib/lead-magnet";
-import { sendReadingConfirmation } from "@/lib/reading-letters";
+import { sendReadingConfirmation, sendDayOfToOneIfDue } from "@/lib/reading-letters";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +47,18 @@ export async function POST(request: Request) {
      swallows a dark rail elsewhere: the confirmation stays unstamped and
      the mail tick's backlog sweep is the retry, never a crashed request.
      The branch's own return shape, `{ ok: true, outcome }`, is unchanged;
-     every other source's path below stays untouched. */
+     every other source's path below stays untouched.
+
+     TASK-484 (walk item #2) — right after that SAME confirmation send,
+     for that SAME genuinely-new soul only: if today's reading-day letter
+     (#2) is due RIGHT NOW (today is the reading's own day in the
+     schedule's zone, past 02:00 local, before the reading starts), it
+     goes out immediately rather than waiting for the mail tick's own
+     sweep (up to 10 minutes on the VPS crontab). `sendDayOfToOneIfDue`
+     shares the tick's own due-check and `sendReadingDayOf`'s per-recipient
+     once-key, so the tick can never send it a second time. A failure here
+     is swallowed the same way the confirmation's own is — the next tick
+     is always the retry, never a crashed request. */
   if ((body.source ?? "") === "reading") {
     const { outcome } = await addReadingTag(email);
     if (outcome === "joined") {
@@ -55,6 +66,11 @@ export async function POST(request: Request) {
         await sendReadingConfirmation(email);
       } catch (err) {
         console.error("reading confirmation send failed:", err);
+      }
+      try {
+        await sendDayOfToOneIfDue(email, Date.now());
+      } catch (err) {
+        console.error("reading day-of immediate send failed:", err);
       }
     }
     return NextResponse.json({ ok: true, outcome });

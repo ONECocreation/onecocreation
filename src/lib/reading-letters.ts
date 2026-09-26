@@ -330,26 +330,40 @@ async function sweepReadingConfirmations(stats: ReadingTickStats): Promise<void>
   }
 }
 
+/** T-484 (walk item #2) — the day-of gate's ONE shared due-check, factored
+ *  out of `sendDayOfIfDue` so a single new sign-up's immediate send (below)
+ *  can never drift from the tick's own rule: today is the occurrence's own
+ *  day (R5's schedule, in ITS zone), before the reading starts, and past
+ *  02:00 local. Returns the occurrence's own `startsAtMs`/`tz` (exactly what
+ *  `sendReadingDayOf` needs) when due right now, `null` otherwise — never a
+ *  guess, never a second policy. */
+async function dueOccurrenceNow(nowMs: number): Promise<{ startsAtMs: number; tz: string } | null> {
+  const { reading } = await getSiteConfig();
+  const schedule: ReadingSchedule = reading ?? DEFAULT_READING_SCHEDULE;
+  const occurrence = nextReading(schedule, nowMs);
+  if (!occurrence) return null; // on:false, or an invalid schedule — no day-of letter (R5)
+  if (nowMs >= occurrence.startsAtMs) return null; // never after the reading has begun
+
+  const { date: occDate } = zonedDateParts(new Date(occurrence.startsAtMs), schedule.tz);
+  const { date: todayDate } = zonedDateParts(new Date(nowMs), schedule.tz);
+  if (occDate !== todayDate) return null; // the occurrence doesn't start today, in the schedule's own zone
+  if (zonedWallClockMinutes(nowMs, schedule.tz) < EARLIEST_WALL_MINUTES) return null; // before 02:00 local
+
+  return { startsAtMs: occurrence.startsAtMs, tz: schedule.tz };
+}
+
 /** The day-of half — schedule-dependent (R5: `getSiteConfig().reading ??
  *  DEFAULT_READING_SCHEDULE`; an explicit `on: false` is the only thing
  *  that silences it). No-ops quietly when today isn't a reading day, or
  *  it's before 02:00 local, or the reading has already begun. */
 async function sendDayOfIfDue(nowMs: number, stats: ReadingTickStats): Promise<void> {
-  const { reading } = await getSiteConfig();
-  const schedule: ReadingSchedule = reading ?? DEFAULT_READING_SCHEDULE;
-  const occurrence = nextReading(schedule, nowMs);
-  if (!occurrence) return; // on:false, or an invalid schedule — no day-of letter (R5)
-  if (nowMs >= occurrence.startsAtMs) return; // never after the reading has begun
-
-  const { date: occDate } = zonedDateParts(new Date(occurrence.startsAtMs), schedule.tz);
-  const { date: todayDate } = zonedDateParts(new Date(nowMs), schedule.tz);
-  if (occDate !== todayDate) return; // the occurrence doesn't start today, in the schedule's own zone
-  if (zonedWallClockMinutes(nowMs, schedule.tz) < EARLIEST_WALL_MINUTES) return; // before 02:00 local
+  const due = await dueOccurrenceNow(nowMs);
+  if (!due) return;
 
   const records = await listSubscribersByTag("reading");
   for (const rec of records) {
     try {
-      const result = await sendReadingDayOf(rec.email, occurrence.startsAtMs, schedule.tz);
+      const result = await sendReadingDayOf(rec.email, due.startsAtMs, due.tz);
       if (result === "sent") stats.dayOfSent++;
       else if (result === "skippedCap") stats.skippedCap++;
       else if (result === "skippedLate") stats.skippedLate++;
@@ -357,6 +371,25 @@ async function sendDayOfIfDue(nowMs: number, stats: ReadingTickStats): Promise<v
       console.error("reading-letters: day-of send failed:", rec.email, err);
     }
   }
+}
+
+/**
+ * T-484 (walk item #2) — a LATE sign-up's own immediate send: the tick
+ * (`sendDayOfIfDue` above, on EVERY `/api/mail/tick` — the Vercel crons
+ * plus the VPS crontab every 10 minutes) already reaches a late sign-up
+ * at the very next tick, via the per-recipient once-key (R3) — a soul who
+ * joins between ticks is simply unclaimed until then, never skipped. This
+ * closes that up-to-10-minute gap for the ONE soul who just signed up:
+ * called right after their confirmation send, in the subscribe route,
+ * with `Date.now()` at that exact moment. Shares `dueOccurrenceNow()`
+ * (the SAME due-check the tick uses — never a second policy) and
+ * `sendReadingDayOf()`'s own once-key, so whichever of the two — this
+ * immediate call or the next tick's sweep — runs first wins the claim and
+ * the other finds it already spent: never twice, whichever arrives first. */
+export async function sendDayOfToOneIfDue(email: string, nowMs: number): Promise<ReadingDayOfResult | "notDue"> {
+  const due = await dueOccurrenceNow(nowMs);
+  if (!due) return "notDue";
+  return sendReadingDayOf(email, due.startsAtMs, due.tz);
 }
 
 /**
