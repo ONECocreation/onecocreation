@@ -371,7 +371,7 @@
    no new per-page style object — the same kit.css cascade every other
    card rides. */
 .kit-go-room-actions{display:flex;flex-direction:column;gap:12px;margin-top:14px}
-.kit-go-room-actions .kit-btn{width:100%;box-sizing:border-box;text-align:center}
+.kit-go-room-actions .kit-btn{width:100%;box-sizing:border-box;text-align:center;padding-left:12px;padding-right:12px;font-size:1.15rem}
 /* TASK-467 (block 968,561) — the Reading Day brick's own card, the same
    stacking law as kit-stage1-card just above (measured: a wide button
    squeezed into the shared two-column grid clipped against the card's
