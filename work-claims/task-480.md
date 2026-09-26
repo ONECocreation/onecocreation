@@ -83,6 +83,9 @@ BUILD:
 - `src/app/reading/page.tsx` — EDIT: the one `?part=` read only (see
   build item 6) — every other line stays T-473/T-479/T-481's.
 - New test file: `tests/reading-day-calendar-480.test.ts`.
+- `tests/member-calendar.test.ts` — EDIT: one pinned expectation
+  (`buildBookingMarks`'s exact pill shape) updated to include the new
+  `href` field — the only change.
 
 ## READ-ONLY
 

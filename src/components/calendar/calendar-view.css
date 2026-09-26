@@ -107,6 +107,15 @@ button.cal-pill{cursor:pointer;font-family:inherit;appearance:none;-webkit-appea
 button.cal-pill:hover{border-color:var(--info);text-decoration:underline}
 button.cal-pill:focus-visible{outline:2px solid var(--info);outline-offset:2px}
 
+/* T-480 — a pill that is a real <a href> (a reading part's deep link, a
+   booking's receipt page) gets the exact same door-frame look, plus the
+   anchor-specific resets a bare <a> needs (the browser's own link-blue +
+   underline, never the pill's own variant colour). */
+a.cal-pill{cursor:pointer;font-family:inherit;color:inherit;text-decoration:none;
+  border:1px solid var(--glass-edge);text-align:left}
+a.cal-pill:hover{border-color:var(--info);text-decoration:underline}
+a.cal-pill:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+
 /* civil-primary: the a₿|AD slider swaps which value leads (positions
    trade, not just weight — the Admiral's ruling). DayCell already swaps
    the JSX; this class is the styling HOOK the ruling calls for, so a

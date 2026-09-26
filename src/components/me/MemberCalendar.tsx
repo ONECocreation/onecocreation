@@ -13,7 +13,15 @@ import {
   type CalendarDayMarksLookup,
 } from "@/components/calendar";
 import { useReadingSchedule } from "@/components/calendar/useReadingSchedule";
-import { readingMarksLookup, mergeDayMarks } from "@/components/calendar/reading-marks";
+import { readingDayPartsMarksLookup, mergeDayMarks } from "@/components/calendar/reading-marks";
+
+/** TASK-480 — the calendar shows all FOUR reading-day parts (see
+ *  readingDayPartsMarksLookup) plus this member's own bookings; that can
+ *  outgrow T-319's default 2-pill cap on the reading's own day, so this
+ *  surface asks DayCell for more room before it ever folds anything into
+ *  "+N more" — 4 reading parts plus headroom for 2 of the member's own
+ *  bookings landing the same day. */
+const MEMBER_CALENDAR_MAX_PILLS = 6;
 
 interface MemberBooking {
   bookingId: string;
@@ -47,7 +55,11 @@ export function buildBookingMarks(bookings: MemberBooking[] | null): CalendarDay
     if (hits.length === 0) return undefined;
     const pills: CalendarEventPill[] = hits
       .slice(0, 3)
-      .map((b) => ({ id: b.bookingId, label: b.title, variant: "gold" }));
+      /* TASK-480 — every pill is clickable: a booking's own receipt page
+         already exists (`/book/receipt/[id]`, the exact address the
+         session list below and the receipt email both link); the pill
+         reuses it rather than inventing a second door. */
+      .map((b) => ({ id: b.bookingId, label: b.title, variant: "gold", href: `/book/receipt/${b.bookingId}` }));
     return { pills };
   };
 }
@@ -85,13 +97,17 @@ export default function MemberCalendar() {
 
   /* TASK-385, Astra's plan review, block 968,061 — order is LOAD-BEARING
      here (unlike CircleView's merge): buildBookingMarks alone can already
-     return up to 3 pills for a busy day, DayCell only ever DISPLAYS 2, and
-     there is no click-through to reveal the rest today (T-364's
-     territory). The reading pill goes FIRST so it is always among the
-     first two shown, even on a day already busy with two or more of the
-     member's own bookings. buildBookingMarks itself is untouched. */
+     return up to 3 pills for a busy day. The reading's own pills go
+     FIRST so they always survive DayCell's display cap first, even on a
+     day already busy with two or more of the member's own bookings.
+     buildBookingMarks itself is untouched.
+     TASK-480 — readingMarksLookup (one pill, the reading alone) is
+     replaced by readingDayPartsMarksLookup (all FOUR reading-day parts,
+     each its own clickable pill) — MEMBER_CALENDAR_MAX_PILLS (below,
+     passed to both grid mounts) is what keeps all four from folding into
+     "+N more" the moment a booking rides the same day. */
   const marks = useMemo(
-    () => mergeDayMarks(readingMarksLookup(readingSchedule), buildBookingMarks(bookings)),
+    () => mergeDayMarks(readingDayPartsMarksLookup(readingSchedule), buildBookingMarks(bookings)),
     [bookings, readingSchedule],
   );
 
@@ -151,7 +167,13 @@ export default function MemberCalendar() {
       </div>
 
       {view === "week" ? (
-        <WeekRibbon bftYear={today.year} bftMonth={today.month} weekOfMonth={weekOfMonth} marks={marks} />
+        <WeekRibbon
+          bftYear={today.year}
+          bftMonth={today.month}
+          weekOfMonth={weekOfMonth}
+          marks={marks}
+          maxPills={MEMBER_CALENDAR_MAX_PILLS}
+        />
       ) : (
         <>
           <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "0 0 10px", flexWrap: "wrap" }}>
@@ -159,7 +181,7 @@ export default function MemberCalendar() {
             <p style={{ flex: 1, minWidth: 160, margin: 0, fontSize: ".82rem", color: "var(--ink-body)" }}>{header}</p>
             <button type="button" className="btn-round" aria-label="next month" onClick={() => stepMonth(1)}>›</button>
           </div>
-          <BftMonthGrid bftYear={bftYear} bftMonth={bftMonth} marks={marks} />
+          <BftMonthGrid bftYear={bftYear} bftMonth={bftMonth} marks={marks} maxPills={MEMBER_CALENDAR_MAX_PILLS} />
         </>
       )}
 

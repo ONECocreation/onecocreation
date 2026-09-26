@@ -106,3 +106,43 @@ export function openDoorNotice(flags: OpenFlags, selected: ReadingPart): OpenDoo
   if (latest === null || latest === selected) return null;
   return { part: latest, title: PART_TITLES[latest] };
 }
+
+/**
+ * The FOUR agenda rows' own bold titles, verbatim (TASK-480, block
+ * 968,624+) — `ReadingDayBody.tsx`'s own literals ("12:12 PM · The
+ * Housewarming", … "3:33 PM · The Q&A with Love"), restated here as one
+ * exported record so a second surface (the member calendar's own pills,
+ * `reading-marks.ts`) reads the SAME words rather than re-typing them.
+ * Kept separate from `PART_TITLES` above (the courtesy notice's shorter
+ * "The Q&A") — the notice line and the agenda row deliberately say
+ * different things for part 4, and this record exists so THIS surface's
+ * choice (the fuller "with Love") is a constant of its own, never a third
+ * inline literal.
+ */
+export const AGENDA_ROW_TITLES: Record<ReadingPart, string> = {
+  1: "The Housewarming",
+  2: "The Reading",
+  3: "The Book Talk",
+  4: "The Q&A with Love",
+};
+
+/**
+ * "1" through "4" only (TASK-480) — the `?part=` deep link's own
+ * validator. Anything else (a leading zero, a decimal, "5", "0", an empty
+ * string, undefined, an array from a repeated query key) reads as `null`,
+ * never a guessed part — the caller keeps its own computed default.
+ */
+export function parseReadingPart(raw: string | string[] | undefined | null): ReadingPart | null {
+  if (typeof raw !== "string" || !/^[1-4]$/.test(raw)) return null;
+  return Number(raw) as ReadingPart;
+}
+
+/**
+ * The one deep link every reading-part pill points at (TASK-480): an
+ * in-page anchor to the stage PLUS the `?part=` query `parseReadingPart`
+ * reads back, so a click from anywhere (the member calendar's own pills
+ * today) lands on `/reading` with the right part already selected.
+ */
+export function readingPartHref(part: ReadingPart): string {
+  return `/reading?part=${part}#stage`;
+}

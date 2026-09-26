@@ -9,6 +9,14 @@ export interface CalendarEventPill {
   id: string;
   label: string;
   variant?: CalendarPillVariant;
+  /** TASK-480 — a pill that already has somewhere of its own to go (a
+   *  reading part's deep link, a booking's receipt page) renders as a
+   *  real `<a href>` instead of the inert `<span>` below, whenever the
+   *  consumer hasn't wired `onSelectPill` (which still wins — see the
+   *  render below). Omit it and nothing changes: today's plain-span
+   *  consumers (the Circle's live pill, LovesDesk's own booking pills,
+   *  wired through `onSelectPill` instead) are untouched. */
+  href?: string;
 }
 
 export interface CalendarDayMarks {
@@ -41,6 +49,12 @@ export interface DayCellProps {
    *  and any other consumer that never wires this keep today's rendering,
    *  byte for byte. */
   onSelectPill?: (pill: CalendarEventPill, cell: CalendarDayCell) => void;
+  /** TASK-480 — overrides `MAX_SHOWN_PILLS` for this instance only. Most
+   *  consumers leave this unset (the T-319 ruling's cap of 2 stands); the
+   *  member calendar passes a higher number so the reading day's own FOUR
+   *  agenda parts are never folded into "+N more" — the Admiral's report
+   *  named exactly that: "it only shows the 12:12 reading." */
+  maxPills?: number;
 }
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
@@ -55,7 +69,7 @@ const pad2 = (n: number) => String(n).padStart(2, "0");
 const MAX_SHOWN_PILLS = 2;
 
 export default function DayCell({
-  cell, primary, counts, showWeekOfYear, isToday, isSelected, marks, onSelect, onSelectPill,
+  cell, primary, counts, showWeekOfYear, isToday, isSelected, marks, onSelect, onSelectPill, maxPills,
 }: DayCellProps) {
   const bftLabel = `D${pad2(cell.bftDay)}`;
   const civilLabel = String(cell.civilDayNum);
@@ -70,7 +84,7 @@ export default function DayCell({
   const blackout = !!marks?.blackout;
   const multiDay = !!marks?.multiDay;
   const pills = marks?.pills ?? [];
-  const shownPills = pills.slice(0, MAX_SHOWN_PILLS);
+  const shownPills = pills.slice(0, maxPills ?? MAX_SHOWN_PILLS);
   const morePills = pills.length - shownPills.length;
 
   const classes = [
@@ -100,21 +114,35 @@ export default function DayCell({
       {blackout && <span className="cal-cell__mark">blackout</span>}
       {pills.length > 0 && (
         <div className="cal-cell__pills">
-          {shownPills.map((p) => (
-            onSelectPill
-              ? (
+          {shownPills.map((p) => {
+            const pillClass = `cal-pill cal-pill--${p.variant ?? "plain"}`;
+            if (onSelectPill) {
+              return (
                 <button
                   key={p.id}
                   type="button"
-                  className={`cal-pill cal-pill--${p.variant ?? "plain"}`}
+                  className={pillClass}
                   aria-label={`open ${p.label}`}
                   onClick={(e) => { e.stopPropagation(); onSelectPill(p, cell); }}
                 >
                   {p.label}
                 </button>
-              )
-              : <span key={p.id} className={`cal-pill cal-pill--${p.variant ?? "plain"}`}>{p.label}</span>
-          ))}
+              );
+            }
+            /* TASK-480 — a pill with somewhere of its own to go (a
+               reading part's deep link, a booking's receipt page) is a
+               REAL <a>, never a synthetic onClick: it works with
+               JavaScript off, opens in a new tab on a middle-click, and
+               reads correctly to a screen reader without an extra prop. */
+            if (p.href) {
+              return (
+                <a key={p.id} className={pillClass} href={p.href} aria-label={`open ${p.label}`}>
+                  {p.label}
+                </a>
+              );
+            }
+            return <span key={p.id} className={pillClass}>{p.label}</span>;
+          })}
           {morePills > 0 && <span className="cal-cell__more">+{morePills} more</span>}
         </div>
       )}
