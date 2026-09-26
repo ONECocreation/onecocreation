@@ -56,6 +56,14 @@ BUILD: a per-subject order index in `store.ts`.
 - New test file(s) under `tests/` for the index/backfill (exact name(s)
   may shift slightly while building, e.g.
   `tests/store-orders-by-subject.test.ts`).
+- `tests/qa-door-route.test.ts` — EDIT (WIDENED OWNS): the T-475 fixture's
+  `SADD` branch destructured a 4th `member` element no real `kv(["SADD",
+  key, val])` call (2 elements + op) ever sends — dead code until this
+  lane's own subject-index SADD became the first real caller and hit it,
+  silently losing the added id and turning every settled/fulfilled-order
+  case into a false "not entitled". One-line fixture fix (read `value`,
+  the 3rd/last element, not the never-sent 4th); no behavior assertions
+  changed.
 
 ## READ-ONLY
 
