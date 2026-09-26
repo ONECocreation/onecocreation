@@ -323,7 +323,8 @@ export default async function ReadingPage({
                   jitsiDomain: config.meeting.jitsiDomain,
                   qaOffer,
                   whenWords: qaStartsAtMs !== null ? clockWords(qaStartsAtMs, schedule.tz) : null,
-                }                /* TASK-489 (reading day): the countdown back at the top of
+                }}
+                /* TASK-489 (reading day): the countdown back at the top of
                    the page on every screen, until the Housewarming (12:12). */
                 countdownUntilMs={topCountdownUntilMs(housewarmingNext, asOfMs)}
                 asOfMs={asOfMs}
