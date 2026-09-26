@@ -329,6 +329,17 @@ export default function JitsiRoom({
        * actual change, never on every event. */
       if (onHostVideo) {
         let hv = initialHostVideoState;
+        /* TASK-479 fix (stuck-cover-after-rejoin): a FRESH mount always
+         * starts at the reducer's own fail-open `videoOn: true`, but the
+         * parent's own state (ReadingStage.tsx/ReadingStageDoor.tsx) could
+         * still be sitting on a stale `false` from a PRIOR mount of this
+         * same room (host muted -> cover up -> viewer hangs up -> host
+         * turns video on -> viewer rejoins: a new JitsiRoom boots in the
+         * true state, but never told the parent, so the parent's cover
+         * stayed up over a live host). Sync unconditionally, once, right
+         * here — never wait for a CHANGE, since there may be none to wait
+         * for if the room simply never sends another mute signal at all. */
+        onHostVideo(hv.videoOn);
         const dispatch = (event: HostVideoEvent) => {
           const next = hostVideoReducer(hv, event);
           if (live && next.videoOn !== hv.videoOn) onHostVideo(next.videoOn);

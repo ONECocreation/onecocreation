@@ -458,6 +458,14 @@ export default function ReadingStage({
      simply remounts JitsiRoom against it. */
   const rejoin = useCallback(() => {
     setLeft(false);
+    /* TASK-479 fix: a rejoin mounts a FRESH JitsiRoom against the same
+       room string, so the room-change reset above never fires (the room
+       string doesn't change) — reset here too, or a cover left up from
+       BEFORE the hangup (host muted, viewer left, host turned video on,
+       viewer rejoins) would stay stuck over what is now a live host.
+       JitsiRoom's own boot() also syncs onHostVideo once on mount (belt
+       and braces — either fix alone closes this path). */
+    setHostVideoOn(true);
   }, []);
 
   return (

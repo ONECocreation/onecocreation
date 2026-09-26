@@ -300,4 +300,15 @@ describe("JitsiRoom.tsx — the wiring around the reducer (source pins, no jsdom
     const src = await read(JITSIROOM);
     expect(src).toContain("clearTimeout(hostVideoTimeout)");
   });
+
+  it("TASK-479 fix (stuck-cover-after-rejoin, part a): boot() syncs onHostVideo to the fresh reducer state ONCE, unconditionally, before any wire event — a rejoin's new mount must never leave the parent on a stale value from the PRIOR mount", async () => {
+    const src = await read(JITSIROOM);
+    // the sync call itself, ahead of any listener registration
+    const gated = src.slice(src.indexOf("if (onHostVideo) {"));
+    const syncCall = gated.indexOf("onHostVideo(hv.videoOn);");
+    const firstListener = gated.indexOf('a.addListener("videoConferenceJoined"');
+    expect(syncCall, "onHostVideo(hv.videoOn) sync call not found").toBeGreaterThan(-1);
+    expect(firstListener, "videoConferenceJoined listener not found").toBeGreaterThan(-1);
+    expect(syncCall).toBeLessThan(firstListener);
+  });
 });

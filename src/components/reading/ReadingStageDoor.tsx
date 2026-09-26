@@ -236,7 +236,14 @@ export default function ReadingStageDoor({
   /* the hangup unmounts the embed in THIS commit (the TASK-471 review
      law) — no farewell-card flash while the fresh state comes back */
   const onEnded = useCallback(() => setLeft(true), []);
-  const onRejoin = useCallback(() => setLeft(false), []);
+  const onRejoin = useCallback(() => {
+    setLeft(false);
+    /* TASK-479 fix: same stuck-cover-after-rejoin path as ReadingStage.tsx
+       — a rejoin remounts JitsiRoom against the SAME wire.room, so the
+       room-change reset above never fires. Reset here too (belt and
+       braces alongside JitsiRoom's own boot()-time onHostVideo sync). */
+    setHostVideoOn(true);
+  }, []);
 
   return (
     <ReadingStageDoorBody

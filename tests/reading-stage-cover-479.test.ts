@@ -1,8 +1,14 @@
 import { describe, it, expect } from "vitest";
+import { promises as fs } from "fs";
+import path from "path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ReadingStageBody, type ReadingStageBodyProps } from "@/components/reading/ReadingStage";
 import { ReadingStageDoorBody, CLOSED, type ReadingStageDoorBodyProps, type Wire } from "@/components/reading/ReadingStageDoor";
+
+const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
+const STAGE = "src/components/reading/ReadingStage.tsx";
+const DOOR = "src/components/reading/ReadingStageDoor.tsx";
 
 /**
  * TASK-479 (block 968,624+, the Admiral's approved mockup, `t479/mockup.html`,
@@ -165,5 +171,35 @@ describe("ReadingStageDoor — hostVideoOn true (or unset) never shows the cover
     const html = renderDoor(doorProps({ wire: CLOSED, hostVideoOn: false }));
     expect(html).not.toContain("kit-stage-cover");
     expect(html).not.toContain("Love is here. Her camera comes on in a moment.");
+  });
+});
+
+describe("TASK-479 fix (part b) — a rejoin also resets hostVideoOn, never leaving a stuck cover over a live host", () => {
+  /**
+   * The failure this closes: host mutes video (cover up) -> viewer hangs
+   * up -> host turns video on -> viewer clicks back in. A FRESH JitsiRoom
+   * mounts in its own fail-open state and syncs it once on boot (part a,
+   * pinned in tests/host-video-reducer-479.test.ts), but the room string
+   * itself never changes on a rejoin (same still-published room), so the
+   * "reset on a fresh room" adjust-during-render guard never fires either.
+   * `rejoin()`/`onRejoin()` must reset `hostVideoOn` themselves — source
+   * pins (no jsdom in this repo; the default export's interactive state
+   * isn't reachable through `renderToStaticMarkup`, the same reason this
+   * file's own wiring checks throughout the codebase are source pins).
+   */
+  it("ReadingStage.tsx's rejoin() resets hostVideoOn to true, not just left to false", async () => {
+    const src = await read(STAGE);
+    const fn = src.match(/const rejoin = useCallback\(\(\) => \{[\s\S]*?\n {2}\}, \[\]\);/);
+    expect(fn, "rejoin() not found").not.toBeNull();
+    expect(fn![0]).toContain("setLeft(false)");
+    expect(fn![0]).toContain("setHostVideoOn(true)");
+  });
+
+  it("ReadingStageDoor.tsx's onRejoin() resets hostVideoOn to true, not just left to false", async () => {
+    const src = await read(DOOR);
+    const fn = src.match(/const onRejoin = useCallback\(\(\) => \{[\s\S]*?\n {2}\}, \[\]\);/);
+    expect(fn, "onRejoin() not found").not.toBeNull();
+    expect(fn![0]).toContain("setLeft(false)");
+    expect(fn![0]).toContain("setHostVideoOn(true)");
   });
 });
