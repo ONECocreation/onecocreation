@@ -122,6 +122,21 @@ function deriveReading(schedule: ReadingSchedule): {
   return { asOfMs, next, housewarmingNext };
 }
 
+/** TASK-489: the top-of-page countdown's end instant (the Housewarming,
+ *  12:12), or null while the PREVIOUS reading day's program is still
+ *  running (12:12 through the Q&A, DAY_PROGRAM_MS). Without this, a reload
+ *  after 12:12 would count down to next week above the Book Talk and Q&A.
+ *  Weekly schedule, so the previous day is one week back (plain arithmetic;
+ *  a DST hour either side changes nothing at this length). */
+const WEEK_MS = 7 * 24 * 3600_000;
+const DAY_PROGRAM_MS = 5 * 3600_000;
+function topCountdownUntilMs(housewarmingNext: { startsAtMs: number; phase: "upcoming" | "window" } | null, asOfMs: number): number | null {
+  if (!housewarmingNext || housewarmingNext.phase !== "upcoming") return null;
+  const previousStartMs = housewarmingNext.startsAtMs - WEEK_MS;
+  if (asOfMs < previousStartMs + DAY_PROGRAM_MS) return null;
+  return housewarmingNext.startsAtMs;
+}
+
 export default async function ReadingPage({
   searchParams,
 }: {
@@ -309,6 +324,10 @@ export default async function ReadingPage({
                   qaOffer,
                   whenWords: qaStartsAtMs !== null ? clockWords(qaStartsAtMs, schedule.tz) : null,
                 }}
+                /* TASK-489 (reading day): the countdown back at the top of
+                   the page on every screen, until the Housewarming (12:12). */
+                countdownUntilMs={topCountdownUntilMs(housewarmingNext, asOfMs)}
+                asOfMs={asOfMs}
               />
             </div>
           </section>
