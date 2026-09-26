@@ -229,7 +229,9 @@ describe("a.cal-pill gets a visible :focus-visible outline (kit css, the shared 
   it("calendar-view.css carries the anchor rule, mirroring button.cal-pill's own", async () => {
     const css = await read("src/components/calendar/calendar-view.css");
     expect(css).toMatch(/a\.cal-pill:focus-visible\{outline:2px solid var\(--info\);outline-offset:2px\}/);
-    expect(css).toMatch(/a\.cal-pill\{[^}]*color:inherit/);
+    // the variant sets the ink: a colour on a.cal-pill (0,1,1) would beat .cal-pill--gold (0,1,0)
+    expect(css).not.toMatch(/a\.cal-pill\{[^}]*color:/);
+    expect(css).toMatch(/\.cal-pill--gold\{[^}]*color:var\(--gold-ink\)/);
     expect(css).toMatch(/a\.cal-pill\{[^}]*text-decoration:none/);
   });
 });
