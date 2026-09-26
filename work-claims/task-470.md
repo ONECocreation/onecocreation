@@ -66,13 +66,15 @@ This lane is the MINIMAL fix set only:
   DoorSheet/SignInCard send/timeout/no-double-send source pins + a static-
   render "no false success" check, ReadingSignInBox real-call timeout test
   (fake timers, stubbed fetch) + code-step confirmation render check.
+- `src/app/api/auth/email/start/route.ts` — EDIT (review fix, Number One): the 502 reason loses its em dash; the meter comment says ten.
+- `tests/reading-one-box-468.test.ts` — EDIT: re-true the 502 reason string.
 - `work-claims/task-470.md` — this file.
 
 ## READ-ONLY (not touched)
 - `src/app/api/member/profile/route.ts` and `src/lib/registry.ts` — the
   name-claim/registry 409 (L4-TRACE §3/§5 item 5) is explicitly OUT of this
   lane's minimal scope per the Admiral's ruling tonight; a follow-up lane.
-- `src/app/api/auth/email/start/route.ts`, `verify/route.ts`,
+- `verify/route.ts`,
   `src/lib/email-auth.ts` — server-side verify/minting logic untouched;
   `start/route.ts` already meters-before-mints-before-sends (unchanged,
   still pinned by `code-door-limit.test.ts`'s existing source-grep test).
