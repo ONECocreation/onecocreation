@@ -337,7 +337,7 @@
 .kit-day{max-width:800px;margin:0 auto;box-sizing:border-box}
 /* one button width across the agenda card, whatever the label (Lumen
    L-004, the T-471 brand pass, block 968,624): the widest label fits */
-.kit-day .kit-rows-end>.kit-btn{width:256px;max-width:100%;box-sizing:border-box;text-align:center}
+.kit-day .kit-rows-end>.kit-btn{width:256px;max-width:100%;box-sizing:border-box;text-align:center;padding-left:12px;padding-right:12px}
 @media (max-width:640px){
   .room-card .kit-rows>li{grid-template-columns:1fr;gap:8px;text-align:center}
   .room-card .kit-rows-end{justify-self:center}
