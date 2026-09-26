@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useReadingPart } from "./ReadingPartContext";
+import type { ReadingPart } from "@/lib/reading-parts";
 
 /**
  * THE READING DAY BRICK'S UNLOCK BUTTON (TASK-467, block 968,561) —
@@ -22,15 +24,21 @@ import { useState } from "react";
  * short label plus the row's own words right above it.
  *
  * Fix round (block 968,624, the Admiral's Chrome walk) — "only the chosen
- * pick shines": on the agenda card (ReadingDayBody.tsx), a signed-in
- * visitor always has exactly ONE shining pick already (`ReadingPartSelectLink`
- * on rows 1/2), so an Unlock button rendered `kit-btn-main` too would
- * shine right alongside it. `variant` (default `"main"` — every OTHER
- * caller, the top screen's own not-owned card in
- * `ReadingStagePart3`/`4.tsx`, keeps the old look unchanged, since there
- * a lone Unlock button has no pick to compete with) lets the ONE caller
- * that DOES have a pick nearby (ReadingDayBody, signed in) ask for
- * `kit-btn-second` instead — never a second literal class string.
+ * pick shines": THIRD pass. The first pass gave every signed-in Unlock a
+ * blanket `kit-btn-second`, which broke the rule the moment the SELECTED
+ * part itself was the locked one (Q&A open and chosen, visitor tier A —
+ * no button on the whole card shone). The real rule: signed in, a row's
+ * Unlock reads `kit-btn-main` + `aria-current="true"` when ITS OWN part is
+ * the one currently selected, `kit-btn-second` otherwise — the exact same
+ * shine/second law `ReadingPartSelectLink` already keeps, read from the
+ * SAME shared `useReadingPart()` context, never a second selection state.
+ * `part` (the caller's own row number) is what makes this button
+ * "part-aware" at all: `ReadingDayBody.tsx` passes it ONLY while signed in
+ * (`part={signedIn ? 3 : undefined}`); omitted, this renders plain
+ * `kit-btn-main` unconditionally — the signed-out row's own unchanged
+ * look, AND the top screen's own not-owned card
+ * (`ReadingStagePart3`/`4.tsx`, no "row" to compare a selection against),
+ * neither of which ever passes `part`.
  */
 
 const LOCK_ICON = (
@@ -44,14 +52,19 @@ export default function ReadingDayUnlockButton({
   itemId,
   label,
   ariaLabel,
-  variant = "main",
+  part,
 }: {
   itemId: string;
   label: string;
   ariaLabel?: string;
-  /** fix round (block 968,624) — see the module docblock */
-  variant?: "main" | "second";
+  /** fix round (block 968,624) — see the module docblock. Present only
+   *  while signed in (the agenda card's own rows 3/4); absent everywhere
+   *  else, which always reads as plain, unshining `kit-btn-main`. */
+  part?: ReadingPart;
 }) {
+  const { selected } = useReadingPart();
+  const isSelected = part !== undefined && selected === part;
+  const variant = part !== undefined && !isSelected ? "second" : "main";
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,6 +96,7 @@ export default function ReadingDayUnlockButton({
         onClick={unlock}
         disabled={busy}
         aria-label={ariaLabel}
+        aria-current={isSelected ? "true" : undefined}
       >
         {!busy && LOCK_ICON}
         {busy ? "Adding…" : label}

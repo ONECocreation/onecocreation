@@ -165,7 +165,7 @@ export default function ReadingDayBody({
                 itemId={encoreFloor.itemId}
                 label="Unlock the Book Talk"
                 ariaLabel={`Unlock the Book Talk with ${encoreFloor.name}`}
-                variant={signedIn ? "second" : "main"}
+                part={signedIn ? 3 : undefined}
               />
             )}
           </span>
@@ -197,7 +197,7 @@ export default function ReadingDayBody({
               <ReadingDayUnlockButton
                 itemId={qaOffer.itemId}
                 label="Unlock the Q&A"
-                variant={signedIn ? "second" : "main"}
+                part={signedIn ? 4 : undefined}
               />
             )}
           </span>

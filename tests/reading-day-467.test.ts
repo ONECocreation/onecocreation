@@ -293,9 +293,15 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
         expect(html).toContain(`aria-label="Unlock the Book Talk with ${ENCORE_FLOOR.name}"`); // the fuller words, for a screen reader
         expect(html).toContain(`Comes with ${ENCORE_FLOOR.name} and up.`); // and in PLAIN sighted text, right above
         expect(html).not.toContain("Join the Book Talk");
-        // fix round (block 968,624): "only the chosen pick shines" — signed
-        // in, a pick already shines on rows 1/2, so Unlock reads
-        // kit-btn-second; signed out, no pick exists, Unlock stays kit-btn-main
+        // fix round (block 968,624, THIRD pass): "only the chosen pick
+        // shines" — the button reads the shared selection via its own
+        // `part` prop now (ReadingDayUnlockButton), never a blanket
+        // variant. Rendered bare here (no Provider — the house's own
+        // renderToStaticMarkup law), `selected` defaults to Part 1, which
+        // never equals Part 3's own row, so signed in this always reads
+        // kit-btn-second — the REAL "shines when ITS OWN part is picked"
+        // case (Part 3 open, Part 3 selected) is proven under a real
+        // Provider in tests/reading-day-unlock-button-473.test.ts.
         const unlockBtn = html.match(/<button[^>]*>[\s\S]*?Unlock the Book Talk/)?.[0] ?? "";
         expect(unlockBtn).toContain(c.signedIn ? "kit-btn-second" : "kit-btn-main");
       }

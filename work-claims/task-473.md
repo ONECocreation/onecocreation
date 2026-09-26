@@ -80,7 +80,8 @@ New files:
 - Tests: `tests/reading-parts-473.test.ts`, `tests/reading-part-select-473.test.ts`,
   `tests/reading-stage-door-473.test.ts`, `tests/reading-stage-deck-473.test.ts`,
   `tests/reading-return-path-473.test.ts`, `tests/reading-day-notice-fix-473.test.ts`
-  (fix round, new).
+  (fix round, new), `tests/reading-day-unlock-button-473.test.ts` (THIRD
+  fix round, new — see its own section below).
 - `work-claims/task-473.md` — this claim.
 
 Edited files:
@@ -305,13 +306,53 @@ assertion for the new `variant` behavior, both signed states),
 the real `getQaState()` (phase/publishedAtMs, the try/catch fail-closed
 shape) instead of the old hardcoded `false`.
 
+## THIRD FIX ROUND (block 968,624, on top of sha 0a8d9b8 — Number One's re-walk found the real bug)
+
+The SECOND round's own `variant={signedIn ? "second" : "main"}` was a
+blanket rule: EVERY signed-in Unlock button read `kit-btn-second`
+regardless of what was actually selected. That's wrong the moment the
+SELECTED part is itself the locked one — e.g. the Q&A open and picked,
+visitor holds tier A: no button anywhere on the card shone, because
+rows 1/2's own picks aren't selected either and the Q&A row's only
+control (Unlock) was hard-set to `kit-btn-second`.
+
+**The real rule, now wired:** `ReadingDayUnlockButton.tsx` no longer takes
+a `variant` prop at all — it takes an optional `part?: ReadingPart` and
+reads `useReadingPart()` itself (the SAME shared context
+`ReadingPartSelectLink` already reads), computing `isSelected = part !==
+undefined && selected === part`. Signed in, `ReadingDayBody.tsx` passes
+`part={signedIn ? 3 : undefined}` / `part={signedIn ? 4 : undefined}` on
+its two Unlock rows — the button shines (`kit-btn-main` + `aria-current=
+"true"`) exactly when its OWN row is the one currently picked, and reads
+`kit-btn-second` otherwise. Signed out (`part` omitted), or on the top
+screen's own not-owned card (`ReadingStagePart3`/`4.tsx`, which never
+passes `part` — no "row" there to compare a selection against), the
+button is always plain `kit-btn-main`, unconditionally — unchanged
+behavior, exactly as instructed ("signed-out behavior stays as it is").
+
+**New test:** `tests/reading-day-unlock-button-473.test.ts` — renders
+`ReadingDayUnlockButton` under a REAL `ReadingPartProvider` (not the bare
+NO_PROVIDER default every other reading pin renders under, which would
+hide this exact bug: `NO_PROVIDER`'s own `selected: 1` never equals
+`part={3}`/`part={4}`, so a bare render always reads `kit-btn-second`
+regardless of whether the real per-part rule is even wired). Proves:
+`selected=4` with `part={4}` shines (`kit-btn-main`, `aria-current=
+"true"`); `selected=1` with `part={4}` dims (`kit-btn-second`, no
+`aria-current`); `part` omitted always reads plain `kit-btn-main`
+regardless of `selected`; and the inert-outside-a-Provider law still
+holds (no throw). `tests/reading-day-467.test.ts`'s own existing
+assertion (bare render, no Provider) is re-commented to explain WHY it
+still passes by coincidence (Part 3's row is never Part 1, the
+NO_PROVIDER default) rather than claiming it proves the real rule — the
+new dedicated test file is what actually proves it.
+
 ## Gate
 
 `bash /home/pac/dev/shortcuts/oc-gate.sh /home/pac/dev/worktrees/task-473`:
 
 ```
-Test Files  257 passed (257)
-     Tests  3358 passed (3358)
+Test Files  258 passed (258)
+     Tests  3362 passed (3362)
 scripts/calendar-view.test.mjs: 70 passed, 0 failed
 scripts/cartridge-identity.test.mjs: 179 passed, 0 failed
 scripts/console-matrix.test.mjs: 14 passed, 0 failed
@@ -431,3 +472,19 @@ GATES GREEN
    ONLY here (imported, never edited); `ReadingDay.tsx`'s own
    `qaEntitled(subject, tier)` line was left exactly as T-475 wrote it,
    per instruction.
+10. **(THIRD fix round) The second round's own "signed in → blanket
+    kit-btn-second" rule was itself the bug the Admiral's re-walk caught**
+    — an easy trap: "only the chosen pick shines" reads naturally as
+    "everything else dims," but a LOCKED row can BE the chosen pick too
+    (the visitor picked the Q&A specifically because it's the one they
+    don't own yet), and a card where nothing shines at all is worse than
+    the original problem. The fix needed the button to read the SAME
+    selection state `ReadingPartSelectLink` already reads, not a
+    coarser signed-in/signed-out split — caught only because the
+    instruction specifically named a concrete repro (Q&A open, chosen,
+    tier A) rather than a general principle; the existing test suite's
+    own bare-NO_PROVIDER-render convention would never have caught this
+    on its own (Part 3/4's rows are never Part 1, the NO_PROVIDER
+    default, so every existing assertion coincidentally kept passing
+    both before and after this fix) — a real Provider-based test was
+    required to prove the rule at all, not just re-true a broken one.
