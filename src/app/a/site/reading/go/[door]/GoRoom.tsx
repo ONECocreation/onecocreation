@@ -1,7 +1,7 @@
 "use client";
 
 import Card from "@/components/kit/Card";
-import { jitsiRoomUrl, type DoorBusy, type DoorConfig, type DoorRowState } from "../../RoomsCard";
+import { jitsiRoomUrl, type DoorBusy, type DoorConfig, type DoorRowState } from "../../rooms-config";
 import { useDoorRoom } from "../useDoorRoom";
 
 /**
@@ -21,6 +21,12 @@ import { useDoorRoom } from "../useDoorRoom";
  * jsdom): `GoRoomBody` (named) is the pure presentation over explicit
  * props — `tests/reading-go-door.test.ts` renders every phase directly;
  * `GoRoom` (default) is the thin hook wiring.
+ *
+ * `DoorConfig`/`DoorRowState`/`DoorBusy`/`jitsiRoomUrl` come from
+ * `../../rooms-config.ts`, not `RoomsCard.tsx` (block 968,624+ blocker
+ * fix — `page.tsx`, the SERVER half of this route, needed the same
+ * values out of a module with no `"use client"`; every consumer now
+ * reads the one non-client source, this client component included).
  */
 
 export interface GoRoomBodyProps {

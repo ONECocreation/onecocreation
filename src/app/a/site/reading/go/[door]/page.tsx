@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import OperatorGate from "@/components/OperatorGate";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { safeNextPath } from "@/lib/next-path";
-import { DOORS } from "../../RoomsCard";
+import { DOORS } from "../../rooms-config";
 import GoRoom from "./GoRoom";
 
 /**
@@ -17,9 +17,10 @@ import GoRoom from "./GoRoom";
  * — this page reads the cookie itself.
  *
  * TWO checks, in this order:
- *  1. the `door` param against `DOORS` (RoomsCard.tsx's own config, the
- *     one source of truth) — an unknown door 404s BEFORE any cookie read,
- *     same as an unknown room 404s for `/a/studio/room/[room]` (T-306);
+ *  1. the `door` param against `DOORS` (`../../rooms-config.ts`'s own
+ *     config, the one source of truth) — an unknown door 404s BEFORE any
+ *     cookie read, same as an unknown room 404s for `/a/studio/room/
+ *     [room]` (T-306);
  *  2. the operator cookie — signed out gets `<OperatorGate>` with a
  *     `next` back to THIS exact address (`safeNextPath`, T-442) so an
  *     email link that lands her at `/login` first still finishes here,
@@ -31,6 +32,13 @@ import GoRoom from "./GoRoom";
  * room's current phase, the same read `RoomsCard.tsx` polls with) —
  * never a PUT. Only a button press (`onOpenAndJoin`/`onClose`) ever
  * calls `openDoor`/`closeDoor`.
+ *
+ * BLOCKER FIX (block 968,624+, a real `next build`+`next start` Chrome
+ * walk): `DOORS` used to import from `RoomsCard.tsx`, a CLIENT module —
+ * on the server that import is an opaque client reference, not the real
+ * array, and `.find()` on it 500'd. `DOORS` now imports from
+ * `../../rooms-config.ts`, a plain module with no client directive,
+ * safe on either side of the boundary.
  */
 export const metadata: Metadata = {
   title: "Open the room — admin",

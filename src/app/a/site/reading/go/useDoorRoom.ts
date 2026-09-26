@@ -1,15 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  fetchDoorState,
-  openDoor,
-  closeDoor,
-  runExclusive,
-  type DoorBusy,
-  type DoorConfig,
-  type DoorRowState,
-} from "../RoomsCard";
+import { fetchDoorState, openDoor, closeDoor, runExclusive } from "../RoomsCard";
+import type { DoorBusy, DoorConfig, DoorRowState } from "../rooms-config";
 
 /**
  * TASK-486 (block 968,624+) — the SHARED HELPER `/a/site/reading/go/
@@ -31,6 +24,13 @@ import {
  * `useRef(false)` shared by open+close (one door here, so one lock): a
  * second call while the first is still running returns `null`
  * immediately, never runs `openDoor`/`closeDoor` again.
+ *
+ * `DoorBusy`/`DoorConfig`/`DoorRowState` come from `../rooms-config.ts`
+ * (block 968,624+ blocker fix — the plain module `go/[door]/page.tsx`,
+ * a SERVER component, also needs); `fetchDoorState`/`openDoor`/
+ * `closeDoor`/`runExclusive` stay on `RoomsCard.tsx` since they are only
+ * ever called client-side, here and in `RoomsCard`'s own default
+ * export.
  */
 export interface UseDoorRoomResult {
   state: DoorRowState | null;

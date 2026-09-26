@@ -3,7 +3,8 @@ import { promises as fs } from "fs";
 import path from "path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { RoomsCardBody, type RoomsCardBodyProps, type DoorConfig, type DoorRowState } from "@/app/a/site/reading/RoomsCard";
+import { RoomsCardBody, type RoomsCardBodyProps } from "@/app/a/site/reading/RoomsCard";
+import type { DoorConfig, DoorRowState } from "@/app/a/site/reading/rooms-config";
 
 /**
  * TASK-475 (block 968,624) — `RoomsCard.tsx`, the ONE host area on

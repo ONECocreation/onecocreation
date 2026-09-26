@@ -4,7 +4,7 @@ import path from "path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
-import type { DoorConfig, DoorRowState } from "@/app/a/site/reading/RoomsCard";
+import type { DoorConfig, DoorRowState } from "@/app/a/site/reading/rooms-config";
 
 /**
  * TASK-486 (block 968,624+) — Love's one-tap email links: `/a/site/
@@ -254,9 +254,11 @@ describe("GoRoom.tsx — the same-tab navigation law", () => {
     expect(src).not.toContain("window.open(");
   });
 
-  it("reuses RoomsCard's own jitsiRoomUrl — never a second copy of the Jitsi hash", async () => {
+  it("reuses rooms-config.ts's own jitsiRoomUrl — never a second copy of the Jitsi hash, never read from RoomsCard.tsx's client boundary", async () => {
     const src = await read("src/app/a/site/reading/go/[door]/GoRoom.tsx");
     expect(src).toContain("jitsiRoomUrl(");
+    expect(src).toMatch(/from ["']\.\.\/\.\.\/rooms-config["']/);
+    expect(src).not.toMatch(/from ["'].*RoomsCard["']/);
     expect(src).not.toContain("config.p2p.enabled");
   });
 });
@@ -404,9 +406,10 @@ describe("the route — /a/site/reading/go/[door]", () => {
     expect(src).not.toMatch(/fetch\(/);
   });
 
-  it("the door param is checked against DOORS (RoomsCard's own config), never a second copy", async () => {
+  it("the door param is checked against DOORS (rooms-config.ts's own config, a plain module — never RoomsCard.tsx's client boundary), never a second copy", async () => {
     const src = await read("src/app/a/site/reading/go/[door]/page.tsx");
-    expect(src).toMatch(/from ["']\.\.\/\.\.\/RoomsCard["']/);
+    expect(src).toMatch(/from ["']\.\.\/\.\.\/rooms-config["']/);
+    expect(src).not.toMatch(/from ["'].*RoomsCard["']/);
     expect(src).toContain("DOORS.find(");
   });
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Card from "@/components/kit/Card";
+import { jitsiRoomUrl, type DoorBusy, type DoorConfig, type DoorRowState } from "./rooms-config";
 
 /**
  * THE ONE HOST AREA (TASK-475, block 968,624) — the Admiral's ruling: "i
@@ -64,6 +65,19 @@ import Card from "@/components/kit/Card";
  * SAME door do); `useDoorRoom.ts` wraps through it with its own single
  * `useRef(false)`, shared the same way between its own open+close (one
  * door, one lock).
+ *
+ * BLOCKER FIX (block 968,624+, T-486, a real `next build`+`next start`
+ * Chrome walk): `DOORS`/`DoorConfig`/`DoorRowState`/`DoorBusy`/
+ * `jitsiRoomUrl` moved OUT of this file into `./rooms-config.ts`, a
+ * plain module with no `"use client"`. This file is `"use client"` —
+ * `go/[door]/page.tsx` (a SERVER component) imported `DOORS` from here
+ * and called `.find()` on it; on the server a client module's exports
+ * are opaque client references, not the real array, and it 500'd:
+ * "TypeError: h.DOORS.find is not a function". Vitest's plain-node
+ * runner never enforces that boundary, so every test passed; only the
+ * real build caught it. Every value the server needs now imports from
+ * `./rooms-config` directly — never through this file, even by
+ * re-export, which would just relocate the same trap.
  */
 
 export type Lock = { current: boolean };
@@ -95,36 +109,6 @@ export function recordLock(store: { current: Record<string, boolean> }, key: str
   };
 }
 
-export interface DoorConfig {
-  /** a stable key AND the door's admin route suffix source — never
-   *  guessed from the label */
-  id: string;
-  /** the row's own words, e.g. "Free room · 12:12 Housewarming and 1:11
-   *  Reading" */
-  label: string;
-  /** the operator route this row's door answers to, e.g.
-   *  "/api/admin/stage1" */
-  adminPath: string;
-}
-
-/* TASK-481's real, current config — moved here from `SiteReadingRoom.tsx`
-   (TASK-486) so `/a/site/reading/go/[door]` reads the SAME array, never a
-   second copy of the four doors. */
-export const DOORS: DoorConfig[] = [
-  { id: "housewarming", label: "Housewarming · 12:12", adminPath: "/api/admin/housewarming-door" },
-  { id: "stage1", label: "Reading · 1:11", adminPath: "/api/admin/stage1" },
-  { id: "stage2", label: "Book Talk · 2:22", adminPath: "/api/admin/stage2" },
-  { id: "qa", label: "Q&A · 3:33", adminPath: "/api/admin/qa-door" },
-];
-
-export interface DoorRowState {
-  phase: "closed" | "prepared" | "published";
-  room: string | null;
-  jitsiDomain: string;
-}
-
-export type DoorBusy = "open" | "close" | null;
-
 /* the ONE state line per row, said once, under the words, in the ONE
    quiet <em> (the /a uniformity law — Number One's Chrome walk caught a
    second, full-size line here: the close instructions used to ride the
@@ -138,12 +122,6 @@ const STATE_WORDS: Record<DoorRowState["phase"], string> = {
 };
 
 const BUSY_WORDS: Record<Exclude<DoorBusy, null>, string> = { open: "Opening…", close: "Closing…" };
-
-/** The one Jitsi hash every camera link on this card (and the go/[door]
- *  page) carries — a single join point so the flags never drift apart. */
-export function jitsiRoomUrl(state: { jitsiDomain: string; room: string }): string {
-  return `https://${state.jitsiDomain}/${state.room}#config.p2p.enabled=false&config.showChatPermissionsModeratorSetting=true`;
-}
 
 export interface DoorRowProps {
   door: DoorConfig;
