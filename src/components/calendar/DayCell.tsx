@@ -133,8 +133,11 @@ export default function DayCell({
                reading part's deep link, a booking's receipt page) is a
                REAL <a>, never a synthetic onClick: it works with
                JavaScript off, opens in a new tab on a middle-click, and
-               reads correctly to a screen reader without an extra prop. */
-            if (p.href) {
+               reads correctly to a screen reader without an extra prop.
+               Never inside a day cell that is itself a <button> (onSelect
+               wired): a link inside a button is invalid and its click
+               would also fire onSelect, so that cell keeps the plain pill. */
+            if (p.href && !onSelect) {
               return (
                 <a key={p.id} className={pillClass} href={p.href} aria-label={`open ${p.label}`}>
                   {p.label}

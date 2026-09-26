@@ -208,6 +208,21 @@ describe("DayCell — a pill carrying href (no onSelectPill wired) is a real <a>
     expect(html).toMatch(/<button[^>]*class="cal-pill cal-pill--gold"/);
     expect(html).not.toContain("<a ");
   });
+
+  it("a day cell that is itself a button (onSelect wired) never nests the href pill as an <a>", () => {
+    const cell = cellMatching(() => true);
+    const html = renderToStaticMarkup(
+      createElement(DayCell, {
+        cell,
+        primary: "bft",
+        counts: false,
+        marks: { pills: [{ id: "x", label: "hi", variant: "gold", href: "/reading?part=1#stage" }] },
+        onSelect: () => {},
+      }),
+    );
+    expect(html).not.toContain("<a ");
+    expect(html).toMatch(/<span class="cal-pill cal-pill--gold">hi<\/span>/);
+  });
 });
 
 describe("a.cal-pill gets a visible :focus-visible outline (kit css, the shared component sheet)", () => {
