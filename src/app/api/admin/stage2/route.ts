@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { getSiteConfig } from "@/lib/site-config";
-import { getStage2State, prepareStage2, publishStage2, closeStage2 } from "@/lib/stage2";
+import { getStage2State, prepareStage2, publishStage2, closeStage2, showStage2Camera, hideStage2Camera } from "@/lib/stage2";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,10 @@ export const dynamic = "force-dynamic";
  * (read-only call into an untouched file) — the SAME field the member
  * route's reachability probe reads (Astra's review, finding 6: named
  * once, never a second literal).
+ *
+ * TASK-487 (block 968,624+) — `camera: "shown" | "hidden"` rides every
+ * state response now. Two new PUT actions, `show-camera`/`hide-camera`,
+ * valid ONLY while published; otherwise 409 with a plain reason.
  */
 
 function jsonNoStore(body: unknown, status = 200) {
@@ -31,7 +35,8 @@ function gate(request: Request): NextResponse | null {
 async function stateResponse() {
   const state = await getStage2State();
   const { jitsiDomain } = (await getSiteConfig()).meeting;
-  return jsonNoStore({ ok: true, phase: state.phase, room: state.room, jitsiDomain });
+  const camera = state.cameraShownAtMs !== null ? "shown" : "hidden";
+  return jsonNoStore({ ok: true, phase: state.phase, room: state.room, jitsiDomain, camera });
 }
 
 export async function GET(request: Request) {
@@ -60,7 +65,13 @@ export async function PUT(request: Request) {
     if (action === "prepare") await prepareStage2();
     else if (action === "publish") await publishStage2();
     else if (action === "close") await closeStage2();
-    else return jsonNoStore({ ok: false, reason: "action must be prepare, publish, or close" }, 400);
+    else if (action === "show-camera") {
+      const result = await showStage2Camera();
+      if (result === null) return jsonNoStore({ ok: false, reason: "open the room first — the camera needs a published room" }, 409);
+    } else if (action === "hide-camera") {
+      const result = await hideStage2Camera();
+      if (result === null) return jsonNoStore({ ok: false, reason: "open the room first — the camera needs a published room" }, 409);
+    } else return jsonNoStore({ ok: false, reason: "action must be prepare, publish, close, show-camera, or hide-camera" }, 400);
   } catch {
     return jsonNoStore({ ok: false, reason: "the stage store didn't answer — nothing changed" }, 500);
   }

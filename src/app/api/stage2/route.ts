@@ -35,6 +35,12 @@ export const dynamic = "force-dynamic";
  * the house's own precedent reserves 401 for the operator console, and
  * this is not an entry attempt to refuse with 403 (finding 9, recorded
  * in REGISTER).
+ *
+ * TASK-487 (block 968,624+, the Admiral's ruling, option C) — the SITE
+ * SWITCH is the authority for the /reading waiting picture now, never a
+ * Jitsi-event guess. `camera: "shown" | "hidden"` rides this envelope
+ * ONLY alongside a genuine room string (reachable, `decision: "open"`) —
+ * never with a null room.
  */
 
 function jsonNoStore(body: unknown, status = 200) {
@@ -91,6 +97,9 @@ export async function GET(request: Request) {
 
   const { jitsiDomain } = (await getSiteConfig()).meeting;
   const reachable = await probeJitsiReachable(jitsiDomain);
-  /* unreachable never hands back a room a member can't use */
-  return jsonNoStore({ ok: true, open: true, decision: "open", reachable, room: reachable ? state.room : null });
+  /* unreachable never hands back a room a member can't use — and with no
+     room to show, camera never rides the envelope either (TASK-487) */
+  if (!reachable) return jsonNoStore({ ok: true, open: true, decision: "open", reachable, room: null });
+  const camera = state.cameraShownAtMs !== null ? "shown" : "hidden";
+  return jsonNoStore({ ok: true, open: true, decision: "open", reachable, room: state.room, camera });
 }
