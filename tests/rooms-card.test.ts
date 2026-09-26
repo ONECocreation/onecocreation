@@ -83,13 +83,34 @@ describe("three rows, one component, one config array", () => {
   });
 });
 
+describe("ONE state line per row, every phase (the /a uniformity law — Number One's Chrome walk, block 968,624)", () => {
+  const CASES: Array<[DoorRowState["phase"], string | null]> = [
+    ["closed", null],
+    ["prepared", ROOM],
+    ["published", ROOM],
+  ];
+
+  for (const [phase, room] of CASES) {
+    it(`${phase}: exactly one <em>, and the row's own <span> holds nothing but the title and that one <em>`, () => {
+      const html = render(bodyProps({ states: { stage1: { phase, room, jitsiDomain: DOMAIN } } }));
+      const r = row(html, "stage1");
+      expect(r.match(/<em/g)?.length).toBe(1);
+      /* the row's first <span> (the words column) — <b>title</b> then
+         exactly one <em>...</em>, nothing else in between or after */
+      const words = r.match(/<span>([\s\S]*?)<\/span>/)![1];
+      expect(words).toMatch(/^<b>[\s\S]*<\/b><em[\s\S]*<\/em>$/);
+    });
+  }
+});
+
 describe("closed", () => {
   const html = render(bodyProps({ states: { stage1: { phase: "closed", room: null, jitsiDomain: DOMAIN } } }));
   const r = row(html, "stage1");
 
-  it("the one lifecycle control is Open (kit-btn-main), the state said once", () => {
+  it("the one lifecycle control is Open (kit-btn-main), the state said once, in ONE <em>", () => {
     expect(r).toContain('data-state="closed"');
     expect(r.match(/data-state=/g)?.length).toBe(1);
+    expect(r.match(/<em/g)?.length).toBe(1);
     expect(r).toContain(">Open<");
     expect(r).toContain("kit-btn kit-btn-main kit-btn-sm");
   });
@@ -121,8 +142,9 @@ describe("prepared", () => {
     expect(r).toContain('rel="noreferrer"');
   });
 
-  it("the close instructions ride the row's own words, once the door is no longer closed", () => {
-    expect(r).toContain("Press Close first, then End meeting for all in the call.");
+  it("the close instructions ride INSIDE the one state line, not a second one (the /a uniformity law, Number One's Chrome walk)", () => {
+    expect(r).toContain("Open. Press Join on camera to start. When you finish, press Close, then End meeting for all in the call.");
+    expect(r.match(/<em/g)?.length).toBe(1);
   });
 });
 
@@ -130,10 +152,11 @@ describe("published", () => {
   const html = render(bodyProps({ states: { qa: { phase: "published", room: ROOM, jitsiDomain: DOMAIN } } }));
   const r = row(html, "qa");
 
-  it("the state line names the midnight close, the control is Close", () => {
+  it("ONE quiet state line names being open, what a visitor sees, and how to end it — the control is Close", () => {
     expect(r).toContain('data-state="published"');
     expect(r).toContain(">Close<");
-    expect(r).toContain("Open. Viewers can come in. Closes by itself at midnight Mountain.");
+    expect(r).toContain("Open. Viewers can come in. When you finish, press Close, then End meeting for all in the call.");
+    expect(r.match(/<em/g)?.length).toBe(1);
   });
 });
 
@@ -213,5 +236,21 @@ describe("the default export's own wiring — source pins (no jsdom)", () => {
     expect(src).toContain('method: "PUT"');
     expect(src).toContain("JSON.stringify({ action })");
     expect(src).toContain('cache: "no-store"');
+  });
+});
+
+describe("kit.css — the Open/Close width fix and the stray top divider fix (Number One's Chrome walk, block 968,624)", () => {
+  const KIT_CSS = "src/app/kit.css";
+
+  it("the Open/Close button (never Join on camera) gets a shared min-width, scoped to .kit-rooms-card", async () => {
+    const css = await read(KIT_CSS);
+    expect(css).toContain(".kit-rooms-card .kit-rows-end>button.kit-btn{min-width:100px");
+  });
+
+  it(".kit-rooms-card's own .kit-rows loses the shared top border — every other .kit-rows keeps it", async () => {
+    const css = await read(KIT_CSS);
+    expect(css).toContain(".kit-rooms-card .kit-rows{border-top:none}");
+    /* the base rule (shared by Stage1Card, Stage2Details) is untouched */
+    expect(css).toContain(".kit-rows{list-style:none;margin:0;padding:0;text-align:left;border-top:1px solid var(--glass-edge)}");
   });
 });

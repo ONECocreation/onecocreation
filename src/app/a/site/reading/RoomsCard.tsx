@@ -56,12 +56,16 @@ export interface DoorRowState {
 
 export type DoorBusy = "open" | "close" | null;
 
-/* the ONE state line per row, said once, under the words (K122's own
-   law, carried over from Stage1Card) */
+/* the ONE state line per row, said once, under the words, in the ONE
+   quiet <em> (the /a uniformity law — Number One's Chrome walk caught a
+   second, full-size line here: the close instructions used to ride the
+   row's own <span> text, outside the <em>, so an open row showed TWO
+   lines). Every word an open row needs — that it's open, what a visitor
+   sees, and how to end it — now lives in this ONE line. */
 const STATE_WORDS: Record<DoorRowState["phase"], string> = {
   closed: "Closed.",
-  prepared: "Open. Press Join on camera to start.",
-  published: "Open. Viewers can come in. Closes by itself at midnight Mountain.",
+  prepared: "Open. Press Join on camera to start. When you finish, press Close, then End meeting for all in the call.",
+  published: "Open. Viewers can come in. When you finish, press Close, then End meeting for all in the call.",
 };
 
 const BUSY_WORDS: Record<Exclude<DoorBusy, null>, string> = { open: "Opening…", close: "Closing…" };
@@ -121,7 +125,6 @@ export function DoorRow({ door, state, busy, error, onOpen, onClose }: DoorRowPr
     <li data-row={door.id}>
       <span>
         <b>{door.label}</b>
-        {phase !== "closed" && " Press Close first, then End meeting for all in the call."}
         {stateLine}
       </span>
       <span className="kit-rows-end">
