@@ -84,6 +84,13 @@ called directly), never copied. `/a/site/reading` itself gains a quiet
   fallback, proven unmoved), `GoRoomBody` rendered for every phase (no
   jsdom, this repo runs none), and the route (unknown door 404s, the
   operator gate both ways, GET-only render fetches nothing at all).
+- `src/app/a/site/reading/rooms-config.ts` — NEW (blocker fix, OWNS
+  widened in its own commit first): `DoorConfig`/`DOORS`/`DoorRowState`/
+  `DoorBusy`/`jitsiRoomUrl`, no client directive — see the BLOCKER FIX
+  section below.
+- `tests/reading-rooms-server-boundary.test.ts` — NEW (same widening
+  commit): the guard — no non-client file under `src/app/a/site/reading`
+  takes a named/namespace import from a client-directive file.
 
 ## REVIEW FIX (on top of the four commits above, same OWNS, no new files)
 
@@ -107,6 +114,60 @@ other, but open+close on the SAME row do). New test:
 SINGLE openDoor CALL" — real `runExclusive` + real `openDoor`, a
 deliberately-unresolved mocked `fetch`, proves the second concurrent
 call never reaches the network before asserting the count.
+
+## BLOCKER FIX (OWNS widened below, own commit, before touching the files)
+
+A real `next build` + `next start` Chrome walk (never vitest, which
+enforces no such boundary) hit a 500 on `/a/site/reading/go/housewarming`:
+"TypeError: h.DOORS.find is not a function". Cause: `go/[door]/page.tsx`
+is a SERVER component importing `DOORS` — a plain VALUE — from
+`RoomsCard.tsx`, which is `"use client"`. On the server, a client
+module's named exports are opaque React Server Component references,
+never the real array.
+
+FIX:
+- `src/app/a/site/reading/rooms-config.ts` — NEW, no client directive.
+  `DoorConfig`, `DOORS`, `DoorRowState`, `DoorBusy`, `jitsiRoomUrl` all
+  move here from `RoomsCard.tsx` — every plain value/type either side of
+  the client boundary needs. `RoomsCard.tsx` no longer defines or
+  re-exports any of these (a re-export through a client file would just
+  relocate the same trap) — it imports them from here for its own
+  internal use only.
+- `src/app/a/site/reading/RoomsCard.tsx` — EDIT: the five moved
+  definitions removed, replaced with an import from `./rooms-config`;
+  `runExclusive`/`recordLock`/`fetchDoorState`/`openDoor`/`closeDoor`/
+  `putAction` stay here (client-only callers).
+- `src/app/a/site/reading/SiteReadingRoom.tsx` — EDIT: imports `DOORS`
+  from `./rooms-config` instead of `./RoomsCard`.
+- `src/app/a/site/reading/go/[door]/page.tsx` — EDIT: imports `DOORS`
+  from `../../rooms-config` instead of `../../RoomsCard` — this is the
+  actual line that 500'd.
+- `src/app/a/site/reading/go/[door]/GoRoom.tsx` — EDIT: imports
+  `jitsiRoomUrl`/`DoorBusy`/`DoorConfig`/`DoorRowState` from
+  `../../rooms-config` instead of `../../RoomsCard` (this file is client
+  already, so it was never broken — moved for one source of truth).
+- `src/app/a/site/reading/go/useDoorRoom.ts` — EDIT: the three types
+  import from `../rooms-config`; `fetchDoorState`/`openDoor`/
+  `closeDoor`/`runExclusive` stay imported from `../RoomsCard` (only
+  ever called client-side).
+- `tests/rooms-card.test.ts` / `tests/reading-go-door.test.ts` — EDIT:
+  type imports repointed to `rooms-config`; source pins that named
+  `../../RoomsCard`/`../RoomsCard` as the import target for `DOORS`/
+  `jitsiRoomUrl` updated to `rooms-config` and now also assert NO
+  `RoomsCard` import remains for those two names.
+- `tests/reading-rooms-server-boundary.test.ts` — NEW: the guard. Walks
+  every `.ts`/`.tsx` file under `src/app/a/site/reading`; for every
+  NON-client file, every relative import whose target IS a client file
+  must be a bare default import (the house's own "render a client
+  component" pattern) — any named/namespace import from a client file
+  fails. Verified by hand to catch the exact regression (reverting
+  `page.tsx`'s import back to `../../RoomsCard` trips it) before
+  restoring the fix.
+
+VERIFIED against the real repro: `next build` (compiles clean) +
+`next start`, `curl /a/site/reading/go/housewarming` → 200 (the
+OperatorGate, no TypeError), `curl .../go/qa` → 200, `curl .../go/bogus`
+→ 404.
 
 ## READ-ONLY
 
