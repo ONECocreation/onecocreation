@@ -96,6 +96,10 @@ Three builds:
 - Re-trued existing tests (assumed Parts 1/2 shared Stage 1's one door):
   `tests/reading-parts-473.test.ts`, `tests/reading-stage-deck-473.test.ts`,
   `tests/rooms-card.test.ts`.
+- `tests/reading-page.test.ts` — EDIT (OWNS widened): adds source-pin
+  coverage for the default-part inputs' new Housewarming read, confined
+  to the same describe block the existing `qaState` fix-round pin lives
+  in; never touches T-480's own `?part=` read.
 
 ## READ-ONLY
 
