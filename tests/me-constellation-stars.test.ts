@@ -323,18 +323,52 @@ describe("E — profile PUT: the atomic reservation + the 409 path", () => {
     await putProfile("first@example.com", { accountName: "dawnbird", displayName: "dawnbird" });
     const res = await putProfile("second@example.com", { accountName: "dawnbird", displayName: "dawnbird" });
     expect(res.status).toBe(409);
-    expect(res.json.reason).toBe("already claimed");
+    expect(res.json.reason).toBe("That name is taken. Try another.");
     const first = await getProfile("first@example.com");
     expect(first.json.accountName).toBe("dawnbird");
     const second = await getProfile("second@example.com");
     expect(second.json.accountName).toBe("");
   });
 
+  it("a double submit (a re-tap before the first response painted) — the SAME member's own retried claim reads as success, never a refusal (block 968,624, Love's iPhone walk: 'The name could not be claimed. Try another.')", async () => {
+    // Simulates the race window this lane fixes: the FIRST of two
+    // near-simultaneous requests has already won the SET…NX reservation
+    // by the time THIS one's SET…NX runs — but the holder is the SAME
+    // member's own email, not a stranger's, so decideNameClaim reads
+    // "mine" and the request proceeds instead of 409ing.
+    fakeKv.store.set("accountname:racedname", "racer@example.com");
+    const res = await putProfile("racer@example.com", { accountName: "racedname", displayName: "racedname" });
+    expect(res.status).toBe(200);
+    expect(res.json.accountName).toBe("racedname");
+    expect(fakeKv.store.get("accountname:racedname")).toBe("racer@example.com");
+  });
+
+  it("a double submit from a DIFFERENT member for the SAME name still refuses — decideNameClaim's 'mine' shortcut never lets a stranger through", async () => {
+    fakeKv.store.set("accountname:guarded2", "owner@example.com");
+    const res = await putProfile("stranger@example.com", { accountName: "guarded2", displayName: "guarded2" });
+    expect(res.status).toBe(409);
+    expect(res.json.reason).toBe("That name is taken. Try another.");
+  });
+
+  it("iOS autocapitalizes/adds a trailing space claiming a name someone else already holds — normalization still catches the real conflict, never a false success", async () => {
+    await putProfile("owner2@example.com", { accountName: "moonchild", displayName: "moonchild" });
+    const res = await putProfile("ios-taken@example.com", { accountName: " MoonChild ", displayName: " MoonChild " });
+    expect(res.status).toBe(409);
+    expect(res.json.reason).toBe("That name is taken. Try another.");
+  });
+
+  it("iOS autocapitalizes/adds a trailing space on a fresh claim — normalizes to the same lowercase, trimmed name a plain lowercase claim would produce", async () => {
+    const res = await putProfile("ios@example.com", { accountName: " Love ", displayName: " Love " });
+    expect(res.status).toBe(200);
+    expect(res.json.accountName).toBe("love");
+    expect(fakeKv.store.get("accountname:love")).toBe("ios@example.com");
+  });
+
   it("a name that's already a live @onecocreation key handle is refused 409 — no reservation is ever written", async () => {
     writeKeyRegistry([{ handle: "starkeeper", npub: "npub1testkeyhandle0000000000000000000000000000000000000000000" }]);
     const res = await putProfile("hopeful@example.com", { accountName: "starkeeper", displayName: "starkeeper" });
     expect(res.status).toBe(409);
-    expect(res.json.reason).toBe("already claimed");
+    expect(res.json.reason).toBe("That name is taken. Try another.");
     expect(fakeKv.store.has("accountname:starkeeper")).toBe(false);
   });
 
@@ -406,7 +440,7 @@ describe("F — the follow-up fix: lazy heal for names saved before this lane", 
 
     const res = await putProfile("newcomer@example.com", { accountName: "legacyname", displayName: "legacyname" });
     expect(res.status).toBe(409);
-    expect(res.json.reason).toBe("already claimed");
+    expect(res.json.reason).toBe("That name is taken. Try another.");
   });
 
   it("(b) a legacy holder's GET never throws and never steals a reservation a twin already holds", async () => {

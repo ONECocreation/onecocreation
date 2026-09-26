@@ -69,11 +69,26 @@ const key = (email: string) => `member:profile:${email.toLowerCase()}`;
  *  the name (the value the release step guards against). */
 const accountNameKey = (name: string) => `accountname:${name}`;
 
-/** The 409 wording (D5) — reused verbatim from this repo's own key-claim
- *  path (registry.ts's `already claimed`, the same word DoorSheet.tsx and
- *  SignInCard.tsx already surface for a taken key handle), so an email
- *  member's name collision reads in the same voice as a key member's. */
-const NAME_TAKEN_REASON = "already claimed";
+/** The 409 wording (D5; reworded block 968,624 — Love's iPhone walk, S5:
+ *  the vague "already claimed" read as "The name could not be claimed"
+ *  with no way to tell a real conflict from her own retry). Plain words,
+ *  no em dash, matching registry.ts's own `HANDLE_TAKEN_REASON` so an
+ *  email member's name collision reads in the same voice as a key
+ *  member's. */
+const NAME_TAKEN_REASON = "That name is taken. Try another.";
+
+/** The reservation's pure verdict (block 968,624): given who currently
+ *  holds `accountname:<name>` (null = nobody) and who is asking, decide
+ *  what happens. THE SAME member re-submitting their OWN already-claimed
+ *  name — a double submit: a re-tap before the first request's response
+ *  painted (iOS Safari's own lag that block 968,624's walk hit), or a
+ *  race against this route's own `healReservation` — is "mine": an
+ *  idempotent success, never a refusal. A DIFFERENT holder is "taken". */
+export type NameClaimVerdict = "claim" | "mine" | "taken";
+export function decideNameClaim(heldBy: string | null, requester: string): NameClaimVerdict {
+  if (heldBy == null) return "claim";
+  return heldBy === requester ? "mine" : "taken";
+}
 
 /** TASK-186 (0018.06.18 a₿) — the additive money word: which denomination
  *  the member reads first ("fiat" | "sats"). Signed in wins over the
@@ -152,7 +167,15 @@ export async function PUT(request: Request) {
         }
         const reserved = await kv(["SET", accountNameKey(want), fren.handle, "NX"]);
         if (reserved !== "OK") {
-          return NextResponse.json({ ok: false, reason: NAME_TAKEN_REASON }, { status: 409 });
+          // SET…NX refused — somebody already holds this reservation. Read
+          // WHO before refusing: this member's own retried click (a
+          // double submit) must never read as a refusal, only a
+          // DIFFERENT holder really is "taken" (block 968,624).
+          const heldBy = (await kv(["GET", accountNameKey(want)])) as string | null;
+          if (decideNameClaim(heldBy, fren.handle) === "taken") {
+            return NextResponse.json({ ok: false, reason: NAME_TAKEN_REASON }, { status: 409 });
+          }
+          // "mine" — already reserved by this same member; proceed idempotently
         }
       }
       accountName = want;

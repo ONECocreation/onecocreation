@@ -331,7 +331,7 @@ export default function SignInCard({
           | { ok?: boolean; reason?: string; session?: { handle: string; space: string; npub: string } }
           | null;
         if (!res.ok || !data?.ok) {
-          setNote(data?.reason ?? "that name couldn't be claimed — try another");
+          setNote(data?.reason ?? "That name couldn't be claimed. Try another.");
           return;
         }
         if (data.session) applyMemberSession(data.session);
@@ -343,7 +343,7 @@ export default function SignInCard({
         });
         const data = (await res.json().catch(() => null)) as { ok?: boolean; reason?: string } | null;
         if (!res.ok || !data?.ok) {
-          setNote(data?.reason ?? "that name couldn't be claimed — try another");
+          setNote(data?.reason ?? "That name couldn't be claimed. Try another.");
           return;
         }
       }
