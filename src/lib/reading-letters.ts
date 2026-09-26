@@ -3,6 +3,7 @@ import { siteBase, unsubscribeUrl, isSubscribed, listSubscribersByTag, markReadi
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { zonedDateParts } from "@/lib/booking-time";
+import { EDITABLE_LETTERS, getLetterOverride, letterHtml } from "@/lib/letters";
 
 /**
  * TASK-389 — the two reading emails: a confirmation on sign-up, and a
@@ -155,6 +156,59 @@ export function readingDayOfLetter(email: string, startsAtMs: number, tz: string
   };
 }
 
+/* ── T-482 hotfix: read Love's own two composed letters first ─────────────
+ * The two automated reading letters above were NEVER reading the letters
+ * vault — the 2 a.m. day-of send went out 968,624 with the built-in
+ * "Don't forget" words instead of her composed letter "Weekly Reading with
+ * Love #2". These are the two PRODUCTION keys, confirmed from the live
+ * /a/letters list (the Admiral, via Number One, block 968,624 later) —
+ * named constants, never re-derived or guessed. Her words are rendered
+ * with the SAME renderer `/api/admin/letters/send/route.ts` uses
+ * (`letterHtml`, with the identical seeded-only `webUrl` derivation), and
+ * NOTHING is appended to them — no signature, no stage-door pill; a
+ * composed letter carries its own doors in its own body. A slot set later
+ * (T-482 part 2, `letters.ts`'s `letters:auto`) overrides these hardcoded
+ * defaults when present; these two constants are only the FALLBACK layer
+ * under it. */
+
+export const READING_CONFIRMATION_LETTER_KEY = "weekly-reading-with-love";
+export const READING_DAYOF_LETTER_KEY = "weekly-reading-with-love-2";
+
+/** `key`'s composed letter, rendered — or null when it has no override
+ *  saved, that override's body is blank, or the vault errors. Fails
+ *  CLOSED to null: the caller's own built-in words are the fallback, this
+ *  function never throws into a send path. */
+async function composedLetterMailFor(email: string, key: string): Promise<OutgoingMail | null> {
+  try {
+    const override = await getLetterOverride(key);
+    if (!override || !override.body.trim()) return null;
+    const unsub = unsubscribeUrl(email);
+    const seeded = (EDITABLE_LETTERS as readonly string[]).includes(key);
+    const webUrl = seeded ? `/letters/${key}` : undefined;
+    return {
+      to: email,
+      subject: override.subject,
+      html: letterHtml(override.body, { webUrl, unsubscribeUrl: unsub }),
+      unsubscribeUrl: unsub,
+    };
+  } catch (err) {
+    console.error(`reading-letters: composed-letter lookup failed (${key}), falling back to the built-in words:`, err);
+    return null;
+  }
+}
+
+/** The confirmation actually sent: Love's `weekly-reading-with-love` when
+ *  it has words, the built-in `readingConfirmationLetter` otherwise. */
+export async function buildReadingConfirmationLetter(email: string): Promise<OutgoingMail> {
+  return (await composedLetterMailFor(email, READING_CONFIRMATION_LETTER_KEY)) ?? readingConfirmationLetter(email);
+}
+
+/** The day-of letter actually sent: Love's `weekly-reading-with-love-2`
+ *  when it has words, the built-in `readingDayOfLetter` otherwise. */
+export async function buildReadingDayOfLetter(email: string, startsAtMs: number, tz: string): Promise<OutgoingMail> {
+  return (await composedLetterMailFor(email, READING_DAYOF_LETTER_KEY)) ?? readingDayOfLetter(email, startsAtMs, tz);
+}
+
 /* ── the two send paths (R1: direct sendMail, never a post-drain enqueue) ── */
 
 const CONFIRM_ONCE_WINDOW_MS = 24 * 3600_000; // R3
@@ -180,7 +234,7 @@ export async function sendReadingConfirmation(email: string): Promise<ReadingCon
   if (!((await capRemaining()) > 0)) return "skippedCap"; // R4: capacity checked FIRST
   if (!(await isSubscribed(email))) return "skippedUnsubscribed";
   if (!(await onceWithin(`reading-confirm:${email}`, CONFIRM_ONCE_WINDOW_MS))) return "skippedClaimed";
-  await sendMail("news", readingConfirmationLetter(email));
+  await sendMail("news", await buildReadingConfirmationLetter(email));
   await markReadingConfirmed(email);
   return "sent";
 }
@@ -200,7 +254,7 @@ export async function sendReadingDayOf(email: string, startsAtMs: number, tz: st
   if (!((await capRemaining()) > 0)) return "skippedCap";
   if (!(await isSubscribed(email))) return "skippedUnsubscribed";
   if (!(await onceWithin(`reading-dayof:${startsAtMs}:${email}`, DAYOF_ONCE_WINDOW_MS))) return "skippedClaimed";
-  await sendMail("news", readingDayOfLetter(email, startsAtMs, tz));
+  await sendMail("news", await buildReadingDayOfLetter(email, startsAtMs, tz));
   return "sent";
 }
 
