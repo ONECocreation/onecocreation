@@ -663,13 +663,21 @@ describe("the tick route — reading day-of orchestration (Astra §4, R1)", () =
   });
 });
 
-/* ═══════════════════ vercel.json — the no-new-scheduler law ═══════════════ */
+/* ═══════════ vercel.json — the tick's three daily runs (TASK-474) ═══════════
+   TASK-389 kept ONE cron and left the 02:00 send to a VPS poke. The Admiral
+   (block 968,624): "why are we putting this job on the vps" — Love wants the
+   day-of letter at 2 AM Mountain. Two added runs of the SAME tick: 08:05 UTC
+   (02:05 MDT) and 09:05 UTC (02:05 MST); the one before 02:00 local sends
+   nothing (the 02:00 gate). The 15:00 UTC run stays the backstop. */
 
-describe("vercel.json still carries exactly ONE cron line", () => {
-  it("crons has exactly one entry, the existing daily tick, unmodified", () => {
+describe("vercel.json carries the tick's three daily runs, all on /api/mail/tick", () => {
+  it("exactly the 15:00 backstop plus the two 2 AM Mountain runs (summer and winter)", () => {
     const raw = fs.readFileSync(path.join(process.cwd(), "vercel.json"), "utf8");
     const parsed = JSON.parse(raw) as { crons: Array<{ path: string; schedule: string }> };
-    expect(parsed.crons).toHaveLength(1);
-    expect(parsed.crons[0]).toEqual({ path: "/api/mail/tick", schedule: "0 15 * * *" });
+    expect(parsed.crons).toEqual([
+      { path: "/api/mail/tick", schedule: "0 15 * * *" },
+      { path: "/api/mail/tick", schedule: "5 8 * * *" },
+      { path: "/api/mail/tick", schedule: "5 9 * * *" },
+    ]);
   });
 });
