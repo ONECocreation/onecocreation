@@ -2,7 +2,7 @@
  * TASK-185 Phase B · K7 (0018.06.17 a₿) — real or bot: the code door's
  * meter. A real inbox answers ONE code; a script asks for a hundred. The
  * meter counts codes SENT to one email inside one window (the code's own
- * ten-minute life) and holds the door past three — the honest limit, no
+ * ten-minute life) and holds the door past MAX_SENDS (ten since block 968,624), the honest limit, no
  * third-party captcha (the Admiral: keep it simple). The verify side is
  * already metered (src/lib/email-auth.ts burns the window after five wrong
  * tries); this meter guards the SEND, so a bot can't turn Love's mailer

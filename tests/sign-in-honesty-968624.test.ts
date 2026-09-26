@@ -132,7 +132,7 @@ for (const [name, relPath] of [
       const body = src.match(/async function sendCode\([\s\S]*?\n  \}/)?.[0] ?? "";
       expect(body).toContain('if (err instanceof DOMException && err.name === "AbortError") setNote(DOOR_SEND_TIMEOUT_NOTE);');
       /* the 429/other-failure branch (existing reason string) is untouched */
-      expect(body).toContain('setNote(data?.reason ?? "the letter didn\'t send — try again");');
+      expect(body).toContain('setNote(data?.reason ?? "The letter didn\'t send. Try again.");');
     });
 
     it("the code step's confirmation is honest: it lives ONLY in the state===\"code\" branch, unreachable before a real accept", async () => {

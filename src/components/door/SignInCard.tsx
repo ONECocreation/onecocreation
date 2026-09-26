@@ -184,10 +184,10 @@ export default function SignInCard({
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; reason?: string } | null;
       if (res.ok && data?.ok) go({ type: "code-sent" });
-      else setNote(data?.reason ?? "the letter didn't send — try again");
+      else setNote(data?.reason ?? "The letter didn't send. Try again.");
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") setNote(DOOR_SEND_TIMEOUT_NOTE);
-      else setNote("couldn't reach the server — check your connection and try again");
+      else setNote("Couldn't reach the server. Check your connection and try again.");
     } finally {
       clearTimeout(timer);
       setBusy(false);
