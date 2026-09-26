@@ -581,6 +581,19 @@ function vaultConfigured(): boolean {
 const kvKey = (id: string) => `store:order:${id}`;
 const KV_INDEX = "store:orders:index";
 
+/**
+ * TASK-476 — the per-subject order index. Same bare key shape as
+ * `store:order:<id>`/`store:orders:index` above (no `TENANT` prefix —
+ * store.ts's own order keys carry none today, so this doesn't invent one).
+ * `createOrder()` keeps this current going forward; `ensureSubjectIndexBuilt()`
+ * below is the one-time catch-up for orders that existed before this lane.
+ */
+const subjectIndexKey = (subject: string) => `store:orders:by-subject:${subject}`;
+
+/** Set once the one-time backfill has run — after this, `listOrdersForSubject`
+ *  trusts the index alone and never re-scans the whole ledger again. */
+const SUBJECT_INDEX_BUILT_KEY = "store:orders:by-subject:v1-built";
+
 type RedisLike = { sendCommand: (cmd: string[]) => Promise<unknown> };
 let redisClient: RedisLike | null = null;
 
@@ -645,6 +658,13 @@ export async function createOrder(order: OrderRecord): Promise<void> {
     const res = await kv(["SET", kvKey(order.id), JSON.stringify(order), "NX"]);
     if (res?.result === null) throw new Error("order store: id collision");
     await kv(["SADD", KV_INDEX, order.id]);
+    // TASK-476 — keep the per-subject index current from the moment of
+    // creation; entitlementSubject is set once here and never mutated
+    // afterward (grep confirms no other write site touches it), so this
+    // is the only place the index needs a write.
+    if (order.entitlementSubject) {
+      await kv(["SADD", subjectIndexKey(order.entitlementSubject), order.id]);
+    }
     return;
   }
   await fs.mkdir(ordersDir(), { recursive: true });
@@ -692,6 +712,53 @@ export async function listOrders(): Promise<OrderRecord[]> {
       /* no orders yet — an honest empty list */
     }
   }
+  const orders = await Promise.all(ids.map((id) => getOrder(id)));
+  return (orders.filter(Boolean) as OrderRecord[]).sort((a, b) => b.createdAtMs - a.createdAtMs);
+}
+
+/**
+ * TASK-476 — the one-time catch-up for orders that existed before this
+ * lane shipped: a single full `listOrders()` scan, SADDing every order
+ * that carries a subject into that subject's own set, then setting
+ * `SUBJECT_INDEX_BUILT_KEY` so no later call scans again. SADD is
+ * idempotent, so two requests racing to be "the first call" after a cold
+ * start both harmlessly re-add the same ids — never a double-count, never
+ * a lost write. An order created WHILE this scan is in flight is still
+ * covered, because `createOrder()` has already indexed it itself.
+ *
+ * Dev file driver: no index concept (same as `listOrders()`'s own
+ * directory-listing path) — `listOrdersForSubject` below scans directly
+ * instead, so this never runs there.
+ */
+async function ensureSubjectIndexBuilt(): Promise<void> {
+  const flag = await kv(["GET", SUBJECT_INDEX_BUILT_KEY]);
+  if (flag?.result) return;
+  const orders = await listOrders();
+  for (const order of orders) {
+    if (order.entitlementSubject) {
+      await kv(["SADD", subjectIndexKey(order.entitlementSubject), order.id]);
+    }
+  }
+  await kv(["SET", SUBJECT_INDEX_BUILT_KEY, "1"]);
+}
+
+/**
+ * TASK-476 — reads ONE visitor's own orders without paging the whole
+ * ledger: SMEMBERS the subject's own set, then GET only those ids (via
+ * the existing `getOrder()`, which already applies `safeOrderId` — same
+ * as `listOrders()`'s own id-to-record step, no new check invented).
+ * The Q&A door's entitlement check (qa-entitlement.ts) is the first
+ * caller; any future per-subject read (my orders, my bookings) can use
+ * this instead of `listOrders()` + a manual filter.
+ */
+export async function listOrdersForSubject(subject: string): Promise<OrderRecord[]> {
+  if (!vaultConfigured()) {
+    const all = await listOrders();
+    return all.filter((o) => o.entitlementSubject === subject);
+  }
+  await ensureSubjectIndexBuilt();
+  const res = await kv(["SMEMBERS", subjectIndexKey(subject)]);
+  const ids: string[] = Array.isArray(res?.result) ? (res.result as string[]) : [];
   const orders = await Promise.all(ids.map((id) => getOrder(id)));
   return (orders.filter(Boolean) as OrderRecord[]).sort((a, b) => b.createdAtMs - a.createdAtMs);
 }

@@ -1,5 +1,5 @@
 import { tierSatisfies, type Tier } from "./entitlement";
-import { listOrders, type OrderState } from "./store";
+import { listOrdersForSubject, type OrderState } from "./store";
 import { QA_ITEM_ID } from "./reading-day";
 
 /**
@@ -58,16 +58,19 @@ export function qaEntitledFromOrders(tier: Tier | null, subject: string, orders:
   );
 }
 
-/** The live decision: reads the order ledger only when the tier alone
- *  doesn't already settle it (the common case — most visitors are either
- *  Evening Star or have bought nothing). `tier` is the caller's own
- *  already-resolved `tierForSubject` result — this never re-derives it,
- *  so a caller that already paid for that lookup (ReadingDay.tsx,
- *  /api/qa-door) never pays for it twice. */
+/** The live decision: reads only THIS visitor's own orders (TASK-476's
+ *  per-subject index, `store.ts`'s `listOrdersForSubject`) when the tier
+ *  alone doesn't already settle it (the common case — most visitors are
+ *  either Evening Star or have bought nothing). Before TASK-476 this read
+ *  the WHOLE order ledger on every call; now it's one SMEMBERS + only
+ *  this subject's own orders. `tier` is the caller's own already-resolved
+ *  `tierForSubject` result — this never re-derives it, so a caller that
+ *  already paid for that lookup (ReadingDay.tsx, /api/qa-door) never pays
+ *  for it twice. */
 export async function qaEntitled(subject: string, tier: Tier | null): Promise<boolean> {
   if (tierSatisfies(tier, "C")) return true;
   try {
-    const orders = await listOrders();
+    const orders = await listOrdersForSubject(subject);
     return qaEntitledFromOrders(tier, subject, orders);
   } catch {
     return false;
