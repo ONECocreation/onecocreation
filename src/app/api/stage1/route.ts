@@ -23,6 +23,12 @@ export const dynamic = "force-dynamic";
  * Dependency failure fails CLOSED: a broken vault reads as a closed stage
  * (getStage1State's own fail-closed), never a 500, never a guessed-open
  * room.
+ *
+ * TASK-487 (block 968,624+, the Admiral's ruling, option C) — the SITE
+ * SWITCH is the authority for the /reading waiting picture now, never a
+ * Jitsi-event guess. `camera: "shown" | "hidden"` rides this envelope
+ * ONLY in the published+signed-in branch that also hands back the real
+ * room string — never alongside `room: null`.
  */
 
 function jsonNoStore(body: unknown, status = 200) {
@@ -48,7 +54,8 @@ export async function GET(request: Request) {
      it. */
   try {
     const { jitsiDomain } = (await getSiteConfig()).meeting;
-    return jsonNoStore({ ok: true, phase: "published", room: state.room, jitsiDomain });
+    const camera = state.cameraShownAtMs !== null ? "shown" : "hidden";
+    return jsonNoStore({ ok: true, phase: "published", room: state.room, jitsiDomain, camera });
   } catch {
     return jsonNoStore(CLOSED);
   }

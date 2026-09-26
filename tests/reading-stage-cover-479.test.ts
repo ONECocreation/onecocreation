@@ -11,21 +11,29 @@ const STAGE = "src/components/reading/ReadingStage.tsx";
 const DOOR = "src/components/reading/ReadingStageDoor.tsx";
 
 /**
- * TASK-479 (block 968,624+, the Admiral's approved mockup, `t479/mockup.html`,
- * "good on the calls, let's build it"). The book-cover-over-the-mounted-room
+ * TASK-479 (block 968,624+) shipped the book-cover-over-the-mounted-room
  * markup, rendered pure (`renderToStaticMarkup`, no jsdom in this repo) for
  * both /reading top screens it applies to: `ReadingStage.tsx` (Parts 1/2)
- * and `ReadingStageDoor.tsx` (Parts 3/4).
+ * and `ReadingStageDoor.tsx` (Parts 3/4) — driven, at the time, by
+ * JitsiRoom's own `onHostVideo`/`hostVideoReducer` signal (a guess from
+ * Jitsi participant events).
  *
- * Sound path chosen (FEASIBILITY.md §4): NOT a fake "Tap for sound" button —
- * detecting a blocked cross-origin autoplay isn't reliably possible, and a
- * real button would intercept the very tap that's supposed to reach the
- * iframe. Instead: one honest, permanent, click-through line, "No sound?
- * Tap the screen.", under the cover text — true whether or not sound is
- * actually blocked (never a false "Sound is on" claim), sitting in the
- * normal (non-overlapping) controls strip below the media box; the real
- * click-through mechanism is `.kit-stage-cover`'s own `pointer-events:none`
- * on the picture layer that DOES sit over the iframe.
+ * TASK-487 (block 968,624+, the Admiral's ruling, option C) RE-TRUES this
+ * whole file: THE SITE SWITCH REPLACES THE JITSI-EVENT GUESS. The cover is
+ * now driven by `cameraShown` (the door's own polled `camera` field —
+ * "shown"/"hidden"), never `hostVideoOn`/`onHostVideo`. The markup itself
+ * (the cover picture, chip, slim controls line, "No sound? Tap the
+ * screen.") is UNCHANGED — only the signal that decides `coverUp` moved.
+ * `onHostVideo` is retired from these two files' `<JitsiRoom>` mounts
+ * (their own docblocks say so); JitsiRoom's reducer CODE itself is
+ * untouched (see `tests/host-video-reducer-479.test.ts`, which still pins
+ * it).
+ *
+ * Sound path (FEASIBILITY.md §4, unaffected by this lane): NOT a fake "Tap
+ * for sound" button — detecting a blocked cross-origin autoplay isn't
+ * reliably possible, and a real button would intercept the very tap
+ * that's supposed to reach the iframe. Instead: one honest, permanent,
+ * click-through line, "No sound? Tap the screen.", under the cover text.
  */
 
 const ROOM = "oc-0123456789abcdef";
@@ -56,7 +64,7 @@ function renderStage(p: ReadingStageBodyProps): string {
 
 function doorProps(overrides: Partial<ReadingStageDoorBodyProps>): ReadingStageDoorBodyProps {
   return {
-    wire: { decision: "open", reachable: true, room: ROOM } as Wire,
+    wire: { decision: "open", reachable: true, room: ROOM, camera: "shown" } as Wire,
     jitsiDomain: DOMAIN,
     whenWords: null,
     label: "the Book Talk",
@@ -76,8 +84,8 @@ function renderDoor(p: ReadingStageDoorBodyProps): string {
 const NO_EM_DASH = /—/;
 const NO_ARROWS_OR_EMOJI = /[←-⇿➔➡\u{1F300}-\u{1FAFF}☀-➿]/u;
 
-describe("ReadingStage — the cover overlay while showRoom && !hostVideoOn", () => {
-  const html = renderStage(stageProps({ hostVideoOn: false }));
+describe("ReadingStage — the cover overlay while showRoom && !cameraShown (TASK-487)", () => {
+  const html = renderStage(stageProps({ cameraShown: false }));
 
   it("the room stays mounted underneath (kit-stage-viewer present) — audio never stops", () => {
     expect(html).toContain("kit-stage-viewer");
@@ -107,32 +115,31 @@ describe("ReadingStage — the cover overlay while showRoom && !hostVideoOn", ()
   });
 });
 
-describe("ReadingStage — hostVideoOn true (or unset) never shows the cover over a live room", () => {
-  it("explicit true: no cover markup at all", () => {
-    const html = renderStage(stageProps({ hostVideoOn: true }));
+describe("ReadingStage — cameraShown true (or unset) never shows the cover over a live room", () => {
+  it("explicit true (the site switch says shown): no cover markup at all", () => {
+    const html = renderStage(stageProps({ cameraShown: true }));
     expect(html).not.toContain("kit-stage-cover");
     expect(html).not.toContain("Love is here. Her camera comes on in a moment.");
     expect(html).toContain("kit-stage-viewer");
   });
 
-  it("unset (every caller before this lane, and any caller that never wires the reducer): fail-open default is video, byte-identical to before", () => {
+  it("unset (every caller that never wires the prop): fails CLOSED — the cover stays up, never a guessed video", () => {
     const html = renderStage(stageProps({}));
-    expect(html).not.toContain("kit-stage-cover");
-    expect(html).not.toContain("/images/reading-love-cover.jpg");
+    expect(html).toContain("kit-stage-cover");
     expect(html).not.toContain("<button");
   });
 });
 
 describe("ReadingStage — the cover never rides when the room itself isn't showing", () => {
-  it("hostVideoOn: false with showRoom false (not published) still shows the ordinary waiting picture, not the live-cover controls line", () => {
-    const html = renderStage(stageProps({ phase: "closed", room: null, hostVideoOn: false }));
+  it("cameraShown: false with showRoom false (not published) still shows the ordinary waiting picture, not the live-cover controls line", () => {
+    const html = renderStage(stageProps({ phase: "closed", room: null, cameraShown: false }));
     expect(html).not.toContain("kit-stage-viewer");
     expect(html).not.toContain("Love is here. Her camera comes on in a moment.");
   });
 });
 
-describe("ReadingStageDoor — the cover overlay while showRoom && !hostVideoOn (Parts 3/4)", () => {
-  const html = renderDoor(doorProps({ hostVideoOn: false }));
+describe("ReadingStageDoor — the cover overlay while showRoom && !cameraShown (Parts 3/4, TASK-487)", () => {
+  const html = renderDoor(doorProps({ cameraShown: false }));
 
   it("the room stays mounted underneath; the cover, chip and slim controls line all render", () => {
     expect(html).toContain("kit-stage-viewer");
@@ -154,52 +161,75 @@ describe("ReadingStageDoor — the cover overlay while showRoom && !hostVideoOn 
   });
 });
 
-describe("ReadingStageDoor — hostVideoOn true (or unset) never shows the cover over a live room", () => {
+describe("ReadingStageDoor — cameraShown true (or unset) never shows the cover over a live room", () => {
   it("explicit true: no cover markup", () => {
-    const html = renderDoor(doorProps({ hostVideoOn: true }));
+    const html = renderDoor(doorProps({ cameraShown: true }));
     expect(html).not.toContain("kit-stage-cover");
     expect(html).toContain("kit-stage-viewer");
   });
 
-  it("unset: byte-identical to before this lane (every pre-existing wire state test in tests/reading-stage-door-473.test.ts stays true)", () => {
+  it("unset: fails CLOSED — the cover stays up over an otherwise-open door", () => {
     const html = renderDoor(doorProps({}));
-    expect(html).not.toContain("kit-stage-cover");
-    expect(html).not.toContain("/images/reading-love-cover.jpg");
+    expect(html).toContain("kit-stage-cover");
   });
 
-  it("CLOSED / not-open wires never carry the cover text, hostVideoOn value notwithstanding", () => {
-    const html = renderDoor(doorProps({ wire: CLOSED, hostVideoOn: false }));
+  it("CLOSED / not-open wires never carry the cover text, cameraShown value notwithstanding", () => {
+    const html = renderDoor(doorProps({ wire: CLOSED, cameraShown: false }));
     expect(html).not.toContain("kit-stage-cover");
     expect(html).not.toContain("Love is here. Her camera comes on in a moment.");
   });
 });
 
-describe("TASK-479 fix (part b) — a rejoin also resets hostVideoOn, never leaving a stuck cover over a live host", () => {
+describe("TASK-487 — onHostVideo is retired from both mounts; the reducer's CODE stays untouched", () => {
+  /* neither file's LIVE code declares/reads/sets a `hostVideoOn` value
+     any more (no `useState`, no prop, no JSX attribute) — the docblocks
+     DO still name it in prose, by design (this codebase's own precedent:
+     ReadingStage.tsx's own history already names other retired concepts,
+     e.g. JitsiViewer, by name in comments; the CODE never uses them). */
+  const NO_LIVE_HOST_VIDEO_ON = [/useState\(true\)/, /hostVideoOn=\{/, /hostVideoOn:\s*boolean/, /setHostVideoOn/];
+
+  it("ReadingStage.tsx no longer passes onHostVideo to JitsiRoom, and says so in a comment", async () => {
+    const src = await read(STAGE);
+    expect(src).not.toContain("onHostVideo={");
+    expect(src).toMatch(/onHostVideo is deliberately NOT passed/);
+    for (const re of NO_LIVE_HOST_VIDEO_ON) expect(src).not.toMatch(re);
+  });
+
+  it("ReadingStageDoor.tsx no longer passes onHostVideo to JitsiRoom, and says so in a comment", async () => {
+    const src = await read(DOOR);
+    expect(src).not.toContain("onHostVideo={");
+    expect(src).toMatch(/onHostVideo deliberately NOT passed/);
+    for (const re of NO_LIVE_HOST_VIDEO_ON) expect(src).not.toMatch(re);
+  });
+
+  it("JitsiRoom.tsx's own hostVideoReducer/onHostVideo plumbing is left in place — this lane only stops USING it here", async () => {
+    const src = await read("src/components/booking/JitsiRoom.tsx");
+    expect(src).toContain("export function hostVideoReducer");
+    expect(src).toContain("onHostVideo");
+  });
+});
+
+describe("rejoin()/onRejoin() — TASK-487: no host-video state left to reset any more", () => {
   /**
-   * The failure this closes: host mutes video (cover up) -> viewer hangs
-   * up -> host turns video on -> viewer clicks back in. A FRESH JitsiRoom
-   * mounts in its own fail-open state and syncs it once on boot (part a,
-   * pinned in tests/host-video-reducer-479.test.ts), but the room string
-   * itself never changes on a rejoin (same still-published room), so the
-   * "reset on a fresh room" adjust-during-render guard never fires either.
-   * `rejoin()`/`onRejoin()` must reset `hostVideoOn` themselves — source
-   * pins (no jsdom in this repo; the default export's interactive state
-   * isn't reachable through `renderToStaticMarkup`, the same reason this
-   * file's own wiring checks throughout the codebase are source pins).
+   * TASK-479's rejoin fix reset `hostVideoOn` because JitsiRoom's own
+   * per-mount reducer could resync to a stale value the parent hadn't
+   * heard about yet. TASK-487 removed that whole state: `cameraShown` now
+   * comes from the door's own polled truth (set on every poll and on the
+   * hangup's own re-check), never from a per-mount reducer — so a rejoin
+   * has nothing stale to clear. Source pins (no jsdom in this repo).
    */
-  it("ReadingStage.tsx's rejoin() resets hostVideoOn to true, not just left to false", async () => {
+  it("ReadingStage.tsx's rejoin() is just setLeft(false) now — no camera-state reset call", async () => {
     const src = await read(STAGE);
     const fn = src.match(/const rejoin = useCallback\(\(\) => \{[\s\S]*?\n {2}\}, \[\]\);/);
     expect(fn, "rejoin() not found").not.toBeNull();
     expect(fn![0]).toContain("setLeft(false)");
-    expect(fn![0]).toContain("setHostVideoOn(true)");
+    expect(fn![0]).not.toContain("setHostVideoOn");
+    expect(fn![0]).not.toContain("setCameraShown");
   });
 
-  it("ReadingStageDoor.tsx's onRejoin() resets hostVideoOn to true, not just left to false", async () => {
+  it("ReadingStageDoor.tsx's onRejoin() is just setLeft(false) now — no camera-state reset call", async () => {
     const src = await read(DOOR);
-    const fn = src.match(/const onRejoin = useCallback\(\(\) => \{[\s\S]*?\n {2}\}, \[\]\);/);
+    const fn = src.match(/const onRejoin = useCallback\(\(\) => setLeft\(false\), \[\]\);/);
     expect(fn, "onRejoin() not found").not.toBeNull();
-    expect(fn![0]).toContain("setLeft(false)");
-    expect(fn![0]).toContain("setHostVideoOn(true)");
   });
 });

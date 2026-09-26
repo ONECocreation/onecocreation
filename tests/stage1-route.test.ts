@@ -92,6 +92,10 @@ const prep = () => import("@/lib/stage1").then((m) => m.prepareStage1());
 const pub = () => import("@/lib/stage1").then((m) => m.publishStage1());
 
 const ALLOWLIST = ["jitsiDomain", "ok", "phase", "room"]; // sorted
+/* TASK-487: `camera` rides the envelope ONLY in the one branch that also
+   hands back a real room string (published + signed in) — every other
+   branch keeps the original four-key allowlist untouched. */
+const ALLOWLIST_WITH_CAMERA = ["camera", "jitsiDomain", "ok", "phase", "room"]; // sorted
 
 describe("the exact body allowlist — { ok, phase, room, jitsiDomain } and nothing else, in every phase", () => {
   it("closed", async () => {
@@ -121,12 +125,12 @@ describe("the exact body allowlist — { ok, phase, room, jitsiDomain } and noth
     expect(data).toEqual({ ok: true, phase: "closed", room: null, jitsiDomain: null });
   });
 
-  it("published — the one phase that issues the room AND the domain", async () => {
+  it("published — the one phase that issues the room AND the domain (TASK-487: camera rides here too)", async () => {
     await prep();
     const published = await pub();
     const data = await (await memberGet()).json();
-    expect(Object.keys(data).sort()).toEqual(ALLOWLIST);
-    expect(data).toEqual({ ok: true, phase: "published", room: published!.room, jitsiDomain: DOMAIN });
+    expect(Object.keys(data).sort()).toEqual(ALLOWLIST_WITH_CAMERA);
+    expect(data).toEqual({ ok: true, phase: "published", room: published!.room, jitsiDomain: DOMAIN, camera: "hidden" });
   });
 
   it("published but SIGNED OUT: the phase is true, the room and domain never issue (two-way room, TASK-471 review)", async () => {

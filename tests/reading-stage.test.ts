@@ -77,8 +77,8 @@ describe("closed — the book waits, no room, no control at all", () => {
   });
 });
 
-describe("published, signed in, room arrived — JitsiRoom mounts IN PLACE, never JitsiViewer", () => {
-  const html = render(bodyProps({ phase: "published", signedIn: true, room: ROOM }));
+describe("published, signed in, room arrived, camera SHOWN (TASK-487's site switch pressed) — JitsiRoom mounts IN PLACE, never JitsiViewer", () => {
+  const html = render(bodyProps({ phase: "published", signedIn: true, room: ROOM, cameraShown: true }));
 
   it("the 'Love is live now' line, the LIVE chip, the two-way viewer wrapper — no book art, no button", () => {
     expect(html).toContain("Love is live now");
@@ -98,6 +98,17 @@ describe("published, signed in, room arrived — JitsiRoom mounts IN PLACE, neve
   it("no banner while the Playground is closed, and nothing about a camera or a microphone is said in the page's own words", () => {
     expect(html).not.toContain("Want an encore?");
     expect(html).not.toMatch(/camera|microphone/i);
+  });
+});
+
+describe("TASK-487: the SAME arrival, but cameraShown unset (the default, fail CLOSED) — the cover stays over the mounted room", () => {
+  const html = render(bodyProps({ phase: "published", signedIn: true, room: ROOM }));
+
+  it("the room mounts underneath (audio keeps playing), but the cover picture rides over it — never a guessed video", () => {
+    expect(html).toContain("kit-stage-viewer");
+    expect(html).toContain("kit-stage-cover");
+    expect(html).toContain("/images/reading-love-cover.jpg");
+    expect(html).toContain("Love is here. Her camera comes on in a moment.");
   });
 });
 

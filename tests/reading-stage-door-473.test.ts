@@ -86,22 +86,30 @@ describe("ReadingStageDoorBody — not owned (signed in, no entitlement)", () =>
   });
 });
 
-describe("ReadingStageDoorBody — live (owned, published, reachable)", () => {
+describe("ReadingStageDoorBody — live (owned, published, reachable, camera SHOWN — TASK-487's site switch pressed)", () => {
   it("mounts the room in place; the waiting picture is GONE, not just hidden", () => {
-    const wire: Wire = { decision: "open", reachable: true, room: ROOM };
-    const html = render(bodyProps({ wire }));
+    const wire: Wire = { decision: "open", reachable: true, room: ROOM, camera: "shown" };
+    const html = render(bodyProps({ wire, cameraShown: true }));
     expect(html).toContain("kit-stage-viewer");
     expect(html).not.toContain("/images/reading-love-cover.jpg");
     expect(html).toContain("kit-stage-chip");
   });
 
   it("exactly one conference surface: never both the waiting picture and the viewer in the same render", () => {
-    const wire: Wire = { decision: "open", reachable: true, room: ROOM };
-    const html = render(bodyProps({ wire }));
+    const wire: Wire = { decision: "open", reachable: true, room: ROOM, camera: "shown" };
+    const html = render(bodyProps({ wire, cameraShown: true }));
     const hasCover = html.includes("/images/reading-love-cover.jpg");
     const hasViewer = html.includes("kit-stage-viewer");
     expect(hasCover && hasViewer).toBe(false);
     expect(hasCover || hasViewer).toBe(true);
+  });
+
+  it("TASK-487: the SAME wire, but camera still HIDDEN (the default, fail-closed) — the cover stays up over the mounted room, never both surfaces missing", () => {
+    const wire: Wire = { decision: "open", reachable: true, room: ROOM, camera: "hidden" };
+    const html = render(bodyProps({ wire }));
+    expect(html).toContain("kit-stage-viewer");
+    expect(html).toContain("/images/reading-love-cover.jpg");
+    expect(html).toContain("kit-stage-cover");
   });
 
   it("unreachable: honest words, never a guessed room", () => {

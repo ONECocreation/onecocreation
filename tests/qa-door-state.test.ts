@@ -11,7 +11,7 @@ import type { QaState } from "@/lib/qa-door";
  */
 
 const KEY = `qa:state:${TENANT}`;
-const IDLE: QaState = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null };
+const IDLE: QaState = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null, cameraShownAtMs: null };
 
 function fakeKvStore() {
   const store = new Map<string, string>();
@@ -53,6 +53,7 @@ describe("qaExpired — the midnight close (pure)", () => {
       room: "oc-0123456789abcdef",
       openedAtMs: Date.parse("2026-09-26T18:00:00Z"),
       publishedAtMs: Date.parse("2026-09-26T19:30:00Z"),
+      cameraShownAtMs: null,
     };
     expect(qaExpired(published, Date.parse("2026-09-27T05:59:59Z"))).toBe(false);
     expect(qaExpired(published, Date.parse("2026-09-27T06:00:00Z"))).toBe(true);
@@ -65,7 +66,13 @@ describe("qaExpired — the midnight close (pure)", () => {
 
   it("a non-closed state with NO anchor is expired (fail closed)", async () => {
     const { qaExpired } = await import("@/lib/qa-door");
-    const anchorless = { phase: "prepared" as const, room: "oc-0123456789abcdef", openedAtMs: null, publishedAtMs: null };
+    const anchorless = {
+      phase: "prepared" as const,
+      room: "oc-0123456789abcdef",
+      openedAtMs: null,
+      publishedAtMs: null,
+      cameraShownAtMs: null,
+    };
     expect(qaExpired(anchorless, Date.now())).toBe(true);
   });
 });
@@ -191,5 +198,50 @@ describe("prepareQa / publishQa / closeQa — the three-phase transitions, inclu
     await closeQa();
     const second = await publishQa();
     expect(second.room).not.toBe(first.room);
+  });
+});
+
+describe("showQaCamera / hideQaCamera — TASK-487, valid ONLY while published", () => {
+  it("refused (null, nothing written) while closed", async () => {
+    const { showQaCamera, getQaState } = await import("@/lib/qa-door");
+    expect(await showQaCamera()).toBeNull();
+    expect(await getQaState()).toEqual(IDLE);
+  });
+
+  it("refused (null, nothing written) while merely prepared", async () => {
+    const { prepareQa, showQaCamera, getQaState } = await import("@/lib/qa-door");
+    const prepared = await prepareQa();
+    expect(await showQaCamera()).toBeNull();
+    expect(await getQaState()).toEqual(prepared);
+  });
+
+  it("stamps cameraShownAtMs while published; hideQaCamera clears it back to null", async () => {
+    const { publishQa, showQaCamera, hideQaCamera } = await import("@/lib/qa-door");
+    await publishQa();
+    const before = Date.now();
+    const shown = await showQaCamera();
+    expect(shown?.cameraShownAtMs).toBeGreaterThanOrEqual(before);
+    const hidden = await hideQaCamera();
+    expect(hidden?.cameraShownAtMs).toBeNull();
+    expect(hidden?.phase).toBe("published");
+    expect(hidden?.room).toBe(shown?.room);
+  });
+
+  it("both are idempotent — a repeat call returns the SAME state", async () => {
+    const { publishQa, showQaCamera, hideQaCamera } = await import("@/lib/qa-door");
+    await publishQa();
+    const first = await showQaCamera();
+    expect(await showQaCamera()).toEqual(first);
+    const hiddenFirst = await hideQaCamera();
+    expect(await hideQaCamera()).toEqual(hiddenFirst);
+  });
+
+  it("a fresh publish-from-closed always resets cameraShownAtMs to null", async () => {
+    const { publishQa, showQaCamera, closeQa } = await import("@/lib/qa-door");
+    await publishQa();
+    await showQaCamera();
+    await closeQa();
+    const reopened = await publishQa();
+    expect(reopened.cameraShownAtMs).toBeNull();
   });
 });

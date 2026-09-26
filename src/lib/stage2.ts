@@ -52,13 +52,24 @@ export interface Stage2State {
    *  midnight-close anchor); null while `closed` or `prepared`, and on a
    *  stored doc written before the ruling (read as `null`). */
   publishedAtMs: number | null;
+  /** TASK-487 (block 968,624+, the Admiral's ruling, option C) — unix
+   *  MILLISECONDS when Love last pressed "Show my camera" on this door;
+   *  null while the picture is up. See `door-lifecycle.ts`'s own doc for
+   *  the full reset/authority rules. */
+  cameraShownAtMs: number | null;
 }
 
 /** The one KV key this whole lane reads and writes — unchanged by the
  *  TASK-475 refactor. */
 const KEY = `stage2:state:${TENANT}`;
 
-export const IDLE: Stage2State = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null };
+export const IDLE: Stage2State = {
+  phase: "closed",
+  room: null,
+  openedAtMs: null,
+  publishedAtMs: null,
+  cameraShownAtMs: null,
+};
 
 const door = createDoorLifecycle(KEY, { allowPublishFromClosed: true });
 
@@ -101,4 +112,16 @@ export async function publishStage2(): Promise<Stage2State> {
  *  idempotent. */
 export async function closeStage2(): Promise<Stage2State> {
   return door.close();
+}
+
+/** TASK-487 — Love's "Show my camera": valid only while published; `null`
+ *  (never written) otherwise. Idempotent if already shown. */
+export async function showStage2Camera(): Promise<Stage2State | null> {
+  return door.showCamera();
+}
+
+/** TASK-487 — "Pause my camera": valid only while published; `null`
+ *  (never written) otherwise. Idempotent if already hidden. */
+export async function hideStage2Camera(): Promise<Stage2State | null> {
+  return door.hideCamera();
 }

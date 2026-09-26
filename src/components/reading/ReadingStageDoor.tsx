@@ -30,6 +30,16 @@ import JitsiRoom from "@/components/booking/JitsiRoom";
  * `ReadingStageDoorBody` is the pure presentation (renderToStaticMarkup
  * tests, every wire state); the default export owns the fetching — the
  * same split `ReadingStage.tsx` already established.
+ *
+ * TASK-487 (block 968,624+, the Admiral's ruling, option C) — THE SITE
+ * SWITCH REPLACES THE JITSI-EVENT GUESS, the same way `ReadingStage.tsx`
+ * changes: `Wire.camera` (`"shown" | "hidden" | null`) now drives the
+ * cover, never `JitsiRoom`'s `onHostVideo`/`hostVideoReducer` signal.
+ * That reducer's CODE stays in `JitsiRoom.tsx` untouched; `onHostVideo`
+ * is simply no longer passed from this mount either (see the comment at
+ * the JitsiRoom mount below). The poll cadence also speeds up to ~5s
+ * while the door is open (a camera flip must appear quickly) — see the
+ * default export's own `POLL_MS_LIVE`/`POLL_MS_WAITING`.
  */
 
 export type ReadingDoorKind = "housewarming" | "stage2" | "qa";
@@ -38,10 +48,18 @@ export interface Wire {
   decision: "hidden" | "signin" | "package" | "open" | null;
   reachable: boolean | null;
   room: string | null;
+  /** TASK-487 — present only alongside a real `room` string (the member
+   *  routes' own rule: camera never rides the envelope without a room to
+   *  show it for). Absent (or any other value) reads as hidden. */
+  camera?: "shown" | "hidden" | null;
 }
 
-export const CLOSED: Wire = { decision: null, reachable: null, room: null };
-const POLL_MS = 20_000;
+export const CLOSED: Wire = { decision: null, reachable: null, room: null, camera: null };
+/* TASK-487: TWO cadences off the same one poll (never a second timer) —
+   20s while the door isn't open, 5s once it is (a camera flip must
+   appear quickly). */
+const POLL_MS_WAITING = 20_000;
+const POLL_MS_LIVE = 5_000;
 
 export const DOOR_COVER_SRC = "/images/reading-love-cover.jpg";
 const COVER_ALT = "Love, by Leo Buscaglia: the word LOVE in white over a swirling violet and rose nebula";
@@ -61,13 +79,12 @@ export interface ReadingStageDoorBodyProps {
   left: boolean;
   onEnded: () => void;
   onRejoin: () => void;
-  /** TASK-479 (block 968,624+, the Admiral's approved mockup): see
-   *  ReadingStage.tsx's own copy of this prop pair; the same book-cover-
-   *  over-the-mounted-room behaviour, generalized to Parts 3/4's shared
-   *  door. Optional so every existing test of this pure body renders
-   *  exactly as before: video, no cover. */
-  hostVideoOn?: boolean;
-  onHostVideo?: (on: boolean) => void;
+  /** TASK-487 (block 968,624+, the Admiral's ruling, option C): the
+   *  default export's own read of the door's `camera` field — the SITE
+   *  SWITCH, never a Jitsi participant-event guess. Defaults to `false`
+   *  (fail CLOSED), replacing TASK-479's `hostVideoOn` prop, which this
+   *  lane retires from this file. */
+  cameraShown?: boolean;
 }
 
 export function ReadingStageDoorBody({
@@ -80,14 +97,13 @@ export function ReadingStageDoorBody({
   left,
   onEnded,
   onRejoin,
-  hostVideoOn = true,
-  onHostVideo,
+  cameraShown = false,
 }: ReadingStageDoorBodyProps) {
   const showRoom = wire.decision === "open" && wire.reachable === true && !!wire.room && !left;
-  /* TASK-479: same rule as ReadingStage.tsx — the book stays over the
-     mounted (still-listening) room until the identified host's own feed
-     comes on. hostVideoOn defaults true (fail open). */
-  const coverUp = showRoom && !hostVideoOn;
+  /* TASK-487: same rule as ReadingStage.tsx — the book stays over the
+     mounted (still-listening) room until Love's own site switch says her
+     camera is shown. `cameraShown` defaults false (fail CLOSED). */
+  const coverUp = showRoom && !cameraShown;
   const cap = `${label[0].toUpperCase()}${label.slice(1)}`;
   /* fix round (block 968,624) — the chip ALWAYS names the part (when the
      schedule gives one); "Live · " only rides while the door is actually
@@ -100,7 +116,12 @@ export function ReadingStageDoorBody({
       {showRoom ? (
         <div className={coverUp ? "kit-stage-media kit-stage-waiting kit-stage-waiting--cover" : "kit-stage-media"}>
           <div className="kit-stage-viewer">
-            <JitsiRoom domain={jitsiDomain} room={wire.room as string} onEnded={onEnded} onHostVideo={onHostVideo} height="100%" guestView />
+            {/* TASK-487: onHostVideo deliberately NOT passed here any more
+                — the cover is driven by `cameraShown` (the door's own
+                site-switch poll), never JitsiRoom's own onHostVideo/
+                hostVideoReducer signal. That reducer's CODE stays in
+                JitsiRoom.tsx untouched; this mount just stops using it. */}
+            <JitsiRoom domain={jitsiDomain} room={wire.room as string} onEnded={onEnded} height="100%" guestView />
           </div>
           {coverUp && (
             <div className="kit-stage-cover">
@@ -195,19 +216,16 @@ export default function ReadingStageDoor({
   const path = doorPath(door);
   const [wire, setWire] = useState<Wire>(CLOSED);
   const [left, setLeft] = useState(false);
-  /* TASK-479: fail-open true until JitsiRoom's onHostVideo reducer says
-     the identified host's own feed is off; reset on every fresh room —
-     the adjust-state-during-render pattern (ConsoleShell.tsx's own
-     precedent), no effect needed. */
-  const [hostVideoOn, setHostVideoOn] = useState(true);
-  const [prevRoom, setPrevRoom] = useState(wire.room);
-  if (prevRoom !== wire.room) {
-    setPrevRoom(wire.room);
-    setHostVideoOn(true);
-  }
 
+  /* TASK-471 (block 968,624): a recursive setTimeout (never setInterval)
+     so the delay before the NEXT fetch can depend on what THIS fetch just
+     found — TASK-487: 5s once the door's decision is "open" (a camera
+     flip must appear quickly), 20s otherwise. Still exactly ONE poll loop
+     for this route; nothing here doubles it. */
   useEffect(() => {
     let alive = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let lastDecision: Wire["decision"] = null;
     function poll() {
       fetch(path, { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
@@ -215,35 +233,37 @@ export default function ReadingStageDoor({
           /* a 404 (T-475 not live yet) or any failed read never updates the
              wire off its CLOSED default — honestly closed, never guessed. */
           if (!alive || !d?.ok) return;
+          const decision = d.decision ?? (d.open ? "open" : "hidden");
+          lastDecision = decision;
           setWire({
-            decision: d.decision ?? (d.open ? "open" : "hidden"),
+            decision,
             reachable: d.reachable ?? null,
             room: d.room ?? null,
+            camera: d.camera === "shown" ? "shown" : d.camera === "hidden" ? "hidden" : null,
           });
         })
         .catch(() => {
           /* a missed poll leaves the last-known display state */
+        })
+        .finally(() => {
+          if (alive) timer = setTimeout(poll, lastDecision === "open" ? POLL_MS_LIVE : POLL_MS_WAITING);
         });
     }
     poll();
-    const id = setInterval(poll, POLL_MS);
     return () => {
       alive = false;
-      clearInterval(id);
+      if (timer) clearTimeout(timer);
     };
   }, [path]);
 
   /* the hangup unmounts the embed in THIS commit (the TASK-471 review
      law) — no farewell-card flash while the fresh state comes back */
   const onEnded = useCallback(() => setLeft(true), []);
-  const onRejoin = useCallback(() => {
-    setLeft(false);
-    /* TASK-479 fix: same stuck-cover-after-rejoin path as ReadingStage.tsx
-       — a rejoin remounts JitsiRoom against the SAME wire.room, so the
-       room-change reset above never fires. Reset here too (belt and
-       braces alongside JitsiRoom's own boot()-time onHostVideo sync). */
-    setHostVideoOn(true);
-  }, []);
+  /* TASK-487: no cameraShown reset needed on rejoin any more — that
+     value comes from the door's own polled `wire.camera`, never from
+     JitsiRoom's per-mount reducer state, so there is nothing stale to
+     clear here. */
+  const onRejoin = useCallback(() => setLeft(false), []);
 
   return (
     <ReadingStageDoorBody
@@ -256,8 +276,7 @@ export default function ReadingStageDoor({
       left={left}
       onEnded={onEnded}
       onRejoin={onRejoin}
-      hostVideoOn={hostVideoOn}
-      onHostVideo={setHostVideoOn}
+      cameraShown={wire.camera === "shown"}
     />
   );
 }

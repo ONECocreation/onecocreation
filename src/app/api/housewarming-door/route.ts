@@ -27,6 +27,15 @@ export const dynamic = "force-dynamic";
  * decision. A signed-in caller past a published door goes straight to the
  * reachability probe; `decision: "open"` for any signed-in visitor, no
  * tier at all (the brief's own words).
+ *
+ * TASK-487 (block 968,624+, the Admiral's ruling, option C) — the SITE
+ * SWITCH is the authority for the /reading waiting picture now, never a
+ * Jitsi-event guess. `camera: "shown" | "hidden"` rides this envelope
+ * ONLY when a genuine room string is also handed back (reachable and
+ * decision `"open"`) — never alongside a null room, since there is
+ * nothing to show a camera state FOR. A read failure/unreachable probe
+ * fails closed to no `camera` key at all (the guest's own cover default
+ * stays up on any doubt).
  */
 
 function jsonNoStore(body: unknown, status = 200) {
@@ -52,6 +61,9 @@ export async function GET(request: Request) {
      is entitled; straight to the reachability probe. */
   const { jitsiDomain } = (await getSiteConfig()).meeting;
   const reachable = await probeJitsiReachable(jitsiDomain);
-  /* unreachable never hands back a room a member can't use */
-  return jsonNoStore({ ok: true, open: true, decision: "open", reachable, room: reachable ? state.room : null });
+  /* unreachable never hands back a room a member can't use — and with no
+     room to show, camera never rides the envelope either (TASK-487) */
+  if (!reachable) return jsonNoStore({ ok: true, open: true, decision: "open", reachable, room: null });
+  const camera = state.cameraShownAtMs !== null ? "shown" : "hidden";
+  return jsonNoStore({ ok: true, open: true, decision: "open", reachable, room: state.room, camera });
 }

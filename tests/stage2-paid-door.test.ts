@@ -183,7 +183,7 @@ describe("the paid member gets the room — tiers B and C both satisfy the raise
     expectNoStore(res);
     const data = await res.json();
 
-    expect(data).toEqual({ ok: true, open: true, decision: "open", reachable: true, room: published.room });
+    expect(data).toEqual({ ok: true, open: true, decision: "open", reachable: true, room: published.room, camera: "hidden" });
     expect(transport.headCount()).toBe(1);
   });
 
@@ -195,7 +195,7 @@ describe("the paid member gets the room — tiers B and C both satisfy the raise
     expectNoStore(res);
     const data = await res.json();
 
-    expect(data).toEqual({ ok: true, open: true, decision: "open", reachable: true, room: published.room });
+    expect(data).toEqual({ ok: true, open: true, decision: "open", reachable: true, room: published.room, camera: "hidden" });
     expect(transport.headCount()).toBe(1);
   });
 });

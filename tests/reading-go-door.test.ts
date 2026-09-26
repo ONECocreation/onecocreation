@@ -66,7 +66,7 @@ describe("RoomsCard's own shared functions — the ONE open/close logic, called 
 
     const { openDoor } = await import("@/app/a/site/reading/RoomsCard");
     const outcome = await openDoor(DOOR);
-    expect(outcome).toEqual({ ok: true, state: { phase: "published", room: ROOM, jitsiDomain: DOMAIN } });
+    expect(outcome).toEqual({ ok: true, state: { phase: "published", room: ROOM, jitsiDomain: DOMAIN, camera: "hidden" } });
     expect(calls.map((c) => c.action)).toEqual(["publish"]);
   });
 
@@ -84,7 +84,7 @@ describe("RoomsCard's own shared functions — the ONE open/close logic, called 
 
     const { openDoor } = await import("@/app/a/site/reading/RoomsCard");
     const outcome = await openDoor(DOOR);
-    expect(outcome).toEqual({ ok: true, state: { phase: "published", room: ROOM, jitsiDomain: DOMAIN } });
+    expect(outcome).toEqual({ ok: true, state: { phase: "published", room: ROOM, jitsiDomain: DOMAIN, camera: "hidden" } });
     expect(calls.map((c) => c.action)).toEqual(["publish", "prepare", "publish"]);
   });
 
@@ -111,7 +111,7 @@ describe("RoomsCard's own shared functions — the ONE open/close logic, called 
 
     const { closeDoor } = await import("@/app/a/site/reading/RoomsCard");
     const outcome = await closeDoor(DOOR);
-    expect(outcome).toEqual({ ok: true, state: { phase: "closed", room: null, jitsiDomain: DOMAIN } });
+    expect(outcome).toEqual({ ok: true, state: { phase: "closed", room: null, jitsiDomain: DOMAIN, camera: "hidden" } });
     expect(calls).toEqual([{ action: "close" }]);
   });
 
@@ -126,7 +126,7 @@ describe("RoomsCard's own shared functions — the ONE open/close logic, called 
 
     const { fetchDoorState } = await import("@/app/a/site/reading/RoomsCard");
     const state = await fetchDoorState(DOOR);
-    expect(state).toEqual({ phase: "closed", room: null, jitsiDomain: DOMAIN });
+    expect(state).toEqual({ phase: "closed", room: null, jitsiDomain: DOMAIN, camera: "hidden" });
     expect(capturedUrl).toBe(DOOR.adminPath);
     expect(capturedInit?.method).toBeUndefined();
     expect(capturedInit?.body).toBeUndefined();
@@ -219,8 +219,46 @@ describe("runExclusive — the double-tap race's fix (review, block 968,624+)", 
     expect(results.filter((r) => r === null)).toHaveLength(1);
     expect(results.find((r) => r !== null)).toEqual({
       ok: true,
-      state: { phase: "published", room: ROOM, jitsiDomain: DOMAIN },
+      state: { phase: "published", room: ROOM, jitsiDomain: DOMAIN, camera: "hidden" },
     });
+  });
+});
+
+describe("showCameraDoor / hideCameraDoor — TASK-487, the same PUT chain, called directly", () => {
+  it("showCameraDoor: one PUT show-camera, the shown state comes back", async () => {
+    const calls: Array<{ action: string }> = [];
+    global.fetch = (async (_url: string | URL, init?: RequestInit) => {
+      const body = JSON.parse(String((init as RequestInit).body)) as { action: string };
+      calls.push({ action: body.action });
+      return jsonResponse({ ok: true, phase: "published", room: ROOM, jitsiDomain: DOMAIN, camera: "shown" });
+    }) as unknown as typeof fetch;
+
+    const { showCameraDoor } = await import("@/app/a/site/reading/RoomsCard");
+    const outcome = await showCameraDoor(DOOR);
+    expect(outcome).toEqual({ ok: true, state: { phase: "published", room: ROOM, jitsiDomain: DOMAIN, camera: "shown" } });
+    expect(calls).toEqual([{ action: "show-camera" }]);
+  });
+
+  it("hideCameraDoor: one PUT hide-camera, the hidden state comes back", async () => {
+    const calls: Array<{ action: string }> = [];
+    global.fetch = (async (_url: string | URL, init?: RequestInit) => {
+      const body = JSON.parse(String((init as RequestInit).body)) as { action: string };
+      calls.push({ action: body.action });
+      return jsonResponse({ ok: true, phase: "published", room: ROOM, jitsiDomain: DOMAIN, camera: "hidden" });
+    }) as unknown as typeof fetch;
+
+    const { hideCameraDoor } = await import("@/app/a/site/reading/RoomsCard");
+    const outcome = await hideCameraDoor(DOOR);
+    expect(outcome).toEqual({ ok: true, state: { phase: "published", room: ROOM, jitsiDomain: DOMAIN, camera: "hidden" } });
+    expect(calls).toEqual([{ action: "hide-camera" }]);
+  });
+
+  it("a 409 refusal (not published) answers honestly, never a fabricated camera state", async () => {
+    global.fetch = (async () => jsonResponse({ ok: false, reason: "open the room first — the camera needs a published room" }, 409)) as unknown as typeof fetch;
+    const { showCameraDoor } = await import("@/app/a/site/reading/RoomsCard");
+    const outcome = await showCameraDoor(DOOR);
+    expect(outcome.ok).toBe(false);
+    if (!outcome.ok) expect(outcome.reason).toBe("open the room first — the camera needs a published room");
   });
 });
 
@@ -234,16 +272,39 @@ describe("useDoorRoom.ts — reuses RoomsCard's own functions, never a second co
     expect(src).not.toMatch(/putAction/);
   });
 
-  it("wraps open()/close() in the shared runExclusive lock, backed by its own useRef (double-tap race fix)", async () => {
+  it("TASK-487: also imports showCameraDoor/hideCameraDoor from ../RoomsCard, never a second copy of that PUT chain", async () => {
+    const src = await read("src/app/a/site/reading/go/useDoorRoom.ts");
+    expect(src).toContain("showCameraDoor");
+    expect(src).toContain("hideCameraDoor");
+  });
+
+  it("wraps open()/close()/showCamera()/hideCamera() in ONE shared runExclusive lock, backed by its own useRef (double-tap race fix, widened TASK-487)", async () => {
     const src = await read("src/app/a/site/reading/go/useDoorRoom.ts");
     expect(src).toContain("runExclusive");
     expect(src).toContain("useRef(false)");
-    expect(src.match(/runExclusive\(lockRef,/g)?.length).toBe(2);
+    /* the four actions share ONE run-and-report helper (runAction) now,
+       which itself calls runExclusive(lockRef, ...) exactly once — never
+       one inline call per action. */
+    expect(src.match(/runExclusive\(lockRef,/g)?.length).toBe(1);
+    expect(src).toMatch(/runAction\(\s*"open",\s*openDoor\s*\)/);
+    expect(src).toMatch(/runAction\(\s*"close",\s*closeDoor\s*\)/);
+    expect(src).toMatch(/runAction\(\s*"show-camera",\s*showCameraDoor\s*\)/);
+    expect(src).toMatch(/runAction\(\s*"hide-camera",\s*hideCameraDoor\s*\)/);
   });
 
-  it("open()/close() return the resulting state so the page can navigate off the answer directly", async () => {
+  it("open()/close()/showCamera()/hideCamera() return the resulting state so the page can navigate off the answer directly", async () => {
     const src = await read("src/app/a/site/reading/go/useDoorRoom.ts");
     expect(src).toMatch(/Promise<DoorRowState \| null>/);
+  });
+
+  it("TASK-487: refreshes on a 10s interval AND on window focus — Love keeps this page open on her phone all day", async () => {
+    const src = await read("src/app/a/site/reading/go/useDoorRoom.ts");
+    expect(src).toContain("10_000");
+    expect(src).toContain('addEventListener("focus"');
+    expect(src).toContain("setInterval(");
+    // exactly one fetch-driving mechanism (refresh) — the interval and the
+    // focus listener both call it, never a second, separate fetch path
+    expect(src.match(/void refresh\(\)/g)?.length).toBeGreaterThanOrEqual(2);
   });
 });
 
@@ -273,6 +334,8 @@ describe("GoRoomBody — every phase, direct render (no jsdom)", () => {
       error: null,
       onOpenAndJoin: () => {},
       onClose: () => {},
+      onShowCamera: () => {},
+      onHideCamera: () => {},
       ...overrides,
     };
     return renderToStaticMarkup(createElement(GoRoomBody, props));
@@ -285,27 +348,43 @@ describe("GoRoomBody — every phase, direct render (no jsdom)", () => {
     expect(html).toMatch(/<button[^>]*disabled[^>]*>Open and join/);
   });
 
-  it("closed: the title, 'Closed.', ONE big button, no Join/Close pair", async () => {
-    const state: DoorRowState = { phase: "closed", room: null, jitsiDomain: DOMAIN };
+  it("closed: the title, 'Closed.', ONE big button, no other action", async () => {
+    const state: DoorRowState = { phase: "closed", room: null, jitsiDomain: DOMAIN, camera: "hidden" };
     const html = await render({ state });
     expect(html).toContain("Reading · 1:11");
     expect(html).toContain("Closed.");
     expect(html).toContain(">Open and join<");
-    expect(html).not.toContain("Join on camera");
+    expect(html).not.toContain("Join as host");
     expect(html).not.toContain("Close this room");
     expect((html.match(/<button|<a /g) ?? []).length).toBe(1);
   });
 
-  it("already open (prepared or published): the one line, Join on camera + Close this room", async () => {
+  it("open, camera hidden: 'Open. Guests see your picture and hear your mic.', THREE actions in order: Join as host, Show my camera, Close this room", async () => {
     for (const phase of ["prepared", "published"] as const) {
-      const state: DoorRowState = { phase, room: ROOM, jitsiDomain: DOMAIN };
+      const state: DoorRowState = { phase, room: ROOM, jitsiDomain: DOMAIN, camera: "hidden" };
       const html = await render({ state });
-      expect(html).toContain("Open. Viewers can come in.");
+      expect(html).toContain("Open. Guests see your picture and hear your mic.");
       expect(html).toContain(`href="https://${DOMAIN}/${ROOM}#config.p2p.enabled=false&amp;config.showChatPermissionsModeratorSetting=true"`);
-      expect(html).toContain(">Join on camera<");
+      expect(html).toContain(">Join as host<");
+      expect(html).toContain(">Show my camera<");
       expect(html).toContain(">Close this room<");
       expect(html).not.toContain(">Open and join<");
+      expect(html).not.toContain("Pause my camera");
+      const order = [">Join as host<", ">Show my camera<", ">Close this room<"].map((s) => html.indexOf(s));
+      expect(order[0]).toBeLessThan(order[1]);
+      expect(order[1]).toBeLessThan(order[2]);
     }
+  });
+
+  it("open, camera shown (live): 'Live. Guests see your camera.', the camera control reads 'Pause my camera'", async () => {
+    const state: DoorRowState = { phase: "published", room: ROOM, jitsiDomain: DOMAIN, camera: "shown" };
+    const html = await render({ state });
+    expect(html).toContain("Live. Guests see your camera.");
+    expect(html).toContain(">Join as host<");
+    expect(html).toContain(">Pause my camera<");
+    expect(html).toContain(">Close this room<");
+    expect(html).not.toContain("Show my picture");
+    expect(html).not.toContain(">Show my camera<");
   });
 
   it("busy 'open' replaces the status line: 'Opening…'", async () => {
@@ -315,9 +394,16 @@ describe("GoRoomBody — every phase, direct render (no jsdom)", () => {
   });
 
   it("busy 'close' replaces the status line: 'Closing…'", async () => {
-    const state: DoorRowState = { phase: "published", room: ROOM, jitsiDomain: DOMAIN };
+    const state: DoorRowState = { phase: "published", room: ROOM, jitsiDomain: DOMAIN, camera: "hidden" };
     const html = await render({ state, busy: "close" });
     expect(html).toContain("Closing…");
+  });
+
+  it("busy 'show-camera'/'hide-camera' replace the status line too", async () => {
+    const state: DoorRowState = { phase: "published", room: ROOM, jitsiDomain: DOMAIN, camera: "hidden" };
+    expect(await render({ state, busy: "show-camera" })).toContain("Showing your camera…");
+    const shownState: DoorRowState = { ...state, camera: "shown" };
+    expect(await render({ state: shownState, busy: "hide-camera" })).toContain("Pausing your camera…");
   });
 
   it("an error replaces the status line, in plain words, announced (role=alert)", async () => {
@@ -326,7 +412,7 @@ describe("GoRoomBody — every phase, direct render (no jsdom)", () => {
     expect(html).toMatch(/role="alert"[^>]*>the room refused, try again/);
   });
 
-  it("kit classes only — full-width kit-btn-main, no legacy .btn, no em dash, no arrow", async () => {
+  it("kit classes only — full-width kit buttons, no legacy .btn, no em dash, no arrow", async () => {
     const html = await render();
     expect(html).toContain("kit-btn");
     expect(html).toContain("kit-go-room-actions");

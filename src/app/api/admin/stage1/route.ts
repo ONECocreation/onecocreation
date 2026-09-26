@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { getSiteConfig } from "@/lib/site-config";
-import { getStage1State, prepareStage1, publishStage1, closeStage1 } from "@/lib/stage1";
+import { getStage1State, prepareStage1, publishStage1, closeStage1, showStage1Camera, hideStage1Camera } from "@/lib/stage1";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +23,11 @@ export const dynamic = "force-dynamic";
  * SEC-4 (K122, block 968,284): a failed write (the vault unreachable) is
  * CAUGHT and answered `500 { ok:false, reason }` no-store — a bare throw
  * past the handler would answer 500 with no Cache-Control at all.
+ *
+ * TASK-487 (block 968,624+) — `camera: "shown" | "hidden"` rides every
+ * state response now. Two new PUT actions, `show-camera`/`hide-camera`,
+ * valid ONLY while published; otherwise 409 with a plain reason (the
+ * SAME refusal shape Stage 1's own publish-from-closed already uses).
  */
 
 function jsonNoStore(body: unknown, status = 200) {
@@ -39,7 +44,8 @@ function gate(request: Request): NextResponse | null {
 async function stateResponse() {
   const state = await getStage1State();
   const { jitsiDomain } = (await getSiteConfig()).meeting;
-  return jsonNoStore({ ok: true, phase: state.phase, room: state.room, jitsiDomain });
+  const camera = state.cameraShownAtMs !== null ? "shown" : "hidden";
+  return jsonNoStore({ ok: true, phase: state.phase, room: state.room, jitsiDomain, camera });
 }
 
 export async function GET(request: Request) {
@@ -71,7 +77,13 @@ export async function PUT(request: Request) {
         return jsonNoStore({ ok: false, reason: "prepare first — Stage 1 never publishes from closed" }, 409);
       }
     } else if (action === "close") await closeStage1();
-    else return jsonNoStore({ ok: false, reason: "action must be prepare, publish, or close" }, 400);
+    else if (action === "show-camera") {
+      const result = await showStage1Camera();
+      if (result === null) return jsonNoStore({ ok: false, reason: "open the room first — the camera needs a published room" }, 409);
+    } else if (action === "hide-camera") {
+      const result = await hideStage1Camera();
+      if (result === null) return jsonNoStore({ ok: false, reason: "open the room first — the camera needs a published room" }, 409);
+    } else return jsonNoStore({ ok: false, reason: "action must be prepare, publish, close, show-camera, or hide-camera" }, 400);
   } catch {
     return jsonNoStore({ ok: false, reason: "the stage store didn't answer — nothing changed" }, 500);
   }

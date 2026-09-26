@@ -38,11 +38,23 @@ export interface HousewarmingState {
   /** unix MILLISECONDS — when the phase became `published` (the
    *  midnight-close anchor); null while `closed` or `prepared`. */
   publishedAtMs: number | null;
+  /** TASK-487 (block 968,624+, the Admiral's ruling, option C) — unix
+   *  MILLISECONDS when Love last pressed "Show my camera" on this door;
+   *  null while the picture is up. See `door-lifecycle.ts`'s own doc for
+   *  the full reset/authority rules — this is the SAME flag, just typed
+   *  under this door's own name. */
+  cameraShownAtMs: number | null;
 }
 
 const KEY = `housewarming:state:${TENANT}`;
 
-export const IDLE: HousewarmingState = { phase: "closed", room: null, openedAtMs: null, publishedAtMs: null };
+export const IDLE: HousewarmingState = {
+  phase: "closed",
+  room: null,
+  openedAtMs: null,
+  publishedAtMs: null,
+  cameraShownAtMs: null,
+};
 
 const door = createDoorLifecycle(KEY, { allowPublishFromClosed: true });
 
@@ -76,4 +88,16 @@ export async function publishHousewarming(): Promise<HousewarmingState> {
 /** Writes IDLE verbatim regardless of current phase. */
 export async function closeHousewarming(): Promise<HousewarmingState> {
   return door.close();
+}
+
+/** TASK-487 — Love's "Show my camera": valid only while published; `null`
+ *  (never written) otherwise. Idempotent if already shown. */
+export async function showHousewarmingCamera(): Promise<HousewarmingState | null> {
+  return door.showCamera();
+}
+
+/** TASK-487 — "Pause my camera": valid only while published; `null`
+ *  (never written) otherwise. Idempotent if already hidden. */
+export async function hideHousewarmingCamera(): Promise<HousewarmingState | null> {
+  return door.hideCamera();
 }

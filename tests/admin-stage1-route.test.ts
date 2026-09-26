@@ -156,7 +156,7 @@ describe("the happy path — prepare -> publish -> close, every response no-stor
   it("walks the lifecycle, asserting exactly what each response carries", async () => {
     /* closed */
     const closed = await (await adminGet(operatorCookie)).json();
-    expect(closed).toEqual({ ok: true, phase: "closed", room: null, jitsiDomain: DOMAIN });
+    expect(closed).toEqual({ ok: true, phase: "closed", room: null, jitsiDomain: DOMAIN, camera: "hidden" });
 
     /* prepare — minted privately */
     const prepRes = await adminPut({ action: "prepare" }, operatorCookie);
