@@ -395,6 +395,10 @@ export default function ReadingStage({
      in-page remount); only a closed or expired stage shows the ended
      words. */
   const roomEnded = useCallback(() => {
+    /* TASK-471 review: unmount the embed in THIS commit (PlaygroundIsland's
+       callEnded law), so JitsiRoom's own farewell card never flashes; the
+       re-check below only corrects "left" to "ended" when the stage closed */
+    setLeft(true);
     fetch("/api/stage1", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d: Stage1Wire | null) => {

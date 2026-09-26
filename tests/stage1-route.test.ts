@@ -80,6 +80,14 @@ async function publicGet(headers?: Record<string, string>) {
   return GET(new Request("http://test.local/api/stage1", { headers }));
 }
 
+/* TASK-471 review (block 968,624): Stage 1 is two-way, so the room issues
+   to a signed-in caller only; this mints a member cookie for those cases */
+async function memberGet() {
+  process.env.SEAT_SECRET = process.env.SEAT_SECRET || "task-471-stage1-route-secret";
+  const { makeMemberToken } = await import("@/lib/member-auth");
+  return publicGet({ cookie: `pa-fren=${makeMemberToken("stage1tester", "onecocreation")}` });
+}
+
 const prep = () => import("@/lib/stage1").then((m) => m.prepareStage1());
 const pub = () => import("@/lib/stage1").then((m) => m.publishStage1());
 
@@ -116,9 +124,17 @@ describe("the exact body allowlist — { ok, phase, room, jitsiDomain } and noth
   it("published — the one phase that issues the room AND the domain", async () => {
     await prep();
     const published = await pub();
-    const data = await (await publicGet()).json();
+    const data = await (await memberGet()).json();
     expect(Object.keys(data).sort()).toEqual(ALLOWLIST);
     expect(data).toEqual({ ok: true, phase: "published", room: published!.room, jitsiDomain: DOMAIN });
+  });
+
+  it("published but SIGNED OUT: the phase is true, the room and domain never issue (two-way room, TASK-471 review)", async () => {
+    await prep();
+    await pub();
+    const data = await (await publicGet()).json();
+    expect(Object.keys(data).sort()).toEqual(ALLOWLIST);
+    expect(data).toEqual({ ok: true, phase: "published", room: null, jitsiDomain: null });
   });
 });
 
@@ -137,7 +153,7 @@ describe("the domain is read ONLY for a published state", () => {
   it("published: the domain comes from getSiteConfig().meeting.jitsiDomain, the one source", async () => {
     await prep();
     await pub();
-    const data = await (await publicGet()).json();
+    const data = await (await memberGet()).json();
     expect(transport.gets).toContain(CONFIG_KEY);
     expect(data.jitsiDomain).toBe(DOMAIN);
   });

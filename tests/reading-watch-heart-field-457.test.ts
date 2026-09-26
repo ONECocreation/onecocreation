@@ -93,7 +93,7 @@ describe("no <button> or <a> in ReadingStageBody ever calls a Heart Field naviga
 describe("Stage1Card — the published words no longer point the admin at the Heart Field (TASK-471 reverses TASK-457)", () => {
   it("the source line", async () => {
     const src = await read(CARD);
-    expect(src).toContain("Published — signed-in visitors join right on /reading.");
+    expect(src).toContain("Published. Signed-in visitors join right on /reading.");
     expect(src).not.toContain("Published — members watch in the Heart Field. /reading sends them there.");
   });
 
@@ -105,6 +105,6 @@ describe("Stage1Card — the published words no longer point the admin at the He
       onAct: () => {},
     };
     const html = renderToStaticMarkup(createElement(Stage1CardBody, props));
-    expect(html).toContain("Published — signed-in visitors join right on /reading.");
+    expect(html).toContain("Published. Signed-in visitors join right on /reading.");
   });
 });
