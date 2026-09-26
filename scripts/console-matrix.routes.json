@@ -9,7 +9,7 @@
     "pending (optional): a ruling owed by a later lane. /a/briefs renders today; the Q1 ruling (redirect like bots/status) lands in a later PAGE lane, and the flip is a policy edit riding that lane's PR.",
     "source (optional): the page line the row was written from — evidence, not assertion. The four T-135 redirect rows quote their idiom's home line.",
     "The full T-135 redirect idiom is: if (CONSOLE_CHROME === \"site\") redirect(\"/a\"); — the oracle matches the FULL line, never the bare comparison (src/app/a/page.tsx:105 is a render branch, not a carrier; src/app/a/layout.tsx:30 is the switch itself).",
-    "TASK-418 (the two-build browser walker) reads this file as its expectations, per cell. Dynamic routes (/a/letters/[key], /a/studio/room/[room]) are policy rows by PATTERN; the walker substitutes its own fixture values — this policy never names fixture data."
+    "TASK-418 (the two-build browser walker) reads this file as its expectations, per cell. Dynamic routes (/a/letters/[key], /a/studio/room/[room]) are policy rows by PATTERN; the walker substitutes its own fixture values — this policy never names fixture data. TASK-486 (block 968,624+) adds /a/site/reading/go/[door] the same way, with NO fixture substitution yet — an unsubstituted pattern row emits DASH cells (documented, never a guess), same as any other dynamic row the walker's own DYNAMIC_SUBS table doesn't cover."
   ],
   "routes": [
     { "route": "/a", "siteChrome": "render", "signedOut": "gate" },
@@ -35,6 +35,7 @@
     { "route": "/a/site/community-door", "siteChrome": "render", "signedOut": "gate" },
     { "route": "/a/site/menu", "siteChrome": "render", "signedOut": "gate" },
     { "route": "/a/site/reading", "siteChrome": "render", "signedOut": "gate" },
+    { "route": "/a/site/reading/go/[door]", "siteChrome": "render", "signedOut": "gate" },
     { "route": "/a/spaces", "siteChrome": "redirect", "alwaysRedirectTo": "/a/connections", "source": "src/app/a/spaces/page.tsx:8" },
     { "route": "/a/status", "siteChrome": "redirect", "signedOut": "gate", "source": "src/app/a/status/page.tsx:26" },
     { "route": "/a/store", "siteChrome": "render", "signedOut": "gate", "gateDoor": "api-401" },

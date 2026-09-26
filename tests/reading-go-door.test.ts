@@ -58,7 +58,7 @@ vi.mock("next/headers", () => ({
 describe("RoomsCard's own shared functions — the ONE open/close logic, called directly", () => {
   it("openDoor: publish succeeds first try (Stage 2/Q&A's own convenience path) — one PUT", async () => {
     const calls: Array<{ action: string }> = [];
-    global.fetch = (async (_url, init) => {
+    global.fetch = (async (_url: string | URL, init?: RequestInit) => {
       const body = JSON.parse(String((init as RequestInit).body)) as { action: string };
       calls.push({ action: body.action });
       return jsonResponse({ ok: true, phase: "published", room: ROOM, jitsiDomain: DOMAIN });
@@ -72,7 +72,7 @@ describe("RoomsCard's own shared functions — the ONE open/close logic, called 
 
   it("openDoor: publish refused (Stage 1's own 409 law) falls back to prepare, then publish — in the SAME call", async () => {
     const calls: Array<{ action: string }> = [];
-    global.fetch = (async (_url, init) => {
+    global.fetch = (async (_url: string | URL, init?: RequestInit) => {
       const body = JSON.parse(String((init as RequestInit).body)) as { action: string };
       calls.push({ action: body.action });
       if (body.action === "publish" && calls.filter((c) => c.action === "publish").length === 1) {
@@ -89,7 +89,7 @@ describe("RoomsCard's own shared functions — the ONE open/close logic, called 
   });
 
   it("openDoor: a refused prepare answers honestly, never a fabricated room", async () => {
-    global.fetch = (async (_url, init) => {
+    global.fetch = (async (_url: string | URL, init?: RequestInit) => {
       const body = JSON.parse(String((init as RequestInit).body)) as { action: string };
       if (body.action === "prepare") return jsonResponse({ ok: false, reason: "the room refused (500)" }, 500);
       return jsonResponse({ ok: false, reason: "prepare first" }, 409);
@@ -103,7 +103,7 @@ describe("RoomsCard's own shared functions — the ONE open/close logic, called 
 
   it("closeDoor: one PUT close, the closed state comes back", async () => {
     const calls: Array<{ action: string }> = [];
-    global.fetch = (async (_url, init) => {
+    global.fetch = (async (_url: string | URL, init?: RequestInit) => {
       const body = JSON.parse(String((init as RequestInit).body)) as { action: string };
       calls.push({ action: body.action });
       return jsonResponse({ ok: true, phase: "closed", room: null, jitsiDomain: DOMAIN });
@@ -118,7 +118,7 @@ describe("RoomsCard's own shared functions — the ONE open/close logic, called 
   it("fetchDoorState: a plain GET — no method, no body, never a PUT (safe for an email scanner)", async () => {
     let capturedInit: RequestInit | undefined;
     let capturedUrl: string | URL | undefined;
-    global.fetch = (async (url, init) => {
+    global.fetch = (async (url: string | URL, init?: RequestInit) => {
       capturedUrl = url;
       capturedInit = init;
       return jsonResponse({ ok: true, phase: "closed", room: null, jitsiDomain: DOMAIN });
