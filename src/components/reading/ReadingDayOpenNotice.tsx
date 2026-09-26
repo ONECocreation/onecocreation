@@ -7,14 +7,15 @@ import { openDoorNotice, CLOSED_FLAGS, type OpenFlags, type OpenDoorNotice } fro
 
 /**
  * "THE NEXT ROOM IS OPEN" (TASK-473, block 968,624, item 3's OR clause —
- * "a single line above the agenda naming the time"). Polls the three
- * public status routes the stage itself polls: `/api/stage1`,
- * `/api/stage2`, and `/api/qa-door` (T-475, a separate lane, mirrors
- * `/api/stage2` verbatim — see `ReadingStageDoor.tsx`'s own docblock). A
- * 404 (T-475 not landed yet) or any failed read simply keeps Part 4's own
- * flag closed, the same honest default `ReadingStageDoor` keeps. Shows
- * ONE quiet line naming whichever door just opened — but only when it
- * ISN'T the part the visitor is already looking at (`openDoorNotice`,
+ * "a single line above the agenda naming the time"). Polls the four
+ * public status routes the stage itself polls: `/api/housewarming-door`
+ * (TASK-481, block 968,624+ — Part 1's own door now, never Stage 1's),
+ * `/api/stage1` (Part 2 alone), `/api/stage2`, and `/api/qa-door` (T-475,
+ * mirrors `/api/stage2` verbatim — see `ReadingStageDoor.tsx`'s own
+ * docblock). A 404 or any failed read simply keeps that part's own flag
+ * closed, the same honest default `ReadingStageDoor` keeps. Shows ONE
+ * quiet line naming whichever door just opened — but only when it ISN'T
+ * the part the visitor is already looking at (`openDoorNotice`,
  * reading-parts.ts). Nothing here ever names a room; these routes already
  * answer safely to a signed-out visitor (the /api/stage2 law).
  *
@@ -53,15 +54,19 @@ export default function ReadingDayOpenNotice() {
     let alive = true;
     function poll() {
       Promise.all([
+        fetch("/api/housewarming-door", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
         fetch("/api/stage1", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
         fetch("/api/stage2", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
         fetch("/api/qa-door", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-      ]).then(([s1, s2, qa]) => {
+      ]).then(([hw, s1, s2, qa]) => {
         if (!alive) return;
-        const open1 = s1?.ok ? s1.phase === "published" : false;
+        /* TASK-481: Part 1's own flag reads the Housewarming door now —
+           never Stage 1's `phase`, which is Part 2's own truth alone. */
+        const open1 = hw?.ok ? hw.open === true : false;
+        const open2 = s1?.ok ? s1.phase === "published" : false;
         const open3 = s2?.ok ? s2.open === true : false;
         const open4 = qa?.ok ? qa.open === true : false;
-        setFlags({ part1: open1, part2: open1, part3: open3, part4: open4 });
+        setFlags({ part1: open1, part2: open2, part3: open3, part4: open4 });
       });
     }
     poll();

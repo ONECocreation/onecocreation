@@ -32,7 +32,7 @@ import JitsiRoom from "@/components/booking/JitsiRoom";
  * same split `ReadingStage.tsx` already established.
  */
 
-export type ReadingDoorKind = "stage2" | "qa";
+export type ReadingDoorKind = "housewarming" | "stage2" | "qa";
 
 export interface Wire {
   decision: "hidden" | "signin" | "package" | "open" | null;
@@ -150,8 +150,10 @@ export interface ReadingStageDoorProps {
 }
 
 /** Which public route each door polls — the ONE place this mapping is
- *  written (tests pin this). */
+ *  written (tests pin this). TASK-481: `"housewarming"` added minimally
+ *  beside the existing two cases. */
 export function doorPath(door: ReadingDoorKind): string {
+  if (door === "housewarming") return "/api/housewarming-door";
   return door === "stage2" ? "/api/stage2" : "/api/qa-door";
 }
 

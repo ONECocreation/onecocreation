@@ -20,6 +20,7 @@ import { encoreFloorDoor, qaDoor } from "@/lib/reading-day-doors";
 import { getStage1State } from "@/lib/stage1";
 import { getStage2State } from "@/lib/stage2";
 import { getQaState, IDLE as QA_IDLE } from "@/lib/qa-door";
+import { getHousewarmingState, IDLE as HOUSEWARMING_IDLE } from "@/lib/housewarming-door";
 import { STAGE2_FLOOR_NAME, STAGE2_MIN_TIER } from "@/lib/stage2-access";
 import { tierForSubject } from "@/lib/member-tier";
 import { tierSatisfies, type Tier } from "@/lib/entitlement";
@@ -81,6 +82,13 @@ import { defaultReadingPart, type PartDoorInfo, type ReadingPart } from "@/lib/r
  * data the agenda rows already use (`encoreFloorDoor()`/`qaDoor()` —
  * called again here, not threaded through ReadingDay.tsx, so that
  * component's own tested shape stays untouched).
+ *
+ * TASK-481 (block 968,624+, the Admiral's ruling: "was there going to be
+ * 4 rooms … we spoke about one line per meeting time") — Part 1 (the
+ * Housewarming, 12:12) gets its OWN door and its own small screen now
+ * (`ReadingStagePart1`, free — no entitlement data to fetch), read via
+ * `getHousewarmingState()` the same fail-closed way `qaState` above
+ * already is. Part 2 (the Reading) keeps Stage 1's door alone.
  */
 
 export const metadata: Metadata = {
@@ -189,8 +197,20 @@ export default async function ReadingPage() {
     } catch {
       qaState = QA_IDLE;
     }
+    /* TASK-481 (block 968,624+): Part 1's open truth is the Housewarming's
+       OWN door now, never Stage 1's `phase` (Part 2's own truth alone) —
+       the exact fail-closed idiom `qaState` above already keeps.
+       `getHousewarmingState()` already fails closed internally (the same
+       `createDoorLifecycle` law every door keeps); this catch is
+       belt-and-braces against a future regression. */
+    let housewarmingState = HOUSEWARMING_IDLE;
+    try {
+      housewarmingState = await getHousewarmingState();
+    } catch {
+      housewarmingState = HOUSEWARMING_IDLE;
+    }
     const doors: PartDoorInfo[] = [
-      { part: 1, title: "The Housewarming", startsAtMs: housewarmingStartsAtMs, open: stage1Phase === "published", openedAtMs: stage1State.publishedAtMs },
+      { part: 1, title: "The Housewarming", startsAtMs: housewarmingStartsAtMs, open: housewarmingState.phase === "published", openedAtMs: housewarmingState.publishedAtMs },
       { part: 2, title: "The Reading", startsAtMs: next.startsAtMs, open: stage1Phase === "published", openedAtMs: stage1State.publishedAtMs },
       { part: 3, title: "The Book Talk", startsAtMs: encoreStartsAtMs, open: stage2State.phase === "published", openedAtMs: stage2State.publishedAtMs },
       { part: 4, title: "The Q&A", startsAtMs: qaStartsAtMs, open: qaState.phase === "published", openedAtMs: qaState.publishedAtMs },
@@ -259,6 +279,10 @@ export default async function ReadingPage() {
                      second literal. Null only when the schedule is off. */
                   housewarmingLabel: housewarmingStartsAtMs !== null ? `${clockWords(housewarmingStartsAtMs, schedule.tz)} · The Housewarming` : null,
                   readingLabel: next !== null ? `${clockWords(next.startsAtMs, schedule.tz)} · The Reading` : null,
+                }}
+                part1={{
+                  jitsiDomain: config.meeting.jitsiDomain,
+                  whenWords: housewarmingStartsAtMs !== null ? clockWords(housewarmingStartsAtMs, schedule.tz) : null,
                 }}
                 part3={{
                   jitsiDomain: config.meeting.jitsiDomain,
