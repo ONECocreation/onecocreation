@@ -4,9 +4,17 @@ import type { OrderState } from "@/lib/store";
 
 /**
  * TASK-475 (block 968,624) — the pure core of the Q&A's entitlement
- * decision: tier C (Evening Star) OR a settled, non-refunded order
+ * decision: tier C (Evening Star) OR a `settled`/`fulfilled` order
  * carrying the Q&A pass (`QA_ITEM_ID`, `q-a-meetup-with-love`). No KV, no
  * fs — a handful of fabricated orders in memory.
+ *
+ * The adversarial review (block 968,624) caught that `disputed` must NOT
+ * count as entitled here — `entitlement-fulfil.ts` treats a disputed
+ * order the SAME as a refunded one (it revokes the tier and removes the
+ * member from rooms), so this decision only grants on the two states
+ * that mean money actually landed and stayed: `settled` and `fulfilled`
+ * — narrower than `store.ts`'s own `SETTLED_FAMILY`, which also includes
+ * `refunded` and `disputed`.
  */
 
 const SUBJECT = "reader@onecocreation";
@@ -36,16 +44,16 @@ describe("qaEntitledFromOrders", () => {
     expect(qaEntitledFromOrders(null, SUBJECT, [order({ state: "settled" })])).toBe(true);
   });
 
-  it("a fulfilled order (also SETTLED_FAMILY) entitles", () => {
+  it("a fulfilled order also entitles", () => {
     expect(qaEntitledFromOrders(null, SUBJECT, [order({ state: "fulfilled" })])).toBe(true);
   });
 
-  it("a REFUNDED order does NOT entitle, even though it's in SETTLED_FAMILY", () => {
+  it("a REFUNDED order does NOT entitle", () => {
     expect(qaEntitledFromOrders(null, SUBJECT, [order({ state: "refunded" })])).toBe(false);
   });
 
-  it("a disputed order STILL entitles (the brief's literal spec: SETTLED_FAMILY minus refunded only, disputed is unresolved money, not returned money)", () => {
-    expect(qaEntitledFromOrders(null, SUBJECT, [order({ state: "disputed" })])).toBe(true);
+  it("a DISPUTED order does NOT entitle either — entitlement-fulfil.ts revokes on dispute the same as on refund, so this decision must agree", () => {
+    expect(qaEntitledFromOrders(null, SUBJECT, [order({ state: "disputed" })])).toBe(false);
   });
 
   it("a created (not yet settled) order does not entitle", () => {

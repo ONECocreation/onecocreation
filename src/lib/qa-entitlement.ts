@@ -1,5 +1,5 @@
 import { tierSatisfies, type Tier } from "./entitlement";
-import { listOrders, SETTLED_FAMILY, type OrderState } from "./store";
+import { listOrders, type OrderState } from "./store";
 import { QA_ITEM_ID } from "./reading-day";
 
 /**
@@ -15,14 +15,25 @@ import { QA_ITEM_ID } from "./reading-day";
  * `qaEntitled` is true when EITHER holds:
  *   - the visitor's tier already satisfies "C" (Evening Star and up,
  *     `tierSatisfies` — the progressive ladder), OR
- *   - the visitor holds an order in `SETTLED_FAMILY` that is NOT refunded,
- *     with a line item `itemId === QA_ITEM_ID` — the pass itself, paid,
- *     money landed, never revoked.
+ *   - the visitor holds an order whose state is `settled` OR `fulfilled`
+ *     — NOT `SETTLED_FAMILY` minus refunded — with a line item
+ *     `itemId === QA_ITEM_ID`. The adversarial review (block 968,624)
+ *     caught that `disputed` belongs on the SAME side as `refunded` here:
+ *     `entitlement-fulfil.ts` already treats a disputed order like a
+ *     refunded one (it revokes the tier and removes the member from
+ *     rooms), so a disputed Q&A order must not open this door either —
+ *     unresolved money is not the same as landed money.
  *
  * Fails CLOSED on any throw (a broken vault reads as "not entitled",
  * never a guessed-open door) — the same law `ReadingDay.tsx`'s own
  * `tierForSubject` catch already keeps for the tier half.
  */
+
+/** The only two order states that actually entitle — money landed and
+ *  never reversed. Deliberately narrower than `store.ts`'s
+ *  `SETTLED_FAMILY` (which also includes `refunded` and `disputed`, both
+ *  of which `entitlement-fulfil.ts` treats as a closed door elsewhere). */
+const QA_GRANTING_STATES: OrderState[] = ["settled", "fulfilled"];
 
 /** Only the three fields the decision actually reads — narrower than
  *  `OrderRecord` on purpose, so the pure core (and its tests) never carry
@@ -42,8 +53,7 @@ export function qaEntitledFromOrders(tier: Tier | null, subject: string, orders:
   return orders.some(
     (o) =>
       o.entitlementSubject === subject &&
-      o.state !== "refunded" &&
-      SETTLED_FAMILY.includes(o.state) &&
+      QA_GRANTING_STATES.includes(o.state) &&
       o.lineItems.some((li) => li.itemId === QA_ITEM_ID),
   );
 }

@@ -29,13 +29,17 @@ export const dynamic = "force-dynamic";
  *
  * The ONE real difference from `/api/stage2`: entitlement here isn't a
  * bare tier check — `qaEntitled` sits at the exact step stage2's own
- * `decideStage2` occupies, and it also admits a settled, non-refunded
- * order for the Q&A pass (`QA_ITEM_ID`), because that pass carries no
- * `entitlementTier`/`entitlementDays` of its own (the brief's show
- * stopper). A not-entitled caller's `decision: "package"` carries the
- * SAME buy-the-pass-or-Evening-Star offer `ReadingDayBody.tsx` already
- * shows (`reading-day-doors.ts`'s `qaDoor()`), reused rather than
- * reinvented.
+ * `decideStage2` occupies (tier C short-circuits before any order read,
+ * so the common case never touches the ledger), and it also admits a
+ * `settled`/`fulfilled` order for the Q&A pass (`QA_ITEM_ID`) — never a
+ * `refunded` or `disputed` one, `entitlement-fulfil.ts`'s own line —
+ * because that pass carries no `entitlementTier`/`entitlementDays` of its
+ * own (the brief's show stopper). A not-entitled caller's
+ * `decision: "package"` carries the SAME buy-the-pass-or-Evening-Star
+ * offer `ReadingDayBody.tsx` already shows (`reading-day-doors.ts`'s
+ * `qaDoor()`), reused rather than reinvented. The order read itself only
+ * ever runs AFTER the not-published early return above — a closed Q&A
+ * costs zero KV/order reads.
  */
 
 function jsonNoStore(body: unknown, status = 200) {
