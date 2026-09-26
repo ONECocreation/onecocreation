@@ -272,8 +272,8 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
 
       if (c.signedIn) {
         // TASK-471 (block 968,624): the door is #stage now, never /rooms/heart-field
-        // fix round (block 968,624): rows 1/2 read as picks now, "Watch the Housewarming"/"Watch the Reading"
-        expect(html).toContain("Watch the Housewarming");
+        // fix round (block 968,624): rows 1/2 read as picks now, "Join the Housewarming" (the two-way room; "Watch the" overflowed 256px by 11px)/"Watch the Reading"
+        expect(html).toContain("Join the Housewarming");
         expect(html).toContain("Watch the Reading");
         expect(html).toContain('href="#stage"');
         expect(html).not.toContain("Go to the Heart Field");

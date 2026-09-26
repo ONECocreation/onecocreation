@@ -100,7 +100,7 @@ export default function ReadingDayBody({
           </span>
           <span className="kit-rows-end">
             {signedIn ? (
-              <ReadingPartSelectLink part={1}>Watch the Housewarming</ReadingPartSelectLink>
+              <ReadingPartSelectLink part={1}>Join the Housewarming</ReadingPartSelectLink>
             ) : (
               <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">
                 Sign me up
