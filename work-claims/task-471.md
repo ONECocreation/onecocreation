@@ -33,6 +33,8 @@ like `QA_ITEM_ID`'s own pattern.
 
 ## OWNS
 
+- `src/app/api/stage1/route.ts` — EDIT (review fix, Number One): room + domain issue to a signed-in session only (two-way room; the /api/stage2 law).
+- `tests/stage1-route.test.ts` — EDIT: published cases sign in; new signed-out case proves no room issues.
 - `src/app/kit.css` — EDIT (Number One, Lumen's brand pass L-004): ONE rule, `.kit-day .kit-rows-end>.kit-btn` = one 256px width for every agenda-card button.
 - `src/components/reading/ReadingStage.tsx` — REWRITTEN. Stage 1 mounts
   `JitsiRoom` (booking's two-way embed) in place when published+signedIn;
@@ -251,7 +253,7 @@ GATES GREEN
   Admiral/Number One should do a real Chrome walk of `/reading` (signed
   in and out) and `/reading/playground` before Saturday.
 - The live store catalog was never read (gitignored, not in this repo).
-  `READING_BOOK_TALK_ITEM_ID = "reading-book-talk"` is a NEW, UNVERIFIED
+  `READING_BOOK_TALK_ITEM_ID = "weekly-one-week (corrected by Number One: the existing $11 item; NO new catalog item needed)"` is a NEW, UNVERIFIED
   id — it almost certainly does not exist in the live catalog yet. Until
   the Admiral creates it in `/a/store` (or hands over the real id to swap
   in, the one place it would need to change), Part 3's row/card falls
