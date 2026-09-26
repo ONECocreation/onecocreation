@@ -176,14 +176,36 @@ describe("no camera or microphone words anywhere /reading renders from (M2)", ()
      exclude exactly the one sentence the Admiral approved verbatim for the
      new book-cover-over-a-live-mic overlay on ReadingStage.tsx — "Her
      camera comes on in a moment." — scrubbed out before the check so any
-     OTHER, un-approved camera/microphone mention still fails this test. */
+     OTHER, un-approved camera/microphone mention still fails this test.
+     TASK-487 (block 968,624+, the Admiral's ruling, option C): this file
+     now legitimately MANAGES a `camera` (shown/hidden) concept in its own
+     CODE — a `cameraShown` prop, doc comments explaining the site-switch
+     replacing the Jitsi-event guess — none of it rendered to a visitor.
+     M2's own law is about WORDS THE PAGE RENDERS, not source comments or
+     identifiers, so this check now strips (a) every block comment (the
+     exact `/\* ... \*\/` masking `tests/design-drift.test.ts`'s own
+     scanner uses, applied here too) and (b) the THREE exact, named CODE
+     tokens TASK-487 adds to ReadingStage.tsx's own state/wire plumbing —
+     the `cameraShown`/`setCameraShown` identifiers, the `Stage1Wire`
+     interface's `camera?:` field, and the poll handlers' `d.camera` reads
+     — never a blanket "camera" word-strip, which would just as happily
+     hide a real, un-approved rendered mention. A stray user-facing
+     camera/microphone mention still fails this test. */
   const APPROVED_479 = "Love is here. Her camera comes on in a moment.";
+  const stripBlockComments = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "");
+  const stripTask487CodeTokens = (src: string) =>
+    src
+      .replace(/\b(?:set)?[Cc]ameraShown\b/g, "")
+      .replace(/\bcamera\?:/g, "")
+      .replace(/\bd\.camera\b/g, "");
   for (const file of [PAGE, STAGE, VIEWER, DETAILS, SIGNUP]) {
     it(`${file} is clean`, async () => {
       const src = await read(file);
-      expect(src.replaceAll(APPROVED_479, "")).not.toMatch(/camera|microphone/i);
+      const scrubbed = stripTask487CodeTokens(stripBlockComments(src).replaceAll(APPROVED_479, ""));
+      expect(scrubbed).not.toMatch(/camera|microphone/i);
     });
   }
+
 });
 
 /* ═══════════════ the new kit rules obey the look laws ═══════════════ */

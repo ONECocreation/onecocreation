@@ -49,6 +49,19 @@ import { useReadingPart } from "./ReadingPartContext";
  * `ReadingPartSelectLink`, an in-page pick of Part 3 — no address on
  * /reading points at `/reading/playground` any more).
  *
+ * TASK-487 (block 968,624+, the Admiral's ruling, option C) — THE SITE
+ * SWITCH REPLACES THE JITSI-EVENT GUESS. Love joins the call as host with
+ * her camera off and her mic on (guests hear her audio, see her book
+ * picture); when she's ready she presses "Show my camera" on the admin
+ * side (`RoomsCard.tsx`/`GoRoom.tsx`), and `/api/stage1`'s own `camera`
+ * field (`"shown" | "hidden"`) flips for every guest at once. This file
+ * STOPS reading `JitsiRoom`'s `onHostVideo`/`hostVideoReducer` signal for
+ * the cover — that reducer's CODE stays in `JitsiRoom.tsx` untouched, but
+ * `onHostVideo` is no longer passed from this mount (see the comment at
+ * the JitsiRoom mount below). The cover is driven by `cameraShown`
+ * (the poll's own `camera` field), never a guessed Jitsi participant
+ * event.
+ *
  * `ReadingStageBody` is the pure presentation (renderToStaticMarkup
  * tests); the default export owns the fetching.
  */
@@ -123,15 +136,13 @@ export interface ReadingStageBodyProps {
   /** the "left" card's own Back button — no navigation, no re-fetch: it
    *  simply remounts the same still-published room. */
   onRejoin: () => void;
-  /** TASK-479 (block 968,624+, the Admiral's approved mockup): the default
-   *  export's own read of JitsiRoom's onHostVideo reducer (fail-open true,
-   *  the real video, until an explicit signal says the identified host's
-   *  own feed is off). Optional so every existing caller of this pure body
-   *  (this file's own tests) renders exactly as before: video, no cover. */
-  hostVideoOn?: boolean;
-  /** TASK-479: forwarded straight to JitsiRoom's own onHostVideo prop on
-   *  the room mount below (see hostVideoReducer in JitsiRoom.tsx). */
-  onHostVideo?: (on: boolean) => void;
+  /** TASK-487 (block 968,624+, the Admiral's ruling, option C): the
+   *  default export's own read of `/api/stage1`'s `camera` field — the
+   *  SITE SWITCH, never a Jitsi participant-event guess (see the file's
+   *  own docblock). Defaults to `false` (fail CLOSED — the picture stays
+   *  up on any doubt), replacing TASK-479's `hostVideoOn` prop, which this
+   *  lane retires from this file. */
+  cameraShown?: boolean;
 }
 
 /** The wire body `/api/stage1` answers with (its exact four keys). */
@@ -140,6 +151,10 @@ interface Stage1Wire {
   phase: string;
   room: string | null;
   jitsiDomain: string | null;
+  /** TASK-487 — present only alongside a real `room` string (`/api/stage1`'s
+   *  own rule: camera never rides the envelope without a room to show it
+   *  for). Absent (or any other value) reads as hidden — fail closed. */
+  camera?: "shown" | "hidden";
 }
 
 /** The poll's fresh answer is the only thing that can name a room:
@@ -196,18 +211,17 @@ export function ReadingStageBody({
   onRoomEnded,
   onRejoin,
   partLabel,
-  hostVideoOn = true,
-  onHostVideo,
+  cameraShown = false,
 }: ReadingStageBodyProps) {
   /* the ONE gate for mounting the real two-way room: published, signed
      in, not left, not ended, and a room the poll actually gave us. */
   const showRoom = phase === "published" && signedIn && !left && !ended && !!room;
-  /* TASK-479: the book cover rides OVER the mounted room (JitsiRoom stays
-     mounted underneath the whole time, audio keeps playing) until the
-     identified host's own feed comes on. hostVideoOn defaults true (fail
-     open) so every caller that never passes it renders exactly as this
-     file did before this lane. */
-  const coverUp = showRoom && !hostVideoOn;
+  /* TASK-487: the book cover rides OVER the mounted room (JitsiRoom stays
+     mounted underneath the whole time, audio keeps playing) until Love's
+     own site switch says her camera is shown. `cameraShown` defaults
+     false (fail CLOSED — the picture stays up on any doubt), replacing
+     TASK-479's `hostVideoOn`/Jitsi-event reducer read. */
+  const coverUp = showRoom && !cameraShown;
   /* fix round (block 968,624) — the chip ALWAYS names the part (when the
      schedule gives one); "Live · " only rides while actually published
      and not ended, the same condition the old bare "Live" chip used. */
@@ -224,7 +238,13 @@ export function ReadingStageBody({
         {showRoom ? (
           <div className={coverUp ? "kit-stage-media kit-stage-waiting kit-stage-waiting--cover" : "kit-stage-media"}>
             <div className="kit-stage-viewer">
-              <JitsiRoom domain={jitsiDomain} room={room as string} onEnded={onRoomEnded} onHostVideo={onHostVideo} height="100%" guestView />
+              {/* TASK-487: onHostVideo is deliberately NOT passed here any
+                  more — the cover is driven by `cameraShown` (the door's
+                  own site-switch poll), never JitsiRoom's own
+                  onHostVideo/hostVideoReducer signal. That reducer's CODE
+                  stays in JitsiRoom.tsx untouched (other callers may still
+                  wire it); this mount just stops using it. */}
+              <JitsiRoom domain={jitsiDomain} room={room as string} onEnded={onRoomEnded} height="100%" guestView />
             </div>
             {coverUp && (
               <div className="kit-stage-cover">
@@ -323,7 +343,12 @@ export function ReadingStageBody({
   );
 }
 
-const POLL_MS = 20_000;
+/* TASK-487: TWO cadences off the same one poll (never a second timer) —
+   20s while the room isn't showing (no urgency yet), 5s once it is (a
+   camera flip must appear quickly). Reused verbatim as the schedule
+   delay after every fetch settles. */
+const POLL_MS_WAITING = 20_000;
+const POLL_MS_LIVE = 5_000;
 
 export default function ReadingStage({
   initialPhase,
@@ -352,17 +377,11 @@ export default function ReadingStage({
      ended branch, so SSR and the first client paint agree */
   const [nextWords, setNextWords] = useState<string | null>(null);
   const phaseRef = useRef(phase);
-  /* TASK-479: fail-open true (the real video) until JitsiRoom's own
-     onHostVideo reducer says the identified host's own feed is off. Reset
-     to true on every fresh room (a stale "off" from a PRIOR room must
-     never carry into a new one) — the adjust-state-during-render pattern
-     (ConsoleShell.tsx's own precedent), no effect needed. */
-  const [hostVideoOn, setHostVideoOn] = useState(true);
-  const [prevRoom, setPrevRoom] = useState(room);
-  if (prevRoom !== room) {
-    setPrevRoom(room);
-    setHostVideoOn(true);
-  }
+  /* TASK-487: the SITE SWITCH's own current value, driven by every poll's
+     `camera` field — fail CLOSED (false, the picture stays) by default
+     and whenever the poll doesn't say otherwise. Replaces TASK-479's
+     `hostVideoOn`/onHostVideo-reducer state entirely. */
+  const [cameraShown, setCameraShown] = useState(false);
 
   /* K122 item 7 + the purity law — the ended words name the NEXT reading
      (the FOLLOWING occurrence once the clock is at or past next's start),
@@ -370,6 +389,7 @@ export default function ReadingStage({
   const markEnded = useCallback(() => {
     setLeft(false);
     setRoom(null);
+    setCameraShown(false);
     const shown = readingShownNext(next, following, Date.now());
     setNextWords(
       shown
@@ -383,9 +403,15 @@ export default function ReadingStage({
 
   /* TASK-471 (block 968,624): the room mounts IN PLACE now — the poll
      itself is the fresh authorization (no separate click-time fetch, no
-     "Watch" gesture; Jitsi's own prejoin screen is the join gesture). */
+     "Watch" gesture; Jitsi's own prejoin screen is the join gesture).
+     TASK-487: a recursive setTimeout (never setInterval) so the delay
+     before the NEXT fetch can depend on what THIS fetch just found —
+     5s once published (a camera flip must appear quickly), 20s
+     otherwise. Still exactly ONE poll loop for this route; nothing here
+     doubles it. */
   useEffect(() => {
     let alive = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     function poll() {
       fetch("/api/stage1", { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
@@ -404,6 +430,7 @@ export default function ReadingStage({
             /* the fresh room, every poll — the poll IS the authorization
                now (no separate click-time fetch) */
             setRoom(stage1WatchTarget(d));
+            setCameraShown(d.camera === "shown");
             if (!wasPublished) {
               /* a FRESH publish (closed -> published) clears any
                  ended/left flag left over from an earlier occurrence */
@@ -414,13 +441,15 @@ export default function ReadingStage({
         })
         .catch(() => {
           /* a missed poll leaves the last-known display state */
+        })
+        .finally(() => {
+          if (alive) timer = setTimeout(poll, phaseRef.current === "published" ? POLL_MS_LIVE : POLL_MS_WAITING);
         });
     }
     poll();
-    const id = setInterval(poll, POLL_MS);
     return () => {
       alive = false;
-      clearInterval(id);
+      if (timer) clearTimeout(timer);
     };
   }, [markEnded]);
 
@@ -440,6 +469,7 @@ export default function ReadingStage({
         if (d?.ok && d.phase === "published") {
           const target = stage1WatchTarget(d);
           setRoom(target);
+          setCameraShown(d.camera === "shown");
           setEnded(false);
           setLeft(true);
         } else {
@@ -455,17 +485,13 @@ export default function ReadingStage({
 
   /* the "left" card's Back button — no navigation, no re-fetch: the room
      string from the hangup's own fresh re-check is still good, so this
-     simply remounts JitsiRoom against it. */
+     simply remounts JitsiRoom against it. TASK-487: no cameraShown reset
+     needed any more — that value now comes from the door's own polled
+     truth (set on the hangup's own re-check above and every poll since),
+     never from JitsiRoom's per-mount reducer state, so there is nothing
+     stale to clear on a rejoin. */
   const rejoin = useCallback(() => {
     setLeft(false);
-    /* TASK-479 fix: a rejoin mounts a FRESH JitsiRoom against the same
-       room string, so the room-change reset above never fires (the room
-       string doesn't change) — reset here too, or a cover left up from
-       BEFORE the hangup (host muted, viewer left, host turned video on,
-       viewer rejoins) would stay stuck over what is now a live host.
-       JitsiRoom's own boot() also syncs onHostVideo once on mount (belt
-       and braces — either fix alone closes this path). */
-    setHostVideoOn(true);
   }, []);
 
   return (
@@ -483,8 +509,7 @@ export default function ReadingStage({
       onRoomEnded={roomEnded}
       onRejoin={rejoin}
       partLabel={partLabel}
-      hostVideoOn={hostVideoOn}
-      onHostVideo={setHostVideoOn}
+      cameraShown={cameraShown}
     />
   );
 }

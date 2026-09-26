@@ -68,10 +68,23 @@ describe("/reading waits on the cover of the book Love is reading", () => {
     });
   }
 
-  it("published, signed in, room arrived: the viewer replaces it — neither picture is on the page", () => {
-    const html = body({ phase: "published", signedIn: true, room: "oc-0123456789abcdef" });
+  it("published, signed in, room arrived, camera shown (TASK-487's site switch pressed): the viewer replaces it — neither picture is on the page", () => {
+    /* TASK-487 (block 968,624+, the Admiral's ruling, option C) re-trues
+       this case: the cover no longer drops the moment the room merely
+       arrives — it stays up (fail CLOSED) until Love's own "Show my
+       camera" flips the door's `camera` field to "shown". `cameraShown:
+       true` here is that flipped state — the one this test always meant
+       to check ("the viewer replaces it"). */
+    const html = body({ phase: "published", signedIn: true, room: "oc-0123456789abcdef", cameraShown: true });
     expect(html).toContain("kit-stage-viewer");
     expect(html).not.toContain("reading-love-cover");
+    expect(html).not.toContain("reading-book");
+  });
+
+  it("published, signed in, room arrived, camera STILL hidden (the default, fail-closed state): the cover stays up over the mounted room", () => {
+    const html = body({ phase: "published", signedIn: true, room: "oc-0123456789abcdef" });
+    expect(html).toContain("kit-stage-viewer");
+    expect(html).toContain("reading-love-cover");
     expect(html).not.toContain("reading-book");
   });
 
