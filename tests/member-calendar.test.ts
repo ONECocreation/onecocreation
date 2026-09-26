@@ -66,7 +66,11 @@ describe("buildBookingMarks — pure, pins the model (not the render)", () => {
     ];
     const marks = buildBookingMarks(bookings);
     const hit = marks(target);
-    expect(hit?.pills).toEqual([{ id: "b1", label: "Discovery call", variant: "gold" }]);
+    /* TASK-480 — every pill is clickable now: the booking pill carries
+       its own receipt-page href. */
+    expect(hit?.pills).toEqual([
+      { id: "b1", label: "Discovery call", variant: "gold", href: "/book/receipt/b1" },
+    ]);
     // every OTHER cell in the grid stays unmarked
     expect(cells.filter((c) => c !== target).every((c) => marks(c) === undefined)).toBe(true);
   });

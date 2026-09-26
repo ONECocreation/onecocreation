@@ -24,7 +24,7 @@ import { getHousewarmingState, IDLE as HOUSEWARMING_IDLE } from "@/lib/housewarm
 import { STAGE2_FLOOR_NAME, STAGE2_MIN_TIER } from "@/lib/stage2-access";
 import { tierForSubject } from "@/lib/member-tier";
 import { tierSatisfies, type Tier } from "@/lib/entitlement";
-import { defaultReadingPart, type PartDoorInfo, type ReadingPart } from "@/lib/reading-parts";
+import { defaultReadingPart, parseReadingPart, type PartDoorInfo, type ReadingPart } from "@/lib/reading-parts";
 
 /**
  * TASK-391 (block 968,088) + TASK-438 (block 968,222; HOLD LIFTED block
@@ -122,7 +122,17 @@ function deriveReading(schedule: ReadingSchedule): {
   return { asOfMs, next, housewarmingNext };
 }
 
-export default async function ReadingPage() {
+export default async function ReadingPage({
+  searchParams,
+}: {
+  /* TASK-480 — the ONE deep link every reading-part pill (the member
+     calendar's own, `readingPartHref`) points at: `/reading?part=N#stage`.
+     `parseReadingPart` validates it (1-4 only, else `null`) before it
+     ever overrides the door-based default computed below. */
+  searchParams: Promise<{ part?: string }>;
+}) {
+  const requestedPart = parseReadingPart((await searchParams).part);
+
   /* The same raw-cookie session read every public page with a signed-in
      variant already does (rooms/[slug]/page.tsx:82, home page.tsx:34) —
      never cookies() (it URL-encodes an email handle's own "@" and the
@@ -217,6 +227,11 @@ export default async function ReadingPage() {
     ];
     defaultPart = defaultReadingPart(doors, asOfMs);
   }
+  /* TASK-480 — an explicit `?part=` always wins over the door-based
+     default above: a visitor who followed a deep link (the member
+     calendar's own pills) asked for THAT part, not whichever one the
+     doors would otherwise pick. */
+  if (requestedPart !== null) defaultPart = requestedPart;
 
   return (
     <>

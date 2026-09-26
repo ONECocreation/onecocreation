@@ -39,6 +39,8 @@ export interface BftMonthGridProps {
    *  (console/LovesDesk.tsx) keep the blackout swatch unchanged — they
    *  pass no prop here at all. Only the Circle passes false. */
   legendBlackout?: boolean;
+  /** TASK-480 — threaded straight to each DayCell; see DayCell's own doc. */
+  maxPills?: number;
   className?: string;
 }
 
@@ -53,7 +55,7 @@ export interface BftMonthGridProps {
  */
 export default function BftMonthGrid({
   bftYear, bftMonth, primary: primaryProp, counts: countsProp,
-  marks, selectedBftKey, onSelectDay, onSelectPill, nowMs, todayHeight, legend = true, legendBlackout = true, className,
+  marks, selectedBftKey, onSelectDay, onSelectPill, nowMs, todayHeight, legend = true, legendBlackout = true, maxPills, className,
 }: BftMonthGridProps) {
   const prefs = useCalendarPrefs();
   const primary = primaryProp ?? prefs.primary;
@@ -86,6 +88,7 @@ export default function BftMonthGrid({
             marks={marks?.(cell)}
             onSelect={onSelectDay}
             onSelectPill={onSelectPill}
+            maxPills={maxPills}
           />
         ))}
       </div>

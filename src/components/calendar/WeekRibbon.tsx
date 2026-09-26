@@ -17,6 +17,8 @@ export interface WeekRibbonProps {
   onSelectDay?: (cell: CalendarDayCell) => void;
   /** T-248: threaded straight to each DayCell — see DayCell's own doc. */
   onSelectPill?: (pill: CalendarEventPill, cell: CalendarDayCell) => void;
+  /** TASK-480 — threaded straight to each DayCell; see DayCell's own doc. */
+  maxPills?: number;
   nowMs?: number;
   className?: string;
 }
@@ -30,7 +32,7 @@ export interface WeekRibbonProps {
  */
 export default function WeekRibbon({
   bftYear, bftMonth, weekOfMonth, primary: primaryProp, counts: countsProp,
-  marks, selectedBftKey, onSelectDay, onSelectPill, nowMs, className,
+  marks, selectedBftKey, onSelectDay, onSelectPill, maxPills, nowMs, className,
 }: WeekRibbonProps) {
   const prefs = useCalendarPrefs();
   const primary = primaryProp ?? prefs.primary;
@@ -65,6 +67,7 @@ export default function WeekRibbon({
             marks={marks?.(cell)}
             onSelect={onSelectDay}
             onSelectPill={onSelectPill}
+            maxPills={maxPills}
           />
         ))}
       </div>

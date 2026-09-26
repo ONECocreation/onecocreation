@@ -4,6 +4,9 @@ import {
   validateReadingSchedule,
   type ReadingSchedule,
 } from "@/lib/reading-schedule";
+import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt } from "@/lib/reading-day";
+import { zonedDateParts } from "@/lib/booking-time";
+import { AGENDA_ROW_TITLES, readingPartHref, type ReadingPart } from "@/lib/reading-parts";
 import type { CalendarDayMarks, CalendarDayMarksLookup, CalendarEventPill } from "./DayCell";
 
 /**
@@ -52,6 +55,81 @@ export function readingMarksLookup(schedule: ReadingSchedule | null): CalendarDa
     const pills: CalendarEventPill[] = [
       { id: `reading-${cell.civilKey}`, label: readingPillLabel(occurrence.startsAtMs), variant: "gold" },
     ];
+    return { pills };
+  };
+}
+
+/** "12:12 PM" — mirrors `readingPillLabel`'s own (unexported) time format
+ *  exactly, minus its " reading" suffix: `readingDayPartsMarksLookup`
+ *  below appends each part's own `AGENDA_ROW_TITLES` name instead. Same
+ *  law as `readingPillLabel` — no `timeZone` passed, so this always reads
+ *  the VIEWER's own browser zone (both call sites here are client
+ *  components), never the schedule's `tz`. */
+function partClockWords(ms: number): string {
+  return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit", hour12: true }).format(
+    new Date(ms),
+  );
+}
+
+/**
+ * THE FOUR-PART READING DAY, painted onto ONE calendar cell (TASK-480,
+ * block 968,624+ — the Admiral: "the month and week calendar in the /me
+ * area doesnt show the events for today. it only shows the 12:12
+ * reading, and it's not clickable"). `readingMarksLookup` above only ever
+ * modeled the ONE occurrence at `schedule.time` — this sibling models all
+ * FOUR clock times the reading's own day carries (`/reading`'s own
+ * agenda brick, `ReadingDayBody.tsx`): the Housewarming (`HOUSEWARMING_
+ * TIME`), the Reading itself (`schedule.time`), the Book Talk
+ * (`ENCORE_TIME`), and the Q&A with Love (`QA_TIME`) — the exact same
+ * `sameDayAt` derivation `ReadingDay.tsx`/`/reading/page.tsx` already use,
+ * never a fifth re-implementation of "same civil day, different wall
+ * clock." Titles come from `AGENDA_ROW_TITLES` (reading-parts.ts) — never
+ * a re-typed literal.
+ *
+ * EVERY PILL IS A REAL LINK: `href` is `readingPartHref(part)` —
+ * `/reading?part=N#stage` — which `/reading/page.tsx` reads
+ * (`parseReadingPart`) to select that same part on arrival. `DayCell`
+ * renders a pill carrying `href` as an `<a>` (never a synthetic `onClick`
+ * span) whenever the consumer hasn't wired `onSelectPill` of its own —
+ * `MemberCalendar.tsx`'s shape, exactly.
+ *
+ * THE UTC-DAY TRAP (house note, calendar-view.ts's own honesty stance:
+ * "the BFT calendar's cells are UTC days... evening Mountain events land
+ * on the next day's cell") — `readingMarksLookup`'s own window check
+ * above (`[cell.civilDate, +86_400_000)`, a UTC day) is exactly that
+ * trap; it happens to miss it today only because none of the four times
+ * cross UTC midnight in `America/Denver`. This function never repeats
+ * that shape: it asks `readingOccurrencesBetween` for every occurrence in
+ * a wide net around the cell (roughly 1 civil day either side, nowhere near the
+ * 366-day cap), then keeps only the one whose OWN civil day — read back
+ * through `zonedDateParts` IN THE SCHEDULE'S OWN ZONE — matches this
+ * cell's `civilKey`. A 7 PM Mountain occurrence's UTC instant can fall on
+ * the next UTC calendar date; `zonedDateParts` still reads it back as the
+ * Mountain day it belongs to, so it lands on the right cell regardless.
+ */
+export function readingDayPartsMarksLookup(schedule: ReadingSchedule | null): CalendarDayMarksLookup {
+  return (cell): CalendarDayMarks | undefined => {
+    if (!schedule) return undefined;
+    const netFrom = cell.civilDate.getTime() - 86_400_000;
+    const netTo = cell.civilDate.getTime() + 2 * 86_400_000;
+    const occurrence = readingOccurrencesBetween(schedule, netFrom, netTo).find(
+      (o) => zonedDateParts(new Date(o.startsAtMs), schedule.tz).date === cell.civilKey,
+    );
+    if (!occurrence) return undefined;
+
+    const parts: { part: ReadingPart; ms: number }[] = [
+      { part: 1, ms: sameDayAt(occurrence.startsAtMs, schedule.tz, HOUSEWARMING_TIME) },
+      { part: 2, ms: occurrence.startsAtMs },
+      { part: 3, ms: sameDayAt(occurrence.startsAtMs, schedule.tz, ENCORE_TIME) },
+      { part: 4, ms: sameDayAt(occurrence.startsAtMs, schedule.tz, QA_TIME) },
+    ];
+
+    const pills: CalendarEventPill[] = parts.map(({ part, ms }) => ({
+      id: `reading-${cell.civilKey}-part${part}`,
+      label: `${partClockWords(ms)} · ${AGENDA_ROW_TITLES[part]}`,
+      variant: "gold",
+      href: readingPartHref(part),
+    }));
     return { pills };
   };
 }
