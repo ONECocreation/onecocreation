@@ -5,6 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import SignerDoors from "@/components/SignerDoors";
 import useMemberSession from "@/hooks/useMemberSession";
+import { safeNextPath } from "@/lib/next-path";
 
 /* hydration-safe one-shot read — the useHasSigner pattern (Kind0Doors,
    SignerDoors). TASK-301: Love pressed "Verify operator key" on her iPad
@@ -21,8 +22,16 @@ function useHasSigner(): boolean | null {
  * the admin side opens. No password, nothing stored, nothing to leak.
  * Mobile parity (Module 6): the same challenge signs through a remote
  * signer or an Android signer app — the artist's shelf works from a phone.
+ *
+ * TASK-486 (block 968,624+): an optional `next` — a same-origin path this
+ * gate should return to after the email door, hardened through
+ * `safeNextPath` (T-442) again here, belt-and-braces, even though every
+ * caller so far already validates its own. The key-sign paths above
+ * (`verify()`, `SignerDoors`' `submitConsole`) never navigate at all — a
+ * bare `window.location.reload()` already lands back on this same page —
+ * so only the email door's `/login` link needed the `next` wired through.
  */
-export default function OperatorGate({ configured }: { configured: boolean }) {
+export default function OperatorGate({ configured, next = null }: { configured: boolean; next?: string | null }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { accounts } = useMemberSession();
@@ -32,6 +41,8 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
      server-snapshot null (pre-hydration) reads as "unchanged", same
      treatment emailSeat gets below */
   const noSigner = hasSigner === false;
+  const safeNext = safeNextPath(next);
+  const loginHref = safeNext ? `/login?next=${encodeURIComponent(safeNext)}` : "/login";
 
   /* The one honest line: an email door is signed in on this browser (any
      slot — the door switcher, a key login or an order claim can move it),
@@ -147,7 +158,7 @@ export default function OperatorGate({ configured }: { configured: boolean }) {
                   just her ordinary sign-in; the gate recognizes the address */}
               <p className="mt-5" style={{ fontSize: ".78rem", color: "var(--muted)" }}>
                 Prefer email?{" "}
-                <a href="/login" style={{ color: "var(--gold-deep, #D9B24E)", textDecoration: "underline" }}>
+                <a href={loginHref} style={{ color: "var(--gold-deep, #D9B24E)", textDecoration: "underline" }}>
                   Sign in with your email
                 </a>{" "}
                 &mdash; then come back here and you&apos;re in.

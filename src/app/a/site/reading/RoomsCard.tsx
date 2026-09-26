@@ -34,6 +34,21 @@ import Card from "@/components/kit/Card";
  * (named) is the pure presentation over explicit per-door state, so
  * `tests/rooms-card.test.ts` renders every phase directly — this repo's
  * vitest runs no jsdom.
+ *
+ * TASK-486 (block 968,624+, Love's one-tap email links): the ONE-CLICK
+ * OPEN logic above (`fetchDoorState`/`openDoor`/`closeDoor`, the pure GET/
+ * PUT chain `putAction` always rode) is now exported — `/a/site/reading/
+ * go/[door]`'s own `useDoorRoom` hook calls the SAME functions for a
+ * single door, never a copy of the publish-then-prepare-fallback chain.
+ * `DOORS` moves here too (was a local const on `SiteReadingRoom.tsx`) so
+ * both that page and the go/[door] route read the one config array. Every
+ * literal call site (`putAction(door.adminPath, "publish")` etc.) is
+ * unmoved text, only re-homed into named exports — `tests/rooms-card.
+ * test.ts`'s own source pins read the same bytes either way. The one row
+ * addition — a quiet "Room link" under the state line — rides as a THIRD
+ * child of the `<li>` (its own `<span className="kit-row-link">`, never
+ * inside the first span the state-line test pins, never inside
+ * `kit-rows-end` the two-control test pins).
  */
 
 export interface DoorConfig {
@@ -47,6 +62,16 @@ export interface DoorConfig {
    *  "/api/admin/stage1" */
   adminPath: string;
 }
+
+/* TASK-481's real, current config — moved here from `SiteReadingRoom.tsx`
+   (TASK-486) so `/a/site/reading/go/[door]` reads the SAME array, never a
+   second copy of the four doors. */
+export const DOORS: DoorConfig[] = [
+  { id: "housewarming", label: "Housewarming · 12:12", adminPath: "/api/admin/housewarming-door" },
+  { id: "stage1", label: "Reading · 1:11", adminPath: "/api/admin/stage1" },
+  { id: "stage2", label: "Book Talk · 2:22", adminPath: "/api/admin/stage2" },
+  { id: "qa", label: "Q&A · 3:33", adminPath: "/api/admin/qa-door" },
+];
 
 export interface DoorRowState {
   phase: "closed" | "prepared" | "published";
@@ -69,6 +94,12 @@ const STATE_WORDS: Record<DoorRowState["phase"], string> = {
 };
 
 const BUSY_WORDS: Record<Exclude<DoorBusy, null>, string> = { open: "Opening…", close: "Closing…" };
+
+/** The one Jitsi hash every camera link on this card (and the go/[door]
+ *  page) carries — a single join point so the flags never drift apart. */
+export function jitsiRoomUrl(state: { jitsiDomain: string; room: string }): string {
+  return `https://${state.jitsiDomain}/${state.room}#config.p2p.enabled=false&config.showChatPermissionsModeratorSetting=true`;
+}
 
 export interface DoorRowProps {
   door: DoorConfig;
@@ -107,7 +138,7 @@ export function DoorRow({ door, state, busy, error, onOpen, onClose }: DoorRowPr
   const joinControl = state?.room ? (
     <a
       className="kit-btn kit-btn-second kit-btn-sm"
-      href={`https://${state.jitsiDomain}/${state.room}#config.p2p.enabled=false&config.showChatPermissionsModeratorSetting=true`}
+      href={jitsiRoomUrl({ jitsiDomain: state.jitsiDomain, room: state.room })}
       target="_blank"
       rel="noreferrer"
     >
@@ -130,6 +161,15 @@ export function DoorRow({ door, state, busy, error, onOpen, onClose }: DoorRowPr
       <span className="kit-rows-end">
         {lifecycleControl}
         {joinControl}
+      </span>
+      {/* TASK-486: the quiet one-tap email link, under the state line but
+         OUTSIDE both the words span (the state-line test pins that span
+         to exactly <b>/<em>) and kit-rows-end (the two-control test pins
+         that span to exactly two controls) — its own third child, its own
+         grid cell (kit.css's `.kit-rows>li` auto-places it under column
+         1, `.kit-rooms-card .kit-row-link` tightens the gap). */}
+      <span className="kit-row-link">
+        <a href={`/a/site/reading/go/${door.id}`}>Room link</a>
       </span>
     </li>
   );
@@ -175,19 +215,62 @@ async function putAction(adminPath: string, action: "prepare" | "publish" | "clo
   return { res, data } as { res: Response; data: { ok: boolean; phase?: DoorRowState["phase"]; room?: string | null; jitsiDomain?: string; reason?: string } | null };
 }
 
+/* TASK-486: the pure GET read every poll (RoomsCard's mount loop AND the
+   go/[door] page's own hook) shares — a plain read, never a mutation, so
+   an email scanner opening the go page's link is always safe. */
+export async function fetchDoorState(door: DoorConfig): Promise<DoorRowState | null> {
+  try {
+    const r = await fetch(door.adminPath, { cache: "no-store" });
+    const d = r.ok ? await r.json() : null;
+    if (d?.ok) return { phase: d.phase, room: d.room, jitsiDomain: d.jitsiDomain };
+  } catch {
+    /* the caller keeps the last-known truth */
+  }
+  return null;
+}
+
+export type DoorActionOutcome = { ok: true; state: DoorRowState } | { ok: false; reason: string };
+
+/* TASK-486: the ONE-CLICK OPEN chain, pulled out of the component's own
+   `open` callback so `useDoorRoom` (go/[door]) calls the exact same
+   publish-then-prepare-fallback logic — never a second copy of it. No
+   door id is ever special-cased here (door-agnostic, config-driven, same
+   as before this move). */
+export async function openDoor(door: DoorConfig): Promise<DoorActionOutcome> {
+  const first = await putAction(door.adminPath, "publish");
+  if (first.data?.ok) {
+    return { ok: true, state: { phase: first.data.phase!, room: first.data.room!, jitsiDomain: first.data.jitsiDomain! } };
+  }
+  /* the door refused publish from closed (Stage 1's own law, 409) —
+     prepare, then publish, in this SAME call */
+  const prepared = await putAction(door.adminPath, "prepare");
+  if (!prepared.data?.ok) {
+    return { ok: false, reason: prepared.data?.reason ?? `the room refused (${prepared.res.status})` };
+  }
+  const published = await putAction(door.adminPath, "publish");
+  if (published.data?.ok) {
+    return { ok: true, state: { phase: published.data.phase!, room: published.data.room!, jitsiDomain: published.data.jitsiDomain! } };
+  }
+  return { ok: false, reason: published.data?.reason ?? `the room refused (${published.res.status})` };
+}
+
+/** TASK-486: the close chain, same shape as `openDoor`. */
+export async function closeDoor(door: DoorConfig): Promise<DoorActionOutcome> {
+  const { res, data } = await putAction(door.adminPath, "close");
+  if (data?.ok) {
+    return { ok: true, state: { phase: data.phase!, room: data.room!, jitsiDomain: data.jitsiDomain! } };
+  }
+  return { ok: false, reason: data?.reason ?? `the room refused (${res.status})` };
+}
+
 export default function RoomsCard({ doors }: { doors: DoorConfig[] }) {
   const [states, setStates] = useState<Record<string, DoorRowState | null>>({});
   const [busy, setBusy] = useState<Record<string, DoorBusy>>({});
   const [errors, setErrors] = useState<Record<string, string | null>>({});
 
   const refresh = useCallback(async (door: DoorConfig) => {
-    try {
-      const r = await fetch(door.adminPath, { cache: "no-store" });
-      const d = r.ok ? await r.json() : null;
-      if (d?.ok) setStates((s) => ({ ...s, [door.id]: { phase: d.phase, room: d.room, jitsiDomain: d.jitsiDomain } }));
-    } catch {
-      /* the rows keep the last-known truth */
-    }
+    const s = await fetchDoorState(door);
+    if (s) setStates((prev) => ({ ...prev, [door.id]: s }));
   }, []);
 
   useEffect(() => {
@@ -210,27 +293,11 @@ export default function RoomsCard({ doors }: { doors: DoorConfig[] }) {
       setBusy((b) => ({ ...b, [door.id]: "open" }));
       setErrors((e) => ({ ...e, [door.id]: null }));
       try {
-        const first = await putAction(door.adminPath, "publish");
-        if (first.data?.ok) {
-          setStates((s) => ({ ...s, [door.id]: { phase: first.data!.phase!, room: first.data!.room!, jitsiDomain: first.data!.jitsiDomain! } }));
-          return;
-        }
-        /* the door refused publish from closed (Stage 1's own law, 409) —
-           prepare, then publish, in this SAME click */
-        const prepared = await putAction(door.adminPath, "prepare");
-        if (!prepared.data?.ok) {
-          setErrors((e) => ({ ...e, [door.id]: prepared.data?.reason ?? `the room refused (${prepared.res.status})` }));
-          await refresh(door);
-          return;
-        }
-        const published = await putAction(door.adminPath, "publish");
-        if (published.data?.ok) {
-          setStates((s) => ({
-            ...s,
-            [door.id]: { phase: published.data!.phase!, room: published.data!.room!, jitsiDomain: published.data!.jitsiDomain! },
-          }));
+        const outcome = await openDoor(door);
+        if (outcome.ok) {
+          setStates((s) => ({ ...s, [door.id]: outcome.state }));
         } else {
-          setErrors((e) => ({ ...e, [door.id]: published.data?.reason ?? `the room refused (${published.res.status})` }));
+          setErrors((e) => ({ ...e, [door.id]: outcome.reason }));
           await refresh(door);
         }
       } catch {
@@ -248,11 +315,11 @@ export default function RoomsCard({ doors }: { doors: DoorConfig[] }) {
       setBusy((b) => ({ ...b, [door.id]: "close" }));
       setErrors((e) => ({ ...e, [door.id]: null }));
       try {
-        const { res, data } = await putAction(door.adminPath, "close");
-        if (data?.ok) {
-          setStates((s) => ({ ...s, [door.id]: { phase: data.phase!, room: data.room!, jitsiDomain: data.jitsiDomain! } }));
+        const outcome = await closeDoor(door);
+        if (outcome.ok) {
+          setStates((s) => ({ ...s, [door.id]: outcome.state }));
         } else {
-          setErrors((e) => ({ ...e, [door.id]: data?.reason ?? `the room refused (${res.status})` }));
+          setErrors((e) => ({ ...e, [door.id]: outcome.reason }));
           await refresh(door);
         }
       } catch {

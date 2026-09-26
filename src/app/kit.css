@@ -356,6 +356,22 @@
    is scoped OFF for .kit-rooms-card alone; every other .kit-rows keeps
    its top border. */
 .kit-rooms-card .kit-rows{border-top:none}
+/* TASK-486 (block 968,624+) — Love's one-tap email links: a quiet "Room
+   link" under each row's state line, so the Admiral or Love can copy the
+   go/[door] address straight off this card. It rides as the row's own
+   THIRD `<li>` child (never inside kit-rows-end's two-control cluster,
+   never inside the words span the state-line test pins) — `.kit-rows>li`'s
+   shared 2-column grid auto-places a bare third child under column 1, this
+   rule only tightens the row gap the shared `gap:16px` would otherwise
+   leave above it and sizes the link down to a quiet, secondary size. */
+.kit-rooms-card .kit-row-link{margin-top:-8px;font-size:.78rem}
+.kit-rooms-card .kit-row-link a{color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+/* TASK-486 — the go/[door] page itself: one action column, every button
+   full width (a thumb target at 390px, opened straight off an email link),
+   no new per-page style object — the same kit.css cascade every other
+   card rides. */
+.kit-go-room-actions{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.kit-go-room-actions .kit-btn{width:100%;box-sizing:border-box;text-align:center}
 /* TASK-467 (block 968,561) — the Reading Day brick's own card, the same
    stacking law as kit-stage1-card just above (measured: a wide button
    squeezed into the shared two-column grid clipped against the card's
