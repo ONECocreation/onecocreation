@@ -50,7 +50,6 @@ function bodyProps(overrides: Partial<ReadingDayBodyProps>): ReadingDayBodyProps
     encoreEntitled: false,
     encoreFloor: ENCORE_FLOOR,
     qaEntitled: false,
-    qaRoomHref: "/rooms/inner-sanctum",
     qaOffer: QA_OFFER_LIVE,
     ...overrides,
   };

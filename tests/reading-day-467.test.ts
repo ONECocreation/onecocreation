@@ -232,7 +232,6 @@ function bodyProps(overrides: Partial<ReadingDayBodyProps>): ReadingDayBodyProps
     encoreEntitled: false,
     encoreFloor: ENCORE_FLOOR,
     qaEntitled: false,
-    qaRoomHref: "/rooms/inner-sanctum",
     qaOffer: QA_OFFER_LIVE,
     ...overrides,
   };
@@ -249,7 +248,7 @@ describe("ReadingDayBody — the three rows carry their own computed times and n
     expect(html).toContain(clockWords(ENCORE_MS, TZ));
     expect(html).toContain(clockWords(QA_MS, TZ));
     expect(html).toContain("The Reading");
-    expect(html).toContain("The Encore in the Playground");
+    expect(html).toContain("The book talk");
     expect(html).toContain("The Q&amp;A with Love");
   });
 });
@@ -284,13 +283,13 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
       }
 
       if (encoreEntitled) {
-        expect(html).toContain("Join the Playground");
-        expect(html).not.toContain("</svg>Unlock the Encore<");
+        expect(html).toContain("Go to the book talk");
+        expect(html).not.toContain("</svg>Unlock the book talk<");
       } else {
-        expect(html).toContain("</svg>Unlock the Encore<"); // the visible label, right after the lock glyph
-        expect(html).toContain(`aria-label="Unlock the Encore with ${ENCORE_FLOOR.name}"`); // the fuller words, for a screen reader
+        expect(html).toContain("</svg>Unlock the book talk<"); // the visible label, right after the lock glyph
+        expect(html).toContain(`aria-label="Unlock the book talk with ${ENCORE_FLOOR.name}"`); // the fuller words, for a screen reader
         expect(html).toContain(`Comes with ${ENCORE_FLOOR.name} and up.`); // and in PLAIN sighted text, right above
-        expect(html).not.toContain("Join the Playground");
+        expect(html).not.toContain("Go to the book talk");
       }
 
       if (qaEntitled) {
@@ -322,7 +321,7 @@ describe("ReadingDayBody — a locked row names who it's for even when the store
 
   it("both unlock labels name their part, the same shape", () => {
     const html = render(bodyProps({ encoreEntitled: false, qaEntitled: false }));
-    expect(html).toContain("</svg>Unlock the Encore<");
+    expect(html).toContain("</svg>Unlock the book talk<");
     expect(html).toContain("</svg>Unlock the Q&amp;A<");
   });
 });
@@ -354,8 +353,8 @@ describe("ReadingDayBody — TASK-471 (block 968,624): the $11 one-time pass, wh
     expect(STAGE2_MIN_TIER).toBe("A");
     expect(tierSatisfies("A", STAGE2_MIN_TIER)).toBe(true);
     const html = render(bodyProps({ encoreEntitled: tierSatisfies("A", STAGE2_MIN_TIER) }));
-    expect(html).toContain("Join the Playground");
-    expect(html).not.toContain("Unlock the Encore");
+    expect(html).toContain("Go to the book talk");
+    expect(html).not.toContain("Unlock the book talk");
   });
 });
 
@@ -374,11 +373,11 @@ describe("ReadingDayBody — the lock icon is aria-hidden, decorative only; the 
     const locks = html.match(/class="kit-lock-icon"/g) ?? [];
     expect(locks.length).toBe(2);
     expect(html).toContain('aria-hidden="true"');
-    // the Encore's label names the part ("Unlock the Encore", matching
+    // the Encore's label names the part ("Unlock the book talk", matching
     // "Unlock the Q&A"); the tier's name lives in the row's own quiet line
     // (button text never wraps, R-071; "Unlock with {name}" measured wider
     // than the card, see the register)
-    expect(html).toContain("</svg>Unlock the Encore<");
+    expect(html).toContain("</svg>Unlock the book talk<");
     expect(html).toContain(`Comes with ${ENCORE_FLOOR.name} and up.`);
     // the Q&A's own label carries the full meaning right in its own words
     expect(html).toContain("Unlock the Q&amp;A");

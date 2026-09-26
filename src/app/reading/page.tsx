@@ -8,17 +8,21 @@ import SiteFooter from "@/components/SiteFooter";
 import PaletteVars from "@/components/PaletteVars";
 import CosmicSky from "@/components/CosmicSky";
 import ReadingHeroCountdown from "@/components/ReadingHeroCountdown";
-import ReadingStage from "@/components/reading/ReadingStage";
+import ReadingStageDeck from "@/components/reading/ReadingStageDeck";
+import { ReadingPartProvider } from "@/components/reading/ReadingPartContext";
 import ReadingSignInBox from "@/components/rooms/ReadingSignInBox";
 import ReadingDay from "@/components/reading/ReadingDay";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
-import { HOUSEWARMING_TIME } from "@/lib/reading-day";
+import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt, clockWords } from "@/lib/reading-day";
+import { encoreFloorDoor, qaDoor } from "@/lib/reading-day-doors";
 import { getStage1State } from "@/lib/stage1";
+import { getStage2State } from "@/lib/stage2";
 import { STAGE2_FLOOR_NAME, STAGE2_MIN_TIER } from "@/lib/stage2-access";
 import { tierForSubject } from "@/lib/member-tier";
-import { tierSatisfies } from "@/lib/entitlement";
+import { tierSatisfies, type Tier } from "@/lib/entitlement";
+import { defaultReadingPart, type PartDoorInfo, type ReadingPart } from "@/lib/reading-parts";
 
 /**
  * TASK-391 (block 968,088) + TASK-438 (block 968,222; HOLD LIFTED block
@@ -61,6 +65,21 @@ import { tierSatisfies } from "@/lib/entitlement";
  * uses — so `getSiteConfig()` and `getStage1State()` run fresh on every
  * request and a saved schedule change (or a Publish) shows on the very
  * next reload.
+ *
+ * TASK-473 (block 968,624, the Admiral's flow ruling) — "for the end user
+ * they will stay on /reading ... users can have a button that shows the
+ * next room is open." The whole page now sits inside ONE
+ * `ReadingPartProvider` (client selection state, shared by the stage band
+ * and the agenda brick below it — the one client boundary a server page
+ * needs for this). `ReadingStageDeck` replaces the bare `ReadingStage`
+ * mount: it shows whichever of the four parts is selected, defaulting
+ * (server-computed, once, at first paint) to the part whose door is open
+ * — the latest opened — else the next part by time (`defaultReadingPart`,
+ * reading-parts.ts). Parts 3 and 4 get their own small screens
+ * (`ReadingStagePart3`/`4`) fed the same server-derived entitlement/price
+ * data the agenda rows already use (`encoreFloorDoor()`/`qaDoor()` —
+ * called again here, not threaded through ReadingDay.tsx, so that
+ * component's own tested shape stays untouched).
  */
 
 export const metadata: Metadata = {
@@ -113,157 +132,209 @@ export default async function ReadingPage() {
      name the next reading, never the one that just ended (a visitor who
      loaded before or during the window holds TODAY'S occurrence in next) */
   const following = next ? nextReading(schedule, next.endsAtMs) : null;
-  const stage1Phase = (await getStage1State()).phase;
+  const stage1State = await getStage1State();
+  const stage1Phase = stage1State.phase;
 
   const recurrenceLabel = next ? weekdayName(next.startsAtMs, schedule.tz) : null;
 
-  /* TASK-466 (block 968,561, ruling 1) — the ended card's "Watch part two
-     in the Playground" link needs to know whether THIS visitor already
-     clears the Playground's own floor, so someone below it sees the lock
-     + the floor's name instead of a bare door. Computed the exact way
+  /* TASK-466 (block 968,561, ruling 1) — the ended card's "Watch part two"
+     link needs to know whether THIS visitor already clears the book
+     talk's own floor, so someone below it sees the lock + the floor's
+     name instead of a bare door. Computed the exact way
      `/api/stage2/route.ts`'s GET does (`tierForSubject` then
      `tierSatisfies` against `STAGE2_MIN_TIER`, the one place that floor
      is written) — never re-implemented, and it fails CLOSED: any throw
-     reads locked. This is display only; the link always goes to
-     /reading/playground, which re-decides for real (the same "words, not
-     a gate" idiom the Playground page's own band already keeps). */
+     reads locked. */
   const floorName = STAGE2_FLOOR_NAME; // TASK-465: the floor name comes from stage2-access.ts only
-  let playgroundLocked = true;
+  let tier: Tier | null = null;
   if (session) {
     try {
-      const tier = await tierForSubject(`${session.handle}@${session.space}`);
-      playgroundLocked = !tierSatisfies(tier, STAGE2_MIN_TIER);
+      tier = await tierForSubject(`${session.handle}@${session.space}`);
     } catch {
-      playgroundLocked = true;
+      tier = null; // fail closed — a throw is never read as an open door
     }
   }
-  const playgroundLock = { locked: playgroundLocked, floorName };
+  const encoreEntitled = tierSatisfies(tier, STAGE2_MIN_TIER);
+  const playgroundLock = { locked: !encoreEntitled, floorName };
+
+  /* TASK-473 (block 968,624) — Part 3's own price/door data, the SAME
+     derivation ReadingDay.tsx already calls (never re-derived; called
+     again here rather than threaded through that file so its own tested
+     prop shape stays untouched). Part 4's `qaOffer` too — its own gate
+     (owned or not) now comes from `/api/qa-door`'s wire, client-side
+     (ReadingStageDoor), never a server tier read on this page. */
+  const [encoreFloor, qaOffer] = await Promise.all([encoreFloorDoor(), qaDoor()]);
+
+  /* TASK-473 — the default selection: "the part whose door is open (the
+     latest opened), else the next part by time" (ACTIONS.md item 2).
+     Stage 2's own state is read directly (server function, never the
+     public route) so `openedAtMs` is a real timestamp, not a guess. Part
+     4's own door (T-475, /api/qa-door) has no server-side reader yet —
+     course change, block 968,624 — so it reads closed here until that
+     lane lands; the client's own poll (ReadingStageDoor/
+     ReadingDayOpenNotice) picks it up live once it exists. */
+  const encoreStartsAtMs = next ? sameDayAt(next.startsAtMs, schedule.tz, ENCORE_TIME) : null;
+  const qaStartsAtMs = next ? sameDayAt(next.startsAtMs, schedule.tz, QA_TIME) : null;
+  const housewarmingStartsAtMs = next ? sameDayAt(next.startsAtMs, schedule.tz, HOUSEWARMING_TIME) : null;
+  let defaultPart: ReadingPart = 1;
+  if (next && encoreStartsAtMs !== null && qaStartsAtMs !== null && housewarmingStartsAtMs !== null) {
+    const stage2State = await getStage2State();
+    const doors: PartDoorInfo[] = [
+      { part: 1, title: "The Housewarming", startsAtMs: housewarmingStartsAtMs, open: stage1Phase === "published", openedAtMs: stage1State.publishedAtMs },
+      { part: 2, title: "The Reading", startsAtMs: next.startsAtMs, open: stage1Phase === "published", openedAtMs: stage1State.publishedAtMs },
+      { part: 3, title: "The book talk", startsAtMs: encoreStartsAtMs, open: stage2State.phase === "published", openedAtMs: stage2State.publishedAtMs },
+      { part: 4, title: "The Q&A", startsAtMs: qaStartsAtMs, open: false, openedAtMs: null },
+    ];
+    defaultPart = defaultReadingPart(doors, asOfMs);
+  }
 
   return (
     <>
       <SiteHeader />
       <PaletteVars />
-      <main className="center kitx-balanced">
-        {/* THE STAGE BAND — the approved round-3 look: the house living
-            sky + the home hero's own nebula (one shared kit rule), the
-            derived kicker, the blocks countdown, and the stage itself. */}
-        <section className="keep-dark sky-veil sky-stage sky-nebula" id="stage">
-          <CosmicSky />
-          <div className="wrap kitx-flow">
-            <p className="kicker">{recurrenceLabel ? `Live every ${recurrenceLabel} · free` : "Readings with Love · free"}</p>
-            <h1 className="kit-h1">Read with Love</h1>
-            {/* the countdown rides INSIDE the island now (K122 item 6a —
-                the server-composed-nodes idiom): only the island knows the
-                phase, so only it can stop the counting when the stage
-                goes live */}
-            <ReadingStage
-              initialPhase={stage1Phase}
-              signedIn={!!session}
-              next={next}
-              following={following}
-              scheduleTz={schedule.tz}
-              jitsiDomain={config.meeting.jitsiDomain}
-              /* S8 (block 968,624): the Housewarming's own schedule variant
-                 — same weekday/tz/durationMin/on, `time` swapped to
-                 HOUSEWARMING_TIME — never the raw `schedule`/`next` (those
-                 still drive Row 2, ReadingDayBody.tsx, and the ended
-                 card's date words, unchanged). */
-              countdown={
-                <ReadingHeroCountdown
-                  schedule={{ ...schedule, time: HOUSEWARMING_TIME }}
-                  next={housewarmingNext}
-                  asOfMs={asOfMs}
-                  variant="blocks"
-                />
-              }
-              countdownWhen={
-                <ReadingHeroCountdown
-                  schedule={{ ...schedule, time: HOUSEWARMING_TIME }}
-                  next={housewarmingNext}
-                  asOfMs={asOfMs}
-                  variant="blocks"
-                  whenOnly
-                />
-              }
-              playgroundLock={playgroundLock}
-            />
-          </div>
-        </section>
+      {/* TASK-473 (block 968,624) — ONE selection, shared by the stage band
+          and the agenda below it; the ONE client boundary this server page
+          needs. Default computed above, once, at first paint. */}
+      <ReadingPartProvider defaultPart={defaultPart}>
+        <main className="center kitx-balanced">
+          {/* THE STAGE BAND — the approved round-3 look: the house living
+              sky + the home hero's own nebula (one shared kit rule), the
+              derived kicker, the blocks countdown, and the stage itself. */}
+          <section className="keep-dark sky-veil sky-stage sky-nebula" id="stage">
+            <CosmicSky />
+            <div className="wrap kitx-flow">
+              <p className="kicker">{recurrenceLabel ? `Live every ${recurrenceLabel} · free` : "Readings with Love · free"}</p>
+              <h1 className="kit-h1">Read with Love</h1>
+              {/* the countdown rides INSIDE the island now (K122 item 6a —
+                  the server-composed-nodes idiom): only the island knows the
+                  phase, so only it can stop the counting when the stage
+                  goes live. TASK-473: the deck shows whichever of the four
+                  parts is selected — "the video changes to the correct
+                  one" (the Admiral's own words). */}
+              <ReadingStageDeck
+                stage1={{
+                  initialPhase: stage1Phase,
+                  signedIn: !!session,
+                  next,
+                  following,
+                  scheduleTz: schedule.tz,
+                  jitsiDomain: config.meeting.jitsiDomain,
+                  /* S8 (block 968,624): the Housewarming's own schedule
+                     variant — same weekday/tz/durationMin/on, `time`
+                     swapped to HOUSEWARMING_TIME — never the raw
+                     `schedule`/`next` (those still drive Row 2,
+                     ReadingDayBody.tsx, and the ended card's date words,
+                     unchanged). */
+                  countdown: (
+                    <ReadingHeroCountdown
+                      schedule={{ ...schedule, time: HOUSEWARMING_TIME }}
+                      next={housewarmingNext}
+                      asOfMs={asOfMs}
+                      variant="blocks"
+                    />
+                  ),
+                  countdownWhen: (
+                    <ReadingHeroCountdown
+                      schedule={{ ...schedule, time: HOUSEWARMING_TIME }}
+                      next={housewarmingNext}
+                      asOfMs={asOfMs}
+                      variant="blocks"
+                      whenOnly
+                    />
+                  ),
+                  playgroundLock,
+                }}
+                part3={{
+                  jitsiDomain: config.meeting.jitsiDomain,
+                  encoreFloor,
+                  whenWords: encoreStartsAtMs !== null ? clockWords(encoreStartsAtMs, schedule.tz) : null,
+                }}
+                part4={{
+                  jitsiDomain: config.meeting.jitsiDomain,
+                  qaOffer,
+                  whenWords: qaStartsAtMs !== null ? clockWords(qaStartsAtMs, schedule.tz) : null,
+                }}
+              />
+            </div>
+          </section>
 
-        {/* SIGN ME UP · KEEP ME POSTED (TASK-468, block 968,561) — one box,
-            never gated on schedule.on/next (K122 item 13's law carries
-            over: the one door that works without a date); email + code,
-            never a navigation away from /reading. */}
-        <section className="kitx-section kitx-section-first">
-          <div className="wrap">
-            <ReadingSignInBox />
-          </div>
-        </section>
+          {/* SIGN ME UP · KEEP ME POSTED (TASK-468, block 968,561) — one box,
+              never gated on schedule.on/next (K122 item 13's law carries
+              over: the one door that works without a date); email + code,
+              never a navigation away from /reading. */}
+          <section className="kitx-section kitx-section-first">
+            <div className="wrap">
+              <ReadingSignInBox />
+            </div>
+          </section>
 
-        {/* THE DAY'S AGENDA (TASK-467, block 968,561) — Love's own words on
-            the call: "put this whole room brick right in the other on the
-            weekly reading page … with three buttons of the times." One
-            bare mount, no props: ReadingDay reads the session, the
-            schedule and the live store on its own — every decision behind
-            the three rows lives in its own files, never here. */}
-        <section className="kitx-section">
-          <div className="wrap">
-            <ReadingDay />
-          </div>
-        </section>
+          {/* THE DAY'S AGENDA (TASK-467, block 968,561) — Love's own words on
+              the call: "put this whole room brick right in the other on the
+              weekly reading page … with three buttons of the times." One
+              bare mount, no props: ReadingDay reads the session, the
+              schedule and the live store on its own — every decision behind
+              the four rows lives in its own files, never here. */}
+          <section className="kitx-section">
+            <div className="wrap">
+              <ReadingDay />
+            </div>
+          </section>
 
-        {/* WHAT YOU WILL EXPERIENCE — M3's three lines: the weekday
-            DERIVED (never the mock's literal), the clock living once at
-            the top, the pass price from the live store item. */}
-        <section className="kitx-section">
-          <div className="wrap kitx-flow">
-            <h2 className="kit-h2">What you will experience</h2>
-            <ul className="kit-list">
-              <li>{recurrenceLabel ? `Every ${recurrenceLabel}, a live reading from Love's book` : "A live reading from Love's book"}</li>
-              <li>Free to watch from anywhere. Nothing to install</li>
-              {/* T-454: the real floor, in the Playground page's own words —
-                  "any membership" read true to a free Heart Field member who
-                  then met the paid gate (this page stays free of the paywall's
-                  logic, so the name rides as words, as the Playground's list does).
-                  TASK-465 (block 968,561): the floor name is DERIVED off
-                  Stage 2's own floor (stage2-access.ts's STAGE2_FLOOR_NAME —
-                  a plain name read, no entitlement lookup imported here
-                  directly, keeping this page's own house law clean) — the
-                  Admiral raised the floor to Observer, so a literal
-                  "Weekly Intuitive" would now be wrong. */}
-              {/* TASK-471/472 (block 968,624): the one-week-pass clause is
-                  retired — that was stage2-access.ts's shared membership
-                  taster (its own derivation lives in week-pass.ts), never
-                  offered on /reading any more (reading-day-doors.ts's own
-                  docblock). The Encore row below names the book talk's
-                  OWN pass instead. */}
-              <li>{`Join the discussion after: the Playground, a live group video call with Love, with every membership from ${STAGE2_FLOOR_NAME} up`}</li>
-            </ul>
-          </div>
-        </section>
+          {/* WHAT YOU WILL EXPERIENCE — M3's three lines: the weekday
+              DERIVED (never the mock's literal), the clock living once at
+              the top, the pass price from the live store item. */}
+          <section className="kitx-section">
+            <div className="wrap kitx-flow">
+              <h2 className="kit-h2">What you will experience</h2>
+              <ul className="kit-list">
+                <li>{recurrenceLabel ? `Every ${recurrenceLabel}, a live reading from Love's book` : "A live reading from Love's book"}</li>
+                <li>Free to watch from anywhere. Nothing to install</li>
+                {/* T-454: the real floor, in the book talk's own words —
+                    "any membership" read true to a free Heart Field member who
+                    then met the paid gate (this page stays free of the paywall's
+                    logic, so the name rides as words). TASK-465 (block
+                    968,561): the floor name is DERIVED off Stage 2's own
+                    floor (stage2-access.ts's STAGE2_FLOOR_NAME — a plain
+                    name read, no entitlement lookup imported here directly,
+                    keeping this page's own house law clean) — the Admiral
+                    raised the floor to Observer, so a literal "Weekly
+                    Intuitive" would now be wrong. */}
+                {/* TASK-471/472 (block 968,624): the one-week-pass clause is
+                    retired — that was stage2-access.ts's shared membership
+                    taster (its own derivation lives in week-pass.ts), never
+                    offered on /reading any more (reading-day-doors.ts's own
+                    docblock). The book talk row below names its own pass
+                    instead. TASK-473 (block 968,624): "the Playground" word
+                    is retired from this line too — no "Encore"/"Playground"
+                    survives anywhere in /reading's visible copy. */}
+                <li>{`Join the discussion after: a live group video call with Love, with every membership from ${STAGE2_FLOOR_NAME} up`}</li>
+              </ul>
+            </div>
+          </section>
 
-        {/* THE HOST — the real portrait beside her words, and the one
-            bottom button back UP to the stage (Stage 1, never Stage 2). */}
-        <section className="kitx-section">
-          <div className="wrap">
-            <div className="kitx-host">
-              <div className="kitx-photo">
-                <img src="/images/love-sidelook.webp" alt="Love" width={519} height={676} />
-              </div>
-              <div className="kit-stack">
-                <h2 className="kit-h2">Love</h2>
-                <p className="kit-text-quiet">Founder of One Cocreation</p>
-                <p className="kit-body">Join me weekly for a live book reading in my own room.</p>
-                <div className="kit-btn-row">
-                  <a className="kit-btn kit-btn-main kit-btn-sm" href="#stage">
-                    Back to the reading
-                  </a>
+          {/* THE HOST — the real portrait beside her words, and the one
+              bottom button back UP to the stage (Stage 1, never Stage 2). */}
+          <section className="kitx-section">
+            <div className="wrap">
+              <div className="kitx-host">
+                <div className="kitx-photo">
+                  <img src="/images/love-sidelook.webp" alt="Love" width={519} height={676} />
+                </div>
+                <div className="kit-stack">
+                  <h2 className="kit-h2">Love</h2>
+                  <p className="kit-text-quiet">Founder of One Cocreation</p>
+                  <p className="kit-body">Join me weekly for a live book reading in my own room.</p>
+                  <div className="kit-btn-row">
+                    <a className="kit-btn kit-btn-main kit-btn-sm" href="#stage">
+                      Back to the reading
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
-      </main>
+          </section>
+        </main>
+      </ReadingPartProvider>
       {/* FOOTER — the real SiteFooter, exactly as home mounts it
           (src/app/page.tsx:65/:88); never a page-local reimplementation. */}
       <SiteFooter />

@@ -39,10 +39,13 @@ describe("/reading's viewer survives the Playground banner flipping (the rejoin 
     expect(src).not.toContain("onViewerFailed");
   });
 
-  it("a failed banner read keeps the last-known state (it used to write undefined — a re-render)", async () => {
+  it("TASK-473 (block 968,624): the Playground banner and its own /api/stage2 poll are retired from ReadingStage.tsx — the agenda's own notice line (ReadingDayOpenNotice) does that job now", async () => {
     const src = await read("src/components/reading/ReadingStage.tsx");
-    expect(src).toContain("if (alive && d?.ok) setPlaygroundOpen(d.open === true);");
-    expect(src).not.toContain("setPlaygroundOpen(d?.ok && d.open === true)");
+    expect(src).not.toContain("setPlaygroundOpen");
+    expect(src).not.toContain("playgroundOpen");
+    expect(src).not.toContain("Want an encore?");
+    const notice = await read("src/components/reading/ReadingDayOpenNotice.tsx");
+    expect(notice).toContain('fetch("/api/stage2"');
   });
 });
 

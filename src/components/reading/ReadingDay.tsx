@@ -8,7 +8,6 @@ import { STAGE2_MIN_TIER } from "@/lib/stage2-access";
 import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt } from "@/lib/reading-day";
 import { encoreFloorDoor, qaDoor } from "@/lib/reading-day-doors";
 import { qaEntitled } from "@/lib/qa-entitlement";
-import { ROOMS } from "@/lib/matrix-rooms";
 import ReadingDayBody from "./ReadingDayBody";
 
 /**
@@ -67,9 +66,6 @@ export default async function ReadingDay() {
      order lookup even runs, same as tierSatisfies(null, "C") before. */
   const hasQaAccess = subject ? await qaEntitled(subject, tier) : false;
 
-  const qaRoom = ROOMS.find((r) => r.kind === "community" && r.minTier === "C") ?? null;
-  const qaRoomHref = qaRoom ? `/rooms/${qaRoom.id.slice(1, qaRoom.id.indexOf(":"))}` : "/memberships";
-
   return (
     <ReadingDayBody
       tz={schedule.tz}
@@ -81,7 +77,6 @@ export default async function ReadingDay() {
       encoreEntitled={tierSatisfies(tier, STAGE2_MIN_TIER)}
       encoreFloor={encoreFloor}
       qaEntitled={hasQaAccess}
-      qaRoomHref={qaRoomHref}
       qaOffer={qaOffer}
     />
   );

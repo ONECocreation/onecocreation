@@ -2,6 +2,8 @@ import Link from "next/link";
 import { clockWords } from "@/lib/reading-day";
 import type { EncoreFloorDoor, QaDoor } from "@/lib/reading-day-doors";
 import ReadingDayUnlockButton from "./ReadingDayUnlockButton";
+import ReadingPartSelectLink from "./ReadingPartSelectLink";
+import ReadingDayOpenNotice from "./ReadingDayOpenNotice";
 
 /**
  * THE READING DAY BRICK (TASK-467, block 968,561; TASK-469, block
@@ -30,6 +32,18 @@ import ReadingDayUnlockButton from "./ReadingDayUnlockButton";
  * never `/rooms/heart-field` — that door is retired from both of these
  * rows. A signed-out visitor still meets the sign-up anchor, unchanged.
  *
+ * TASK-473 (block 968,624, the Admiral's flow ruling) — "the agenda rows'
+ * buttons ARE the time buttons": every row's own control now picks that
+ * part for the top screen (`ReadingPartSelectLink`, an in-page `#stage`
+ * anchor that also flips the shared selection — no page change), never a
+ * Link to `/reading/playground` or to the Q&A's room directly. Row 3's
+ * title drops "the Encore in the Playground" for the neutral "The book
+ * talk" (no "Encore"/"Playground" word survives anywhere on /reading);
+ * its internal ids (`encoreFloor`, `encoreEntitled`, `ENCORE_TIME`) are
+ * UNCHANGED — only visible copy moved. One quiet line above the rows
+ * (`ReadingDayOpenNotice`) names whichever door just opened elsewhere —
+ * "one control per row" stays true; the notice is not a second control.
+ *
  * PURE presentation over already-derived props — no fetch, no
  * `Date.now()`, renderToStaticMarkup-testable for every state
  * (`tests/reading-day-467.test.ts`, `tests/housewarming-469.test.ts`).
@@ -53,9 +67,6 @@ export interface ReadingDayBodyProps {
   encoreEntitled: boolean;
   encoreFloor: EncoreFloorDoor;
   qaEntitled: boolean;
-  /** the tier-C community room's own address (derived in the wrapper from
-   *  matrix-rooms.ts, never a literal room path here) */
-  qaRoomHref: string;
   qaOffer: QaDoor;
 }
 
@@ -69,16 +80,19 @@ export default function ReadingDayBody({
   encoreEntitled,
   encoreFloor,
   qaEntitled,
-  qaRoomHref,
   qaOffer,
 }: ReadingDayBodyProps) {
   return (
     <div className="card room-card kit-day">
       <h2 className="kit-h2">The day&apos;s agenda</h2>
+      <ReadingDayOpenNotice />
       <ul className="kit-rows" aria-label="The day's agenda">
         {/* ROW 1 — the Housewarming (TASK-469, block 968,567): free, no
             lock, before the reading, the same door as Row 2 (the two-way
-            call itself is Love's own /a/studio action, no code here) */}
+            call itself is Love's own /a/studio action, no code here).
+            TASK-473: the button picks Part 1 for the top screen — the
+            SAME door as Row 2, so picking either just changes which
+            clock word is highlighted, never a different room. */}
         <li>
           <span>
             <b>{`${clockWords(housewarmingStartsAtMs, tz)} · The Housewarming`}</b>
@@ -86,9 +100,7 @@ export default function ReadingDayBody({
           </span>
           <span className="kit-rows-end">
             {signedIn ? (
-              <Link className="kit-btn kit-btn-main kit-btn-sm" href="#stage">
-                Back to the reading
-              </Link>
+              <ReadingPartSelectLink part={1}>Back to the reading</ReadingPartSelectLink>
             ) : (
               <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">
                 Sign me up
@@ -105,9 +117,7 @@ export default function ReadingDayBody({
           </span>
           <span className="kit-rows-end">
             {signedIn ? (
-              <Link className="kit-btn kit-btn-main kit-btn-sm" href="#stage">
-                Back to the reading
-              </Link>
+              <ReadingPartSelectLink part={2}>Back to the reading</ReadingPartSelectLink>
             ) : (
               <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">
                 Sign me up
@@ -116,10 +126,13 @@ export default function ReadingDayBody({
           </span>
         </li>
 
-        {/* ROW 3 — the Encore in the Playground */}
+        {/* ROW 3 — the book talk (TASK-473, block 968,624: neutral title,
+            no "Encore"/"Playground" word anywhere on /reading; the item
+            id, encoreFloor/encoreEntitled names and ENCORE_TIME constant
+            are UNCHANGED — only the visible words moved). */}
         <li>
           <span>
-            <b>{`${clockWords(encoreStartsAtMs, tz)} · The Encore in the Playground`}</b>
+            <b>{`${clockWords(encoreStartsAtMs, tz)} · The book talk`}</b>
             <em>A live group video call with Love, going deeper into the book.</em>
             {/* who it's for is always said; the price rides only when the
                 store answers one (Number One's review, block 968,561).
@@ -138,9 +151,9 @@ export default function ReadingDayBody({
           </span>
           <span className="kit-rows-end">
             {encoreEntitled ? (
-              <Link className="kit-btn kit-btn-main kit-btn-sm" href="/reading/playground">
-                Join the Playground
-              </Link>
+              /* TASK-473: picks Part 3 for the top screen, never a Link
+                 to /reading/playground (that address is retired here). */
+              <ReadingPartSelectLink part={3}>Go to the book talk</ReadingPartSelectLink>
             ) : (
               /* TASK-467: "Unlock with {name}" measured 258–328px at
                  kit-btn-sm (nowrap, R-071) — wider than the card's own
@@ -150,8 +163,8 @@ export default function ReadingDayBody({
                  button itself stays short and constant. */
               <ReadingDayUnlockButton
                 itemId={encoreFloor.itemId}
-                label="Unlock the Encore"
-                ariaLabel={`Unlock the Encore with ${encoreFloor.name}`}
+                label="Unlock the book talk"
+                ariaLabel={`Unlock the book talk with ${encoreFloor.name}`}
               />
             )}
           </span>
@@ -175,9 +188,10 @@ export default function ReadingDayBody({
           </span>
           <span className="kit-rows-end">
             {qaEntitled ? (
-              <Link className="kit-btn kit-btn-main kit-btn-sm" href={qaRoomHref}>
-                Join the Q&A
-              </Link>
+              /* TASK-473 (course change, block 968,624): picks Part 4 for
+                 the top screen, which mounts the room IN PLACE there
+                 (ReadingStageDoor, door="qa") — never a Link to /rooms. */
+              <ReadingPartSelectLink part={4}>Join the Q&A</ReadingPartSelectLink>
             ) : (
               <ReadingDayUnlockButton itemId={qaOffer.itemId} label="Unlock the Q&A" />
             )}

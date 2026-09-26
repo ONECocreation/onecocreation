@@ -6,6 +6,7 @@ import { cartridge } from "@/brand/cartridge";
 import { priceWords, type PriceLike } from "@/lib/money-words";
 import { useMoneyPrefer } from "@/lib/money-preference";
 import { bftDateTime, estimateHeightAt } from "@/lib/bb/bft";
+import { READING_BOOK_TALK_ITEM_ID, QA_ITEM_ID } from "@/lib/reading-day";
 
 /** TASK-173 — a recorded moment wears a stamp, never a dash: the BFT stamp
  *  when the chain tip answers (a calendar projection off the anchored model,
@@ -242,6 +243,17 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
     : { fiat: { amount: order.priceSnapshot.amount, currency: order.priceSnapshot.currency } };
   const receiptWords = priceWords(receiptPrice, { btc: true, card: true }, receiptPrefer);
 
+  /* TASK-473 (block 968,624) — NARROWED, per the brief's own words: "do a
+     'Back to the reading' link on the order page when the order contains
+     weekly-one-week or the Q&A pass." A purchase started from /reading
+     (the book talk's $11 pass, or the Q&A's one-time pass) lands here
+     after paying; this is the honest way back, independent of the site's
+     generic membership `door` (READING_ROOM_PATH, still `/rooms/heart-
+     field` — a different, wider mechanism this lane does not touch). */
+  const boughtReadingPass = order.lineItems.some(
+    (li) => li.itemId === READING_BOOK_TALK_ITEM_ID || li.itemId === QA_ITEM_ID,
+  );
+
   return (
     <div style={{ marginTop: 20, textAlign: "center" }}>
       <p style={{ margin: 0, textTransform: "uppercase", fontWeight: 700,
@@ -321,6 +333,12 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
           <p><a href={order.door} className="kit-btn kit-btn-main kit-btn-sm">Go to the Heart Field</a></p>
           <p className="kit-text-quiet">The reading and the Playground both open there.</p>
         </>
+      )}
+      {/* TASK-473 (block 968,624) — the reading day's own pass return, see
+          `boughtReadingPass` above. Design-drift ratchet: no new inline
+          style, the same centered inline-block .kit-btn pattern. */}
+      {settledFine && boughtReadingPass && (
+        <p><a href="/reading#stage" className="kit-btn kit-btn-main kit-btn-sm">Back to the reading</a></p>
       )}
       {/* the paid good itself — gold is right here, this IS the money's worth.
           Locked = the viewer isn't the buying tag (shared link, or signed
