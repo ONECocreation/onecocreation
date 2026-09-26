@@ -31,12 +31,88 @@ declare global {
   }
 }
 
+/**
+ * TASK-477 (block 968,624+, the Admiral's ruling): screen share is for the
+ * HOST only. Love hosts every /reading room from the direct
+ * meet.onecocreation.com link, never from this embed, so this embed is
+ * always the GUEST view there. The server's own house toolbar (the tail
+ * of live-config.js, ~line 250) is this list WITH 'desktop' — this is
+ * that same list minus 'desktop', nothing else changed: 'tileview' stays
+ * (ruling 1 — stage view by default, the tile-view button still offered,
+ * never forced), 'participants-pane' stays (ruling 3 — a hand-granted
+ * moderator still needs it to mute people and watch the roster).
+ */
+export const GUEST_TOOLBAR_BUTTONS = [
+  "camera",
+  "chat",
+  "fullscreen",
+  "hangup",
+  "microphone",
+  "participants-pane",
+  "raisehand",
+  "settings",
+  "tileview",
+  "toggle-camera",
+  "videoquality",
+  "select-background",
+] as const;
+
+/**
+ * TASK-477: the External API options object, pulled out pure so a test can
+ * pin its shape without booting a script tag or a DOM. `guestView` is the
+ * ONLY thing that changes the returned object; everything else is exactly
+ * what the component already built before this lane, so every caller that
+ * never passes it (every mount except /reading's) gets a byte-identical
+ * `configOverwrite` — no `toolbarButtons` key at all, same as today.
+ */
+export function jitsiEmbedOptions({
+  room,
+  parentNode,
+  displayName,
+  markUrl,
+  origin,
+  guestView,
+}: {
+  room: string;
+  parentNode: HTMLElement | null;
+  displayName?: string;
+  markUrl: string;
+  origin: string;
+  /** TASK-477: true only for the /reading guest mounts. */
+  guestView?: boolean;
+}): Record<string, unknown> {
+  return {
+    roomName: room,
+    parentNode,
+    width: "100%",
+    height: "100%",
+    userInfo: displayName ? { displayName } : undefined,
+    configOverwrite: {
+      prejoinConfig: { enabled: true },
+      disableDeepLinking: true,
+      defaultLogoUrl: markUrl,
+      ...(guestView ? { toolbarButtons: GUEST_TOOLBAR_BUTTONS } : {}),
+    },
+    interfaceConfigOverwrite: {
+      SHOW_JITSI_WATERMARK: false,
+      SHOW_WATERMARK_FOR_GUESTS: false,
+      SHOW_BRAND_WATERMARK: true,
+      BRAND_WATERMARK_LINK: origin,
+      DEFAULT_LOGO_URL: markUrl,
+      DEFAULT_WELCOME_PAGE_LOGO_URL: markUrl,
+      APP_NAME: "One Cocreation",
+      JITSI_WATERMARK_LINK: "",
+    },
+  };
+}
+
 export default function JitsiRoom({
   domain,
   room,
   displayName,
   onEnded,
   height = "72vh",
+  guestView,
 }: {
   domain: string;
   room: string;
@@ -50,6 +126,11 @@ export default function JitsiRoom({
    *  renders byte-identical without passing it — the classroom slot and
    *  /live pass their own to fit a smaller embed frame. */
   height?: string;
+  /** TASK-477: true only for the /reading guest mounts (ReadingStage.tsx,
+   *  ReadingStageDoor.tsx) — drops the screen-share button from the
+   *  toolbar (Love hosts from the direct link, not this embed). Every
+   *  other caller leaves this unset and is unaffected. */
+  guestView?: boolean;
 }) {
   const holder = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"loading" | "live" | "ended" | "failed">("loading");
@@ -67,28 +148,17 @@ export default function JitsiRoom({
        * puts ONE Cocreation's own mark up instead. Same keys as the kit so
        * client and server never disagree about what should show. */
       const markUrl = `${siteOrigin()}${cartridge.logo.mark}`;
-      const a = new window.JitsiMeetExternalAPI(domain, {
-        roomName: room,
-        parentNode: holder.current,
-        width: "100%",
-        height: "100%",
-        userInfo: displayName ? { displayName } : undefined,
-        configOverwrite: {
-          prejoinConfig: { enabled: true },
-          disableDeepLinking: true,
-          defaultLogoUrl: markUrl,
-        },
-        interfaceConfigOverwrite: {
-          SHOW_JITSI_WATERMARK: false,
-          SHOW_WATERMARK_FOR_GUESTS: false,
-          SHOW_BRAND_WATERMARK: true,
-          BRAND_WATERMARK_LINK: siteOrigin(),
-          DEFAULT_LOGO_URL: markUrl,
-          DEFAULT_WELCOME_PAGE_LOGO_URL: markUrl,
-          APP_NAME: "One Cocreation",
-          JITSI_WATERMARK_LINK: "",
-        },
-      });
+      const a = new window.JitsiMeetExternalAPI(
+        domain,
+        jitsiEmbedOptions({
+          room,
+          parentNode: holder.current,
+          displayName,
+          markUrl,
+          origin: siteOrigin(),
+          guestView,
+        }),
+      );
       api = a;
       setState("live");
       // both farewell paths land HERE, not on jit.si
@@ -106,7 +176,7 @@ export default function JitsiRoom({
       document.body.appendChild(s);
     }
     return () => { live = false; api?.dispose(); };
-  }, [domain, room, displayName, onEnded]);
+  }, [domain, room, displayName, onEnded, guestView]);
 
   if (state === "ended") {
     return (

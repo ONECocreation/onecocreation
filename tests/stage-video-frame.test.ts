@@ -67,7 +67,12 @@ describe("JitsiRoom — client-side branding override", () => {
     expect(JITSI_SRC).toContain("DEFAULT_LOGO_URL: markUrl");
     expect(JITSI_SRC).toContain("DEFAULT_WELCOME_PAGE_LOGO_URL: markUrl");
     expect(JITSI_SRC).toContain("defaultLogoUrl: markUrl");
-    expect(JITSI_SRC).toContain("BRAND_WATERMARK_LINK: siteOrigin()");
+    /* TASK-477: the options object moved into a pure `jitsiEmbedOptions()`
+       (so it can be pinned directly — see jitsi-embed-options-477.test.ts)
+       and takes `origin` as a param rather than calling `siteOrigin()`
+       inline; the call site still feeds it the live origin, verbatim. */
+    expect(JITSI_SRC).toContain("origin: siteOrigin()");
+    expect(JITSI_SRC).toContain("BRAND_WATERMARK_LINK: origin");
   });
 });
 

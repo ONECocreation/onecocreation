@@ -207,7 +207,7 @@ export function ReadingStageBody({
         {showRoom ? (
           <div className="kit-stage-media">
             <div className="kit-stage-viewer">
-              <JitsiRoom domain={jitsiDomain} room={room as string} onEnded={onRoomEnded} height="100%" />
+              <JitsiRoom domain={jitsiDomain} room={room as string} onEnded={onRoomEnded} height="100%" guestView />
             </div>
             {chipText && <span className="kit-stage-chip">{chipText}</span>}
           </div>
