@@ -7,7 +7,9 @@ Part 4 — see Obstacles)
 Branch: feat/task-473
 Worktree: /home/pac/dev/worktrees/task-473
 Base: feat/task-471 @ 06e4b29 (rebased onto it mid-lane after task-471
-gained review fixes — see the rebase note below)
+gained review fixes — see the rebase note below), then rebased AGAIN onto
+origin/main @ c8ca7d6 (Number One's own rebase, block 968,624 — this
+lane's own tip became 3be591e before the fix round below).
 
 The Admiral's flow ruling: "there will be an agenda item that shows what
 time each class is. for the end user they will stay on /reading. and love
@@ -64,9 +66,19 @@ New files:
   naturally unmounts the old screen (its own JitsiRoom disposes) before
   the next one mounts; "exactly one conference at a time" falls out of
   React's own rendering, no extra guard needed.
+- `src/components/booking/JitsiRoom.tsx` — fix round, item 4: widened
+  into this lane's OWNS to fix its two em-dash sentences (the ended
+  farewell card, the load-failure text) — a SHARED component (also used
+  by the Playground and any other Jitsi mount on the site), touched
+  ONLY for these two strings, nothing else in the file changed.
+- `src/components/store/ReadingPassReturnLink.tsx` — fix round, item 5:
+  the pure body of the reading-day pass return, extracted so it's tested
+  by RENDERING it (unsettled / settled-without-pass / settled-with-pass),
+  never by pinning `OrderStatus.tsx`'s own source text.
 - Tests: `tests/reading-parts-473.test.ts`, `tests/reading-part-select-473.test.ts`,
   `tests/reading-stage-door-473.test.ts`, `tests/reading-stage-deck-473.test.ts`,
-  `tests/reading-return-path-473.test.ts`.
+  `tests/reading-return-path-473.test.ts`, `tests/reading-day-notice-fix-473.test.ts`
+  (fix round, new).
 - `work-claims/task-473.md` — this claim.
 
 Edited files:
@@ -155,13 +167,91 @@ kit-btn-main kit-btn-sm` (the one button size, unchanged), `.kit-rows`/
    own poll (`ReadingStageDoor`/`ReadingDayOpenNotice`) picks it up live
    the moment that route exists, no further code change needed here.
 
+## FIX ROUND (block 968,624, the Admiral's Chrome walk on 3be591e; no blockers found, five fixes)
+
+1. **The top screen must say which part it's showing.** Every stage
+   screen (`ReadingStage.tsx` for parts 1/2, `ReadingStageDoor.tsx` for
+   parts 3/4) now carries a `partLabel: string | null` prop — the SAME
+   full string the agenda row's own bold title reads ("2:22 PM MDT · The
+   book talk," "3:33 PM MDT · The Q&A with Love") — rendered in the
+   EXISTING `.kit-stage-chip` slot, in every state (closed, open,
+   unreachable, live), prefixed `Live · ` only while actually live. Parts
+   1/2 pick between `housewarmingLabel`/`readingLabel` (both computed once
+   in `page.tsx` via `clockWords()`, never a second literal) off the
+   shared `selected` context value; Parts 3/4 derive their own single
+   label straight from `whenWords` inside their own thin wrapper (no new
+   prop from `page.tsx` needed there). No new CSS — one class, two pieces
+   of text joined by " · " / "Live · ".
+2. **The agenda buttons are the picker, so the chosen one must shine.**
+   `ReadingPartSelectLink` now reads `selected` off the same context it
+   already read `select` from: the part it names gets `kit-btn-main` +
+   `aria-current="true"`; every other part's own pick gets
+   `kit-btn-second`. New `variant?: "button" | "quiet"` prop (default
+   "button") — `"quiet"` drops all button chrome (a bare `<a href="#stage">`)
+   for the notice line's own pick (fix 3). Labels: "Watch the Housewarming"
+   (12:12), "Watch the Reading" (1:11), "Join the book talk" (2:22), "Join
+   the Q&A" (3:33, unchanged). Sign me up / Unlock rows untouched — this
+   logic only ever touches the ALREADY-owned pick buttons. `.kit-day
+   .kit-rows-end>.kit-btn` (kit.css) already caps every `.kit-btn` at one
+   width regardless of which variant class rides with it — zero new CSS.
+   The ended card's own "Watch part two" (`ReadingStage.tsx`) reuses the
+   SAME component, so it now also shines/dims correctly (it's never the
+   selected part while it's showing, by construction — it always reads
+   `kit-btn-second`, an honest "secondary action" read).
+3. **The notice said "above"; it sits above.** `reading-parts.ts`'s
+   `openDoorNotice()` now returns `{ part, title } | null` (was a
+   pre-built string) — the CALLER (`ReadingDayOpenNotice.tsx`) builds the
+   sentence AND a real pick: "Now open: {title}. " + a `variant="quiet"`
+   `ReadingPartSelectLink` reading "Pick it below" + " to join." Split
+   into `ReadingDayOpenNoticeBody` (pure) + the polling default export —
+   the same Body/wrapper convention every other reading component keeps,
+   needed here because a bare `useState` default never resolves under
+   `renderToStaticMarkup` (no jsdom, no effects run), so testing the real
+   rendered notice text required a prop-driven pure half.
+4. **The em dash that reached the screen.** `JitsiRoom.tsx` had TWO
+   visible em-dash sentences (its own failed-load text — the one the
+   Admiral's Chrome walk hit directly reading "The book talk isn't
+   answering right now" alongside a stale "meeting room couldn't load
+   here — open it directly instead" from an EARLIER click-based flow this
+   task's own poll-driven design made unreachable in practice, but the
+   string itself still lived in the shared component) and its own
+   "ended" farewell card ("Thank you for meeting — you're home…"). Both
+   split into two sentences. Grepped every `.tsx` file under
+   `src/components/reading/` plus `JitsiRoom.tsx` for a live (non-comment)
+   em dash — none found elsewhere; `StageView.tsx`'s own em dash
+   ("couldn't load here — try again") lives in `src/components/rooms/`,
+   OUT of this fix's named scope (a different, unrelated Matrix-classroom
+   surface), left untouched.
+5. **(done, not skipped — stayed under 40 lines)** Extracted
+   `ReadingPassReturnLink.tsx`, a ~25-line pure component taking
+   `{settledFine, boughtReadingPass}`, now tested by rendering all three
+   states (unsettled / settled-without-pass / settled-with-pass) instead
+   of pinning `OrderStatus.tsx`'s own source text for the link's HTML.
+6. **T-475 heads-up followed** — `ReadingDay.tsx`'s `qaEntitled` line
+   (`tierSatisfies(tier, "C")`) was NOT touched in this round; Number One
+   rebases when that lane lands.
+
+Every pre-existing test this round's label/class changes touched was
+re-trued in place (full list: `tests/housewarming-469.test.ts`,
+`tests/reading-day-467.test.ts`, `tests/reading-small-watch-464.test.ts`,
+`tests/reading-stage.test.ts`); the fix round's OWN new/rewritten test
+coverage: `tests/reading-parts-473.test.ts` (the new `{part,title}` return
+shape), `tests/reading-part-select-473.test.ts` (shine/second/quiet
+rendered via a real `ReadingPartProvider`, not just source pins),
+`tests/reading-stage-door-473.test.ts` (the chip's own four states),
+`tests/reading-stage-deck-473.test.ts` (all four parts' chip content),
+`tests/reading-day-notice-fix-473.test.ts` (new file — the notice's real
+rendered words + its real pick link), `tests/reading-return-path-473.test.ts`
+(widened: the em-dash grep across every touched file, plus
+`ReadingPassReturnLink` rendered in all three states).
+
 ## Gate
 
 `bash /home/pac/dev/shortcuts/oc-gate.sh /home/pac/dev/worktrees/task-473`:
 
 ```
-Test Files  250 passed (250)
-     Tests  3262 passed (3262)
+Test Files  251 passed (251)
+     Tests  3279 passed (3279)
 scripts/calendar-view.test.mjs: 70 passed, 0 failed
 scripts/cartridge-identity.test.mjs: 179 passed, 0 failed
 scripts/console-matrix.test.mjs: 14 passed, 0 failed
@@ -249,3 +339,18 @@ GATES GREEN
    stack** — S1/S2 (whether guests actually see video through the bridge)
    remain L1's own territory, untouched and unverified here, exactly as
    task-471 already flagged.
+6. **(fix round) `useReadingPart()`'s NO_PROVIDER default (`selected: 1`)
+   changed meaning under this round's own new styling logic.** Before the
+   fix round, that default only mattered for `select()` being a no-op;
+   now it also decides which pick reads `kit-btn-main` in every
+   `renderToStaticMarkup` test that renders `ReadingStageBody`/
+   `ReadingDayBody` bare (no Provider) — Part 1's own pick always reads
+   "selected" in those bare renders. Every pre-existing test asserting an
+   exact class or a `count(html, "kit-btn-main")` had to be re-read
+   against this, not just re-labelled; `tests/reading-stage.test.ts`'s own
+   "exactly one kit-btn-main" pin became "exactly one `.kit-btn` of either
+   variant" for that reason, not a mechanical find-replace.
+7. **(fix round) The walk server on 127.0.0.1:4730 (this worktree's own
+   `.next`) stayed up through the gate's own rebuild**, per instruction —
+   confirmed reachable (200) after `GATES GREEN`; not restarted, not
+   touched.

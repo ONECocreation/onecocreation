@@ -61,7 +61,9 @@ export interface OpenFlags {
 
 export const CLOSED_FLAGS: OpenFlags = { part1: false, part2: false, part3: false, part4: false };
 
-const PART_TITLES: Record<ReadingPart, string> = {
+/** Exported (fix round, block 968,624): `ReadingDayOpenNotice` builds the
+ *  notice's own words directly from this — never a second literal. */
+export const PART_TITLES: Record<ReadingPart, string> = {
   1: "The Housewarming",
   2: "The Reading",
   3: "The book talk",
@@ -79,14 +81,23 @@ export function latestOpenPart(flags: OpenFlags): ReadingPart | null {
   return null;
 }
 
-/**
- * "The next room is open" (block 968,624, item 3's own OR clause: "a
- * single line above the agenda naming the time"). Null when nothing is
- * open, or when the only open door is the one already selected — the
- * visitor is already looking at it, no notice needed.
- */
-export function openDoorNotice(flags: OpenFlags, selected: ReadingPart): string | null {
+/** "The next room is open" (block 968,624, item 3's own OR clause: "a
+ *  single line above the agenda naming the time") — the part named plus
+ *  its title, so the CALLER (a client component, `ReadingDayOpenNotice`)
+ *  can render a real in-page pick alongside the words (fix round, same
+ *  block: the notice sits ABOVE the rows, so its own words must say
+ *  "below," and "Pick it below" is now a direct `ReadingPartSelectLink`,
+ *  never bare prose — this function hands back the part to pick, not a
+ *  finished string). Null when nothing is open, or when the only open
+ *  door is the one already selected — the visitor is already looking at
+ *  it, no notice needed. */
+export interface OpenDoorNotice {
+  part: ReadingPart;
+  title: string;
+}
+
+export function openDoorNotice(flags: OpenFlags, selected: ReadingPart): OpenDoorNotice | null {
   const latest = latestOpenPart(flags);
   if (latest === null || latest === selected) return null;
-  return `Now open: ${PART_TITLES[latest]}. Pick it above to join.`;
+  return { part: latest, title: PART_TITLES[latest] };
 }

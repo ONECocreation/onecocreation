@@ -102,11 +102,11 @@ describe("ReadingDayBody — the Housewarming is the FIRST row, before The Readi
 });
 
 describe("ReadingDayBody — the Housewarming row's buttons: TASK-471 (block 968,624) retires the Heart Field door", () => {
-  it("signed in: 'Back to the reading', linked to #stage — never /rooms/heart-field", () => {
+  it("signed in: 'Watch the Housewarming' (fix round, block 968,624), linked to #stage — never /rooms/heart-field", () => {
     const html = render(bodyProps({ signedIn: true }));
     const row = firstRow(html);
     expect(row).toContain('href="#stage"');
-    expect(row).toContain("Back to the reading");
+    expect(row).toContain("Watch the Housewarming");
     expect(row).not.toContain("Go to the Heart Field");
     expect(row).not.toContain("/rooms/heart-field");
     expect(row).not.toContain("Sign me up");

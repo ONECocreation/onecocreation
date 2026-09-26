@@ -83,6 +83,7 @@ describe("no 'Encore'/'Playground' anywhere in /reading's VISIBLE copy", () => {
       ended: false,
       onRoomEnded: () => {},
       onRejoin: () => {},
+    partLabel: null,
       ...overrides,
     };
   }
@@ -143,16 +144,63 @@ describe("the payment return path — NARROWED (block 968,624): a fixed 'Back to
     expect(src).toContain("li.itemId === READING_BOOK_TALK_ITEM_ID || li.itemId === QA_ITEM_ID");
   });
 
-  it("the link itself is a FIXED same-origin path, never built from any request/query/order field — an open redirect has no input to exploit here", async () => {
+  it("OrderStatus.tsx mounts the pure ReadingPassReturnLink, never a second inline copy of the link", async () => {
     const src = await read(FILE);
-    expect(src).toContain('href="/reading#stage"');
-    expect(src).toContain("Back to the reading");
-    // never composed from a variable — grep for the one literal href
-    expect(src).not.toMatch(/href=\{.*reading.*\}/i);
+    expect(src).toContain('import ReadingPassReturnLink from "./ReadingPassReturnLink"');
+    expect(src).toContain("<ReadingPassReturnLink settledFine={settledFine} boughtReadingPass={boughtReadingPass} />");
+    expect(src).not.toContain('href="/reading#stage"'); // the literal lives in the extracted file now
+  });
+});
+
+/* fix round item 5 (block 968,624) — extracted so this is tested by
+   RENDERING it in every state, not by pinning OrderStatus.tsx's own
+   source text. */
+describe("ReadingPassReturnLink — rendered, in every state", () => {
+  it("unsettled order: renders nothing, even if it contains the pass", async () => {
+    const { default: ReadingPassReturnLink } = await import("@/components/store/ReadingPassReturnLink");
+    const html = renderToStaticMarkup(createElement(ReadingPassReturnLink, { settledFine: false, boughtReadingPass: true }));
+    expect(html).toBe("");
   });
 
-  it("only shows once the order actually settled (settledFine) — never on an open/failed order", async () => {
-    const src = await read(FILE);
-    expect(src).toContain("{settledFine && boughtReadingPass && (");
+  it("settled, but without the reading pass: renders nothing", async () => {
+    const { default: ReadingPassReturnLink } = await import("@/components/store/ReadingPassReturnLink");
+    const html = renderToStaticMarkup(createElement(ReadingPassReturnLink, { settledFine: true, boughtReadingPass: false }));
+    expect(html).toBe("");
+  });
+
+  it("settled WITH the reading pass: the fixed same-origin link, no open-redirect surface — never built from any request/query/order field", async () => {
+    const { default: ReadingPassReturnLink } = await import("@/components/store/ReadingPassReturnLink");
+    const html = renderToStaticMarkup(createElement(ReadingPassReturnLink, { settledFine: true, boughtReadingPass: true }));
+    expect(html).toBe('<p><a href="/reading#stage" class="kit-btn kit-btn-main kit-btn-sm">Back to the reading</a></p>');
+  });
+});
+
+describe("fix round (block 968,624, the Admiral's Chrome walk): an em dash reached JitsiRoom's load-failure text — fixed, and never lets it back in", () => {
+  it("both of JitsiRoom's visible strings are two sentences now, never one joined by an em dash", async () => {
+    const src = await read("src/components/booking/JitsiRoom.tsx");
+    expect(src).toContain("The meeting room couldn&apos;t load here.");
+    expect(src).not.toContain("The meeting room couldn&apos;t load here —");
+    expect(src).toContain("Thank you for meeting. You&apos;re home, right where you left off.");
+    expect(src).not.toContain("Thank you for meeting —");
+  });
+
+  it("no em dash anywhere OUTSIDE a comment, in JitsiRoom.tsx or any reading component (comments explaining history are fine; live strings never are)", async () => {
+    for (const file of [
+      "src/components/booking/JitsiRoom.tsx",
+      "src/components/reading/ReadingStage.tsx",
+      "src/components/reading/ReadingStageDoor.tsx",
+      "src/components/reading/ReadingStagePart3.tsx",
+      "src/components/reading/ReadingStagePart4.tsx",
+      "src/components/reading/ReadingDayBody.tsx",
+      "src/components/reading/ReadingDayOpenNotice.tsx",
+      "src/components/reading/ReadingPartSelectLink.tsx",
+    ]) {
+      const src = await read(file);
+      // strip /* block */ and // line comments before checking — a
+      // prose explanation of history is not a rendered string
+      const stripped = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+      const hit = stripped.includes("—");
+      expect(hit, `${file} carries an em dash outside a comment`).toBe(false);
+    }
   });
 });

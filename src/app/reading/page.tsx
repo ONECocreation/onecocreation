@@ -243,6 +243,12 @@ export default async function ReadingPage() {
                     />
                   ),
                   playgroundLock,
+                  /* fix round (block 968,624, the Admiral's Chrome walk) —
+                     the stage chip's own label, the SAME string Row 1/2's
+                     own bold title reads (ReadingDayBody.tsx) — never a
+                     second literal. Null only when the schedule is off. */
+                  housewarmingLabel: housewarmingStartsAtMs !== null ? `${clockWords(housewarmingStartsAtMs, schedule.tz)} · The Housewarming` : null,
+                  readingLabel: next !== null ? `${clockWords(next.startsAtMs, schedule.tz)} · The Reading` : null,
                 }}
                 part3={{
                   jitsiDomain: config.meeting.jitsiDomain,

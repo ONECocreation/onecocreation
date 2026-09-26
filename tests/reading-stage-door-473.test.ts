@@ -30,6 +30,7 @@ function bodyProps(overrides: Partial<ReadingStageDoorBodyProps>): ReadingStageD
     jitsiDomain: DOMAIN,
     whenWords: null,
     label: "the book talk",
+    partLabel: null,
     notOwned: NOT_OWNED,
     left: false,
     onEnded: () => {},
@@ -114,6 +115,34 @@ describe("ReadingStageDoorBody — live (owned, published, reachable)", () => {
     const wire: Wire = { decision: "open", reachable: true, room: null };
     const html = render(bodyProps({ wire }));
     expect(html).not.toContain("kit-stage-viewer");
+  });
+});
+
+describe("ReadingStageDoorBody — fix round (block 968,624, the Admiral's Chrome walk): the chip always names the part", () => {
+  it("closed: the chip shows the part label, no 'Live' prefix", () => {
+    const html = render(bodyProps({ partLabel: "2:22 PM MDT · The book talk" }));
+    expect(html).toContain('<span class="kit-stage-chip">2:22 PM MDT · The book talk</span>');
+  });
+
+  it("open but unreachable — the exact regression the Admiral hit: the chip STILL says which part, not just 'Live'", () => {
+    const wire: Wire = { decision: "open", reachable: false, room: null };
+    const html = render(bodyProps({ wire, partLabel: "2:22 PM MDT · The book talk" }));
+    expect(html).toContain('<span class="kit-stage-chip">Live · 2:22 PM MDT · The book talk</span>');
+    expect(html).toContain("The book talk isn&#x27;t answering right now.");
+  });
+
+  it("live and mounted: the chip rides beside the real viewer, 'Live · ' plus the part label", () => {
+    const wire: Wire = { decision: "open", reachable: true, room: ROOM };
+    const html = render(bodyProps({ wire, partLabel: "3:33 PM MDT · The Q&A with Love" }));
+    expect(html).toContain('<span class="kit-stage-chip">Live · 3:33 PM MDT · The Q&amp;A with Love</span>');
+  });
+
+  it("no schedule (partLabel null): 'Live' alone when live, no chip at all when not", () => {
+    const wire: Wire = { decision: "open", reachable: true, room: ROOM };
+    const live = render(bodyProps({ wire, partLabel: null }));
+    expect(live).toContain('<span class="kit-stage-chip">Live</span>');
+    const closed = render(bodyProps({ partLabel: null }));
+    expect(closed).not.toContain("kit-stage-chip");
   });
 });
 

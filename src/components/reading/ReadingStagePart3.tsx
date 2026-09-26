@@ -22,6 +22,11 @@ export interface ReadingStagePart3Props {
 }
 
 export default function ReadingStagePart3({ jitsiDomain, encoreFloor, whenWords }: ReadingStagePart3Props) {
+  /* fix round (block 968,624, the Admiral's Chrome walk) — the stage chip's
+     own label, built from the SAME `whenWords` the agenda row's own title
+     reads ("2:22 PM MDT · The book talk," the reviewer's own example) —
+     never a second clockWords() call. */
+  const partLabel = whenWords ? `${whenWords} · The book talk` : null;
   const notOwned = (
     <>
       <p className="kit-body">
@@ -47,6 +52,7 @@ export default function ReadingStagePart3({ jitsiDomain, encoreFloor, whenWords 
       jitsiDomain={jitsiDomain}
       whenWords={whenWords}
       label="the book talk"
+      partLabel={partLabel}
       notOwned={notOwned}
     />
   );

@@ -272,7 +272,9 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
 
       if (c.signedIn) {
         // TASK-471 (block 968,624): the door is #stage now, never /rooms/heart-field
-        expect(html).toContain("Back to the reading");
+        // fix round (block 968,624): rows 1/2 read as picks now, "Watch the Housewarming"/"Watch the Reading"
+        expect(html).toContain("Watch the Housewarming");
+        expect(html).toContain("Watch the Reading");
         expect(html).toContain('href="#stage"');
         expect(html).not.toContain("Go to the Heart Field");
         expect(html).not.toContain("/rooms/heart-field");
@@ -283,13 +285,14 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
       }
 
       if (encoreEntitled) {
-        expect(html).toContain("Go to the book talk");
+        // fix round (block 968,624): "Join the book talk" (was "Go to the book talk")
+        expect(html).toContain("Join the book talk");
         expect(html).not.toContain("</svg>Unlock the book talk<");
       } else {
         expect(html).toContain("</svg>Unlock the book talk<"); // the visible label, right after the lock glyph
         expect(html).toContain(`aria-label="Unlock the book talk with ${ENCORE_FLOOR.name}"`); // the fuller words, for a screen reader
         expect(html).toContain(`Comes with ${ENCORE_FLOOR.name} and up.`); // and in PLAIN sighted text, right above
-        expect(html).not.toContain("Go to the book talk");
+        expect(html).not.toContain("Join the book talk");
       }
 
       if (qaEntitled) {
@@ -353,7 +356,7 @@ describe("ReadingDayBody — TASK-471 (block 968,624): the $11 one-time pass, wh
     expect(STAGE2_MIN_TIER).toBe("A");
     expect(tierSatisfies("A", STAGE2_MIN_TIER)).toBe(true);
     const html = render(bodyProps({ encoreEntitled: tierSatisfies("A", STAGE2_MIN_TIER) }));
-    expect(html).toContain("Go to the book talk");
+    expect(html).toContain("Join the book talk");
     expect(html).not.toContain("Unlock the book talk");
   });
 });

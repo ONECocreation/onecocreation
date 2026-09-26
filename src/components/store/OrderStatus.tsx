@@ -7,6 +7,7 @@ import { priceWords, type PriceLike } from "@/lib/money-words";
 import { useMoneyPrefer } from "@/lib/money-preference";
 import { bftDateTime, estimateHeightAt } from "@/lib/bb/bft";
 import { READING_BOOK_TALK_ITEM_ID, QA_ITEM_ID } from "@/lib/reading-day";
+import ReadingPassReturnLink from "./ReadingPassReturnLink";
 
 /** TASK-173 — a recorded moment wears a stamp, never a dash: the BFT stamp
  *  when the chain tip answers (a calendar projection off the anchored model,
@@ -335,11 +336,9 @@ export default function OrderStatus({ orderId }: { orderId: string }) {
         </>
       )}
       {/* TASK-473 (block 968,624) — the reading day's own pass return, see
-          `boughtReadingPass` above. Design-drift ratchet: no new inline
-          style, the same centered inline-block .kit-btn pattern. */}
-      {settledFine && boughtReadingPass && (
-        <p><a href="/reading#stage" className="kit-btn kit-btn-main kit-btn-sm">Back to the reading</a></p>
-      )}
+          `boughtReadingPass` above; the pure body lives in its own file
+          now (fix round item 5), tested by rendering it. */}
+      <ReadingPassReturnLink settledFine={settledFine} boughtReadingPass={boughtReadingPass} />
       {/* the paid good itself — gold is right here, this IS the money's worth.
           Locked = the viewer isn't the buying tag (shared link, or signed
           out): an honest lock, never a gold button that would only 403. */}

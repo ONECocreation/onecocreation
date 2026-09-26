@@ -49,6 +49,8 @@ const STAGE1: ReadingStageProps = {
   countdown: null,
   countdownWhen: null,
   playgroundLock: { locked: false, floorName: "Test Tier" },
+  housewarmingLabel: "12:12 PM MDT · The Housewarming",
+  readingLabel: "1:11 PM MDT · The Reading",
 };
 const PART3: ReadingStagePart3Props = { jitsiDomain: DOMAIN, encoreFloor: ENCORE_FLOOR, whenWords: "2:22 PM MDT" };
 const PART4: ReadingStagePart4Props = { jitsiDomain: DOMAIN, qaOffer: QA_OFFER, whenWords: "3:33 PM MDT" };
@@ -71,6 +73,20 @@ describe("ReadingStageDeck — exactly one screen mounts, chosen by the selectio
       expect(html).not.toContain("The book talk is not live yet.");
       expect(html).not.toContain("The Q&amp;A is not live yet.");
     }
+  });
+
+  it("fix round (block 968,624): the stage chip names WHICH row is picked, 1 vs 2 — the SAME label the agenda row's own title reads", () => {
+    const chip1 = renderDeck(1);
+    expect(chip1).toContain('<span class="kit-stage-chip">12:12 PM MDT · The Housewarming</span>');
+    const chip2 = renderDeck(2);
+    expect(chip2).toContain('<span class="kit-stage-chip">1:11 PM MDT · The Reading</span>');
+  });
+
+  it("fix round: parts 3 and 4 each carry their own stage chip too, e.g. '2:22 PM MDT · The book talk'", () => {
+    const chip3 = renderDeck(3);
+    expect(chip3).toContain('<span class="kit-stage-chip">2:22 PM MDT · The book talk</span>');
+    const chip4 = renderDeck(4);
+    expect(chip4).toContain('<span class="kit-stage-chip">3:33 PM MDT · The Q&amp;A with Love</span>');
   });
 
   it("part 3: the book talk's own screen — never ReadingStage's own words, never Part 4's", () => {

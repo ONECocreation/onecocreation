@@ -15,23 +15,47 @@ import type { ReadingPart } from "@/lib/reading-parts";
  * already renders inside a button (the lock icon plus words, the exact
  * shape `ReadingDayUnlockButton`/the old ended-card Link already used) —
  * never re-typed as a bare string prop.
+ *
+ * Fix round (same block, the Admiral's Chrome walk) — "the agenda buttons
+ * are the picker, so the chosen one must shine": `variant="button"` (the
+ * default, every agenda row and the ended card's own pick) reads
+ * `selected` off the shared context and wears `kit-btn-main` (shining)
+ * when it names the CURRENTLY selected part, `kit-btn-second` otherwise —
+ * plus `aria-current="true"` on the shining one, an honest a11y signal a
+ * screen reader can act on. `.kit-day .kit-rows-end>.kit-btn` (kit.css)
+ * already caps every `.kit-btn` at one width regardless of which variant
+ * class rides alongside it — no new CSS. `variant="quiet"` (the notice
+ * line's own "Pick it below") is the SAME select+anchor behavior with NO
+ * button chrome at all — a bare inline link, since a courtesy line is not
+ * a second control competing with the rows themselves.
  */
 export default function ReadingPartSelectLink({
   part,
   ariaLabel,
+  variant = "button",
   children,
 }: {
   part: ReadingPart;
   ariaLabel?: string;
+  variant?: "button" | "quiet";
   /** optional in the TYPE only (createElement's own overload resolution
    *  needs this to accept children as trailing arguments, the
    *  `react/no-children-prop` shape every call site here uses) — every
    *  real call site always gives real content. */
   children?: ReactNode;
 }) {
-  const { select } = useReadingPart();
+  const { selected, select } = useReadingPart();
+  const isSelected = selected === part;
+  const className =
+    variant === "quiet" ? undefined : `kit-btn ${isSelected ? "kit-btn-main" : "kit-btn-second"} kit-btn-sm`;
   return (
-    <a className="kit-btn kit-btn-main kit-btn-sm" href="#stage" aria-label={ariaLabel} onClick={() => select(part)}>
+    <a
+      className={className}
+      href="#stage"
+      aria-label={ariaLabel}
+      aria-current={isSelected ? "true" : undefined}
+      onClick={() => select(part)}
+    >
       {children}
     </a>
   );

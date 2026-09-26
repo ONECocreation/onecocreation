@@ -67,17 +67,17 @@ describe("latestOpenPart / openDoorNotice — the courtesy line, never gating", 
     expect(latestOpenPart(flags)).toBe(3);
   });
 
-  it("a notice names the open part, but only when it ISN'T the one already selected", () => {
+  it("a notice names the open part, but only when it ISN'T the one already selected (fix round, block 968,624: returns {part, title} — the CALLER builds the words + a real pick link, never a finished string)", () => {
     const flags: OpenFlags = { part1: false, part2: false, part3: true, part4: false };
-    expect(openDoorNotice(flags, 1)).toBe("Now open: The book talk. Pick it above to join.");
+    expect(openDoorNotice(flags, 1)).toEqual({ part: 3, title: "The book talk" });
     expect(openDoorNotice(flags, 3)).toBeNull(); // already looking at it
   });
 
-  it("never names a room, never an em dash", () => {
+  it("never names a room, never carries an em dash of its own", () => {
     const flags: OpenFlags = { part1: false, part2: false, part3: false, part4: true };
     const notice = openDoorNotice(flags, 1);
     expect(notice).not.toBeNull();
-    expect(notice).not.toContain("—");
-    expect(notice).not.toMatch(/oc-[0-9a-f]{16}/);
+    expect(notice!.title).not.toContain("—");
+    expect(notice!.title).not.toMatch(/oc-[0-9a-f]{16}/);
   });
 });

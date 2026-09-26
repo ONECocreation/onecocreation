@@ -51,6 +51,12 @@ export interface ReadingStageDoorBodyProps {
   jitsiDomain: string;
   whenWords: string | null;
   label: string;
+  /** fix round (block 968,624, the Admiral's Chrome walk) — "the top
+   *  screen must say which part it's showing": the FULL label
+   *  ("2:22 PM MDT · The book talk") the caller composes from the SAME
+   *  `clockWords()` the agenda row already reads — never a second
+   *  literal. Null only when the schedule is off. */
+  partLabel: string | null;
   notOwned: ReactNode;
   left: boolean;
   onEnded: () => void;
@@ -62,6 +68,7 @@ export function ReadingStageDoorBody({
   jitsiDomain,
   whenWords,
   label,
+  partLabel,
   notOwned,
   left,
   onEnded,
@@ -69,6 +76,11 @@ export function ReadingStageDoorBody({
 }: ReadingStageDoorBodyProps) {
   const showRoom = wire.decision === "open" && wire.reachable === true && !!wire.room && !left;
   const cap = `${label[0].toUpperCase()}${label.slice(1)}`;
+  /* fix round (block 968,624) — the chip ALWAYS names the part (when the
+     schedule gives one); "Live · " only rides while the door is actually
+     open (and the visitor hasn't left it). */
+  const isLive = wire.decision === "open" && !left;
+  const chipText = partLabel ? (isLive ? `Live · ${partLabel}` : partLabel) : isLive ? "Live" : null;
 
   return (
     <div className="kit-stage">
@@ -77,12 +89,12 @@ export function ReadingStageDoorBody({
           <div className="kit-stage-viewer">
             <JitsiRoom domain={jitsiDomain} room={wire.room as string} onEnded={onEnded} height="100%" />
           </div>
-          <span className="kit-stage-chip">Live</span>
+          {chipText && <span className="kit-stage-chip">{chipText}</span>}
         </div>
       ) : (
         <div className="kit-stage-media kit-stage-waiting kit-stage-waiting--cover">
           <img src={DOOR_COVER_SRC} alt={COVER_ALT} width="600" height="358" />
-          {wire.decision === "open" && !left && <span className="kit-stage-chip">Live</span>}
+          {chipText && <span className="kit-stage-chip">{chipText}</span>}
         </div>
       )}
       {!showRoom && (
@@ -129,6 +141,8 @@ export interface ReadingStageDoorProps {
   /** the words used in the door's own sentences, e.g. "the book talk" /
    *  "the Q&A" */
   label: string;
+  /** fix round (block 968,624) — see ReadingStageDoorBodyProps */
+  partLabel: string | null;
   /** the not-owned card's own body — price line(s) + `ReadingDayUnlockButton`,
    *  composed by the caller from its own door data (EncoreFloorDoor /
    *  QaDoor) — never re-derived here. */
@@ -141,7 +155,14 @@ export function doorPath(door: ReadingDoorKind): string {
   return door === "stage2" ? "/api/stage2" : "/api/qa-door";
 }
 
-export default function ReadingStageDoor({ door, jitsiDomain, whenWords, label, notOwned }: ReadingStageDoorProps) {
+export default function ReadingStageDoor({
+  door,
+  jitsiDomain,
+  whenWords,
+  label,
+  partLabel,
+  notOwned,
+}: ReadingStageDoorProps) {
   const path = doorPath(door);
   const [wire, setWire] = useState<Wire>(CLOSED);
   const [left, setLeft] = useState(false);
@@ -184,6 +205,7 @@ export default function ReadingStageDoor({ door, jitsiDomain, whenWords, label, 
       jitsiDomain={jitsiDomain}
       whenWords={whenWords}
       label={label}
+      partLabel={partLabel}
       notOwned={notOwned}
       left={left}
       onEnded={onEnded}

@@ -100,7 +100,7 @@ export default function ReadingDayBody({
           </span>
           <span className="kit-rows-end">
             {signedIn ? (
-              <ReadingPartSelectLink part={1}>Back to the reading</ReadingPartSelectLink>
+              <ReadingPartSelectLink part={1}>Watch the Housewarming</ReadingPartSelectLink>
             ) : (
               <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">
                 Sign me up
@@ -117,7 +117,7 @@ export default function ReadingDayBody({
           </span>
           <span className="kit-rows-end">
             {signedIn ? (
-              <ReadingPartSelectLink part={2}>Back to the reading</ReadingPartSelectLink>
+              <ReadingPartSelectLink part={2}>Watch the Reading</ReadingPartSelectLink>
             ) : (
               <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">
                 Sign me up
@@ -153,7 +153,7 @@ export default function ReadingDayBody({
             {encoreEntitled ? (
               /* TASK-473: picks Part 3 for the top screen, never a Link
                  to /reading/playground (that address is retired here). */
-              <ReadingPartSelectLink part={3}>Go to the book talk</ReadingPartSelectLink>
+              <ReadingPartSelectLink part={3}>Join the book talk</ReadingPartSelectLink>
             ) : (
               /* TASK-467: "Unlock with {name}" measured 258–328px at
                  kit-btn-sm (nowrap, R-071) — wider than the card's own

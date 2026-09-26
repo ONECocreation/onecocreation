@@ -45,6 +45,7 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     ended: false,
     onRoomEnded: () => {},
     onRejoin: () => {},
+    partLabel: null,
     ...overrides,
   };
 }
@@ -134,7 +135,10 @@ describe("ended — the book, the ended words, the next date; Part 3 picked in-p
     expect(html).toContain("Thank you for being here.");
     expect(html).not.toContain("The reading has ended — thank you for being here.");
     expect(html).toContain("Wednesday, September 30");
-    expect(count(html, "kit-btn-main")).toBe(1);
+    // fix round (block 968,624): exactly one CONTROL — the class itself
+    // (main vs second) now depends on the shared selection, so this
+    // counts real `.kit-btn` tags, not the literal "kit-btn-main" string
+    expect(count(html, "kit-btn kit-btn-")).toBe(1);
     expect(html).toContain("Watch part two");
     expect(html).toContain('href="#stage"');
     expect(html).not.toContain("/reading/playground");

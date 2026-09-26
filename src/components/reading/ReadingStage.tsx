@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import JitsiRoom from "@/components/booking/JitsiRoom";
 import ReadingPartSelectLink from "./ReadingPartSelectLink";
+import { useReadingPart } from "./ReadingPartContext";
 
 /**
  * READING STAGE (TASK-438, block 968,222; HOLD LIFTED block 968,269) —
@@ -79,6 +80,16 @@ export interface ReadingStageProps {
    *  real. `floorName` reads `TIERS[STAGE2_MIN_TIER].name` — never a
    *  literal. */
   playgroundLock: { locked: boolean; floorName: string };
+  /** fix round (block 968,624, the Admiral's Chrome walk) — "the top
+   *  screen must say which part it's showing": the FULL label strings
+   *  ReadingDayBody's own rows already carry ("12:12 PM MDT · The
+   *  Housewarming" / "1:11 PM MDT · The Reading"), computed once in
+   *  reading/page.tsx from the SAME `clockWords()` call — never a second
+   *  literal. Null only when the schedule itself is off. The default
+   *  export picks between the two off the shared selection (parts 1/2
+   *  share this one door, but the visitor picked ONE of the two rows). */
+  housewarmingLabel: string | null;
+  readingLabel: string | null;
 }
 
 export interface ReadingStageBodyProps {
@@ -94,6 +105,10 @@ export interface ReadingStageBodyProps {
   left: boolean;
   ended: boolean;
   nextWords: string | null;
+  /** fix round (block 968,624) — see ReadingStageProps; already resolved
+   *  to the ONE label the default export's own `selected` picked. Null
+   *  only when the schedule is off (no clock words to show at all). */
+  partLabel: string | null;
   /** TASK-466 — see ReadingStageProps. Read only on the ended card's own
    *  Playground link: locked shows the lock glyph + the quiet floor
    *  words, entitled shows neither. */
@@ -171,10 +186,16 @@ export function ReadingStageBody({
   countdownWhen,
   onRoomEnded,
   onRejoin,
+  partLabel,
 }: ReadingStageBodyProps) {
   /* the ONE gate for mounting the real two-way room: published, signed
      in, not left, not ended, and a room the poll actually gave us. */
   const showRoom = phase === "published" && signedIn && !left && !ended && !!room;
+  /* fix round (block 968,624) — the chip ALWAYS names the part (when the
+     schedule gives one); "Live · " only rides while actually published
+     and not ended, the same condition the old bare "Live" chip used. */
+  const isLive = phase === "published" && !ended;
+  const chipText = partLabel ? (isLive ? `Live · ${partLabel}` : partLabel) : isLive ? "Live" : null;
 
   return (
     <>
@@ -188,12 +209,12 @@ export function ReadingStageBody({
             <div className="kit-stage-viewer">
               <JitsiRoom domain={jitsiDomain} room={room as string} onEnded={onRoomEnded} height="100%" />
             </div>
-            <span className="kit-stage-chip">Live</span>
+            {chipText && <span className="kit-stage-chip">{chipText}</span>}
           </div>
         ) : (
           <div className="kit-stage-media kit-stage-waiting kit-stage-waiting--cover">
             <img src={COVER_SRC} alt={COVER_ALT} width="600" height="358" />
-            {phase === "published" && !ended && <span className="kit-stage-chip">Live</span>}
+            {chipText && <span className="kit-stage-chip">{chipText}</span>}
           </div>
         )}
         {showRoom ? null : ended ? (
@@ -278,7 +299,13 @@ export default function ReadingStage({
   countdown,
   countdownWhen,
   playgroundLock,
+  housewarmingLabel,
+  readingLabel,
 }: ReadingStageProps) {
+  /* fix round (block 968,624) — parts 1/2 share this one door, but the
+     chip names whichever ROW the visitor actually picked. */
+  const { selected } = useReadingPart();
+  const partLabel = selected === 2 ? readingLabel : housewarmingLabel;
   /* prepared is PRIVATE — a visitor's phase is closed until published */
   const [phase, setPhase] = useState<"closed" | "published">(initialPhase === "published" ? "published" : "closed");
   const [room, setRoom] = useState<string | null>(null);
@@ -400,6 +427,7 @@ export default function ReadingStage({
       countdownWhen={countdownWhen}
       onRoomEnded={roomEnded}
       onRejoin={rejoin}
+      partLabel={partLabel}
     />
   );
 }

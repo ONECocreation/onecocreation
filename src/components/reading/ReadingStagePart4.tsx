@@ -29,6 +29,11 @@ export interface ReadingStagePart4Props {
 }
 
 export default function ReadingStagePart4({ jitsiDomain, qaOffer, whenWords }: ReadingStagePart4Props) {
+  /* fix round (block 968,624, the Admiral's Chrome walk) — the stage
+     chip's own label, built from the SAME `whenWords` the agenda row's
+     own title reads ("The Q&A with Love") — never a second clockWords()
+     call. */
+  const partLabel = whenWords ? `${whenWords} · The Q&A with Love` : null;
   const notOwned = (
     <>
       <p className="kit-body">
@@ -43,6 +48,13 @@ export default function ReadingStagePart4({ jitsiDomain, qaOffer, whenWords }: R
   );
 
   return (
-    <ReadingStageDoor door="qa" jitsiDomain={jitsiDomain} whenWords={whenWords} label="the Q&A" notOwned={notOwned} />
+    <ReadingStageDoor
+      door="qa"
+      jitsiDomain={jitsiDomain}
+      whenWords={whenWords}
+      label="the Q&A"
+      partLabel={partLabel}
+      notOwned={notOwned}
+    />
   );
 }

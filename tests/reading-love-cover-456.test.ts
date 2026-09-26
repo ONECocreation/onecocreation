@@ -43,6 +43,7 @@ function body(overrides: Partial<ReadingStageBodyProps>): string {
     left: false,
     onRoomEnded: () => {},
     onRejoin: () => {},
+    partLabel: null,
     ...overrides,
   };
   return renderToStaticMarkup(createElement(ReadingStageBody, props));

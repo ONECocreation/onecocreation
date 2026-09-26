@@ -36,6 +36,7 @@ function render(overrides: Partial<ReadingStageBodyProps>): string {
       ended: false,
       onRoomEnded: () => {},
       onRejoin: () => {},
+    partLabel: null,
       ...overrides,
     }),
   );
