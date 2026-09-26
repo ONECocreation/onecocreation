@@ -64,6 +64,16 @@ called directly), never copied. `/a/site/reading` itself gains a quiet
   .kit-row-link` (the quiet Room link's size/color/spacing) and
   `.kit-go-room-actions` (the go page's own full-width button column) —
   no inline style objects, no per-page CSS.
+- `scripts/console-matrix.routes.json` — EDIT (OWNS widened in its own
+  commit before touching it): the T-416 HAND-DECLARED `/a` route policy
+  — `console-matrix.test.mjs` (the gate's own `scripts/*.test.mjs` loop)
+  fails closed on any page under `src/app/a` with no policy row. One row
+  added, `{ "route": "/a/site/reading/go/[door]", "siteChrome":
+  "render", "signedOut": "gate" }`, plus a one-line `_doc` note that this
+  dynamic pattern has no `DYNAMIC_SUBS` fixture substitution yet (an
+  unsubstituted pattern row emits DASH cells under T-418's own browser
+  walker, documented, never a guess — this lane never touches
+  `console-matrix.cjs` itself).
 - `tests/rooms-card.test.ts` — EDIT (OWNS widened before touching it,
   same commit as this claim): the new Room link is a row's THIRD `<li>`
   child, so "the same two controls" test's own `controlsIn` helper is
