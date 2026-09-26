@@ -33,7 +33,6 @@ function body(overrides: Partial<ReadingStageBodyProps>): string {
     signedIn: true,
     ended: false,
     room: null,
-    playgroundOpen: false,
     /* TASK-466 (block 968,561): unlocked by default — this suite only
        checks the cover art, never the ended card's lock. */
     playgroundLock: { locked: false, floorName: "Test Tier" },
@@ -44,6 +43,7 @@ function body(overrides: Partial<ReadingStageBodyProps>): string {
     left: false,
     onRoomEnded: () => {},
     onRejoin: () => {},
+    partLabel: null,
     ...overrides,
   };
   return renderToStaticMarkup(createElement(ReadingStageBody, props));

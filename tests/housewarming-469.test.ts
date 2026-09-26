@@ -50,7 +50,6 @@ function bodyProps(overrides: Partial<ReadingDayBodyProps>): ReadingDayBodyProps
     encoreEntitled: false,
     encoreFloor: ENCORE_FLOOR,
     qaEntitled: false,
-    qaRoomHref: "/rooms/inner-sanctum",
     qaOffer: QA_OFFER_LIVE,
     ...overrides,
   };
@@ -103,11 +102,11 @@ describe("ReadingDayBody — the Housewarming is the FIRST row, before The Readi
 });
 
 describe("ReadingDayBody — the Housewarming row's buttons: TASK-471 (block 968,624) retires the Heart Field door", () => {
-  it("signed in: 'Back to the reading', linked to #stage — never /rooms/heart-field", () => {
+  it("signed in: 'Join the Housewarming' (fix round, block 968,624), linked to #stage — never /rooms/heart-field", () => {
     const html = render(bodyProps({ signedIn: true }));
     const row = firstRow(html);
     expect(row).toContain('href="#stage"');
-    expect(row).toContain("Back to the reading");
+    expect(row).toContain("Join the Housewarming");
     expect(row).not.toContain("Go to the Heart Field");
     expect(row).not.toContain("/rooms/heart-field");
     expect(row).not.toContain("Sign me up");

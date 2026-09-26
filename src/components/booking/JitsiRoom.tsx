@@ -115,7 +115,7 @@ export default function JitsiRoom({
           The field holds what you brought 🕊️
         </p>
         <p style={{ color: "var(--muted)", margin: "0 0 20px" }}>
-          Thank you for meeting — you&apos;re home, right where you left off.
+          Thank you for meeting. You&apos;re home, right where you left off.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
           <Link className="btn" href="/me">My calendar</Link>
@@ -127,8 +127,8 @@ export default function JitsiRoom({
   if (state === "failed") {
     return (
       <p style={{ color: "var(--muted)" }}>
-        The meeting room couldn&apos;t load here —{" "}
-        <a href={`https://${domain}/${room}`} style={{ color: "var(--gold-deep)" }}>open it directly</a> instead.
+        The meeting room couldn&apos;t load here.{" "}
+        <a href={`https://${domain}/${room}`} style={{ color: "var(--gold-deep)" }}>Open it directly</a> instead.
       </p>
     );
   }

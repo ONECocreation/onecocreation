@@ -36,7 +36,6 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     phase: "closed",
     signedIn: true,
     room: null,
-    playgroundOpen: false,
     playgroundLock: { locked: false, floorName: "Test Tier" },
     jitsiDomain: DOMAIN,
     nextWords: null,
@@ -46,6 +45,7 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     ended: false,
     onRoomEnded: () => {},
     onRejoin: () => {},
+    partLabel: null,
     ...overrides,
   };
 }
@@ -126,8 +126,8 @@ describe("published, signed OUT — the page's own sign-in path, never a link el
   });
 });
 
-describe("ended — the book, the ended words, the next date; the Playground door, in BOTH variants", () => {
-  it("still published: the ended words (two sentences, no dash) and the Playground link, no Heart Field anywhere", () => {
+describe("ended — the book, the ended words, the next date; Part 3 picked in-page, in BOTH variants", () => {
+  it("still published: the ended words (two sentences, no dash) and the in-page Part 3 pick, no Heart Field anywhere, no /reading/playground", () => {
     const html = render(bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30" }));
     expect(html).toContain("/images/reading-love-cover.jpg");
     expect(html).not.toContain("kit-stage-viewer");
@@ -135,19 +135,24 @@ describe("ended — the book, the ended words, the next date; the Playground doo
     expect(html).toContain("Thank you for being here.");
     expect(html).not.toContain("The reading has ended — thank you for being here.");
     expect(html).toContain("Wednesday, September 30");
-    expect(count(html, "kit-btn-main")).toBe(1);
-    expect(html).toContain("Watch part two");
-    expect(html).toContain('href="/reading/playground"');
+    // fix round (block 968,624): exactly one CONTROL — the class itself
+    // (main vs second) now depends on the shared selection, so this
+    // counts real `.kit-btn` tags, not the literal "kit-btn-main" string
+    expect(count(html, "kit-btn kit-btn-")).toBe(1);
+    expect(html).toContain("Watch the Book Talk");
+    expect(html).toContain('href="#stage"');
+    expect(html).not.toContain("/reading/playground");
     expect(html).not.toContain("/rooms/heart-field");
   });
 
-  it("closed underneath: the SAME words and the SAME Playground door", () => {
+  it("closed underneath: the SAME words and the SAME in-page Part 3 pick", () => {
     const html = render(bodyProps({ phase: "closed", ended: true, nextWords: "Wednesday, September 30" }));
     expect(html).toContain("The reading has ended.");
     expect(html).toContain("Thank you for being here.");
     expect(html).not.toContain("<button");
-    expect(html).toContain("Watch part two");
-    expect(html).toContain('href="/reading/playground"');
+    expect(html).toContain("Watch the Book Talk");
+    expect(html).toContain('href="#stage"');
+    expect(html).not.toContain("/reading/playground");
   });
 
   it("K122 item 13 — ended with NO date (nextWords null, the schedule off): 'Love will share the next reading date soon.', never 'The next reading is …'", () => {
@@ -176,29 +181,15 @@ describe("left — the viewer's own hangup on a STILL-PUBLISHED stage (K122 item
   });
 });
 
-describe("the Playground banner (TASK-449) — open-only, in EVERY phase, after the stage", () => {
-  it("while Stage 2 is open the banner shows: waiting, live, ended and closed alike", () => {
+describe("the Playground banner (TASK-449) is RETIRED (TASK-473, block 968,624) — the agenda's own notice line does that job now", () => {
+  it("no banner anywhere, in any phase — no kicker, no 'Want an encore?', no /reading/playground href", () => {
     for (const over of [
       { phase: "closed" },
       { phase: "published", room: ROOM },
       { phase: "closed", ended: true, nextWords: "Wednesday, September 30" },
     ] as const) {
-      const html = render(bodyProps({ ...over, playgroundOpen: true }));
-      expect(html).toContain('<p class="kicker">The Playground</p>');
-      expect(html).toContain("Want an encore?");
-      expect(html).toContain("Go to the Playground");
-      expect(html).toContain('href="/reading/playground"');
-      expect(html).not.toContain("Go to the Playground →"); // ruling 1: no arrow
-    }
-  });
-
-  it("closed Stage 2 (playgroundOpen false) renders NO banner in any phase", () => {
-    for (const over of [
-      { phase: "closed" },
-      { phase: "published", room: ROOM },
-      { phase: "closed", ended: true, nextWords: "Wednesday, September 30" },
-    ] as const) {
-      const html = render(bodyProps({ ...over, playgroundOpen: false }));
+      const html = render(bodyProps(over));
+      expect(html).not.toContain('<p class="kicker">The Playground</p>');
       expect(html).not.toContain("Want an encore?");
       if (!over.ended) expect(html).not.toContain("/reading/playground");
     }
@@ -233,10 +224,10 @@ describe("the countdown rides the island now (K122 item 6a) — cells only while
     expect(html).not.toContain("kit-when");
   });
 
-  it("the page hands the countdown INTO ReadingStage as server-composed nodes — never a bare page mount that can't know the phase", async () => {
+  it("the page hands the countdown INTO ReadingStage as server-composed nodes — never a bare page mount that can't know the phase (TASK-473: composed into the stage1 prop object ReadingStageDeck reads, not a bare JSX attribute any more)", async () => {
     const page = await read(PAGE);
-    expect(page).toContain("countdown={");
-    expect(page).toContain("countdownWhen={");
+    expect(page).toContain("countdown: (");
+    expect(page).toContain("countdownWhen: (");
     const src = await read(STAGE);
     expect(src).toContain("countdownWhen");
   });
@@ -253,10 +244,10 @@ describe("the ended words name the NEXT reading, never the one that just ended (
     expect(readingShownNext(NEXT, FOLLOWING, 2_500)).toBe(FOLLOWING);
   });
 
-  it("the page derives following = nextReading(schedule, next.endsAtMs) and hands it into the island", async () => {
+  it("the page derives following = nextReading(schedule, next.endsAtMs) and hands it into the island (TASK-473: via the stage1 prop object, shorthand)", async () => {
     const page = await read(PAGE);
     expect(page).toContain("nextReading(schedule, next.endsAtMs)");
-    expect(page).toContain("following={");
+    expect(page).toContain("following,");
   });
 });
 
@@ -297,14 +288,13 @@ describe("the island's own wiring — source pins (the repo runs no jsdom)", () 
     expect(src).not.toContain(">Watch Love live<");
   });
 
-  it("the banner replaced the Stage 2 card + single-embed branch (TASK-449): banner words and its own /api/stage2 poll; none of the retired shape survives", async () => {
+  it("the Stage 2 card + single-embed branch (TASK-449) stays retired, AND its own banner is retired too (TASK-473, block 968,624) — no /api/stage2 poll left in this file at all", async () => {
     const src = await read(STAGE);
-    expect(src).toContain('<p className="kicker">The Playground</p>');
-    expect(src).toContain("Want an encore?");
-    expect(src).toContain("Go to the Playground");
-    expect(src).toContain('href="/reading/playground"');
-    expect(src).not.toContain("Go to the Playground →");
-    expect(src).toContain('fetch("/api/stage2", { cache: "no-store" })');
+    expect(src).not.toContain('<p className="kicker">The Playground</p>');
+    expect(src).not.toContain("Want an encore?");
+    expect(src).not.toContain("Go to the Playground");
+    expect(src).not.toContain('href="/reading/playground"');
+    expect(src).not.toContain('fetch("/api/stage2"');
     for (const gone of [
       "showStage2Card",
       "stage2Room",

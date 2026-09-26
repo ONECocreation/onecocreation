@@ -189,27 +189,28 @@ describe("the page itself — source pins (async server component, headers()-dep
     expect(src).toContain("config.reading ?? DEFAULT_READING_SCHEDULE");
   });
 
-  it("Stage 1 is phase-only SSR: the page mounts ReadingStage with the phase from getStage1State() — never a room path, never a client-only door", async () => {
+  it("Stage 1 is phase-only SSR: the page mounts ReadingStageDeck (TASK-473) with the phase from getStage1State() — never a room path, never a client-only door", async () => {
     const src = await read(PAGE_PATH);
-    expect(src).toContain('from "@/components/reading/ReadingStage"');
-    expect(src).toContain("(await getStage1State()).phase");
+    expect(src).toContain('from "@/components/reading/ReadingStageDeck"');
+    expect(src).toContain("const stage1State = await getStage1State();");
+    expect(src).toContain("const stage1Phase = stage1State.phase;");
     expect(src).not.toContain("readingDoorHref");
     expect(src).not.toMatch(/href="\/rooms\//);
     expect(src).not.toContain("Enter the reading room");
     expect(src).not.toContain("Sign in to join");
   });
 
-  it("the countdown rides INSIDE ReadingStage as server-composed nodes (K122 item 6a — the stage2Details idiom, the island owns the phase), and the page derives the FOLLOWING reading for the ended words (K122 item 7)", async () => {
+  it("the countdown rides INSIDE ReadingStage as server-composed nodes (K122 item 6a — the stage2Details idiom, the island owns the phase), and the page derives the FOLLOWING reading for the ended words (K122 item 7) — TASK-473: composed into the stage1 prop object ReadingStageDeck reads", async () => {
     const src = await read(PAGE_PATH);
-    expect(src).toContain("countdown={");
-    expect(src).toContain("countdownWhen={");
+    expect(src).toContain("countdown: (");
+    expect(src).toContain("countdownWhen: (");
     expect(src).toContain("nextReading(schedule, next.endsAtMs)");
-    expect(src).toContain("following={");
+    expect(src).toContain("following,");
   });
 
   it("S8 (TASK-471, block 968,624): the hero countdown targets the Housewarming (HOUSEWARMING_TIME), never the raw schedule/next the Reading's own row (ReadingDayBody.tsx) and the ended words still use", async () => {
     const src = await read(PAGE_PATH);
-    expect(src).toContain('import { HOUSEWARMING_TIME } from "@/lib/reading-day"');
+    expect(src).toContain('import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt, clockWords } from "@/lib/reading-day"');
     // both countdown nodes read the housewarming-derived pair, not the raw schedule/next
     expect(src).toContain("schedule={{ ...schedule, time: HOUSEWARMING_TIME }}");
     expect(src).toContain("next={housewarmingNext}");
@@ -219,9 +220,10 @@ describe("the page itself — source pins (async server component, headers()-dep
     // ReadingStage itself, and the ended-card's own "following" derivation,
     // still ride the real, unmodified schedule/next (Row 2's own time,
     // ReadingDayBody.tsx, is untouched by this — a different file, this
-    // lane's own OWNS)
-    expect(src).toContain("next={next}");
-    expect(src).toContain("following={following}");
+    // lane's own OWNS) — TASK-473: shorthand object properties now, not
+    // bare JSX attributes
+    expect(src).toContain("next,");
+    expect(src).toContain("following,");
   });
 
   it("TASK-468 (block 968,561): the sign-up/sign-in box — ReadingSignInBox mounted exactly once, ReadingSignUp retired from this page — the letters, never a second door", async () => {
@@ -275,6 +277,22 @@ describe("the page itself — source pins (async server component, headers()-dep
     for (const cls of ["kitx-balanced", "kitx-flow", "kitx-host", "kitx-section"]) {
       expect(src).toContain(cls);
     }
+  });
+
+  it("fix round (block 968,624): the default selection reads the REAL Q&A door (src/lib/qa-door.ts), never a hardcoded closed — the same phase/publishedAtMs shape stage1/stage2 already read, fails closed on a throw", async () => {
+    const src = await read(PAGE_PATH);
+    expect(src).toContain('import { getQaState, IDLE as QA_IDLE } from "@/lib/qa-door"');
+    expect(src).toContain("await getQaState()");
+    expect(src).toContain('open: qaState.phase === "published"');
+    expect(src).toContain("openedAtMs: qaState.publishedAtMs");
+    // fails CLOSED on a throw — never lets a broken vault read as open
+    const qaBlock = src.slice(src.indexOf("let qaState = QA_IDLE;"), src.indexOf("const doors: PartDoorInfo[]"));
+    expect(qaBlock).toContain("try {");
+    expect(qaBlock).toContain("qaState = await getQaState();");
+    expect(qaBlock).toContain("} catch {");
+    expect(qaBlock).toContain("qaState = QA_IDLE;");
+    // never the old hardcoded literal
+    expect(src).not.toContain("open: false, openedAtMs: null }");
   });
 });
 

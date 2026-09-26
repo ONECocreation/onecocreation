@@ -13,9 +13,12 @@ import { ReadingStageBody, type ReadingStageBodyProps } from "@/components/readi
  * 2. the published "Watch Love live" link was the small kit button.
  *
  * TASK-471 (block 968,624) retires the Heart Field link entirely (Stage 1
- * mounts in place); this file's surviving pins are the banner kicker
- * (still true, untouched) and the ONE-SIZE-BUTTON discipline, re-proven
- * against the current shape's own controls.
+ * mounts in place). TASK-473 (block 968,624) retires the banner ITSELF
+ * (its job is now the agenda's own single notice line,
+ * `ReadingDayOpenNotice`) — this file's surviving pin is the
+ * ONE-SIZE-BUTTON discipline, re-proven against the current shape's own
+ * controls; the banner-kicker pin is kept only as the retirement's own
+ * record.
  */
 
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
@@ -29,7 +32,6 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     phase: "closed",
     signedIn: true,
     room: null,
-    playgroundOpen: false,
     playgroundLock: { locked: false, floorName: "Test Tier" },
     jitsiDomain: DOMAIN,
     nextWords: null,
@@ -39,6 +41,7 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     ended: false,
     onRoomEnded: () => {},
     onRejoin: () => {},
+    partLabel: null,
     ...overrides,
   };
 }
@@ -47,17 +50,17 @@ function render(p: ReadingStageBodyProps): string {
   return renderToStaticMarkup(createElement(ReadingStageBody, p));
 }
 
-describe('TASK-464 — the Playground banner kicker drops "Stage 2 · " (still true)', () => {
-  it('rendered: playgroundOpen true -> <p class="kicker">The Playground</p>, never the old kicker string', () => {
-    const html = render(bodyProps({ phase: "closed", playgroundOpen: true }));
-    expect(html).toContain('<p class="kicker">The Playground</p>');
+describe("TASK-464's own banner kicker is retired along with the whole banner (TASK-473, block 968,624)", () => {
+  it("rendered: no kicker, no banner, in any state", () => {
+    const html = render(bodyProps({}));
+    expect(html).not.toContain('<p class="kicker">The Playground</p>');
     expect(html).not.toContain("Stage 2 · the Playground");
   });
 
-  it("source: the old kicker string is gone; the new one is the exact JSX line", async () => {
+  it("source: neither the old nor the retired kicker string survives in ReadingStage.tsx", async () => {
     const src = await read(STAGE);
     expect(src).not.toContain("Stage 2 · the Playground");
-    expect(src).toContain('<p className="kicker">The Playground</p>');
+    expect(src).not.toContain('<p className="kicker">The Playground</p>');
   });
 });
 
@@ -72,15 +75,15 @@ describe("TASK-464/471 — every surviving button on the card is the small kit b
     expect(html).toMatch(/<button[^>]*class="kit-btn kit-btn-main kit-btn-sm"[^>]*>\s*Back to the reading\s*<\/button>/);
   });
 
-  it("ended, published underneath: Watch part two is kit-btn-sm", () => {
+  it("ended, published underneath: Watch the Book Talk is kit-btn-sm, picks Part 3 in-page (never /reading/playground)", () => {
     const html = render(bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30" }));
-    expect(html).toContain("Watch part two");
-    expect(html).toMatch(/<a class="kit-btn kit-btn-main kit-btn-sm" href="\/reading\/playground">/);
-  });
-
-  it("the Playground banner's own button stays kit-btn-sm too", () => {
-    const html = render(bodyProps({ playgroundOpen: true }));
-    expect(html).toMatch(/<a class="kit-btn kit-btn-main kit-btn-sm" href="\/reading\/playground">\s*Go to the Playground\s*<\/a>/);
+    expect(html).toContain("Watch the Book Talk");
+    // fix round (block 968,624): the shining/second class now depends on
+    // the shared selection (outside any Provider this file's own bare
+    // render defaults to Part 1 selected, so Part 3's own pick reads
+    // kit-btn-second — still one house button size, kit-btn-sm)
+    expect(html).toMatch(/<a class="kit-btn kit-btn-(main|second) kit-btn-sm" href="#stage">/);
+    expect(html).not.toContain("/reading/playground");
   });
 });
 
@@ -89,9 +92,7 @@ describe("TASK-464 — no arrow or emoji on any /reading button label", () => {
   const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
   const cases: Array<Partial<ReadingStageBodyProps>> = [
     { phase: "closed" },
-    { phase: "closed", playgroundOpen: true },
     { phase: "published", signedIn: true, room: ROOM },
-    { phase: "published", signedIn: true, room: ROOM, playgroundOpen: true },
     { phase: "published", signedIn: false, room: ROOM },
     { phase: "published", ended: true, nextWords: "Wednesday, September 30" },
     { phase: "published", left: true },

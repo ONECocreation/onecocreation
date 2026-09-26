@@ -26,8 +26,7 @@ const PAGE = "src/app/reading/page.tsx";
 const ROOM = "oc-0123456789abcdef";
 const DOMAIN = "meet.reading-polish-fixture.invalid";
 const FLOOR_NAME = TIERS[STAGE2_MIN_TIER].name;
-const PLAYGROUND_HREF = "/reading/playground";
-const PLAYGROUND_LABEL = "Watch part two";
+const PART3_LABEL = "Watch the Book Talk";
 const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
 
 function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyProps {
@@ -35,7 +34,6 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     phase: "closed",
     signedIn: true,
     room: null,
-    playgroundOpen: false,
     playgroundLock: { locked: false, floorName: FLOOR_NAME },
     jitsiDomain: DOMAIN,
     nextWords: null,
@@ -45,6 +43,7 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     ended: false,
     onRoomEnded: () => {},
     onRejoin: () => {},
+    partLabel: null,
     ...overrides,
   };
 }
@@ -89,9 +88,9 @@ describe("TASK-466 ruling 3 — one button size everywhere on the card", () => {
     }
   });
 
-  it("the Playground banner's own button stays kit-btn-sm too (unchanged, but re-proven under this ruling)", () => {
-    const html = render(bodyProps({ playgroundOpen: true }));
-    expect(html).toMatch(/<a class="kit-btn kit-btn-main kit-btn-sm" href="\/reading\/playground">\s*Go to the Playground\s*<\/a>/);
+  it("the Playground banner is retired (TASK-473, block 968,624) — no such button survives here any more", () => {
+    const html = render(bodyProps({}));
+    expect(html).not.toContain("Go to the Playground");
   });
 });
 
@@ -110,19 +109,21 @@ describe("TASK-466 ruling 2 — no em dash in any rendered phase's text", () => 
   });
 });
 
-describe("TASK-466 ruling 1 — the ended card drops Watch again for one Playground door", () => {
-  it("published-underneath ended: no Watch again, exactly one /reading/playground link labelled \"Watch part two\"", () => {
+describe("TASK-466 ruling 1 — the ended card drops Watch again for one in-page Part 3 pick (TASK-473, block 968,624: never /reading/playground any more)", () => {
+  it("published-underneath ended: no Watch again, exactly one #stage pick labelled \"Watch the Book Talk\"", () => {
     const html = render(bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30" }));
     expect(html).not.toContain("Watch again");
-    expect([...html.matchAll(new RegExp(PLAYGROUND_HREF.replace("/", "\\/"), "g"))]).toHaveLength(1);
-    expect(html).toContain(PLAYGROUND_LABEL);
+    expect(html).not.toContain("/reading/playground");
+    expect([...html.matchAll(/href="#stage"/g)]).toHaveLength(1);
+    expect(html).toContain(PART3_LABEL);
   });
 
-  it("closed-underneath ended: the SAME door", () => {
+  it("closed-underneath ended: the SAME pick", () => {
     const html = render(bodyProps({ phase: "closed", ended: true, nextWords: "Wednesday, September 30" }));
     expect(html).not.toContain("Watch again");
-    expect([...html.matchAll(new RegExp(PLAYGROUND_HREF.replace("/", "\\/"), "g"))]).toHaveLength(1);
-    expect(html).toContain(PLAYGROUND_LABEL);
+    expect(html).not.toContain("/reading/playground");
+    expect([...html.matchAll(/href="#stage"/g)]).toHaveLength(1);
+    expect(html).toContain(PART3_LABEL);
   });
 
   it("never links to /rooms/heart-field from the ended card any more", () => {
@@ -137,7 +138,7 @@ describe("TASK-466 ruling 1 — the ended card drops Watch again for one Playgro
       bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30", playgroundLock: { locked: true, floorName: FLOOR_NAME } }),
     );
     expect(html).toMatch(/<svg[^>]*aria-hidden="true"[^>]*>/);
-    expect(html).toContain(`Part two is for ${FLOOR_NAME} members and up.`);
+    expect(html).toContain(`The Book Talk is for ${FLOOR_NAME} members and up.`);
   });
 
   it("unlocked: neither the lock svg nor the floor words render", () => {
@@ -148,14 +149,14 @@ describe("TASK-466 ruling 1 — the ended card drops Watch again for one Playgro
     expect(html).not.toContain("members and up.");
   });
 
-  it("no duplicate Playground button: when the banner is ALSO showing (playgroundOpen), the ended card yields to it — exactly one /reading/playground link on the page", () => {
+  it("no duplicate Part 3 door: with the banner retired (TASK-473), the ended card's own #stage pick is the ONLY control, in every state", () => {
     for (const phase of ["published", "closed"] as const) {
       const html = render(
-        bodyProps({ phase, ended: true, nextWords: "Wednesday, September 30", playgroundOpen: true, playgroundLock: { locked: true, floorName: FLOOR_NAME } }),
+        bodyProps({ phase, ended: true, nextWords: "Wednesday, September 30", playgroundLock: { locked: true, floorName: FLOOR_NAME } }),
       );
-      expect([...html.matchAll(new RegExp(PLAYGROUND_HREF.replace("/", "\\/"), "g"))]).toHaveLength(1);
-      expect(html).not.toContain(PLAYGROUND_LABEL); // the banner's own "Go to the Playground" is the one door
-      expect(html).toContain("Go to the Playground");
+      expect([...html.matchAll(/href="#stage"/g)]).toHaveLength(1);
+      expect(html).toContain(PART3_LABEL);
+      expect(html).not.toContain("Go to the Playground");
     }
   });
 });

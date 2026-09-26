@@ -102,11 +102,12 @@ describe("the /reading page — the sky band and the approved structure", () => 
     expect(src).not.toContain('variant="card"');
   });
 
-  it("mounts ReadingStage with the phase only (phase-only SSR), and reads the phase from getStage1State", async () => {
+  it("mounts ReadingStage (via ReadingStageDeck, TASK-473) with the phase only (phase-only SSR), and reads the phase from getStage1State", async () => {
     const src = await read(PAGE);
-    expect(src).toContain("(await getStage1State()).phase");
-    expect(src).toContain("initialPhase={");
-    expect(src).toContain("<ReadingStage");
+    expect(src).toContain("const stage1State = await getStage1State();");
+    expect(src).toContain("const stage1Phase = stage1State.phase;");
+    expect(src).toContain("initialPhase: stage1Phase,");
+    expect(src).toContain("<ReadingStageDeck");
     /* TASK-449: the stage2Details prop is RETIRED (the Playground page is
        Stage2Details' only consumer now). TASK-471/472 (block 968,624): the
        week-pass import is ALSO retired from this page — that was
@@ -147,7 +148,7 @@ describe("the /reading page — the sky band and the approved structure", () => 
        floor name is DERIVED (stage2-access.ts's STAGE2_FLOOR_NAME) — the
        Admiral raised it to Observer, so the literal "Weekly Intuitive"
        would now be wrong. */
-    expect(src).toContain("Join the discussion after: the Playground, a live group video call with Love, with every membership from ${STAGE2_FLOOR_NAME} up");
+    expect(src).toContain("Join the discussion after: a live group video call with Love, with every membership from ${STAGE2_FLOOR_NAME} up");
     expect(src).not.toContain("from Weekly Intuitive up");
     expect(src).not.toContain("with any membership");
     /* TASK-471/472 (block 968,624): the "one-week pass" clause is retired

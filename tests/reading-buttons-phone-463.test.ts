@@ -27,7 +27,6 @@ function render(overrides: Partial<ReadingStageBodyProps>): string {
       phase: "closed",
       signedIn: true,
       room: null,
-      playgroundOpen: false,
       playgroundLock: { locked: false, floorName: "Test Tier" },
       jitsiDomain: "meet.example",
       nextWords: null,
@@ -37,6 +36,7 @@ function render(overrides: Partial<ReadingStageBodyProps>): string {
       ended: false,
       onRoomEnded: () => {},
       onRejoin: () => {},
+    partLabel: null,
       ...overrides,
     }),
   );

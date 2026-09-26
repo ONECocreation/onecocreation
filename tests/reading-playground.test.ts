@@ -178,15 +178,14 @@ describe("the known-by name (readingViewerName, ported verbatim from 179fce8 —
 });
 
 describe("the banner replaced the /reading Stage 2 card (the seam)", () => {
-  it("ReadingStage carries the banner — ruling-1 words, no arrow — and its own /api/stage2 poll", async () => {
+  it("ReadingStage's own banner is retired (TASK-473, block 968,624) — the agenda's own notice line does that job now, no /api/stage2 poll left in this file", async () => {
     const src = await read(STAGE);
-    expect(src).toContain('<p className="kicker">The Playground</p>');
+    expect(src).not.toContain('<p className="kicker">The Playground</p>');
     expect(src).not.toContain("Stage 2 · the Playground");
-    expect(src).toContain("Want an encore?");
-    expect(src).toContain("Go to the Playground");
-    expect(src).toContain('href="/reading/playground"');
-    expect(src).not.toContain("Go to the Playground →");
-    expect(src).toContain('fetch("/api/stage2", { cache: "no-store" })');
+    expect(src).not.toContain("Want an encore?");
+    expect(src).not.toContain("Go to the Playground");
+    expect(src).not.toContain('href="/reading/playground"');
+    expect(src).not.toContain('fetch("/api/stage2"');
   });
 
   it("…and NONE of the replaced shape survives: no card, no single-embed branch, no Stage2Door import, no stage2Details prop (TASK-471, block 968,624: JitsiRoom itself is now Stage 1's OWN two-way embed — expected here, not retired)", async () => {

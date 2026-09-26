@@ -34,7 +34,6 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     phase: "closed",
     signedIn: true,
     room: null,
-    playgroundOpen: false,
     playgroundLock: { locked: false, floorName: "Test Tier" },
     jitsiDomain: DOMAIN,
     nextWords: null,
@@ -44,6 +43,7 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     ended: false,
     onRoomEnded: () => {},
     onRejoin: () => {},
+    partLabel: null,
     ...overrides,
   };
 }
@@ -73,13 +73,14 @@ describe("TASK-471 (block 968,624) — the Heart Field door is retired from the 
     expect(html).toMatch(/<button[^>]*>\s*Back to the reading\s*<\/button>/);
   });
 
-  it("ended, still published: no Watch again, no Heart Field link — the ended card points onward to /reading/playground instead", () => {
+  it("ended, still published: no Watch again, no Heart Field link — the ended card picks Part 3 in-page (TASK-473, block 968,624), never /reading/playground", () => {
     const html = render(bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30" }));
     expect(html).not.toMatch(/<button[^>]*>\s*Watch again/);
     expect(html).not.toContain("Watch again");
     expect(html).not.toContain("/rooms/heart-field");
-    expect(html).toContain("Watch part two");
-    expect(html).toContain("/reading/playground");
+    expect(html).toContain("Watch the Book Talk");
+    expect(html).not.toContain("/reading/playground");
+    expect(html).toContain('href="#stage"');
   });
 });
 

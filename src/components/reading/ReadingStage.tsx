@@ -4,6 +4,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import JitsiRoom from "@/components/booking/JitsiRoom";
+import ReadingPartSelectLink from "./ReadingPartSelectLink";
+import { useReadingPart } from "./ReadingPartContext";
 
 /**
  * READING STAGE (TASK-438, block 968,222; HOLD LIFTED block 968,269) —
@@ -32,9 +34,20 @@ import JitsiRoom from "@/components/booking/JitsiRoom";
  *
  * The phase-control law still holds where it still applies: closed has no
  * control, the room's own toolbar (fullscreen, hang-up, chat — Jitsi's,
- * never a page control) is the only control while showing the room, ended
- * keeps its one Playground door, left offers one in-page "Back to the
- * reading" (no navigation — it just remounts the same room).
+ * never a page control) is the only control while showing the room, left
+ * offers one in-page "Back to the reading" (no navigation — it just
+ * remounts the same room).
+ *
+ * TASK-473 (block 968,624, the Admiral's flow ruling) — this file is now
+ * ONE of four screens `ReadingStageDeck` can mount ("the video changes to
+ * the correct one" as the visitor picks a time on the agenda); it stays
+ * completely unchanged in its OWN prop contract (parts 1 and 2 share this
+ * one door). Two things this ruling DID retire from here: the old
+ * "encore" banner, shown whenever Stage 2 was open — gone, its job is now
+ * the agenda's own single notice line, `ReadingDayOpenNotice` — and the
+ * ended card's Link to `/reading/playground` (now
+ * `ReadingPartSelectLink`, an in-page pick of Part 3 — no address on
+ * /reading points at `/reading/playground` any more).
  *
  * `ReadingStageBody` is the pure presentation (renderToStaticMarkup
  * tests); the default export owns the fetching.
@@ -67,6 +80,16 @@ export interface ReadingStageProps {
    *  real. `floorName` reads `TIERS[STAGE2_MIN_TIER].name` — never a
    *  literal. */
   playgroundLock: { locked: boolean; floorName: string };
+  /** fix round (block 968,624, the Admiral's Chrome walk) — "the top
+   *  screen must say which part it's showing": the FULL label strings
+   *  ReadingDayBody's own rows already carry ("12:12 PM MDT · The
+   *  Housewarming" / "1:11 PM MDT · The Reading"), computed once in
+   *  reading/page.tsx from the SAME `clockWords()` call — never a second
+   *  literal. Null only when the schedule itself is off. The default
+   *  export picks between the two off the shared selection (parts 1/2
+   *  share this one door, but the visitor picked ONE of the two rows). */
+  housewarmingLabel: string | null;
+  readingLabel: string | null;
 }
 
 export interface ReadingStageBodyProps {
@@ -82,9 +105,10 @@ export interface ReadingStageBodyProps {
   left: boolean;
   ended: boolean;
   nextWords: string | null;
-  /** the Playground banner's open truth (the island's own /api/stage2
-   *  poll) — the banner shows in every phase while Stage 2 is open */
-  playgroundOpen: boolean;
+  /** fix round (block 968,624) — see ReadingStageProps; already resolved
+   *  to the ONE label the default export's own `selected` picked. Null
+   *  only when the schedule is off (no clock words to show at all). */
+  partLabel: string | null;
   /** TASK-466 — see ReadingStageProps. Read only on the ended card's own
    *  Playground link: locked shows the lock glyph + the quiet floor
    *  words, entitled shows neither. */
@@ -157,16 +181,21 @@ export function ReadingStageBody({
   left,
   ended,
   nextWords,
-  playgroundOpen,
   playgroundLock,
   countdown,
   countdownWhen,
   onRoomEnded,
   onRejoin,
+  partLabel,
 }: ReadingStageBodyProps) {
   /* the ONE gate for mounting the real two-way room: published, signed
      in, not left, not ended, and a room the poll actually gave us. */
   const showRoom = phase === "published" && signedIn && !left && !ended && !!room;
+  /* fix round (block 968,624) — the chip ALWAYS names the part (when the
+     schedule gives one); "Live · " only rides while actually published
+     and not ended, the same condition the old bare "Live" chip used. */
+  const isLive = phase === "published" && !ended;
+  const chipText = partLabel ? (isLive ? `Live · ${partLabel}` : partLabel) : isLive ? "Live" : null;
 
   return (
     <>
@@ -180,12 +209,12 @@ export function ReadingStageBody({
             <div className="kit-stage-viewer">
               <JitsiRoom domain={jitsiDomain} room={room as string} onEnded={onRoomEnded} height="100%" />
             </div>
-            <span className="kit-stage-chip">Live</span>
+            {chipText && <span className="kit-stage-chip">{chipText}</span>}
           </div>
         ) : (
           <div className="kit-stage-media kit-stage-waiting kit-stage-waiting--cover">
             <img src={COVER_SRC} alt={COVER_ALT} width="600" height="358" />
-            {phase === "published" && !ended && <span className="kit-stage-chip">Live</span>}
+            {chipText && <span className="kit-stage-chip">{chipText}</span>}
           </div>
         )}
         {showRoom ? null : ended ? (
@@ -198,18 +227,17 @@ export function ReadingStageBody({
             <p className="kit-text-quiet">
               {nextWords ? `The next reading is ${nextWords}.` : "Love will share the next reading date soon."}
             </p>
-            {!playgroundOpen && (
-              <>
-                <div className="kit-btn-row">
-                  <Link href="/reading/playground" className="kit-btn kit-btn-main kit-btn-sm">
-                    {playgroundLock.locked && PLAYGROUND_LOCK_ICON}
-                    Watch part two
-                  </Link>
-                </div>
-                {playgroundLock.locked && (
-                  <p className="kit-text-quiet">Part two is for {playgroundLock.floorName} members and up.</p>
-                )}
-              </>
+            {/* TASK-473 (block 968,624): the visitor picks Part 3 IN PAGE
+                now — never a Link to /reading/playground (that address is
+                retired from every door on /reading). */}
+            <div className="kit-btn-row">
+              <ReadingPartSelectLink part={3}>
+                {playgroundLock.locked && PLAYGROUND_LOCK_ICON}
+                Watch the Book Talk
+              </ReadingPartSelectLink>
+            </div>
+            {playgroundLock.locked && (
+              <p className="kit-text-quiet">The Book Talk is for {playgroundLock.floorName} members and up.</p>
             )}
           </div>
         ) : left ? (
@@ -255,22 +283,6 @@ export function ReadingStageBody({
           </div>
         )}
       </div>
-      {/* THE PLAYGROUND BANNER (TASK-449 — ruling 1's words, no arrow):
-          after the stage, in every phase, only while Stage 2 is open */}
-      {playgroundOpen && (
-        <div className="kit-card kit-card-body kitx-flow kit-stage2-card">
-          <p className="kicker">The Playground</p>
-          <h2 className="kit-h2">Want an encore?</h2>
-          <p className="kit-body">
-            Love is opening the Playground now: a live video call right after the reading. Come up and talk with her.
-          </p>
-          <div className="kit-btn-row kitx-actions">
-            <Link href="/reading/playground" className="kit-btn kit-btn-main kit-btn-sm">
-              Go to the Playground
-            </Link>
-          </div>
-        </div>
-      )}
     </>
   );
 }
@@ -287,7 +299,13 @@ export default function ReadingStage({
   countdown,
   countdownWhen,
   playgroundLock,
+  housewarmingLabel,
+  readingLabel,
 }: ReadingStageProps) {
+  /* fix round (block 968,624) — parts 1/2 share this one door, but the
+     chip names whichever ROW the visitor actually picked. */
+  const { selected } = useReadingPart();
+  const partLabel = selected === 2 ? readingLabel : housewarmingLabel;
   /* prepared is PRIVATE — a visitor's phase is closed until published */
   const [phase, setPhase] = useState<"closed" | "published">(initialPhase === "published" ? "published" : "closed");
   const [room, setRoom] = useState<string | null>(null);
@@ -297,9 +315,6 @@ export default function ReadingStage({
      never meets Date.now() in render), and only ever rendered in the
      ended branch, so SSR and the first client paint agree */
   const [nextWords, setNextWords] = useState<string | null>(null);
-  /* TASK-449 — the banner's own open truth (display only; the Playground
-     page's island re-decides at its own door) */
-  const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const phaseRef = useRef(phase);
 
   /* K122 item 7 + the purity law — the ended words name the NEXT reading
@@ -362,33 +377,6 @@ export default function ReadingStage({
     };
   }, [markEnded]);
 
-  /* TASK-449 — the Playground banner's own poll (the same 20 s cadence
-     the Stage 2 door uses; a sibling poll, not a shared one): the banner
-     shows in EVERY phase while Stage 2 is open and goes the poll after
-     Love closes. The anonymous-safe key is `d.open` — an anonymous
-     visitor learns only whether the door is open, never a room. */
-  useEffect(() => {
-    let alive = true;
-    function poll() {
-      fetch("/api/stage2", { cache: "no-store" })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => {
-          /* T-454: a failed read keeps the last-known state (it used to
-             write undefined — a state change, a re-render) */
-          if (alive && d?.ok) setPlaygroundOpen(d.open === true);
-        })
-        .catch(() => {
-          /* a missed poll leaves the last-known display state */
-        });
-    }
-    poll();
-    const id = setInterval(poll, POLL_MS);
-    return () => {
-      alive = false;
-      clearInterval(id);
-    };
-  }, []);
-
   /* K122 item 8 — a viewer's own hangup is NEVER assumed to be "the
      reading has ended": the stage's own fresh truth decides. Still
      published -> "You left the reading." + Back to the reading (an
@@ -434,12 +422,12 @@ export default function ReadingStage({
       left={left}
       ended={ended}
       nextWords={nextWords}
-      playgroundOpen={playgroundOpen}
       playgroundLock={playgroundLock}
       countdown={countdown}
       countdownWhen={countdownWhen}
       onRoomEnded={roomEnded}
       onRejoin={rejoin}
+      partLabel={partLabel}
     />
   );
 }
