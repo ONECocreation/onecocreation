@@ -6,17 +6,18 @@ import ReadingDayBody, { type ReadingDayBodyProps } from "@/components/reading/R
 import type { Tier } from "@/lib/entitlement";
 
 /**
- * TASK-469 (block 968,567) — THE 12:12 HOUSEWARMING ROW.
+ * TASK-469 (block 968,567) -- THE 12:12 HOUSEWARMING ROW.
  *
  * Love, passed on by the Admiral: "will you make a 12:12 button that is
  * linked straight to the stage where everyone gets to see everyone? I
  * wanna have housewarming with introductions and movement before the
  * reading." The Admiral: "yes lets cut the 12:12 room."
  *
- * The two-way call itself needs no code — this pins only the NEW first
- * row on `/reading`'s "The day's agenda" card (TASK-467): free, no
- * lock, the same two buttons (signed in / signed out) as the existing
- * Reading row, pointed at the same `/rooms/heart-field` door.
+ * TASK-471 (block 968,624) reverses this row's own door: Stage 1 is
+ * two-way now and mounts IN PLACE on /reading, so a signed-in visitor's
+ * button points at the stage section on THIS SAME PAGE (`#stage`), never
+ * `/rooms/heart-field`. A signed-out visitor still meets the sign-up
+ * anchor, unchanged.
  *
  * Same fixture pattern `tests/reading-day-467.test.ts` already uses:
  * `America/Denver`, the reading's own civil day (2026-09-23), the
@@ -30,7 +31,7 @@ const ENCORE_MS = Date.parse("2026-09-23T20:22:00.000Z"); // 2:22 PM MDT, same d
 const QA_MS = Date.parse("2026-09-23T21:33:00.000Z"); // 3:33 PM MDT, same day
 const HOUSEWARMING_MS = Date.parse("2026-09-23T18:12:00.000Z"); // 12:12 PM MDT, same day, before the reading
 
-const ENCORE_FLOOR = { tier: "A" as Tier, name: "Weekly Intuitive", itemId: "weekly-intuitive", href: "/packages/weekly-intuitive", price: "$33" };
+const ENCORE_FLOOR = { tier: "A" as Tier, name: "Weekly Intuitive", itemId: "weekly-intuitive", href: "/packages/weekly-intuitive", price: "$33", passLive: false };
 const QA_OFFER_LIVE = {
   itemId: "q-a-meetup-with-love",
   passLive: true,
@@ -101,12 +102,14 @@ describe("ReadingDayBody — the Housewarming is the FIRST row, before The Readi
   });
 });
 
-describe("ReadingDayBody — the Housewarming row's buttons: the Reading row's own two states", () => {
-  it("signed in: 'Go to the Heart Field', linked to /rooms/heart-field", () => {
+describe("ReadingDayBody — the Housewarming row's buttons: TASK-471 (block 968,624) retires the Heart Field door", () => {
+  it("signed in: 'Back to the reading', linked to #stage — never /rooms/heart-field", () => {
     const html = render(bodyProps({ signedIn: true }));
     const row = firstRow(html);
-    expect(row).toContain('href="/rooms/heart-field"');
-    expect(row).toContain("Go to the Heart Field");
+    expect(row).toContain('href="#stage"');
+    expect(row).toContain("Back to the reading");
+    expect(row).not.toContain("Go to the Heart Field");
+    expect(row).not.toContain("/rooms/heart-field");
     expect(row).not.toContain("Sign me up");
   });
 
@@ -115,7 +118,7 @@ describe("ReadingDayBody — the Housewarming row's buttons: the Reading row's o
     const row = firstRow(html);
     expect(row).toContain('href="#sign-up"');
     expect(row).toContain("Sign me up");
-    expect(row).not.toContain("Go to the Heart Field");
+    expect(row).not.toContain("Back to the reading");
   });
 
   it("both button states carry kit-btn kit-btn-main kit-btn-sm, the one button size on the card", () => {

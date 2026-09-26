@@ -21,11 +21,14 @@ import ReadingDayUnlockButton from "./ReadingDayUnlockButton";
  * make a 12:12 button that is linked straight to the stage where
  * everyone gets to see everyone? I wanna have housewarming with
  * introductions and movement before the reading." The Admiral: "yes lets
- * cut the 12:12 room." The two-way call needs no code (Love opens the
- * live room from /a/studio; every signed-in visitor on
- * `/rooms/heart-field` gets it) — this adds only a new FIRST row, free,
- * no lock, the exact two buttons the Reading row already carries,
- * pointed at the same door.
+ * cut the 12:12 room." This adds only a new FIRST row, free, no lock, the
+ * exact two buttons the Reading row already carries.
+ *
+ * TASK-471 (block 968,624) — Stage 1 becomes TWO-WAY and lives ON
+ * /reading (ReadingStage.tsx mounts the room in place); the ONLY door for
+ * a signed-in visitor is the stage section on THIS SAME PAGE (`#stage`),
+ * never `/rooms/heart-field` — that door is retired from both of these
+ * rows. A signed-out visitor still meets the sign-up anchor, unchanged.
  *
  * PURE presentation over already-derived props — no fetch, no
  * `Date.now()`, renderToStaticMarkup-testable for every state
@@ -83,8 +86,8 @@ export default function ReadingDayBody({
           </span>
           <span className="kit-rows-end">
             {signedIn ? (
-              <Link className="kit-btn kit-btn-main kit-btn-sm" href="/rooms/heart-field">
-                Go to the Heart Field
+              <Link className="kit-btn kit-btn-main kit-btn-sm" href="#stage">
+                Back to the reading
               </Link>
             ) : (
               <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">
@@ -94,16 +97,16 @@ export default function ReadingDayBody({
           </span>
         </li>
 
-        {/* ROW 2 — the reading itself, free, in the Heart Field */}
+        {/* ROW 2 — the reading itself, free, in the two-way stage above */}
         <li>
           <span>
             <b>{`${clockWords(readingStartsAtMs, tz)} · The Reading`}</b>
-            <em>Free. Love reads live in the Heart Field.</em>
+            <em>Free. Love reads live, right here on this page.</em>
           </span>
           <span className="kit-rows-end">
             {signedIn ? (
-              <Link className="kit-btn kit-btn-main kit-btn-sm" href="/rooms/heart-field">
-                Go to the Heart Field
+              <Link className="kit-btn kit-btn-main kit-btn-sm" href="#stage">
+                Back to the reading
               </Link>
             ) : (
               <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">
@@ -119,11 +122,16 @@ export default function ReadingDayBody({
             <b>{`${clockWords(encoreStartsAtMs, tz)} · The Encore in the Playground`}</b>
             <em>A live group video call with Love, going deeper into the book.</em>
             {/* who it's for is always said; the price rides only when the
-                store answers one (Number One's review, block 968,561) */}
+                store answers one (Number One's review, block 968,561).
+                TASK-471 (block 968,624): the buy action is the $11
+                one-time pass when it's live — "$11 once." — never the
+                recurring membership's monthly price mislabeled as such. */}
             {!encoreEntitled && (
               <em>
                 {encoreFloor.price
-                  ? `Comes with ${encoreFloor.name} and up. ${encoreFloor.price} a month.`
+                  ? encoreFloor.passLive
+                    ? `${encoreFloor.price} once.`
+                    : `Comes with ${encoreFloor.name} and up. ${encoreFloor.price} a month.`
                   : `Comes with ${encoreFloor.name} and up.`}
               </em>
             )}

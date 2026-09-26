@@ -9,49 +9,54 @@ import { ReadingStageBody, type ReadingStageBodyProps } from "@/components/readi
  * TASK-463 (block 968,543) — /reading's buttons fit a phone.
  *
  * `.kit-btn` never wraps (kit.css, R-071, unconditional). The closed
- * state's "Go to the Heart Field" (TASK-457) shipped as the full-size
- * `kit-btn-main`: 406 px wide on production, inside a card whose clip box
- * is 316 px on a 360 px phone, so the ends of the words were cut off.
- * It is now the small kit button. The page's bottom button also loses
- * its "↑" (the no-arrow-buttons law, 968,357).
+ * state's "Go to the Heart Field" shipped as the full-size `kit-btn-main`:
+ * 406 px wide on production, inside a card whose clip box is 316 px on a
+ * 360 px phone, so the ends of the words were cut off — it became the
+ * small kit button.
+ *
+ * TASK-471 (block 968,624) retires that door entirely (Stage 1 mounts in
+ * place now; the closed state carries no button at all). This suite's own
+ * surviving pin is the one that never depended on Heart Field: every
+ * button /reading's stage still shows is the small kit button, and the
+ * page's bottom button carries no arrow (968,357).
  */
 
 function render(overrides: Partial<ReadingStageBodyProps>): string {
   return renderToStaticMarkup(
     createElement(ReadingStageBody, {
       phase: "closed",
-      watching: false,
-      failed: false,
-      ended: false,
+      signedIn: true,
       room: null,
       playgroundOpen: false,
-      /* TASK-466 (block 968,561): unlocked by default — this suite never
-         renders the ended card (where the lock is read). */
       playgroundLock: { locked: false, floorName: "Test Tier" },
       jitsiDomain: "meet.example",
       nextWords: null,
       countdown: null,
       countdownWhen: null,
       left: false,
-      onWatch: () => {},
-      onTryAgain: () => {},
-      onViewerEnded: () => {},
+      ended: false,
+      onRoomEnded: () => {},
+      onRejoin: () => {},
       ...overrides,
     }),
   );
 }
 
-describe("TASK-463 — the closed state's Heart Field link is the small kit button", () => {
-  it("renders kit-btn kit-btn-main kit-btn-sm to /rooms/heart-field", () => {
-    expect(render({})).toMatch(
-      /<a class="kit-btn kit-btn-main kit-btn-sm" href="\/rooms\/heart-field">\s*Go to the Heart Field\s*<\/a>/,
-    );
+describe("TASK-463/471 — the stage's buttons are the small kit button, never full size", () => {
+  it("closed: no button at all (the Heart Field door is retired — TASK-471)", () => {
+    const html = render({});
+    expect(html).not.toContain("<a ");
+    expect(html).not.toContain("<button");
   });
 
-  it("the live state's primary Watch Love live is the small button too, since TASK-464 (block 968,548)", () => {
-    expect(render({ phase: "published", room: "shot-room" })).toMatch(
-      /<a class="kit-btn kit-btn-main kit-btn-sm" href="\/rooms\/heart-field">\s*Watch Love live\s*<\/a>/,
-    );
+  it("published, signed out: the one button (Sign me up) is kit-btn-sm", () => {
+    const html = render({ phase: "published", signedIn: false, room: "shot-room" });
+    expect(html).toMatch(/<a class="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">\s*Sign me up\s*<\/a>/);
+  });
+
+  it("left-while-published: the one button (Back to the reading) is kit-btn-sm", () => {
+    const html = render({ phase: "published", left: true });
+    expect(html).toMatch(/<button[^>]*class="kit-btn kit-btn-main kit-btn-sm"[^>]*>\s*Back to the reading\s*<\/button>/);
   });
 });
 

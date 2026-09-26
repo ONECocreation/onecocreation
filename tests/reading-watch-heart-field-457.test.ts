@@ -7,15 +7,18 @@ import { ReadingStageBody, type ReadingStageBodyProps } from "@/components/readi
 import { Stage1CardBody, type Stage1CardBodyProps } from "@/app/a/site/reading/Stage1Card";
 
 /**
- * TASK-457 (block 968,543) — the Admiral's ruling (his tracker notes,
- * block 968,516: w482-where-reading + w482-email-to-watch) REVERSES the
- * earlier ruling that retired the Heart Field doors from /reading: Love
- * only ever goes live in the Heart Field now, and /reading's Watch
- * controls send the visitor there instead of mounting the stream in
- * place. This suite pins the new shape; `tests/reading-stage.test.ts`
- * carries the one re-trued pin from the old shape (the published quiet
- * line) — every other assertion in that file held unmodified because the
- * labels and `kit-btn-main` class are unchanged.
+ * TASK-457 (block 968,543) — the Admiral's ruling REVERSED the earlier
+ * ruling that retired the Heart Field doors from /reading: Love only ever
+ * goes live in the Heart Field, and /reading's Watch controls sent the
+ * visitor there instead of mounting the stream in place.
+ *
+ * TASK-471 (block 968,624) REVERSES TASK-457 in turn: Love's first live
+ * reading is tomorrow, and the Admiral's Saturday ruling makes Stage 1
+ * two-way and mounts it IN PLACE on /reading again. This file, which used
+ * to pin the Heart-Field-link shape, now pins its RETIREMENT — the door
+ * is gone from both the public stage and the admin card's own words.
+ * `tests/reading-stage.test.ts` carries the current shape's own full
+ * record; this file stays as the retirement's own proof.
  */
 
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
@@ -25,27 +28,22 @@ const CARD = "src/app/a/site/reading/Stage1Card.tsx";
 
 const ROOM = "oc-0123456789abcdef";
 const DOMAIN = "meet.reading-stage-fixture.invalid";
-const HEART_FIELD_HREF = "/rooms/heart-field";
 
 function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyProps {
   return {
     phase: "closed",
-    watching: false,
-    failed: false,
-    ended: false,
+    signedIn: true,
     room: null,
     playgroundOpen: false,
-    /* TASK-466 (block 968,561): unlocked by default — this suite doesn't
-       exercise the lock itself (reading-polish-466.test.ts owns that). */
     playgroundLock: { locked: false, floorName: "Test Tier" },
     jitsiDomain: DOMAIN,
     nextWords: null,
     countdown: null,
     countdownWhen: null,
     left: false,
-    onWatch: () => {},
-    onTryAgain: () => {},
-    onViewerEnded: () => {},
+    ended: false,
+    onRoomEnded: () => {},
+    onRejoin: () => {},
     ...overrides,
   };
 }
@@ -54,106 +52,49 @@ function render(p: ReadingStageBodyProps): string {
   return renderToStaticMarkup(createElement(ReadingStageBody, p));
 }
 
-describe("published — Watch Love live is a link to the Heart Field, never an in-place mount", () => {
-  const html = render(bodyProps({ phase: "published", room: ROOM }));
-
-  it('renders exactly one kit-btn-main link (the small size since TASK-464), href="/rooms/heart-field", labelled "Watch Love live"', () => {
-    expect(html).toMatch(
-      new RegExp(
-        `<a class="kit-btn kit-btn-main kit-btn-sm" href="${HEART_FIELD_HREF.replace("/", "\\/")}">\\s*Watch Love live\\s*<\\/a>`,
-      ),
-    );
+describe("TASK-471 (block 968,624) — the Heart Field door is retired from the public stage", () => {
+  it("published, signed in: no href to /rooms/heart-field anywhere, no 'Watch Love live' label", () => {
+    const html = render(bodyProps({ phase: "published", signedIn: true, room: ROOM }));
+    expect(html).not.toContain("/rooms/heart-field");
+    expect(html).not.toContain("Watch Love live");
   });
 
-  it("the quiet line sends the visitor to the Heart Field, names sign-in, and says it's free", () => {
-    expect(html).toContain("It plays in the Heart Field. Sign in with your email if you haven&#x27;t yet. It&#x27;s free.");
-  });
-
-  it("no JitsiViewer mount path from this control — no room string, no viewer class, no iframe", () => {
-    expect(html).not.toContain(ROOM);
-    expect(html).not.toContain("kit-stage-viewer");
-    expect(html).not.toContain("<iframe");
-  });
-});
-
-describe("closed — Go to the Heart Field", () => {
-  const html = render(bodyProps({}));
-
-  it('renders exactly one kit-btn-main link (the small size since TASK-463), href="/rooms/heart-field", labelled "Go to the Heart Field"', () => {
-    expect(html).toMatch(
-      new RegExp(`<a class="kit-btn kit-btn-main kit-btn-sm" href="${HEART_FIELD_HREF.replace("/", "\\/")}">\\s*Go to the Heart Field\\s*<\\/a>`),
-    );
-  });
-
-  it("keeps the round-3 welcome body paragraph untouched, and the quiet line now names the Heart Field", () => {
-    expect(html).toContain(
-      "The reading is live to watch, free. Want to join the discussion? Stay after for a live group video call with Love.",
-    );
-    expect(html).toContain(
-      "The reading plays in the Heart Field. Your Watch button appears right here when Love goes live.",
-    );
-  });
-
-  it("no button anywhere in the closed body — the new control is a link, not a mount", () => {
+  it("closed: no href to /rooms/heart-field, no 'Go to the Heart Field' label, no button at all", () => {
+    const html = render(bodyProps({}));
+    expect(html).not.toContain("/rooms/heart-field");
+    expect(html).not.toContain("Go to the Heart Field");
+    expect(html).not.toContain("<a ");
     expect(html).not.toContain("<button");
   });
-});
 
-describe("ended-while-published: TASK-466 (block 968,561) retired Watch again for the Playground door; left-while-published: Watch again is the same Heart Field link, label unchanged", () => {
-  it("ended, still published: no Watch again anywhere, no /rooms/heart-field link — the ended card now points onward to /reading/playground instead", () => {
+  it("left-while-published: the way back in is an in-page button, never a link to /rooms/heart-field", () => {
+    const html = render(bodyProps({ phase: "published", left: true }));
+    expect(html).not.toMatch(/<a[^>]*href="\/rooms\/heart-field"/);
+    expect(html).toMatch(/<button[^>]*>\s*Back to the reading\s*<\/button>/);
+  });
+
+  it("ended, still published: no Watch again, no Heart Field link — the ended card points onward to /reading/playground instead", () => {
     const html = render(bodyProps({ phase: "published", ended: true, nextWords: "Wednesday, September 30" }));
     expect(html).not.toMatch(/<button[^>]*>\s*Watch again/);
     expect(html).not.toContain("Watch again");
-    expect(html).not.toContain(HEART_FIELD_HREF);
+    expect(html).not.toContain("/rooms/heart-field");
     expect(html).toContain("Watch part two");
     expect(html).toContain("/reading/playground");
   });
+});
 
-  it("left-while-published: Watch again links to /rooms/heart-field", () => {
-    const html = render(bodyProps({ phase: "published", left: true }));
-    expect(html).not.toMatch(/<button[^>]*>\s*Watch again/);
-    expect(html).toMatch(new RegExp(`<a[^>]*href="${HEART_FIELD_HREF.replace("/", "\\/")}"[^>]*>\\s*Watch again\\s*<\\/a>`));
+describe("no <button> or <a> in ReadingStageBody ever calls a Heart Field navigation", () => {
+  it("the source carries no /rooms/heart-field href anywhere", async () => {
+    const src = await read(STAGE);
+    expect(src).not.toContain('href="/rooms/heart-field"');
   });
 });
 
-describe("no <button> in ReadingStageBody calls onWatch — nothing on /reading mounts the stream any more", () => {
-  it("the source carries no onClick={onWatch} anywhere (every former Watch control is now a Link)", async () => {
-    const src = await read(STAGE);
-    expect(src).not.toContain("onClick={onWatch}");
-  });
-
-  it("ReadingStageBody's own JSX never destructures onWatch (it stays only in the type, for the wired watch() click-time fetch)", async () => {
-    const src = await read(STAGE);
-    const fnStart = src.indexOf("export function ReadingStageBody({");
-    expect(fnStart).toBeGreaterThan(-1);
-    const fnHeader = src.slice(fnStart, src.indexOf("ReadingStageBodyProps) {", fnStart));
-    expect(fnHeader).not.toMatch(/\bonWatch\b/);
-  });
-
-  it("every rendered phase across the pure body is free of <button>-calls-onWatch (belt and suspenders on the real markup)", () => {
-    const cases: Array<Partial<ReadingStageBodyProps>> = [
-      { phase: "closed" },
-      { phase: "published", room: ROOM },
-      { phase: "published", ended: true, nextWords: "Wednesday, September 30" },
-      { phase: "closed", ended: true, nextWords: "Wednesday, September 30" },
-      { phase: "published", left: true },
-      { phase: "published", failed: true },
-      { phase: "published", watching: true, room: ROOM },
-    ];
-    for (const over of cases) {
-      const html = render(bodyProps(over));
-      // Try again (failed) is the one legitimate remaining <button>; it never
-      // names "Watch" and never calls onWatch.
-      expect(html).not.toMatch(/<button[^>]*>\s*Watch/);
-    }
-  });
-});
-
-describe("Stage1Card — the published words point the admin at the Heart Field (TASK-457)", () => {
+describe("Stage1Card — the published words no longer point the admin at the Heart Field (TASK-471 reverses TASK-457)", () => {
   it("the source line", async () => {
     const src = await read(CARD);
-    expect(src).toContain("Published — members watch in the Heart Field. /reading sends them there.");
-    expect(src).not.toContain("Published — viewers can watch on /reading.");
+    expect(src).toContain("Published — signed-in visitors join right on /reading.");
+    expect(src).not.toContain("Published — members watch in the Heart Field. /reading sends them there.");
   });
 
   it("the rendered lifecycle row, published phase", () => {
@@ -164,6 +105,6 @@ describe("Stage1Card — the published words point the admin at the Heart Field 
       onAct: () => {},
     };
     const html = renderToStaticMarkup(createElement(Stage1CardBody, props));
-    expect(html).toContain("Published — members watch in the Heart Field. /reading sends them there.");
+    expect(html).toContain("Published — signed-in visitors join right on /reading.");
   });
 });

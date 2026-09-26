@@ -3,7 +3,7 @@ import { TIER_PAGES } from "./tiers-content";
 import { getItem } from "./store";
 import { dollars } from "./money-words";
 import { STAGE2_MIN_TIER, stage2PackageDoor } from "./stage2-access";
-import { QA_ITEM_ID } from "./reading-day";
+import { QA_ITEM_ID, READING_BOOK_TALK_ITEM_ID } from "./reading-day";
 
 /**
  * THE READING DAY BRICK'S SERVER-ONLY DERIVATIONS (TASK-467, block
@@ -18,33 +18,59 @@ import { QA_ITEM_ID } from "./reading-day";
  */
 
 /** What the Encore's locked row shows/does: the floor package's own name,
- *  its package page, the store item id "Unlock with {name}" adds to the
- *  basket, and that item's live monthly price (or null — omit the line). */
+ *  its package page, the buy action's own item id, and its live price
+ *  (or null — omit the line).
+ *
+ *  TASK-471 (block 968,624): the Admiral ruled the book talk's own buy
+ *  action is the $11 ONE-TIME pass — `READING_BOOK_TALK_ITEM_ID`
+ *  (reading-day.ts), its OWN dedicated item, never `stage2-access.ts`'s
+ *  shared `stage2PackageDoor().week` taster (the parallel TASK-472
+ *  review, same block: that taster fulfils a standing membership tier for
+ *  N days — a side door into whichever tier it targets, the wrong shape
+ *  for a single Saturday pass, and specifically wrong while a sibling
+ *  tier is marked "Coming soon"). `passLive` names which one `itemId`/
+ *  `price` actually are: true reads the ONE-TIME price ("$11 once.");
+ *  false falls back to the membership's own monthly price — the book
+ *  talk pass isn't live (or doesn't exist yet) the row simply sells the
+ *  membership instead, never a guessed price. */
 export interface EncoreFloorDoor {
   tier: Tier;
   name: string;
   itemId: string;
   href: string;
   price: string | null;
+  passLive: boolean;
 }
 
 export async function encoreFloorDoor(): Promise<EncoreFloorDoor> {
   const tier = STAGE2_MIN_TIER;
   const page = TIER_PAGES.find((p) => p.tier === tier);
   /* the door's own name/href come from the one function every other paid
-     Stage 2 surface already reads (stage2PackageDoor) — never re-derived */
+     Stage 2 surface already reads (stage2PackageDoor) — never re-derived.
+     Its OWN `week` field (the membership-ladder taster) is never read
+     here — see the interface doc above. */
   const door = await stage2PackageDoor();
-  const itemId = page ? page.slug : tier;
+  const membershipItemId = page ? page.slug : tier;
+
+  try {
+    const item = await getItem(READING_BOOK_TALK_ITEM_ID);
+    const eff = item?.sale ?? item?.price;
+    if (item?.status === "live" && eff?.fiat) {
+      return { tier, name: door.name, itemId: READING_BOOK_TALK_ITEM_ID, href: door.href, price: dollars(eff.fiat.amount, eff.fiat.currency), passLive: true };
+    }
+  } catch {
+    /* fall through to the membership fallback below */
+  }
 
   let price: string | null = null;
   try {
-    const item = await getItem(itemId);
+    const item = await getItem(membershipItemId);
     const eff = item?.sale ?? item?.price;
     if (item?.status === "live" && eff?.fiat) price = dollars(eff.fiat.amount, eff.fiat.currency);
   } catch {
     price = null;
   }
-  return { tier, name: door.name, itemId, href: door.href, price };
+  return { tier, name: door.name, itemId: membershipItemId, href: door.href, price, passLive: false };
 }
 
 /** What the Q&A's locked row shows/does. `passLive` names which item

@@ -16,7 +16,7 @@ import { getStage2State } from "@/lib/stage2";
 import { STAGE2_FLOOR_NAME, STAGE2_MIN_TIER, type Stage2Decision } from "@/lib/stage2-access";
 import { TIERS, tierSatisfies, type Tier } from "@/lib/entitlement";
 import { TIER_PAGES } from "@/lib/tiers-content";
-import { deriveWeekPass } from "@/lib/week-pass";
+import { encoreFloorDoor } from "@/lib/reading-day-doors";
 
 /**
  * TASK-449 (block 968,364; AMENDMENT 1 block 968,366 — "the Playground",
@@ -81,7 +81,14 @@ export default async function PlaygroundPage() {
   const schedule = config.reading ?? DEFAULT_READING_SCHEDULE;
   const next = deriveNext(schedule);
   const published = (await getStage2State()).phase === "published";
-  const weekPass = await deriveWeekPass();
+  /* TASK-471/472 (block 968,624): the book talk's OWN one-time pass, NEVER
+     stage2-access.ts's shared membership taster (deriveWeekPass/week-pass.ts
+     — retired from this page entirely; see reading-day-doors.ts's own
+     docblock). `bookTalkPass` feeds the island's free-member card;
+     `stage2Rows` below gets no pass row at all on this page, since that
+     row is the same retired taster's own display. */
+  const bookTalkFloor = await encoreFloorDoor();
+  const bookTalkPass = bookTalkFloor.passLive ? { itemId: bookTalkFloor.itemId, price: bookTalkFloor.price! } : null;
 
   /* the band's per-visitor line — the rail's own helpers, fail-quiet to
      the plainer band on any membership-check blip (the display never
@@ -98,12 +105,16 @@ export default async function PlaygroundPage() {
   }
   const entitled = visitorTier !== null && tierSatisfies(visitorTier, STAGE2_MIN_TIER);
 
-  /* derive-or-dash: no tier-B page → the memberships shelf, never a 404
-     (stage2-access.ts:56-57's idiom); the NAME rides TIERS — no literal
-     slug, name or price is ever written here */
-  const observerPage = TIER_PAGES.find((p) => p.tier === "B");
+  /* derive-or-dash: no floor-tier page → the memberships shelf, never a
+     404 (stage2-access.ts:56-57's idiom); the NAME rides TIERS — no
+     literal slug, name or price is ever written here. TASK-471 (block
+     968,624): follows STAGE2_MIN_TIER itself now, never a literal "B" —
+     the Admiral's Saturday ruling moved the floor back to Weekly
+     Intuitive (tier A) for this room, and this page's own words must
+     follow it, not repeat TASK-465's Observer literal. */
+  const observerPage = TIER_PAGES.find((p) => p.tier === STAGE2_MIN_TIER);
   const observerHref = observerPage ? `/packages/${observerPage.slug}` : "/memberships";
-  const observerName = TIERS.B.name;
+  const observerName = TIERS[STAGE2_MIN_TIER].name;
 
   /* the band's first paint — the server's read of the same rail (words
      only: the island's body stays fail-closed until the wire answers) */
@@ -133,7 +144,8 @@ export default async function PlaygroundPage() {
               jitsiDomain={config.meeting.jitsiDomain}
               observerHref={observerHref}
               observerName={observerName}
-              stage2Rows={<Stage2Rows weekPass={weekPass} />}
+              bookTalkPass={bookTalkPass}
+              stage2Rows={<Stage2Rows weekPass={null} />}
               initialDecision={initialDecision}
               closedWhen={closedWhen}
               tierName={tierName}

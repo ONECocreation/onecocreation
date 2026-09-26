@@ -51,37 +51,37 @@ beforeEach(() => {
   mockGetItem.mockResolvedValue(null);
 });
 
-describe("STAGE2_MIN_TIER — ruling A/B, block 968,561: the floor moves to Observer", () => {
-  it('is "B" (Observer), not "A" (Weekly Intuitive)', async () => {
+describe("STAGE2_MIN_TIER — ruling A/B, block 968,561, REVERSED for this room by TASK-471 (block 968,624)", () => {
+  it('is "A" (Weekly Intuitive), not "B" (Observer) — the Admiral\'s Saturday-night minimal fix: the $11 one-time pass admits, so the floor is back to A', async () => {
     const { STAGE2_MIN_TIER } = await import("@/lib/stage2-access");
-    expect(STAGE2_MIN_TIER).toBe("B");
+    expect(STAGE2_MIN_TIER).toBe("A");
   });
 
-  it("STAGE2_FLOOR_NAME reads the floor's own display name — Observer, not Weekly Intuitive", async () => {
+  it("STAGE2_FLOOR_NAME reads the floor's own display name — Weekly Intuitive, not Observer", async () => {
     const { STAGE2_FLOOR_NAME } = await import("@/lib/stage2-access");
-    expect(STAGE2_FLOOR_NAME).toBe("Observer");
+    expect(STAGE2_FLOOR_NAME).toBe("Weekly Intuitive");
   });
 
-  it("decideStage2: tier A alone no longer satisfies the floor (package); B and C do (open)", async () => {
+  it("decideStage2: tiers A, B and C all satisfy the floor (open) — owning the $11 pass (tier A) is enough", async () => {
     const { decideStage2 } = await import("@/lib/stage2-access");
-    expect(decideStage2(true, { signedIn: true, tier: "A" })).toBe("package");
+    expect(decideStage2(true, { signedIn: true, tier: "A" })).toBe("open");
     expect(decideStage2(true, { signedIn: true, tier: "B" })).toBe("open");
     expect(decideStage2(true, { signedIn: true, tier: "C" })).toBe("open");
   });
 
-  it("stage2PackageDoor names Observer and points at its own tier page — never Weekly Intuitive", async () => {
+  it("stage2PackageDoor names Weekly Intuitive and points at its own tier page — never Observer", async () => {
     const { stage2PackageDoor } = await import("@/lib/stage2-access");
     const door = await stage2PackageDoor();
-    expect(door.name).toBe("Observer");
-    expect(door.href).toBe("/packages/observer");
+    expect(door.name).toBe("Weekly Intuitive");
+    expect(door.href).toBe("/packages/weekly-intuitive");
   });
 
-  it("stage2PackageDoor's week offer reads the OBSERVER one-week item, never weekly-one-week", async () => {
+  it("stage2PackageDoor's week offer reads the WEEKLY-ONE-WEEK item (the $11 pass), never observer-one-week", async () => {
     mockGetItem.mockResolvedValue(weekItem({}));
     const { stage2PackageDoor } = await import("@/lib/stage2-access");
     const door = await stage2PackageDoor();
-    expect(mockGetItem).toHaveBeenCalledWith("observer-one-week");
-    expect(door.week).toEqual({ itemId: "observer-one-week", price: "$22" });
+    expect(mockGetItem).toHaveBeenCalledWith("weekly-one-week");
+    expect(door.week).toEqual({ itemId: "weekly-one-week", price: "$22" });
   });
 });
 
@@ -278,6 +278,7 @@ describe("PlaygroundIsland.tsx — Observer floor, no em dash (ruling A/C)", () 
       jitsiDomain: "meet.test.invalid",
       observerHref: "/packages/observer",
       observerName: "OBSERVER-FIXTURE",
+      bookTalkPass: null,
       stage2Rows: null,
       onJoinClick: () => {},
       onTryWeek: () => {},
@@ -300,14 +301,29 @@ describe("PlaygroundIsland.tsx — Observer floor, no em dash (ruling A/C)", () 
     // $22 for the 1 week of the observer") — no state promises one it can't sell
     expect(signin).not.toMatch(/one-week pass|try one week/i);
     expect(pkg).not.toMatch(/one-week pass|try one week/i);
-    const pkgWeek = renderToStaticMarkup(
+    /* TASK-471/472 (block 968,624): the buy button is the BOOK TALK's own
+       pass now (the `bookTalkPass` prop) — never the wire's own `pkg.week`
+       (the shared membership taster). A live `pkg.week` alongside a null
+       `bookTalkPass` still falls back to the membership door, honestly. */
+    const pkgWeekIgnored = renderToStaticMarkup(
       h(PlaygroundIslandBody, {
         ...base,
         wire: { decision: "package", reachable: null, pkg: { name: "x", href: "/x", week: { itemId: "w", price: "$9" } } },
       } as never),
     );
-    expect(pkgWeek).toContain("or try one week,");
-    expect(pkgWeek).toContain("Try one week for $9");
+    expect(pkgWeekIgnored).not.toContain("$9");
+    expect(pkgWeekIgnored).not.toContain("Try one week");
+    expect(pkgWeekIgnored).toContain("OBSERVER-FIXTURE");
+    const pkgWithPass = renderToStaticMarkup(
+      h(PlaygroundIslandBody, {
+        ...base,
+        wire: { decision: "package", reachable: null, pkg: { name: "x", href: "/x", week: null } },
+        bookTalkPass: { itemId: "reading-book-talk", price: "$9" },
+      } as never),
+    );
+    expect(pkgWithPass).toContain("Buy the $9 pass");
+    expect(pkgWithPass).toContain("Buy the pass for $9");
+    expect(pkgWithPass).not.toContain("Try one week");
   });
 
   it("/reading/playground's list line and meta description promise no pass (no Observer week pass exists)", async () => {
@@ -317,10 +333,10 @@ describe("PlaygroundIsland.tsx — Observer floor, no em dash (ruling A/C)", () 
     expect(page).not.toMatch(/description: .*—/);
   });
 
-  it("the Try-one-week button label carries no em dash", async () => {
+  it("no 'Try one week' wording survives anywhere in the source (TASK-471/472, block 968,624: the shared membership taster is retired from this island)", async () => {
     const src = await read(ISLAND);
-    expect(src).not.toContain("Try one week —");
-    expect(src).toContain("Try one week for");
+    expect(src).not.toContain("Try one week");
+    expect(src).toContain("Buy the pass for");
   });
 
   it("the click-failure notes read two sentences, no dash", async () => {
@@ -353,24 +369,23 @@ describe("week-pass.ts — deriveWeekPass follows Stage 2's own floor, never a h
     expect(src).toMatch(/TIER_PAGES\.find\(\(p\) => p\.tier === STAGE2_MIN_TIER\)/);
   });
 
-  it("behaviorally resolves the Observer one-week item, not Weekly Intuitive's", async () => {
+  it("behaviorally resolves the WEEKLY INTUITIVE one-week item (TASK-471, block 968,624 — the floor moved back to A)", async () => {
     mockGetItem.mockResolvedValue(weekItem({}));
     const { deriveWeekPass } = await import("@/lib/week-pass");
     const pass = await deriveWeekPass();
-    expect(mockGetItem).toHaveBeenCalledWith("observer-one-week");
+    expect(mockGetItem).toHaveBeenCalledWith("weekly-one-week");
     expect(pass).toEqual({ name: "Observer — One Week Pass", price: "$22" });
   });
 });
 
-describe("Stage2Rows — the Playground's ways in start at the floor (review fix, block 968,561)", () => {
-  it("lists Observer and Evening Star, never Weekly Intuitive, and the week row names the floor tier", async () => {
+describe("Stage2Rows — the Playground's ways in start at the floor (review fix, block 968,561; re-widened by TASK-471, block 968,624)", () => {
+  it("lists Weekly Intuitive, Observer and Evening Star (the floor moved back to A), and the week row names the floor tier", async () => {
     const { Stage2Rows } = await import("@/components/reading/Stage2Details");
     const noWeek = renderToStaticMarkup(h(Stage2Rows, { weekPass: null }));
+    expect(noWeek).toContain("Weekly Intuitive");
     expect(noWeek).toContain("Observer");
     expect(noWeek).toContain("Evening Star");
-    expect(noWeek).not.toContain("Weekly Intuitive");
     const withWeek = renderToStaticMarkup(h(Stage2Rows, { weekPass: { name: "PASS-FIXTURE", price: "$9" } }));
-    expect(withWeek).toContain("One week of Observer, the Playground included.");
-    expect(withWeek).not.toContain("Weekly Intuitive");
+    expect(withWeek).toContain("One week of Weekly Intuitive, the Playground included.");
   });
 });

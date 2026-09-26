@@ -67,6 +67,7 @@ function bodyProps(overrides: Partial<PlaygroundIslandBodyProps>): PlaygroundIsl
     jitsiDomain: DOMAIN,
     observerHref: "/packages/fixture-tier-b",
     observerName: "Fixture Observer",
+    bookTalkPass: null,
     stage2Rows: ROWS,
     onJoinClick: () => {},
     onTryWeek: () => {},
@@ -84,12 +85,18 @@ const count = (html: string, needle: string) => html.split(needle).length - 1;
 const PKG = { name: "Fixture Weekly", href: "/packages/fixture-tier-a", week: { itemId: "fixture-one-week", price: "$0" } };
 
 describe("the route and its derivations (the page source)", () => {
-  it("the shell rides the live sources: jitsiDomain from getSiteConfig, the shared week-pass helper, the tier-B package derived from TIER_PAGES", async () => {
+  it("the shell rides the live sources: jitsiDomain from getSiteConfig, the book talk's own door (reading-day-doors.ts), the FLOOR package derived from TIER_PAGES (TASK-471, block 968,624: STAGE2_MIN_TIER itself, never a literal tier letter)", async () => {
     const src = await read(PAGE);
     expect(src).toContain("getSiteConfig()");
     expect(src).toContain("jitsiDomain");
-    expect(src).toContain('from "@/lib/week-pass"');
-    expect(src).toContain('TIER_PAGES.find((p) => p.tier === "B")');
+    /* TASK-471/472 (block 968,624): the shared week-pass helper is retired
+       from this page — see reading-day-doors.ts's own docblock; the book
+       talk's OWN door replaces it. */
+    expect(src).not.toContain('from "@/lib/week-pass"');
+    expect(src).toContain('from "@/lib/reading-day-doors"');
+    expect(src).toContain("encoreFloorDoor()");
+    expect(src).toContain("TIER_PAGES.find((p) => p.tier === STAGE2_MIN_TIER)");
+    expect(src).not.toMatch(/TIER_PAGES\.find\(\(p\) => p\.tier === ["'][ABC]["']\)/);
   });
 
   it("NEVER a literal tier slug or price anywhere in the lane's source (TIER_PAGES/TIERS/the store item derive them)", async () => {
@@ -98,7 +105,6 @@ describe("the route and its derivations (the page source)", () => {
       expect(src).not.toContain('"observer"');
       expect(src).not.toContain("/packages/observer");
       expect(src).not.toContain("$55");
-      expect(src).not.toContain("$11");
     }
   });
 
@@ -111,23 +117,17 @@ describe("the route and its derivations (the page source)", () => {
     expect(page).toContain("The Playground");
   });
 
-  it("deriveWeekPass lives in src/lib/week-pass.ts (decision D — one home, never two copies) and /reading imports it", async () => {
+  it("deriveWeekPass still lives in src/lib/week-pass.ts (decision D — one home) but TASK-471/472 (block 968,624) retire it from /reading — that item is stage2-access.ts's shared membership taster, never offered on this page any more", async () => {
     const lib = await read(WEEK_PASS);
     expect(lib).toContain("export async function deriveWeekPass");
-    /* the store-read pins travelled WITH the function (pickup fix — at base
-       reading-look pinned these on the page; the move had dropped them).
-       TASK-465 (block 968,561): the item id is DERIVED off Stage 2's own
-       floor now (STAGE2_MIN_TIER + TIER_PAGES), never the hardcoded
-       weekly-one-week literal — the Admiral raised the floor to Observer. */
-    expect(lib).not.toContain('getItem("weekly-one-week")');
     expect(lib).toContain("STAGE2_MIN_TIER");
     expect(lib).toMatch(/TIER_PAGES\.find\(\(p\) => p\.tier === STAGE2_MIN_TIER\)/);
     expect(lib).toContain("item?.sale ?? item?.price");
     expect(lib).toContain('item?.status !== "live"');
     expect(lib).toContain("dollars(eff.fiat.amount, eff.fiat.currency)");
     const reading = await read(READING_PAGE);
-    expect(reading).toContain('from "@/lib/week-pass"');
-    expect(reading).not.toContain("function deriveWeekPass");
+    expect(reading).not.toContain('from "@/lib/week-pass"');
+    expect(reading).not.toContain("deriveWeekPass");
   });
 });
 
@@ -189,7 +189,7 @@ describe("the banner replaced the /reading Stage 2 card (the seam)", () => {
     expect(src).toContain('fetch("/api/stage2", { cache: "no-store" })');
   });
 
-  it("…and NONE of the replaced shape survives: no card, no single-embed branch, no Stage2Door/JitsiRoom import, no stage2Details prop", async () => {
+  it("…and NONE of the replaced shape survives: no card, no single-embed branch, no Stage2Door import, no stage2Details prop (TASK-471, block 968,624: JitsiRoom itself is now Stage 1's OWN two-way embed — expected here, not retired)", async () => {
     const src = await read(STAGE);
     for (const gone of [
       "showStage2Card",
@@ -200,7 +200,6 @@ describe("the banner replaced the /reading Stage 2 card (the seam)", () => {
       "onJoinStage2",
       "onLeaveStage2",
       'from "@/components/rooms/Stage2Door"',
-      'from "@/components/booking/JitsiRoom"',
     ]) {
       expect(src).not.toContain(gone);
     }
@@ -251,10 +250,10 @@ describe("the price rows link their names (the derive-every-word law, rendered)"
     createElement(Stage2Details, { weekPass: { name: "Fixture Week Pass", price: "$0" } }),
   );
 
-  /* TASK-465 (block 968,561): rows start at the floor (Observer) — re-trued
-     from every tier / the tier-A week page */
+  /* TASK-465 (block 968,561) raised the floor to Observer; TASK-471 (block
+     968,624) moved it back to A for this room — re-trued for every tier
+     at or above the current floor / the current floor's own week page. */
   it("every tier name AT OR ABOVE the floor is an <a> to its TIER_PAGES slug, the prices still ride TIERS", () => {
-    expect(html).not.toContain(`>${TIERS.A.name}</a>`);
     for (const t of (["A", "B", "C"] as Tier[]).filter((x) => tierSatisfies(x, STAGE2_MIN_TIER))) {
       const slug = TIER_PAGES.find((p) => p.tier === t)!.slug;
       expect(html).toContain(`<a href="/packages/${slug}">${TIERS[t].name}</a>`);
@@ -303,27 +302,47 @@ describe("the five states render the wire (ruling words, rendered)", () => {
     expect(html).not.toContain(ROOM);
   });
 
-  it("free member (M19b, ruling 3) — the derived tier-B package is the ONE main, the memberships second, Try one week quiet nevermind-weight", () => {
-    const html = render(bodyProps({ wire: { decision: "package", reachable: null, pkg: PKG } }));
+  it("free member (M19b) — TASK-471/472 (block 968,624): the book talk's OWN pass (bookTalkPass — never the wire's pkg.week, the shared membership taster) is the ONE main button now, the membership link retired in this state, the memberships shelf second", () => {
+    const html = render(
+      bodyProps({
+        wire: { decision: "package", reachable: null, pkg: PKG },
+        bookTalkPass: { itemId: "reading-book-talk", price: "$0" },
+      }),
+    );
     expect(html).toContain("Heart Field · your free membership");
     expect(html).toContain("The Playground comes with a paid membership");
     expect(count(html, "kit-btn-main")).toBe(1);
-    expect(html).toContain('href="/packages/fixture-tier-b"');
+    expect(html).not.toContain('href="/packages/fixture-tier-b"');
+    expect(html).not.toContain('href="/packages/fixture-tier-a"');
     expect(html).toContain("Fixture Observer");
     expect(html).toContain("See the memberships");
-    /* Try one week: quiet, riding the wire's own itemId and price, NEVER a main */
-    expect(html).toMatch(/kit-btn-quiet[^>]*>\s*Try one week/);
-    expect(html).not.toMatch(/kit-btn-main[^>]*>\s*Try one week/);
+    /* the pass button, never worded "Try one week" (TASK-472's own finding) */
+    expect(html).toMatch(/kit-btn-main[^>]*>\s*Buy the pass for \$0\s*<\/button>/);
+    expect(html).not.toContain("Try one week");
     expect(html).toContain("ROWS-MARKER");
     expect(html).not.toContain(ROOM);
   });
 
-  it("free member WITHOUT the week offer (pkg.week null — the offer is optional): the quiet option simply doesn't render", () => {
+  it("free member WITHOUT a live book talk pass (bookTalkPass null): the membership link is the fallback, never a guessed price, never 'Try one week'", () => {
     const html = render(
-      bodyProps({ wire: { decision: "package", reachable: null, pkg: { ...PKG, week: null } } }),
+      bodyProps({ wire: { decision: "package", reachable: null, pkg: { ...PKG, week: null } }, bookTalkPass: null }),
     );
     expect(html).not.toContain("Try one week");
+    expect(html).not.toContain("Buy the pass");
     expect(count(html, "kit-btn-main")).toBe(1);
+    expect(html).toContain('href="/packages/fixture-tier-b"');
+  });
+
+  it("the wire's own pkg.week (the shared membership taster) is NEVER read for the buy button, even when present", () => {
+    const html = render(
+      bodyProps({
+        wire: { decision: "package", reachable: null, pkg: { ...PKG, week: { itemId: "observer-one-week", price: "$22" } } },
+        bookTalkPass: null,
+      }),
+    );
+    expect(html).not.toContain("observer-one-week");
+    expect(html).not.toContain("Try one week");
+    expect(html).not.toContain("$22");
   });
 
   it("entitled and reachable (M19c, ruling 4) — the stage frame, the Live chip, ONE kit-btn-main reading Join Love, and NO room string before the click", () => {

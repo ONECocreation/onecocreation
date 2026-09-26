@@ -189,8 +189,8 @@ describe("Love's Stage 2 card names the floor from STAGE2_FLOOR_NAME", () => {
     expect(read("src/app/a/site/reading/SiteReadingRoom.tsx")).not.toContain("stage2-access");
   });
 
-  it("STAGE2_FLOOR_NAME itself reads Observer", async () => {
+  it("STAGE2_FLOOR_NAME itself reads Weekly Intuitive (TASK-471, block 968,624 — the floor moved back for this room)", async () => {
     const { STAGE2_FLOOR_NAME } = await import("@/lib/stage2-access");
-    expect(STAGE2_FLOOR_NAME).toBe("Observer");
+    expect(STAGE2_FLOOR_NAME).toBe("Weekly Intuitive");
   });
 });

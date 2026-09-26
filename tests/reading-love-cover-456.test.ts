@@ -30,8 +30,7 @@ const ALT = 'alt="Love, by Leo Buscaglia: the word LOVE in white over a swirling
 function body(overrides: Partial<ReadingStageBodyProps>): string {
   const props: ReadingStageBodyProps = {
     phase: "closed",
-    watching: false,
-    failed: false,
+    signedIn: true,
     ended: false,
     room: null,
     playgroundOpen: false,
@@ -43,9 +42,8 @@ function body(overrides: Partial<ReadingStageBodyProps>): string {
     countdown: null,
     countdownWhen: null,
     left: false,
-    onWatch: () => {},
-    onTryAgain: () => {},
-    onViewerEnded: () => {},
+    onRoomEnded: () => {},
+    onRejoin: () => {},
     ...overrides,
   };
   return renderToStaticMarkup(createElement(ReadingStageBody, props));
@@ -54,8 +52,8 @@ function body(overrides: Partial<ReadingStageBodyProps>): string {
 describe("/reading waits on the cover of the book Love is reading", () => {
   const waiting: [string, Partial<ReadingStageBodyProps>][] = [
     ["closed", {}],
-    ["published, not yet watching", { phase: "published", room: "oc-0123456789abcdef" }],
-    ["failed", { phase: "published", failed: true }],
+    ["published, signed out (no room mounts)", { phase: "published", signedIn: false, room: "oc-0123456789abcdef" }],
+    ["published, signed in, room not yet arrived", { phase: "published", signedIn: true, room: null }],
     ["ended", { phase: "published", ended: true, nextWords: "Wednesday, September 30" }],
   ];
 
@@ -70,8 +68,8 @@ describe("/reading waits on the cover of the book Love is reading", () => {
     });
   }
 
-  it("watching: the viewer replaces it — neither picture is on the page", () => {
-    const html = body({ phase: "published", watching: true, room: "oc-0123456789abcdef" });
+  it("published, signed in, room arrived: the viewer replaces it — neither picture is on the page", () => {
+    const html = body({ phase: "published", signedIn: true, room: "oc-0123456789abcdef" });
     expect(html).toContain("kit-stage-viewer");
     expect(html).not.toContain("reading-love-cover");
     expect(html).not.toContain("reading-book");

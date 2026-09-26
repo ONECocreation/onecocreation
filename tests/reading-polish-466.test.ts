@@ -9,29 +9,14 @@ import { STAGE2_MIN_TIER } from "@/lib/stage2-access";
 
 /**
  * TASK-466 (block 968,561) — the Admiral's three notes on the /reading
- * block picture:
+ * block picture: centered buttons, no dash, one button size everywhere.
  *
- * 1. "all of these buttons would be centered. and the watch again is not
- *    going to happen right now. but we can change this to the watch 2nd
- *    part in the playground if the user isnt a member for that package we
- *    would show a lock icon and have them go through the added to cart pay
- *    function."
- * 2. "The reading has ended — thank you for being here." — "the big -
- *    needs to be replaced ... a new line that should be started here ...
- *    this would be considered slop."
- * 3. "noticing all the buttons here are not the same size ... it doesnt
- *    look like our style team looked at this before hand."
- *
- * This suite is RED against main: today "Watch again" still shows on the
- * ended card at full size, the ended sentence still carries an em dash,
- * "Try again" is still full size, and there is no `playgroundLock` prop at
- * all. `tests/reading-stage.test.ts`, `reading-watch-heart-field-457.
- * test.ts` and `reading-small-watch-464.test.ts` carry this lane's
- * re-trued pins of the OLD shape; this file is the new shape's own record.
- *
- * The floor name is read from TIERS[STAGE2_MIN_TIER].name — never a
- * literal — so this file stays true once the parallel TASK-465 lane moves
- * the floor from A to B.
+ * TASK-471 (block 968,624) reshapes the stage's own states (no more
+ * `watching`/`failed` booleans — the two-way room mounts straight off
+ * `phase`+`signedIn`+`room`, and JitsiRoom owns its own script-load
+ * failure). This file's pins are re-trued against the CURRENT phases;
+ * every rule TASK-466 established (one size, no dash, one Playground
+ * door, the lock icon, no arrow/emoji) still holds and is re-proven here.
  */
 
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
@@ -48,9 +33,7 @@ const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
 function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyProps {
   return {
     phase: "closed",
-    watching: false,
-    failed: false,
-    ended: false,
+    signedIn: true,
     room: null,
     playgroundOpen: false,
     playgroundLock: { locked: false, floorName: FLOOR_NAME },
@@ -59,9 +42,9 @@ function bodyProps(overrides: Partial<ReadingStageBodyProps>): ReadingStageBodyP
     countdown: null,
     countdownWhen: null,
     left: false,
-    onWatch: () => {},
-    onTryAgain: () => {},
-    onViewerEnded: () => {},
+    ended: false,
+    onRoomEnded: () => {},
+    onRejoin: () => {},
     ...overrides,
   };
 }
@@ -79,31 +62,31 @@ function kitBtnClassAttrs(html: string): string[] {
 
 const ALL_PHASES: Array<[string, Partial<ReadingStageBodyProps>]> = [
   ["closed", {}],
-  ["published, not watching", { phase: "published", room: ROOM }],
-  ["watching", { phase: "published", watching: true, room: ROOM }],
-  ["failed", { phase: "published", failed: true }],
+  ["published, signed in, room arrived", { phase: "published", signedIn: true, room: ROOM }],
+  ["published, signed in, room not yet arrived", { phase: "published", signedIn: true, room: null }],
+  ["published, signed out", { phase: "published", signedIn: false, room: ROOM }],
   ["ended, published underneath", { phase: "published", ended: true, nextWords: "Wednesday, September 30" }],
   ["ended, closed underneath", { phase: "closed", ended: true, nextWords: "Wednesday, September 30" }],
   ["left", { phase: "published", left: true }],
 ];
 
+/* TASK-471 (block 968,624): the two phases with no button at all — closed
+   carries only the waiting words (nothing to click before Love is live),
+   and the room-showing phase where Jitsi's own toolbar is the control. */
+const NO_BUTTON_PHASES = ["closed", "published, signed in, room arrived", "published, signed in, room not yet arrived"];
+
 describe("TASK-466 ruling 3 — one button size everywhere on the card", () => {
-  it("every kit-btn* tag across every phase carries kit-btn-sm (watching alone has none — Jitsi's own toolbar is the control)", () => {
+  it("every kit-btn* tag across every phase carries kit-btn-sm (closed and the room-showing phase alone have none)", () => {
     for (const [name, overrides] of ALL_PHASES) {
       const html = render(bodyProps(overrides));
       const classes = kitBtnClassAttrs(html);
-      if (name !== "watching") {
+      if (!NO_BUTTON_PHASES.includes(name)) {
         expect(classes.length, `${name}: expected at least one kit-btn`).toBeGreaterThan(0);
       }
       for (const cls of classes) {
         expect(cls.split(" "), `${name}: "${cls}" is missing kit-btn-sm`).toContain("kit-btn-sm");
       }
     }
-  });
-
-  it("Try again (failed) is kit-btn kit-btn-main kit-btn-sm", () => {
-    const html = render(bodyProps({ phase: "published", failed: true }));
-    expect(html).toMatch(/<button[^>]*class="kit-btn kit-btn-main kit-btn-sm"[^>]*>\s*Try again\s*<\/button>/);
   });
 
   it("the Playground banner's own button stays kit-btn-sm too (unchanged, but re-proven under this ruling)", () => {
@@ -125,11 +108,6 @@ describe("TASK-466 ruling 2 — no em dash in any rendered phase's text", () => 
     expect(html).toContain("The reading has ended.");
     expect(html).toMatch(/The reading has ended\.<\/p><p[^>]*>Thank you for being here\./);
   });
-
-  it('the failed words read as two sentences, no dash: "The picture didn\'t open just now. The reading itself is fine on our side."', () => {
-    const html = render(bodyProps({ phase: "published", failed: true }));
-    expect(html).toContain("The picture didn&#x27;t open just now. The reading itself is fine on our side.");
-  });
 });
 
 describe("TASK-466 ruling 1 — the ended card drops Watch again for one Playground door", () => {
@@ -140,7 +118,7 @@ describe("TASK-466 ruling 1 — the ended card drops Watch again for one Playgro
     expect(html).toContain(PLAYGROUND_LABEL);
   });
 
-  it("closed-underneath ended: the SAME door — no Watch again, no control at all was the old rule; now it carries the one Playground link too", () => {
+  it("closed-underneath ended: the SAME door", () => {
     const html = render(bodyProps({ phase: "closed", ended: true, nextWords: "Wednesday, September 30" }));
     expect(html).not.toContain("Watch again");
     expect([...html.matchAll(new RegExp(PLAYGROUND_HREF.replace("/", "\\/"), "g"))]).toHaveLength(1);
@@ -182,10 +160,10 @@ describe("TASK-466 ruling 1 — the ended card drops Watch again for one Playgro
   });
 });
 
-describe("TASK-466 — the 'left' state keeps rejoining the LIVE show, resized only", () => {
-  it('left-while-published: "Watch again" survives, now kit-btn-sm, still to /rooms/heart-field', () => {
+describe("TASK-466/471 — the 'left' state offers an in-page way back, resized only", () => {
+  it('left-while-published: "Back to the reading" survives, kit-btn-sm, an in-page button (never a Heart Field link)', () => {
     const html = render(bodyProps({ phase: "published", left: true }));
-    expect(html).toMatch(/<a class="kit-btn kit-btn-main kit-btn-sm" href="\/rooms\/heart-field">\s*Watch again\s*<\/a>/);
+    expect(html).toMatch(/<button[^>]*class="kit-btn kit-btn-main kit-btn-sm"[^>]*>\s*Back to the reading\s*<\/button>/);
   });
 });
 

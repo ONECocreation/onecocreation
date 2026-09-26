@@ -31,13 +31,15 @@ const CATALOG_KEY = "store:catalog";
 const STATE_KEY = `stage2:state:${TENANT}`;
 const DOMAIN = "meet.stage2-fixture.invalid";
 
-// TASK-465 (block 968,561): the floor is Observer now — the week item
-// moved from weekly-one-week to observer-one-week.
+// TASK-465 (block 968,561) moved the floor to Observer (observer-one-week);
+// TASK-471 (block 968,624, the Admiral's Saturday-night minimal fix) moved
+// it back to Weekly Intuitive (weekly-one-week) for this room, so the $11
+// one-time pass admits.
 const WEEK_ITEM = {
-  id: "observer-one-week",
+  id: "weekly-one-week",
   schemaVersion: 2,
-  title: "Observer Zoom — One Week Pass",
-  blurb: "one week of the Observer package",
+  title: "Weekly Intuitive — One Week Pass",
+  blurb: "one week of the Weekly Intuitive package",
   images: [],
   kind: "package",
   price: { fiat: { amount: 2200, currency: "USD" }, sats: 22_222 },
@@ -133,9 +135,9 @@ describe("WATCH ITEM 2 — the free member's door: no room key, and the probe ne
     expect("room" in data).toBe(false);
     expect("reachable" in data).toBe(false);
     expect(data.package).toEqual({
-      name: "Observer",
-      href: "/packages/observer",
-      week: { itemId: "observer-one-week", price: "$22" },
+      name: "Weekly Intuitive",
+      href: "/packages/weekly-intuitive",
+      week: { itemId: "weekly-one-week", price: "$22" },
     });
     expect(transport.headCount()).toBe(0);
   });
@@ -151,15 +153,15 @@ describe("WATCH ITEM 2 — the free member's door: no room key, and the probe ne
 
     expect(data.decision).toBe("package");
     expect(data.package.week).toBeNull();
-    expect(data.package.name).toBe("Observer");
+    expect(data.package.name).toBe("Weekly Intuitive");
     expect("room" in data).toBe(false);
     expect("reachable" in data).toBe(false);
     expect(transport.headCount()).toBe(0);
   });
 });
 
-describe("tier A alone no longer satisfies the raised floor (TASK-465, block 968,561) — package, no room, no probe", () => {
-  it("tier A, published -> decision package (never open), the probe never fires", async () => {
+describe("tier A alone now satisfies the floor again (TASK-471, block 968,624 — reversing TASK-465 for this room)", () => {
+  it("tier A, published -> decision open (the $11 pass grants A, and A now clears the floor)", async () => {
     transport.seedWeekItem("live");
     mockTier.mockResolvedValue("A");
     await publish();
@@ -168,11 +170,7 @@ describe("tier A alone no longer satisfies the raised floor (TASK-465, block 968
     expectNoStore(res);
     const data = await res.json();
 
-    expect(data.decision).toBe("package");
-    expect("room" in data).toBe(false);
-    expect("reachable" in data).toBe(false);
-    expect(data.package.name).toBe("Observer");
-    expect(transport.headCount()).toBe(0);
+    expect(data.decision).toBe("open");
   });
 });
 

@@ -14,8 +14,8 @@ import ReadingDay from "@/components/reading/ReadingDay";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
+import { HOUSEWARMING_TIME } from "@/lib/reading-day";
 import { getStage1State } from "@/lib/stage1";
-import { deriveWeekPass } from "@/lib/week-pass";
 import { STAGE2_FLOOR_NAME, STAGE2_MIN_TIER } from "@/lib/stage2-access";
 import { tierForSubject } from "@/lib/member-tier";
 import { tierSatisfies } from "@/lib/entitlement";
@@ -25,10 +25,30 @@ import { tierSatisfies } from "@/lib/entitlement";
  * 968,269) — THE READING PAGE, now the STAGE itself. `/reading` opens on
  * the approved round-3 sky band (the house living sky + the home hero's
  * own drifting nebula, one shared rule): the derived kicker, "Read with
- * Love", the blocks countdown, and ReadingStage — Stage 1 as a one-way
- * house Jitsi room, phase-only SSR (the phase from `getStage1State()`,
- * never a room, never a host URL). The three old room CTAs are RETIRED —
- * there is no second door anywhere on this page.
+ * Love", the blocks countdown, and ReadingStage — phase-only SSR (the
+ * phase from `getStage1State()`, never a room, never a host URL). The
+ * three old room CTAs are RETIRED — there is no second door anywhere on
+ * this page.
+ *
+ * TASK-471 (block 968,624) — Stage 1 is TWO-WAY now and mounts IN PLACE
+ * (ReadingStage's own two-way embed, `JitsiRoom`) when published and the
+ * visitor is signed in; the page's own `session` read (below) is threaded
+ * through as `signedIn` so the island knows without a client-side guess.
+ *
+ * TASK-471 / S8 (block 968,624, VERDICT-968624.md's Saturday reality list)
+ * — the top-of-page countdown targets the day's FIRST part, the
+ * Housewarming at 12:12 (`HOUSEWARMING_TIME`, reading-day.ts — the same
+ * constant the agenda brick's Row 1 already reads), never
+ * `schedule.time` (the Reading's own, admin-editable clock — Row 2's own
+ * time, ReadingDayBody.tsx, untouched). This is a deliberate DECOUPLING,
+ * not a workaround for Love's mis-typed schedule save: no matter what
+ * clock reading `schedule.time` itself holds, the hero countdown always
+ * counts to 12:12 on the reading's own day, because that is the first
+ * thing that happens.
+ * `deriveReading`'s own `housewarmingNext` reuses `nextReading()`'s pure
+ * walk against a schedule-shaped object with the SAME weekday/tz/
+ * durationMin/on, only `time` swapped — never a second date-math
+ * implementation.
  *
  * Under the band: the public "Stay in the know" sign-up (M4 — the
  * letters, never a door), "What you will experience" as M3's three lines
@@ -61,12 +81,17 @@ function weekdayName(instantMs: number, tz: string): string {
  * :32-46 — "kept out of RoomPage's own body so the purity rule never
  * meets Date.now()"). One clock read feeds both `next` and the value
  * ReadingHeroCountdown's first paint buckets against. */
-function deriveReading(
-  schedule: ReadingSchedule,
-): { asOfMs: number; next: { startsAtMs: number; endsAtMs: number; phase: "upcoming" | "window" } | null } {
+function deriveReading(schedule: ReadingSchedule): {
+  asOfMs: number;
+  next: { startsAtMs: number; endsAtMs: number; phase: "upcoming" | "window" } | null;
+  /** S8 (block 968,624) — the hero countdown's OWN target: the
+   *  Housewarming (12:12), never `schedule.time`. See the module docblock. */
+  housewarmingNext: { startsAtMs: number; endsAtMs: number; phase: "upcoming" | "window" } | null;
+} {
   const asOfMs = Date.now();
   const next = schedule.on ? nextReading(schedule, asOfMs) : null;
-  return { asOfMs, next };
+  const housewarmingNext = schedule.on ? nextReading({ ...schedule, time: HOUSEWARMING_TIME }, asOfMs) : null;
+  return { asOfMs, next, housewarmingNext };
 }
 
 export default async function ReadingPage() {
@@ -83,13 +108,12 @@ export default async function ReadingPage() {
 
   const config = await getSiteConfig();
   const schedule = config.reading ?? DEFAULT_READING_SCHEDULE;
-  const { asOfMs, next } = deriveReading(schedule);
+  const { asOfMs, next, housewarmingNext } = deriveReading(schedule);
   /* K122 item 7 — the occurrence AFTER next: the island's ended words
      name the next reading, never the one that just ended (a visitor who
      loaded before or during the window holds TODAY'S occurrence in next) */
   const following = next ? nextReading(schedule, next.endsAtMs) : null;
   const stage1Phase = (await getStage1State()).phase;
-  const weekPass = await deriveWeekPass();
 
   const recurrenceLabel = next ? weekdayName(next.startsAtMs, schedule.tz) : null;
 
@@ -134,12 +158,33 @@ export default async function ReadingPage() {
                 goes live */}
             <ReadingStage
               initialPhase={stage1Phase}
+              signedIn={!!session}
               next={next}
               following={following}
               scheduleTz={schedule.tz}
               jitsiDomain={config.meeting.jitsiDomain}
-              countdown={<ReadingHeroCountdown schedule={schedule} next={next} asOfMs={asOfMs} variant="blocks" />}
-              countdownWhen={<ReadingHeroCountdown schedule={schedule} next={next} asOfMs={asOfMs} variant="blocks" whenOnly />}
+              /* S8 (block 968,624): the Housewarming's own schedule variant
+                 — same weekday/tz/durationMin/on, `time` swapped to
+                 HOUSEWARMING_TIME — never the raw `schedule`/`next` (those
+                 still drive Row 2, ReadingDayBody.tsx, and the ended
+                 card's date words, unchanged). */
+              countdown={
+                <ReadingHeroCountdown
+                  schedule={{ ...schedule, time: HOUSEWARMING_TIME }}
+                  next={housewarmingNext}
+                  asOfMs={asOfMs}
+                  variant="blocks"
+                />
+              }
+              countdownWhen={
+                <ReadingHeroCountdown
+                  schedule={{ ...schedule, time: HOUSEWARMING_TIME }}
+                  next={housewarmingNext}
+                  asOfMs={asOfMs}
+                  variant="blocks"
+                  whenOnly
+                />
+              }
               playgroundLock={playgroundLock}
             />
           </div>
@@ -186,7 +231,13 @@ export default async function ReadingPage() {
                   directly, keeping this page's own house law clean) — the
                   Admiral raised the floor to Observer, so a literal
                   "Weekly Intuitive" would now be wrong. */}
-              <li>{`Join the discussion after: the Playground, a live group video call with Love, with every membership from ${STAGE2_FLOOR_NAME} up${weekPass ? `, or a ${weekPass.price} one-week pass` : ""}`}</li>
+              {/* TASK-471/472 (block 968,624): the one-week-pass clause is
+                  retired — that was stage2-access.ts's shared membership
+                  taster (its own derivation lives in week-pass.ts), never
+                  offered on /reading any more (reading-day-doors.ts's own
+                  docblock). The Encore row below names the book talk's
+                  OWN pass instead. */}
+              <li>{`Join the discussion after: the Playground, a live group video call with Love, with every membership from ${STAGE2_FLOOR_NAME} up`}</li>
             </ul>
           </div>
         </section>

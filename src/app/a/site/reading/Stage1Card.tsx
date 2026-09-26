@@ -42,9 +42,10 @@ const BUSY_WORDS = { prepare: "Preparing…", publish: "Publishing…", close: "
 const PHASE_WORDS = {
   closed: "Closed — no room exists.",
   prepared: "Prepared — the room exists; only the host link below opens it. Viewers see nothing yet.",
-  /* TASK-457 (block 968,543): Love only goes live in the Heart Field now —
-     /reading's Watch controls link there, they don't mount the stream. */
-  published: "Published — members watch in the Heart Field. /reading sends them there.",
+  /* TASK-471 (block 968,624): the reversal of TASK-457 — Stage 1 is
+     two-way now and mounts IN PLACE on /reading; there is no more Heart
+     Field hand-off for a signed-in visitor. */
+  published: "Published — signed-in visitors join right on /reading.",
 } as const;
 
 /* the host row's OWN state line, said once under its words, in every phase
@@ -102,7 +103,9 @@ export function Stage1CardBody({ state, busy, error, onAct }: Stage1CardBodyProp
       <ul className="kit-rows">
         <li data-row="lifecycle">
           <span>
-            The one-way stage — Prepare mints the room privately, Publish lets viewers in, Close ends it.
+            {/* TASK-471 (block 968,624): "one-way" retired — the stage is
+                two-way now, mounted in place on /reading. */}
+            The stage — Prepare mints the room privately, Publish lets viewers in, Close ends it.
             {state.phase === "published" &&
               " New joins stop at midnight Mountain. When you finish: press Close first (it removes our viewers on their next poll), then End meeting for all in the call."}
             {stateLine}
