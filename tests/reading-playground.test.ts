@@ -306,7 +306,7 @@ describe("the five states render the wire (ruling words, rendered)", () => {
     const html = render(
       bodyProps({
         wire: { decision: "package", reachable: null, pkg: PKG },
-        bookTalkPass: { itemId: "reading-book-talk", price: "$0" },
+        bookTalkPass: { itemId: "weekly-one-week", price: "$0" },
       }),
     );
     expect(html).toContain("Heart Field · your free membership");

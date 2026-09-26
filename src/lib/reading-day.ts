@@ -60,25 +60,17 @@ export const QA_TIME = "15:33";
 export const QA_ITEM_ID = "q-a-meetup-with-love";
 
 /**
- * The book talk's (Part 3, the Encore in the Playground) own one-time
- * store pass (TASK-471, block 968,624; narrowed by the parallel TASK-472
- * review, same block). The Admiral ruled the 2:22 book talk is an $11
- * ONE-TIME pass — deliberately its OWN item id, never `stage2-access.ts`'s
- * shared `stage2PackageDoor().week` / `week-pass.ts`'s `deriveWeekPass()`:
- * that offer is the membership-ladder TASTER (fulfils a standing tier for
- * N days, currently the floor tier's own one-week item), a side door into
- * whichever tier it targets — wrong shape for a single Saturday event pass,
- * and specifically wrong while a sibling tier is marked "Coming soon"
- * (not purchasable). `encoreFloorDoor()` (reading-day-doors.ts) reads this
- * item, derive-or-dash: not live (or not yet created) falls back to the
- * membership door, never a guessed price.
- *
- * UNVERIFIED against the live store catalog (gitignored, not in this
- * repo) whether an item with this id exists yet — flag for the Admiral:
- * create it in /a store with this exact id (or hand Number One the real
- * id to swap in here, the ONE place it would need to change).
+ * The book talk's (Part 3, 2:22) buy: the $11 ONE-TIME pass the Admiral
+ * ruled (TASK-471, block 968,624). It is the existing `weekly-one-week`
+ * item (TIERS_CONTENT tier A `oneTime`, $11): one week of Weekly Intuitive,
+ * which admits the paid room (STAGE2_MIN_TIER "A"). Love's own words (walk
+ * 2:33:45): one week buys the book talk AND that week's meet-up. It is NOT
+ * the Observer taster (`observer-one-week`) that TASK-472 closes while
+ * Observer is "Coming soon". `encoreFloorDoor()` reads this item,
+ * derive-or-dash: not live falls back to the membership door, never a
+ * guessed price.
  */
-export const READING_BOOK_TALK_ITEM_ID = "reading-book-talk";
+export const READING_BOOK_TALK_ITEM_ID = "weekly-one-week";
 
 const CLOCK_LABEL: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
 

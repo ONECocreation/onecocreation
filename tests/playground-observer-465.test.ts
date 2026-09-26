@@ -318,7 +318,7 @@ describe("PlaygroundIsland.tsx — Observer floor, no em dash (ruling A/C)", () 
       h(PlaygroundIslandBody, {
         ...base,
         wire: { decision: "package", reachable: null, pkg: { name: "x", href: "/x", week: null } },
-        bookTalkPass: { itemId: "reading-book-talk", price: "$9" },
+        bookTalkPass: { itemId: "weekly-one-week", price: "$9" },
       } as never),
     );
     expect(pkgWithPass).toContain("Buy the $9 pass");
