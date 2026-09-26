@@ -16,20 +16,27 @@ import { PlaygroundIslandBody, type PlaygroundIslandBodyProps } from "@/componen
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
 
 describe("/reading's viewer survives the Playground banner flipping (the rejoin on Stage 2 open)", () => {
-  it("viewerEnded and viewerFailed are stable useCallback identities handed to the viewer", async () => {
+  /* TASK-471 (block 968,624): the one-way JitsiViewer's own two callbacks
+     (`viewerEnded`/`viewerFailed`) are retired with it — JitsiRoom (the
+     two-way embed) exposes only `onEnded`, and owns its own script-load
+     failure internally. `roomEnded` is this lane's own stable identity
+     (the same T-450 pickup idiom: a re-created callback on every
+     playground-banner poll would tear the room down and rejoin it). */
+  it("roomEnded and rejoin are stable useCallback identities handed to JitsiRoom / the left card", async () => {
     const src = await read("src/components/reading/ReadingStage.tsx");
-    expect(src).not.toContain("function viewerEnded(");
-    const ended = src.indexOf("const viewerEnded = useCallback(");
+    expect(src).not.toContain("function roomEnded(");
+    const ended = src.indexOf("const roomEnded = useCallback(");
     expect(ended).toBeGreaterThan(-1);
     const endedClose = src.indexOf("}, [", ended);
     expect(src.slice(endedClose, endedClose + 16)).toBe("}, [markEnded]);");
-    const failed = src.indexOf("const viewerFailed = useCallback(");
-    expect(failed).toBeGreaterThan(-1);
-    const failedClose = src.indexOf("}, [", failed);
-    expect(src.slice(failedClose, failedClose + 7)).toBe("}, []);");
-    expect(src).toContain("onViewerEnded={viewerEnded}");
-    expect(src).toContain("onViewerFailed={viewerFailed}");
-    expect(src).not.toMatch(/onViewerFailed=\{\(\) =>/);
+    const rejoin = src.indexOf("const rejoin = useCallback(");
+    expect(rejoin).toBeGreaterThan(-1);
+    const rejoinClose = src.indexOf("}, [", rejoin);
+    expect(src.slice(rejoinClose, rejoinClose + 7)).toBe("}, []);");
+    expect(src).toContain("onRoomEnded={roomEnded}");
+    expect(src).toContain("onRejoin={rejoin}");
+    expect(src).not.toContain("viewerFailed");
+    expect(src).not.toContain("onViewerFailed");
   });
 
   it("a failed banner read keeps the last-known state (it used to write undefined — a re-render)", async () => {
@@ -51,6 +58,7 @@ describe("/reading/playground before its first answer", () => {
     jitsiDomain: "meet.saturday-polish.invalid",
     observerHref: "/packages/fixture-tier-b",
     observerName: "Fixture Observer",
+    bookTalkPass: null,
     stage2Rows: createElement("ul", null, createElement("li", null, "ROWS")),
     onJoinClick: () => {},
     onTryWeek: () => {},

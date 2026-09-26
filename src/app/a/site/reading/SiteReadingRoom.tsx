@@ -23,9 +23,12 @@ export default function SiteReadingRoom({ floorName }: { floorName: string }) {
       </p>
       <SectionHead label="The weekly reading — day, time, zone" />
       <ReadingScheduleCard />
-      <SectionHead label="Stage 1 — the reading (everyone watches)" />
+      {/* TASK-471 (block 968,624): plain steps Love can follow, tonight's
+          two rooms named by what they hold, not by their old lifecycle
+          jargon. */}
+      <SectionHead label="Free room: 12:12 Housewarming and 1:11 Reading" />
       <Stage1Card />
-      <SectionHead label="Stage 2 — after the reading" />
+      <SectionHead label="Paid room: 2:22 Book talk" />
       <Stage2Card floorName={floorName} />
     </div>
   );

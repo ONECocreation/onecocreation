@@ -129,6 +129,40 @@ describe("reading-day-doors.ts — encoreFloorDoor: name/href via stage2PackageD
     mockGetItem.mockRejectedValue(new Error("catalog down"));
     expect((await encoreFloorDoor()).price).toBeNull();
   });
+
+  /* TASK-471 (block 968,624): the Admiral's Saturday ruling — the book
+     talk's own buy action is the $11 ONE-TIME pass at the floor tier
+     (weekly-one-week), never the recurring membership, when that pass is
+     live on the shelf. */
+  it("a live book talk pass wins: passLive true, READING_BOOK_TALK_ITEM_ID as itemId, its own one-time price — never the membership's, never the shared membership taster", async () => {
+    const { READING_BOOK_TALK_ITEM_ID } = await import("@/lib/reading-day");
+    const { STAGE2_MIN_TIER } = await import("@/lib/stage2-access");
+    const floorPage = TIER_PAGES.find((p) => p.tier === STAGE2_MIN_TIER)!;
+    mockGetItem.mockImplementation(async (id: string) => {
+      if (id === READING_BOOK_TALK_ITEM_ID) return item({ id, price: { fiat: { amount: 1100, currency: "USD" } } });
+      if (id === floorPage.slug) return item({ id: floorPage.slug, price: { fiat: { amount: 3300, currency: "USD" } } });
+      return null;
+    });
+    const { encoreFloorDoor } = await import("@/lib/reading-day-doors");
+    const door = await encoreFloorDoor();
+    expect(door.passLive).toBe(true);
+    expect(door.itemId).toBe(READING_BOOK_TALK_ITEM_ID);
+    expect(door.price).toBe("$11");
+  });
+
+  it("no live pass: falls back to the membership itself, passLive false", async () => {
+    const { STAGE2_MIN_TIER } = await import("@/lib/stage2-access");
+    const floorPage = TIER_PAGES.find((p) => p.tier === STAGE2_MIN_TIER)!;
+    mockGetItem.mockImplementation(async (id: string) => {
+      if (id === floorPage.slug) return item({ id: floorPage.slug, price: { fiat: { amount: 3300, currency: "USD" } } });
+      return null; // the one-time pass isn't live
+    });
+    const { encoreFloorDoor } = await import("@/lib/reading-day-doors");
+    const door = await encoreFloorDoor();
+    expect(door.passLive).toBe(false);
+    expect(door.itemId).toBe(floorPage.slug);
+    expect(door.price).toBe("$33");
+  });
 });
 
 describe("reading-day-doors.ts — qaDoor: the pass when live, Evening Star when it isn't (the Admiral's fallback ruling)", () => {
@@ -184,7 +218,7 @@ describe("reading-day-doors.ts — qaDoor: the pass when live, Evening Star when
 
 /* ── ReadingDayBody — pure presentation, every honest state ──────────── */
 
-const ENCORE_FLOOR = { tier: "A" as Tier, name: "Weekly Intuitive", itemId: "weekly-intuitive", href: "/packages/weekly-intuitive", price: "$33" };
+const ENCORE_FLOOR = { tier: "A" as Tier, name: "Weekly Intuitive", itemId: "weekly-intuitive", href: "/packages/weekly-intuitive", price: "$33", passLive: false };
 const QA_OFFER_LIVE = { itemId: QA_ITEM_ID, passLive: true, price: "$33.33", eveningStar: { name: "Evening Star", price: "$111", href: "/packages/evening-star" } };
 
 function bodyProps(overrides: Partial<ReadingDayBodyProps>): ReadingDayBodyProps {
@@ -238,7 +272,11 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
       const html = render(bodyProps({ signedIn: c.signedIn, encoreEntitled, qaEntitled }));
 
       if (c.signedIn) {
-        expect(html).toContain("Go to the Heart Field"); // the stage card's own words for the same door (Lumen, 968,561)
+        // TASK-471 (block 968,624): the door is #stage now, never /rooms/heart-field
+        expect(html).toContain("Back to the reading");
+        expect(html).toContain('href="#stage"');
+        expect(html).not.toContain("Go to the Heart Field");
+        expect(html).not.toContain("/rooms/heart-field");
         expect(html).not.toContain("Sign me up");
       } else {
         expect(html).toContain("Sign me up");
@@ -286,6 +324,38 @@ describe("ReadingDayBody — a locked row names who it's for even when the store
     const html = render(bodyProps({ encoreEntitled: false, qaEntitled: false }));
     expect(html).toContain("</svg>Unlock the Encore<");
     expect(html).toContain("</svg>Unlock the Q&amp;A<");
+  });
+});
+
+describe("ReadingDayBody — TASK-471 (block 968,624): the $11 one-time pass, when live, is the Encore row's own price line", () => {
+  it("passLive true: '$11 once.' — never the recurring membership's monthly price mislabeled as such", () => {
+    const html = render(
+      bodyProps({ encoreEntitled: false, encoreFloor: { ...ENCORE_FLOOR, passLive: true, price: "$11" } }),
+    );
+    expect(html).toContain("$11 once.");
+    expect(html).not.toContain("$11 a month");
+  });
+
+  it("passLive false: the old 'Comes with {name} and up. {price} a month.' shape, untouched", () => {
+    const html = render(
+      bodyProps({ encoreEntitled: false, encoreFloor: { ...ENCORE_FLOOR, passLive: false, price: "$33" } }),
+    );
+    expect(html).toContain(`Comes with ${ENCORE_FLOOR.name} and up. $33 a month.`);
+    expect(html).not.toContain("$33 once");
+  });
+
+  it("Observer is never the Encore row's buy action — the floor moved back to Weekly Intuitive (TASK-471, block 968,624)", () => {
+    const html = render(bodyProps({ encoreEntitled: false }));
+    expect(html).not.toContain("Observer");
+  });
+
+  it("a live tier A entitlement (from owning the $11 pass, or any real Weekly Intuitive membership) admits Part 3 — encoreEntitled follows STAGE2_MIN_TIER, now A", async () => {
+    const { STAGE2_MIN_TIER } = await import("@/lib/stage2-access");
+    expect(STAGE2_MIN_TIER).toBe("A");
+    expect(tierSatisfies("A", STAGE2_MIN_TIER)).toBe(true);
+    const html = render(bodyProps({ encoreEntitled: tierSatisfies("A", STAGE2_MIN_TIER) }));
+    expect(html).toContain("Join the Playground");
+    expect(html).not.toContain("Unlock the Encore");
   });
 });
 

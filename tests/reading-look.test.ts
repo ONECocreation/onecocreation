@@ -108,10 +108,12 @@ describe("the /reading page — the sky band and the approved structure", () => 
     expect(src).toContain("initialPhase={");
     expect(src).toContain("<ReadingStage");
     /* TASK-449: the stage2Details prop is RETIRED (the Playground page is
-       Stage2Details' only consumer now); the week-pass derivation moved
-       to its one home, src/lib/week-pass.ts (decision D) */
-    expect(src).toContain('from "@/lib/week-pass"');
-    expect(src).toContain("deriveWeekPass()");
+       Stage2Details' only consumer now). TASK-471/472 (block 968,624): the
+       week-pass import is ALSO retired from this page — that was
+       stage2-access.ts's shared membership taster, never offered on
+       /reading any more (reading-day-doors.ts's own docblock). */
+    expect(src).not.toContain('from "@/lib/week-pass"');
+    expect(src).not.toContain("deriveWeekPass()");
     expect(src).not.toContain("stage2Details");
     expect(src).not.toContain('from "@/components/reading/Stage2Details"');
   });
@@ -147,12 +149,15 @@ describe("the /reading page — the sky band and the approved structure", () => 
        would now be wrong. */
     expect(src).toContain("Join the discussion after: the Playground, a live group video call with Love, with every membership from ${STAGE2_FLOOR_NAME} up");
     expect(src).not.toContain("from Weekly Intuitive up");
-    expect(src).toContain("one-week pass");
     expect(src).not.toContain("with any membership");
-    /* TASK-449 (decision D): the pass's live store read lives in
-       src/lib/week-pass.ts now — one home, imported, never two copies */
-    expect(src).toContain('from "@/lib/week-pass"');
-    expect(src).not.toContain("function deriveWeekPass");
+    /* TASK-471/472 (block 968,624): the "one-week pass" clause is retired
+       from this line — that was stage2-access.ts's shared membership
+       taster (deriveWeekPass/week-pass.ts), never mentioned on /reading
+       any more; the Encore row (ReadingDayBody) names the book talk's OWN
+       pass instead. */
+    expect(src).not.toContain("one-week pass");
+    expect(src).not.toContain('from "@/lib/week-pass"');
+    expect(src).not.toContain("deriveWeekPass");
   });
 
   it("the host section is .kitx-host with the real portrait, and the one bottom button reads 'Back to the reading' to #stage (no arrow since TASK-463) (Stage 1, never Stage 2)", async () => {
@@ -414,14 +419,15 @@ describe("Stage2Details — the round-3 heading and the derive-every-word law", 
     expect(html).toContain("Right after the reading, Love opens a live group video call. Come talk with her.");
   });
 
-  /* TASK-465 (block 968,561): the rows start at Stage 2's own floor — the
-     Admiral raised it to Observer, so Weekly Intuitive is no longer a way
-     in; re-trued from ["A","B","C"] / 3 rows / tier-A week page. */
+  /* TASK-465 (block 968,561) raised the floor to Observer, dropping
+     Weekly Intuitive from this list. TASK-471 (block 968,624) — the
+     Admiral's Saturday-night minimal fix — moved the floor back to A for
+     this room; re-trued from ["B","C"] / 2 rows back to ["A","B","C"] /
+     3 rows, tier-A's own week page. */
   it("one row per tier AT OR ABOVE the floor — the name LINKED to its TIER_PAGES page (TASK-449), the monthly price from TIERS, the tagline from TIER_PAGES", () => {
     const html = renderDetails(null);
     const floorUp = (["A", "B", "C"] as Tier[]).filter((t) => tierSatisfies(t, STAGE2_MIN_TIER));
-    expect(floorUp).toEqual(["B", "C"]);
-    expect(html).not.toContain(`>${TIERS.A.name}</a>`);
+    expect(floorUp).toEqual(["A", "B", "C"]);
     for (const t of floorUp) {
       const page = TIER_PAGES.find((p) => p.tier === t)!;
       expect(html).toContain(`<b><a href="/packages/${page.slug}">${TIERS[t].name}</a></b>`);
@@ -429,7 +435,7 @@ describe("Stage2Details — the round-3 heading and the derive-every-word law", 
       expect(html).toContain(`$${TIERS[t].priceUsd} / month`);
     }
     const rows = html.match(/<li>/g) ?? [];
-    expect(rows).toHaveLength(2);
+    expect(rows).toHaveLength(3);
     expect(html).not.toContain("once");
   });
 
@@ -443,13 +449,13 @@ describe("Stage2Details — the round-3 heading and the derive-every-word law", 
        Playground */
     expect(html).toContain(`One week of ${TIERS[STAGE2_MIN_TIER].name}, the Playground included.`);
     const rows = html.match(/<li>/g) ?? [];
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(4);
   });
 
   it("every row's price rides .kit-rows-end — the one right edge (the /a uniformity law's grid)", () => {
     const html = renderDetails({ name: "Weekly Chronicles — One Week Pass", price: "$11" });
     const rows = html.match(/<li>[\s\S]*?<\/li>/g) ?? [];
-    expect(rows.length).toBe(3);
+    expect(rows.length).toBe(4);
     for (const r of rows) expect(r).toContain("kit-rows-end");
   });
 

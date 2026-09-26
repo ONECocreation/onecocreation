@@ -20,10 +20,10 @@ import type { Stage2Decision, Stage2PackageDoor } from "@/lib/stage2-access";
  * fresh.room`, Stage2Door.tsx:210-227's pattern).
  *
  * The five states (M19a–e, rulings 3 and 4 applied over the mock): closed
- * (hidden/pre-poll alike), the sign-in gate, the free-member gate (MAIN =
- * the derived tier-B package page, "Try one week" quiet nevermind-weight
- * riding the wire's own itemId — absent `week`, the option simply doesn't
- * render), the entitled ready frame (ONE `Join Love`), and the call
+ * (hidden/pre-poll alike), the sign-in gate, the free-member gate (MAIN,
+ * as of TASK-471/472, block 968,624 = the book talk's own one-time pass,
+ * `bookTalkPass` — absent, the option falls back to the derived floor
+ * package page), the entitled ready frame (ONE `Join Love`), and the call
  * itself (Jitsi's own toolbar is the whole control surface — NO page
  * buttons under it). Plus K124's un-mocked sixth: JitsiRoom's onEnded
  * while the wire still says open reads "You left the Playground." with
@@ -57,6 +57,15 @@ export interface PlaygroundIslandProps {
   /** the visitor's package name when their tier clears the door (the
    *  "You're in" line), else null */
   tierName: string | null;
+  /** TASK-471/472 (block 968,624): the book talk's OWN one-time pass
+   *  (reading-day.ts's READING_BOOK_TALK_ITEM_ID, via encoreFloorDoor()),
+   *  server-computed — null when it isn't live yet (derive-or-dash; the
+   *  free-member card falls back to the membership door). Deliberately
+   *  NOT the wire's own `pkg.week` (stage2-access.ts's shared taster,
+   *  which fulfils a standing membership tier — the parallel TASK-472
+   *  review's finding: wrong shape for a single event pass, and a side
+   *  door into a tier marked "Coming soon"). */
+  bookTalkPass: { itemId: string; price: string } | null;
 }
 
 /** The band's words (pickup fix round, block 968,393): the kicker, the
@@ -154,8 +163,12 @@ export interface PlaygroundIslandBodyProps {
   jitsiDomain: string;
   observerHref: string;
   observerName: string;
+  /** TASK-471/472 (block 968,624) — see PlaygroundIslandProps. */
+  bookTalkPass: { itemId: string; price: string } | null;
   stage2Rows: React.ReactNode;
   onJoinClick: () => void;
+  /** the add-to-cart flow (its name predates the rename — the button it
+   *  drives now buys the book talk pass, never a membership "week"). */
   onTryWeek: (itemId: string) => void;
   onCallEnded: () => void;
 }
@@ -174,6 +187,7 @@ export function PlaygroundIslandBody({
   jitsiDomain,
   observerHref,
   observerName,
+  bookTalkPass,
   stage2Rows,
   onJoinClick,
   onTryWeek,
@@ -305,35 +319,36 @@ export function PlaygroundIslandBody({
   }
 
   if (wire.decision === "package") {
-    /* FREE MEMBER (M19b, ruling 3) — MAIN = the derived tier-B package;
-       "Try one week" is quiet nevermind-weight UNDER the actions, riding
-       the wire's own week offer (absent → the option simply doesn't
-       render, stage2-access.ts:46-50). */
-    const week = wire.pkg ? wire.pkg.week : null;
+    /* FREE MEMBER (M19b, ruling 3). TASK-471/472 (block 968,624): the
+       Admiral's Saturday ruling makes the book talk's OWN one-time pass
+       (bookTalkPass, server-computed off READING_BOOK_TALK_ITEM_ID — NEVER
+       the wire's own `pkg.week`, stage2-access.ts's shared membership
+       taster) the ONE primary button. The membership (the floor tier —
+       Weekly Intuitive, per STAGE2_MIN_TIER, never a literal Observer)
+       only rides as the fallback when the book talk pass isn't live yet. */
     return (
       <div className="kit-card kit-card-body kitx-flow kit-stage2-card">
         <p className="kicker">Heart Field · your free membership</p>
         <h2 className="kit-h2">The Playground comes with a paid membership</h2>
         <p className="kit-body">
-          {week
-            ? `Join ${observerName} or above, or try one week, and come straight back here to join Love.`
+          {bookTalkPass
+            ? `Buy the ${bookTalkPass.price} pass, or join ${observerName} or above for every Playground.`
             : `Join ${observerName} or above and come straight back here to join Love.`}
         </p>
         <div className="kit-btn-row kitx-actions">
-          <Link href={observerHref} className="kit-btn kit-btn-main kit-btn-sm">
-            {observerName}
-          </Link>
+          {bookTalkPass ? (
+            <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled={weekBusy} onClick={() => onTryWeek(bookTalkPass.itemId)}>
+              {weekBusy ? "Adding…" : `Buy the pass for ${bookTalkPass.price}`}
+            </button>
+          ) : (
+            <Link href={observerHref} className="kit-btn kit-btn-main kit-btn-sm">
+              {observerName}
+            </Link>
+          )}
           <Link href="/memberships" className="kit-btn kit-btn-second kit-btn-sm">
             See the memberships
           </Link>
         </div>
-        {week && (
-          <div className="kit-btn-row">
-            <button type="button" className="kit-btn kit-btn-quiet" disabled={weekBusy} onClick={() => onTryWeek(week.itemId)}>
-              {weekBusy ? "Adding…" : `Try one week for ${week.price}`}
-            </button>
-          </div>
-        )}
         {note && <p className="kit-text-quiet">{note}</p>}
         {stage2Rows}
       </div>
@@ -363,6 +378,7 @@ export default function PlaygroundIsland({
   jitsiDomain,
   observerHref,
   observerName,
+  bookTalkPass,
   stage2Rows,
   initialDecision,
   closedWhen,
@@ -482,6 +498,7 @@ export default function PlaygroundIsland({
         jitsiDomain={jitsiDomain}
         observerHref={observerHref}
         observerName={observerName}
+        bookTalkPass={bookTalkPass}
         stage2Rows={stage2Rows}
         onJoinClick={() => void join()}
         onTryWeek={(itemId) => void tryWeek(itemId)}

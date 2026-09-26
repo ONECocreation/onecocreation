@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSiteConfig } from "@/lib/site-config";
 import { getStage1State } from "@/lib/stage1";
+import { sessionsFromCookieHeader } from "@/lib/member-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -31,11 +32,13 @@ function jsonNoStore(body: unknown, status = 200) {
 const CLOSED = { ok: true, phase: "closed", room: null, jitsiDomain: null } as const;
 
 export async function GET(request: Request) {
-  /* no clock, no input of any kind is ever taken from the request — the
-     answer is the server's own fresh state read, always */
-  void request;
+  /* no clock is ever taken from the request; only its session cookie is
+     read (TASK-471 review, block 968,624): Stage 1 is a TWO-WAY room now,
+     so the room name is a key to join with camera and mic. A signed-out
+     caller learns the phase only, never the room (the /api/stage2 law). */
+  const session = sessionsFromCookieHeader(request.headers.get("cookie"))[0] ?? null;
   const state = await getStage1State();
-  if (state.phase !== "published") {
+  if (state.phase !== "published" || !session) {
     return jsonNoStore({ ok: true, phase: state.phase, room: null, jitsiDomain: null });
   }
   /* Defensive: getSiteConfig() is built never to throw (its own readStored

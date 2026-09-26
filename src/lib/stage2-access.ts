@@ -6,17 +6,30 @@ import { dollars } from "./money-words";
 
 /**
  * STAGE 2'S ONE ACCESS DECISION (TASK-439, block 968,218; RAISED to
- * Observer by TASK-465, block 968,561).
+ * Observer by TASK-465, block 968,561; LOWERED back to Weekly Intuitive by
+ * TASK-471, block 968,624, for Saturday).
  *
  * TASK-465 ruling (the Admiral, block 968,561, verbatim): "the playground
  * is for members of the observer or better package. users can be
- * presented with an upgrade option." This REVERSES ruling 1 of block
+ * presented with an upgrade option." This REVERSED ruling 1 of block
  * 968,218 ("any paid package so that puts it in to the weekly intuitive
  * since that is a base item and gets added to all" — the old floor was
- * tier A). `STAGE2_MIN_TIER` below is still the ONLY place the minimum is
- * written: the route decides through `decideStage2`, which reuses
- * `room-access.ts`'s `roomGate` — the same helper the Stage's video slot
- * and the room chat already follow — never a re-implementation.
+ * tier A).
+ *
+ * TASK-471 ruling (the Admiral, block 968,624, the Saturday-night minimal
+ * fix): "the 2:22 book talk is an $11 ONE-TIME pass, not Observer" —
+ * overruling TASK-465's Observer floor for THIS ROOM (Stage 2 / the
+ * Playground / the book talk are the one physical room every one of these
+ * consumers gates). Owning the $11 one-time pass (`weekly-one-week`,
+ * `TIER_PAGES`'s tier-A `oneTime` item) grants tier A, so the floor moves
+ * back to A — any higher standing tier still admits (the progressive
+ * ladder, `tierSatisfies`). No other room's floor changes: the Q&A room
+ * still gates on tier C, untouched.
+ *
+ * `STAGE2_MIN_TIER` below is still the ONLY place the minimum is written:
+ * the route decides through `decideStage2`, which reuses `room-access.ts`'s
+ * `roomGate` — the same helper the Stage's video slot and the room chat
+ * already follow — never a re-implementation.
  *
  * SERVER-ONLY: `stage2PackageDoor` reads entitlement.ts (the vault) and,
  * for the Amendment-1 week offer, the store catalog. The member door
@@ -24,10 +37,12 @@ import { dollars } from "./money-words";
  * route sends the decision and these few strings down the wire instead.
  */
 
-/** Stage 2's minimum tier (TASK-465, block 968,561) — written here and
- *  nowhere else. Was "A" (Weekly Intuitive) under TASK-439's ruling 1,
- *  block 968,218; the Admiral raised the floor to Observer. */
-export const STAGE2_MIN_TIER: Tier = "B";
+/** Stage 2's minimum tier (TASK-465, block 968,561; TASK-471, block
+ *  968,624) — written here and nowhere else. Was "A" (Weekly Intuitive)
+ *  under TASK-439's ruling 1, block 968,218; TASK-465 raised the floor to
+ *  Observer; TASK-471 (Saturday's minimal fix, the $11 one-time pass)
+ *  moved it back to A, for this room only. */
+export const STAGE2_MIN_TIER: Tier = "A";
 
 /** The floor's own display name (`TIERS[STAGE2_MIN_TIER].name`) — a plain
  *  read, no entitlement check. Lets a page name the floor without

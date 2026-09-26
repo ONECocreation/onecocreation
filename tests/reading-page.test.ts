@@ -207,6 +207,23 @@ describe("the page itself — source pins (async server component, headers()-dep
     expect(src).toContain("following={");
   });
 
+  it("S8 (TASK-471, block 968,624): the hero countdown targets the Housewarming (HOUSEWARMING_TIME), never the raw schedule/next the Reading's own row (ReadingDayBody.tsx) and the ended words still use", async () => {
+    const src = await read(PAGE_PATH);
+    expect(src).toContain('import { HOUSEWARMING_TIME } from "@/lib/reading-day"');
+    // both countdown nodes read the housewarming-derived pair, not the raw schedule/next
+    expect(src).toContain("schedule={{ ...schedule, time: HOUSEWARMING_TIME }}");
+    expect(src).toContain("next={housewarmingNext}");
+    // housewarmingNext is derived with nextReading against the SAME override
+    // shape, reusing the one pure walk — never a second date-math impl
+    expect(src).toContain('nextReading({ ...schedule, time: HOUSEWARMING_TIME }, asOfMs)');
+    // ReadingStage itself, and the ended-card's own "following" derivation,
+    // still ride the real, unmodified schedule/next (Row 2's own time,
+    // ReadingDayBody.tsx, is untouched by this — a different file, this
+    // lane's own OWNS)
+    expect(src).toContain("next={next}");
+    expect(src).toContain("following={following}");
+  });
+
   it("TASK-468 (block 968,561): the sign-up/sign-in box — ReadingSignInBox mounted exactly once, ReadingSignUp retired from this page — the letters, never a second door", async () => {
     const src = await read(PAGE_PATH);
     expect(src).toContain('from "@/components/rooms/ReadingSignInBox"');
