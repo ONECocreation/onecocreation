@@ -61,6 +61,13 @@ export interface ReadingStageDoorBodyProps {
   left: boolean;
   onEnded: () => void;
   onRejoin: () => void;
+  /** TASK-479 (block 968,624+, the Admiral's approved mockup): see
+   *  ReadingStage.tsx's own copy of this prop pair; the same book-cover-
+   *  over-the-mounted-room behaviour, generalized to Parts 3/4's shared
+   *  door. Optional so every existing test of this pure body renders
+   *  exactly as before: video, no cover. */
+  hostVideoOn?: boolean;
+  onHostVideo?: (on: boolean) => void;
 }
 
 export function ReadingStageDoorBody({
@@ -73,8 +80,14 @@ export function ReadingStageDoorBody({
   left,
   onEnded,
   onRejoin,
+  hostVideoOn = true,
+  onHostVideo,
 }: ReadingStageDoorBodyProps) {
   const showRoom = wire.decision === "open" && wire.reachable === true && !!wire.room && !left;
+  /* TASK-479: same rule as ReadingStage.tsx — the book stays over the
+     mounted (still-listening) room until the identified host's own feed
+     comes on. hostVideoOn defaults true (fail open). */
+  const coverUp = showRoom && !hostVideoOn;
   const cap = `${label[0].toUpperCase()}${label.slice(1)}`;
   /* fix round (block 968,624) — the chip ALWAYS names the part (when the
      schedule gives one); "Live · " only rides while the door is actually
@@ -85,16 +98,30 @@ export function ReadingStageDoorBody({
   return (
     <div className="kit-stage">
       {showRoom ? (
-        <div className="kit-stage-media">
+        <div className={coverUp ? "kit-stage-media kit-stage-waiting kit-stage-waiting--cover" : "kit-stage-media"}>
           <div className="kit-stage-viewer">
-            <JitsiRoom domain={jitsiDomain} room={wire.room as string} onEnded={onEnded} height="100%" guestView />
+            <JitsiRoom domain={jitsiDomain} room={wire.room as string} onEnded={onEnded} onHostVideo={onHostVideo} height="100%" guestView />
           </div>
+          {coverUp && (
+            <div className="kit-stage-cover">
+              <img src={DOOR_COVER_SRC} alt={COVER_ALT} width="600" height="358" />
+            </div>
+          )}
           {chipText && <span className="kit-stage-chip">{chipText}</span>}
         </div>
       ) : (
         <div className="kit-stage-media kit-stage-waiting kit-stage-waiting--cover">
           <img src={DOOR_COVER_SRC} alt={COVER_ALT} width="600" height="358" />
           {chipText && <span className="kit-stage-chip">{chipText}</span>}
+        </div>
+      )}
+      {coverUp && (
+        /* TASK-479: no fake "Tap for sound" button — see ReadingStage.tsx's
+           own comment (FEASIBILITY.md §4); the cover's own click-through
+           layer above is the real mechanism, this is a plain hint. */
+        <div className="kit-stage-controls kit-stage-controls-slim">
+          <p className="kit-body">Love is here. Her camera comes on in a moment.</p>
+          <p className="kit-text-quiet">No sound? Tap the screen.</p>
         </div>
       )}
       {!showRoom && (
@@ -168,6 +195,16 @@ export default function ReadingStageDoor({
   const path = doorPath(door);
   const [wire, setWire] = useState<Wire>(CLOSED);
   const [left, setLeft] = useState(false);
+  /* TASK-479: fail-open true until JitsiRoom's onHostVideo reducer says
+     the identified host's own feed is off; reset on every fresh room —
+     the adjust-state-during-render pattern (ConsoleShell.tsx's own
+     precedent), no effect needed. */
+  const [hostVideoOn, setHostVideoOn] = useState(true);
+  const [prevRoom, setPrevRoom] = useState(wire.room);
+  if (prevRoom !== wire.room) {
+    setPrevRoom(wire.room);
+    setHostVideoOn(true);
+  }
 
   useEffect(() => {
     let alive = true;
@@ -199,7 +236,14 @@ export default function ReadingStageDoor({
   /* the hangup unmounts the embed in THIS commit (the TASK-471 review
      law) — no farewell-card flash while the fresh state comes back */
   const onEnded = useCallback(() => setLeft(true), []);
-  const onRejoin = useCallback(() => setLeft(false), []);
+  const onRejoin = useCallback(() => {
+    setLeft(false);
+    /* TASK-479 fix: same stuck-cover-after-rejoin path as ReadingStage.tsx
+       — a rejoin remounts JitsiRoom against the SAME wire.room, so the
+       room-change reset above never fires. Reset here too (belt and
+       braces alongside JitsiRoom's own boot()-time onHostVideo sync). */
+    setHostVideoOn(true);
+  }, []);
 
   return (
     <ReadingStageDoorBody
@@ -212,6 +256,8 @@ export default function ReadingStageDoor({
       left={left}
       onEnded={onEnded}
       onRejoin={onRejoin}
+      hostVideoOn={hostVideoOn}
+      onHostVideo={setHostVideoOn}
     />
   );
 }
