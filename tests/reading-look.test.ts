@@ -171,10 +171,17 @@ describe("the /reading page — the sky band and the approved structure", () => 
 });
 
 describe("no camera or microphone words anywhere /reading renders from (M2)", () => {
+  /* TASK-479 (block 968,624+, the Admiral's approved mockup, t479/mockup.html,
+     "good on the calls. let's build it."): M2's blanket law is re-trued to
+     exclude exactly the one sentence the Admiral approved verbatim for the
+     new book-cover-over-a-live-mic overlay on ReadingStage.tsx — "Her
+     camera comes on in a moment." — scrubbed out before the check so any
+     OTHER, un-approved camera/microphone mention still fails this test. */
+  const APPROVED_479 = "Love is here. Her camera comes on in a moment.";
   for (const file of [PAGE, STAGE, VIEWER, DETAILS, SIGNUP]) {
     it(`${file} is clean`, async () => {
       const src = await read(file);
-      expect(src).not.toMatch(/camera|microphone/i);
+      expect(src.replaceAll(APPROVED_479, "")).not.toMatch(/camera|microphone/i);
     });
   }
 });

@@ -123,6 +123,15 @@ export interface ReadingStageBodyProps {
   /** the "left" card's own Back button — no navigation, no re-fetch: it
    *  simply remounts the same still-published room. */
   onRejoin: () => void;
+  /** TASK-479 (block 968,624+, the Admiral's approved mockup): the default
+   *  export's own read of JitsiRoom's onHostVideo reducer (fail-open true,
+   *  the real video, until an explicit signal says the identified host's
+   *  own feed is off). Optional so every existing caller of this pure body
+   *  (this file's own tests) renders exactly as before: video, no cover. */
+  hostVideoOn?: boolean;
+  /** TASK-479: forwarded straight to JitsiRoom's own onHostVideo prop on
+   *  the room mount below (see hostVideoReducer in JitsiRoom.tsx). */
+  onHostVideo?: (on: boolean) => void;
 }
 
 /** The wire body `/api/stage1` answers with (its exact four keys). */
@@ -187,10 +196,18 @@ export function ReadingStageBody({
   onRoomEnded,
   onRejoin,
   partLabel,
+  hostVideoOn = true,
+  onHostVideo,
 }: ReadingStageBodyProps) {
   /* the ONE gate for mounting the real two-way room: published, signed
      in, not left, not ended, and a room the poll actually gave us. */
   const showRoom = phase === "published" && signedIn && !left && !ended && !!room;
+  /* TASK-479: the book cover rides OVER the mounted room (JitsiRoom stays
+     mounted underneath the whole time, audio keeps playing) until the
+     identified host's own feed comes on. hostVideoOn defaults true (fail
+     open) so every caller that never passes it renders exactly as this
+     file did before this lane. */
+  const coverUp = showRoom && !hostVideoOn;
   /* fix round (block 968,624) — the chip ALWAYS names the part (when the
      schedule gives one); "Live · " only rides while actually published
      and not ended, the same condition the old bare "Live" chip used. */
@@ -205,10 +222,15 @@ export function ReadingStageBody({
       {phase === "published" && !ended && <p className="kit-body kit-stage-live-line">Love is live now</p>}
       <div className="kit-stage">
         {showRoom ? (
-          <div className="kit-stage-media">
+          <div className={coverUp ? "kit-stage-media kit-stage-waiting kit-stage-waiting--cover" : "kit-stage-media"}>
             <div className="kit-stage-viewer">
-              <JitsiRoom domain={jitsiDomain} room={room as string} onEnded={onRoomEnded} height="100%" guestView />
+              <JitsiRoom domain={jitsiDomain} room={room as string} onEnded={onRoomEnded} onHostVideo={onHostVideo} height="100%" guestView />
             </div>
+            {coverUp && (
+              <div className="kit-stage-cover">
+                <img src={COVER_SRC} alt={COVER_ALT} width="600" height="358" />
+              </div>
+            )}
             {chipText && <span className="kit-stage-chip">{chipText}</span>}
           </div>
         ) : (
@@ -217,7 +239,21 @@ export function ReadingStageBody({
             {chipText && <span className="kit-stage-chip">{chipText}</span>}
           </div>
         )}
-        {showRoom ? null : ended ? (
+        {coverUp ? (
+          /* TASK-479: the book stays over the mounted (still-listening)
+             room until the identified host's own feed comes on. No fake
+             "Tap for sound" button — FEASIBILITY.md §4: a real user
+             gesture has to land INSIDE the iframe's own document to lift
+             an autoplay block, which a button on this page can't do; the
+             cover's own click-through layer above (.kit-stage-cover,
+             pointer-events:none) already lets a tap anywhere on the
+             picture reach the real iframe, so this line is a plain,
+             honest hint, never an intercepting control. */
+          <div className="kit-stage-controls kit-stage-controls-slim">
+            <p className="kit-body">Love is here. Her camera comes on in a moment.</p>
+            <p className="kit-text-quiet">No sound? Tap the screen.</p>
+          </div>
+        ) : showRoom ? null : ended ? (
           <div className="kit-stage-controls">
             {/* TASK-466: two sentences, no dash (ruling 2's shape) */}
             <p className="kit-body">The reading has ended.</p>
@@ -316,6 +352,17 @@ export default function ReadingStage({
      ended branch, so SSR and the first client paint agree */
   const [nextWords, setNextWords] = useState<string | null>(null);
   const phaseRef = useRef(phase);
+  /* TASK-479: fail-open true (the real video) until JitsiRoom's own
+     onHostVideo reducer says the identified host's own feed is off. Reset
+     to true on every fresh room (a stale "off" from a PRIOR room must
+     never carry into a new one) — the adjust-state-during-render pattern
+     (ConsoleShell.tsx's own precedent), no effect needed. */
+  const [hostVideoOn, setHostVideoOn] = useState(true);
+  const [prevRoom, setPrevRoom] = useState(room);
+  if (prevRoom !== room) {
+    setPrevRoom(room);
+    setHostVideoOn(true);
+  }
 
   /* K122 item 7 + the purity law — the ended words name the NEXT reading
      (the FOLLOWING occurrence once the clock is at or past next's start),
@@ -428,6 +475,8 @@ export default function ReadingStage({
       onRoomEnded={roomEnded}
       onRejoin={rejoin}
       partLabel={partLabel}
+      hostVideoOn={hostVideoOn}
+      onHostVideo={setHostVideoOn}
     />
   );
 }

@@ -22,10 +22,25 @@ function siteOrigin(): string {
   if (typeof window !== "undefined") return window.location.origin;
   return "http://localhost:3000";
 }
+/**
+ * TASK-479: the External API's own event payloads — a loose, optional-field
+ * shape (different events carry different keys) rather than a per-event
+ * type, since one `addListener` signature has to cover all of them. See
+ * FEASIBILITY.md §1: the wire's real key is `id` (source-verified); the
+ * handbook's prose calls it `participantId` — both are read, never just one.
+ */
+interface JitsiWireEventData {
+  id?: string;
+  participantId?: string;
+  role?: string;
+  mediaType?: string;
+  isMuted?: boolean;
+}
+
 declare global {
   interface Window {
     JitsiMeetExternalAPI?: new (domain: string, opts: Record<string, unknown>) => {
-      addListener: (ev: string, cb: () => void) => void;
+      addListener: (ev: string, cb: (data: JitsiWireEventData) => void) => void;
       dispose: () => void;
     };
   }
@@ -106,6 +121,108 @@ export function jitsiEmbedOptions({
   };
 }
 
+/**
+ * TASK-479 (block 968,624+, the Admiral's approved mockup, `t479/mockup.html`):
+ * the /reading top screen keeps the book cover over the mounted, still-
+ * listening room until Love's camera comes on. Her identity: the
+ * participant holding the External API's 'moderator' role who is NOT the
+ * local viewer themselves (this embed's own join, reported by
+ * `videoConferenceJoined`'s own `id` — FEASIBILITY.md §3 "moderator role").
+ *
+ * FAIL OPEN throughout (FEASIBILITY.md §6): unknown, ambiguous, or gone
+ * always means SHOW THE VIDEO, never trap a viewer behind a still picture.
+ * `videoOn` starts `true` and only ever turns `false` on an EXPLICIT
+ * muted-video signal from the participant already identified as the host —
+ * merely joining, or merely becoming the moderator, says nothing about the
+ * camera by itself (§6: "the host's camera starting unmuted is not
+ * guaranteed to fire an event... default to video if unsure").
+ *
+ * A pure reducer so the state machine can be pinned hard without a script
+ * tag, a DOM, or a live Jitsi server (none exist in this environment —
+ * FEASIBILITY.md's own "Obstacles").
+ */
+export interface HostVideoState {
+  /** this embed's own participant id (from `videoConferenceJoined`) —
+   *  never treated as a possible host, however its role reads. */
+  localId: string | null;
+  /** the one participant currently trusted as the host (moderator, not
+   *  local) — null when nobody's been identified yet, or the identified
+   *  host left / lost the role. */
+  hostId: string | null;
+  /** what the /reading screen shows: true -> the real video, false -> the
+   *  cover stays over the mounted (still audible) room. */
+  videoOn: boolean;
+  /** true once an explicit participantMuted(video) signal has arrived for
+   *  the identified host — guards the safety timeout from undoing a real,
+   *  still-current signal (see `hostVideoReducer`'s "timeout" case). */
+  sawMuteSignal: boolean;
+}
+
+export const initialHostVideoState: HostVideoState = {
+  localId: null,
+  hostId: null,
+  videoOn: true,
+  sawMuteSignal: false,
+};
+
+export type HostVideoEvent =
+  | { type: "videoConferenceJoined"; id: string }
+  | { type: "participantJoined"; id: string }
+  | { type: "participantLeft"; id: string }
+  | { type: "participantRoleChanged"; id: string; role: string }
+  | { type: "participantMuted"; id: string; mediaType: string; isMuted: boolean }
+  | { type: "timeout" };
+
+/** FEASIBILITY.md §1: the wire's real payload key is `id` (source-verified
+ *  against `external_api.js`); the public handbook's prose calls the same
+ *  field `participantId`. Both are read here so a docs/source drift never
+ *  silently drops an event. */
+export function hostEventParticipantId(data: { id?: string; participantId?: string }): string {
+  return data.id ?? data.participantId ?? "";
+}
+
+/** 20 seconds from OUR OWN join (`videoConferenceJoined`) — if by then no
+ *  host has ever been identified at all, the safety net below drops any
+ *  assumption of a cover rather than risk trapping a viewer on a broken or
+ *  older build that never fires the events this lane relies on. It never
+ *  overrides a REAL, still-current mute signal (`sawMuteSignal`) — Love's
+ *  camera can legitimately stay off far longer than 20 seconds; only the
+ *  UNCERTAIN case times out. */
+export const HOST_VIDEO_SAFETY_TIMEOUT_MS = 20_000;
+
+export function hostVideoReducer(state: HostVideoState, event: HostVideoEvent): HostVideoState {
+  switch (event.type) {
+    case "videoConferenceJoined":
+      return { ...state, localId: event.id || state.localId };
+    case "participantRoleChanged": {
+      if (!event.id || event.id === state.localId) return state; // never trust our own role
+      if (event.role === "moderator") {
+        return state.hostId === event.id ? state : { ...state, hostId: event.id };
+      }
+      if (event.id === state.hostId) {
+        // the identified host lost the role (e.g. handed off) — fail open
+        return { ...state, hostId: null, videoOn: true, sawMuteSignal: false };
+      }
+      return state;
+    }
+    case "participantMuted": {
+      if (event.mediaType !== "video") return state;
+      if (!state.hostId || event.id !== state.hostId) return state; // a non-host's events are ignored
+      return { ...state, videoOn: !event.isMuted, sawMuteSignal: true };
+    }
+    case "participantJoined":
+      // presence alone says nothing about the camera (FEASIBILITY.md §6)
+      return state;
+    case "participantLeft":
+      if (event.id !== state.hostId) return state;
+      return { ...state, hostId: null, videoOn: true, sawMuteSignal: false };
+    case "timeout":
+      return state.sawMuteSignal ? state : { ...state, videoOn: true };
+    default:
+      return state;
+  }
+}
+
 export default function JitsiRoom({
   domain,
   room,
@@ -113,6 +230,7 @@ export default function JitsiRoom({
   onEnded,
   height = "72vh",
   guestView,
+  onHostVideo,
 }: {
   domain: string;
   room: string;
@@ -131,6 +249,13 @@ export default function JitsiRoom({
    *  toolbar (Love hosts from the direct link, not this embed). Every
    *  other caller leaves this unset and is unaffected. */
   guestView?: boolean;
+  /** TASK-479: opt-in ONLY for the /reading mounts — reports whether the
+   *  identified host currently has video on, computed by the pure
+   *  `hostVideoReducer` above from participantMuted/participantRoleChanged/
+   *  participantJoined/participantLeft/videoConferenceJoined. Every other
+   *  caller leaves this unset; the listeners below are only added when a
+   *  callback is actually passed, so nothing else pays for this. */
+  onHostVideo?: (on: boolean) => void;
 }) {
   const holder = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"loading" | "live" | "ended" | "failed">("loading");
@@ -138,6 +263,7 @@ export default function JitsiRoom({
   useEffect(() => {
     let api: { dispose: () => void } | null = null;
     let live = true;
+    let hostVideoTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const boot = () => {
       if (!live || !holder.current || !window.JitsiMeetExternalAPI) return;
@@ -164,6 +290,37 @@ export default function JitsiRoom({
       // both farewell paths land HERE, not on jit.si
       a.addListener("readyToClose", () => { if (live) { setState("ended"); onEnded?.(); } });
       a.addListener("videoConferenceLeft", () => { if (live) { setState("ended"); onEnded?.(); } });
+
+      /* TASK-479: the /reading guest mounts' own opt-in — see the block
+       * comment above `hostVideoReducer`. `hv` is local, mutable state for
+       * this one boot cycle only (a fresh conference gets a fresh reducer),
+       * dispatched into on each wire event; `onHostVideo` fires only on an
+       * actual change, never on every event. */
+      if (onHostVideo) {
+        let hv = initialHostVideoState;
+        const dispatch = (event: HostVideoEvent) => {
+          const next = hostVideoReducer(hv, event);
+          if (live && next.videoOn !== hv.videoOn) onHostVideo(next.videoOn);
+          hv = next;
+        };
+        a.addListener("videoConferenceJoined", (data) => {
+          dispatch({ type: "videoConferenceJoined", id: hostEventParticipantId(data) });
+          hostVideoTimeout = setTimeout(() => dispatch({ type: "timeout" }), HOST_VIDEO_SAFETY_TIMEOUT_MS);
+        });
+        a.addListener("participantJoined", (data) => dispatch({ type: "participantJoined", id: hostEventParticipantId(data) }));
+        a.addListener("participantLeft", (data) => dispatch({ type: "participantLeft", id: hostEventParticipantId(data) }));
+        a.addListener("participantRoleChanged", (data) =>
+          dispatch({ type: "participantRoleChanged", id: hostEventParticipantId(data), role: data.role ?? "" }),
+        );
+        a.addListener("participantMuted", (data) =>
+          dispatch({
+            type: "participantMuted",
+            id: hostEventParticipantId(data),
+            mediaType: data.mediaType ?? "",
+            isMuted: Boolean(data.isMuted),
+          }),
+        );
+      }
     };
 
     if (window.JitsiMeetExternalAPI) boot();
@@ -175,8 +332,12 @@ export default function JitsiRoom({
       s.onerror = () => { if (live) setState("failed"); };
       document.body.appendChild(s);
     }
-    return () => { live = false; api?.dispose(); };
-  }, [domain, room, displayName, onEnded, guestView]);
+    return () => {
+      live = false;
+      api?.dispose();
+      if (hostVideoTimeout) clearTimeout(hostVideoTimeout);
+    };
+  }, [domain, room, displayName, onEnded, guestView, onHostVideo]);
 
   if (state === "ended") {
     return (

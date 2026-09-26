@@ -57,6 +57,12 @@ and `~/dev/briefings/walk-968624/t479/mockup.html` (the approved look).
   confirmed mute signal; `id` vs `participantId` payload keys) plus source
   pins on `JitsiRoom.tsx`'s wiring (listeners present, gated behind
   `if (onHostVideo)`, timeout cleared on unmount).
+- `tests/reading-look.test.ts` — EDIT (named add): M2's blanket "no camera
+  or microphone words anywhere /reading renders from" law is re-trued to
+  scrub out exactly one Admiral-approved sentence
+  ("Love is here. Her camera comes on in a moment.") before the check —
+  any OTHER, un-approved camera/microphone mention in those files still
+  fails this test.
 - `tests/reading-stage-cover-479.test.ts` — NEW: the cover markup rendered
   pure (`renderToStaticMarkup`) for both `ReadingStageBody` and
   `ReadingStageDoorBody` — cover present with `hostVideoOn: false` and a

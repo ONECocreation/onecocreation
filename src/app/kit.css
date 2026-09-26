@@ -271,6 +271,17 @@
    lane needed. */
 .kit-lock-icon{display:inline-block;margin-right:6px;vertical-align:-2px}
 
+/* TASK-479 (block 968,624+, the Admiral's approved mockup, t479/mockup.html):
+   the book cover, stacked visually above the mounted (still-listening)
+   JitsiRoom iframe inside .kit-stage-viewer. pointer-events:none means a
+   click (and the mousemove Jitsi's own JS uses to wake its auto-hiding
+   toolbar) is skipped during hit-testing and passes straight through to
+   the real iframe underneath — visually hidden, functionally untouched
+   (FEASIBILITY.md §5). Tokens only, generic, no page name in the
+   selector — the same shape as kit-stage-chip/kit-lock-icon above it. */
+.kit-stage-cover{position:absolute;inset:0;pointer-events:none;display:grid;place-items:center}
+.kit-stage-cover>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+
 /* ── the one-way viewer, filling the same media frame the book waited in ── */
 .kit-stage-viewer{position:absolute;inset:0}
 .kit-stage-viewer-frame{position:absolute;inset:0}
