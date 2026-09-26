@@ -98,6 +98,10 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         setSegments(segs);
         setCap(capVal);
         updateEstimate(segs.find((seg) => seg.source === "all")?.count ?? 0, capVal);
+        // s.slots is the EFFECTIVE key per slot (the hardcoded default
+        // applied when no slot was ever set) — this letter's row shows
+        // itself selected whenever ITS key is the effective holder,
+        // default-riding or explicit alike.
         const slots: { "reading-confirm"?: string; "reading-dayof"?: string } = s?.ok ? (s.slots ?? {}) : {};
         setAutoSlot(slots["reading-confirm"] === key ? "reading-confirm" : slots["reading-dayof"] === key ? "reading-dayof" : "");
       })
@@ -116,7 +120,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
       const d = await fetch("/api/admin/letters/slots", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key, slot: next || null }),
+        body: JSON.stringify({ key, slot: next }),
       }).then((r) => r.json()).catch(() => null);
       if (!d?.ok) {
         setAutoSlot(prev);
@@ -224,22 +228,27 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
             This letter has no words yet — <Link href="/a/letters" style={{ textDecoration: "underline", color: "var(--info)" }}>write it in the room</Link> before sending.
           </p>
         )}
-        {/* T-482: ONE state per row, said once, under the row's words; ONE
+        {/* T-482: only a letter Love composes may ride an automatic send
+            (review BLOCKER — a seeded letter's {{placeholders}} would go
+            out raw) — the row shows only on a composed letter's own page.
+            ONE state per row, said once, under the row's words; ONE
             control per row, on the same right edge in every state — the
             /a uniformity law, `.kit-rows`' own grid (Stage1Card's idiom).
             A save error REPLACES the state line, never adds a second one. */}
-        <ul className="kit-rows mt-2">
-          <li data-row="auto-slot">
-            <span>{slotNote || AUTO_SLOT_STATE_WORDS[autoSlot]}</span>
-            <span className="kit-rows-end">
-              <select value={autoSlot} onChange={(e) => changeAutoSlot(e.target.value as AutoSlot)} disabled={savingSlot} className="kit-field-input">
-                <option value="">Not automatic</option>
-                <option value="reading-confirm">When someone signs up for the reading</option>
-                <option value="reading-dayof">Reading-day morning (2 a.m.)</option>
-              </select>
-            </span>
-          </li>
-        </ul>
+        {letter.kind === "composed" && (
+          <ul className="kit-rows mt-2">
+            <li data-row="auto-slot">
+              <span>{slotNote || AUTO_SLOT_STATE_WORDS[autoSlot]}</span>
+              <span className="kit-rows-end">
+                <select value={autoSlot} onChange={(e) => changeAutoSlot(e.target.value as AutoSlot)} disabled={savingSlot} className="kit-field-input">
+                  <option value="">Not automatic</option>
+                  <option value="reading-confirm">When someone signs up for the reading</option>
+                  <option value="reading-dayof">Reading-day morning (2 a.m.)</option>
+                </select>
+              </span>
+            </li>
+          </ul>
+        )}
       </div>
 
       <SectionHead label="Send me a test" />
