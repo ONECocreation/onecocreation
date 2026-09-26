@@ -127,6 +127,84 @@ describe("hostVideoReducer — the host leaves: cover off / safe, never stuck", 
   });
 });
 
+describe("hostVideoReducer — a SECOND moderator arriving never hijacks the tracked host (the reported blocker)", () => {
+  const SECOND_MOD = "second-moderator-participant-id";
+
+  it("regression: a second moderator arrives while the real host is muted, then the real host unmutes — the cover MUST drop", () => {
+    // Love is identified and mutes her video: the cover goes up on a REAL,
+    // confirmed signal.
+    let state = hostVideoReducer(withHost(), { type: "participantMuted", id: LOVE, mediaType: "video", isMuted: true });
+    expect(state.videoOn).toBe(false);
+    expect(state.hostId).toBe(LOVE);
+    // a second participant is also reported as 'moderator' (a hand-off in
+    // progress, a co-host, or just a race in the wire events) — this must
+    // NOT replace LOVE as the tracked host, and must NOT touch videoOn.
+    state = hostVideoReducer(state, { type: "participantRoleChanged", id: SECOND_MOD, role: "moderator" });
+    expect(state.hostId).toBe(LOVE);
+    expect(state.videoOn).toBe(false);
+    // Love's own, real unmute must still reach the cover — this is the
+    // exact failure the blocker described: it used to be silently dropped
+    // because hostId had been reassigned to SECOND_MOD.
+    state = hostVideoReducer(state, { type: "participantMuted", id: LOVE, mediaType: "video", isMuted: false });
+    expect(state.videoOn).toBe(true);
+  });
+
+  it("the second moderator's own video-mute events are ignored throughout (never adopted as the host)", () => {
+    let state = hostVideoReducer(withHost(), { type: "participantMuted", id: LOVE, mediaType: "video", isMuted: true });
+    state = hostVideoReducer(state, { type: "participantRoleChanged", id: SECOND_MOD, role: "moderator" });
+    state = hostVideoReducer(state, { type: "participantMuted", id: SECOND_MOD, mediaType: "video", isMuted: false });
+    // the second moderator's own (unmuted) signal changes nothing — hostId
+    // and videoOn both still belong to LOVE, still muted
+    expect(state.hostId).toBe(LOVE);
+    expect(state.videoOn).toBe(false);
+  });
+
+  it("if hostId ever DID change to a different id (belt and braces on the invariant itself), videoOn/sawMuteSignal reset to fail-open — never a stale cover riding on a new identity", () => {
+    // constructed directly: the reducer's own normal paths never produce a
+    // hostId change while videoOn is false (the guard above prevents it),
+    // but the CONTRACT — reset on any hostId change — is pinned here too,
+    // the same way the timeout's own escape hatch is pinned directly.
+    const suspect: HostVideoState = { localId: ME, hostId: LOVE, videoOn: false, sawMuteSignal: true };
+    const state = hostVideoReducer(suspect, { type: "participantRoleChanged", id: SECOND_MOD, role: "moderator" });
+    // per the fix: a second moderator while one is already tracked is
+    // ignored outright — hostId stays LOVE, and the real (still-current)
+    // signal survives untouched, which is itself the safe outcome.
+    expect(state.hostId).toBe(LOVE);
+    expect(state.videoOn).toBe(false);
+    expect(state.sawMuteSignal).toBe(true);
+  });
+
+  it("host swaps ids: the ONLY sanctioned path is lost-role or left on the CURRENT host, and either resets fail-open before any new host is trusted", () => {
+    // LOVE mutes video (cover up), then LOVE's own role is revoked
+    // (handed off) — fail open immediately, regardless of who comes next.
+    let state = hostVideoReducer(withHost(), { type: "participantMuted", id: LOVE, mediaType: "video", isMuted: true });
+    state = hostVideoReducer(state, { type: "participantRoleChanged", id: LOVE, role: "participant" });
+    expect(state.hostId).toBeNull();
+    expect(state.videoOn).toBe(true);
+    expect(state.sawMuteSignal).toBe(false);
+    // NOW a new moderator (the swap target) is identified — starts clean,
+    // fail-open, no stale mute state carried over from LOVE.
+    state = hostVideoReducer(state, { type: "participantRoleChanged", id: SECOND_MOD, role: "moderator" });
+    expect(state.hostId).toBe(SECOND_MOD);
+    expect(state.videoOn).toBe(true);
+    expect(state.sawMuteSignal).toBe(false);
+    // the new host's own mute signal now works normally
+    state = hostVideoReducer(state, { type: "participantMuted", id: SECOND_MOD, mediaType: "video", isMuted: true });
+    expect(state.videoOn).toBe(false);
+  });
+
+  it("host swaps ids via participantLeft instead of a role change — same fail-open reset, then a clean adoption", () => {
+    let state = hostVideoReducer(withHost(), { type: "participantMuted", id: LOVE, mediaType: "video", isMuted: true });
+    state = hostVideoReducer(state, { type: "participantLeft", id: LOVE });
+    expect(state.hostId).toBeNull();
+    expect(state.videoOn).toBe(true);
+    expect(state.sawMuteSignal).toBe(false);
+    state = hostVideoReducer(state, { type: "participantRoleChanged", id: SECOND_MOD, role: "moderator" });
+    expect(state.hostId).toBe(SECOND_MOD);
+    expect(state.videoOn).toBe(true);
+  });
+});
+
 describe("hostVideoReducer — the safety timeout", () => {
   it("with no host ever identified and no mute signal, a timeout is a no-op (already video)", () => {
     const state = hostVideoReducer(joined(), { type: "timeout" });

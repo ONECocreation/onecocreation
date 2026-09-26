@@ -128,6 +128,16 @@ export function jitsiEmbedOptions({
  * participant holding the External API's 'moderator' role who is NOT the
  * local viewer themselves (this embed's own join, reported by
  * `videoConferenceJoined`'s own `id` — FEASIBILITY.md §3 "moderator role").
+ * Deliberately NOT the "moderator AND displayName" combination FEASIBILITY.md
+ * §3 floats as the sturdier interim signal: `displayName` is free text any
+ * guest's own prejoin screen lets them type (FEASIBILITY.md §3's own
+ * "a guest COULD type 'Love'" risk) — adding it back in here would only
+ * narrow WHICH moderator we trust, never harden the check, since the
+ * moderator flag is still the thing actually granting the identity. The
+ * durable fix is the JWT plan's own moderator claim (briefings/jitsi-jwt-968269/);
+ * until then, moderator-only plus "never adopt a second moderator while the
+ * first is still tracked" (see `participantRoleChanged` below) is the
+ * chosen interim shape.
  *
  * FAIL OPEN throughout (FEASIBILITY.md §6): unknown, ambiguous, or gone
  * always means SHOW THE VIDEO, never trap a viewer behind a still picture.
@@ -197,7 +207,28 @@ export function hostVideoReducer(state: HostVideoState, event: HostVideoEvent): 
     case "participantRoleChanged": {
       if (!event.id || event.id === state.localId) return state; // never trust our own role
       if (event.role === "moderator") {
-        return state.hostId === event.id ? state : { ...state, hostId: event.id };
+        if (event.id === state.hostId) return state; // already tracking this one
+        if (state.hostId) {
+          /* a SECOND moderator arriving while we already track one — never
+           * adopt them as a replacement host. This was the reported
+           * blocker: Love (the real host) mutes video (cover up, a real
+           * confirmed signal), a second participant is handed/reports
+           * 'moderator' too, and the naive "last moderator wins" rule used
+           * to overwrite hostId to the second id WITHOUT resetting
+           * videoOn/sawMuteSignal — Love's later real unmute then failed
+           * the `event.id !== state.hostId` guard in "participantMuted"
+           * below and was silently dropped, leaving the cover stuck over
+           * a live host for the rest of the call. The only paths that may
+           * change who we track are the identified host's OWN lost-role
+           * (below) or leaving (participantLeft) — never a second
+           * participant's role report while the first is still present. */
+          return state;
+        }
+        // no host tracked yet — fail open still holds (videoOn/sawMuteSignal
+        // are already true/false); if this branch is ever reached with a
+        // DIFFERENT id already tracked, reset explicitly too (belt and
+        // braces — see the guard above that makes this the normal case).
+        return { ...state, hostId: event.id, videoOn: true, sawMuteSignal: false };
       }
       if (event.id === state.hostId) {
         // the identified host lost the role (e.g. handed off) — fail open
@@ -305,6 +336,9 @@ export default function JitsiRoom({
         };
         a.addListener("videoConferenceJoined", (data) => {
           dispatch({ type: "videoConferenceJoined", id: hostEventParticipantId(data) });
+          // a re-join (e.g. a reconnect) fires this event again — clear any
+          // still-pending timer first so two never race each other
+          if (hostVideoTimeout) clearTimeout(hostVideoTimeout);
           hostVideoTimeout = setTimeout(() => dispatch({ type: "timeout" }), HOST_VIDEO_SAFETY_TIMEOUT_MS);
         });
         a.addListener("participantJoined", (data) => dispatch({ type: "participantJoined", id: hostEventParticipantId(data) }));
