@@ -332,7 +332,7 @@
 }
 /* TASK-475 (block 968,624) — RoomsCard folds Stage 1's old two
    one-control rows (the stage's lifecycle, and its host link) into ONE
-   row per door carrying BOTH controls (Open/Close, plus Join on camera)
+   row per door carrying BOTH controls (Open/Close, plus Join as host)
    on the same right edge. The shared .kit-rows-end above is plain
    inline text with no layout of its own, so two buttons there would
    overlap instead of sitting side by side — this rule gives the pair a
@@ -342,13 +342,19 @@
 .kit-rooms-card .kit-rows-end{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 /* Number One's Chrome walk (block 968,624): Close measured ~100px and Open
    ~95px, so the pair's left edge shifted between states — the Open/Close
-   button (never Join on camera, which keeps its own natural width) gets a
+   button (never Join as host, which keeps its own natural width) gets a
    shared floor both labels fit inside without stretching either one. */
 .kit-rooms-card .kit-rows-end>button.kit-btn{min-width:100px;box-sizing:border-box;text-align:center}
-@media (max-width:768px){
-  .kit-rooms-card .kit-rows>li{grid-template-columns:1fr;gap:8px}
-  .kit-rooms-card .kit-rows-end{justify-self:end}
-}
+/* TASK-487 (block 968,624+): THREE controls per row now (Close/Open, Join
+   as host, the camera toggle) squeeze the room title at DESKTOP widths too
+   — "Housewarming · 12:12" wrapped in the mockup. The shared `.kit-rows>li`
+   two-column grid (words beside controls) only ever worked for a single
+   control opposite the words; three never fit there. Controls now sit on
+   their OWN LINE under the words, right-aligned, AT EVERY WIDTH — this
+   used to be scoped to a narrow max-width:768px breakpoint only; it is
+   unconditional now, so the title never wraps at any width. */
+.kit-rooms-card .kit-rows>li{grid-template-columns:1fr;gap:8px}
+.kit-rooms-card .kit-rows-end{justify-self:end}
 /* Number One's Chrome walk: an empty rule sat above the Free room row —
    the shared .kit-rows top border plus the first row's own top padding
    read as a stray blank row before any real content. Stage1Card's own

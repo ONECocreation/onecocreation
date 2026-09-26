@@ -48,13 +48,39 @@ export interface DoorRowState {
   phase: "closed" | "prepared" | "published";
   room: string | null;
   jitsiDomain: string;
+  /** TASK-487 (block 968,624+, the Admiral's ruling, option C) — Love's
+   *  site switch, the authority for the /reading waiting picture now.
+   *  Always present (every admin route's own `stateResponse()` computes
+   *  it unconditionally, "hidden" while closed too) — never optional. */
+  camera: "shown" | "hidden";
 }
 
-export type DoorBusy = "open" | "close" | null;
+/* TASK-487: two new in-flight labels beside open/close, for the camera
+   toggle actions — the SAME per-door lock (`runExclusive`/`recordLock`)
+   guards these too, so a camera tap can never race an open/close tap on
+   the same door. */
+export type DoorBusy = "open" | "close" | "show-camera" | "hide-camera" | null;
 
 /** The one Jitsi hash every camera link (`RoomsCard.tsx`'s rows, the
  *  go/[door] page) carries — a single join point so the flags never
  *  drift apart. Pure, no React, safe on either side of the boundary. */
 export function jitsiRoomUrl(state: { jitsiDomain: string; room: string }): string {
   return `https://${state.jitsiDomain}/${state.room}#config.p2p.enabled=false&config.showChatPermissionsModeratorSetting=true`;
+}
+
+/**
+ * TASK-487 (block 968,624+, the Admiral's ruling, option C) — the THREE
+ * state lines, said once, shared by `RoomsCard.tsx`'s rows AND
+ * `GoRoom.tsx`'s phone page (never a second copy of the words): closed;
+ * open with the picture up (camera hidden — Love's mic plays, guests see
+ * her book cover); live (camera shown — guests see her). `prepared`
+ * collapses into the "open, hidden" bucket here — it is a private,
+ * pre-publish mint the RoomsCard/GoRoom open-then-publish chain resolves
+ * within one click, never a phase an operator actually sits on, and it
+ * can never carry `camera: "shown"` either (the admin routes refuse
+ * show-camera outside `published`). Pure, no React — safe on either side
+ * of the "use client" boundary. */
+export function doorStateWords(phase: DoorRowState["phase"], cameraOn: boolean): string {
+  if (phase === "closed") return "Closed.";
+  return cameraOn ? "Live. Guests see your camera." : "Open. Guests see your picture and hear your mic.";
 }

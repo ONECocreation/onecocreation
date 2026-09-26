@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Card from "@/components/kit/Card";
-import { jitsiRoomUrl, type DoorBusy, type DoorConfig, type DoorRowState } from "./rooms-config";
+import { jitsiRoomUrl, doorStateWords, type DoorBusy, type DoorConfig, type DoorRowState } from "./rooms-config";
 
 /**
  * THE ONE HOST AREA (TASK-475, block 968,624) — the Admiral's ruling: "i
@@ -78,6 +78,38 @@ import { jitsiRoomUrl, type DoorBusy, type DoorConfig, type DoorRowState } from 
  * real build caught it. Every value the server needs now imports from
  * `./rooms-config` directly — never through this file, even by
  * re-export, which would just relocate the same trap.
+ *
+ * TASK-487 (block 968,624+, the Admiral's ruling, option C) — Love's own
+ * flow on the day: she joins the Jitsi call as host, camera OFF, mic ON
+ * (guests see her book picture, hear her audio), then presses a THIRD
+ * control, "Show my camera" — every guest's cover drops at once. Each
+ * row now carries THREE controls, always on the same right edge:
+ *   - closed:            Open | Join as host (disabled) | Show my camera (disabled)
+ *   - open, hidden:      Close | Join as host | Show my camera (kit-btn-main)
+ *   - open, shown (live): Close | Join as host | Pause my camera (kit-btn-second)
+ * "Join on camera" is renamed "Join as host" everywhere (it was always
+ * just the direct Jitsi link, never a state transition). "Pause my
+ * camera" is the Admiral's own label (not "Show my picture") — pressing
+ * it puts the waiting picture back over the room for every guest while
+ * her mic keeps playing, a short-break control; the row afterward reads
+ * exactly like "open, hidden" again. The state line is now ONE of exactly
+ * three (`rooms-config.ts`'s own `doorStateWords`, shared with
+ * `GoRoom.tsx` so the words are never typed twice) — the old two-line
+ * "press Close, then End meeting for all" instructions are dropped in
+ * favor of these shorter, one-line-rule words. `showCameraDoor`/
+ * `hideCameraDoor` are new exports beside `openDoor`/`closeDoor`, the
+ * SAME shape (`putAction` against the door's own admin route), so
+ * `useDoorRoom.ts` (the phone page) calls the identical PUT chain, never
+ * a copy of it. All four actions share ONE per-door `runExclusive` lock
+ * (`locksRef`/`recordLock`) — a camera tap can never race an open/close
+ * tap, or another camera tap, on the same door.
+ *
+ * LAYOUT (kit.css): three controls squeeze a room's title at desktop
+ * widths too — the two-column `.kit-rows` grid only ever worked for one
+ * control opposite the words. `.kit-rooms-card`'s own rules now put the
+ * controls on their OWN LINE under the words, right-aligned, at EVERY
+ * width (not just the narrow `@media` this used to be scoped to) — see
+ * `kit.css`'s own TASK-487 comment.
  */
 
 export type Lock = { current: boolean };
@@ -109,19 +141,16 @@ export function recordLock(store: { current: Record<string, boolean> }, key: str
   };
 }
 
-/* the ONE state line per row, said once, under the words, in the ONE
-   quiet <em> (the /a uniformity law — Number One's Chrome walk caught a
-   second, full-size line here: the close instructions used to ride the
-   row's own <span> text, outside the <em>, so an open row showed TWO
-   lines). Every word an open row needs — that it's open, what a visitor
-   sees, and how to end it — now lives in this ONE line. */
-const STATE_WORDS: Record<DoorRowState["phase"], string> = {
-  closed: "Closed.",
-  prepared: "Open. Press Join on camera to start. When you finish, press Close, then End meeting for all in the call.",
-  published: "Open. Viewers can come in. When you finish, press Close, then End meeting for all in the call.",
-};
+/* TASK-487: the state line is now `rooms-config.ts`'s own shared
+   `doorStateWords(phase, cameraOn)` — see that file's docblock for why
+   `prepared` collapses into the "open, hidden" bucket. */
 
-const BUSY_WORDS: Record<Exclude<DoorBusy, null>, string> = { open: "Opening…", close: "Closing…" };
+const BUSY_WORDS: Record<Exclude<DoorBusy, null>, string> = {
+  open: "Opening…",
+  close: "Closing…",
+  "show-camera": "Showing your camera…",
+  "hide-camera": "Pausing your camera…",
+};
 
 export interface DoorRowProps {
   door: DoorConfig;
@@ -130,10 +159,14 @@ export interface DoorRowProps {
   error: string | null;
   onOpen: () => void;
   onClose: () => void;
+  onShowCamera: () => void;
+  onHideCamera: () => void;
 }
 
-export function DoorRow({ door, state, busy, error, onOpen, onClose }: DoorRowProps) {
+export function DoorRow({ door, state, busy, error, onOpen, onClose, onShowCamera, onHideCamera }: DoorRowProps) {
   const phase = state?.phase ?? "closed";
+  const isOpen = phase !== "closed";
+  const cameraOn = state?.camera === "shown";
 
   /* the state line: busy or error REPLACES the phase words, said once */
   const stateLine = busy ? (
@@ -141,21 +174,20 @@ export function DoorRow({ door, state, busy, error, onOpen, onClose }: DoorRowPr
   ) : error ? (
     <em role="alert">{error}</em>
   ) : state ? (
-    <em data-state={phase}>{STATE_WORDS[phase]}</em>
+    <em data-state={phase}>{doorStateWords(phase, cameraOn)}</em>
   ) : (
     <em>Reading…</em>
   );
 
-  const lifecycleControl =
-    phase === "closed" ? (
-      <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled={busy !== null || !state} onClick={onOpen}>
-        Open
-      </button>
-    ) : (
-      <button type="button" className="kit-btn kit-btn-second kit-btn-sm" disabled={busy !== null} onClick={onClose}>
-        Close
-      </button>
-    );
+  const lifecycleControl = isOpen ? (
+    <button type="button" className="kit-btn kit-btn-second kit-btn-sm" disabled={busy !== null} onClick={onClose}>
+      Close
+    </button>
+  ) : (
+    <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled={busy !== null || !state} onClick={onOpen}>
+      Open
+    </button>
+  );
 
   const joinControl = state?.room ? (
     <a
@@ -164,14 +196,33 @@ export function DoorRow({ door, state, busy, error, onOpen, onClose }: DoorRowPr
       target="_blank"
       rel="noreferrer"
     >
-      Join on camera
+      Join as host
     </a>
   ) : (
     /* disabled until a room exists: the same anchor in the same place, no
        href, honestly marked — never a dead button that LOOKS live */
     <a className="kit-btn kit-btn-second kit-btn-sm" aria-disabled="true">
-      Join on camera
+      Join as host
     </a>
+  );
+
+  /* TASK-487: the third control — "Show my camera" (kit-btn-main, the
+     call to action) while hidden, "Pause my camera" (kit-btn-second, the
+     Admiral's own label — puts the picture back, mic keeps playing) once
+     shown; disabled while closed (the admin route itself refuses outside
+     published, this just never lets the tap happen at all). */
+  const cameraControl = !isOpen ? (
+    <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled>
+      Show my camera
+    </button>
+  ) : cameraOn ? (
+    <button type="button" className="kit-btn kit-btn-second kit-btn-sm" disabled={busy !== null} onClick={onHideCamera}>
+      Pause my camera
+    </button>
+  ) : (
+    <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled={busy !== null} onClick={onShowCamera}>
+      Show my camera
+    </button>
   );
 
   return (
@@ -183,13 +234,14 @@ export function DoorRow({ door, state, busy, error, onOpen, onClose }: DoorRowPr
       <span className="kit-rows-end">
         {lifecycleControl}
         {joinControl}
+        {cameraControl}
       </span>
       {/* TASK-486: the quiet one-tap email link, under the state line but
          OUTSIDE both the words span (the state-line test pins that span
-         to exactly <b>/<em>) and kit-rows-end (the two-control test pins
-         that span to exactly two controls) — its own third child, its own
-         grid cell (kit.css's `.kit-rows>li` auto-places it under column
-         1, `.kit-rooms-card .kit-row-link` tightens the gap). */}
+         to exactly <b>/<em>) and kit-rows-end (the control-cluster test
+         pins that span) — its own third child, its own grid cell
+         (kit.css's `.kit-rows>li` auto-places it under column 1,
+         `.kit-rooms-card .kit-row-link` tightens the gap). */}
       <span className="kit-row-link">
         <a href={`/a/site/reading/go/${door.id}`}>Room link</a>
       </span>
@@ -204,9 +256,11 @@ export interface RoomsCardBodyProps {
   errors: Record<string, string | null>;
   onOpen: (door: DoorConfig) => void;
   onClose: (door: DoorConfig) => void;
+  onShowCamera: (door: DoorConfig) => void;
+  onHideCamera: (door: DoorConfig) => void;
 }
 
-export function RoomsCardBody({ doors, states, busy, errors, onOpen, onClose }: RoomsCardBodyProps) {
+export function RoomsCardBody({ doors, states, busy, errors, onOpen, onClose, onShowCamera, onHideCamera }: RoomsCardBodyProps) {
   return (
     <Card className="kit-rooms-card">
       <ul className="kit-rows">
@@ -219,6 +273,8 @@ export function RoomsCardBody({ doors, states, busy, errors, onOpen, onClose }: 
             error={errors[door.id] ?? null}
             onOpen={() => onOpen(door)}
             onClose={() => onClose(door)}
+            onShowCamera={() => onShowCamera(door)}
+            onHideCamera={() => onHideCamera(door)}
           />
         ))}
       </ul>
@@ -226,7 +282,7 @@ export function RoomsCardBody({ doors, states, busy, errors, onOpen, onClose }: 
   );
 }
 
-async function putAction(adminPath: string, action: "prepare" | "publish" | "close") {
+async function putAction(adminPath: string, action: "prepare" | "publish" | "close" | "show-camera" | "hide-camera") {
   const res = await fetch(adminPath, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -234,17 +290,31 @@ async function putAction(adminPath: string, action: "prepare" | "publish" | "clo
     cache: "no-store",
   });
   const data = await res.json().catch(() => null);
-  return { res, data } as { res: Response; data: { ok: boolean; phase?: DoorRowState["phase"]; room?: string | null; jitsiDomain?: string; reason?: string } | null };
+  return { res, data } as {
+    res: Response;
+    data: {
+      ok: boolean;
+      phase?: DoorRowState["phase"];
+      room?: string | null;
+      jitsiDomain?: string;
+      camera?: DoorRowState["camera"];
+      reason?: string;
+    } | null;
+  };
 }
 
 /* TASK-486: the pure GET read every poll (RoomsCard's mount loop AND the
    go/[door] page's own hook) shares — a plain read, never a mutation, so
-   an email scanner opening the go page's link is always safe. */
+   an email scanner opening the go page's link is always safe. TASK-487:
+   `camera` rides every admin GET now, defaulted to "hidden" on any doubt
+   (a malformed/missing value never reads as "shown" — the picture stays
+   up on any doubt, the same fail-closed spirit the door libs themselves
+   keep). */
 export async function fetchDoorState(door: DoorConfig): Promise<DoorRowState | null> {
   try {
     const r = await fetch(door.adminPath, { cache: "no-store" });
     const d = r.ok ? await r.json() : null;
-    if (d?.ok) return { phase: d.phase, room: d.room, jitsiDomain: d.jitsiDomain };
+    if (d?.ok) return { phase: d.phase, room: d.room, jitsiDomain: d.jitsiDomain, camera: d.camera === "shown" ? "shown" : "hidden" };
   } catch {
     /* the caller keeps the last-known truth */
   }
@@ -253,6 +323,16 @@ export async function fetchDoorState(door: DoorConfig): Promise<DoorRowState | n
 
 export type DoorActionOutcome = { ok: true; state: DoorRowState } | { ok: false; reason: string };
 
+function outcomeFromPut(data: NonNullable<Awaited<ReturnType<typeof putAction>>["data"]> | null, res: Response): DoorActionOutcome {
+  if (data?.ok) {
+    return {
+      ok: true,
+      state: { phase: data.phase!, room: data.room!, jitsiDomain: data.jitsiDomain!, camera: data.camera === "shown" ? "shown" : "hidden" },
+    };
+  }
+  return { ok: false, reason: data?.reason ?? `the room refused (${res.status})` };
+}
+
 /* TASK-486: the ONE-CLICK OPEN chain, pulled out of the component's own
    `open` callback so `useDoorRoom` (go/[door]) calls the exact same
    publish-then-prepare-fallback logic — never a second copy of it. No
@@ -260,9 +340,7 @@ export type DoorActionOutcome = { ok: true; state: DoorRowState } | { ok: false;
    as before this move). */
 export async function openDoor(door: DoorConfig): Promise<DoorActionOutcome> {
   const first = await putAction(door.adminPath, "publish");
-  if (first.data?.ok) {
-    return { ok: true, state: { phase: first.data.phase!, room: first.data.room!, jitsiDomain: first.data.jitsiDomain! } };
-  }
+  if (first.data?.ok) return outcomeFromPut(first.data, first.res);
   /* the door refused publish from closed (Stage 1's own law, 409) —
      prepare, then publish, in this SAME call */
   const prepared = await putAction(door.adminPath, "prepare");
@@ -270,19 +348,26 @@ export async function openDoor(door: DoorConfig): Promise<DoorActionOutcome> {
     return { ok: false, reason: prepared.data?.reason ?? `the room refused (${prepared.res.status})` };
   }
   const published = await putAction(door.adminPath, "publish");
-  if (published.data?.ok) {
-    return { ok: true, state: { phase: published.data.phase!, room: published.data.room!, jitsiDomain: published.data.jitsiDomain! } };
-  }
-  return { ok: false, reason: published.data?.reason ?? `the room refused (${published.res.status})` };
+  return outcomeFromPut(published.data, published.res);
 }
 
 /** TASK-486: the close chain, same shape as `openDoor`. */
 export async function closeDoor(door: DoorConfig): Promise<DoorActionOutcome> {
   const { res, data } = await putAction(door.adminPath, "close");
-  if (data?.ok) {
-    return { ok: true, state: { phase: data.phase!, room: data.room!, jitsiDomain: data.jitsiDomain! } };
-  }
-  return { ok: false, reason: data?.reason ?? `the room refused (${res.status})` };
+  return outcomeFromPut(data, res);
+}
+
+/** TASK-487 — Love's "Show my camera": the same PUT chain, one action,
+ *  409 (an honest `reason`) if the door isn't published. */
+export async function showCameraDoor(door: DoorConfig): Promise<DoorActionOutcome> {
+  const { res, data } = await putAction(door.adminPath, "show-camera");
+  return outcomeFromPut(data, res);
+}
+
+/** TASK-487 — "Pause my camera": the same shape as `showCameraDoor`. */
+export async function hideCameraDoor(door: DoorConfig): Promise<DoorActionOutcome> {
+  const { res, data } = await putAction(door.adminPath, "hide-camera");
+  return outcomeFromPut(data, res);
 }
 
 export default function RoomsCard({ doors }: { doors: DoorConfig[] }) {
@@ -315,53 +400,49 @@ export default function RoomsCard({ doors }: { doors: DoorConfig[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const open = useCallback(
-    async (door: DoorConfig) => {
-      await runExclusive(recordLock(locksRef, door.id), async () => {
-        setBusy((b) => ({ ...b, [door.id]: "open" }));
-        setErrors((e) => ({ ...e, [door.id]: null }));
-        try {
-          const outcome = await openDoor(door);
-          if (outcome.ok) {
-            setStates((s) => ({ ...s, [door.id]: outcome.state }));
-          } else {
-            setErrors((e) => ({ ...e, [door.id]: outcome.reason }));
+  /* TASK-487: the four door actions (open/close/show-camera/hide-camera)
+     share this one run-and-report shape — busy label in, action fn in,
+     everything else (the lock, the error/refresh fallback) identical. */
+  const runDoorAction = useCallback(
+    (label: Exclude<DoorBusy, null>, action: (door: DoorConfig) => Promise<DoorActionOutcome>) =>
+      async (door: DoorConfig) => {
+        await runExclusive(recordLock(locksRef, door.id), async () => {
+          setBusy((b) => ({ ...b, [door.id]: label }));
+          setErrors((e) => ({ ...e, [door.id]: null }));
+          try {
+            const outcome = await action(door);
+            if (outcome.ok) {
+              setStates((s) => ({ ...s, [door.id]: outcome.state }));
+            } else {
+              setErrors((e) => ({ ...e, [door.id]: outcome.reason }));
+              await refresh(door);
+            }
+          } catch {
+            setErrors((e) => ({ ...e, [door.id]: "the room didn't answer, try again" }));
             await refresh(door);
+          } finally {
+            setBusy((b) => ({ ...b, [door.id]: null }));
           }
-        } catch {
-          setErrors((e) => ({ ...e, [door.id]: "the room didn't answer, try again" }));
-          await refresh(door);
-        } finally {
-          setBusy((b) => ({ ...b, [door.id]: null }));
-        }
-      });
-    },
+        });
+      },
     [refresh],
   );
 
-  const close = useCallback(
-    async (door: DoorConfig) => {
-      await runExclusive(recordLock(locksRef, door.id), async () => {
-        setBusy((b) => ({ ...b, [door.id]: "close" }));
-        setErrors((e) => ({ ...e, [door.id]: null }));
-        try {
-          const outcome = await closeDoor(door);
-          if (outcome.ok) {
-            setStates((s) => ({ ...s, [door.id]: outcome.state }));
-          } else {
-            setErrors((e) => ({ ...e, [door.id]: outcome.reason }));
-            await refresh(door);
-          }
-        } catch {
-          setErrors((e) => ({ ...e, [door.id]: "the room didn't answer, try again" }));
-          await refresh(door);
-        } finally {
-          setBusy((b) => ({ ...b, [door.id]: null }));
-        }
-      });
-    },
-    [refresh],
-  );
+  const open = useCallback((door: DoorConfig) => runDoorAction("open", openDoor)(door), [runDoorAction]);
+  const close = useCallback((door: DoorConfig) => runDoorAction("close", closeDoor)(door), [runDoorAction]);
+  const showCamera = useCallback((door: DoorConfig) => runDoorAction("show-camera", showCameraDoor)(door), [runDoorAction]);
+  const hideCamera = useCallback((door: DoorConfig) => runDoorAction("hide-camera", hideCameraDoor)(door), [runDoorAction]);
 
-  return <RoomsCardBody doors={doors} states={states} busy={busy} errors={errors} onOpen={open} onClose={close} />;
+  return (
+    <RoomsCardBody
+      doors={doors}
+      states={states}
+      busy={busy}
+      errors={errors}
+      onOpen={open}
+      onClose={close}
+      onShowCamera={showCamera}
+      onHideCamera={hideCamera}
+    />
+  );
 }

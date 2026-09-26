@@ -1,7 +1,7 @@
 "use client";
 
 import Card from "@/components/kit/Card";
-import { jitsiRoomUrl, type DoorBusy, type DoorConfig, type DoorRowState } from "../../rooms-config";
+import { jitsiRoomUrl, doorStateWords, type DoorBusy, type DoorConfig, type DoorRowState } from "../../rooms-config";
 import { useDoorRoom } from "../useDoorRoom";
 
 /**
@@ -27,6 +27,19 @@ import { useDoorRoom } from "../useDoorRoom";
  * fix — `page.tsx`, the SERVER half of this route, needed the same
  * values out of a module with no `"use client"`; every consumer now
  * reads the one non-client source, this client component included).
+ *
+ * TASK-487 (block 968,624+, the Admiral's ruling, option C) — the OPEN
+ * state now carries THREE actions in order: "Join as host" (renamed from
+ * "Join on camera" everywhere — it was always just the direct Jitsi
+ * link), the camera toggle ("Show my camera" while hidden, "Pause my
+ * camera" while shown — the Admiral's own label, never "Show my
+ * picture": pressing it puts the waiting picture back for every guest
+ * while her mic keeps playing, a short-break control), then "Close this
+ * room". The status line is `rooms-config.ts`'s own shared
+ * `doorStateWords` — the SAME words `RoomsCard.tsx`'s rows show, never a
+ * second copy. `useDoorRoom` now also refreshes every 10s and on window
+ * focus (Love keeps this page open on her phone through the day), so
+ * these buttons never go stale under her.
  */
 
 export interface GoRoomBodyProps {
@@ -36,25 +49,25 @@ export interface GoRoomBodyProps {
   error: string | null;
   onOpenAndJoin: () => void;
   onClose: () => void;
+  onShowCamera: () => void;
+  onHideCamera: () => void;
 }
 
-export function GoRoomBody({ door, state, busy, error, onOpenAndJoin, onClose }: GoRoomBodyProps) {
+const BUSY_WORDS: Record<Exclude<DoorBusy, null>, string> = {
+  open: "Opening…",
+  close: "Closing…",
+  "show-camera": "Showing your camera…",
+  "hide-camera": "Pausing your camera…",
+};
+
+export function GoRoomBody({ door, state, busy, error, onOpenAndJoin, onClose, onShowCamera, onHideCamera }: GoRoomBodyProps) {
   const phase = state?.phase ?? "closed";
   const isOpen = !!state && phase !== "closed";
+  const cameraOn = state?.camera === "shown";
 
   /* the ONE status line — busy or error REPLACES it, said once, in plain
      words (never an <em>, which reads as italic outside .kit-rows) */
-  const statusWords = busy
-    ? busy === "open"
-      ? "Opening…"
-      : "Closing…"
-    : error
-      ? error
-      : !state
-        ? "Reading…"
-        : isOpen
-          ? "Open. Viewers can come in."
-          : "Closed.";
+  const statusWords = busy ? BUSY_WORDS[busy] : error ? error : !state ? "Reading…" : doorStateWords(phase, cameraOn);
 
   return (
     <div className="p-6">
@@ -66,13 +79,22 @@ export function GoRoomBody({ door, state, busy, error, onOpenAndJoin, onClose }:
         {isOpen ? (
           <div className="kit-go-room-actions">
             {state?.room ? (
-              <a className="kit-btn kit-btn-main" href={jitsiRoomUrl({ jitsiDomain: state.jitsiDomain, room: state.room })}>
-                Join on camera
+              <a className="kit-btn kit-btn-second" href={jitsiRoomUrl({ jitsiDomain: state.jitsiDomain, room: state.room })}>
+                Join as host
               </a>
             ) : (
-              <a className="kit-btn kit-btn-main" aria-disabled="true">
-                Join on camera
+              <a className="kit-btn kit-btn-second" aria-disabled="true">
+                Join as host
               </a>
+            )}
+            {cameraOn ? (
+              <button type="button" className="kit-btn kit-btn-second" disabled={busy !== null} onClick={onHideCamera}>
+                Pause my camera
+              </button>
+            ) : (
+              <button type="button" className="kit-btn kit-btn-main" disabled={busy !== null} onClick={onShowCamera}>
+                Show my camera
+              </button>
             )}
             <button type="button" className="kit-btn kit-btn-second" disabled={busy !== null} onClick={onClose}>
               Close this room
@@ -91,7 +113,7 @@ export function GoRoomBody({ door, state, busy, error, onOpenAndJoin, onClose }:
 }
 
 export default function GoRoom({ door }: { door: DoorConfig }) {
-  const { state, busy, error, open, close } = useDoorRoom(door);
+  const { state, busy, error, open, close, showCamera, hideCamera } = useDoorRoom(door);
 
   /* the ONE click: open, then send THIS TAB to whatever room the PUT
      answered with — assign, never open (the iOS-Safari-after-await
@@ -103,5 +125,16 @@ export default function GoRoom({ door }: { door: DoorConfig }) {
     }
   }
 
-  return <GoRoomBody door={door} state={state} busy={busy} error={error} onOpenAndJoin={openAndJoin} onClose={close} />;
+  return (
+    <GoRoomBody
+      door={door}
+      state={state}
+      busy={busy}
+      error={error}
+      onOpenAndJoin={openAndJoin}
+      onClose={close}
+      onShowCamera={showCamera}
+      onHideCamera={hideCamera}
+    />
+  );
 }
