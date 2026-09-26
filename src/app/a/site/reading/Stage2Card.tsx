@@ -1,5 +1,9 @@
 "use client";
 
+/* TASK-475 (block 968,624): RoomsCard.tsx replaces it on /a/site/reading —
+   this file is kept in place (never deleted, house law) but no longer
+   imported anywhere. */
+
 import { useEffect, useState } from "react";
 import Card from "@/components/kit/Card";
 import { Chip } from "@/components/console/glass";

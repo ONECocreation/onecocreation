@@ -7,6 +7,7 @@ import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/l
 import { STAGE2_MIN_TIER } from "@/lib/stage2-access";
 import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt } from "@/lib/reading-day";
 import { encoreFloorDoor, qaDoor } from "@/lib/reading-day-doors";
+import { qaEntitled } from "@/lib/qa-entitlement";
 import { ROOMS } from "@/lib/matrix-rooms";
 import ReadingDayBody from "./ReadingDayBody";
 
@@ -47,16 +48,24 @@ export default async function ReadingDay() {
   const next = deriveNext(schedule);
   if (!next) return null;
 
+  const subject = session ? `${session.handle}@${session.space}` : null;
   let tier: Tier | null = null;
-  if (session) {
+  if (subject) {
     try {
-      tier = await tierForSubject(`${session.handle}@${session.space}`);
+      tier = await tierForSubject(subject);
     } catch {
       tier = null; // fail closed — a throw is never read as an open door
     }
   }
 
   const [encoreFloor, qaOffer] = await Promise.all([encoreFloorDoor(), qaDoor()]);
+  /* TASK-475 (block 968,624, the show stopper): the Q&A pass carries no
+     entitlementTier/entitlementDays on its own — tier C alone (Evening
+     Star, "Coming soon") locked out every buyer. qaEntitled adds the
+     settled, non-refunded Q&A order as a second, equal way in. A
+     signed-out visitor has no subject to check an order against — no
+     order lookup even runs, same as tierSatisfies(null, "C") before. */
+  const hasQaAccess = subject ? await qaEntitled(subject, tier) : false;
 
   const qaRoom = ROOMS.find((r) => r.kind === "community" && r.minTier === "C") ?? null;
   const qaRoomHref = qaRoom ? `/rooms/${qaRoom.id.slice(1, qaRoom.id.indexOf(":"))}` : "/memberships";
@@ -71,7 +80,7 @@ export default async function ReadingDay() {
       signedIn={!!session}
       encoreEntitled={tierSatisfies(tier, STAGE2_MIN_TIER)}
       encoreFloor={encoreFloor}
-      qaEntitled={tierSatisfies(tier, "C")}
+      qaEntitled={hasQaAccess}
       qaRoomHref={qaRoomHref}
       qaOffer={qaOffer}
     />

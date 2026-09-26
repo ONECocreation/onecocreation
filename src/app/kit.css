@@ -290,6 +290,32 @@
   .kit-stage1-card .kit-rows>li{grid-template-columns:1fr;gap:8px}
   .kit-stage1-card .kit-rows-end{justify-self:end}
 }
+/* TASK-475 (block 968,624) — RoomsCard folds Stage 1's old two
+   one-control rows (the stage's lifecycle, and its host link) into ONE
+   row per door carrying BOTH controls (Open/Close, plus Join on camera)
+   on the same right edge. The shared .kit-rows-end above is plain
+   inline text with no layout of its own, so two buttons there would
+   overlap instead of sitting side by side — this rule gives the pair a
+   small flex row, wrapping to stack under narrow widths, SCOPED to
+   .kit-rooms-card so every other .kit-rows-end (Stage2Details, the
+   Reading Day brick) is untouched. */
+.kit-rooms-card .kit-rows-end{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+/* Number One's Chrome walk (block 968,624): Close measured ~100px and Open
+   ~95px, so the pair's left edge shifted between states — the Open/Close
+   button (never Join on camera, which keeps its own natural width) gets a
+   shared floor both labels fit inside without stretching either one. */
+.kit-rooms-card .kit-rows-end>button.kit-btn{min-width:100px;box-sizing:border-box;text-align:center}
+@media (max-width:768px){
+  .kit-rooms-card .kit-rows>li{grid-template-columns:1fr;gap:8px}
+  .kit-rooms-card .kit-rows-end{justify-self:end}
+}
+/* Number One's Chrome walk: an empty rule sat above the Free room row —
+   the shared .kit-rows top border plus the first row's own top padding
+   read as a stray blank row before any real content. Stage1Card's own
+   card never showed this (its rows carry less combined height), so this
+   is scoped OFF for .kit-rooms-card alone; every other .kit-rows keeps
+   its top border. */
+.kit-rooms-card .kit-rows{border-top:none}
 /* TASK-467 (block 968,561) — the Reading Day brick's own card, the same
    stacking law as kit-stage1-card just above (measured: a wide button
    squeezed into the shared two-column grid clipped against the card's
