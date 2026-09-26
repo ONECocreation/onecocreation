@@ -273,6 +273,12 @@ describe("the default export's own wiring — source pins (no jsdom)", () => {
     expect(src).toContain("JSON.stringify({ action })");
     expect(src).toContain('cache: "no-store"');
   });
+
+  it("the double-tap race's fix (review, T-486): open/close wrap through runExclusive, one lock per door", async () => {
+    const src = await read(CARD);
+    expect(src).toContain("useRef<Record<string, boolean>>({})");
+    expect(src.match(/runExclusive\(recordLock\(locksRef, door\.id\),/g)?.length).toBe(2);
+  });
 });
 
 describe("kit.css — the Open/Close width fix and the stray top divider fix (Number One's Chrome walk, block 968,624)", () => {

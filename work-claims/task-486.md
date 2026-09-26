@@ -85,6 +85,29 @@ called directly), never copied. `/a/site/reading` itself gains a quiet
   jsdom, this repo runs none), and the route (unknown door 404s, the
   operator gate both ways, GET-only render fetches nothing at all).
 
+## REVIEW FIX (on top of the four commits above, same OWNS, no new files)
+
+THE DOUBLE-TAP RACE: `useDoorRoom.ts`'s `open()`/`close()` were only
+guarded by React `busy` state, which is batched — two taps land before
+the next render and both slip past `disabled`, both reach `openDoor`,
+which can prepare TWO DIFFERENT ROOMS; Love then gets sent to whichever
+one lost the race. The same gap sat in `RoomsCard.tsx`'s own row
+callbacks.
+
+FIX: `RoomsCard.tsx` gains a shared `runExclusive(lock, fn)` helper (a
+plain `{ current: boolean }` in-flight lock — `null` immediately on a
+second concurrent call, always released in `finally`) plus a
+`recordLock(store, key)` view for a Record-backed ref. `useDoorRoom.ts`
+wraps `open`/`close` through it with one `useRef(false)` shared by
+both (one door, one lock). `RoomsCard`'s own `open`/`close` wrap through
+it too, via a single `useRef<Record<string, boolean>>({})` +
+`recordLock` (one lock PER DOOR — two different rows never block each
+other, but open+close on the SAME row do). New test:
+`tests/reading-go-door.test.ts`'s "TWO CONCURRENT open() CALLS PRODUCE A
+SINGLE openDoor CALL" — real `runExclusive` + real `openDoor`, a
+deliberately-unresolved mocked `fetch`, proves the second concurrent
+call never reaches the network before asserting the count.
+
 ## READ-ONLY
 
 Everything else. In particular: `Stage1Card.tsx`/`Stage2Card.tsx` (not

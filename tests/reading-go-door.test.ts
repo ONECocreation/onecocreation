@@ -142,6 +142,88 @@ describe("RoomsCard's own shared functions — the ONE open/close logic, called 
   });
 });
 
+describe("runExclusive — the double-tap race's fix (review, block 968,624+)", () => {
+  it("a plain lock: two concurrent runs invoke fn only ONCE — the second gets null immediately, without waiting", async () => {
+    const { runExclusive } = await import("@/app/a/site/reading/RoomsCard");
+    const lock = { current: false };
+    let calls = 0;
+    let release!: (v: string) => void;
+    const fn = () =>
+      new Promise<string>((resolve) => {
+        calls++;
+        release = resolve;
+      });
+
+    const p1 = runExclusive(lock, fn);
+    const p2 = runExclusive(lock, fn);
+    // BEFORE either promise settles: fn ran exactly once, synchronously
+    // proven — the second call's lock check already saw `current: true`.
+    expect(calls).toBe(1);
+    expect(lock.current).toBe(true);
+
+    release("done");
+    const [r1, r2] = await Promise.all([p1, p2]);
+    const results = [r1, r2];
+    expect(results.filter((r) => r === null)).toHaveLength(1);
+    expect(results).toContain("done");
+    expect(lock.current).toBe(false);
+  });
+
+  it("after the lock releases, a later call runs fn again", async () => {
+    const { runExclusive } = await import("@/app/a/site/reading/RoomsCard");
+    const lock = { current: false };
+    let calls = 0;
+    await runExclusive(lock, async () => {
+      calls++;
+      return "a";
+    });
+    await runExclusive(lock, async () => {
+      calls++;
+      return "b";
+    });
+    expect(calls).toBe(2);
+  });
+
+  it("a thrown fn still releases the lock (finally, never a stuck room)", async () => {
+    const { runExclusive } = await import("@/app/a/site/reading/RoomsCard");
+    const lock = { current: false };
+    await expect(
+      runExclusive(lock, async () => {
+        throw new Error("boom");
+      }),
+    ).rejects.toThrow("boom");
+    expect(lock.current).toBe(false);
+  });
+
+  it("TWO CONCURRENT open() CALLS PRODUCE A SINGLE openDoor CALL — the real production path, real openDoor, mocked fetch", async () => {
+    const lock = { current: false };
+    let fetchCalls = 0;
+    let releaseFetch!: (v: Response) => void;
+    global.fetch = (() =>
+      new Promise<Response>((resolve) => {
+        fetchCalls++;
+        releaseFetch = resolve;
+      })) as unknown as typeof fetch;
+
+    const { runExclusive, openDoor } = await import("@/app/a/site/reading/RoomsCard");
+    const p1 = runExclusive(lock, () => openDoor(DOOR));
+    const p2 = runExclusive(lock, () => openDoor(DOOR));
+
+    // the SECOND concurrent open() never reaches openDoor's own fetch —
+    // exactly one PUT in flight, never two rooms prepared
+    expect(fetchCalls).toBe(1);
+
+    releaseFetch(jsonResponse({ ok: true, phase: "published", room: ROOM, jitsiDomain: DOMAIN }));
+    const [r1, r2] = await Promise.all([p1, p2]);
+    const results = [r1, r2];
+    expect(results.filter((r) => r === null)).toHaveLength(1);
+    expect(results.find((r) => r !== null)).toEqual({
+      ok: true,
+      state: { phase: "published", room: ROOM, jitsiDomain: DOMAIN },
+    });
+  });
+});
+
 describe("useDoorRoom.ts — reuses RoomsCard's own functions, never a second copy of the fallback chain", () => {
   it("imports openDoor/closeDoor/fetchDoorState from ../RoomsCard, never reimplements putAction", async () => {
     const src = await read("src/app/a/site/reading/go/useDoorRoom.ts");
@@ -150,6 +232,13 @@ describe("useDoorRoom.ts — reuses RoomsCard's own functions, never a second co
     expect(src).toContain("closeDoor");
     expect(src).toContain("fetchDoorState");
     expect(src).not.toMatch(/putAction/);
+  });
+
+  it("wraps open()/close() in the shared runExclusive lock, backed by its own useRef (double-tap race fix)", async () => {
+    const src = await read("src/app/a/site/reading/go/useDoorRoom.ts");
+    expect(src).toContain("runExclusive");
+    expect(src).toContain("useRef(false)");
+    expect(src.match(/runExclusive\(lockRef,/g)?.length).toBe(2);
   });
 
   it("open()/close() return the resulting state so the page can navigate off the answer directly", async () => {

@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchDoorState,
   openDoor,
   closeDoor,
+  runExclusive,
   type DoorBusy,
   type DoorConfig,
   type DoorRowState,
@@ -23,6 +24,13 @@ import {
  * `open`/`close` RETURN the resulting state (or null on failure) so the
  * page's own "Open and join" button can navigate off the value the PUT
  * just answered with, in the same click, without waiting on a re-render.
+ *
+ * REVIEW FIX (block 968,624+, T-486): the double-tap race. `busy` state
+ * alone doesn't guard a second tap before the next render — both wrap
+ * through `RoomsCard.tsx`'s own `runExclusive` and a single
+ * `useRef(false)` shared by open+close (one door here, so one lock): a
+ * second call while the first is still running returns `null`
+ * immediately, never runs `openDoor`/`closeDoor` again.
  */
 export interface UseDoorRoomResult {
   state: DoorRowState | null;
@@ -37,6 +45,10 @@ export function useDoorRoom(door: DoorConfig): UseDoorRoomResult {
   const [state, setState] = useState<DoorRowState | null>(null);
   const [busy, setBusy] = useState<DoorBusy>(null);
   const [error, setError] = useState<string | null>(null);
+  /* the double-tap race's fix (review, T-486): one door, one lock,
+     shared by open AND close so neither can run while the other is
+     still in flight. */
+  const lockRef = useRef(false);
 
   /* the ONE read — a GET, never a mutation, safe for an email scanner
      that opens the page's link without a click ever happening */
@@ -52,45 +64,49 @@ export function useDoorRoom(door: DoorConfig): UseDoorRoomResult {
   }, [refresh]);
 
   const open = useCallback(async (): Promise<DoorRowState | null> => {
-    setBusy("open");
-    setError(null);
-    try {
-      const outcome = await openDoor(door);
-      if (outcome.ok) {
-        setState(outcome.state);
-        return outcome.state;
+    return runExclusive(lockRef, async () => {
+      setBusy("open");
+      setError(null);
+      try {
+        const outcome = await openDoor(door);
+        if (outcome.ok) {
+          setState(outcome.state);
+          return outcome.state;
+        }
+        setError(outcome.reason);
+        await refresh();
+        return null;
+      } catch {
+        setError("the room didn't answer, try again");
+        await refresh();
+        return null;
+      } finally {
+        setBusy(null);
       }
-      setError(outcome.reason);
-      await refresh();
-      return null;
-    } catch {
-      setError("the room didn't answer, try again");
-      await refresh();
-      return null;
-    } finally {
-      setBusy(null);
-    }
+    });
   }, [door, refresh]);
 
   const close = useCallback(async (): Promise<DoorRowState | null> => {
-    setBusy("close");
-    setError(null);
-    try {
-      const outcome = await closeDoor(door);
-      if (outcome.ok) {
-        setState(outcome.state);
-        return outcome.state;
+    return runExclusive(lockRef, async () => {
+      setBusy("close");
+      setError(null);
+      try {
+        const outcome = await closeDoor(door);
+        if (outcome.ok) {
+          setState(outcome.state);
+          return outcome.state;
+        }
+        setError(outcome.reason);
+        await refresh();
+        return null;
+      } catch {
+        setError("the room didn't answer, try again");
+        await refresh();
+        return null;
+      } finally {
+        setBusy(null);
       }
-      setError(outcome.reason);
-      await refresh();
-      return null;
-    } catch {
-      setError("the room didn't answer, try again");
-      await refresh();
-      return null;
-    } finally {
-      setBusy(null);
-    }
+    });
   }, [door, refresh]);
 
   return { state, busy, error, refresh, open, close };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Card from "@/components/kit/Card";
 
 /**
@@ -49,7 +49,51 @@ import Card from "@/components/kit/Card";
  * child of the `<li>` (its own `<span className="kit-row-link">`, never
  * inside the first span the state-line test pins, never inside
  * `kit-rows-end` the two-control test pins).
+ *
+ * REVIEW FIX (block 968,624+, T-486): THE DOUBLE-TAP RACE. `busy` state
+ * alone doesn't guard `open`/`close` — `setBusy` is batched, so two taps
+ * before the next render both slip past the `disabled` check and both
+ * reach `openDoor`/`closeDoor`, which can PREPARE TWO DIFFERENT ROOMS —
+ * Love then gets sent to whichever one lost the race. `runExclusive`
+ * below is the shared in-flight lock, backed by a real `useRef`: a
+ * second call while the first is still running returns `null`
+ * immediately, never runs `fn`, and the lock always clears in `finally`.
+ * `RoomsCard`'s own `open`/`close` wrap through it, one ref PER DOOR (via
+ * `recordLock` over a single `useRef<Record<string, boolean>>({})`, so
+ * two different doors never block each other, but open+close on the
+ * SAME door do); `useDoorRoom.ts` wraps through it with its own single
+ * `useRef(false)`, shared the same way between its own open+close (one
+ * door, one lock).
  */
+
+export type Lock = { current: boolean };
+
+/** The in-flight lock every open/close caller shares — see the docblock
+ *  above. Returns `fn()`'s result, or `null` immediately without ever
+ *  calling `fn` when a call is already running. */
+export async function runExclusive<T>(lock: Lock, fn: () => Promise<T>): Promise<T | null> {
+  if (lock.current) return null;
+  lock.current = true;
+  try {
+    return await fn();
+  } finally {
+    lock.current = false;
+  }
+}
+
+/** A `{ current }` view of one key in a Record-backed ref — lets
+ *  `RoomsCard`'s single `useRef<Record<string, boolean>>({})` hand
+ *  `runExclusive` a per-door lock without a ref per door. */
+export function recordLock(store: { current: Record<string, boolean> }, key: string): Lock {
+  return {
+    get current() {
+      return store.current[key] ?? false;
+    },
+    set current(v: boolean) {
+      store.current[key] = v;
+    },
+  };
+}
 
 export interface DoorConfig {
   /** a stable key AND the door's admin route suffix source — never
@@ -267,6 +311,11 @@ export default function RoomsCard({ doors }: { doors: DoorConfig[] }) {
   const [states, setStates] = useState<Record<string, DoorRowState | null>>({});
   const [busy, setBusy] = useState<Record<string, DoorBusy>>({});
   const [errors, setErrors] = useState<Record<string, string | null>>({});
+  /* the double-tap race's fix (review, T-486): one in-flight lock PER
+     DOOR, so two taps on the SAME row before the next render can't both
+     reach openDoor/closeDoor, but two different rows never block each
+     other. */
+  const locksRef = useRef<Record<string, boolean>>({});
 
   const refresh = useCallback(async (door: DoorConfig) => {
     const s = await fetchDoorState(door);
@@ -290,44 +339,48 @@ export default function RoomsCard({ doors }: { doors: DoorConfig[] }) {
 
   const open = useCallback(
     async (door: DoorConfig) => {
-      setBusy((b) => ({ ...b, [door.id]: "open" }));
-      setErrors((e) => ({ ...e, [door.id]: null }));
-      try {
-        const outcome = await openDoor(door);
-        if (outcome.ok) {
-          setStates((s) => ({ ...s, [door.id]: outcome.state }));
-        } else {
-          setErrors((e) => ({ ...e, [door.id]: outcome.reason }));
+      await runExclusive(recordLock(locksRef, door.id), async () => {
+        setBusy((b) => ({ ...b, [door.id]: "open" }));
+        setErrors((e) => ({ ...e, [door.id]: null }));
+        try {
+          const outcome = await openDoor(door);
+          if (outcome.ok) {
+            setStates((s) => ({ ...s, [door.id]: outcome.state }));
+          } else {
+            setErrors((e) => ({ ...e, [door.id]: outcome.reason }));
+            await refresh(door);
+          }
+        } catch {
+          setErrors((e) => ({ ...e, [door.id]: "the room didn't answer, try again" }));
           await refresh(door);
+        } finally {
+          setBusy((b) => ({ ...b, [door.id]: null }));
         }
-      } catch {
-        setErrors((e) => ({ ...e, [door.id]: "the room didn't answer, try again" }));
-        await refresh(door);
-      } finally {
-        setBusy((b) => ({ ...b, [door.id]: null }));
-      }
+      });
     },
     [refresh],
   );
 
   const close = useCallback(
     async (door: DoorConfig) => {
-      setBusy((b) => ({ ...b, [door.id]: "close" }));
-      setErrors((e) => ({ ...e, [door.id]: null }));
-      try {
-        const outcome = await closeDoor(door);
-        if (outcome.ok) {
-          setStates((s) => ({ ...s, [door.id]: outcome.state }));
-        } else {
-          setErrors((e) => ({ ...e, [door.id]: outcome.reason }));
+      await runExclusive(recordLock(locksRef, door.id), async () => {
+        setBusy((b) => ({ ...b, [door.id]: "close" }));
+        setErrors((e) => ({ ...e, [door.id]: null }));
+        try {
+          const outcome = await closeDoor(door);
+          if (outcome.ok) {
+            setStates((s) => ({ ...s, [door.id]: outcome.state }));
+          } else {
+            setErrors((e) => ({ ...e, [door.id]: outcome.reason }));
+            await refresh(door);
+          }
+        } catch {
+          setErrors((e) => ({ ...e, [door.id]: "the room didn't answer, try again" }));
           await refresh(door);
+        } finally {
+          setBusy((b) => ({ ...b, [door.id]: null }));
         }
-      } catch {
-        setErrors((e) => ({ ...e, [door.id]: "the room didn't answer, try again" }));
-        await refresh(door);
-      } finally {
-        setBusy((b) => ({ ...b, [door.id]: null }));
-      }
+      });
     },
     [refresh],
   );
