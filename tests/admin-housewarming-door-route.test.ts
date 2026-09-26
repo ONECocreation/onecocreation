@@ -133,7 +133,7 @@ describe("SEC-4 — a failed write answers a NO-STORE 500, never a bare throw pa
 describe("the happy path — prepare -> publish -> close, every response no-store, ITS OWN KV key", () => {
   it("walks the lifecycle, asserting exactly what each response carries", async () => {
     const closed = await (await adminGet(operatorCookie)).json();
-    expect(closed).toEqual({ ok: true, phase: "closed", room: null, jitsiDomain: DOMAIN });
+    expect(closed).toEqual({ ok: true, phase: "closed", room: null, jitsiDomain: DOMAIN, camera: "hidden" });
 
     const preparePut = await adminPut({ action: "prepare" }, operatorCookie);
     expect(preparePut.headers.get("Cache-Control")).toBe("no-store");
@@ -146,7 +146,7 @@ describe("the happy path — prepare -> publish -> close, every response no-stor
     expect(published.room).toBe(prepared.room);
 
     const closedAgain = await (await adminPut({ action: "close" }, operatorCookie)).json();
-    expect(closedAgain).toEqual({ ok: true, phase: "closed", room: null, jitsiDomain: DOMAIN });
+    expect(closedAgain).toEqual({ ok: true, phase: "closed", room: null, jitsiDomain: DOMAIN, camera: "hidden" });
 
     /* its own key — never stage1's, stage2's, or the Q&A door's */
     expect(transport.kv.has(STATE_KEY)).toBe(true);

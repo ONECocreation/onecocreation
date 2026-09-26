@@ -350,7 +350,7 @@ describe("full transition coverage — anonymous / member / operator, closed -> 
     expect(published.room).toBe(prepared.room);
     expect(await (await memberGet()).json()).toEqual({ ok: true, open: true, reachable: null, decision: "signin" });
     const memberPublished = await (await memberGet(memberCookie)).json();
-    expect(memberPublished).toEqual({ ok: true, open: true, decision: "open", reachable: true, room: prepared.room });
+    expect(memberPublished).toEqual({ ok: true, open: true, decision: "open", reachable: true, room: prepared.room, camera: "hidden" });
 
     // closed again
     const closePut = await adminPut({ action: "close" }, operatorCookie);

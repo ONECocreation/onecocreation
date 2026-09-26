@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { getSiteConfig } from "@/lib/site-config";
-import { getHousewarmingState, prepareHousewarming, publishHousewarming, closeHousewarming } from "@/lib/housewarming-door";
+import {
+  getHousewarmingState,
+  prepareHousewarming,
+  publishHousewarming,
+  closeHousewarming,
+  showHousewarmingCamera,
+  hideHousewarmingCamera,
+} from "@/lib/housewarming-door";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +26,13 @@ export const dynamic = "force-dynamic";
  * convenience path (`housewarming-door.ts`'s `allowPublishFromClosed:
  * true`), so `publishHousewarming()` never returns null and this route
  * never answers 409 — the one-click Open path `RoomsCard.tsx` relies on.
+ *
+ * TASK-487 (block 968,624+) — `camera: "shown" | "hidden"` rides every
+ * state response now (the operator card's own three-state button needs
+ * it, closed included — always hidden then). Two new PUT actions,
+ * `show-camera`/`hide-camera`, valid ONLY while published; otherwise 409
+ * with a plain reason, same shape as Stage 1's own publish-from-closed
+ * refusal.
  */
 
 function jsonNoStore(body: unknown, status = 200) {
@@ -35,7 +49,8 @@ function gate(request: Request): NextResponse | null {
 async function stateResponse() {
   const state = await getHousewarmingState();
   const { jitsiDomain } = (await getSiteConfig()).meeting;
-  return jsonNoStore({ ok: true, phase: state.phase, room: state.room, jitsiDomain });
+  const camera = state.cameraShownAtMs !== null ? "shown" : "hidden";
+  return jsonNoStore({ ok: true, phase: state.phase, room: state.room, jitsiDomain, camera });
 }
 
 export async function GET(request: Request) {
@@ -64,7 +79,13 @@ export async function PUT(request: Request) {
     if (action === "prepare") await prepareHousewarming();
     else if (action === "publish") await publishHousewarming();
     else if (action === "close") await closeHousewarming();
-    else return jsonNoStore({ ok: false, reason: "action must be prepare, publish, or close" }, 400);
+    else if (action === "show-camera") {
+      const result = await showHousewarmingCamera();
+      if (result === null) return jsonNoStore({ ok: false, reason: "open the room first — the camera needs a published room" }, 409);
+    } else if (action === "hide-camera") {
+      const result = await hideHousewarmingCamera();
+      if (result === null) return jsonNoStore({ ok: false, reason: "open the room first — the camera needs a published room" }, 409);
+    } else return jsonNoStore({ ok: false, reason: "action must be prepare, publish, close, show-camera, or hide-camera" }, 400);
   } catch {
     return jsonNoStore({ ok: false, reason: "the stage store didn't answer — nothing changed" }, 500);
   }

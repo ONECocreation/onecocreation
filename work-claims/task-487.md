@@ -65,15 +65,25 @@ let three controls squeeze the title at desktop widths).
   `cameraShownAtMs`; `prepareStage1()` resets it to null on a fresh mint;
   new `showStage1Camera()`/`hideStage1Camera()`, hand-written to mirror
   the factory's own logic.
-- `src/app/api/admin/housewarming-door/route.ts` / `.../admin/qa-door/route.ts`
-  / `.../admin/stage2/route.ts` / `.../admin/stage1/route.ts` — EDIT:
-  `stateResponse()` adds `camera: "shown"|"hidden"` (always, closed
-  included); PUT gains `show-camera`/`hide-camera` actions, 409 on a
-  `null` refusal.
-- `src/app/api/housewarming-door/route.ts` / `.../qa-door/route.ts` /
-  `.../stage2/route.ts` / `.../stage1/route.ts` — EDIT: the member
-  envelope adds `camera` ONLY in the branch that also hands back a real
+- `src/app/api/admin/housewarming-door/route.ts` — EDIT: `stateResponse()`
+  adds `camera: "shown"|"hidden"` (always, closed included); PUT gains
+  `show-camera`/`hide-camera` actions, 409 on a `null` refusal.
+- `src/app/api/admin/qa-door/route.ts` — EDIT: same shape as
+  `housewarming-door`'s admin route above.
+- `src/app/api/admin/stage2/route.ts` — EDIT: same shape as
+  `housewarming-door`'s admin route above.
+- `src/app/api/admin/stage1/route.ts` — EDIT: same shape as
+  `housewarming-door`'s admin route above.
+- `src/app/api/housewarming-door/route.ts` — EDIT: the member envelope
+  adds `camera` ONLY in the branch that also hands back a real
   (non-null) room string.
+- `src/app/api/qa-door/route.ts` — EDIT: same shape as
+  `housewarming-door`'s member route above.
+- `src/app/api/stage2/route.ts` — EDIT: same shape as
+  `housewarming-door`'s member route above.
+- `src/app/api/stage1/route.ts` — EDIT: same shape (different envelope —
+  `camera` rides only in the published+signed-in branch that also hands
+  back the real room string).
 - `src/app/a/site/reading/rooms-config.ts` — EDIT: `DoorRowState` gains
   `camera: "shown"|"hidden"` (required); `DoorBusy` gains `"show-camera"
   |"hide-camera"`; new exported `doorStateWords(phase, cameraOn)`, the
