@@ -97,7 +97,11 @@ export default function EmailDoor({
     }
   }
 
-  /* paper pill, dark ink — the house input law (Admiral, 0018.05.15) */
+  /* paper pill, dark ink — the house input law (Admiral, 0018.05.15).
+     lineHeight:"normal" (block 968,624) decouples this input from
+     body's ambient copy line-height, the same fix kit.css's
+     `.kit-field-input` and DoorSheet.tsx's own field style carry — this
+     component is currently unmounted, kept consistent regardless. */
   const inputStyle: React.CSSProperties = {
     flex: "1 1 200px",
     padding: "12px 16px",
@@ -106,6 +110,7 @@ export default function EmailDoor({
     background: "rgba(255,255,255,.94)",
     color: "var(--field-ink)",
     fontSize: ".95rem",
+    lineHeight: "normal",
   };
 
   return (

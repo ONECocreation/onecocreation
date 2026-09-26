@@ -372,6 +372,23 @@ export async function getEntry(handle: string, space?: string): Promise<HandleEn
   return reg.entries.find((e) => e.handle === handle) ?? null;
 }
 
+/** The claim's reservation verdict, pure (block 968,624, Love's iPhone
+ *  walk: "The name could not be claimed. Try another." on a plain re-tap).
+ *  Given who already holds the handle (or null, unclaimed) and who is
+ *  asking: THE SAME npub retrying its own already-successful claim (a
+ *  double submit — a re-tap before the first request's response painted,
+ *  or a retry after a dropped reply) is "mine", an idempotent success,
+ *  never a refusal. A DIFFERENT npub holding it is genuinely "taken". */
+export type HandleClaimVerdict = "claim" | "mine" | "taken";
+export function decideHandleClaim(existing: { npub: string } | null, npub: string): HandleClaimVerdict {
+  if (!existing) return "claim";
+  return existing.npub === npub ? "mine" : "taken";
+}
+
+/** Plain words for a real conflict (block 968,624) — no em dash, says
+ *  exactly what happened and what to do next. */
+const HANDLE_TAKEN_REASON = "That name is taken. Try another.";
+
 export async function claimHandle(
   handle: string,
   npub: string,
@@ -405,8 +422,13 @@ export async function claimHandle(
         contentType: "application/json",
       });
     } catch {
-      if (await blobExists(s, valid.handle)) {
-        return { ok: false, reason: "already claimed" };
+      const existing = await getEntry(valid.handle, s);
+      const verdict = decideHandleClaim(existing, npub);
+      if (verdict === "mine" && existing) {
+        return { ok: true, entry: existing, queuePosition: await blobCount(s) };
+      }
+      if (verdict === "taken") {
+        return { ok: false, reason: HANDLE_TAKEN_REASON };
       }
       return { ok: false, reason: "the claim queue hiccuped — try again in a moment" };
     }
@@ -418,8 +440,13 @@ export async function claimHandle(
   }
 
   const reg = await fileRead(s);
-  if (reg.entries.some((e) => e.handle === valid.handle)) {
-    return { ok: false, reason: "already claimed" };
+  const existing = reg.entries.find((e) => e.handle === valid.handle) ?? null;
+  const verdict = decideHandleClaim(existing, npub);
+  if (verdict === "mine" && existing) {
+    return { ok: true, entry: existing, queuePosition: reg.entries.filter((e) => e.status === "queued").length };
+  }
+  if (verdict === "taken") {
+    return { ok: false, reason: HANDLE_TAKEN_REASON };
   }
   reg.entries.push(entry);
   try {

@@ -112,6 +112,15 @@
   background:var(--field-bg);color:var(--field-ink);
   border:1.5px solid rgba(139,118,196,.4);border-radius:10px;
   padding:11px 14px;font-family:inherit;font-size:1rem;
+  /* block 968,624 (Love's iPhone/iPad walk, S5) — the row-alignment law:
+     a button beside/under this field must share its height. With no
+     line-height of its own, the input INHERITED body's ambient copy
+     line-height (globals.css: 1.0625rem/1.6 — meant for paragraphs, not
+     a one-line pill) — measured 51.2px tall against a same-size
+     .kit-btn-main.kit-btn-sm's 42px, a 9.2px gap. `line-height:normal`
+     decouples it from that ambient value the same way .kit-btn-main
+     already pins its own (kit.css:44) — measured 42.0px, an exact match. */
+  line-height:normal;
 }
 .kit-field-input:focus-visible{outline:2px solid var(--info);outline-offset:2px}
 /* TWO DIFFERENT SURFACES, TWO DIFFERENT INKS — an accessibility finding

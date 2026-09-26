@@ -284,7 +284,7 @@ export default function DoorSheet({
           | { ok?: boolean; reason?: string; session?: { handle: string; space: string; npub: string } }
           | null;
         if (!res.ok || !data?.ok) {
-          setNote(data?.reason ?? "that name couldn't be claimed — try another");
+          setNote(data?.reason ?? "That name couldn't be claimed. Try another.");
           return;
         }
         if (data.session) applyMemberSession(data.session);
@@ -298,7 +298,7 @@ export default function DoorSheet({
         });
         const data = (await res.json().catch(() => null)) as { ok?: boolean; reason?: string } | null;
         if (!res.ok || !data?.ok) {
-          setNote(data?.reason ?? "that name couldn't be claimed — try another");
+          setNote(data?.reason ?? "That name couldn't be claimed. Try another.");
           return;
         }
       }
@@ -332,11 +332,17 @@ export default function DoorSheet({
   };
   const bodyNote: React.CSSProperties = { fontSize: ".86rem", lineHeight: 1.65, color: "var(--ink-body)", margin: "0 0 16px" };
   const quietNote: React.CSSProperties = { fontSize: ".74rem", color: "var(--muted)" };
-  /* paper pill, dark ink — the house input law */
+  /* paper pill, dark ink — the house input law. lineHeight:"normal"
+     (block 968,624, Love's iPhone/iPad walk, S5 — the row-alignment law)
+     — with no line-height of its own this input inherited body's ambient
+     copy line-height (globals.css: 1.0625rem/1.6), measuring 51.8px tall
+     against its own "EMAIL ME A CODE" button's 42px. kit.css's
+     `.kit-field-input` carries the SAME fix; this input is plain inline
+     style, never a kit class, so the fix rides here instead. */
   const field: React.CSSProperties = {
     width: "100%", boxSizing: "border-box", padding: "12px 16px", borderRadius: 999,
     border: "1.5px solid rgba(180,134,43,.65)", background: "rgba(255,255,255,.94)",
-    color: "var(--field-ink)", fontSize: ".95rem", textAlign: "center",
+    color: "var(--field-ink)", fontSize: ".95rem", textAlign: "center", lineHeight: "normal",
   };
   const copy = DOOR_COPY[state];
 

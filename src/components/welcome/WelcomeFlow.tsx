@@ -108,7 +108,9 @@ export default function WelcomeFlow({ next = null }: { next?: string | null }) {
      DoorSheet.tsx/SignInCard.tsx already use — accountName and displayName
      both set to the same trimmed value — now guarded server-side by the
      SET…NX reservation. A 409 comes back with `reason` set to the exact
-     wording those doors already surface ("already claimed"). */
+     wording those doors already surface ("That name is taken. Try
+     another." — block 968,624). A retry of THIS member's own already-
+     claimed name never 409s (profile/route.ts's `decideNameClaim`). */
   async function claimAccountName(ev: React.FormEvent) {
     ev.preventDefault();
     const want = nameWish.trim();
@@ -123,7 +125,7 @@ export default function WelcomeFlow({ next = null }: { next?: string | null }) {
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; reason?: string; accountName?: string } | null;
       if (!res.ok || !data?.ok) {
-        setClaimError(data?.reason ?? "that name couldn't be claimed — try another");
+        setClaimError(data?.reason ?? "That name couldn't be claimed. Try another.");
         return;
       }
       setAccountName(data.accountName ?? want);
