@@ -10,7 +10,7 @@ import {
 } from "@/lib/letters";
 import { hourlyCap, onceWithin } from "@/lib/mail";
 import { listSubscribers, subscribersConfigured, unsubscribeUrl } from "@/lib/subscribers";
-import { enqueue } from "@/lib/mail-queue";
+import { enqueue, getSendRecord, initSendRecord, recentSendsForLetter, recordSendForLetter } from "@/lib/mail-queue";
 import { recordDelivery } from "@/lib/mailbox";
 
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
@@ -92,6 +92,11 @@ export async function POST(request: Request) {
       { status: 409 },
     );
   }
+  // T-484 (walk item S7): one sendId per list-send click — every queued
+  // copy carries it, `tick()` bumps its sent/dropped tally against it, and
+  // the panel polls that tally instead of trusting silence.
+  const sendId = crypto.randomUUID();
+  const scheduledFor = notBefore ? new Date(notBefore).toISOString() : "next tick";
   await enqueue(
     list.map((to) => ({
       to,
@@ -99,8 +104,11 @@ export async function POST(request: Request) {
       html: htmlFor(to),
       notBefore,
       guard: { kind: "subscribed" as const },
+      sendId,
     })),
   );
+  await initSendRecord(sendId, { key: body.key, queued: list.length, segment: source ?? "all", scheduledFor });
+  await recordSendForLetter(body.key, sendId);
   // the mailbox remembers — each member's /letters shows what THEY received
   const atMs = notBefore ?? Date.now();
   for (const to of list) {
@@ -112,7 +120,8 @@ export async function POST(request: Request) {
     queued: list.length,
     segment: source ?? "all",
     recipients: list,
-    scheduledFor: notBefore ? new Date(notBefore).toISOString() : "next tick",
+    sendId,
+    scheduledFor,
     // the drip is honest about its pace: past the cap, the queue spans hours
     hourlyCap: cap,
     estimatedFinish:
@@ -120,4 +129,35 @@ export async function POST(request: Request) {
         ? new Date(atMs + Math.ceil(list.length / cap) * 3_600_000).toISOString()
         : undefined,
   });
+}
+
+/**
+ * T-484 (walk item S7): the real sent state, read back. Operator only,
+ * exactly like the POST above. Two shapes, one query param each:
+ *   ?sendId=<id>  — that one send's own tally: {queued, sent, dropped}
+ *                   (plus the metadata the panel already has, so a fresh
+ *                   poll never needs a second round trip for it).
+ *   ?key=<key>    — the last few sends FOR that letter, newest first —
+ *                   what the panel shows after a reload, with no send
+ *                   in flight to poll.
+ * Neither param present, or an unknown sendId, is a plain 400/404 — never
+ * a thrown error, never a guessed number.
+ */
+export async function GET(request: Request) {
+  if (!operatorFromCookieHeader(request.headers.get("cookie"))) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  const url = new URL(request.url);
+  const sendId = url.searchParams.get("sendId");
+  const key = url.searchParams.get("key");
+  if (sendId) {
+    const rec = await getSendRecord(sendId);
+    if (!rec) return NextResponse.json({ ok: false, reason: "unknown send" }, { status: 404 });
+    return NextResponse.json({ ok: true, ...rec, sendId });
+  }
+  if (key) {
+    const sends = await recentSendsForLetter(key, 5);
+    return NextResponse.json({ ok: true, sends });
+  }
+  return NextResponse.json({ ok: false, reason: "sendId or key required" }, { status: 400 });
 }

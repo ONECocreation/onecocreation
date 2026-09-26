@@ -176,6 +176,19 @@
 .kit-body{font-family:var(--font-body);color:var(--ink-body);line-height:1.7;max-width:680px;margin:0 auto}
 .kit-text-quiet{font-family:var(--font-body);color:var(--muted);font-size:.9rem}
 
+/* ── T-484 (walk item S7) — the send panel's ONE status line, said once,
+   under/beside its own control (the /a uniformity law): neutral by
+   default, `.kit-note-ok`/`.kit-note-err` REPLACE the color, never add a
+   second line. `.kit-sends-list` is the "last few sends" history under
+   it — the same divider-plus-small-rows idiom `.kit-rows`/the old
+   per-recipient list already used, generalized so this panel needs no
+   new inline style object to reach it (design-drift/operator-census: both
+   already sit at THIS file's own ceiling, zero headroom). ── */
+.kit-note{margin:0;font-size:.75rem;color:var(--muted)}
+.kit-note-ok{color:var(--ok)}
+.kit-note-err{color:var(--err)}
+.kit-sends-list{list-style:none;margin:8px 0 0;padding:8px 0 0;display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--glass-edge)}
+
 /* ── STACK (TASK-382) ─────────────────────────────────────────────
    A small vertical rhythm for a handful of short status lines inside
    a kit-card (born from the reading notice's off/upcoming/soon/window
