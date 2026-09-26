@@ -50,6 +50,18 @@ server scripts):
   `'tileview'`, no `startVideoMuted`, prejoin kept, branding keys kept)
   and confirms the non-guest shape is unchanged (no `toolbarButtons` key
   at all — matching every pre-existing caller's real output).
+- `tests/jitsi-viewer.test.ts` — EDIT: T-439 pin #7 (a source-string guard
+  on `JitsiRoom.tsx`'s `configOverwrite` block) re-trued for this lane —
+  it still bans the audio/video force-mute keys, and now requires that
+  `toolbarButtons` appears ONLY behind the `guestView`-gated spread, never
+  unconditional.
+- `tests/stage2-door.test.ts` — EDIT: the SAME T-439-style guard, re-copied
+  into this file too (found only at gate time, running the full suite) —
+  re-trued the same way.
+- `tests/stage-video-frame.test.ts` — EDIT: its `BRAND_WATERMARK_LINK:
+  siteOrigin()` source pin re-trued to the new call-site shape
+  (`origin: siteOrigin()` fed into `jitsiEmbedOptions()`, which itself
+  writes `BRAND_WATERMARK_LINK: origin`) — same guarantee, different line.
 
 ## READ-ONLY
 

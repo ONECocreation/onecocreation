@@ -105,13 +105,17 @@ describe("Stage2Door.tsx — source pins", () => {
 });
 
 describe("JitsiRoom.tsx — read-only source pin (ruling 3): chat on, cameras and mics the member's own choice", () => {
-  it("configOverwrite never touches audio/video defaults or the toolbar", () => {
+  it("configOverwrite never forces audio/video defaults, and only ever restricts the toolbar behind the guestView flag (TASK-477, block 968,624+)", () => {
     const src = read("src/components/booking/JitsiRoom.tsx");
     const block = src.match(/configOverwrite: \{[\s\S]*?\n\s*\},/);
     expect(block, "configOverwrite block not found").not.toBeNull();
-    for (const banned of ["startWithAudioMuted", "startWithVideoMuted", "startAudioOnly", "startSilent", "toolbarButtons"]) {
+    for (const banned of ["startWithAudioMuted", "startWithVideoMuted", "startAudioOnly", "startSilent"]) {
       expect(block![0]).not.toContain(banned);
     }
+    /* TASK-477: toolbarButtons may only appear gated behind `guestView` —
+       never unconditional (this door's own room stays the full, unrestricted
+       embed unless it too is mounted with guestView). */
+    expect(block![0]).toContain("...(guestView ? { toolbarButtons: GUEST_TOOLBAR_BUTTONS } : {})");
   });
 });
 

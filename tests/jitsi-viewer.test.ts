@@ -128,13 +128,18 @@ describe("JitsiViewer — lifecycle honesty (the JitsiRoom.tsx:93-102 pattern, r
   });
 });
 
-describe("T-439 pin #7 stays green — JitsiRoom.tsx's configOverwrite never touches audio/video defaults or the toolbar (re-pinned so this lane's guard is self-contained)", () => {
+describe("T-439 pin #7 stays green — JitsiRoom.tsx's configOverwrite never touches audio/video defaults, and only ever restricts the toolbar behind the guestView flag (TASK-477, block 968,624+)", () => {
   it("the read-only pin, verbatim", async () => {
     const src = await read(JITSIROOM);
     const block = src.match(/configOverwrite: \{[\s\S]*?\n\s*\},/);
     expect(block, "configOverwrite block not found").not.toBeNull();
-    for (const banned of ["startWithAudioMuted", "startWithVideoMuted", "startAudioOnly", "startSilent", "toolbarButtons"]) {
+    for (const banned of ["startWithAudioMuted", "startWithVideoMuted", "startAudioOnly", "startSilent"]) {
       expect(block![0]).not.toContain(banned);
     }
+    /* TASK-477: the ONLY sanctioned way `toolbarButtons` may appear in this
+       block — gated behind `guestView`, never unconditional. The built
+       object's own shape (guestView unset carries no `toolbarButtons` key
+       at all) is pinned in tests/jitsi-embed-options-477.test.ts. */
+    expect(block![0]).toContain("...(guestView ? { toolbarButtons: GUEST_TOOLBAR_BUTTONS } : {})");
   });
 });
