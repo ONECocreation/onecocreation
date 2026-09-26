@@ -47,10 +47,10 @@ describe("defaultReadingPart — the part whose door is open (the latest opened)
     expect(defaultReadingPart(doors, 500)).toBe(3);
   });
 
-  it("parts 1 and 2 share Stage 1's one door — both open together with the same openedAtMs never conflicts with a real tie-break", () => {
+  it("re-trued (TASK-481, block 968,624+): Parts 1 and 2 are TWO INDEPENDENT doors now (the Housewarming's own door, Stage 1's own) — a tie on openedAtMs is still an honest, rare coincidence, never a crash or a closed part picked", () => {
     const doors = DOORS.map((d) => (d.part <= 2 ? { ...d, open: true, openedAtMs: 7_000 } : d));
-    // the reduce picks whichever member of the tie it meets — either free
-    // part is an honest answer since they share one room; just prove it
+    // the reduce picks whichever member of the tie it meets — both are
+    // genuinely open, so either is an honest answer; just prove it
     // returns ONE of them, never crashes, never picks a closed part.
     expect([1, 2]).toContain(defaultReadingPart(doors, 500));
   });

@@ -13,13 +13,22 @@ import RoomsCard, { type DoorConfig } from "./RoomsCard";
  *
  * TASK-475 (the Admiral's ruling: "one area for love to open each room as
  * needed on the host side"): the separate Stage1Card/Stage2Card sections
- * are replaced by ONE `RoomsCard`, three identical rows, one config array.
- * `Stage1Card.tsx`/`Stage2Card.tsx` are not deleted (house law) — they
- * simply stop being imported here.
+ * are replaced by ONE `RoomsCard`, one config array. `Stage1Card.tsx`/
+ * `Stage2Card.tsx` are not deleted (house law) — they simply stop being
+ * imported here.
+ *
+ * TASK-481 (block 968,624+, the Admiral's ruling: "was there going to be
+ * 4 rooms in the /a/site/reading room. i'm seeing 3. we spoke about one
+ * line per meeting time"): the Housewarming (12:12) gets its OWN door and
+ * its own row now — the "Free room" row above used to cover Parts 1 and 2
+ * together because both read Stage 1's one door; the stage1 row below
+ * narrows to "Reading · 1:11" (Part 2 alone). `RoomsCard.tsx` itself needs
+ * no edit — it was already door-agnostic, config-driven.
  */
 const DOORS: DoorConfig[] = [
-  { id: "stage1", label: "Free room · 12:12 Housewarming and 1:11 Reading", adminPath: "/api/admin/stage1" },
-  { id: "stage2", label: "Book talk · 2:22", adminPath: "/api/admin/stage2" },
+  { id: "housewarming", label: "Housewarming · 12:12", adminPath: "/api/admin/housewarming-door" },
+  { id: "stage1", label: "Reading · 1:11", adminPath: "/api/admin/stage1" },
+  { id: "stage2", label: "Book Talk · 2:22", adminPath: "/api/admin/stage2" },
   { id: "qa", label: "Q&A · 3:33", adminPath: "/api/admin/qa-door" },
 ];
 

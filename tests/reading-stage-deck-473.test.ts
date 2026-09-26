@@ -6,18 +6,25 @@ import { renderToStaticMarkup } from "react-dom/server";
 import ReadingStageDeck from "@/components/reading/ReadingStageDeck";
 import { ReadingPartProvider } from "@/components/reading/ReadingPartContext";
 import type { ReadingStageProps } from "@/components/reading/ReadingStage";
+import type { ReadingStagePart1Props } from "@/components/reading/ReadingStagePart1";
 import type { ReadingStagePart3Props } from "@/components/reading/ReadingStagePart3";
 import type { ReadingStagePart4Props } from "@/components/reading/ReadingStagePart4";
 import type { EncoreFloorDoor, QaDoor } from "@/lib/reading-day-doors";
 
 /**
  * TASK-473 (block 968,624) — "the video changes to the correct one." The
- * deck mounts EXACTLY ONE of the three stage screens, chosen by the
- * shared selection. React's own conditional-return shape (an if/return
- * chain, never a Set or multiple simultaneous mounts) is what makes
- * "exactly one conference at a time" true by construction — every switch
- * unmounts the old screen (its own JitsiRoom cleanup disposes) before the
- * next one mounts.
+ * deck mounts EXACTLY ONE of the four stage screens, chosen by the shared
+ * selection. React's own conditional-return shape (an if/return chain,
+ * never a Set or multiple simultaneous mounts) is what makes "exactly one
+ * conference at a time" true by construction — every switch unmounts the
+ * old screen (its own JitsiRoom cleanup disposes) before the next one
+ * mounts.
+ *
+ * RE-TRUED (TASK-481, block 968,624+): this file used to assume Parts 1
+ * and 2 shared `ReadingStage` (Stage 1's own screen) — the Admiral's
+ * ruling ("was there going to be 4 rooms … one line per meeting time")
+ * gave Part 1 its OWN door and its own screen, `ReadingStagePart1`. Part
+ * 2 keeps `ReadingStage` alone now.
  */
 
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
@@ -52,6 +59,7 @@ const STAGE1: ReadingStageProps = {
   housewarmingLabel: "12:12 PM MDT · The Housewarming",
   readingLabel: "1:11 PM MDT · The Reading",
 };
+const PART1: ReadingStagePart1Props = { jitsiDomain: DOMAIN, whenWords: "12:12 PM MDT" };
 const PART3: ReadingStagePart3Props = { jitsiDomain: DOMAIN, encoreFloor: ENCORE_FLOOR, whenWords: "2:22 PM MDT" };
 const PART4: ReadingStagePart4Props = { jitsiDomain: DOMAIN, qaOffer: QA_OFFER, whenWords: "3:33 PM MDT" };
 
@@ -60,22 +68,30 @@ function renderDeck(defaultPart: 1 | 2 | 3 | 4): string {
     createElement(
       ReadingPartProvider,
       { defaultPart },
-      createElement(ReadingStageDeck, { stage1: STAGE1, part3: PART3, part4: PART4 }),
+      createElement(ReadingStageDeck, { stage1: STAGE1, part1: PART1, part3: PART3, part4: PART4 }),
     ),
   );
 }
 
 describe("ReadingStageDeck — exactly one screen mounts, chosen by the selection", () => {
-  it("part 1 (and 2): ReadingStage's own waiting picture — never Part 3/4's own words", () => {
-    for (const part of [1, 2] as const) {
-      const html = renderDeck(part);
-      expect(html).toContain("The reading is live to watch, free.");
-      expect(html).not.toContain("The Book Talk is not live yet.");
-      expect(html).not.toContain("The Q&amp;A is not live yet.");
-    }
+  it("part 1: ReadingStagePart1's own closed words (the Housewarming's own door now, TASK-481) — never ReadingStage's, never Part 3/4's", () => {
+    const html = renderDeck(1);
+    expect(html).toContain("The Housewarming is not live yet.");
+    expect(html).toContain("Opens 12:12 PM MDT.");
+    expect(html).not.toContain("The reading is live to watch, free.");
+    expect(html).not.toContain("The Book Talk is not live yet.");
+    expect(html).not.toContain("The Q&amp;A is not live yet.");
   });
 
-  it("fix round (block 968,624): the stage chip names WHICH row is picked, 1 vs 2 — the SAME label the agenda row's own title reads", () => {
+  it("part 2: ReadingStage's own waiting picture — never Part 1/3/4's own words", () => {
+    const html = renderDeck(2);
+    expect(html).toContain("The reading is live to watch, free.");
+    expect(html).not.toContain("The Housewarming is not live yet.");
+    expect(html).not.toContain("The Book Talk is not live yet.");
+    expect(html).not.toContain("The Q&amp;A is not live yet.");
+  });
+
+  it("fix round (block 968,624; re-trued TASK-481): the stage chip names WHICH row is picked, 1 vs 2 — the SAME label the agenda row's own title reads", () => {
     const chip1 = renderDeck(1);
     expect(chip1).toContain('<span class="kit-stage-chip">12:12 PM MDT · The Housewarming</span>');
     const chip2 = renderDeck(2);
@@ -115,8 +131,9 @@ describe("ReadingStageDeck — exactly one screen mounts, chosen by the selectio
 });
 
 describe("ReadingStageDeck — source pin: an if/return chain, never a lookup table or multiple mounts", () => {
-  it("selected===3 and selected===4 each return early; ReadingStage is the one fallthrough", async () => {
+  it("selected===1, ===3 and ===4 each return early; ReadingStage is the one fallthrough (Part 2 alone, TASK-481)", async () => {
     const src = await read("src/components/reading/ReadingStageDeck.tsx");
+    expect(src).toContain('if (selected === 1) return <ReadingStagePart1 {...part1} />;');
     expect(src).toContain('if (selected === 3) return <ReadingStagePart3 {...part3} />;');
     expect(src).toContain('if (selected === 4) return <ReadingStagePart4 {...part4} />;');
     expect(src).toContain("return <ReadingStage {...stage1} />;");

@@ -294,6 +294,27 @@ describe("the page itself — source pins (async server component, headers()-dep
     // never the old hardcoded literal
     expect(src).not.toContain("open: false, openedAtMs: null }");
   });
+
+  it("TASK-481 (block 968,624+): Part 1's own open truth is the Housewarming's own door now (src/lib/housewarming-door.ts) — never Stage 1's phase, the same fail-closed shape qaState keeps", async () => {
+    const src = await read(PAGE_PATH);
+    expect(src).toContain('import { getHousewarmingState, IDLE as HOUSEWARMING_IDLE } from "@/lib/housewarming-door"');
+    expect(src).toContain("await getHousewarmingState()");
+    expect(src).toContain('open: housewarmingState.phase === "published"');
+    expect(src).toContain("openedAtMs: housewarmingState.publishedAtMs");
+    // fails CLOSED on a throw — never lets a broken vault read as open
+    const hwBlock = src.slice(src.indexOf("let housewarmingState = HOUSEWARMING_IDLE;"), src.indexOf("const doors: PartDoorInfo[]"));
+    expect(hwBlock).toContain("try {");
+    expect(hwBlock).toContain("housewarmingState = await getHousewarmingState();");
+    expect(hwBlock).toContain("} catch {");
+    expect(hwBlock).toContain("housewarmingState = HOUSEWARMING_IDLE;");
+    // Part 2 (the Reading) keeps reading Stage 1's own phase, unchanged
+    expect(src).toContain('{ part: 2, title: "The Reading", startsAtMs: next.startsAtMs, open: stage1Phase === "published", openedAtMs: stage1State.publishedAtMs }');
+    // never the old sharing (Part 1 reusing stage1Phase/stage1State)
+    expect(src).not.toContain('{ part: 1, title: "The Housewarming", startsAtMs: housewarmingStartsAtMs, open: stage1Phase === "published", openedAtMs: stage1State.publishedAtMs }');
+    // ReadingStageDeck gets the new part1 prop, fed the same jitsiDomain/whenWords shape Part 3/4 already use
+    expect(src).toContain("part1={{");
+    expect(src).toContain("whenWords: housewarmingStartsAtMs !== null ? clockWords(housewarmingStartsAtMs, schedule.tz) : null,");
+  });
 });
 
 describe("no literal weekday name and no \"1:11\" — the page AND its one helper island (the schedule computes it, never the source)", () => {

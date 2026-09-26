@@ -6,11 +6,16 @@
  * is open" / "just have the users pick the button for the time and the
  * video changes to the correct one."
  *
- * Parts 1 and 2 (12:12, 1:11) share ONE door — Stage 1 — so they are
- * separate PARTS (separate agenda rows, separate clock words) but never a
- * separate OPEN/CLOSED truth: both read Stage 1's own phase. Part 3
- * (2:22) is Stage 2's door; Part 4 (3:33) is the Q&A's own door (the
- * site-wide live flag, `src/lib/live.ts`, targeting the Q&A's room).
+ * TASK-481 (block 968,624+, the Admiral's ruling: "was there going to be
+ * 4 rooms … we spoke about one line per meeting time") — every part now
+ * has its OWN door: Part 1 (12:12) is the Housewarming's own door
+ * (`housewarming-door.ts`); Part 2 (1:11) is Stage 1's; Part 3 (2:22) is
+ * Stage 2's; Part 4 (3:33) is the Q&A's own door. Before this lane, Parts
+ * 1 and 2 shared Stage 1's one door (one row on `/a/site/reading` for
+ * both) — the code below never hardcoded that sharing (it is generic
+ * over `PartDoorInfo[]`/`OpenFlags`, whichever caller builds them), so
+ * this file's own functions needed no change, only this docblock's own
+ * words.
  *
  * Pure, isomorphic (server default-selection math AND the client's
  * courtesy notice both import this file) — no fetch, no Date.now() inside

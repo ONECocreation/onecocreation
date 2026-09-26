@@ -8,8 +8,19 @@ import { RoomsCardBody, type RoomsCardBodyProps, type DoorConfig, type DoorRowSt
 /**
  * TASK-475 (block 968,624) — `RoomsCard.tsx`, the ONE host area on
  * `/a/site/reading` (the Admiral's ruling: "one area for love to open
- * each room as needed"). Three identical rows built from ONE component
- * over a config array — never three copies.
+ * each room as needed"). Identical rows built from ONE component over a
+ * config array — never one copy per row.
+ *
+ * RE-TRUED (TASK-481, block 968,624+, the Admiral's ruling: "was there
+ * going to be 4 rooms in the /a/site/reading room. i'm seeing 3. we spoke
+ * about one line per meeting time"): T-475 shipped THREE rows because
+ * Parts 1 and 2 shared Stage 1's one door ("Free room · 12:12
+ * Housewarming and 1:11 Reading"). The Housewarming now has its own door
+ * (`housewarming-door.ts`) and its own row; the fixture below mirrors
+ * `SiteReadingRoom.tsx`'s own real, current `DOORS` config — FOUR rows,
+ * one per meeting time. `RoomsCard.tsx` itself needed no change (it was
+ * already door-agnostic, config-driven) — only this test file's fixture
+ * was re-trued.
  *
  * Same split as `Stage1Card.tsx`'s own tests: `RoomsCardBody` (pure
  * presentation) is rendered through `renderToStaticMarkup` (this repo
@@ -27,8 +38,9 @@ const DOMAIN = "meet.rooms-card-fixture.invalid";
 const ROOM = "oc-0123456789abcdef";
 
 const DOORS: DoorConfig[] = [
-  { id: "stage1", label: "Free room · 12:12 Housewarming and 1:11 Reading", adminPath: "/api/admin/stage1" },
-  { id: "stage2", label: "Book talk · 2:22", adminPath: "/api/admin/stage2" },
+  { id: "housewarming", label: "Housewarming · 12:12", adminPath: "/api/admin/housewarming-door" },
+  { id: "stage1", label: "Reading · 1:11", adminPath: "/api/admin/stage1" },
+  { id: "stage2", label: "Book Talk · 2:22", adminPath: "/api/admin/stage2" },
   { id: "qa", label: "Q&A · 3:33", adminPath: "/api/admin/qa-door" },
 ];
 
@@ -56,15 +68,16 @@ function row(html: string, id: string): string {
 
 const controlsIn = (rowHtml: string) => (rowHtml.match(/<button|<a /g) ?? []).length;
 
-describe("three rows, one component, one config array", () => {
-  it("renders exactly three rows, one per door id, in order", () => {
+describe("four rows, one component, one config array", () => {
+  it("renders exactly four rows, one per door id, in order (TASK-481: the Housewarming's own row, first)", () => {
     const html = render(bodyProps());
-    expect((html.match(/<li data-row=/g) ?? []).length).toBe(3);
+    expect((html.match(/<li data-row=/g) ?? []).length).toBe(4);
     for (const d of DOORS) row(html, d.id);
   });
 
   it("every row carries the SAME TWO controls, on the same right edge, every state", () => {
     const states: Record<string, DoorRowState | null> = {
+      housewarming: { phase: "published", room: ROOM, jitsiDomain: DOMAIN },
       stage1: { phase: "closed", room: null, jitsiDomain: DOMAIN },
       stage2: { phase: "prepared", room: ROOM, jitsiDomain: DOMAIN },
       qa: { phase: "published", room: ROOM, jitsiDomain: DOMAIN },
@@ -73,7 +86,7 @@ describe("three rows, one component, one config array", () => {
     for (const d of DOORS) {
       expect(controlsIn(row(html, d.id))).toBe(2);
     }
-    expect((html.match(/kit-rows-end/g) ?? []).length).toBe(3);
+    expect((html.match(/kit-rows-end/g) ?? []).length).toBe(4);
   });
 
   it("the source builds the rows from a doors.map — never three copies of DoorRow", async () => {
