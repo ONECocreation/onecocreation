@@ -11,7 +11,7 @@ import SubscribeForm from "@/components/SubscribeForm";
 import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES, TIER_ADDONS, tierPageBySlug, type TierPage } from "@/lib/tiers-content";
 import { getSiteConfig } from "@/lib/site-config";
-import { getItem } from "@/lib/store";
+import { getItem, isPurchasable } from "@/lib/store";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 import { dollars, priceWords, satsWords, defaultPreferOf, type MoneyPrefer } from "@/lib/money-words";
 import { preferFromCookieHeader } from "@/lib/money-preference";
@@ -19,11 +19,16 @@ import { cookies } from "next/headers";
 import { tierRailsOn, tierOfferMode, type TierOfferMode } from "@/lib/tier-offer";
 
 /** Admiral, 0018.06.17 a₿: nothing is offered or recommended whose store item is not live — a hidden
- *  item is off everywhere, not just off the shelf. */
+ *  item is off everywhere, not just off the shelf.
+ *  TASK-472 (block 968,624): "live" now means isPurchasable() — a comingSoon
+ *  item (Astra: itemLive() is one of the tier/package fallbacks) is treated
+ *  the same as not-live everywhere this helper feeds an upgrade/addon/related
+ *  door, so a comingSoon item's OWN buy doors never sneak in from a sibling
+ *  tier page either. */
 async function itemLive(id: string | undefined): Promise<boolean> {
   if (!id) return false;
   const item = await getItem(id).catch(() => null);
-  return item?.status === "live";
+  return item != null && isPurchasable(item);
 }
 
 /* eslint-disable @next/next/no-img-element */
@@ -52,6 +57,21 @@ export { tierRailsOn, tierOfferMode, type TierOfferMode };
 /** The banner's exact words when `?joined=1` lands after a waitlist join. */
 export function tierJoinedBanner(page: Pick<TierPage, "tier">): string {
   return `You're on the list for ${TIERS[page.tier].name}.`;
+}
+
+/**
+ * TASK-472 (block 968,624 — the Admiral's ruling: Observer/Evening Star
+ * show "Coming soon"; price and description stay visible, nobody can buy
+ * them anywhere). `comingSoon` wins over everything else this page would
+ * otherwise show for the door slot — the live "buy" button AND the
+ * pre-order waitlist email form both give way to a plain, honest label,
+ * never a dead button and never an offer to be notified when it opens.
+ * Pure + exported for a unit pin without rendering the whole RSC page.
+ */
+export type TierPageMode = TierOfferMode | "soon";
+export function tierPageMode(offerMode: TierOfferMode, mainLive: boolean, comingSoon: boolean): TierPageMode {
+  if (comingSoon) return "soon";
+  return offerMode === "buy" && !mainLive ? "waitlist" : offerMode;
 }
 
 export function generateStaticParams() {
@@ -138,14 +158,14 @@ export default async function TierPage({
      the lead to the other denomination, whatever the preference said) */
   const fiatPrimary = moneyRails.card && (prefer === "fiat" || !moneyRails.btc);
   const joined = sp?.joined === "1";
-  const [mainLive, oneTimeLive, upgradeLive, related, addons] = await Promise.all([
-    itemLive(page.slug),
+  const [mainItem, oneTimeLive, upgradeLive, related, addons] = await Promise.all([
+    getItem(page.slug).catch(() => null),
     itemLive(page.oneTime?.itemId),
     itemLive(upgrade?.slug),
     Promise.all(TIER_PAGES.filter((p) => p.slug !== page.slug).map(async (p) => ((await itemLive(p.slug)) ? p : null))),
     Promise.all(visibleTierAddons(switches.features.largeSums).map(async (a) => {
       const item = await getItem(a.itemId).catch(() => null);
-      if (item?.status !== "live") return null;
+      if (!item || !isPurchasable(item)) return null;
       const eff = item.sale ?? item.price;
       return {
         ...a,
@@ -157,10 +177,15 @@ export default async function TierPage({
       };
     })),
   ]);
+  const mainLive = mainItem != null && isPurchasable(mainItem);
+  // TASK-472 (block 968,624): the ONE signal that turns the YES button into
+  // the honest "Coming soon" label instead of the waitlist email form — read
+  // straight off the item, never derived from mainLive (mainLive can also be
+  // false for hidden/soldout, which keeps today's waitlist behavior).
+  const mainComingSoon = mainItem?.comingSoon === true;
   const relatedLive = related.filter((p): p is TierPage => p !== null);
   const addonsLive = addons.filter((a): a is NonNullable<(typeof addons)[number]> => a !== null);
-  // a hidden membership item cannot be bought — the page falls back to the waitlist door
-  const mode = tierOfferMode(switches, joined) === "buy" && !mainLive ? "waitlist" : tierOfferMode(switches, joined);
+  const mode = tierPageMode(tierOfferMode(switches, joined), mainLive, mainComingSoon);
 
   return (
     <>
@@ -250,9 +275,15 @@ export default async function TierPage({
               <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
                 {mode === "buy" ? (
                   <AddTierButton itemId={page.slug} label={`${t.name} — YES! $${t.priceUsd}`} />
-                ) : mode === "banner" ? (
-                  <p style={{ color: "var(--rose)", fontWeight: 600, textAlign: "center", margin: 0 }}>
-                    {tierJoinedBanner(page)}
+                ) : mode === "soon" || mode === "banner" ? (
+                  /* TASK-472 (block 968,624): "soon" shares the banner's one
+                     style block (mutually exclusive states) — the Admiral's
+                     own words for this exact spot ("the thing that they
+                     would press to actually buy it would just say coming
+                     soon"), a plain disabled-looking label, never the
+                     pre-order email form below. */
+                  <p style={{ color: mode === "soon" ? "var(--muted)" : "var(--rose)", fontWeight: 600, textAlign: "center", margin: 0 }}>
+                    {mode === "soon" ? "Coming soon" : tierJoinedBanner(page)}
                   </p>
                 ) : (
                   <SubscribeForm
@@ -262,8 +293,10 @@ export default async function TierPage({
                     next={`/packages/${page.slug}`}
                   />
                 )}
-                {/* T-138 follow-through (Number One): the one-time purchase gives way with the rails, same as the monthly YES */}
-                {mode !== "waitlist" && oneTimeLive && page.oneTime &&
+                {/* T-138 follow-through (Number One): the one-time purchase gives way with the rails, same as the monthly YES.
+                    TASK-472 (block 968,624): also gives way to "soon" — the one-week taster is entry AS this tier, so a
+                    comingSoon tier's own one-time door stays off too, never a side door around its own "Coming soon". */}
+                {mode !== "waitlist" && mode !== "soon" && oneTimeLive && page.oneTime &&
                   (page.oneTime.itemId ? (
                     <AddTierButton
                       ghost

@@ -527,7 +527,10 @@ export default function StoreRoom() {
                           <span style={{ color: "var(--muted)" }} title="unlimited">—</span>
                         )}
                       </td>
-                      <td style={td}><StatusChip status={item.status} /></td>
+                      <td style={td}>
+                        <StatusChip status={item.status} />
+                        {item.comingSoon && (<><br /><Chip tone="lavender">coming soon</Chip></>)}
+                      </td>
                       <td style={td}><FulfilledBy item={item} /></td>
                       <td style={{ ...td, borderRadius: "0 14px 14px 0", borderRight: "1px solid rgba(139,118,196,.18)",
                         whiteSpace: "nowrap", textAlign: "right" }}>
@@ -827,6 +830,21 @@ export default function StoreRoom() {
                     <option value="hidden">○ hidden</option>
                     <option value="soldout">◌ sold out</option>
                   </select>
+                  {/* TASK-472 (block 968,624 — the Admiral's ruling): an
+                      independent flag, not a fourth status — the item stays
+                      live (price + words showing everywhere) while this box
+                      blocks every buy/join door and swaps its label to
+                      "Coming soon". Ticking this is the ONLY step left after
+                      deploy; the Admiral/Love do it here, never Number One.
+                      Reuses fieldLabel/fieldHint (no new style block — the
+                      design-drift ratchet, T-419's census, never gets a new
+                      one for something this file's own kit already covers). */}
+                  <label style={fieldLabel}>
+                    <input type="checkbox" checked={draft.comingSoon === true}
+                      onChange={(e) => setDraft({ ...draft, comingSoon: e.target.checked || undefined })} />
+                    {" "}coming soon
+                  </label>
+                  <p style={fieldHint}>keeps the price and description showing, but no one can buy or join yet</p>
                 </div>
 
                 <div style={editorCard}>

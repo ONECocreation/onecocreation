@@ -9,7 +9,7 @@ import {
   type CartDoc,
   type CartLine,
 } from "@/lib/cart";
-import { getItem, stripPrivateMedia } from "@/lib/store";
+import { getItem, isPurchasable, stripPrivateMedia } from "@/lib/store";
 import { getService, readConfig, slotsFor, isValidTz } from "@/lib/booking";
 import { claimSlot, releaseSlot, getClaim, newBookingId } from "@/lib/booking-orders";
 import { busyFeed, subtractBusy } from "@/lib/ical-busy";
@@ -115,7 +115,10 @@ async function resolved(cart: CartDoc) {
     }
 
     const item = await getItem(l.itemId);
-    if (!item || item.status !== "live") continue;
+    // TASK-472 (block 968,624): isPurchasable() also drops a line an old
+    // cart is still holding for an item just flagged comingSoon — the same
+    // sweep that already drops a hidden/gone item, never a silent keep.
+    if (!item || !isPurchasable(item)) continue;
     const eff = item.sale ?? item.price;
     const listSats = eff.sats ?? null;
     const lineSats = l.offerSats ?? (listSats != null ? listSats * l.qty : null);
@@ -338,7 +341,7 @@ export async function POST(request: Request) {
     }
   } else {
     const item = await getItem(body.itemId!);
-    if (!item || item.status !== "live") {
+    if (!item || !isPurchasable(item)) {
       return NextResponse.json({ ok: false, reason: "that item isn't on the shelf" }, { status: 404 });
     }
     const qty = clampQty(body.qty ?? 1);

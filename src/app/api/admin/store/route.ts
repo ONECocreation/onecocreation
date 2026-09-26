@@ -66,6 +66,9 @@ export async function PUT(request: Request) {
   item.description = sanitizeDescription(item.description);
   // TASK-215: the bundle word rides the same honest-shapes law as sku/category
   item.bundle = typeof item.bundle === "string" && item.bundle.trim() ? item.bundle.trim() : undefined;
+  // TASK-472 (block 968,624): comingSoon — boolean only, absent (never a
+  // stored `false`) means "not coming soon", the same honest-shapes law.
+  item.comingSoon = item.comingSoon === true ? true : undefined;
   item.sizes = Array.isArray(item.sizes)
     ? [...new Set(item.sizes.map((s) => String(s).trim()).filter(Boolean))]
     : undefined;

@@ -6,6 +6,7 @@ import {
   attachCharge,
   newOrderId,
   ordersConfigured,
+  isPurchasable,
   type OrderRecord,
   type PriceSnapshot,
 } from "@/lib/store";
@@ -157,7 +158,10 @@ export async function POST(request: Request) {
   }
 
   const item = body.itemId ? await getItem(body.itemId) : null;
-  if (!item || item.status !== "live") {
+  // TASK-472 (block 968,624): a comingSoon item refuses here too — the
+  // single-item door (BuyPanel → this route) never gets a second doorway
+  // a comingSoon flag forgot to cover.
+  if (!item || !isPurchasable(item)) {
     return NextResponse.json({ ok: false, reason: "not on the shelf" }, { status: 404 });
   }
 

@@ -83,6 +83,9 @@ export function storeCardModel(
   fiatSecondary: string | null;
   onSale: boolean;
   soldOut: boolean;
+  /** TASK-472 (block 968,624): price + words still render above this — the
+   *  card just says the doors aren't open yet, same shape as `soldOut`. */
+  comingSoon: boolean;
   deliverableLabel: string | null;
   img: string | null;
 } {
@@ -92,6 +95,7 @@ export function storeCardModel(
     fiatSecondary: secondary,
     onSale: item.sale != null,
     soldOut: item.status === "soldout",
+    comingSoon: item.comingSoon === true,
     deliverableLabel: item.media?.deliverable?.label ?? null,
     img: item.media?.images[0] ?? item.images[0] ?? null,
   };
@@ -160,9 +164,15 @@ export default function StoreItemCard({
                 sub/meta/price rows below it on ITS card alone */}
             <div className="card-title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
               <h3 style={{ fontWeight: 400, fontSize: "1.12rem", margin: 0 }}>{item.title}</h3>
-              {m.soldOut && (
+              {/* TASK-472 (block 968,624): comingSoon shares the sold-out
+                  badge's one style block (mutually exclusive states) —
+                  the card's own door is still "Full view →" either way;
+                  the full view's BuyPanel is what swaps to "Coming soon." */}
+              {(m.soldOut || m.comingSoon) && (
                 <span style={{ fontSize: ".64rem", fontWeight: 700, textTransform: "uppercase",
-                  letterSpacing: ".06em", color: "var(--rose)", whiteSpace: "nowrap" }}>sold out</span>
+                  letterSpacing: ".06em", color: m.soldOut ? "var(--rose)" : "var(--muted)", whiteSpace: "nowrap" }}>
+                  {m.soldOut ? "sold out" : "coming soon"}
+                </span>
               )}
             </div>
             {/* the one-line sub — the shelf stays level, the story lives on

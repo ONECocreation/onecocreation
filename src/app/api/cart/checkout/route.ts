@@ -8,6 +8,7 @@ import {
   newOrderId,
   ordersConfigured,
   getItem,
+  isPurchasable,
   type OrderRecord,
   type PriceSnapshot,
   type Price,
@@ -227,7 +228,9 @@ export async function POST(request: Request) {
     }
 
     const item = await getItem(l.itemId);
-    if (!item || item.status !== "live") {
+    // TASK-472 (block 968,624): the same purchasability law refuses a
+    // comingSoon item at checkout even if an old cart still holds the line.
+    if (!item || !isPurchasable(item)) {
       return NextResponse.json({ ok: false, reason: `"${l.itemId}" left the shelf — remove it and retry` }, { status: 409 });
     }
     const eff = item.sale ?? item.price;
