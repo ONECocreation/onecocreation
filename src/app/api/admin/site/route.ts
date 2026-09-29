@@ -87,7 +87,7 @@ export async function PUT(request: Request) {
     const reason = aboutPatchError((patch as Record<string, unknown>).about);
     if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
   }
-  /* TASK-496 (block 969,088+) — same rule, same shape, for the replays
+  /* TASK-496 (block 969,088+) - same rule, same shape, for the replays
      list: a malformed `replays` patch is refused IN WORDS before persist,
      never silently sanitized into dropped rows. */
   if ("replays" in patch) {
