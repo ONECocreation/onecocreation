@@ -93,6 +93,9 @@ export const SITE_SUBS = [
   { key: "menu", href: "/a/site/menu", label: "Menu" },
   { key: "community-door", href: "/a/site/community-door", label: "Community door" },
   { key: "about-videos", href: "/a/site/about-videos", label: "Videos on About" },
+  /* TASK-496 (block 969,088+): the Replays list - the links /replays plays,
+     pasted one per row. */
+  { key: "replays", href: "/a/site/replays", label: "Replays" },
   /* TASK-381 (block 968,047+): the weekly reading's day/time/zone/length —
      no public surface yet (the notice is T-382, held on the mockup nod),
      but the source lives here so Love can set it ahead of that lane. */

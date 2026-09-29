@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { AboutVideo } from "@/lib/about-content";
 
 /**
- * TASK-496 (block 969,088+) — the Replays list, podcast style: one row per
+ * TASK-496 (block 969,088+) - the Replays list, podcast style: one row per
  * saved replay, title first; tap Play and THAT row unfolds its player,
  * one open at a time; the iframe exists only while its row is open (a
  * closed list mounts no frame at all, and the browser never touches
@@ -14,11 +14,11 @@ import type { AboutVideo } from "@/lib/about-content";
  * AboutFeatured.tsx), with one ruled difference: a replay the visitor
  * TAPPED to hear keeps `autoplay=1`, `playsinline=1`, `rel=0` and DROPS
  * `mute=1`. The saved `id` is already the bare 11-char id (the /a card's
- * parseYoutubeInput did the parsing at save time — this component never
+ * parseYoutubeInput did the parsing at save time - this component never
  * re-parses a URL).
  *
  * THE FRAME IS THE HOUSE'S ONE STAGE FRAME: `.kit-stage-media` (16/9) with
- * the iframe wearing `.kit-stage-viewer-frame` (absolute inset:0) — the
+ * the iframe wearing `.kit-stage-viewer-frame` (absolute inset:0) - the
  * same frame /reading's stage uses. The brief's "aspect from ratio" would
  * need either a new CSS rule or an inline style, and this lane may add
  * neither (the template-first law; the design-drift ratchet); a portrait
@@ -30,11 +30,11 @@ import type { AboutVideo } from "@/lib/about-content";
  * public agenda brick's own `card room-card kit-day` (ReadingDayBody.tsx),
  * the rows are `kit-rows` with one control on `kit-rows-end`, the player
  * rides as the open row's own third child (the kit-row-link placement
- * idiom — `.kit-rows>li`'s grid auto-places it under the words, and
+ * idiom - `.kit-rows>li`'s grid auto-places it under the words, and
  * room-card's phone rule stacks the row so the player goes full width).
  */
 
-/** The one place the embed URL is spelled — pinned in tests/replays.test.ts
+/** The one place the embed URL is spelled - pinned in tests/replays.test.ts
     so the nocookie host and the no-mute rule can never drift. */
 export function replayEmbedUrl(id: string): string {
   return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0`;

@@ -9,25 +9,25 @@ import { parseYoutubeInput } from "@/lib/youtube-id";
 import type { AboutVideo } from "@/lib/about-content";
 
 /**
- * TASK-496 (block 969,088+) — the REPLAYS page: Love's links of what has
+ * TASK-496 (block 969,088+) - the REPLAYS page: Love's links of what has
  * been read, playable on the site ("maybe just the link is there ... an
  * area with all the links of what's been read and they just click on it";
  * named "Replays"; ONE page, podcast style, under Community; the list
- * ships EMPTY — the Admiral pastes the first link himself). Pins:
+ * ships EMPTY - the Admiral pastes the first link himself). Pins:
  *
- *  · the config doc — `replays` is a whole-list AboutVideo[] on the
+ *  · the config doc - `replays` is a whole-list AboutVideo[] on the
  *    site-config doc; absent AND a saved empty list BOTH mean the designed
  *    empty state (there is no seed, nothing to fall back to); a malformed
  *    patch is refused 400 IN WORDS before persist; no operator cookie is
  *    401; the sanitize backstop drops garbage rows from a hand-edited doc
- *  · ONE parser — the /a card imports parseYoutubeInput from
+ *  · ONE parser - the /a card imports parseYoutubeInput from
  *    @/lib/youtube-id (source pin, no second parser can drift in); the
  *    four shapes that matter here (watch, youtu.be, shorts → portrait
  *    default, embed) land on the id
- *  · the player — youtube-nocookie.com/embed/<id> with
+ *  · the player - youtube-nocookie.com/embed/<id> with
  *    autoplay=1&playsinline=1&rel=0 and NO mute= (a replay the visitor
  *    tapped to hear); the iframe is mounted only while its row is open
- *  · the empty state renders — absent config and a saved empty list both
+ *  · the empty state renders - absent config and a saved empty list both
  *    render the quiet words and the /reading door, never an iframe
  *  · /reading carries the Replays door; the Community menu carries the
  *    Replays row (code default + PAGE_CATALOG + KNOWN_NAV_HREFS, the
@@ -86,7 +86,7 @@ const put = (body: unknown) =>
     body: JSON.stringify(body),
   }));
 
-describe("TASK-496 — the replays doc: whole-list, absent and empty both mean the empty state", () => {
+describe("TASK-496 - the replays doc: whole-list, absent and empty both mean the empty state", () => {
   it("no saved replays → absent, and the page's own pick lands on the empty list (no seed behind it)", async () => {
     await fs.rm(FILE, { force: true });
     const config = await getSiteConfig();
@@ -135,7 +135,7 @@ describe("TASK-496 — the replays doc: whole-list, absent and empty both mean t
   });
 });
 
-describe("TASK-496 — patch validation refuses a malformed replays patch IN WORDS", () => {
+describe("TASK-496 - patch validation refuses a malformed replays patch IN WORDS", () => {
   it("a clean patch passes; an empty list is legitimate", () => {
     expect(replaysPatchError(FIXTURE)).toBeNull();
     expect(replaysPatchError([])).toBeNull();
@@ -165,11 +165,11 @@ describe("TASK-496 — patch validation refuses a malformed replays patch IN WOR
   });
 });
 
-describe("TASK-496 — ONE parser, reused (no second YouTube parser can drift in)", () => {
+describe("TASK-496 - ONE parser, reused (no second YouTube parser can drift in)", () => {
   it("the /a card imports parseYoutubeInput from @/lib/youtube-id (source pin)", async () => {
     const card = await readSrc("src/app/a/site/replays/ReplaysCard.tsx");
     expect(card).toMatch(/import\s*\{\s*parseYoutubeInput\s*\}\s*from\s*"@\/lib\/youtube-id"/);
-    // and the public page never re-parses — it reads saved ids only
+    // and the public page never re-parses - it reads saved ids only
     const player = await readSrc("src/components/replays/ReplaysList.tsx");
     expect(player).not.toContain("youtube.com/watch");
     expect(player).not.toContain("youtu.be/");
@@ -184,7 +184,7 @@ describe("TASK-496 — ONE parser, reused (no second YouTube parser can drift in
   });
 });
 
-describe("TASK-496 — the player: youtube-nocookie, tapped-to-hear (autoplay, NO mute), mounted only while open", () => {
+describe("TASK-496 - the player: youtube-nocookie, tapped-to-hear (autoplay, NO mute), mounted only while open", () => {
   it("the embed URL is the nocookie host with autoplay=1&playsinline=1&rel=0 and never mute=", async () => {
     const { replayEmbedUrl } = await import("@/components/replays/ReplaysList");
     const url = replayEmbedUrl("dQw4w9WgXcQ");
@@ -202,11 +202,11 @@ describe("TASK-496 — the player: youtube-nocookie, tapped-to-hear (autoplay, N
   });
 });
 
-describe("TASK-496 — the designed empty state (the list ships EMPTY; this surface is first-class)", () => {
+describe("TASK-496 - the designed empty state (the list ships EMPTY; this surface is first-class)", () => {
   async function renderPage() {
     vi.resetModules();
     vi.doMock("next/navigation", () => ({ usePathname: () => "/replays" }));
-    /* PaletteVars is an ASYNC server component — vitest has no Next
+    /* PaletteVars is an ASYNC server component - vitest has no Next
        runtime to await it mid-render (renderToStaticMarkup suspends on
        it), so the pin stubs it out; what this suite pins is the page's
        OWN content (the empty state, the rows, the doors), not the palette
@@ -251,7 +251,7 @@ describe("TASK-496 — the designed empty state (the list ships EMPTY; this surf
   });
 });
 
-describe("TASK-496 — the /reading door and the Community menu row", () => {
+describe("TASK-496 - the /reading door and the Community menu row", () => {
   it("/reading carries the Replays door to /replays (source pin)", async () => {
     const page = await readSrc("src/app/reading/page.tsx");
     expect(page).toContain('href="/replays"');
@@ -280,7 +280,7 @@ describe("TASK-496 — the /reading door and the Community menu row", () => {
   });
 });
 
-describe("TASK-496 — the /a room (the RoomsCard layout idiom, the AboutVideosCard data flow)", () => {
+describe("TASK-496 - the /a room (the RoomsCard layout idiom, the AboutVideosCard data flow)", () => {
   it("SiteReplaysRoom mounts ReplaysCard; the card speaks /api/admin/site and the replays key (source pins)", async () => {
     const room = await readSrc("src/app/a/site/replays/SiteReplaysRoom.tsx");
     expect(room).toContain("<ReplaysCard />");
@@ -309,7 +309,7 @@ describe("TASK-496 — the /a room (the RoomsCard layout idiom, the AboutVideosC
       "src/app/a/site/replays/ReplaysCard.tsx",
     ]) {
       const src = await readSrc(rel);
-      expect(src, `${rel} carries an em dash`).not.toContain("—");
+      expect(src, `${rel} carries an em dash`).not.toContain("\u2014");
     }
   });
 });

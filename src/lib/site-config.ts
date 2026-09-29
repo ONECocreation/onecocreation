@@ -133,7 +133,7 @@ export interface SiteConfig {
   nav?: NavConfig;
   /** TASK-161: the About playlist Love pastes. Absent = the seed stands. */
   about?: AboutConfig;
-  /** TASK-496 (block 969,088+): the Replays list — every recorded reading,
+  /** TASK-496 (block 969,088+): the Replays list - every recorded reading,
       pasted link by link on /a/site/replays, played on /replays. Shares
       AboutVideo's exact shape (the TASK-161 one-type rule) so the two
       lists can never drift. Unlike `about` there is NO seed: absent and a
@@ -183,7 +183,7 @@ export type SiteConfigPatch = {
   nav?: NavConfig;
   /** same whole-list replace as nav — the card always saves its full set */
   about?: AboutConfig;
-  /** TASK-496: whole-list replace, same rule as about — the Replays card
+  /** TASK-496: whole-list replace, same rule as about - the Replays card
       always saves its full set; omitted leaves her saved list untouched */
   replays?: AboutVideo[];
   /** whole-object replace when present, same shape as nav/about — the
@@ -206,7 +206,7 @@ export const KNOWN_NAV_HREFS: readonly string[] = [
   "/about", "/memberships", "/packages", "/store", "/store/meditations",
   "/store/memberships", "/book", "/services",
   "/classes", "/news", "/letters", "/meditation", "/support", "/contact", "/me", "/reading",
-  /* TASK-496: the Replays page — a saved menu row pointing here must
+  /* TASK-496: the Replays page - a saved menu row pointing here must
      survive sanitize (the row also rides buildDefaultMenu's code-side
      Community subs, NavMenu.tsx). */
   "/replays",
@@ -363,9 +363,9 @@ function sanitizeAbout(raw: unknown): AboutConfig | undefined {
 }
 
 /** TASK-496: the replays list → known-good rows (the SAME per-row drop
-    rule sanitizeAbout uses — sanitizeAboutVideo is the shared row check,
+    rule sanitizeAbout uses - sanitizeAboutVideo is the shared row check,
     reused, never forked), or `undefined` when `replays` was never saved.
-    An EMPTY list survives on purpose, same as about's — but here there is
+    An EMPTY list survives on purpose, same as about's - but here there is
     no seed behind it: absent and empty BOTH render /replays' designed
     empty state (derive-or-dash, never an invented video). */
 function sanitizeReplays(raw: unknown): AboutVideo[] | undefined {
@@ -412,7 +412,7 @@ export function aboutPatchError(raw: unknown): string | null {
   return null;
 }
 
-/** TASK-496 — route-side patch validation for the replays list, the exact
+/** TASK-496 - route-side patch validation for the replays list, the exact
     aboutPatchError shape: the /api/admin/site PUT refuses a malformed
     `replays` patch IN WORDS instead of silently dropping rows on the
     sanitize round-trip. An empty list is clean (the empty state is a real
@@ -675,7 +675,7 @@ export async function saveSiteConfig(patch: SiteConfigPatch): Promise<SiteConfig
     // TASK-161: same whole-list rule for the About playlist — omitted leaves
     // her saved list (or the absent-means-seed default) untouched.
     about: patch.about !== undefined ? patch.about : current.about,
-    // TASK-496: same whole-list rule for the replays list — omitted leaves
+    // TASK-496: same whole-list rule for the replays list - omitted leaves
     // her saved list untouched; a saved empty list is a real saved state.
     replays: patch.replays !== undefined ? patch.replays : current.replays,
     // TASK-381: same whole-object rule for the reading schedule — omitted

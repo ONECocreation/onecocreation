@@ -6,9 +6,9 @@ import ReplaysList from "@/components/replays/ReplaysList";
 import { getSiteConfig } from "@/lib/site-config";
 
 /**
- * TASK-496 (block 969,088+) — REPLAYS: Love's links of what has been read,
+ * TASK-496 (block 969,088+) - REPLAYS: Love's links of what has been read,
  * playable on the site ("maybe just the link is there like there's an area
- * with all the links of what's been read and they just click on it" — and
+ * with all the links of what's been read and they just click on it" - and
  * on the site, not YouTube). ONE page, podcast style, top level at
  * /replays: the Admiral put it under the Community MENU, not under the
  * reading's URL tree, and the letters will point straight at it, so it
@@ -17,12 +17,12 @@ import { getSiteConfig } from "@/lib/site-config";
  * mislabeling where the visitor stands, since Replays belongs to
  * Community.
  *
- * THE LIST SHIPS EMPTY — the first recording's link sits in Love's email
+ * THE LIST SHIPS EMPTY - the first recording's link sits in Love's email
  * to the Admiral, not on the ship; he pastes it in /a himself. There is no
  * seed (unlike the About playlist): absent config and a saved empty list
  * BOTH render the designed empty state below, never an invented video
  * (derive-or-dash). The empty state is a first-class surface of this lane,
- * not a fallback — the page must be worth telling people about before the
+ * not a fallback - the page must be worth telling people about before the
  * first link lands.
  *
  * Every class here is the existing kit/house vocabulary (kitx-section,
@@ -59,7 +59,7 @@ export default async function ReplaysPage() {
               <div className="card room-card kit-day">
                 <div className="kit-card-body">
                   <div className="kit-stack">
-                    {/* Love's register, one quiet line — hers to rewrite
+                    {/* Love's register, one quiet line - hers to rewrite
                         from /a, never a blank page */}
                     <p className="kit-text-quiet">
                       Nothing here yet. When a reading has been recorded, its replay lands on this page.

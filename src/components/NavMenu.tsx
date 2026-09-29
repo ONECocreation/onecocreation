@@ -80,6 +80,12 @@ export const PAGE_CATALOG: {
      (the free room's own Stage, READING_ROOM_PATH). Ungated (decision D):
      the reading is the site's public front door this week. */
   { href: "/reading", label: "Read with Love" },
+  /* TASK-496 (block 969,088+): the Replays page - every recorded reading,
+     playable on the site. Ungated (same standing as Free meditation): the
+     page is public and always exists; the list ships empty and the page's
+     designed empty state carries it until the first paste. The Admiral:
+     under Community, NOT Sessions. */
+  { href: "/replays", label: "Replays" },
   /* TASK-213 (0018.06.23 a₿, Love's call #19): the reading gets its own
      door under Community — the SAME derived room reading-room.ts already
      feeds ReadWithLove, the member menu, and the Heart Field row (never a
@@ -189,6 +195,13 @@ export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
       { label: "11:11 Live with Love", href: "/contact" },
       ...(s?.features.classes ? [{ label: "Classes", href: "/classes" }] : []),
       { label: "Read with Love", href: READING_PAGE_PATH },
+      /* TASK-496 (block 969,088+): Replays rides under Community (the
+         Admiral's ruling, NOT Sessions), right after the reading's own
+         row. Code-side default only - a SAVED nav doc wins instead, so
+         production may need the row added by hand in /a/site/menu (the
+         lane's Operator runbook); "/replays" is in KNOWN_NAV_HREFS so a
+         saved row survives sanitize. */
+      { label: "Replays", href: "/replays" },
     ],
   });
   menu.push({ label: "Support", href: "/support" });
