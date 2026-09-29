@@ -45,9 +45,11 @@ vi.mock("@/lib/letters", async (importActual) => {
 const MP3_PATH = path.join(process.cwd(), "public", "audio", "unzip-into-the-new-you.mp3");
 
 describe("the download route serves the gift as an attachment (R-077)", () => {
+  const req = () => new Request("http://localhost:3000/meditation/download");
+
   it("GET 200s: attachment disposition naming the mp3, audio/mpeg, the real file's length", async () => {
     const { GET } = await import("@/app/meditation/download/route");
-    const res = await GET();
+    const res = await GET(req());
     expect(res.status).toBe(200);
     expect(res.headers.get("content-disposition")).toBe(
       'attachment; filename="unzip-into-the-new-you.mp3"',
@@ -56,6 +58,27 @@ describe("the download route serves the gift as an attachment (R-077)", () => {
     const stat = await fs.stat(MP3_PATH);
     expect(res.headers.get("content-length")).toBe(String(stat.size));
     await res.body?.cancel();
+  });
+
+  /* AMENDMENT 1 (block 969,095): on Vercel, public/ assets are not traced
+     into serverless functions, so disk can fail in production. The old
+     honest-404 answer becomes a graceful 302 to the static Listen path
+     (the redirect loses the attachment disposition — the file plays
+     inline — but the gift is never dead). */
+  it("when the gift is not on disk (the serverless case), GET 302s to the static Listen path", async () => {
+    const { GET } = await import("@/app/meditation/download/route");
+    const spy = vi
+      .spyOn(fs, "stat")
+      .mockRejectedValueOnce(Object.assign(new Error("ENOENT: no such file"), { code: "ENOENT" }));
+    try {
+      const res = await GET(req());
+      expect(res.status).toBe(302);
+      expect(res.headers.get("location")).toBe(
+        "http://localhost:3000/audio/unzip-into-the-new-you.mp3",
+      );
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it("the Listen path stays the plain static file: on disk, and no route handler shadows /audio/", async () => {
