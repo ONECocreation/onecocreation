@@ -152,7 +152,7 @@ describe("GET /api/live — one reading door published lights the strip (her Ope
     mockLiveFlag = { live: true, room: "heart-field", kind: "class", startedAt: 42, afterHours: null };
     const json = await livePayload();
     expect(json.live).toBe(true);
-    expect(json.kind).toBe("class");
+    expect(json.kind).toBe("community");
     expect(json.room).toBe("heart-field");
     expect(json.roomTitle).toBe("The Heart Field — Commons");
     expect(json.startedAt).toBe(42);
