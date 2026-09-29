@@ -105,7 +105,10 @@ describe("the lead-magnet letter points at both doors, both render paths", () =>
   it("WITH Love's override body", async () => {
     overrides.set("lead-magnet", {
       subject: "Your free meditation",
-      body: "Welcome, beautiful soul. Here is your gift.",
+      // the seam (AMENDMENT 2): this mock mirrors Love's post-T-491 body — on THIS branch bodyToHtml leaves the !cta: line literal, so the Download href still arrives via the appended pill while the Listen href and the words ride the body's own markdown; after T-491 retires the pill, letterHtml lifts these very lines, and the pin stays true on both sides
+      body: `Welcome, beautiful soul. Here is your gift.
+!cta: Download: Unzip Into the New You | /meditation/download
+[Listen in your browser](/audio/unzip-into-the-new-you.mp3)`,
     });
     const { sendLeadMagnetLetter } = await import("@/lib/lead-magnet");
     const { siteBase } = await import("@/lib/subscribers");
