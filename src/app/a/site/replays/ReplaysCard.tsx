@@ -134,7 +134,6 @@ export default function ReplaysCard() {
             <li key={v.id} data-row={v.id}>
               <span>
                 <b>{v.title}</b>
-                {/* the one state line, under the words */}
                 <em>
                   {v.id} · {v.ratio === "9/16" ? "portrait" : "landscape"}
                 </em>
@@ -163,8 +162,6 @@ export default function ReplaysCard() {
         </ul>
       )}
 
-      {/* the add row: paste, name, pick the shape (a Shorts paste picks
-          portrait for you), then + add */}
       <div className="kit-stack">
         <div className="kit-field">
           <label className="kit-field-label" htmlFor="replays-link">

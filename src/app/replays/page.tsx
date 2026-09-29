@@ -59,8 +59,6 @@ export default async function ReplaysPage() {
               <div className="card room-card kit-day">
                 <div className="kit-card-body">
                   <div className="kit-stack">
-                    {/* Love's register, one quiet line - hers to rewrite
-                        from /a, never a blank page */}
                     <p className="kit-text-quiet">
                       Nothing here yet. When a reading has been recorded, its replay lands on this page.
                     </p>

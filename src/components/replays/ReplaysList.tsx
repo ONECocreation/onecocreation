@@ -53,7 +53,6 @@ export default function ReplaysList({ replays }: { replays: AboutVideo[] }) {
               <li key={v.id} data-row={v.id}>
                 <span>
                   <b>{v.title}</b>
-                  {/* the one state line, said once, under the words */}
                   <em>{open ? "Playing now" : "Tap Play and it opens right here"}</em>
                 </span>
                 <span className="kit-rows-end">
