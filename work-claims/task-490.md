@@ -22,8 +22,10 @@ fails closed on a throw; the Jitsi room name NEVER enters the payload.
 - `src/app/api/live/route.ts` — EDIT: the additive reading case only.
 - `src/components/LiveStrip.tsx` — EDIT: feed type, fetch mapping,
   `stripModel` reading case, the dot's pulse class.
-- ONE existing sheet — additive pulse class + keyframes +
-  reduced-motion block only (the sheet named in SUMMARY).
+- ONE existing sheet: `src/app/kit.css` — additive pulse class
+  (`.live-strip-dot`) + `@keyframes live-strip-pulse` + reduced-motion
+  block only. Chosen over house.css: the strip is site chrome and
+  kit.css imports last (`src/app/layout.tsx:25`).
 - `tests/live-strip-reading.test.ts` — NEW.
 
 READ-ONLY (imported, never edited): the four door getters,
