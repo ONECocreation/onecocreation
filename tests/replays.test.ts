@@ -206,12 +206,19 @@ describe("TASK-496 — the designed empty state (the list ships EMPTY; this surf
   async function renderPage() {
     vi.resetModules();
     vi.doMock("next/navigation", () => ({ usePathname: () => "/replays" }));
+    /* PaletteVars is an ASYNC server component — vitest has no Next
+       runtime to await it mid-render (renderToStaticMarkup suspends on
+       it), so the pin stubs it out; what this suite pins is the page's
+       OWN content (the empty state, the rows, the doors), not the palette
+       style tag. */
+    vi.doMock("@/components/PaletteVars", () => ({ default: () => null }));
     try {
       const mod = await import("@/app/replays/page");
       const element = await mod.default();
       return renderToStaticMarkup(element);
     } finally {
       vi.doUnmock("next/navigation");
+      vi.doUnmock("@/components/PaletteVars");
       vi.resetModules();
     }
   }
