@@ -154,7 +154,7 @@ describe("GET /api/live — one reading door published lights the strip (her Ope
     expect(json.live).toBe(true);
     expect(json.kind).toBe("community");
     expect(json.room).toBe("heart-field");
-    expect(json.roomTitle).toBe("The Heart Field — Commons");
+    expect(json.roomTitle).toBe("The Heart Field");
     expect(json.startedAt).toBe(42);
     expect(json.part ?? null).toBeNull();
   });
