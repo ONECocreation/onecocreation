@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
-import { getSiteConfig, saveSiteConfig, aboutPatchError, roomsPatchError, type SiteConfigPatch } from "@/lib/site-config";
+import { getSiteConfig, saveSiteConfig, aboutPatchError, replaysPatchError, roomsPatchError, type SiteConfigPatch } from "@/lib/site-config";
 import { validateReadingSchedule } from "@/lib/reading-schedule";
 import { btcpayAdapter, squareAdapter } from "@/lib/payments";
 
@@ -85,6 +85,13 @@ export async function PUT(request: Request) {
      sanitized into dropped rows. */
   if ("about" in patch) {
     const reason = aboutPatchError((patch as Record<string, unknown>).about);
+    if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
+  }
+  /* TASK-496 (block 969,088+) — same rule, same shape, for the replays
+     list: a malformed `replays` patch is refused IN WORDS before persist,
+     never silently sanitized into dropped rows. */
+  if ("replays" in patch) {
+    const reason = replaysPatchError((patch as Record<string, unknown>).replays);
     if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
   }
   /* TASK-381 — same rule, same shape, for the reading schedule: refused IN
