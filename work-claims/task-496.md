@@ -17,6 +17,7 @@ A public `/replays` page (podcast style, youtube-nocookie embeds, list shipped E
 - NEW `src/app/a/site/replays/page.tsx`, NEW `src/app/a/site/replays/SiteReplaysRoom.tsx`, NEW `src/app/a/site/replays/ReplaysCard.tsx`
 - NEW `tests/replays.test.ts`
 - edits: `src/lib/site-config.ts` (replays key, sanitize, patch error, merge line, KNOWN_NAV_HREFS), `src/app/api/admin/site/route.ts` (one validation block), `src/components/NavMenu.tsx` (PAGE_CATALOG row + one Community sub), `src/components/console/SiteConsoleShell.tsx` (one SITE_SUBS row), `src/app/reading/page.tsx` (one new section only), `tests/site-room-accordion.test.ts` + `tests/a-site-rooms-wear-the-gate.test.ts` (honest updates), `work-claims/task-496.md`
+- SEAM additions the brief did not name but the gates require (honest, additive, minimal): `src/lib/page-states.ts` (one PAGE_STATES row: /replays, "words", copy lives in code; the pages-panel manifest walk fails any unlisted public route) and `scripts/console-matrix.routes.json` (one policy row: /a/site/replays render+gate, the same shape as its five siblings; the console-matrix oracle fails any /a page with no row)
 
 ## Baseline gates at cut (block 969,094, base 7b33fb6)
 - `npx vitest run` - green (278 files, all passed)
