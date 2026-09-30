@@ -172,9 +172,9 @@ describe("compose (TASK-131)", () => {
 
     const { EDITABLE_LETTERS } = await import("@/lib/letters");
     /* the seeded set grows only by spec: TASK-156 added the `welcome`
-       first-sign-in key, TASK-173 the `order-receipt` key — a compose must
-       not grow it further */
-    expect(EDITABLE_LETTERS).toHaveLength(8);
+       first-sign-in key, TASK-173 the `order-receipt` key, TASK-493 the
+       `read-with-love` key — a compose must not grow it further */
+    expect(EDITABLE_LETTERS).toHaveLength(9);
   });
 
   it("rejects a clashing key and a non-slug key", async () => {

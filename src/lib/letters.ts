@@ -29,9 +29,12 @@ export const EDITABLE_LETTERS = [
   "pwyc-accept",
   "pwyc-decline",
   "order-receipt",
+  "read-with-love",
 ] as const;
 /** The SEEDED set — six until TASK-156 (0018.06.17 a₿) added `welcome` (the
- *  FIRST-sign-in letter Love edits in /a/letters); Love's own composed
+ *  FIRST-sign-in letter Love edits in /a/letters), eight once TASK-173 added
+ *  `order-receipt`, nine since TASK-493 (0018.06.30) added `read-with-love`
+ *  (the Read with Love seat letter); Love's own composed
  *  letters still never touch this constant — they live in the vault registry
  *  below, and every reader that wants "all letters" goes through
  *  listLetterKeys(), never this constant alone. */
@@ -59,6 +62,8 @@ export const DEFAULT_AUDIENCE: Record<LetterKey, LetterAudience> = {
   "pwyc-decline": "members",
   // the receipt is one soul's mail — never the open feed
   "order-receipt": "members",
+  // the Read with Love seat letter is one soul's mail — never the open feed
+  "read-with-love": "members",
 };
 
 export function audienceOf(k: string, override: LetterOverride | null): LetterAudience {
@@ -228,6 +233,24 @@ This page is yours to keep — come back whenever you like, the door stays open.
 With love,
 One Cocreation`,
   },
+  /* TASK-493 (0018.06.30): the Read with Love seat letter joins the letters
+   * system — sent the moment someone joins through the Read with Love door
+   * (sendReadWithLoveLetter, lead-magnet.ts). Today's words verbatim; the
+   * rail-dependent room fragment (the pill and its words, built from the
+   * meeting config) rides the {{room}} slot under the offer-letters
+   * doctrine: a slot Love leaves out is appended at send time so the door
+   * to the room can never be edited away. */
+  "read-with-love": {
+    subject: "Read with Love — your seat",
+    body: `Welcome, beautiful soul — your seat is saved.
+
+Read with Love is a weekly live book reading: we gather, I read aloud, and the field listens together. Bring the book if you have it; bring yourself either way.
+
+{{room}}
+
+With love,
+One Cocreation`,
+  },
 };
 
 function restEnv(): { url: string; token: string } | null {
@@ -337,7 +360,7 @@ export async function isComposedLetterKey(k: string): Promise<boolean> {
 
 /* ── TASK-131: letters Love composes herself ───────────────────────────────
  * The registry is a JSON list of keys (creation order) at letters:composed;
- * each letter's words ride the SAME override vault as the seeded six
+ * each letter's words ride the SAME override vault as the seeded nine
  * (letters:tpl:<key>), its meta (title, birthday) beside it. */
 
 const COMPOSED = "letters:composed";
@@ -361,7 +384,7 @@ export async function getLetterMeta(k: string): Promise<ComposedLetterMeta | nul
   }
 }
 
-/** Every letter key: the seeded six first, then Love's own in creation order. */
+/** Every letter key: the seeded nine first, then Love's own in creation order. */
 export async function listLetterKeys(): Promise<string[]> {
   return [...EDITABLE_LETTERS, ...(await composedLetterKeys())];
 }

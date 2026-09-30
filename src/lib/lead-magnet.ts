@@ -61,6 +61,17 @@ export async function sendLeadMagnetLetter(email: string): Promise<void> {
  * brand appears in this letter (the studio host's name never rides in it
  * either: the stage is the site's). The day-two welcome is skipped for
  * this source — it is about the meditation.
+ *
+ * TASK-493 (0018.06.30): the letter joins the letters system as the
+ * seeded key `read-with-love` — Love's /a/letters override wins, the
+ * LETTER_DEFAULTS entry (today's words verbatim) is the floor, and the
+ * body renders through letterHtml like every other sender. The
+ * rail-dependent room fragment is machine-built and load-bearing, so it
+ * rides the {{room}} slot under the offer-letters doctrine
+ * (pwyc-letters.ts's letterFor): swapped to a marker before render,
+ * substituted into the rendered html after, appended at the end when
+ * Love's words leave the slot out — the door to the room can never be
+ * edited away.
  */
 export async function sendReadWithLoveLetter(email: string): Promise<void> {
   const unsub = unsubscribeUrl(email);
@@ -86,18 +97,19 @@ export async function sendReadWithLoveLetter(email: string): Promise<void> {
        <p>The room is ours — when you arrive, settle in and wait for me:
        I&apos;ll join as the moderator and we&apos;ll begin together.</p>`
     : `<p>The room link is coming — I&apos;ll send it before the first reading.</p>`;
+  const tpl = (await getLetterOverride("read-with-love")) ?? LETTER_DEFAULTS["read-with-love"];
+  let body = tpl?.body ?? "";
+  const marker = "\u0000room\u0000";
+  if (body.includes("{{room}}")) body = body.split("{{room}}").join(marker);
+  else body += `\n\n${marker}`; // a slot Love left out is appended, never lost
+  let html = letterHtml(body, { unsubscribeUrl: unsub });
+  // a slot standing alone became its own block (valid html); inline stays inline
+  html = html.split(`<p style="margin:0 0 1.15em;line-height:1.75;">${marker}</p>`).join(roomLine);
+  html = html.split(marker).join(roomLine);
   await sendMail("news", {
     to: email,
-    subject: "Read with Love — your seat",
-    html: brandShell(
-      `<p>Welcome, beautiful soul — your seat is saved.</p>
-       <p>Read with Love is a weekly live book reading: we gather, I read
-       aloud, and the field listens together. Bring the book if you have it;
-       bring yourself either way.</p>
-       ${roomLine}
-       <p>With love,<br/>One Cocreation</p>`,
-      { unsubscribeUrl: unsub },
-    ),
+    subject: tpl?.subject ?? "Read with Love — your seat",
+    html,
     unsubscribeUrl: unsub,
   });
 }
