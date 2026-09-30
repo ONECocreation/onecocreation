@@ -106,8 +106,15 @@ function partClockWords(ms: number): string {
  * cell's `civilKey`. A 7 PM Mountain occurrence's UTC instant can fall on
  * the next UTC calendar date; `zonedDateParts` still reads it back as the
  * Mountain day it belongs to, so it lands on the right cell regardless.
+ *
+ * TASK-499 (block 969,306+): the optional `housewarmingOn` flag (default
+ * true) drops the part-1 pill when the /a/site/reading Housewarming
+ * switch is off — the calendar never links into a hidden part.
  */
-export function readingDayPartsMarksLookup(schedule: ReadingSchedule | null): CalendarDayMarksLookup {
+export function readingDayPartsMarksLookup(
+  schedule: ReadingSchedule | null,
+  housewarmingOn = true,
+): CalendarDayMarksLookup {
   return (cell): CalendarDayMarks | undefined => {
     if (!schedule) return undefined;
     const netFrom = cell.civilDate.getTime() - 86_400_000;
@@ -117,8 +124,14 @@ export function readingDayPartsMarksLookup(schedule: ReadingSchedule | null): Ca
     );
     if (!occurrence) return undefined;
 
+    /* TASK-499: `housewarmingOn === false` (the /a/site/reading switch)
+       drops the part-1 pill entirely — the member calendar never paints
+       a link into a part that does not exist this week. Default true:
+       every existing caller keeps today's four pills. */
     const parts: { part: ReadingPart; ms: number }[] = [
-      { part: 1, ms: sameDayAt(occurrence.startsAtMs, schedule.tz, HOUSEWARMING_TIME) },
+      ...(housewarmingOn
+        ? [{ part: 1 as ReadingPart, ms: sameDayAt(occurrence.startsAtMs, schedule.tz, HOUSEWARMING_TIME) }]
+        : []),
       { part: 2, ms: occurrence.startsAtMs },
       { part: 3, ms: sameDayAt(occurrence.startsAtMs, schedule.tz, ENCORE_TIME) },
       { part: 4, ms: sameDayAt(occurrence.startsAtMs, schedule.tz, QA_TIME) },
@@ -231,4 +244,24 @@ export function normalizeReadingResponse(status: number, body: unknown): Reading
   if (raw === undefined) return DEFAULT_READING_SCHEDULE;
   const checked = validateReadingSchedule(raw);
   return checked.ok ? checked.value : null;
+}
+
+
+/**
+ * TASK-499 (block 969,306+) — the Housewarming switch's half of the same
+ * public GET, the `normalizeReadingResponse` sibling. Deliberately the
+ * OPPOSITE default: every failure mode (non-2xx, non-ok body, absent or
+ * malformed `config.housewarming`) reads ON (true). A calendar that fails
+ * to learn the switch must never hide a part that exists; only an
+ * explicit saved `false` drops the part-1 pill.
+ */
+export function normalizeHousewarmingResponse(status: number, body: unknown): boolean {
+  if (status < 200 || status >= 300) return true;
+  if (!body || typeof body !== "object") return true;
+  const o = body as Record<string, unknown>;
+  if (o.ok !== true) return true;
+  const config = o.config;
+  if (!config || typeof config !== "object") return true;
+  const raw = (config as Record<string, unknown>).housewarming;
+  return raw !== false;
 }

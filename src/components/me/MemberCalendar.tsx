@@ -12,7 +12,7 @@ import {
   type CalendarDayMarks,
   type CalendarDayMarksLookup,
 } from "@/components/calendar";
-import { useReadingSchedule } from "@/components/calendar/useReadingSchedule";
+import { useHousewarmingOn, useReadingSchedule } from "@/components/calendar/useReadingSchedule";
 import { readingDayPartsMarksLookup, mergeDayMarks } from "@/components/calendar/reading-marks";
 
 /** TASK-480 — the calendar shows all FOUR reading-day parts (see
@@ -79,6 +79,9 @@ export default function MemberCalendar() {
   /* TASK-385 — the weekly reading joins /me/calendar, via the ONE shared
      fetch (Named decision B). No fetch code lives in this file. */
   const readingSchedule = useReadingSchedule();
+  /* TASK-499 — the Housewarming switch, the same public GET through the
+     sibling hook; false drops the part-1 pill below. */
+  const housewarmingOn = useHousewarmingOn();
 
   const today = useMemo(() => bftToday(nowMs), [nowMs]);
   const [bftYear, setBftYear] = useState(today.year);
@@ -105,10 +108,13 @@ export default function MemberCalendar() {
      replaced by readingDayPartsMarksLookup (all FOUR reading-day parts,
      each its own clickable pill) — MEMBER_CALENDAR_MAX_PILLS (below,
      passed to both grid mounts) is what keeps all four from folding into
-     "+N more" the moment a booking rides the same day. */
+     "+N more" the moment a booking rides the same day.
+     TASK-499 — `housewarmingOn` (default true in the hook until the
+     fetch says otherwise) drops the part-1 pill in a no-Housewarming
+     week. */
   const marks = useMemo(
-    () => mergeDayMarks(readingDayPartsMarksLookup(readingSchedule), buildBookingMarks(bookings)),
-    [bookings, readingSchedule],
+    () => mergeDayMarks(readingDayPartsMarksLookup(readingSchedule, housewarmingOn), buildBookingMarks(bookings)),
+    [bookings, readingSchedule, housewarmingOn],
   );
 
   function stepMonth(dir: -1 | 1) {

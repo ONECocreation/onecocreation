@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { ReadingSchedule } from "@/lib/reading-schedule";
-import { normalizeReadingResponse } from "./reading-marks";
+import { normalizeHousewarmingResponse, normalizeReadingResponse } from "./reading-marks";
 
 /**
  * TASK-385, Named decision B — the ONE shared fetch for the weekly reading
@@ -39,4 +39,33 @@ export function useReadingSchedule(): ReadingSchedule | null {
   }, []);
 
   return schedule;
+}
+
+/**
+ * TASK-499 (block 969,306+) — the sibling fetch for the Housewarming
+ * switch, the same public GET /api/admin/site, so MemberCalendar drops
+ * the part-1 pill in a no-Housewarming week. The default is ON in every
+ * unresolved or failed state (initial, failed fetch, malformed body —
+ * normalizeHousewarmingResponse's own law): the calendar failing to
+ * learn the switch must never hide a part that exists.
+ */
+export function useHousewarmingOn(): boolean {
+  const [on, setOn] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/admin/site", { cache: "no-store" })
+      .then(async (r) => {
+        const body = await r.json().catch(() => null);
+        if (alive) setOn(normalizeHousewarmingResponse(r.status, body));
+      })
+      .catch(() => {
+        if (alive) setOn(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return on;
 }
