@@ -109,6 +109,15 @@ export interface SiteConfig {
         entries stay in their data/seed spots so ON brings them back in one
         line — no delete, no re-type. */
     largeSums: boolean;
+    /** TASK-518 (block 969,339 · K131): the purchase letter to Love —
+        one short letter to love@ (offerNotifyTo()) the moment any order
+        settles: who bought, what, which tier or pass, the amount, a
+        write-back door. Default ON (the Admiral asked for the letters to
+        flow; bools() backfills absent keys from these defaults, so every
+        stored doc is ON with zero migration); set from /a/site. OFF = no
+        letter, ever — the order, the entitlements, the receipt, and
+        every other letter are untouched. */
+    purchaseLoveNotify: boolean;
   };
   payments: { btcpay: boolean; square: boolean; stripe: boolean };
   meeting: {
@@ -246,6 +255,7 @@ export function defaultSiteConfig(): SiteConfig {
       news: true,
       memberships: true,
       largeSums: false,
+      purchaseLoveNotify: true,
     },
     payments: { btcpay: true, square: true, stripe: false },
     meeting: {
