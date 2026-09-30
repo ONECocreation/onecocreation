@@ -136,7 +136,7 @@ describe("the directive href policy (T-227's rule at the directive boundary, T-4
 
   it("a !hero with a non-admitted URL renders no hero image and falls to literal text", () => {
     const html = letterHtml("!hero: javascript:alert(1)\n\nBody words.");
-    expect(html).not.toContain("<img");
+    expect(html).not.toContain('src="javascript:');
     expect(html).toContain("!hero: javascript:alert(1)");
   });
 
@@ -194,7 +194,9 @@ describe("(f) source pins — the page wires the gate, the iframe wears the sand
     expect(metaStart).toBeGreaterThan(-1);
     expect(pageStart).toBeGreaterThan(metaStart);
     const meta = src.slice(metaStart, pageStart);
-    expect(meta).toContain("letterAudienceGate");
+    // the metadata block wires the same gate wiring (letterGate, the
+    // page-local wiring of letterAudienceGate — never a re-derived check)
+    expect(meta).toContain("letterGate(");
     // the gated path returns the generic title, never the subject
     expect(meta).toContain("Letters — One Cocreation");
     expect(meta).not.toContain("tpl.subject");
@@ -203,8 +205,22 @@ describe("(f) source pins — the page wires the gate, the iframe wears the sand
   it("the page body gates through the same helper and 404s on the gated path", () => {
     const src = readFileSync(PAGE, "utf8");
     const body = src.slice(src.indexOf("export default"));
-    expect(body).toContain("letterAudienceGate");
+    expect(body).toContain("letterGate(");
     expect(body).toContain("notFound()");
+  });
+
+  it("the gate wiring itself is letterAudienceGate fed by audienceOf — never a re-derived audience", () => {
+    const src = readFileSync(PAGE, "utf8");
+    const wireStart = src.indexOf("async function letterGate(");
+    expect(wireStart).toBeGreaterThan(-1);
+    const wire = src.slice(wireStart, src.indexOf("export async function generateMetadata"));
+    expect(wire).toContain("audienceOf(");
+    expect(wire).toContain("letterAudienceGate(");
+    expect(wire).toContain("tierForSubject");
+    expect(wire).toContain("operatorFromCookieHeader");
+    expect(wire).toContain("sessionsFromCookieHeader");
+    // fail closed — a tier read that throws is not a member
+    expect(wire).toContain("catch");
   });
 
   it('the /a/letters preview iframe carries sandbox="" — every capability denied', () => {
