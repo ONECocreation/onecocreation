@@ -137,10 +137,10 @@ const escAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").re
 export function reviewCopyHtml(key: string, body: string): string {
   const openUrl = `${siteBase()}/a/letters/${escAttr(key)}`;
   const note =
-    `<div style="max-width:560px;margin:0 auto;padding:14px 24px;background:#2b2733;color:#E9E2F2;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;border-bottom:1px solid rgba(139,118,196,.34);">` +
+    `<div style="max-width:552px;margin:0 auto;padding:14px 24px;background:#2b2733;color:#E9E2F2;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;border-bottom:1px solid rgba(139,118,196,.34);">` +
     `<b>This letter was prepared automatically for Love&#39;s review. Nothing has gone to the list.</b></div>`;
   const link =
-    `<div style="max-width:560px;margin:0 auto;padding:18px 24px;background:#2b2733;color:#E9E2F2;font-family:Arial,Helvetica,sans-serif;font-size:14px;text-align:center;">` +
+    `<div style="max-width:552px;margin:0 auto;padding:18px 24px;background:#2b2733;color:#E9E2F2;font-family:Arial,Helvetica,sans-serif;font-size:14px;text-align:center;">` +
     `<a href="${openUrl}" style="color:#E7B2C3;">Open it to edit and send</a></div>`;
   const html = letterHtml(body, { webUrl: openUrl });
   const withNote = /<body[^>]*>/.test(html) ? html.replace(/<body[^>]*>/, (m) => `${m}\n${note}`) : note + html;
