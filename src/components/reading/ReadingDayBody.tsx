@@ -50,13 +50,23 @@ import ReadingDayOpenNotice from "./ReadingDayOpenNotice";
  * `ReadingDay.tsx` (the async server wrapper) is the only caller and the
  * only place that reads the session, the schedule, and the live
  * store/entitlement sources.
+ *
+ * TASK-499 (block 969,306+): `housewarmingStartsAtMs` is nullable — the
+ * server wrapper reads null when the Housewarming switch is off, and Row
+ * 1 simply does not render (the first row is The Reading). The same
+ * null forces the open notice's part-1 flag closed below, so a
+ * hand-opened housewarming door can never surface a "Pick it below"
+ * into a hidden part. Every existing caller passing a number is
+ * unchanged.
  */
 
 export interface ReadingDayBodyProps {
   /** the reading schedule's own IANA zone — every clock word below reads
    *  through it, never a second zone */
   tz: string;
-  housewarmingStartsAtMs: number;
+  /** TASK-499: null when the Housewarming switch is off — Row 1 does not
+   *  render then, and the open notice's part-1 flag is forced closed */
+  housewarmingStartsAtMs: number | null;
   readingStartsAtMs: number;
   encoreStartsAtMs: number;
   qaStartsAtMs: number;
@@ -85,29 +95,36 @@ export default function ReadingDayBody({
   return (
     <div className="card room-card kit-day">
       <h2 className="kit-h2">The day&apos;s agenda</h2>
-      <ReadingDayOpenNotice />
+      {/* TASK-499: the notice's part-1 flag is forced closed when Row 1
+          is hidden, so a hand-opened housewarming door never surfaces a
+          pick into a part that does not exist this week. */}
+      <ReadingDayOpenNotice part1On={housewarmingStartsAtMs !== null} />
       <ul className="kit-rows" aria-label="The day's agenda">
         {/* ROW 1 — the Housewarming (TASK-469, block 968,567): free, no
             lock, before the reading, the same door as Row 2 (the two-way
             call itself is Love's own /a/studio action, no code here).
             TASK-473: the button picks Part 1 for the top screen — the
             SAME door as Row 2, so picking either just changes which
-            clock word is highlighted, never a different room. */}
-        <li>
-          <span>
-            <b>{`${clockWords(housewarmingStartsAtMs, tz)} · The Housewarming`}</b>
-            <em>Free. Introductions and movement with Love. Everyone&apos;s on camera.</em>
-          </span>
-          <span className="kit-rows-end">
-            {signedIn ? (
-              <ReadingPartSelectLink part={1}>Join the Housewarming</ReadingPartSelectLink>
-            ) : (
-              <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">
-                Sign me up
-              </Link>
-            )}
-          </span>
-        </li>
+            clock word is highlighted, never a different room.
+            TASK-499: null start (the switch off) skips the row entirely;
+            the agenda then starts at The Reading. */}
+        {housewarmingStartsAtMs !== null && (
+          <li>
+            <span>
+              <b>{`${clockWords(housewarmingStartsAtMs, tz)} · The Housewarming`}</b>
+              <em>Free. Introductions and movement with Love. Everyone&apos;s on camera.</em>
+            </span>
+            <span className="kit-rows-end">
+              {signedIn ? (
+                <ReadingPartSelectLink part={1}>Join the Housewarming</ReadingPartSelectLink>
+              ) : (
+                <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">
+                  Sign me up
+                </Link>
+              )}
+            </span>
+          </li>
+        )}
 
         {/* ROW 2 — the reading itself, free, in the two-way stage above */}
         <li>

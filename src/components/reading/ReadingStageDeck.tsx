@@ -20,6 +20,14 @@ import ReadingStagePart4, { type ReadingStagePart4Props } from "./ReadingStagePa
  * showing (its own JitsiRoom cleanup disposes the conference) before the
  * next one mounts — React itself enforces "exactly ONE conference
  * mounted at a time," no extra guard needed here.
+ *
+ * TASK-499 (block 969,306+) — belt-and-braces for the Housewarming
+ * switch: `part1On={false}` makes a selection of 1 fall through to Part
+ * 2's screen, so the deck can NEVER mount a hidden part. It is a guard
+ * against a stale client selection, not the mechanism — with the switch
+ * off, /reading itself never produces a selection of 1 (no agenda link,
+ * no notice pick, the deep link neutralized, the default never 1).
+ * Default true: every existing caller and bare render is unchanged.
  */
 /** setTimeout's own ceiling (~24.8 days); a longer wait never arms (a
  *  reload that far out reads the clock again anyway). */
@@ -47,15 +55,21 @@ export default function ReadingStageDeck({
   part3,
   part4,
   countdownUntilMs = null,
+  part1On = true,
   asOfMs = 0,
 }: {
   stage1: ReadingStageProps;
   part1: ReadingStagePart1Props;
   part3: ReadingStagePart3Props;
   part4: ReadingStagePart4Props;
-  /** TASK-489: the Housewarming's start (12:12). Parts 1, 3 and 4 show
-   *  Stage 1's own countdown node above them until then. Null = none. */
+  /** TASK-489: the Housewarming's start (12:12) while the TASK-499
+   *  switch is on, the reading's own start when off. Parts 1, 3 and 4
+   *  show Stage 1's own countdown node above them until then. Null =
+   *  none. */
   countdownUntilMs?: number | null;
+  /** TASK-499: false = the Housewarming is hidden this week — a
+   *  selection of 1 falls through to Part 2's screen (default true). */
+  part1On?: boolean;
   asOfMs?: number;
 }) {
   const { selected } = useReadingPart();
@@ -67,7 +81,7 @@ export default function ReadingStageDeck({
   return (
     <>
       {counting && selected !== 2 && stage1.countdown}
-      <DeckScreen selected={selected} stage1={stage1} part1={part1} part3={part3} part4={part4} />
+      <DeckScreen selected={selected} stage1={stage1} part1={part1} part3={part3} part4={part4} part1On={part1On} />
     </>
   );
 }
@@ -78,13 +92,19 @@ function DeckScreen({
   part1,
   part3,
   part4,
+  part1On = true,
 }: {
   selected: number;
   stage1: ReadingStageProps;
   part1: ReadingStagePart1Props;
   part3: ReadingStagePart3Props;
   part4: ReadingStagePart4Props;
+  part1On?: boolean;
 }) {
+  /* TASK-499: with the switch off a selection of 1 can only be a stale
+     client state — fall through to Part 2's screen, never mount a
+     hidden part. The on-branch line below is byte-for-byte today's. */
+  if (selected === 1 && part1On === false) return <ReadingStage {...stage1} />;
   if (selected === 1) return <ReadingStagePart1 {...part1} />;
   if (selected === 3) return <ReadingStagePart3 {...part3} />;
   if (selected === 4) return <ReadingStagePart4 {...part4} />;

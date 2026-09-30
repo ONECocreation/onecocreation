@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import OperatorGate from "@/components/OperatorGate";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import SiteReadingRoom from "./SiteReadingRoom";
+import HousewarmingSwitchCard from "./HousewarmingSwitchCard";
 
 /**
  * /a/site/reading — THE WEEKLY READING room (TASK-381, block 968,047+).
@@ -14,6 +15,11 @@ import SiteReadingRoom from "./SiteReadingRoom";
  * `floorName` prop — the combined rooms card doesn't name Stage 2's floor
  * on its row (`STAGE2_FLOOR_NAME` still lives in `stage2-access.ts`, read
  * by `/reading` itself).
+ *
+ * TASK-499 (block 969,306+): the Housewarming-this-week switch card
+ * mounts HERE, directly below `<SiteReadingRoom />` and behind the same
+ * gate — never inside SiteReadingRoom.tsx, which task-446's stale live
+ * claim owns (the brief's decision 3).
  */
 
 export const metadata: Metadata = {
@@ -29,5 +35,10 @@ export default async function SiteReadingPage() {
   if (!operator) {
     return <OperatorGate configured={operatorsConfigured()} />;
   }
-  return <SiteReadingRoom />;
+  return (
+    <>
+      <SiteReadingRoom />
+      <HousewarmingSwitchCard />
+    </>
+  );
 }

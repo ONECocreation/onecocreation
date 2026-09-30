@@ -237,8 +237,12 @@ describe("the countdown rides the island now (K122 item 6a) — cells only while
 
   it("the page hands the countdown INTO ReadingStage as server-composed nodes — never a bare page mount that can't know the phase (TASK-473: composed into the stage1 prop object ReadingStageDeck reads, not a bare JSX attribute any more)", async () => {
     const page = await read(PAGE);
-    expect(page).toContain("countdown: (");
-    expect(page).toContain("countdownWhen: (");
+    /* TASK-499 honest update (SUMMARY finding): the nodes are now
+       switch-selected (`countdown: housewarmingOn ? (`), so the bare
+       `countdown: (` literal no longer exists; the conditional opener
+       pins the same fact — a server-composed node either way. */
+    expect(page).toContain("countdown: housewarmingOn ? (");
+    expect(page).toContain("countdownWhen: housewarmingOn ? (");
     const src = await read(STAGE);
     expect(src).toContain("countdownWhen");
   });

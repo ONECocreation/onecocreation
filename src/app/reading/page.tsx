@@ -56,6 +56,20 @@ import { defaultReadingPart, parseReadingPart, type PartDoorInfo, type ReadingPa
  * durationMin/on, only `time` swapped — never a second date-math
  * implementation.
  *
+ * TASK-499 (block 969,306+; K126 AMENDMENT 1 item 9, the Admiral: "Move
+ * the countdown off the housewarming") — the honest addendum to the S8
+ * paragraph above: the 12:12 target holds only while the Housewarming
+ * switch is ON (`config.housewarming !== false`, the site-config doc —
+ * absent means on, every pixel above unchanged). With the switch OFF
+ * there is no Part 1 this week: `housewarmingNext` and the
+ * HOUSEWARMING_TIME-overridden countdown nodes are never built (the
+ * nodes take the plain `schedule`/`next`), the top countdown counts to
+ * the reading's own time (`schedule.time`) through the SAME
+ * `topCountdownUntilMs` holdback, the `doors` array omits part 1 (and
+ * `getHousewarmingState()` is never called), a `?part=1` deep link reads
+ * as no request, and the deck's `part1On` guard makes a stale selection
+ * of 1 fall through to Part 2's screen.
+ *
  * Under the band: the public "Stay in the know" sign-up (M4 — the
  * letters, never a door), "What you will experience" as M3's three lines
  * (the weekday DERIVED, the pass price from the live store item), and the
@@ -109,23 +123,28 @@ function weekdayName(instantMs: number, tz: string): string {
  * :32-46 — "kept out of RoomPage's own body so the purity rule never
  * meets Date.now()"). One clock read feeds both `next` and the value
  * ReadingHeroCountdown's first paint buckets against. */
-function deriveReading(schedule: ReadingSchedule): {
+function deriveReading(schedule: ReadingSchedule, housewarmingOn: boolean): {
   asOfMs: number;
   next: { startsAtMs: number; endsAtMs: number; phase: "upcoming" | "window" } | null;
-  /** S8 (block 968,624) — the hero countdown's OWN target: the
-   *  Housewarming (12:12), never `schedule.time`. See the module docblock. */
+  /** S8 (block 968,624) — the hero countdown's OWN target while the
+   *  Housewarming switch is on: the Housewarming (12:12), never
+   *  `schedule.time`. TASK-499: built only when ON — off, it is null and
+   *  the countdown nodes ride the plain `schedule`/`next` instead. */
   housewarmingNext: { startsAtMs: number; endsAtMs: number; phase: "upcoming" | "window" } | null;
 } {
   const asOfMs = Date.now();
   const next = schedule.on ? nextReading(schedule, asOfMs) : null;
-  const housewarmingNext = schedule.on ? nextReading({ ...schedule, time: HOUSEWARMING_TIME }, asOfMs) : null;
+  const housewarmingNext = schedule.on && housewarmingOn ? nextReading({ ...schedule, time: HOUSEWARMING_TIME }, asOfMs) : null;
   return { asOfMs, next, housewarmingNext };
 }
 
 /** TASK-489: the top-of-page countdown's end instant (the Housewarming,
- *  12:12), or null while the PREVIOUS reading day's program is still
- *  running (12:12 through the Q&A, DAY_PROGRAM_MS). Without this, a reload
- *  after 12:12 would count down to next week above the Book Talk and Q&A.
+ *  12:12, while the TASK-499 switch is on; the reading's own time when
+ *  off — the argument is structurally the same `{startsAtMs, phase}`
+ *  either way), or null while the PREVIOUS reading day's program is
+ *  still running (through the Q&A, DAY_PROGRAM_MS). Without this, a
+ *  reload after the day's first part would count down to next week
+ *  above the Book Talk and Q&A.
  *  Weekly schedule, so the previous day is one week back (plain arithmetic;
  *  a DST hour either side changes nothing at this length). */
 const WEEK_MS = 7 * 24 * 3600_000;
@@ -146,7 +165,7 @@ export default async function ReadingPage({
      ever overrides the door-based default computed below. */
   searchParams: Promise<{ part?: string }>;
 }) {
-  const requestedPart = parseReadingPart((await searchParams).part);
+  let requestedPart = parseReadingPart((await searchParams).part);
 
   /* The same raw-cookie session read every public page with a signed-in
      variant already does (rooms/[slug]/page.tsx:82, home page.tsx:34) —
@@ -161,7 +180,11 @@ export default async function ReadingPage({
 
   const config = await getSiteConfig();
   const schedule = config.reading ?? DEFAULT_READING_SCHEDULE;
-  const { asOfMs, next, housewarmingNext } = deriveReading(schedule);
+  /* TASK-499 (block 969,306+) — the Housewarming-this-week switch, read
+     ONCE here: absent means ON (every stored doc is already valid), only
+     an explicit saved `false` hides Part 1 and retargets the countdown. */
+  const housewarmingOn = config.housewarming !== false;
+  const { asOfMs, next, housewarmingNext } = deriveReading(schedule, housewarmingOn);
   /* K122 item 7 — the occurrence AFTER next: the island's ended words
      name the next reading, never the one that just ended (a visitor who
      loaded before or during the window holds TODAY'S occurrence in next) */
@@ -206,9 +229,12 @@ export default async function ReadingPage({
      timestamp, not a guess. */
   const encoreStartsAtMs = next ? sameDayAt(next.startsAtMs, schedule.tz, ENCORE_TIME) : null;
   const qaStartsAtMs = next ? sameDayAt(next.startsAtMs, schedule.tz, QA_TIME) : null;
-  const housewarmingStartsAtMs = next ? sameDayAt(next.startsAtMs, schedule.tz, HOUSEWARMING_TIME) : null;
-  let defaultPart: ReadingPart = 1;
-  if (next && encoreStartsAtMs !== null && qaStartsAtMs !== null && housewarmingStartsAtMs !== null) {
+  const housewarmingStartsAtMs = housewarmingOn && next ? sameDayAt(next.startsAtMs, schedule.tz, HOUSEWARMING_TIME) : null;
+  /* TASK-499: with the switch off the initial selection is Part 2 (the
+     Reading) — Part 1 does not exist this week, so nothing may open on
+     it; the doors array below then picks from parts 2-4 by door state. */
+  let defaultPart: ReadingPart = housewarmingOn ? 1 : 2;
+  if (next && encoreStartsAtMs !== null && qaStartsAtMs !== null) {
     const stage2State = await getStage2State();
     /* fix round (block 968,624) — fails CLOSED on a throw: a broken vault
        reads as the Q&A door's own IDLE (closed), never a guessed-open
@@ -227,15 +253,24 @@ export default async function ReadingPage({
        the exact fail-closed idiom `qaState` above already keeps.
        `getHousewarmingState()` already fails closed internally (the same
        `createDoorLifecycle` law every door keeps); this catch is
-       belt-and-braces against a future regression. */
+       belt-and-braces against a future regression.
+       TASK-499: the read itself is skipped when the switch is off — no
+       Part 1 exists this week, so its open truth is never even asked. */
     let housewarmingState = HOUSEWARMING_IDLE;
-    try {
-      housewarmingState = await getHousewarmingState();
-    } catch {
-      housewarmingState = HOUSEWARMING_IDLE;
+    if (housewarmingOn) {
+      try {
+        housewarmingState = await getHousewarmingState();
+      } catch {
+        housewarmingState = HOUSEWARMING_IDLE;
+      }
     }
     const doors: PartDoorInfo[] = [
-      { part: 1, title: "The Housewarming", startsAtMs: housewarmingStartsAtMs, open: housewarmingState.phase === "published", openedAtMs: housewarmingState.publishedAtMs },
+      /* TASK-499: off omits the part-1 entry entirely (housewarmingStarts-
+         AtMs is null then) — the default can never land on a part that
+         does not exist this week. */
+      ...(housewarmingStartsAtMs !== null
+        ? [{ part: 1 as ReadingPart, title: "The Housewarming", startsAtMs: housewarmingStartsAtMs, open: housewarmingState.phase === "published", openedAtMs: housewarmingState.publishedAtMs }]
+        : []),
       { part: 2, title: "The Reading", startsAtMs: next.startsAtMs, open: stage1Phase === "published", openedAtMs: stage1State.publishedAtMs },
       { part: 3, title: "The Book Talk", startsAtMs: encoreStartsAtMs, open: stage2State.phase === "published", openedAtMs: stage2State.publishedAtMs },
       { part: 4, title: "The Q&A", startsAtMs: qaStartsAtMs, open: qaState.phase === "published", openedAtMs: qaState.publishedAtMs },
@@ -246,6 +281,10 @@ export default async function ReadingPage({
      default above: a visitor who followed a deep link (the member
      calendar's own pills) asked for THAT part, not whichever one the
      doors would otherwise pick. */
+  /* TASK-499 — unless the switch is off and the ask is Part 1: there is
+     no Housewarming this week, so a `?part=1` reads as NO request (null)
+     and the door-based default above stands — never a hidden screen. */
+  if (!housewarmingOn && requestedPart === 1) requestedPart = null;
   if (requestedPart !== null) defaultPart = requestedPart;
 
   return (
@@ -279,24 +318,42 @@ export default async function ReadingPage({
                   following,
                   scheduleTz: schedule.tz,
                   jitsiDomain: config.meeting.jitsiDomain,
-                  /* S8 (block 968,624): the Housewarming's own schedule
-                     variant — same weekday/tz/durationMin/on, `time`
-                     swapped to HOUSEWARMING_TIME — never the raw
-                     `schedule`/`next` (those still drive Row 2,
-                     ReadingDayBody.tsx, and the ended card's date words,
-                     unchanged). */
-                  countdown: (
+                  /* S8 (block 968,624): while the Housewarming switch is on,
+                     the Housewarming's own schedule variant — same
+                     weekday/tz/durationMin/on, `time` swapped to
+                     HOUSEWARMING_TIME — never the raw `schedule`/`next`
+                     (those still drive Row 2, ReadingDayBody.tsx, and the
+                     ended card's date words, unchanged). TASK-499: with
+                     the switch off the nodes take the plain `schedule`
+                     and `next` — the countdown counts to the reading
+                     itself. */
+                  countdown: housewarmingOn ? (
                     <ReadingHeroCountdown
                       schedule={{ ...schedule, time: HOUSEWARMING_TIME }}
                       next={housewarmingNext}
                       asOfMs={asOfMs}
                       variant="blocks"
                     />
+                  ) : (
+                    <ReadingHeroCountdown
+                      schedule={schedule}
+                      next={next}
+                      asOfMs={asOfMs}
+                      variant="blocks"
+                    />
                   ),
-                  countdownWhen: (
+                  countdownWhen: housewarmingOn ? (
                     <ReadingHeroCountdown
                       schedule={{ ...schedule, time: HOUSEWARMING_TIME }}
                       next={housewarmingNext}
+                      asOfMs={asOfMs}
+                      variant="blocks"
+                      whenOnly
+                    />
+                  ) : (
+                    <ReadingHeroCountdown
+                      schedule={schedule}
+                      next={next}
                       asOfMs={asOfMs}
                       variant="blocks"
                       whenOnly
@@ -325,8 +382,15 @@ export default async function ReadingPage({
                   whenWords: qaStartsAtMs !== null ? clockWords(qaStartsAtMs, schedule.tz) : null,
                 }}
                 /* TASK-489 (reading day): the countdown back at the top of
-                   the page on every screen, until the Housewarming (12:12). */
-                countdownUntilMs={topCountdownUntilMs(housewarmingNext, asOfMs)}
+                   the page on every screen. TASK-499: its target follows
+                   the switch — the Housewarming (12:12) while on, the
+                   reading's own time when off, the same function and the
+                   same holdback either way. */
+                countdownUntilMs={housewarmingOn ? topCountdownUntilMs(housewarmingNext, asOfMs) : topCountdownUntilMs(next, asOfMs)}
+                /* TASK-499: belt-and-braces — the deck can never mount
+                   Part 1 when the switch is off, even on a stale client
+                   selection (decision 5). */
+                part1On={housewarmingOn}
                 asOfMs={asOfMs}
               />
             </div>
