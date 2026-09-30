@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { readingPartHref, type ReadingPart } from "@/lib/reading-parts";
 
 /**
  * THE MEMBER-HEADER LIVE STRIP (TASK-192, 0018.06.18 a₿ · H69 ruled A) —
@@ -14,6 +15,13 @@ import { useEffect, useState } from "react";
  * so the served HTML carries no trace — zero layout shift), and hidden
  * under /a, where the operator's own desk already carries the truth.
  *
+ * TASK-490 (block 969,088+ — the Admiral, RULED at block 968,624): the
+ * strip follows Love's reading buttons too. A `kind: "reading"` feed
+ * (any of the four reading doors `published`) links the part's deep
+ * link instead of a room slug — "Love is live · <the part> · Join" for
+ * EVERYONE, paid rooms included: the /reading page's own unlock offer
+ * does the gating, the strip never reads entitlements.
+ *
  * Styling: house tokens, slimmer than the old banner; the live dot wears
  * --err, the wash is lavender — never gold (gold means money only).
  */
@@ -21,13 +29,28 @@ export interface LiveStripFeed {
   live: boolean;
   room: string | null;
   roomTitle: string | null;
+  /** TASK-490: the payload's live flavour — "reading" for a published
+   *  reading door; absent on the old Go-live path. */
+  kind?: string | null;
+  /** TASK-490: the reading part (1-4) when `kind` is "reading". */
+  part?: number | null;
 }
 
 /** The strip's model, pure: a live flag with a room gives the one line and
  *  its href (the room's Stage); anything else gives NOTHING — the strip's
  *  absence is as honest as its presence. Exported for the tests. */
 export function stripModel(feed: LiveStripFeed | null): { href: string; label: string } | null {
-  if (!feed?.live || !feed.room) return null;
+  if (!feed?.live) return null;
+  /* TASK-490 — the reading case: the href is DERIVED (`readingPartHref`,
+     never a hand-written query string); a nonsense part falls through to
+     NOTHING rather than a guessed link. */
+  if (feed.kind === "reading") {
+    const part =
+      typeof feed.part === "number" && feed.part >= 1 && feed.part <= 4 ? (feed.part as ReadingPart) : null;
+    if (part === null || !feed.roomTitle) return null;
+    return { href: readingPartHref(part), label: `Love is live · ${feed.roomTitle} · Join` };
+  }
+  if (!feed.room) return null;
   return {
     href: `/rooms/${feed.room}`,
     label: `Love is live · ${feed.roomTitle ?? feed.room} · Join`,
@@ -45,7 +68,11 @@ export default function LiveStrip() {
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => {
           if (stop || !d?.ok) return;
-          setFeed(d.live ? { live: true, room: d.room ?? null, roomTitle: d.roomTitle ?? null } : null);
+          setFeed(
+            d.live
+              ? { live: true, room: d.room ?? null, roomTitle: d.roomTitle ?? null, kind: d.kind ?? null, part: d.part ?? null }
+              : null,
+          );
         })
         .catch(() => {});
     check();
@@ -94,7 +121,16 @@ export default function LiveStrip() {
           border: "1px solid rgba(139,118,196,.5)",
         }}
       >
-        <span style={{ color: "var(--err)", fontSize: "1.4em", verticalAlign: "-.05em", marginRight: ".35em" }}>●</span>
+        {/* TASK-490: the pulse rides the CLASS (kit.css, the named
+            exception to the idle-motion law — the live dot ONLY, both
+            flavours of live, stilled under prefers-reduced-motion); the
+            inline style stays (T-339's own pins name it). */}
+        <span
+          className="live-strip-dot"
+          style={{ color: "var(--err)", fontSize: "1.4em", verticalAlign: "-.05em", marginRight: ".35em" }}
+        >
+          ●
+        </span>
         {model.label}
       </span>
     </Link>

@@ -284,6 +284,21 @@
    lane needed. */
 .kit-lock-icon{display:inline-block;margin-right:6px;vertical-align:-2px}
 
+/* TASK-490 (block 969,088+) — THE LIVE STRIP'S DOT PULSES: the Admiral's
+   named exception to the idle-motion law (RULED at block 968,624: "i do
+   want the pulse", the live dot ONLY, both flavours of live). The dot is
+   a text glyph wearing var(--err), so the glow is a TEXT-shadow of the
+   same token (a box-shadow would frame the glyph's inline box, not the
+   dot); no new literal colour, no new sheet. Reduced-motion keeps the
+   dot still and present — the same source-pinned shape reading-look and
+   pink-shimmer-doors already keep. */
+.live-strip-dot{animation:live-strip-pulse 2.4s ease-in-out infinite}
+@keyframes live-strip-pulse{
+  0%,100%{opacity:1;text-shadow:0 0 0 transparent}
+  50%{opacity:.6;text-shadow:0 0 12px var(--err)}
+}
+@media (prefers-reduced-motion:reduce){.live-strip-dot{animation:none}}
+
 /* TASK-479 (block 968,624+, the Admiral's approved mockup, t479/mockup.html):
    the book cover, stacked visually above the mounted (still-listening)
    JitsiRoom iframe inside .kit-stage-viewer. pointer-events:none means a

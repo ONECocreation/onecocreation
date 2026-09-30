@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  /* TASK-492 AMENDMENT 1 (block 969,095): on Vercel, public/ assets are NOT
+     traced into serverless functions — without this include the meditation
+     download route would ENOENT on fs.stat in production. Key verified
+     against the installed Next's own types (config-shared.d.ts,
+     NextConfig.outputFileTracingIncludes, Next 16.3.5). */
+  outputFileTracingIncludes: {
+    "/meditation/download": ["./public/audio/unzip-into-the-new-you.mp3"],
+  },
   /* API routes require a server runtime; the old `output: 'export'` static
      export is retired along with the Plesk deploy. */
   /* @frens-earth/* packages ship raw TS — Next transpiles them */
