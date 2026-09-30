@@ -3,6 +3,7 @@ import { addSubscriber, addReadingTag, validEmail, subscribersConfigured } from 
 import { mailConfigured } from "@/lib/mail";
 import { sendLeadMagnetLetter, sendReadWithLoveLetter, enqueueDayTwoWelcome } from "@/lib/lead-magnet";
 import { sendReadingConfirmation, sendDayOfToOneIfDue } from "@/lib/reading-letters";
+import { isValidTz } from "@/lib/booking-time";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { email?: string; source?: string };
+  let body: { email?: string; source?: string; viewerTz?: string };
   try {
     body = await request.json();
   } catch {
@@ -32,6 +33,12 @@ export async function POST(request: Request) {
   if (!validEmail(email)) {
     return NextResponse.json({ ok: false, reason: "that email doesn't look right" }, { status: 400 });
   }
+  /* TASK-519: the browser's own zone, posted by the reading sign-up (the
+     SlotPicker idiom) so the join letters can say the start time in the
+     reader's own zone. Validated before it is stored (the bookings
+     checkout route's own isValidTz idiom); absent or invalid is simply
+     no zone — never a rejected sign-up. */
+  const viewerTz = typeof body.viewerTz === "string" && isValidTz(body.viewerTz) ? body.viewerTz : undefined;
 
   /* TASK-388 — the reading sign-up's own branch: tags the subscriber via
      the narrow seam (addReadingTag, subscribers.ts's own Ground — bare
@@ -60,7 +67,7 @@ export async function POST(request: Request) {
      is swallowed the same way the confirmation's own is — the next tick
      is always the retry, never a crashed request. */
   if ((body.source ?? "") === "reading") {
-    const { outcome } = await addReadingTag(email);
+    const { outcome } = await addReadingTag(email, viewerTz);
     if (outcome === "joined") {
       try {
         await sendReadingConfirmation(email);

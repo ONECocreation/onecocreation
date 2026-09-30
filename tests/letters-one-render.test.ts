@@ -342,7 +342,7 @@ describe("the one-render law: an override without a !cta: line renders no button
   });
 });
 
-describe("preview equals sent: nine EDITABLE_LETTERS keys with sample slots", () => {
+describe("preview equals sent: eleven EDITABLE_LETTERS keys with sample slots", () => {
   it("lead-magnet: sendLeadMagnetLetter string-equals letterHtml of the same resolved body", async () => {
     const { sendLeadMagnetLetter } = await leadMagnet();
     await sendLeadMagnetLetter("reader@example.com");
@@ -479,6 +479,53 @@ describe("preview equals sent: nine EDITABLE_LETTERS keys with sample slots", ()
     expect(sentMail[0].subject).toBe(expected.subject);
     expect(sentMail[0].html).toBe(expected.html);
     expect(sentMail[0].html).not.toMatch(/\{\{[a-z]+\}\}/); // no raw slot ever ships
+  });
+
+  /* TASK-519: the join letters pour from the same composer too — each
+     builder string-equals letterFor of the same machine parts (the
+     {{session}}/{{when}}/{{link}} fragments pinned by content, the
+     byte-shape copied from src/lib/join-letters.ts so a drift in the
+     module breaks this suite, never ships silent) */
+  const JOIN_STARTS = Date.parse("2026-09-23T19:11:00.000Z"); // Wednesday 1:11 PM MDT
+  const joinParts = {
+    session: "the reading",
+    startsAtMs: JOIN_STARTS,
+    tz: "America/Denver",
+    link: `${SITE}/reading`,
+    linkWords: "Open the reading page",
+  };
+  const joinLinkFragment = `<p style="margin:22px 0;"><a href="${SITE}/reading" style="background:#b4862b;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;">Open the reading page</a></p>`;
+
+  it("join-reminder: joinReminderLetter string-equals letterFor with the same machine parts (TASK-519)", async () => {
+    const { joinReminderLetter } = await import("@/lib/join-letters");
+    const { letterFor } = await pwyc();
+    const built = await joinReminderLetter("reader@example.com", joinParts);
+    const expected = await letterFor("join-reminder", {
+      session: `<p style="margin:0 0 1.15em;line-height:1.75;">The session: <b>the reading</b>.</p>`,
+      when: `<p style="margin:0 0 1.15em;line-height:1.75;">It begins <b>Wednesday, September 23 at 1:11 PM Mountain</b>.</p>`,
+      link: joinLinkFragment,
+    });
+    expect(built.to).toBe("reader@example.com");
+    expect(built.subject).toBe("Your session is coming: the link and the time");
+    expect(built.subject).toBe(expected.subject);
+    expect(built.html).toBe(expected.html);
+    expect(built.html).not.toMatch(/\{\{[a-z]+\}\}/); // no raw slot ever ships
+  });
+
+  it("join-start: joinStartLetter string-equals letterFor with the same machine parts (TASK-519)", async () => {
+    const { joinStartLetter } = await import("@/lib/join-letters");
+    const { letterFor } = await pwyc();
+    const built = await joinStartLetter("reader@example.com", joinParts);
+    const expected = await letterFor("join-start", {
+      session: `<p style="margin:0 0 1.15em;line-height:1.75;">The session: <b>the reading</b>.</p>`,
+      when: `<p style="margin:0 0 1.15em;line-height:1.75;">It opened <b>Wednesday, September 23 at 1:11 PM Mountain</b>.</p>`,
+      link: joinLinkFragment,
+    });
+    expect(built.to).toBe("reader@example.com");
+    expect(built.subject).toBe("The room is open: come on in");
+    expect(built.subject).toBe(expected.subject);
+    expect(built.html).toBe(expected.html);
+    expect(built.html).not.toMatch(/\{\{[a-z]+\}\}/); // no raw slot ever ships
   });
 });
 

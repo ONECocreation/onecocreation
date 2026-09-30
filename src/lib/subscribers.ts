@@ -29,6 +29,13 @@ export interface SubscriberRecord {
    *  itself, not a wall-clock window, is what stops a second send). Set
    *  only by `markReadingConfirmed`, never touched by `addReadingTag`. */
   readingConfirmedAt?: number;
+  /** TASK-519: the reader's own IANA zone, captured from the browser at
+   *  the reading sign-up (`viewerTz`, validated by `isValidTz` before it
+   *  ever lands here) so the join letters can say the start time in HER
+   *  zone. Additive: absent is simply "no zone known" and the letters
+   *  fall back to Love's zone, named in words. Only ever feeds Intl
+   *  formatting, never interpolated raw. */
+  tz?: string;
 }
 
 const INDEX = "mail:subscribers";
@@ -109,9 +116,18 @@ export async function addSubscriber(
  *
  * `listSubscribers`/`subscriberSegments` are UNCHANGED by this lane — they
  * still read `source` only; a tag-aware reader is TASK-389's own hand-off.
+ *
+ * TASK-519: optional `tz` — the reader's own IANA zone, already validated
+ * by the caller (`isValidTz` at the subscribe route). When handed in it
+ * lands on the record on EVERY non-unsubscribed outcome: on create, on
+ * the tag merge, and on "already" (a soul who signed up before zones
+ * were captured re-signs and leaves her zone — the tag state is
+ * unchanged so the outcome stays "already", but the zone is newer
+ * truth and is persisted). "unsubscribed" stays a strict no-write.
  */
 export async function addReadingTag(
   email: string,
+  tz?: string,
 ): Promise<{ outcome: "joined" | "already" | "unsubscribed" }> {
   const key = recKey(email);
   const existing = await kv(["GET", key]);
@@ -122,6 +138,7 @@ export async function addReadingTag(
       joinedAtMs: Date.now(),
       source: "reading",
       tags: ["reading"],
+      ...(tz ? { tz } : {}),
     };
     await kv(["SET", key, JSON.stringify(rec)]);
     await kv(["SADD", INDEX, rec.email]);
@@ -130,11 +147,58 @@ export async function addReadingTag(
 
   const prior = JSON.parse(existing as string) as SubscriberRecord;
   if (prior.optedOut) return { outcome: "unsubscribed" }; // preserved, never cleared here
-  if (prior.tags?.includes("reading")) return { outcome: "already" };
 
-  const next: SubscriberRecord = { ...prior, tags: [...(prior.tags ?? []), "reading"] };
+  if (prior.tags?.includes("reading")) {
+    // "already" — the tag stands; a handed-in zone is still newer truth
+    if (tz && prior.tz !== tz) {
+      await kv(["SET", key, JSON.stringify({ ...prior, tz } satisfies SubscriberRecord)]);
+    }
+    return { outcome: "already" };
+  }
+
+  const next: SubscriberRecord = { ...prior, tags: [...(prior.tags ?? []), "reading"], ...(tz ? { tz } : {}) };
   await kv(["SET", key, JSON.stringify(next)]);
   return { outcome: "joined" };
+}
+
+/** TASK-519 (K131, decision 3): the reading-seat tag, written at settle
+ *  time by `settleEntitlementFromOrder` for every seat-admitting order.
+ *  The tag rides the subscribers store — never the entitlement store —
+ *  so consent and unsubscribe keep ONE meaning (R2's `isSubscribed`
+ *  gates every join-letter send). */
+export const READING_SEAT_TAG = "reading-seat";
+
+/**
+ * TASK-519 — additive tagging generalized from `addReadingTag`'s narrow
+ * seam: merges `tag` into the record's `tags`, creating the record when
+ * the vault doesn't know the soul yet (a seat buyer who never joined any
+ * list — source "purchase", the paying-members-are-opted-in doctrine).
+ * An existing record's `source`/`optedOut`/`joinedAtMs`/`tz` are
+ * byte-preserved; an opted-out record keeps its opt-out (the send-time
+ * `isSubscribed` gate stays the one opt-out law — the tag is subscription
+ * data, not a resubscribe). Idempotent: a record already carrying the
+ * tag is no write.
+ */
+export async function addSubscriberTag(email: string, tag: string): Promise<void> {
+  const key = recKey(email);
+  const existing = await kv(["GET", key]);
+
+  if (!existing) {
+    const rec: SubscriberRecord = {
+      email: email.toLowerCase(),
+      joinedAtMs: Date.now(),
+      source: "purchase",
+      tags: [tag],
+    };
+    await kv(["SET", key, JSON.stringify(rec)]);
+    await kv(["SADD", INDEX, rec.email]);
+    return;
+  }
+
+  const prior = JSON.parse(existing as string) as SubscriberRecord;
+  if (prior.tags?.includes(tag)) return;
+  const next: SubscriberRecord = { ...prior, tags: [...(prior.tags ?? []), tag] };
+  await kv(["SET", key, JSON.stringify(next)]);
 }
 
 /**

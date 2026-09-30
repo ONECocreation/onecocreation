@@ -95,9 +95,17 @@ describe("published, signed in, room arrived, camera SHOWN (TASK-487's site swit
     expect(html).not.toContain("Go to the Heart Field");
   });
 
-  it("no banner while the Playground is closed, and nothing about a camera or a microphone is said in the page's own words", () => {
+  it("no banner while the Playground is closed, and the ONLY camera/microphone words are TASK-519's deliberate prejoin hint", () => {
     expect(html).not.toContain("Want an encore?");
-    expect(html).not.toMatch(/camera|microphone/i);
+    /* TASK-519 (K131, decision 7): the hint line "Allow camera and
+       microphone" now rides OUR JitsiRoom wrapper on purpose — the whole
+       point of the join-letter lane (Shawnah lost her camera to a
+       browser permission). The T-471-era intent of this pin is kept by
+       stripping that one deliberate line and asserting NOTHING ELSE on
+       the page speaks of a camera or a microphone. */
+    expect(html).toContain("Allow camera and microphone");
+    const withoutHint = html.split("Allow camera and microphone").join("");
+    expect(withoutHint).not.toMatch(/camera|microphone/i);
   });
 });
 

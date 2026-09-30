@@ -410,10 +410,10 @@ describe("the letter's content — derive-or-dash, never an invented word", () =
 });
 
 describe("the key — purchase-love-notify joins the letters system", () => {
-  it("EDITABLE_LETTERS carries it at length 10 (TASK-518 added the tenth)", async () => {
+  it("EDITABLE_LETTERS carries it at length 12 (TASK-518 added the tenth; TASK-519 added the join pair)", async () => {
     const { EDITABLE_LETTERS } = await import("@/lib/letters");
     expect(EDITABLE_LETTERS).toContain("purchase-love-notify");
-    expect(EDITABLE_LETTERS).toHaveLength(10);
+    expect(EDITABLE_LETTERS).toHaveLength(12); // TASK-519: join-reminder and join-start are the 11th and 12th
   });
 
   it("its audience is members — one-soul mail, never the open feed", async () => {

@@ -78,11 +78,18 @@ const GENERIC_ERROR = "Something went sideways — please try again.";
 export async function postReadingSignUp(
   email: string,
 ): Promise<{ ok: true; outcome: ReadingTagOutcome } | { ok: false; message: string }> {
+  /* TASK-519: the browser's own zone rides the post (the SlotPicker.tsx
+     idiom, Intl.DateTimeFormat().resolvedOptions().timeZone) so the join
+     letters can say the start time in the reader's own zone; the route
+     validates with isValidTz and an absent/invalid zone simply stores
+     none. Detected here, in the ONE post path, so every caller (the
+     room card, the public card, the sign-in box) inherits it. */
+  const viewerTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   try {
     const res = await fetch("/api/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, source: "reading" }),
+      body: JSON.stringify({ email, source: "reading", ...(viewerTz ? { viewerTz } : {}) }),
     });
     let data: { ok?: boolean; outcome?: string; reason?: string } | null = null;
     try {

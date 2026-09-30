@@ -97,7 +97,7 @@ describe("startEmailCode / verifyAndSubscribe — the fetch orchestration (mocke
     expect(calls).toEqual(["/api/auth/email/verify"]); // subscribe never reached
   });
 
-  it("subscribe is called ONLY after a verified code — the exact postReadingSignUp contract, {email, source:'reading'}", async () => {
+  it("subscribe is called ONLY after a verified code — the exact postReadingSignUp contract, {email, source:'reading'} plus TASK-519's viewerTz", async () => {
     const calls: { url: string; body: unknown }[] = [];
     vi.stubGlobal("fetch", async (url: string, init?: { body?: string }) => {
       calls.push({ url: String(url), body: init?.body ? JSON.parse(init.body) : null });
@@ -112,7 +112,11 @@ describe("startEmailCode / verifyAndSubscribe — the fetch orchestration (mocke
     const result = await verifyAndSubscribe("x@example.com", "123456");
     expect(result).toEqual({ ok: true, handle: "x@example.com", space: "email", outcome: "joined" });
     expect(calls.map((c) => c.url)).toEqual(["/api/auth/email/verify", "/api/subscribe"]);
-    expect(calls[1].body).toEqual({ email: "x@example.com", source: "reading" });
+    /* TASK-519: the body now carries the browser's own zone too — the
+       join letters say the start time in the reader's own zone (K131).
+       expect.any(String): the detected zone is the runner's own, never
+       a pinned literal. */
+    expect(calls[1].body).toEqual({ email: "x@example.com", source: "reading", viewerTz: expect.any(String) });
   });
 
   it("a subscribe failure never unwinds a good sign-in — verify still resolves ok, outcome is the honest 'subscribe-unknown'", async () => {

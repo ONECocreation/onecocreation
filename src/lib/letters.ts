@@ -31,13 +31,17 @@ export const EDITABLE_LETTERS = [
   "order-receipt",
   "read-with-love",
   "purchase-love-notify",
+  "join-reminder",
+  "join-start",
 ] as const;
 /** The SEEDED set — six until TASK-156 (0018.06.17 a₿) added `welcome` (the
  *  FIRST-sign-in letter Love edits in /a/letters), eight once TASK-173 added
  *  `order-receipt`, nine since TASK-493 (0018.06.30) added `read-with-love`
  *  (the Read with Love seat letter), ten since TASK-518 (0018.06.30) added
- *  `purchase-love-notify` (the letter to Love when any order settles);
- *  Love's own composed
+ *  `purchase-love-notify` (the letter to Love when any order settles),
+ *  twelve since TASK-519 (0018.06.30) added `join-reminder` and
+ *  `join-start` (the join letters every seat holder gets before a live
+ *  session and when it starts); Love's own composed
  *  letters still never touch this constant — they live in the vault registry
  *  below, and every reader that wants "all letters" goes through
  *  listLetterKeys(), never this constant alone. */
@@ -69,6 +73,9 @@ export const DEFAULT_AUDIENCE: Record<LetterKey, LetterAudience> = {
   "read-with-love": "members",
   // the purchase letter is one soul's mail TO Love — never the open feed
   "purchase-love-notify": "members",
+  // the join letters are one soul's mail — never the open feed
+  "join-reminder": "members",
+  "join-start": "members",
 };
 
 export function audienceOf(k: string, override: LetterOverride | null): LetterAudience {
@@ -282,6 +289,55 @@ One Cocreation`,
 {{writeback}}
 
 The full record lives on the orders desk in /a. Card details never travel; the payment page keeps those.`,
+  },
+  /* TASK-519 (0018.06.30, K131): THE JOIN LETTERS — one letter before
+   * every live session and a short one when it starts, sent from
+   * src/lib/join-letters.ts to every seat holder (the reading list, the
+   * settle-tagged seat buyers, and each confirmed booking's own guest).
+   * The {{slots}} are machine-built and load-bearing, computed per soul
+   * per occurrence: {{session}} = which session (the reading, or the
+   * booking's own title), {{when}} = the start time in the reader's own
+   * zone when known, Love's zone named in words otherwise, {{link}} =
+   * the ONE door (the /reading page for the reading, the booking's own
+   * meeting link for a booked session). A slot Love edits out is
+   * appended at the end so no door and no time can ever be lost. The
+   * three plain lines at the foot are the call's own ruling (Shawnah's
+   * join): they stay verbatim, and no words here or in the rows ever
+   * promise a minute. Plain words per the house copy law: no em dash,
+   * no arrow, no emoji. */
+  "join-reminder": {
+    subject: "Your session is coming: the link and the time",
+    body: `Beautiful soul, a gentle note before we gather.
+
+{{session}}
+
+{{when}}
+
+{{link}}
+
+Open it on a computer or the phone.
+Press Allow for the camera and the microphone.
+If it says no, refresh once.
+
+With love,
+One Cocreation`,
+  },
+  "join-start": {
+    subject: "The room is open: come on in",
+    body: `Beautiful soul, the room is open.
+
+{{session}}
+
+{{when}}
+
+{{link}}
+
+Open it on a computer or the phone.
+Press Allow for the camera and the microphone.
+If it says no, refresh once.
+
+With love,
+One Cocreation`,
   },
 };
 
