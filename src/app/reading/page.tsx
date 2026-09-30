@@ -399,8 +399,10 @@ export default async function ReadingPage({
           {/* SIGN ME UP · KEEP ME POSTED (TASK-468, block 968,561) — one box,
               never gated on schedule.on/next (K122 item 13's law carries
               over: the one door that works without a date); email + code,
-              never a navigation away from /reading. */}
-          <section className="kitx-section kitx-section-first">
+              never a navigation away from /reading. TASK-532 (block
+              969,334): the id="keep-posted" anchor is /replays' "Want a
+              reminder email?" button's target (the round-2 NOD, pick 3). */}
+          <section className="kitx-section kitx-section-first" id="keep-posted">
             <div className="wrap">
               <ReadingSignInBox />
             </div>
@@ -418,17 +420,28 @@ export default async function ReadingPage({
             </div>
           </section>
 
-          {/* THE REPLAYS DOOR (TASK-496, block 969,088+; the Admiral: "a
-              Replays button on /reading") - one small section, classes only
-              from the pinned kitx set; nothing else on this page moves. */}
+          {/* THE REPLAYS DOOR (TASK-496, block 969,088+; re-faced by
+              TASK-532, block 969,334, the Admiral's round-2 NOD pick 1) -
+              the BOOK door: "Catch the replays" beside the current book
+              picture (reading-book-thumb.webp), the existing
+              kitx-host/kitx-photo layout (the host section below is the
+              same grammar), stacked on a phone. Nothing else on this page
+              moves. */}
           <section className="kitx-section">
-            <div className="wrap kitx-flow">
-              <h2 className="kit-h2">Replays</h2>
-              <p className="kit-body">Missed one? The replays keep every recorded reading.</p>
-              <div className="kit-btn-row kitx-actions">
-                <a className="kit-btn kit-btn-main kit-btn-sm" href="/replays">
-                  Replays
-                </a>
+            <div className="wrap">
+              <div className="kitx-host">
+                <div className="kitx-photo">
+                  <img src="/images/reading-book-thumb.webp" alt="An open book whose pages curl into a heart" width={480} height={349} />
+                </div>
+                <div className="kit-stack">
+                  <h2 className="kit-h2">Catch the replays</h2>
+                  <p className="kit-body">Missed a reading? Every one is kept for you to watch again.</p>
+                  <div className="kit-btn-row">
+                    <a className="kit-btn kit-btn-main kit-btn-sm" href="/replays">
+                      Catch the replays
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
