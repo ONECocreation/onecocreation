@@ -5,6 +5,7 @@ import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import ShelfSection, { shelfGroups, hasFreeMeditation } from "@/components/store/ShelfSection";
+import GiftDrawer from "@/components/store/GiftDrawer";
 import StackedHero from "@/components/StackedHero";
 import NotOpenYet from "@/components/NotOpenYet";
 import PaletteVars from "@/components/PaletteVars";
@@ -13,7 +14,8 @@ import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
 import { listItems, stripPrivateMedia } from "@/lib/store";
 import { getSiteConfig } from "@/lib/site-config";
-import { liveAdapter, ensureSquareVault } from "@/lib/payments";
+import { liveAdapter, ensureSquareVault, jarsOpen } from "@/lib/payments";
+import { liveJarKeys } from "@/components/sections";
 
 export const metadata: Metadata = {
   title: "Store — One Cocreation",
@@ -88,6 +90,15 @@ export default async function StorePage() {
   const groups = shelfGroups(items)
     .filter((g) => g.items.length > 0 || (g.anchor === "meditations" && free));
 
+  /* TASK-498 (block 969,095 · R-072): the tip jars live in ONE drawer at
+     the bottom of this page, gated exactly as they were on /support —
+     jarsOpen() (the features.jars switch AND a live bitcoin rail) AND each
+     jar's shelf item live (the /support idiom, moved). Rail off or every
+     jar hidden: no drawer at all. No cat-pill for the drawer: the pills
+     navigate the selling sections; the drawer is giving furniture, not a
+     section. */
+  const jars = jarsOpen() ? await liveJarKeys() : [];
+
   return (
     <main>
       <SiteHeader />
@@ -122,6 +133,7 @@ export default async function StorePage() {
           withFreeCard={group.anchor === "meditations"}
         />
       ))}
+      {jars.length > 0 && <GiftDrawer liveJars={jars} />}
       <SiteFooter />
     </main>
   );
