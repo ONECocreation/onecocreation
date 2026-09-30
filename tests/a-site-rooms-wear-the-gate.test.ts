@@ -13,6 +13,10 @@ import { renderToStaticMarkup } from "react-dom/server";
  * gate wrapper (same shape as /a/live's page.tsx), and the moved room body
  * (SiteRoom.tsx / SiteAboutVideosRoom.tsx / SiteCommunityDoorRoom.tsx /
  * SiteMenuRoom.tsx) is untouched.
+ *
+ * TASK-496 (block 969,088+): /a/site/replays joins the family - the same
+ * server gate-wrapper shape, the PAGES list below grows to six (the suite
+ * title is renamed honestly: five became six).
  */
 
 const ROOT = process.cwd();
@@ -26,9 +30,12 @@ const PAGES = [
   // TASK-381 (block 968,047+): the weekly reading room — same server
   // gate-wrapper shape as its four siblings above.
   "src/app/a/site/reading/page.tsx",
+  // TASK-496 (block 969,088+): the replays room - the same shape again,
+  // the sixth Site room (the suite title below grows honestly).
+  "src/app/a/site/replays/page.tsx",
 ];
 
-describe("the five Site rooms wear the operator gate (source pins)", () => {
+describe("the six Site rooms wear the operator gate (source pins)", () => {
   it.each(PAGES)("%s is a server gate: OperatorGate + operatorFromCookieHeader + operatorsConfigured, no \"use client\"", async (rel) => {
     const src = await read(rel);
     expect(src).not.toContain('"use client"');

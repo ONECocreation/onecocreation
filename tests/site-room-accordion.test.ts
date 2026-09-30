@@ -19,13 +19,17 @@ const ROOT = process.cwd();
 const read = (rel: string) => fs.readFile(path.join(ROOT, rel), "utf8");
 
 describe("the accordion's rows + the current mark", () => {
-  it("carries the five /a/site sub-rooms (Switches first) plus TASK-330's Brand row, last", async () => {
+  it("carries the five /a/site sub-rooms (Switches first) plus TASK-496's Replays row and TASK-330's Brand row, last", async () => {
     const { SITE_SUBS } = await import("@/components/console/SiteConsoleShell");
     expect(SITE_SUBS.map((s) => [s.key, s.href, s.label])).toEqual([
       ["switches", "/a/site", "Switches"],
       ["menu", "/a/site/menu", "Menu"],
       ["community-door", "/a/site/community-door", "Community door"],
       ["about-videos", "/a/site/about-videos", "Videos on About"],
+      // TASK-496 (block 969,088+): the Replays list Love pastes, beside its
+      // sibling video room (an honest update - the row is new, the pin
+      // grows; nothing existing moves).
+      ["replays", "/a/site/replays", "Replays"],
       // TASK-381 (block 968,047+): the weekly reading's source, no public
       // surface yet (the notice is T-382, held on the mockup nod).
       ["reading", "/a/site/reading", "The weekly reading"],
@@ -47,6 +51,7 @@ describe("the accordion's rows + the current mark", () => {
     expect(siteSubForPath("/a/site/menu")).toBe("menu");
     expect(siteSubForPath("/a/site/community-door")).toBe("community-door");
     expect(siteSubForPath("/a/site/about-videos")).toBe("about-videos");
+    expect(siteSubForPath("/a/site/replays")).toBe("replays"); // TASK-496
     expect(siteSubForPath("/a/site/reading")).toBe("reading");
     expect(siteSubForPath("/a/site/chat")).toBe("chat");
     // a deeper unknown /a/site/* path still marks Switches; outside /a/site nothing marks
@@ -130,6 +135,14 @@ describe("the sub-routes — each renders its one card", () => {
     expect(page).toContain("Videos on About — the playlist Love pastes");
     // the card itself moved verbatim — still self-contained through /api/admin/site
     const card = await read("src/app/a/site/about-videos/AboutVideosCard.tsx");
+    expect(card).toContain('fetch("/api/admin/site"');
+  });
+
+  it("/a/site/replays renders T-496's replays card", async () => {
+    const page = await read("src/app/a/site/replays/SiteReplaysRoom.tsx");
+    expect(page).toContain("<ReplaysCard />");
+    // the card is self-contained through the same one endpoint
+    const card = await read("src/app/a/site/replays/ReplaysCard.tsx");
     expect(card).toContain('fetch("/api/admin/site"');
   });
 });

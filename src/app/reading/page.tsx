@@ -354,6 +354,21 @@ export default async function ReadingPage({
             </div>
           </section>
 
+          {/* THE REPLAYS DOOR (TASK-496, block 969,088+; the Admiral: "a
+              Replays button on /reading") - one small section, classes only
+              from the pinned kitx set; nothing else on this page moves. */}
+          <section className="kitx-section">
+            <div className="wrap kitx-flow">
+              <h2 className="kit-h2">Replays</h2>
+              <p className="kit-body">Missed one? The replays keep every recorded reading.</p>
+              <div className="kit-btn-row kitx-actions">
+                <a className="kit-btn kit-btn-main kit-btn-sm" href="/replays">
+                  Replays
+                </a>
+              </div>
+            </div>
+          </section>
+
           {/* WHAT YOU WILL EXPERIENCE — M3's three lines: the weekday
               DERIVED (never the mock's literal), the clock living once at
               the top, the pass price from the live store item. */}

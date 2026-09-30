@@ -36,6 +36,7 @@
     { "route": "/a/site/menu", "siteChrome": "render", "signedOut": "gate" },
     { "route": "/a/site/reading", "siteChrome": "render", "signedOut": "gate" },
     { "route": "/a/site/reading/go/[door]", "siteChrome": "render", "signedOut": "gate" },
+    { "route": "/a/site/replays", "siteChrome": "render", "signedOut": "gate" },
     { "route": "/a/spaces", "siteChrome": "redirect", "alwaysRedirectTo": "/a/connections", "source": "src/app/a/spaces/page.tsx:8" },
     { "route": "/a/status", "siteChrome": "redirect", "signedOut": "gate", "source": "src/app/a/status/page.tsx:26" },
     { "route": "/a/store", "siteChrome": "render", "signedOut": "gate", "gateDoor": "api-401" },
