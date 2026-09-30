@@ -79,7 +79,8 @@ export const LETTER_DEFAULTS: Partial<Record<LetterKey, LetterOverride>> = {
 
 Here is your free guided meditation, with love:
 
-[▶ Unzip Into the New You](https://onecocreation-adminpacmans-projects.vercel.app/audio/unzip-into-the-new-you.mp3)
+!cta: Download: Unzip Into the New You | /meditation/download
+[Listen in your browser](/audio/unzip-into-the-new-you.mp3)
 
 Save it, return to it, share the stillness. A weekly note of inspiration will find you here from now on.
 
