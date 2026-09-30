@@ -6,7 +6,25 @@ Lane: feat/task-518-love-knows-who-bought · worktree
 
 ## Baseline (established at cut, before any lane edit)
 
-(gates pending — pasted below once the cut-tip run completes)
+`bash ~/dev/shortcuts/oc-gate.sh /home/pac/dev/worktrees/task-518` on
+the cut tip 8ef0363 (+ claim commit 345cdba, work-claims only):
+
+```
+census: 1114 objects, baseline 1119 · families: 181/37/5/8/63/0 · fonts: 47 token/32 literal
+ Test Files  286 passed (286)
+      Tests  3852 passed (3852)
+scripts/calendar-view.test.mjs: 70 passed, 0 failed
+scripts/cartridge-identity.test.mjs: 179 passed, 0 failed
+scripts/console-matrix.test.mjs: 14 passed, 0 failed
+scripts/fixture-kv.test.mjs: 45 passed, 0 failed
+scripts/square-payments.test.mjs: 58 passed, 0 failed
+eslint 0
+tsc 0
+build ok
+GATES GREEN
+```
+
+The suite must grow from 286 files / 3852 tests.
 
 ## Running log
 
