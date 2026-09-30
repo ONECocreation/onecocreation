@@ -2,8 +2,8 @@ import crypto from "crypto";
 import { decidePwyc, getOrder, attachCharge, type OrderRecord } from "./store";
 import { btcpayRefundLink } from "./payments";
 import { enqueue } from "./mail-queue";
-import { brandShell, pill } from "./mail";
-import { getLetterOverride, bodyToHtml, LETTER_DEFAULTS, type LetterKey } from "./letters";
+import { pill } from "./mail";
+import { getLetterOverride, letterHtml, LETTER_DEFAULTS, type LetterKey } from "./letters";
 import { siteBase } from "./subscribers";
 
 /**
@@ -111,8 +111,13 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 
 /** Slots ({{lines}}, {{doors}}, …) let Love move the machine-built parts
  *  around in her own words; a slot she doesn't place is appended at the end
- *  so the load-bearing pieces can never be edited away. */
-async function letterFor(
+ *  so the load-bearing pieces can never be edited away.
+ *  TASK-491: ONE RENDER — the slot-marked body renders through letterHtml
+ *  (the same render the desk preview and every other sender pour from), so
+ *  her directive lines lift into the rich shell instead of shipping as
+ *  literal "!cta:" text. Exported so the preview-equals-sent pins can
+ *  reconstruct a sender's document from the same composer. */
+export async function letterFor(
   key: LetterKey,
   slots: Record<string, string>,
 ): Promise<{ subject: string; html: string }> {
@@ -127,19 +132,20 @@ async function letterFor(
       placed.add(k);
     }
   }
-  let html = bodyToHtml(body);
-  for (const k of placed) {
+  /* a slot Love left out rides as a marker line at the END OF THE BODY,
+     before render, so it still lands as its own block inside the shell */
+  for (const k of Object.keys(slots)) {
+    if (!placed.has(k)) body += `\n\n\u0000${k}\u0000`;
+  }
+  let html = letterHtml(body);
+  for (const k of Object.keys(slots)) {
     // a slot standing alone becomes its own block (valid html); inline stays inline
     html = html
       .split(`<p style="margin:0 0 1.15em;line-height:1.75;">\u0000${k}\u0000</p>`)
       .join(slots[k]);
     html = html.split(`\u0000${k}\u0000`).join(slots[k]);
   }
-  const appended = Object.keys(slots)
-    .filter((k) => !placed.has(k))
-    .map((k) => slots[k])
-    .join("\n");
-  return { subject: tpl.subject, html: html + appended };
+  return { subject: tpl.subject, html };
 }
 
 /** Where the decision letter goes — the receipt email, or the email door. */
@@ -197,7 +203,7 @@ export async function sendOfferNotify(order: OrderRecord): Promise<void> {
   };
 
   const { subject, html } = await letterFor("offer-love-notify", slots);
-  await enqueue([{ to: offerNotifyTo(), subject, html: brandShell(html) }]);
+  await enqueue([{ to: offerNotifyTo(), subject, html }]);
 }
 
 /* ── TASK 1b: the decision — ONE machinery for the desk and the email doors ── */
@@ -248,7 +254,7 @@ export async function decideOfferWithLetters(
     }
     try {
       const { subject, html } = await letterFor(accept ? "pwyc-accept" : "pwyc-decline", slots);
-      await enqueue([{ to, subject, html: brandShell(html) }]);
+      await enqueue([{ to, subject, html }]);
     } catch {
       /* the ledger already holds the decision; the letter can be resent */
     }
