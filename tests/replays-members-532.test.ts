@@ -219,12 +219,12 @@ describe("TASK-532 - the page's own shape: an invitation, never a 404, never a t
     expect(list).not.toContain("/api/member/session");
   });
 
-  it("no em dash, no arrow, no emoji in the lane's touched on-screen files", async () => {
+  it("no em dash, no arrow, no emoji in the files this lane authors", async () => {
+    /* scoped to the lane-authored files: the /a files carry pre-existing
+       T-496 comment punctuation and keep the old suite's own em-dash pin */
     for (const rel of [
       "src/app/replays/page.tsx",
       "src/components/replays/ReplaysList.tsx",
-      "src/app/a/site/replays/ReplaysCard.tsx",
-      "src/app/a/site/replays/SiteReplaysRoom.tsx",
       "src/lib/replays-source.ts",
       "src/app/api/admin/replays-playlist/route.ts",
     ]) {

@@ -192,9 +192,11 @@ describe("TASK-496 - the player: youtube-nocookie, tapped-to-hear (autoplay, NO 
     expect(url).not.toContain("mute=");
   });
 
-  it("a closed list renders one row per saved entry, title first, and NO iframe (the open row's player mounts only while open)", async () => {
+  it("signed OUT renders one mini per saved entry, title first, and NO iframe (TASK-532: the player is the gate, the titles are public)", async () => {
     const { default: ReplaysList } = await import("@/components/replays/ReplaysList");
-    const html = renderToStaticMarkup(createElement(ReplaysList, { replays: FIXTURE }));
+    /* TASK-532: the component gained the server-read signedIn + the
+       deep-link initialId props; signed out mounts no frame at all. */
+    const html = renderToStaticMarkup(createElement(ReplaysList, { replays: FIXTURE, signedIn: false, initialId: FIXTURE[0].id }));
     expect(html).toContain("The first reading, kept");
     expect(html).toContain("A short from the porch");
     expect(html).not.toContain("<iframe");
@@ -214,7 +216,9 @@ describe("TASK-496 - the designed empty state (the list ships EMPTY; this surfac
     vi.doMock("@/components/PaletteVars", () => ({ default: () => null }));
     try {
       const mod = await import("@/app/replays/page");
-      const element = await mod.default();
+      /* TASK-532: the page gained the ?play= deep link (a searchParams
+         prop) - this suite renders the default (no play) shape. */
+      const element = await mod.default({ searchParams: Promise.resolve({}) });
       return renderToStaticMarkup(element);
     } finally {
       vi.doUnmock("next/navigation");
@@ -255,7 +259,10 @@ describe("TASK-496 - the /reading door and the Community menu row", () => {
   it("/reading carries the Replays door to /replays (source pin)", async () => {
     const page = await readSrc("src/app/reading/page.tsx");
     expect(page).toContain('href="/replays"');
-    expect(page).toContain("The replays keep every recorded reading");
+    /* TASK-532 (round-2 NOD pick 1): the door is the BOOK door now -
+       "Catch the replays" beside reading-book-thumb.webp */
+    expect(page).toContain("Catch the replays");
+    expect(page).toContain("reading-book-thumb.webp");
   });
 
   it("buildDefaultMenu's Community subs carry Replays → /replays after Read with Love", async () => {
