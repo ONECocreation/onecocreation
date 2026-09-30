@@ -5,37 +5,33 @@ import { Render } from "@puckeditor/core";
 import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import TipJar from "@/components/TipJar";
-import { liveJarKeys } from "@/components/sections";
 import WildDoors from "@/components/WildDoors";
 import StackedHero from "@/components/StackedHero";
 import PaletteVars from "@/components/PaletteVars";
 import PopupHost from "@/components/PopupHost";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
-import { jarsOpen } from "@/lib/payments";
 
 /**
- * TASK-134 (0018.06.17 a₿) — jarsOpen() gates the whole jars block: when
- * features.jars is off, or it's on but the bitcoin rail isn't actually
- * live, the block is gone entirely (no header, no empty box — the Admiral's
- * report was that a bitcoin-off state still showed the Gifts of Gratitude
- * jar). The remaining jars split into two named sections: "Tip the field"
- * (Tip Love · Tip One Cocreation) and its own "Gifts of Gratitude" section
- * with a two-line explainer and a derive-or-dash line for the not-yet-built
- * claim/feedback loop.
+ * TASK-498 (block 969,095 · R-072, settled Monday — the Admiral
+ * [00:44:13–00:44:38]): the jars LEFT this room. The tip items live only
+ * under Store, in their own drop-down at the bottom of /store
+ * (src/components/store/GiftDrawer.tsx), gated exactly as they were here
+ * (TASK-134's switch-plus-live-rail gate AND TASK-411's live-shelf-items
+ * gate — the idiom moved with the jars, unchanged). What stays: the hero,
+ * the Three Doors, and More Ways to Hold the Work.
  */
 
 export const metadata: Metadata = {
   title: "Support — One Cocreation",
-  description: "Tend the field — gifts land whole with Love, and Gifts of Gratitude flow onward to the beings holding this Earth.",
+  description: "Tend the field — gifts land whole with Love.",
 };
 
 /**
  * /support, revamped (Admiral, 0018.05.15): a full room instead of a flat
- * strip — the field hero, the three jars with their purposes, the wild
- * doors (beasts grow out of their cells on hover), the other ways to hold
- * the work, and the money words spoken gently.
+ * strip — the field hero, the wild doors (beasts grow out of their cells
+ * on hover), the other ways to hold the work, and the money words spoken
+ * gently. (TASK-498: the three jars moved to the store's bottom drawer.)
  */
 
 const MORE_DOORS = [
@@ -69,13 +65,6 @@ export default async function SupportPage() {
   }
   /* ── end TASK-159 Puck-first branch; hand-built fallback below ── */
 
-  /* TASK-411 (block 968,170 a₿) — the jars ride the basket now, and a jar
-     is offered only while its shelf item is live (derive-or-dash): the
-     section copy stands either way, the widget mounts only for live jars —
-     same truth the home Donations() section reads (one helper, sections.tsx). */
-  const liveJars = jarsOpen() ? await liveJarKeys() : [];
-  const fieldJars = liveJars.filter((k) => k !== "payforward");
-
   return (
     <>
       <SiteHeader />
@@ -86,45 +75,10 @@ export default async function SupportPage() {
             <StackedHero kicker="Support This Work — Gently" lines={[{ t: "TEND" }, { t: "THE FIELD", tone: "teal" }]} constellation />
             <p className="lead" style={{ marginBottom: 0 }}>
               Everything here — the sessions, the rooms, the letters — is held by one pair of hands.
-              A gift lands with Love. Choose the jar it fills.
+              A gift lands with Love.
             </p>
           </div>
         </section>
-
-        {/* ── the jars (TASK-134: gone entirely when jarsOpen() is false;
-             TASK-411: each jar additionally follows its shelf item) ── */}
-        {jarsOpen() && (
-          <section style={{ padding: "10px 0 30px" }}>
-            <div className="wrap reveal">
-              <div style={{ background: "var(--warm-panel)",
-                border: "1px solid var(--warm-edge)", borderRadius: 30, padding: "34px 38px", boxShadow: "var(--soft)" }}>
-                {/* ── Tip the field ── */}
-                <h2 style={{ fontWeight: 400, fontSize: "1.5rem", margin: 0 }}>Tip the Field</h2>
-                <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: ".95rem" }}>
-                  pick a jar, pick an amount — it lands in your basket, and it&apos;s done in a breath.
-                </p>
-                {fieldJars.length > 0 && <TipJar only={fieldJars} />}
-                <p style={{ fontSize: ".82rem", color: "var(--muted)", marginTop: 18 }}>
-                  Bitcoin gifts travel on-chain straight to Love&apos;s own wallet — nothing
-                  held, nothing routed by anyone else. Dollars are always welcome too: bitcoin is an
-                  option here, never a demand.
-                </p>
-
-                {/* ── Gifts of Gratitude, its own header ── */}
-                <div style={{ marginTop: 38, paddingTop: 30, borderTop: "1px solid var(--warm-edge)" }}>
-                  <h2 style={{ fontWeight: 400, fontSize: "1.5rem", margin: 0 }}>Gifts of Gratitude</h2>
-                  <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: ".95rem" }}>
-                    A gift bought forward for someone who needs it, held until they can claim it.
-                  </p>
-                  <p style={{ color: "var(--muted)", margin: "2px 0 0", fontSize: ".95rem" }}>
-                    — how gifts were received will show here.
-                  </p>
-                  {liveJars.includes("payforward") && <TipJar only={["payforward"]} />}
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* ── the wild doors ── */}
         <section style={{ padding: "20px 0 34px" }}>

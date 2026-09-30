@@ -1,7 +1,13 @@
 import Link from "next/link";
 import StoreItemCard, { type PriceRails } from "@/components/store/StoreItemCard";
 import { doorForItem } from "@/lib/store-sections";
+import { JAR_ITEMS } from "@/lib/jars";
 import type { StoreItem } from "@/lib/store";
+
+/* TASK-498 (R-072): the jars' shelf ids, one source (@/lib/jars) — a jar
+   is never related to anything and nothing is ever related to a jar;
+   their one home is the GiftDrawer at the bottom of /store. */
+const JAR_IDS = new Set<string>(Object.values(JAR_ITEMS));
 
 /**
  * TASK-177 (0018.06.18 a₿) — the ShinePages product template's "Related
@@ -26,8 +32,9 @@ export function relatedItems(
   current: StoreItem,
   limit = 3,
 ): StoreItem[] {
+  if (JAR_IDS.has(current.id)) return [];
   return all
-    .filter((i) => i.id !== current.id && i.status === "live" && i.kind === current.kind)
+    .filter((i) => i.id !== current.id && i.status === "live" && i.kind === current.kind && !JAR_IDS.has(i.id))
     .slice(0, limit);
 }
 

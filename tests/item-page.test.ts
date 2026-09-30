@@ -94,6 +94,30 @@ describe("the breadcrumb — Home / Store / <section>", () => {
     const { sectionForKind } = await import("@/lib/store-sections");
     expect(sectionForKind("retreat")).toBeUndefined();
   });
+
+  /* TASK-498 (R-072): the page's crumb line now calls sectionForItem, so a
+   * jar's crumb reads Gifts and points at the /store#gifts drawer. The one
+   * kind→section map above is unchanged; these pins cover the fall-through. */
+  it("sectionForItem: the three jar ids crumb to the gifts pseudo-section", async () => {
+    const { sectionForItem } = await import("@/lib/store-sections");
+    const { JAR_ITEMS } = await import("@/lib/jars");
+    for (const id of Object.values(JAR_ITEMS)) {
+      expect(sectionForItem({ id, kind: "digital" })).toEqual({ anchor: "gifts", pill: "Gifts" });
+    }
+  });
+
+  it("sectionForItem: a non-jar item falls through to the ONE map unchanged", async () => {
+    const { sectionForItem } = await import("@/lib/store-sections");
+    expect(sectionForItem({ id: "worthy", kind: "digital" })).toEqual(
+      expect.objectContaining({ anchor: "meditations", pill: "Meditations" }),
+    );
+    expect(sectionForItem({ id: "some-retreat", kind: "retreat" })).toBeUndefined();
+  });
+
+  it("the item page's crumb line reads sectionForItem(item) (R-072 source pin)", async () => {
+    const src = await read("src/app/store/[id]/page.tsx");
+    expect(src).toContain("sectionForItem(item)");
+  });
 });
 
 describe("relatedItems — same kind, live only, never itself, at most three", () => {

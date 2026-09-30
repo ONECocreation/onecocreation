@@ -8,10 +8,10 @@ import { listItems, getItem } from "@/lib/store";
 import { JAR_ITEMS } from "@/lib/jars";
 import { getSiteConfig } from "@/lib/site-config";
 import { tierRailsOn } from "@/lib/tier-offer";
-import { jarsOpen, liveAdapter, ensureSquareVault } from "@/lib/payments";
+import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 import { DEFAULT_READING_SCHEDULE, validateReadingSchedule, type ReadingSchedule } from "@/lib/reading-schedule";
 import SubscribeForm from "./SubscribeForm";
-import TipJar, { type JarKey } from "./TipJar";
+import type { JarKey } from "./TipJar";
 import WildDoors from "./WildDoors";
 import LightCode from "./LightCode";
 import { cartridge } from "@/brand/cartridge";
@@ -569,8 +569,8 @@ export async function Affirmations() {
    ONCE in @/lib/jars (a neutral module — a server page cannot call a
    client-module export, payments.ts:656's own note), read by this gate
    and by TipJar's give() alike; the lane's pin 4 pins that single source
-   against the JARS words. /support imports liveJarKeys too — the two
-   faces can never disagree. */
+   against the JARS words. TASK-498 (R-072): /store imports liveJarKeys
+   now — the jars' one remaining face reads this same gate. */
 export async function liveJarKeys(): Promise<JarKey[]> {
   const live = await Promise.all(
     (Object.keys(JAR_ITEMS) as JarKey[]).map(async (key) => {
@@ -582,19 +582,13 @@ export async function liveJarKeys(): Promise<JarKey[]> {
 }
 
 export async function Donations() {
-  /* TASK-134 (0018.06.17 a₿) — THE JARS FOLLOW THE SWITCHES: the jars block
-     renders only when jarsOpen() — features.jars ON *and* the bitcoin rail
-     actually live — so this section and /support can never disagree.
-     TASK-411 adds the shelf truth: only jars whose store item is live are
-     offered (derive-or-dash); with none live the copy stands with no
-     widget, same as jarsOpen() false. */
-  const open = jarsOpen();
-  const liveJars = open ? await liveJarKeys() : [];
+  /* TASK-498 (block 969,095 · R-072 — the Admiral: the tip items live ONLY
+     under Store): the TipJar widget LEFT this section for the drawer at
+     the bottom of /store (GiftDrawer). The words, the give-line, the Three
+     Doors, and the Full Support Room button stay. */
   /* TASK-393 (R5 of the block-968,133 amendment) — "Give in bitcoin over
      lightning or simply in dollars" was unconditional on the payment
-     rails (a separate concern from the jarsOpen()+shelf gate on the
-     TipJar widget above). Rail-judged the same way
-     as Jewelry()/Affirmations() above. */
+     rails. Rail-judged the same way as Jewelry()/Affirmations() above. */
   const rails = await liveRails();
   const giveLine = rails.btc && rails.card
     ? "Give in bitcoin or simply in dollars; bitcoin is an option here, never a demand."
@@ -612,7 +606,6 @@ export async function Donations() {
           <p style={{ color: "var(--ink-body)", maxWidth: 640 }}>
             A gift lands with Love. {giveLine}
           </p>
-          {open && liveJars.length > 0 && <TipJar only={liveJars} />}
 
           {/* ── the three doors (TASK-126, 0018.06.16 a₿ — same words as /support) ── */}
           <div style={{ marginTop: 34 }}>

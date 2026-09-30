@@ -1,5 +1,6 @@
 import type { StoreItem } from "@/lib/store";
 import { TIER_PAGES } from "@/lib/tiers-content";
+import { JAR_ITEMS } from "@/lib/jars";
 
 /**
  * TASK-189 (0018.06.18 a₿, cut from the T-177/T-184 reviews) — THE ONE
@@ -72,6 +73,22 @@ for (const section of STORE_SECTIONS) {
  *  reader shares — undefined for a kind with no shelf home (derive-or-dash) */
 export function sectionForKind(kind: StoreItem["kind"]): StoreSection | undefined {
   return SECTION_BY_KIND.get(kind);
+}
+
+/** TASK-498 (block 969,095 · R-072) — the jars' crumb home. The tip jars
+ *  left the shelf grid (they rode Meditations by kind) for the GiftDrawer
+ *  at the bottom of /store; their item pages stay reachable, so their
+ *  breadcrumb needs a home that is NOT a shelf section: a gifts
+ *  pseudo-section naming the drawer's anchor. Identity keys on the
+ *  JAR_ITEMS ids (@/lib/jars, the one source T-411 pinned), never on the
+ *  category word "gifts" (T-422 decision 3). STORE_SECTIONS itself is
+ *  untouched — four entries, sessions last. Everything that is not a jar
+ *  falls through to the one kind→section map. */
+export function sectionForItem(item: Pick<StoreItem, "id" | "kind">): Pick<StoreSection, "anchor" | "pill"> | undefined {
+  if ((Object.values(JAR_ITEMS) as string[]).includes(item.id)) {
+    return { anchor: "gifts", pill: "Gifts" };
+  }
+  return sectionForKind(item.kind);
 }
 
 /** The card's one door: the item's OWN page — a package goes STRAIGHT to

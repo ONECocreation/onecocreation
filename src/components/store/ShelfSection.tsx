@@ -5,7 +5,13 @@ import StoreItemCard, { type PriceRails } from "@/components/store/StoreItemCard
 import FreeMeditationCard from "@/components/store/FreeMeditationCard";
 import type { StoreItem } from "@/lib/store";
 import { STORE_SECTIONS, doorForItem, groupItemsByBundle, type StoreSection } from "@/lib/store-sections";
+import { JAR_ITEMS } from "@/lib/jars";
 import { cartridge } from "@/brand/cartridge";
+
+/* TASK-498 (R-072): the jars' shelf ids, one source (@/lib/jars, the same
+   map T-411 pinned) — the grid exclusion keys on the ids, never on the
+   category word "gifts". */
+const JAR_IDS = new Set<string>(Object.values(JAR_ITEMS));
 
 /**
  * THE SHELF SECTION (TASK-176, 0018.06.18 a₿ · block 966098) — one shelf
@@ -74,12 +80,16 @@ export interface ShelfGroupWithItems extends ShelfGroup {
 /** Every group with its items filtered and price-sorted — visibility (an
     empty group drops off /store; the filtered routes keep their own) is
     the caller's call, so the free card can hold the meditations section
-    open even when no paid meditation is on the shelf yet. */
+    open even when no paid meditation is on the shelf yet. TASK-498
+    (R-072): the tip jars leave the grid — they rode the meditations
+    section by kind before; their one home is the GiftDrawer at the
+    bottom of /store, keyed on the JAR_ITEMS ids (never the category
+    word). */
 export function shelfGroups(items: StoreItem[]): ShelfGroupWithItems[] {
   return SHELF_GROUPS.map((g) => ({
     ...g,
     items: items
-      .filter((i) => g.kinds.includes(i.kind))
+      .filter((i) => g.kinds.includes(i.kind) && !JAR_IDS.has(i.id))
       .sort((a, b) => Number(isTasterPass(a)) - Number(isTasterPass(b)) || effectiveAmount(a) - effectiveAmount(b)),
   }));
 }

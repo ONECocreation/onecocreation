@@ -85,10 +85,17 @@ describe("TASK-459 — the four bitcoin/no-cut sentences are gone from the live 
     expect(flat).toContain("choose a real open time → pay → confirmed with a calendar file");
   });
 
-  it("support/page.tsx: no \"no cut taken\", the jar sentence stays grammatical", () => {
+  /* TASK-498 (R-072): honestly-broken pin, updated not deleted — the old
+     pin kept the hero's jar sentence ("Choose the jar it fills.") on a
+     page that held the jars; the Admiral ruled the jars leave /support
+     entirely, so the jar clause was struck and the pin now asserts the
+     lead ends at "A gift lands with Love." The T-459 substance (no
+     "no cut taken") is unchanged. */
+  it("support/page.tsx: no \"no cut taken\", and no jar clause on a page that holds no jars (R-072)", () => {
     const src = read("src/app/support/page.tsx");
     expect(src).not.toMatch(FORBIDDEN.noCutTaken);
-    expect(src).toMatch(/A gift lands with Love\.\s*Choose the jar it fills\./);
+    expect(src).not.toMatch(/Choose the jar it fills\./);
+    expect(src).toMatch(/A gift lands with Love\./);
   });
 });
 

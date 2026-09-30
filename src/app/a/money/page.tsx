@@ -188,7 +188,7 @@ export default function MoneyRoom() {
               <div style={{ fontSize: ".72rem", color: "var(--muted)" }}>
                 {t?.count ?? 0} gifts{pulse?.thisMoon ? ` · ${pulse.thisMoon} this moon` : ""}
                 {key === "payforward" && (
-                  <span title="Love passes this jar onward — the doors live on /support">
+                  <span title="Love passes this jar onward — the doors live on /store">
                     {" "}· flows onward 🦁🌳🐘
                   </span>
                 )}
