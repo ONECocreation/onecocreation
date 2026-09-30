@@ -616,7 +616,12 @@ const packagesContent: Block[] = [
   ]),
 ];
 
-/* ── support — the full room: hero, jars, wild doors, more ways ─────────── */
+/* ── support — the full room: hero, wild doors, more ways ─────────────────
+   TASK-498 (R-072): the two jar bands left this seed (the gifts panel
+   band and the pay-it-forward band) so Love's next studio publish of
+   /support cannot resurrect the jars the Admiral ruled gone; the jars'
+   one home is the GiftDrawer at the bottom of /store. The wild-doors
+   note stays byte-identical. */
 const su = kit("su");
 const supportContent: Block[] = [
   su.band("plain", "theme", [
@@ -626,17 +631,6 @@ const supportContent: Block[] = [
     su.rich("Everything here — the sessions, the rooms, the letters — is held by one pair of hands. A gift lands with Love. Choose the jar it fills.", "center"),
   ]),
   su.band("plain", "theme", [
-    su.panel([
-      su.heading("Gifts of Gratitude", "h2"),
-      su.text("pick a jar, pick an amount — it lands in your basket, and it’s done in a breath."),
-      su.note("── live tip jars stay code-side ──"),
-      su.text("Bitcoin gifts travel on-chain straight to Love’s own wallet — nothing held, nothing routed by anyone else. Dollars are always welcome too: bitcoin is an option here, never a demand.", "left", st({ size: 15 })),
-    ]),
-  ]),
-  su.band("plain", "theme", [
-    su.eyebrow("Where Pay It Forward Flows 🎁", "center"),
-    su.heading("It Doesn’t Stop Here", "h2", "center"),
-    su.text("The Pay-It-Forward jar funds sessions for those who can’t right now — and Love passes it onward to the beings holding this Earth together.", "center"),
     su.note("── live wild doors stay code-side (beasts grow out of their cells on hover) ──"),
   ]),
   su.band("plain", "theme", [
