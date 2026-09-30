@@ -344,12 +344,31 @@ describe("no literal weekday name and no \"1:11\" — the page AND its one helpe
   }
 });
 
-describe("the design-drift theme contract — kit.css carries exactly the seven RULED kitx- rules", () => {
-  it("every kitx- class the page/island use is defined in kit.css, and no eighth kitx- class exists", async () => {
+describe("the design-drift theme contract — kit.css carries exactly the RULED kitx- rules", () => {
+  it("every kitx- class the page/island use is defined in kit.css, and no unruled kitx- class exists", async () => {
     const css = await read("src/app/kit.css");
     const defined = [...css.matchAll(/\.kitx-([a-z]+)/g)].map((m) => m[0]);
     const unique = [...new Set(defined)].sort();
-    expect(unique).toEqual([".kitx-actions", ".kitx-balanced", ".kitx-flow", ".kitx-host", ".kitx-mark", ".kitx-photo", ".kitx-section"].sort());
+    /* TASK-532 (block 969,334, the Admiral's round-2 NOD): the ruled
+       replays look adds kitx-player, kitx-thumbs(-mini), kitx-thumb(-pic/
+       -play/-title) and kitx-stage-play to kit.css - the NOD's own words:
+       "the kitx- classes listed there go into kit.css, tokens only". The
+       [a-z]+ capture reads -mini/-pic/-play/-title as their stems. */
+    expect(unique).toEqual(
+      [
+        ".kitx-actions",
+        ".kitx-balanced",
+        ".kitx-flow",
+        ".kitx-host",
+        ".kitx-mark",
+        ".kitx-photo",
+        ".kitx-player",
+        ".kitx-section",
+        ".kitx-stage",
+        ".kitx-thumb",
+        ".kitx-thumbs",
+      ].sort(),
+    );
   });
 });
 

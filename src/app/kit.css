@@ -478,7 +478,9 @@
 .kitx-player{margin-bottom:24px}
 .kitx-thumbs{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:24px 20px}
 .kitx-thumbs-mini{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:18px 14px}
-.kitx-thumb{display:block;width:100%;min-width:0;padding:0;margin:0;background:none;border:0;color:inherit;font:inherit;text-align:left;text-decoration:none;cursor:pointer}
+/* the bare-button reset is house.css's own .about-video-head idiom
+   (all:unset, never a new font declaration - the font census ratchet) */
+.kitx-thumb{all:unset;box-sizing:border-box;display:block;width:100%;min-width:0;text-align:left;cursor:pointer}
 .kitx-thumb:focus-visible{outline:2px solid var(--info);outline-offset:4px;border-radius:12px}
 .kitx-thumb-pic{position:relative;display:block;aspect-ratio:16/9;overflow:hidden;border-radius:12px;border:1px solid var(--glass-edge);background:var(--band-1)}
 .kitx-thumb-pic>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
