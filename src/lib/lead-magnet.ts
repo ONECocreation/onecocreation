@@ -1,7 +1,7 @@
 import { unsubscribeUrl, siteBase } from "@/lib/subscribers";
 import { sendMail, brandShell } from "@/lib/mail";
 import { enqueue } from "@/lib/mail-queue";
-import { getLetterOverride, bodyToHtml, letterHtml, LETTER_DEFAULTS } from "@/lib/letters";
+import { getLetterOverride, letterHtml, LETTER_DEFAULTS } from "@/lib/letters";
 import { getSiteConfig } from "@/lib/site-config";
 import { READING_PAGE_PATH, READING_ROOM_PATH } from "@/lib/reading-room";
 
@@ -18,30 +18,23 @@ import { READING_PAGE_PATH, READING_ROOM_PATH } from "@/lib/reading-room";
 /** "Unzip Into the New You" — the promise on every form, sent immediately. */
 export async function sendLeadMagnetLetter(email: string): Promise<void> {
   const unsub = unsubscribeUrl(email);
-  const leadTpl = await getLetterOverride("lead-magnet");
-  /* R-077 (TASK-492): the button DOWNLOADS the gift (the attachment route),
-     and a Listen line under it plays the same file in the browser (the plain
-     static path). T-491 turns this pill into Love's own !cta: line and keeps
-     both public paths: /meditation/download and /audio/unzip-into-the-new-you.mp3. */
-  const giftBlock =
-    `<p style="margin:22px 0;"><a href="${siteBase()}/meditation/download"
-          style="background:#b4862b;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;">
-          Download: Unzip Into the New You</a></p>
-       <p><a href="${siteBase()}/audio/unzip-into-the-new-you.mp3">Listen in your browser</a></p>`;
+  /* TASK-491: ONE RENDER. The Download button and the Listen line live in
+     the body now (the default's !cta: pair, T-492's two public paths), so a
+     saved override sends exactly as previewed — no pill appended after the
+     render. */
+  const tpl = (await getLetterOverride("lead-magnet")) ?? LETTER_DEFAULTS["lead-magnet"];
   await sendMail("news", {
     to: email,
-    subject: leadTpl?.subject ?? "Your free meditation — Unzip Into the New You",
-    html: brandShell(
-      leadTpl
-        ? bodyToHtml(leadTpl.body) + giftBlock
-        : `<p>Welcome, beautiful soul.</p>
-       <p>Here is your free guided meditation, with love:</p>
-       ${giftBlock}
-       <p>Save it, return to it, share the stillness. A weekly note of
-       inspiration will find you here from now on.</p>
-       <p>With love,<br/>One Cocreation</p>`,
-      { unsubscribeUrl: unsub },
-    ),
+    subject: tpl?.subject ?? "Your free meditation — Unzip Into the New You",
+    html: tpl
+      ? letterHtml(tpl.body, { unsubscribeUrl: unsub })
+      : brandShell(
+          `<p>Welcome, beautiful soul.</p>
+           <p>Here is your free guided meditation, with love:</p>
+           <p><a href="${siteBase()}/audio/unzip-into-the-new-you.mp3">Listen in your browser</a></p>
+           <p>With love,<br/>One Cocreation</p>`,
+          { unsubscribeUrl: unsub },
+        ),
     unsubscribeUrl: unsub,
   });
 }

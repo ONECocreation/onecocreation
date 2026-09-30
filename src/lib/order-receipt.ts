@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { getItem, kv, type OrderRecord } from "./store";
-import { getLetterOverride, LETTER_DEFAULTS, bodyToHtml } from "./letters";
-import { sendMail, brandShell } from "./mail";
+import { getLetterOverride, LETTER_DEFAULTS, letterHtml } from "./letters";
+import { sendMail } from "./mail";
 import { siteBase } from "./subscribers";
 import { priceWords, defaultPreferOf, type MoneyPrefer, type PriceLike } from "./money-words";
 import { liveAdapter } from "./payments";
@@ -208,7 +208,9 @@ export async function buildReceiptLetter(order: OrderRecord): Promise<{ subject:
   if (door && !hadDoor) body += `\n\n${door}`;
   body = body.replace(/\n{3,}/g, "\n\n").trim();
 
-  return { subject, html: brandShell(bodyToHtml(body)) };
+  /* TASK-491: ONE RENDER — the same letterHtml the preview and every other
+     sender pour from, so a !cta: in Love's override renders as the button */
+  return { subject, html: letterHtml(body) };
 }
 
 /**
