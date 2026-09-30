@@ -44,6 +44,11 @@ export default async function ReadingDay() {
 
   const config = await getSiteConfig();
   const schedule = config.reading ?? DEFAULT_READING_SCHEDULE;
+  /* TASK-499 (block 969,306+): the Housewarming-this-week switch, the
+     same read /reading itself makes — absent means ON; a saved false
+     drops Row 1 (the prop below reads null) and forces the open
+     notice's part-1 flag closed. */
+  const housewarmingOn = config.housewarming !== false;
   const next = deriveNext(schedule);
   if (!next) return null;
 
@@ -69,7 +74,7 @@ export default async function ReadingDay() {
   return (
     <ReadingDayBody
       tz={schedule.tz}
-      housewarmingStartsAtMs={sameDayAt(next.startsAtMs, schedule.tz, HOUSEWARMING_TIME)}
+      housewarmingStartsAtMs={housewarmingOn ? sameDayAt(next.startsAtMs, schedule.tz, HOUSEWARMING_TIME) : null}
       readingStartsAtMs={next.startsAtMs}
       encoreStartsAtMs={sameDayAt(next.startsAtMs, schedule.tz, ENCORE_TIME)}
       qaStartsAtMs={sameDayAt(next.startsAtMs, schedule.tz, QA_TIME)}

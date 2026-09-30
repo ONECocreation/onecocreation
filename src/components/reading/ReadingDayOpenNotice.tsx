@@ -29,6 +29,11 @@ import { openDoorNotice, CLOSED_FLAGS, type OpenFlags, type OpenDoorNotice } fro
  * tests, since a bare poll-driven state never fires under SSR); the
  * default export owns the polling — the same split every other reading
  * component keeps.
+ *
+ * TASK-499 (block 969,306+): the optional `part1On` prop (default true)
+ * forces `flags.part1` closed when the Housewarming switch is off — a
+ * hand-opened housewarming door can never surface a "Pick it below"
+ * into a hidden part.
  */
 
 export function ReadingDayOpenNoticeBody({ notice }: { notice: OpenDoorNotice | null }) {
@@ -46,7 +51,7 @@ export function ReadingDayOpenNoticeBody({ notice }: { notice: OpenDoorNotice | 
 
 const POLL_MS = 20_000;
 
-export default function ReadingDayOpenNotice() {
+export default function ReadingDayOpenNotice({ part1On = true }: { part1On?: boolean }) {
   const { selected } = useReadingPart();
   const [flags, setFlags] = useState<OpenFlags>(CLOSED_FLAGS);
 
@@ -61,8 +66,11 @@ export default function ReadingDayOpenNotice() {
       ]).then(([hw, s1, s2, qa]) => {
         if (!alive) return;
         /* TASK-481: Part 1's own flag reads the Housewarming door now —
-           never Stage 1's `phase`, which is Part 2's own truth alone. */
-        const open1 = hw?.ok ? hw.open === true : false;
+           never Stage 1's `phase`, which is Part 2's own truth alone.
+           TASK-499: `part1On === false` (the Housewarming switch off)
+           forces part 1 closed regardless — a hand-opened door must
+           never surface a "Pick it below" into a hidden part. */
+        const open1 = part1On && hw?.ok ? hw.open === true : false;
         const open2 = s1?.ok ? s1.phase === "published" : false;
         const open3 = s2?.ok ? s2.open === true : false;
         const open4 = qa?.ok ? qa.open === true : false;
@@ -75,7 +83,7 @@ export default function ReadingDayOpenNotice() {
       alive = false;
       clearInterval(id);
     };
-  }, []);
+  }, [part1On]);
 
   const notice = openDoorNotice(flags, selected);
   return <ReadingDayOpenNoticeBody notice={notice} />;
