@@ -121,7 +121,11 @@ export default function HousewarmingSwitchCard() {
                 >
                   {on ? "ON" : "OFF"}
                 </button>
-                <Chip tone={on ? "green" : "grey"}>{on ? "ON · showing" : "OFF · hidden"}</Chip>
+                {/* the chip carries the visibility word only — the
+                    "ON · showing" form measured ~25px past the card's
+                    own overflow:hidden on a 390px phone (the T-467 clip
+                    class); the button already says ON/OFF. */}
+                <Chip tone={on ? "green" : "grey"}>{on ? "showing" : "hidden"}</Chip>
               </span>
             </li>
           </ul>
