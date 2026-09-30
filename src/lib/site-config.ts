@@ -149,6 +149,15 @@ export interface SiteConfig {
       rule; only a genuinely malformed doc falls back (sanitizeReading
       below). */
   reading?: ReadingSchedule;
+  /** TASK-499 (block 969,306+): the Housewarming-this-week switch, set
+      from /a/site/reading. ABSENT MEANS ON — zero migration, every
+      stored doc in production is already valid, and a never-touched
+      switch is exactly today's behavior. Only an explicit saved `false`
+      hides Part 1 (the Housewarming) on /reading and points the top
+      countdown at the reading's own time; a malformed stored value
+      drops back to absent (sanitizeHousewarming below), which reads ON
+      — a broken doc must never hide a part that exists. */
+  housewarming?: boolean;
   /** TASK-387 (block 968,088+): the per-room chat switch, set from
       /a/site/chat — Love's own studio ask, "hide the chat fully for some
       of the rooms. even during some sessions turn it on and off." Keyed
@@ -189,6 +198,10 @@ export type SiteConfigPatch = {
   /** whole-object replace when present, same shape as nav/about — the
       reading card always saves its complete schedule, never one field */
   reading?: ReadingSchedule;
+  /** TASK-499: a bare boolean — the switch card always saves the whole
+      value; omitted leaves her saved flip (or the absent-means-ON
+      default) untouched */
+  housewarming?: boolean;
   /** TASK-387: PARTIAL keyed map, unlike reading/about/nav's whole-object
       rule above — a save carries only the changed slug(s)
       (`{ rooms: { "<slug>": { chat } } }`), and saveSiteConfig merges
@@ -311,6 +324,7 @@ function sanitize(raw: unknown): SiteConfig {
     about: sanitizeAbout(o.about),
     replays: sanitizeReplays(o.replays),
     reading: sanitizeReading(o.reading),
+    housewarming: sanitizeHousewarming(o.housewarming),
     rooms: sanitizeRooms(o.rooms),
   };
 }
@@ -325,6 +339,16 @@ function sanitize(raw: unknown): SiteConfig {
 function sanitizeReading(raw: unknown): ReadingSchedule | undefined {
   const checked = validateReadingSchedule(raw);
   return checked.ok ? checked.value : undefined;
+}
+
+/** TASK-499: the stored housewarming switch → a real boolean, or
+    `undefined` for anything else — absent and malformed BOTH read ON at
+    every consumer (`config.housewarming !== false`), so a hand-edited or
+    garbage doc can never silently hide Part 1. The read-side backstop;
+    the route's write-side refusal lives in housewarmingPatchError
+    (api/admin/site/route.ts). */
+function sanitizeHousewarming(raw: unknown): boolean | undefined {
+  return typeof raw === "boolean" ? raw : undefined;
 }
 
 /** One playlist entry → known-good, or dropped: the id must be the 11-char
@@ -683,6 +707,10 @@ export async function saveSiteConfig(patch: SiteConfigPatch): Promise<SiteConfig
     // missing this line (or the sanitize() wiring above) would silently
     // erase a saved reading time on the next unrelated save.
     reading: patch.reading !== undefined ? patch.reading : current.reading,
+    // TASK-499: same rule for the housewarming switch — omitted leaves
+    // her saved flip (or the absent-means-ON default) alone, so no
+    // unrelated save can erase it.
+    housewarming: patch.housewarming !== undefined ? patch.housewarming : current.housewarming,
     // TASK-387: PER-SLUG merge, unlike every field above -- a rooms patch
     // never replaces the whole map. Every slug named in the patch
     // replaces that slug's own entry; every other stored slug rides

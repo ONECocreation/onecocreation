@@ -54,6 +54,14 @@ export function readingPatchError(raw: unknown): string | null {
   return checked.ok ? null : checked.reason;
 }
 
+/** TASK-499 (block 969,306+) — same rule, same shape, for the
+    housewarming switch: only a real boolean may persist; anything else
+    is refused IN WORDS before saveSiteConfig ever runs. Exported so it
+    is unit-tested as a pure function, the readingPatchError idiom. */
+export function housewarmingPatchError(raw: unknown): string | null {
+  return typeof raw === "boolean" ? null : "the housewarming switch must be true or false";
+}
+
 export async function GET(request: Request) {
   const operator = operatorFromCookieHeader(request.headers.get("cookie"));
   /* Dual-mode read (TASK-129): the SWITCHES THEMSELVES are public — they only
@@ -108,6 +116,14 @@ export async function PUT(request: Request) {
      reading-only save is untouched by this check. */
   if ("rooms" in patch) {
     const reason = roomsPatchError((patch as Record<string, unknown>).rooms);
+    if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
+  }
+  /* TASK-499 (block 969,306+) — same rule, same shape, for the
+     housewarming switch: refused IN WORDS before it's persisted. Only
+     when the key rides the patch at all — a features-, reading-, rooms-
+     or any other save is untouched by this check. */
+  if ("housewarming" in patch) {
+    const reason = housewarmingPatchError((patch as Record<string, unknown>).housewarming);
     if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
   }
   const config = await saveSiteConfig(patch);
