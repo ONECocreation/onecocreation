@@ -39,6 +39,13 @@ export default function ReplaysCard() {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  /* TASK-532 (blocks 969,313 + 969,334) - the YouTube PLAYLIST field: its
+     own KV doc behind /api/admin/replays-playlist (ruling 3 - the
+     site-config doc and its route stay T-499's, untouched). */
+  const [playlistId, setPlaylistId] = useState<string | null>(null);
+  const [playlistInput, setPlaylistInput] = useState("");
+  const [playlistBusy, setPlaylistBusy] = useState(false);
+  const [playlistNote, setPlaylistNote] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -49,6 +56,12 @@ export default function ReplaysCard() {
       const replays = (data.config as SiteConfig).replays;
       setSavedYet(replays !== undefined);
       setRows(replays ?? []); // absent = empty: no seed stands behind this list
+    })();
+    (async () => {
+      const res = await fetch("/api/admin/replays-playlist", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.ok) setPlaylistId(data.playlist?.id ?? null);
     })();
   }, []);
 
@@ -116,6 +129,39 @@ export default function ReplaysCard() {
     }
   }
 
+  /* TASK-532 - the playlist field's own save/clear, against its own
+     route. The route probes the feed once on save and answers `found`,
+     so the note says exactly what YouTube answered. */
+  async function savePlaylistField(clear: boolean) {
+    setPlaylistBusy(true);
+    setPlaylistNote(null);
+    try {
+      const res = await fetch("/api/admin/replays-playlist", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playlist: clear ? null : playlistInput }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setPlaylistId(data.playlist?.id ?? null);
+        if (clear) {
+          setPlaylistInput("");
+          setPlaylistNote("cleared ✓ the Replays page shows your hand-added rows only");
+        } else if (data.found > 0) {
+          setPlaylistInput("");
+          setPlaylistNote(`saved ✓ found ${data.found} videos in the playlist, newest first behind your rows above`);
+        } else {
+          setPlaylistId(data.playlist?.id ?? null);
+          setPlaylistNote(data.note ?? "saved, but YouTube did not answer just now");
+        }
+      } else setPlaylistNote(data.reason ?? "save failed");
+    } catch {
+      setPlaylistNote("save failed");
+    } finally {
+      setPlaylistBusy(false);
+    }
+  }
+
   if (!rows) return <p className="kit-note">Reading the list…</p>;
 
   return (
@@ -127,6 +173,59 @@ export default function ReplaysCard() {
           ? "This is your saved list: the Replays page shows exactly these."
           : "Nothing saved yet. The Replays page shows its quiet note until you save the first one."}
       </p>
+
+      {/* TASK-532 - the YouTube PLAYLIST field (its own doc and route).
+          The honest words are the Admiral's own ruling: the feed shares
+          only the latest 15, so older videos stay a hand-added row. */}
+      <div className="kit-stack">
+        <p className="kit-text-quiet">
+          Paste a public YouTube playlist link. The Replays page then shows what is in it, newest first, and picks
+          up new videos on its own. YouTube shares only the latest 15 videos this way, so older ones need to be
+          added by hand below.
+        </p>
+        {playlistId && (
+          <p className="kit-note kit-note-ok">saved playlist: {playlistId}</p>
+        )}
+        <div className="kit-field">
+          <label className="kit-field-label" htmlFor="replays-playlist">
+            YouTube playlist
+          </label>
+          <input
+            id="replays-playlist"
+            className="kit-field-input"
+            value={playlistInput}
+            onChange={(e) => {
+              setPlaylistInput(e.target.value);
+              setPlaylistNote(null);
+            }}
+            placeholder="paste the playlist link or the playlist id…"
+            aria-label="YouTube playlist link or id"
+          />
+        </div>
+        <div className="kit-btn-row">
+          <button
+            type="button"
+            className="kit-btn kit-btn-main kit-btn-sm"
+            disabled={playlistBusy || !playlistInput.trim()}
+            onClick={() => savePlaylistField(false)}
+          >
+            {playlistBusy ? "Saving…" : "Save the playlist"}
+          </button>
+          {playlistId && (
+            <button
+              type="button"
+              className="kit-btn kit-btn-second kit-btn-sm"
+              disabled={playlistBusy}
+              onClick={() => savePlaylistField(true)}
+            >
+              Clear the playlist
+            </button>
+          )}
+        </div>
+        {playlistNote && (
+          <p className={`kit-note${playlistNote.includes("✓") ? " kit-note-ok" : " kit-note-err"}`}>{playlistNote}</p>
+        )}
+      </div>
 
       {rows.length > 0 && (
         <ul className="kit-rows" aria-label="The replays list">
