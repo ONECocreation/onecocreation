@@ -202,21 +202,33 @@ describe("the page itself — source pins (async server component, headers()-dep
 
   it("the countdown rides INSIDE ReadingStage as server-composed nodes (K122 item 6a — the stage2Details idiom, the island owns the phase), and the page derives the FOLLOWING reading for the ended words (K122 item 7) — TASK-473: composed into the stage1 prop object ReadingStageDeck reads", async () => {
     const src = await read(PAGE_PATH);
-    expect(src).toContain("countdown: (");
-    expect(src).toContain("countdownWhen: (");
+    /* TASK-499 honest update: the nodes are now switch-selected
+       (`countdown: housewarmingOn ? (`), so the bare `countdown: (`
+       literal no longer exists; the conditional opener pins the same
+       fact (a server-composed node, not a prop the island builds). */
+    expect(src).toContain("countdown: housewarmingOn ? (");
+    expect(src).toContain("countdownWhen: housewarmingOn ? (");
     expect(src).toContain("nextReading(schedule, next.endsAtMs)");
     expect(src).toContain("following,");
   });
 
-  it("S8 (TASK-471, block 968,624): the hero countdown targets the Housewarming (HOUSEWARMING_TIME), never the raw schedule/next the Reading's own row (ReadingDayBody.tsx) and the ended words still use", async () => {
+  it("S8 (TASK-471, block 968,624): the hero countdown targets the Housewarming (HOUSEWARMING_TIME), never the raw schedule/next the Reading's own row (ReadingDayBody.tsx) and the ended words still use — TASK-499: while the switch is ON; off, both nodes ride the plain schedule/next", async () => {
     const src = await read(PAGE_PATH);
     expect(src).toContain('import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt, clockWords } from "@/lib/reading-day"');
-    // both countdown nodes read the housewarming-derived pair, not the raw schedule/next
+    // ON branch: both countdown nodes read the housewarming-derived pair,
+    // not the raw schedule/next
     expect(src).toContain("schedule={{ ...schedule, time: HOUSEWARMING_TIME }}");
     expect(src).toContain("next={housewarmingNext}");
     // housewarmingNext is derived with nextReading against the SAME override
-    // shape, reusing the one pure walk — never a second date-math impl
+    // shape, reusing the one pure walk — never a second date-math impl;
+    // TASK-499: built only while the switch is on
     expect(src).toContain('nextReading({ ...schedule, time: HOUSEWARMING_TIME }, asOfMs)');
+    expect(src).toContain("schedule.on && housewarmingOn ?");
+    // OFF branch: both nodes take the plain schedule/next — the countdown
+    // counts to the reading itself (the hero countdown never reads a
+    // stale target in either state)
+    expect(src).toContain("schedule={schedule}");
+    expect(src).toContain("next={next}");
     // ReadingStage itself, and the ended-card's own "following" derivation,
     // still ride the real, unmodified schedule/next (Row 2's own time,
     // ReadingDayBody.tsx, is untouched by this — a different file, this

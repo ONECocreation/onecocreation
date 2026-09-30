@@ -75,9 +75,16 @@ describe("TASK-489: the countdown sits at the top of every screen until 12:12", 
     }
   });
 
-  it("the page passes the Housewarming target, held back while the day's program runs", async () => {
+  it("the page passes the countdown target, switch-selected (TASK-499), held back while the day's program runs", async () => {
     const src = await read("src/app/reading/page.tsx");
-    expect(src).toContain("countdownUntilMs={topCountdownUntilMs(housewarmingNext, asOfMs)}");
+    /* TASK-499 honest update: the literal on-branch line
+       `countdownUntilMs={topCountdownUntilMs(housewarmingNext, asOfMs)}`
+       became switch-selected — on: the Housewarming target; off: the
+       reading's own `next` through the SAME function and holdback. */
+    expect(src).toContain(
+      "countdownUntilMs={housewarmingOn ? topCountdownUntilMs(housewarmingNext, asOfMs) : topCountdownUntilMs(next, asOfMs)}",
+    );
+    expect(src).toContain("topCountdownUntilMs(next, asOfMs)");
     expect(src).toContain('housewarmingNext.phase !== "upcoming"');
     expect(src).toContain("asOfMs < previousStartMs + DAY_PROGRAM_MS");
   });
