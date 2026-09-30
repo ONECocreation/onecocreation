@@ -61,6 +61,11 @@ first, in its own named add):
   settle ONLY — a settle now mails two once-only letters, the receipt to
   the buyer and this lane's letter to Love; updated with TASK-518
   comments, never deleted; the minimal diff rides in SUMMARY's seam list)
+- `tests/letters-every-letter-in-the-room.test.ts` (the two
+  `EDITABLE_LETTERS` length-pin lines 9 to 10 and the one `it` title
+  ONLY — T-493's own suite carries the same pin the brief named in two
+  other files; the same class of honestly-broken pin, the same honest
+  update; SUMMARY's seam list names it)
 
 READ-ONLY: `src/lib/pwyc-letters.ts` (`offerNotifyTo` and `letterFor`
 reused, never edited) · `src/lib/order-receipt.ts` (`buyerEmailOf`
