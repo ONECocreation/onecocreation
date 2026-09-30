@@ -16,6 +16,7 @@ import { memberFromRequest } from "@/lib/member-auth";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleBookingFromOrder } from "@/lib/booking-fulfil";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
+import { sendPurchaseLoveNotify } from "@/lib/purchase-love-notify";
 
 export const dynamic = "force-dynamic";
 
@@ -204,6 +205,9 @@ export async function POST(request: Request) {
       await createOrder(order);
       await settleBookingFromOrder(order);
       await settleEntitlementFromOrder(order);
+      /* TASK-518 — a code-settled booking settles for Love too: her
+         purchase letter goes out (her own marker, webhook retries safe) */
+      await sendPurchaseLoveNotify(order).catch(() => {});
       const origin = new URL(request.url).origin;
       return NextResponse.json({
         ok: true,
