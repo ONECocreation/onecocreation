@@ -4,7 +4,7 @@ import { YOUTUBE_ID_RE, YOUTUBE_PLAYLIST_ID_RE } from "@/lib/youtube-id";
 import type { AboutVideo } from "@/lib/about-content";
 
 /**
- * TASK-532 (blocks 969,313 + 969,334) — THE REPLAYS SOURCE: the manual
+ * TASK-532 (blocks 969,313 + 969,334) - THE REPLAYS SOURCE: the manual
  * rows (site-config's `replays`, Love's own order, pinned on top) plus ONE
  * YouTube playlist auto-fill behind them. YouTube's public playlist feed
  * (feeds/videos.xml?playlist_id=<id>, no key, fetched live at draft time
@@ -14,7 +14,7 @@ import type { AboutVideo } from "@/lib/about-content";
  *
  * HARD RULES (each pinned in tests/replays-playlist-532.test.ts):
  *  · the fetch URL is ONLY the constant host + path + the strictly
- *    validated id (YOUTUBE_PLAYLIST_ID_RE) — never a stored URL; the doc
+ *    validated id (YOUTUBE_PLAYLIST_ID_RE) - never a stored URL; the doc
  *    holds the id alone, so a hand-edited doc can never aim the fetch.
  *  · redirect:"error", a 4s timeout, an XML content-type check, and a
  *    ~512KB size cap bound every fetch.
@@ -27,11 +27,11 @@ import type { AboutVideo } from "@/lib/about-content";
  *  · the last-good cache (its own KV doc): fresh (< ~10 min) never
  *    fetches; stale refetches once and ANY failure serves the last good;
  *    with none, the manual rows alone. loadReplays NEVER throws into the
- *    page. allowFetch:false NEVER fetches — the signed-out crawler law
+ *    page. allowFetch:false NEVER fetches - the signed-out crawler law
  *    (SECURITY.md (d)): the public render reads the cache only, so a
  *    crawler cannot turn this page into a fetch amplifier.
  *
- * KV: TWO docs of this lane's own (ruling 3 — site-config.ts is UNTOUCHED,
+ * KV: TWO docs of this lane's own (ruling 3 - site-config.ts is UNTOUCHED,
  * it is T-499's ground): `replays:playlist:<TENANT>` (the saved id) and
  * `replays:playlist-cache:<TENANT>` (the last good fetch). The stage1.ts
  * idiom: reads fail closed to null, writes THROW on an unconfigured vault
@@ -47,7 +47,7 @@ export interface PlaylistItem {
   publishedMs: number | null;
 }
 
-/** The saved doc: the id ALONE (never a URL — a hand-edited doc must not
+/** The saved doc: the id ALONE (never a URL - a hand-edited doc must not
     be able to aim the fetch) plus when Love saved it. */
 export interface PlaylistDoc {
   id: string;
@@ -70,7 +70,7 @@ const TITLE_CAP = 120;
 const REFRESH_MS = 10 * 60 * 1000;
 
 /** The ONE spelling of the feed URL: the constant base plus a strictly
-    validated id. Throws on anything else — callers validate first (the
+    validated id. Throws on anything else - callers validate first (the
     admin route parses with parseYoutubePlaylistInput; the stored doc is
     re-validated on read), so a throw here means a programming error, not
     visitor input. */
@@ -79,7 +79,7 @@ export function playlistFeedUrl(id: string): string {
   return `${FEED_BASE}${id}`;
 }
 
-/** The five XML entities, decoded — the feed is text, never markup, and
+/** The five XML entities, decoded - the feed is text, never markup, and
     React escapes on render regardless. */
 function decodeEntities(s: string): string {
   return s
@@ -99,7 +99,7 @@ function cleanTitle(raw: string): string {
 /** Strict, dependency-free feed parsing. Splits on <entry>, takes ONLY
     yt:videoId / title / published from each, skips any row whose videoId
     fails YOUTUBE_ID_RE, and returns null (a failure) when NO valid entry
-    survives — a 404 HTML page, garbage XML, and an emptied playlist are
+    survives - a 404 HTML page, garbage XML, and an emptied playlist are
     all the same honest failure to the caller. */
 export function parsePlaylistFeed(xml: string): PlaylistItem[] | null {
   if (!xml || typeof xml !== "string") return null;
@@ -110,7 +110,7 @@ export function parsePlaylistFeed(xml: string): PlaylistItem[] | null {
     const idMatch = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
     const id = idMatch?.[1]?.trim() ?? "";
     if (!YOUTUBE_ID_RE.test(id)) continue;
-    // the atom <title> only — anything from <media:group> on is unread
+    // the atom <title> only - anything from <media:group> on is unread
     const head = entry.split("<media:group")[0] ?? "";
     const titleMatch = head.match(/<title>([\s\S]*?)<\/title>/);
     const title = cleanTitle(titleMatch?.[1] ?? "") || "Untitled replay";
@@ -141,8 +141,8 @@ export function mergeReplays(manual: AboutVideo[], items: PlaylistItem[]): About
   return [...manual, ...extra];
 }
 
-/** The bounded fetch. Every failure — timeout, redirect, non-200, a
-    non-XML content-type, an oversize body, a network throw — is null;
+/** The bounded fetch. Every failure - timeout, redirect, non-200, a
+    non-XML content-type, an oversize body, a network throw - is null;
     the caller decides the fallback. `fetchImpl` is injectable for tests;
     the default is resolved at CALL time so a test's global stub rides. */
 export async function fetchPlaylistFeed(id: string, fetchImpl: typeof fetch = fetch): Promise<string | null> {
@@ -180,12 +180,12 @@ async function defaultKvGet(key: string): Promise<string | null> {
 
 async function defaultKvSet(key: string, value: string): Promise<void> {
   const res = await kv(["SET", key, value]);
-  if (res === null) throw new Error("replays playlist vault is not configured — nothing was written");
+  if (res === null) throw new Error("replays playlist vault is not configured - nothing was written");
 }
 
 async function defaultKvDel(key: string): Promise<void> {
   const res = await kv(["DEL", key]);
-  if (res === null) throw new Error("replays playlist vault is not configured — nothing was written");
+  if (res === null) throw new Error("replays playlist vault is not configured - nothing was written");
 }
 
 /** The saved doc, re-validated on EVERY read: a hand-edited doc whose id
@@ -233,7 +233,7 @@ export async function getSavedPlaylist(kvGet: KvGet = defaultKvGet): Promise<Pla
   return parseDoc(await kvGet(PLAYLIST_DOC_KEY));
 }
 
-/** The operator route's save: the doc lands (a failed write THROWS — a
+/** The operator route's save: the doc lands (a failed write THROWS - a
     failed save never reads as success); null CLEARS doc and cache both. */
 export async function savePlaylist(
   id: string | null,
@@ -260,7 +260,7 @@ export async function writePlaylistCache(
 
 export interface LoadReplaysOptions {
   nowMs?: number;
-  /** false NEVER fetches — the signed-out render passes this (SECURITY.md
+  /** false NEVER fetches - the signed-out render passes this (SECURITY.md
       (d): a crawler must not be able to make this page fetch). */
   allowFetch?: boolean;
   fetchImpl?: typeof fetch;
@@ -270,7 +270,7 @@ export interface LoadReplaysOptions {
 
 /** THE ONE loader the /replays page (and T-534's recap half) calls:
     manual rows + the playlist auto-fill, under every fallback the brief
-    names. NEVER throws — any failure degrades toward the manual rows. */
+    names. NEVER throws - any failure degrades toward the manual rows. */
 export async function loadReplays(
   config: { replays?: AboutVideo[] },
   opts: LoadReplaysOptions = {},
