@@ -7,7 +7,7 @@ import { emailForSubject } from "./member-tier";
 import { TIERS } from "./entitlement";
 import { enqueue } from "./mail-queue";
 import { brandShell } from "./mail";
-import { siteBase } from "./subscribers";
+import { siteBase, addSubscriberTag, READING_SEAT_TAG } from "./subscribers";
 
 /** The doors close kindly, never silently. */
 export async function sendRevokeLetter(to: string, tier: Tier, refunded: boolean): Promise<void> {
@@ -114,6 +114,26 @@ export async function settleEntitlementFromOrder(order: OrderRecord): Promise<Fu
       const expiresAtMs = grant.days ? Date.now() + grant.days * 86_400_000 : undefined;
       let rec = await grantTier(npub, tier, order.id, { expiresAtMs });
       if (!rec) return { ...NOTHING, tier, note: "grant refused" };
+
+      /* TASK-519 (K131, decision 3): the settle-time reading-seat tag.
+         This order just granted a tier, which is decision 3's
+         seat-admitting rule (the two one-time pass items by id — the
+         book-talk pass and the Q&A pass — ARE tier-granting package
+         lines, so "any tier grant" covers them and every membership):
+         the buyer's email gains the `reading-seat` subscriber tag, so
+         the join letters' audience (reading list UNION reading-seat)
+         reaches the seat buyers who used to vanish. The tag rides the
+         subscribers store so consent and unsubscribe keep ONE meaning;
+         a refund does NOT remove it (subscription data, not an
+         entitlement — flagged in the lane's SUMMARY for a ruling).
+         Failure-isolated like the revoke letter below: a tag-write
+         hiccup must never unsettle money or a grant. */
+      try {
+        const seatEmail = order.contact?.email;
+        if (seatEmail) await addSubscriberTag(seatEmail, READING_SEAT_TAG);
+      } catch (err) {
+        console.error("entitlement-fulfil: reading-seat tag write failed (the grant stands):", err);
+      }
 
       // The matrix id is DERIVED now (run book C3, 0018.05.16) — the member's
       // account is born at their first /api/matrix/login with this exact id,
