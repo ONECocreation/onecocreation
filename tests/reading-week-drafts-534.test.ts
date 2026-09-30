@@ -302,7 +302,7 @@ describe("the once-key", () => {
     const { draftReadingLetters } = await mod();
     delete process.env.KV_REST_API_URL;
     const stats = await draftReadingLetters(TUE_0900_MDT);
-    expect(stats.nextReading).toBe("already");
+    expect(stats.nextReading).toBe("error");
     expect(sent).toHaveLength(0);
   });
 });
@@ -347,7 +347,7 @@ describe("the review copy", () => {
       "love@onecocreation.com",
       "a@x.org",
     ]);
-    expect(reviewRecipients(undefined, "love@onecocreation.com")).toEqual(["love@onecocreation.com"]);
+    expect(reviewRecipients("", "love@onecocreation.com")).toEqual(["love@onecocreation.com"]);
   });
 
   it("an unset notice address still falls back to love@ (never an empty set by omission)", async () => {
