@@ -8,8 +8,25 @@ Ports 5228-5231.
 
 ## Baseline (established at cut, before any lane edit)
 
-(pending — gate run on the cut tip + claim commit lands here before
-any lane edit; the suite must grow from it)
+`bash ~/dev/shortcuts/oc-gate.sh /home/pac/dev/worktrees/task-519` on
+the cut tip 5ed20c8 (+ claim commit a77107d, work-claims only):
+
+```
+census: 1114 objects, baseline 1119 · families: 181/37/5/8/63/0 · fonts: 47 token/32 literal
+ Test Files  287 passed (287)
+      Tests  3880 passed (3880)
+scripts/calendar-view.test.mjs: 70 passed, 0 failed
+scripts/cartridge-identity.test.mjs: 179 passed, 0 failed
+scripts/console-matrix.test.mjs: 14 passed, 0 failed
+scripts/fixture-kv.test.mjs: 45 passed, 0 failed
+scripts/square-payments.test.mjs: 58 passed, 0 failed
+eslint 0
+tsc 0
+build ok
+GATES GREEN
+```
+
+The suite must grow from 287 files / 3880 tests.
 
 ## Running log
 
