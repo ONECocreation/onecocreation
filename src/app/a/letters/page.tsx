@@ -307,7 +307,7 @@ export default function LettersRoom() {
               preview — as the email renders
             </div>
             {previewLoading && <p style={{ padding: 8, fontSize: ".75rem", color: "var(--muted)" }}>rendering…</p>}
-            <iframe title={`letter preview — ${key}`} srcDoc={previewHtml} className="w-full" style={{ height: 520, background: "#fff", border: 0 }} />
+            <iframe title={`letter preview — ${key}`} srcDoc={previewHtml} sandbox="" className="w-full" style={{ height: 520, background: "#fff", border: 0 }} />
           </div>
         )}
       </div>

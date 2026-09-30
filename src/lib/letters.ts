@@ -65,6 +65,28 @@ export function audienceOf(k: string, override: LetterOverride | null): LetterAu
   return override?.audience ?? DEFAULT_AUDIENCE[k as LetterKey] ?? "members";
 }
 
+export type LetterGateVerdict = "render" | "not-found";
+
+/** TASK-494 — who may read a letter on the SITE, the ONE truth table the
+ *  /letters/[key] page and its metadata both wire (never re-derived
+ *  per-caller). "members" stays members-only: a signed-in member (a valid
+ *  session AND a resolved tier) or the operator (her "preview on the
+ *  site" doors stay open); everyone else — signed out, or the signed-in
+ *  NON-member state that really exists (an email-space subscriber session
+ *  carries no tier) — is gated to a plain 404, never a sign-in teaser (a
+ *  teaser would confirm the letter exists). "public" renders for
+ *  everyone, signed out included — the /news shelf keeps working. */
+export function letterAudienceGate(input: {
+  audience: LetterAudience;
+  signedIn: boolean;
+  isMember: boolean;
+  operator: boolean;
+}): LetterGateVerdict {
+  if (input.audience === "public") return "render";
+  if (input.operator) return "render";
+  return input.signedIn && input.isMember ? "render" : "not-found";
+}
+
 /** Built-in words for letters with no override yet — the news sample keeps
  *  the Admiral's test blocking visible so Love can SEE the layout. Directive
  *  lines shape the rich shell:
@@ -79,7 +101,8 @@ export const LETTER_DEFAULTS: Partial<Record<LetterKey, LetterOverride>> = {
 
 Here is your free guided meditation, with love:
 
-[▶ Unzip Into the New You](https://onecocreation-adminpacmans-projects.vercel.app/audio/unzip-into-the-new-you.mp3)
+!cta: Download: Unzip Into the New You | /meditation/download
+[Listen in your browser](/audio/unzip-into-the-new-you.mp3)
 
 Save it, return to it, share the stillness. A weekly note of inspiration will find you here from now on.
 
@@ -399,6 +422,21 @@ export async function listPublicLetters(): Promise<{ key: string; subject: strin
 /** letter-markdown → shell-ready html: escape first, then **bold**,
  *  *italic*, [text](url), ![alt](image-url), blank-line paragraphs.
  *  Emoji pass through untouched — type them right in. */
+/* TASK-494 — the ONE escape for letter markup: &, <, > and `"` (a quote
+ *  must never close the attribute a regex or the shell writes the value
+ *  into; &quot; renders identically in browsers and mail clients). The
+ *  same shape lead-magnet.ts / reading-letters.ts already keep. */
+const escHtml = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/* TASK-494 — the directive URL policy: T-227's link rule at the directive
+ *  parse boundary (T-491's security review named the gap). A !hero /
+ *  !section / !cta URL admits a single-`/` site path or an explicit
+ *  https:// URL ONLY; anything else (javascript:, http:, a bare word, a
+ *  scheme-relative //host) fails and the WHOLE directive line falls
+ *  through to the plain body as literal text — never an attribute. */
+const admitsDirectiveUrl = (u: string) => u.startsWith("https://") || (u.startsWith("/") && !u.startsWith("//"));
+
 /** The rich assembly: directives lift the letter into the news shell;
  *  a directive-free letter keeps riding the plain brand shell. */
 export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUrl?: string }): string {
@@ -412,9 +450,19 @@ export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUr
     const hero = /^!hero:\s*(\S+)/.exec(t);
     const sec = /^!section:\s*([^|]+)\|([^|]*)\|([^|]+)\|(.+)$/.exec(t);
     const c = /^!cta:\s*([^|]+)\|(.+)$/.exec(t);
-    if (hero) heroUrl = hero[1];
-    else if (sec) sections.push({ title: sec[1].trim(), image: sec[2].trim() || undefined, href: sec[3].trim(), blurb: sec[4].trim() });
-    else if (c) cta = { label: c[1].trim(), href: c[2].trim() };
+    /* TASK-494: every directive value is escaped BEFORE it reaches
+     * richShell (directives bypass bodyToHtml entirely), and every URL
+     * field passes the policy first — a failed line ships as literal
+     * text, the T-227 fallback shape. */
+    if (hero && admitsDirectiveUrl(hero[1])) heroUrl = escHtml(hero[1]);
+    else if (sec && admitsDirectiveUrl(sec[3].trim()) && (!sec[2].trim() || admitsDirectiveUrl(sec[2].trim())))
+      sections.push({
+        title: escHtml(sec[1].trim()),
+        image: sec[2].trim() ? escHtml(sec[2].trim()) : undefined,
+        href: escHtml(sec[3].trim()),
+        blurb: escHtml(sec[4].trim()),
+      });
+    else if (c && admitsDirectiveUrl(c[2].trim())) cta = { label: escHtml(c[1].trim()), href: escHtml(c[2].trim()) };
     else plain.push(line);
   }
 
@@ -435,7 +483,10 @@ export function bodyToHtml(body: string): string {
   // \r inside a paragraph's <br/> line — normalize before anything else so
   // paste always keeps exactly the breaks it showed on screen
   const normalized = body.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-  const esc = normalized.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  /* TASK-494: escHtml gains `"` -> `&quot;` — the URL regexes below admit
+   * a quote into the attribute they write (`href="${href}"`,
+   * `<img src="$2" ...>`), so the quote itself must never survive raw. */
+  const esc = escHtml(normalized);
   const inline = esc
     .replace(/!\[([^\]]*)\]\((https?:[^)\s]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:12px"/>')
     /* TASK-227 — a link can also point at a site path: `[text](/rooms/x)`
