@@ -66,6 +66,10 @@ first, in its own named add):
   ONLY — T-493's own suite carries the same pin the brief named in two
   other files; the same class of honestly-broken pin, the same honest
   update; SUMMARY's seam list names it)
+- `tests/site-config.test.ts` (ONE line in the exact-defaults toEqual —
+  the new switch joins the pinned features object with its honest
+  comment; the same class of honestly-broken pin; SUMMARY's seam list
+  names it)
 
 READ-ONLY: `src/lib/pwyc-letters.ts` (`offerNotifyTo` and `letterFor`
 reused, never edited) · `src/lib/order-receipt.ts` (`buyerEmailOf`
