@@ -16,6 +16,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 import { orderDoorUrl, sendOrderReceipt } from "@/lib/order-receipt";
+import { sendPurchaseLoveNotify } from "@/lib/purchase-love-notify";
 import { memberFromRequest } from "@/lib/member-auth";
 import { clampQty } from "@/lib/cart";
 
@@ -254,6 +255,9 @@ export async function POST(request: Request) {
     /* TASK-173 — a code-settled order is still a settled order: the receipt
        letter goes out (idempotent inside, same as the webhook path) */
     await sendOrderReceipt(order).catch(() => {});
+    /* TASK-518 — a code-settled order settles for Love too: her purchase
+       letter goes out (her own marker, webhook retries safe) */
+    await sendPurchaseLoveNotify(order).catch(() => {});
     return NextResponse.json({ ok: true, orderId: order.id, paid: true });
   }
   await createOrder(order);

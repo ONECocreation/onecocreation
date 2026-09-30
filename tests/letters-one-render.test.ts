@@ -19,8 +19,10 @@ import path from "path";
  *     !cta: line sends the rendered button, never literal "!cta:" text.
  *  3. the one-render law: an override WITHOUT a !cta: line renders no button
  *     (the button lives in the body now; the preview IS the send).
- *  4. PREVIEW-EQUALS-SENT for all eight EDITABLE_LETTERS keys with sample
- *     slots: the sender's html string-equals letterHtml()/letterFor() of the
+ *  4. PREVIEW-EQUALS-SENT for the EDITABLE_LETTERS keys with sample
+ *     slots (nine cases; TASK-518 added purchase-love-notify — T-493 left
+ *     read-with-love without a case, a gap named in T-518's SUMMARY):
+ *     the sender's html string-equals letterHtml()/letterFor() of the
  *     same resolved body. This lane exports letterFor exactly so the slot
  *     letters' documents reconstruct from exported pieces (makeOfferToken,
  *     pill, mintOrderKeyFor; the fragments pinned by content).
@@ -340,7 +342,7 @@ describe("the one-render law: an override without a !cta: line renders no button
   });
 });
 
-describe("preview equals sent: all eight EDITABLE_LETTERS keys with sample slots", () => {
+describe("preview equals sent: nine EDITABLE_LETTERS keys with sample slots", () => {
   it("lead-magnet: sendLeadMagnetLetter string-equals letterHtml of the same resolved body", async () => {
     const { sendLeadMagnetLetter } = await leadMagnet();
     await sendLeadMagnetLetter("reader@example.com");
@@ -459,6 +461,24 @@ describe("preview equals sent: all eight EDITABLE_LETTERS keys with sample slots
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  /* TASK-518: the purchase letter to Love pours from the same composer —
+     the send string-equals the exported build of the same order (the
+     build is letterFor + the five machine slots; the marker and the
+     switch live outside the words) */
+  it("purchase-love-notify: sendPurchaseLoveNotify string-equals buildPurchaseLoveNotify of the same order", async () => {
+    const { sendPurchaseLoveNotify, buildPurchaseLoveNotify } = await import("@/lib/purchase-love-notify");
+    const order = receiptOrder(); // a settled store order on the catalog fixture
+    const expected = await buildPurchaseLoveNotify(order);
+    const res = await sendPurchaseLoveNotify(order);
+    expect(res).toEqual({ sent: true });
+    expect(sentMail).toHaveLength(1);
+    expect(sentMail[0].to).toBe("love@onecocreation.com");
+    expect(sentMail[0].subject).toBe("A purchase just settled");
+    expect(sentMail[0].subject).toBe(expected.subject);
+    expect(sentMail[0].html).toBe(expected.html);
+    expect(sentMail[0].html).not.toMatch(/\{\{[a-z]+\}\}/); // no raw slot ever ships
   });
 });
 

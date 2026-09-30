@@ -50,6 +50,12 @@ const FEATURE_LABELS: Record<keyof SiteConfig["features"], string> = {
   // packages, not a nav route, so no PAGE_CATALOG entry ever names it
   // and featuresFor() below never surfaces this label in practice.
   largeSums: "Large Sums of Money",
+  // TASK-518 (minimal forced edit — load-bearing, the same shape as the
+  // memberships/largeSums lines above): the total Record fails tsc without
+  // a label for site-config.ts's new purchaseLoveNotify member — it gates
+  // a letter, not a nav route, so no PAGE_CATALOG entry ever names it and
+  // featuresFor() never surfaces this label in practice.
+  purchaseLoveNotify: "Purchase letters to Love",
 };
 
 /** TASK-187: a route may need more than one switch ON now (PAGE_CATALOG's

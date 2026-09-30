@@ -97,6 +97,17 @@ const LETTERS: { key?: string; slot?: "reading-confirm" | "reading-dayof"; name:
     noPublish: true,
   },
   {
+    key: "purchase-love-notify",
+    name: "A purchase settled (to Love)",
+    from: "bookings@ to love@",
+    kind: "on settle · EDITABLE",
+    subject: "A purchase just settled",
+    note: "who + what + the tier or pass + the amount + the write-back door; {{who}} {{lines}} {{tier}} {{amount}} {{writeback}} place the machine-built parts",
+    when: "Sends the moment any order settles, on either rail.",
+    group: "Store",
+    noPublish: true,
+  },
+  {
     key: "offer-love-notify",
     name: "Offer on the doorstep (to Love)",
     from: "news@ → love@",
