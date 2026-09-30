@@ -130,9 +130,15 @@ describe("sections.tsx — the R5 rail-aware sweep (Jewelry/Affirmations/Donatio
     expect(src).toContain('"Giving opens again soon."');
   });
 
-  it("Donations()'s <TipJar/> gate: jarsOpen() AND live shelf items (TASK-411 extended T-393's gate)", async () => {
+  /* TASK-498 (R-072): honestly-broken pin, updated not deleted — the old
+     pin asserted Donations()'s <TipJar/> mount expression; the Admiral
+     ruled the tip items live ONLY under Store, so the home widget is gone
+     and the pin now asserts its absence. (If the Admiral rules question 2
+     the other way at gate, this pin reverts to the mount expression.) */
+  it("Donations() carries no <TipJar/> mount — tip items live only under Store (R-072)", async () => {
     const src = await read("src/components/sections.tsx");
-    expect(src).toMatch(/\{open && liveJars\.length > 0 && <TipJar only=\{liveJars\} \/>\}/);
+    expect(src).not.toMatch(/<TipJar\s/);
+    expect(src).not.toContain("liveJars");
   });
 });
 
@@ -215,9 +221,14 @@ describe("the home affirmation shelf — switch→output contract (R8, rendered)
 });
 
 describe("the already-covered items stay covered (Ground item 4 — pins, not edits)", () => {
-  it("support/page.tsx: the jars block is gated on jarsOpen() (A7 already answered)", async () => {
+  /* TASK-498 (R-072): honestly-broken pin, updated not deleted — the old
+     pin asserted the /support jars block's jarsOpen() gate expression; the
+     Admiral ruled the jars leave /support entirely, so the pin now asserts
+     the block is gone (the gate itself moved to /store, pinned in
+     tests/store-gift-drawer.test.ts pin 2). */
+  it("support/page.tsx: the jars block is gone entirely (R-072 — the gate moved to /store with the jars)", async () => {
     const src = await read("src/app/support/page.tsx");
-    expect(src).toMatch(/\{jarsOpen\(\)\s*&&/);
+    expect(src).not.toMatch(/jarsOpen/);
   });
 
   it("ConstellationCard.tsx: no star's title/subtitle names lightning or a wallet (E1 already answered)", async () => {
