@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { tick } from "@/lib/mail-queue";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { enqueueReadingDayOf } from "@/lib/reading-letters";
+import { enqueueJoinLetters } from "@/lib/join-letters";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -29,7 +30,11 @@ export async function GET(request: Request) {
      queued after the drain above would not be picked up again until
      TOMORROW's single daily cron), so no second drain is needed here. */
   const reading = await enqueueReadingDayOf(Date.now());
-  return NextResponse.json({ ok: true, ...result, reading });
+  /* TASK-519: the two join letters ride this SAME tick — direct sendMail
+     from due-logic like the reading letters (R1), never the queue; the
+     call is internally guarded and never throws into this response. */
+  const join = await enqueueJoinLetters(Date.now());
+  return NextResponse.json({ ok: true, ...result, reading, join });
 }
 
 export async function POST(request: Request) {
