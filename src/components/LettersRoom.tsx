@@ -95,8 +95,14 @@ export default function LettersRoom({ recent }: { recent: { key: string; subject
       <p className="lead" style={{ marginBottom: 24 }}>
         {who.letters.length > 0
           ? "Everything Love has sent you, newest first."
-          : "Nothing here yet — when Love publishes her next letter, it lands here too."}
+          : "Welcome to the community, we are so glad you are here."}
       </p>
+      {who.letters.length === 0 && (
+        <p style={{ color: "var(--ink-body)", margin: "0 auto 22px", maxWidth: 520, textAlign: "center" }}>
+          Nothing has landed in your reading room yet. When Love publishes her next letter, it arrives by email
+          and gathers here too, ready to read any time. Until then, settle in and look around.
+        </p>
+      )}
       <div style={{ display: "grid", gap: 10, textAlign: "left" }}>
         {who.letters.map((l, i) => {
           /* TASK-332: a mailbox key that never resolves to a real letter

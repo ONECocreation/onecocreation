@@ -9,7 +9,7 @@ import { letterAudienceGate, audienceOf, bodyToHtml, letterHtml } from "@/lib/le
  *   1. THE AUDIENCE GATE. `letterAudienceGate` (pure, beside audienceOf in
  *      src/lib/letters.ts) is the ONE truth table for who may read a letter
  *      on the site: a members-audience letter renders only for a signed-in
- *      member (valid session AND a resolved tier) or the operator; everyone
+ *      member (any valid session, tier or none since TASK-535) or the operator; everyone
  *      else — signed out, or the signed-in NON-member state that really
  *      exists (the email-space subscriber session, Ground truth) — is
  *      gated. Public letters render for everyone (the /news shelf keeps
@@ -32,22 +32,22 @@ import { letterAudienceGate, audienceOf, bodyToHtml, letterHtml } from "@/lib/le
 
 describe("letterAudienceGate — the members-only truth table", () => {
   it("(a) a members letter is gated for a signed-out visitor", () => {
-    expect(letterAudienceGate({ audience: "members", signedIn: false, isMember: false, operator: false })).toBe("not-found");
+    expect(letterAudienceGate({ audience: "members", signedIn: false, operator: false })).toBe("not-found");
   });
 
-  it("(b) a members letter is gated for the signed-in NON-member (the email-space subscriber state — it exists)", () => {
-    expect(letterAudienceGate({ audience: "members", signedIn: true, isMember: false, operator: false })).toBe("not-found");
+  it("(b) TASK-535: a members letter RENDERS for any signed-in session, tier or none (the free email member reads their letters)", () => {
+    expect(letterAudienceGate({ audience: "members", signedIn: true, operator: false })).toBe("render");
   });
 
   it("(c) a members letter renders for a signed-in member, and for the operator (signed out or not)", () => {
-    expect(letterAudienceGate({ audience: "members", signedIn: true, isMember: true, operator: false })).toBe("render");
-    expect(letterAudienceGate({ audience: "members", signedIn: false, isMember: false, operator: true })).toBe("render");
-    expect(letterAudienceGate({ audience: "members", signedIn: true, isMember: false, operator: true })).toBe("render");
+    expect(letterAudienceGate({ audience: "members", signedIn: true, operator: false })).toBe("render");
+    expect(letterAudienceGate({ audience: "members", signedIn: false, operator: true })).toBe("render");
+    expect(letterAudienceGate({ audience: "members", signedIn: true, operator: true })).toBe("render");
   });
 
   it("(d) a public letter renders for everyone, signed out included — the /news shelf keeps working", () => {
-    expect(letterAudienceGate({ audience: "public", signedIn: false, isMember: false, operator: false })).toBe("render");
-    expect(letterAudienceGate({ audience: "public", signedIn: true, isMember: true, operator: false })).toBe("render");
+    expect(letterAudienceGate({ audience: "public", signedIn: false, operator: false })).toBe("render");
+    expect(letterAudienceGate({ audience: "public", signedIn: true, operator: false })).toBe("render");
   });
 
   it("audienceOf still fails closed to members for an unknown key (the gate never sees a loose audience)", () => {
@@ -177,10 +177,10 @@ describe("(f) source pins — the page wires the gate, the iframe wears the sand
   const PAGE = "src/app/letters/[key]/page.tsx";
   const ADMIN = "src/app/a/letters/page.tsx";
 
-  it("the letter page reads the session, resolves the tier, admits the operator, resolves via audienceOf, 404s via notFound()", () => {
+  it("the letter page reads the session, admits the operator, resolves via audienceOf, 404s via notFound()", () => {
     const src = readFileSync(PAGE, "utf8");
     expect(src).toContain("sessionsFromCookieHeader");
-    expect(src).toContain("tierForSubject");
+    expect(src).not.toContain("tierForSubject"); // T-535: no tier read
     expect(src).toContain("operatorFromCookieHeader");
     expect(src).toContain("audienceOf");
     expect(src).toContain("letterAudienceGate");
@@ -216,11 +216,12 @@ describe("(f) source pins — the page wires the gate, the iframe wears the sand
     const wire = src.slice(wireStart, src.indexOf("export async function generateMetadata"));
     expect(wire).toContain("audienceOf(");
     expect(wire).toContain("letterAudienceGate(");
-    expect(wire).toContain("tierForSubject");
+    expect(wire).not.toContain("tierForSubject");
+    expect(wire).not.toContain("isMember");
     expect(wire).toContain("operatorFromCookieHeader");
     expect(wire).toContain("sessionsFromCookieHeader");
-    // fail closed — a tier read that throws is not a member
-    expect(wire).toContain("catch");
+    // fail closed — no session is not a member
+    expect(wire).toContain("signedIn: !!session");
   });
 
   it('the /a/letters preview iframe carries sandbox="" — every capability denied', () => {
