@@ -336,8 +336,11 @@ async function sweepReadingConfirmations(stats: ReadingTickStats): Promise<void>
  *  day (R5's schedule, in ITS zone), before the reading starts, and past
  *  02:00 local. Returns the occurrence's own `startsAtMs`/`tz` (exactly what
  *  `sendReadingDayOf` needs) when due right now, `null` otherwise — never a
- *  guess, never a second policy. */
-async function dueOccurrenceNow(nowMs: number): Promise<{ startsAtMs: number; tz: string } | null> {
+ *  guess, never a second policy.
+ *  TASK-519: exported — the join reminder rides this SAME gate verbatim
+ *  (join-letters.ts), so the day-of letter and the join reminder can never
+ *  disagree about when "the reading's own day" begins. Behavior unchanged. */
+export async function dueOccurrenceNow(nowMs: number): Promise<{ startsAtMs: number; tz: string } | null> {
   const { reading } = await getSiteConfig();
   const schedule: ReadingSchedule = reading ?? DEFAULT_READING_SCHEDULE;
   const occurrence = nextReading(schedule, nowMs);
