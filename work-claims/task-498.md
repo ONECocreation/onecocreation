@@ -27,6 +27,8 @@ RULING OF RECORD: R-072. The brief's two Admiral questions settled by its own na
 - `src/lib/puck-seeds.ts` (the `supportContent` jar bands only)
 - `tests/store-gift-drawer.test.ts` (NEW), `tests/feature-switches.test.ts` (:133-136 only), `tests/item-page.test.ts`, `tests/shelf-pass-last.test.ts`
 
+NAMED ADD (mid-lane, house law "honestly-broken pins are updated with honest comments, never deleted"): `tests/card-path-words-459.test.ts` — the T-459 pin on /support's hero jar sentence was honestly broken by Build 2 (the jar clause left with the jars); the pin was updated, its no-cut-taken substance unchanged. Also within the already-owned `tests/feature-switches.test.ts`, a second honestly-broken pin at :224 (the /support jarsOpen gate pin) was updated alongside :133-136.
+
 READ-ONLY: `src/components/TipJar.tsx` (reused as-is; its words are Love's to reword, not owned here), `src/lib/jars.ts`, `src/lib/payments.ts`, `src/lib/store.ts`, `src/app/a/store/page.tsx` and `src/app/api/admin/store/route.ts` (T-422's desk), `src/app/api/cart/**`, `src/lib/letters.ts` (:172's jar mention stays), `src/components/NavMenu.tsx`, `src/components/SiteFooter.tsx`, `src/app/a/page.tsx`, `src/components/store/BuyPanel.tsx`, `tests/support-jars-basket.test.ts` (stays green untouched).
 
 NOT a fifth shelf section; NOT a new ItemKind; NOT category-driven shelves; NOT the desk scoreboard; NOT any route, rail, KV, or env change.
