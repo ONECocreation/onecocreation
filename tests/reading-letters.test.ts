@@ -565,6 +565,12 @@ describe("subscribers.ts additions (Build 4) — the real implementation against
 
 describe("the subscribe route sends the confirmation on outcome:'joined' only (R2/R3/R4, route-level)", () => {
   const routeMod = () => import("@/app/api/subscribe/route");
+  // Pin the clock off the reading's day (T-530): on a real reading day after 02:00 local, the route's
+  // sendDayOfToOneIfDue adds the day-of letter and "exactly once" counted two. Date only, so awaits still run.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(DAY_PRIOR_15Z);
+  });
   function join(source: string, email = "reader@example.com") {
     return new Request("http://test/api/subscribe", {
       method: "POST",
