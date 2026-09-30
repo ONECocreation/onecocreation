@@ -98,7 +98,7 @@ export default function LettersRoom({ recent }: { recent: { key: string; subject
           : "Welcome to the community, we are so glad you are here."}
       </p>
       {who.letters.length === 0 && (
-        <p style={{ color: "var(--ink-body)", margin: "0 auto 22px", maxWidth: 520, textAlign: "center" }}>
+        <p className="lead">
           Nothing has landed in your reading room yet. When Love publishes her next letter, it arrives by email
           and gathers here too, ready to read any time. Until then, settle in and look around.
         </p>
