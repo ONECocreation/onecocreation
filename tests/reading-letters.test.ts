@@ -637,21 +637,32 @@ describe("the tick route — reading day-of orchestration (Astra §4, R1)", () =
     const res = await GET(tickRequest());
     // already true the instant GET resolves — proves the send is awaited
     // inside the handler, never fired-and-forgotten past the response.
-    expect(sent).toHaveLength(1);
-    const json = (await res.json()) as { reading: { dayOfSent: number } };
+    /* TASK-519: TWO letters now ride this tick on the reading's day —
+       the day-of (this suite's own) and the join reminder, which shares
+       this suite's due-gate verbatim (dueOccurrenceNow). Both land
+       before the handler returns; the spec's intent is unchanged. */
+    expect(sent).toHaveLength(2);
+    const json = (await res.json()) as { reading: { dayOfSent: number }; join: { reminderSent: number } };
     expect(json.reading.dayOfSent).toBe(1);
+    expect(json.join.reminderSent).toBe(1);
   });
 
-  it("a tick at/after startsAtMs sends none", async () => {
+  it("a tick at/after startsAtMs sends no day-of — only TASK-519's truthful start letter rides", async () => {
     subscribedState.add("a@example.com");
     recordsState.push(rec("a@example.com", { readingConfirmedAt: Date.now() }));
     vi.useFakeTimers();
     vi.setSystemTime(STARTS_AT_MS);
     const { GET } = await tickRoute();
     const res = await GET(tickRequest());
-    expect(sent).toHaveLength(0);
-    const json = (await res.json()) as { reading: { dayOfSent: number } };
+    /* TASK-519: the day-of still never mails late (its intent, kept —
+       skippedLate before any claim); the ONE send now is the join START
+       letter, due at the start instant inside its honest 45-minute
+       window (a tick past the window sends nothing — the lane's own
+       suite pins that). */
+    expect(sent).toHaveLength(1);
+    const json = (await res.json()) as { reading: { dayOfSent: number }; join: { startSent: number } };
     expect(json.reading.dayOfSent).toBe(0);
+    expect(json.join.startSent).toBe(1);
   });
 
   it("a tick with the meter spent sends none and reports skippedCap", async () => {
