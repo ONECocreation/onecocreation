@@ -86,12 +86,12 @@ file stay byte-untouched. No flag-and-stop condition triggered.
 WIDENED at build time (the seam law: a real widening edits the claim
 first, in its own named add):
 
-- (none yet — see the register's running log; the drift notes above
-  name the three widenings this lane already knows it owes:
-  tests/purchase-love-notify.test.ts and
-  tests/letters-every-letter-in-the-room.test.ts length pins,
-  tests/reading-one-box-468.test.ts's exact-body pin,
-  tests/reading-letters.test.ts's tick-route describe)
+- `src/lib/subscribers.ts` — beyond the brief's "tz field and its write
+  path": the additive `addSubscriberTag(email, tag)` writer and the
+  `READING_SEAT_TAG` constant the settle path calls. The seat tag has to
+  live in the subscribers store so consent and unsubscribe keep ONE
+  meaning (decision 3); entitlement-fulfil.ts owns only the call. The
+  minimal diff rides in SUMMARY's seam list.
 
 READ-ONLY: `src/lib/mail.ts` · `src/lib/mail-queue.ts` (the `notBefore`
 idiom read, deliberately not used) · `src/lib/booking-fulfil.ts` ·
