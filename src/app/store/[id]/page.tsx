@@ -12,7 +12,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { priceWords, defaultPreferOf, type MoneyPrefer, type MoneyRails } from "@/lib/money-words";
 import { preferFromCookieHeader } from "@/lib/money-preference";
 import { cookies } from "next/headers";
-import { sectionForKind } from "@/lib/store-sections";
+import { sectionForItem } from "@/lib/store-sections";
 
 export const dynamic = "force-dynamic";
 
@@ -93,9 +93,11 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   const shots = item.media?.images.length ? item.media.images : item.images;
   // TASK-189: the breadcrumb's third crumb — the ONE kind→section map
   // (src/lib/store-sections.ts), the same one the shelf and Related read.
-  // derive-or-dash still stands: a kind with no shelf section (retreat)
-  // gets no third crumb, never an invented one.
-  const section = sectionForKind(item.kind);
+  // TASK-498 (R-072): via sectionForItem, so a jar's crumb reads Gifts and
+  // points at the /store#gifts drawer instead of Meditations. derive-or-dash
+  // still stands: a kind with no shelf section (retreat) gets no third
+  // crumb, never an invented one.
+  const section = sectionForItem(item);
 
   /* TASK-177 (0018.06.18 a₿) — the ShinePages product layout Love chose
      (recon 03/04): TWO columns at ≥900px (.product-cols, house.css) — the
