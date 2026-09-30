@@ -54,6 +54,14 @@ triggered.
 - `src/app/a/letters/page.tsx` (ONE row in the post-T-493 LETTERS array)
 - `tests/purchase-love-notify.test.ts` (NEW), `tests/free-reading-path.test.ts` and `tests/letters-send.test.ts` (the two length-pin lines and comments ONLY), `tests/letters-one-render.test.ts` (the one new per-key case and the count word ONLY)
 
+WIDENED at build time (the seam law: a real widening edits the claim
+first, in its own named add):
+
+- `tests/order-receipt.test.ts` (the three pins that count letters on a
+  settle ONLY — a settle now mails two once-only letters, the receipt to
+  the buyer and this lane's letter to Love; updated with TASK-518
+  comments, never deleted; the minimal diff rides in SUMMARY's seam list)
+
 READ-ONLY: `src/lib/pwyc-letters.ts` (`offerNotifyTo` and `letterFor`
 reused, never edited) · `src/lib/order-receipt.ts` (`buyerEmailOf`
 reused) · `src/lib/entitlement-fulfil.ts`, `src/lib/booking-fulfil.ts`,
