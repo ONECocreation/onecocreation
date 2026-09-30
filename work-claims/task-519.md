@@ -92,6 +92,34 @@ first, in its own named add):
   live in the subscribers store so consent and unsubscribe keep ONE
   meaning (decision 3); entitlement-fulfil.ts owns only the call. The
   minimal diff rides in SUMMARY's seam list.
+- `tests/purchase-love-notify.test.ts` (T-518's own length pin at 10
+  ONLY) and `tests/letters-every-letter-in-the-room.test.ts` (T-493's
+  TWO length pins at 10 ONLY) — the same class of honestly-broken pin
+  the brief named in two other files; the draft counted two pins, the
+  tree carries four. Updated 10 to 12 with TASK-519 comments, never
+  deleted; SUMMARY's seam list names them.
+- `tests/reading-one-box-468.test.ts` (the ONE exact-body pin line
+  ONLY) — it pins the subscribe post body byte-exactly as
+  `{ email, source: "reading" }`; the viewerTz the sign-up now posts
+  honestly breaks that one line. Updated with its intent kept (the
+  verify-then-subscribe contract, now carrying the zone), TASK-519
+  named in the comment.
+- `tests/reading-letters.test.ts` (the tick-route describe's TWO send-
+  count specs ONLY — the library specs stay byte-untouched) — the
+  brief's own Build 11 sentence covers exactly this ("any tick-route
+  pin the new call breaks is updated with its intent kept"): on the
+  reading's day the join reminder truthfully rides beside the day-of
+  letter, and at the start instant the start letter is due. The specs'
+  intents (sends land BEFORE the handler returns; nothing LATE ever
+  mails) are kept; the counts gain the join letters with TASK-519
+  comments. The READ-ONLY line and Build 11 conflict here; the
+  reconciliation rides in SUMMARY.
+- `tests/reading-stage.test.ts` (the ONE camera/microphone source pin
+  ONLY) — a T-471-era pin asserting the stage page says nothing about
+  a camera or a microphone; TASK-519's whole point (K131) is to say
+  exactly that, in our own words, beside the embed. Updated with its
+  intent kept (no OTHER camera/microphone words, no banner while the
+  Playground is closed) and the deliberate exception named.
 
 READ-ONLY: `src/lib/mail.ts` · `src/lib/mail-queue.ts` (the `notBefore`
 idiom read, deliberately not used) · `src/lib/booking-fulfil.ts` ·
