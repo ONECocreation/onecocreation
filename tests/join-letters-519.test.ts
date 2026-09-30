@@ -223,7 +223,6 @@ function booking(over: Partial<BookingRecord> = {}): BookingRecord {
   } as BookingRecord;
 }
 
-const BK_START = Date.parse("2026-09-24T16:00:00.000Z");
 const BK_REMINDER_TICK = Date.parse("2026-09-24T14:00:00.000Z"); // 2 hours before
 const BK_START_TICK = Date.parse("2026-09-24T16:10:00.000Z"); // 10 minutes after
 
