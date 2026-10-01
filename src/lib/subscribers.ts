@@ -83,6 +83,10 @@ export async function addSubscriber(
     if (prior.optedOut) {
       prior.optedOut = false;
       await kv(["SET", recKey(email), JSON.stringify(prior)]);
+      /* TASK-537: unsubscribing takes a known soul out of the index and a
+         guest's tombstone was never in it, so the re-join puts them back
+         (SADD is idempotent). Without this a re-joined soul never got a list letter. */
+      await kv(["SADD", INDEX, prior.email]);
       return { added: true, already: false };
     }
     return { added: false, already: true };

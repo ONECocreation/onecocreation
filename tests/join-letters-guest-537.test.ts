@@ -199,6 +199,18 @@ describe("1c - the unsubscribe door works for a guest with no record", () => {
     expect(kvLog.some((c) => c[0] === "SADD" || c[0] === "SREM")).toBe(false);
   });
 
+  it("a re-join after unsubscribing puts the soul back in the index (guest tombstone and known record)", async () => {
+    putRec({ email: "known@example.com", joinedAtMs: 7, source: "footer" });
+    const { removeSubscriber, addSubscriber, isSubscribed } = await subs();
+    await removeSubscriber("stranger@example.com");
+    await removeSubscriber("known@example.com");
+    expect(await addSubscriber("stranger@example.com", "footer")).toEqual({ added: true, already: false });
+    expect(await addSubscriber("known@example.com", "footer")).toEqual({ added: true, already: false });
+    expect(kvLog).toContainEqual(["SADD", "mail:subscribers", "stranger@example.com"]);
+    expect(kvLog.filter((c) => c[0] === "SADD" && c[2] === "known@example.com")).toHaveLength(1);
+    expect(await isSubscribed("stranger@example.com")).toBe(true);
+  });
+
   it("a known record behaves byte-identically to before: opted out, kept, removed from the index", async () => {
     putRec({ email: "known@example.com", joinedAtMs: 7, source: "footer", tags: ["reading"] });
     const { removeSubscriber } = await subs();
