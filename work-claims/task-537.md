@@ -9,7 +9,7 @@ BRIEF: `~/dev/kimi/inbox/TASK-537-oc-purchase-join-gaps.md` (Rulings tail: all f
 
 ## OWNS
 - `work-claims/task-537.md`, `work-claims/task-537-register.md`
-- `src/lib/subscribers.ts` (`isOptedOut`, `removeSubscriberTag`, the `removeSubscriber` tombstone ONLY)
+- `src/lib/subscribers.ts` (`isOptedOut`, `removeSubscriberTag`, the `removeSubscriber` tombstone, and the `addSubscriber` re-join SADD, widened by Number One at block 969,420)
 - `src/lib/join-letters.ts` (the booking half's consent argument ONLY)
 - `src/lib/entitlement-fulfil.ts` (the untag in the refund and dispute branch, the import, the one comment ONLY)
 - `src/app/api/cart/checkout/route.ts` (the import and the one call ONLY)
