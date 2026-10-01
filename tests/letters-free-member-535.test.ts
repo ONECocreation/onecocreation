@@ -22,9 +22,13 @@ describe("free members read their letters (T-535)", () => {
     const meta = src.slice(src.indexOf("export async function generateMetadata"), src.indexOf("export default"));
     expect(meta).toContain("letterGate(");
   });
-  it("the reading room greets an empty mailbox with a community welcome", () => {
+  it("the reading room is never empty: the pinned welcome entry replaces the community greeting (T-536)", () => {
+    /* T-536 moved this pin. T-535's empty-room "Welcome to the community"
+       branch is removed because the route now always prepends the pinned
+       welcome entry; the same intent is guarded by the pinned label. */
     const src = readFileSync("src/components/LettersRoom.tsx", "utf8");
-    expect(src).toContain("Welcome to the community");
-    expect(src).not.toContain("—".repeat(1) + " when Love publishes her next letter, it lands here too.");
+    expect(src).not.toContain("Welcome to the community");
+    expect(src).toContain("pinned");
+    expect(src).toContain("Browse the public news");
   });
 });

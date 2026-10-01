@@ -39,7 +39,7 @@ const LETTERS: { key?: string; slot?: "reading-confirm" | "reading-dayof"; name:
     kind: "first sign-in · EDITABLE",
     subject: "Welcome home",
     note: "the first-sign-in hello",
-    when: "Queued at a first sign-in; goes out on the next mail run.",
+    when: "Queued at a first sign-in; goes out on the next mail run. It also sits first in every signed-in member's reading room, so your words are read there too.",
     group: "Welcome sequence",
     noPublish: true,
   },
