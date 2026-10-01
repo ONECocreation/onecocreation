@@ -70,6 +70,7 @@ describe("the switches — defaults are Love's streamlined site", () => {
       news: true,
       memberships: true, // TASK-187: default ON — Love's own offer
       largeSums: false, // TASK-393: default OFF per §8.7 — one flag brings it back
+      purchaseLoveNotify: true, // TASK-518: default ON — the Admiral asked for the letters to flow
     });
     expect(c.payments).toEqual({ btcpay: true, square: true, stripe: false });
     expect(c.meeting.rail).toBe("jitsi");

@@ -17,8 +17,9 @@ export default function SiteReplaysRoom() {
     <div className="kit-stack">
       <h2 className="kit-h2">Replays</h2>
       <p className="kit-text-quiet">
-        The list the Replays page plays. Paste a YouTube link per replay, order the rows, save. An empty list is
-        fine: the page shows its quiet note until the first one lands.
+        The list the Replays page plays. Hand a YouTube playlist to the playlist field and the page picks up its
+        latest videos on its own; paste a single YouTube link per replay below for anything older or one-off,
+        order the rows, save. An empty list is fine: the page shows its quiet note until the first one lands.
       </p>
       <ReplaysCard />
     </div>

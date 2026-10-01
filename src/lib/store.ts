@@ -849,6 +849,18 @@ export async function recordChargeEvent(
     } catch (err) {
       console.error(`order ${order.id}: receipt letter failed —`, err instanceof Error ? err.message : "error");
     }
+    /* TASK-518 (0018.06.30 · K131) — Love's purchase letter rides the ONE
+       settle point the BTCPay AND Square webhooks share (reconcile polling
+       lands here too), beside the receipt. Idempotent inside via its own
+       KV marker (`order:<id>:love-notified`), so a retried settle never
+       re-mails; a mail-rail hiccup never costs the state flip. Same
+       dynamic-import shape: the module reads getItem/kv from this one. */
+    try {
+      const { sendPurchaseLoveNotify } = await import("./purchase-love-notify");
+      await sendPurchaseLoveNotify(order);
+    } catch (err) {
+      console.error(`order ${order.id}: purchase letter to Love failed —`, err instanceof Error ? err.message : "error");
+    }
   }
   order.events.push({ type: ev.type, chargeId: ev.chargeId, atMs: Date.now() });
   await writeOrder(order);

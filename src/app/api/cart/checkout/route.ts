@@ -28,6 +28,7 @@ import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 import { settleBookingFromOrder } from "@/lib/booking-fulfil";
 import { settleGiftsFromOrder } from "@/lib/gift-vouchers";
 import { sendOfferNotify } from "@/lib/pwyc-letters";
+import { sendPurchaseLoveNotify } from "@/lib/purchase-love-notify";
 
 export const dynamic = "force-dynamic";
 
@@ -374,6 +375,9 @@ export async function POST(request: Request) {
     await settleEntitlementFromOrder(order);
     await settleBookingFromOrder(order);
     await settleGiftsFromOrder(order);
+    /* TASK-518 — a code-settled basket settles for Love too: her purchase
+       letter goes out (her own marker, webhook retries safe) */
+    await sendPurchaseLoveNotify(order).catch(() => {});
     await clearCart(cartId);
     return NextResponse.json({ ok: true, orderId: order.id, paid: true });
   }

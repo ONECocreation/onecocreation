@@ -206,7 +206,7 @@ describe("the welcome letter's registry seat (TASK-156)", () => {
   it("`welcome` is a seeded editable key with a members audience", async () => {
     const { EDITABLE_LETTERS, DEFAULT_AUDIENCE, audienceOf } = await import("@/lib/letters");
     expect(EDITABLE_LETTERS).toContain("welcome");
-    expect(EDITABLE_LETTERS).toHaveLength(9); // six until TASK-156; TASK-173 added `order-receipt`, TASK-493 added `read-with-love`
+    expect(EDITABLE_LETTERS).toHaveLength(12); // six until TASK-156; TASK-173 added `order-receipt`, TASK-493 added `read-with-love`, TASK-518 added `purchase-love-notify`, TASK-519 added the `join-reminder`/`join-start` pair
     expect(DEFAULT_AUDIENCE.welcome).toBe("members");
     expect(audienceOf("welcome", null)).toBe("members");
   });

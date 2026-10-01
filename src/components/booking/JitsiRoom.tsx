@@ -443,6 +443,15 @@ export default function JitsiRoom({
     <div style={{ height, display: "flex", flexDirection: "column", minHeight: 0 }}>
       {state === "loading" && <p style={{ color: "var(--muted)" }}>opening the room…</p>}
       <div ref={holder} style={{ flex: 1, minHeight: 0, borderRadius: 18, overflow: "hidden", border: "1.5px solid rgba(139,118,196,.35)" }} />
+      {/* TASK-519 (K131, decision 7): the prejoin hint — Jitsi's own
+          prejoin screen is where the browser asks for the camera and the
+          microphone (T-488: a fresh boot always starts there), and this
+          line says so in our words, on our page, beside the embed holder
+          on every mount (the /meet room and the /reading guest mounts).
+          Code on OUR component, never a Jitsi server change; existing
+          classes only, zero new style blocks (this file's design-drift
+          ceiling is pinned at 9). */}
+      <p className="mt-2 text-center text-xs opacity-60">Allow camera and microphone</p>
     </div>
   );
 }

@@ -30,11 +30,18 @@ export const EDITABLE_LETTERS = [
   "pwyc-decline",
   "order-receipt",
   "read-with-love",
+  "purchase-love-notify",
+  "join-reminder",
+  "join-start",
 ] as const;
 /** The SEEDED set — six until TASK-156 (0018.06.17 a₿) added `welcome` (the
  *  FIRST-sign-in letter Love edits in /a/letters), eight once TASK-173 added
  *  `order-receipt`, nine since TASK-493 (0018.06.30) added `read-with-love`
- *  (the Read with Love seat letter); Love's own composed
+ *  (the Read with Love seat letter), ten since TASK-518 (0018.06.30) added
+ *  `purchase-love-notify` (the letter to Love when any order settles),
+ *  twelve since TASK-519 (0018.06.30) added `join-reminder` and
+ *  `join-start` (the join letters every seat holder gets before a live
+ *  session and when it starts); Love's own composed
  *  letters still never touch this constant — they live in the vault registry
  *  below, and every reader that wants "all letters" goes through
  *  listLetterKeys(), never this constant alone. */
@@ -64,6 +71,11 @@ export const DEFAULT_AUDIENCE: Record<LetterKey, LetterAudience> = {
   "order-receipt": "members",
   // the Read with Love seat letter is one soul's mail — never the open feed
   "read-with-love": "members",
+  // the purchase letter is one soul's mail TO Love — never the open feed
+  "purchase-love-notify": "members",
+  // the join letters are one soul's mail — never the open feed
+  "join-reminder": "members",
+  "join-start": "members",
 };
 
 export function audienceOf(k: string, override: LetterOverride | null): LetterAudience {
@@ -246,6 +258,82 @@ One Cocreation`,
 Read with Love is a weekly live book reading: we gather, I read aloud, and the field listens together. Bring the book if you have it; bring yourself either way.
 
 {{room}}
+
+With love,
+One Cocreation`,
+  },
+  /* TASK-518 (0018.06.30, K131): the purchase letter TO LOVE — sent once
+   * the moment any order settles, from src/lib/purchase-love-notify.ts
+   * (direct sendMail, the receipt's shape, never the queue). The {{slots}}
+   * are machine-built and load-bearing: {{who}} = the buyer (email as
+   * given, the name when the record carries one), {{lines}} = what was
+   * bought (gift lines name their recipient), {{tier}} = the membership
+   * or pass and until when, {{amount}} = the charged snapshot verbatim
+   * (the code line when a discount applied), {{writeback}} = the mailto
+   * door to the buyer. A slot Love edits out is appended at the end so
+   * no fact can be lost. Plain words per the house copy law (the sibling
+   * offer letter's heart emoji is Love's own mark to add in the room). */
+  "purchase-love-notify": {
+    subject: "A purchase just settled",
+    body: `Beautiful, someone just bought from the store.
+
+{{who}}
+
+{{lines}}
+
+{{tier}}
+
+{{amount}}
+
+{{writeback}}
+
+The full record lives on the orders desk in /a. Card details never travel; the payment page keeps those.`,
+  },
+  /* TASK-519 (0018.06.30, K131): THE JOIN LETTERS — one letter before
+   * every live session and a short one when it starts, sent from
+   * src/lib/join-letters.ts to every seat holder (the reading list, the
+   * settle-tagged seat buyers, and each confirmed booking's own guest).
+   * The {{slots}} are machine-built and load-bearing, computed per soul
+   * per occurrence: {{session}} = which session (the reading, or the
+   * booking's own title), {{when}} = the start time in the reader's own
+   * zone when known, Love's zone named in words otherwise, {{link}} =
+   * the ONE door (the /reading page for the reading, the booking's own
+   * meeting link for a booked session). A slot Love edits out is
+   * appended at the end so no door and no time can ever be lost. The
+   * three plain lines at the foot are the call's own ruling (Shawnah's
+   * join): they stay verbatim, and no words here or in the rows ever
+   * promise a minute. Plain words per the house copy law: no em dash,
+   * no arrow, no emoji. */
+  "join-reminder": {
+    subject: "Your session is coming: the link and the time",
+    body: `Beautiful soul, a gentle note before we gather.
+
+{{session}}
+
+{{when}}
+
+{{link}}
+
+Open it on a computer or the phone.
+Press Allow for the camera and the microphone.
+If it says no, refresh once.
+
+With love,
+One Cocreation`,
+  },
+  "join-start": {
+    subject: "The room is open: come on in",
+    body: `Beautiful soul, the room is open.
+
+{{session}}
+
+{{when}}
+
+{{link}}
+
+Open it on a computer or the phone.
+Press Allow for the camera and the microphone.
+If it says no, refresh once.
 
 With love,
 One Cocreation`,

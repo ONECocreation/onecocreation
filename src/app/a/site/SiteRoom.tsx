@@ -38,6 +38,7 @@ const FEATURE_ROWS: { key: keyof SiteConfig["features"]; label: string; about: s
   { key: "news", label: "News & letters", about: "the News & letters door in the nav" },
   { key: "memberships", label: "Memberships", about: "the Memberships door in the nav, the Store header's Memberships button, the home hero's package doors, and /memberships + /packages themselves — each package's own door is its item in Items" },
   { key: "largeSums", label: "Large Sums of Money", about: "the \"Large Sums of Money\" affirmation on the home shelf and the packages add-ons strip — off until the offer is ready" },
+  { key: "purchaseLoveNotify", label: "Purchase letters to Love", about: "the short letter to love@ when any order settles; who bought, what, the amount" },
 ];
 
 const RAIL_ROWS: { key: keyof SiteConfig["payments"]; label: string; about: string }[] = [

@@ -175,30 +175,37 @@ describe("the receipt letter — once per order, words carrying the door", () =>
 
     const flipped = await recordChargeEvent(order.id, { type: "settled", chargeId: "ch_fixture" });
     expect(flipped?.state).toBe("settled");
-    expect(sentMail.length).toBe(1);
+    /* TASK-518: the settle now mails TWO letters, each once-only on its own
+       marker — the receipt to the buyer (this file's pin) and Love's
+       purchase letter (`order:<id>:love-notified`), fired beside it */
+    expect(sentMail.length).toBe(2);
     expect(sentMail[0].to).toBe("soul@example.com");
+    expect(sentMail[1].to).toBe("love@onecocreation.com"); // TASK-518
 
     // the webhook's own retry: same event again — the state flip no-ops
     await recordChargeEvent(order.id, { type: "settled", chargeId: "ch_fixture" });
-    expect(sentMail.length).toBe(1);
+    expect(sentMail.length).toBe(2);
 
     // a fresh settle event on another charge id that arrives late: the state
     // is already settled, the flip no-ops before the letter is even asked
     await recordChargeEvent(order.id, { type: "settled", chargeId: "ch_late" });
-    expect(sentMail.length).toBe(1);
+    expect(sentMail.length).toBe(2);
 
     // the marker itself: a direct re-call on the settled order no-ops
     const settled = await getOrder(order.id);
     const again = await sendOrderReceipt(settled!);
     expect(again).toEqual({ sent: false, reason: "receipt already sent" });
-    expect(sentMail.length).toBe(1);
+    expect(sentMail.length).toBe(2);
   });
 
   it("the words carry the title, the whole-dollar amount as paid, and the signed door — never the file path", async () => {
     const { recordChargeEvent } = await import("@/lib/store");
     const order = await makeOrder();
     await recordChargeEvent(order.id, { type: "settled", chargeId: "ch_fixture" });
-    expect(sentMail.length).toBe(1);
+    // TASK-518: two letters now ride the settle — the receipt (first) plus
+    // Love's purchase letter; this pin reads the receipt, unchanged
+    expect(sentMail.length).toBe(2);
+    expect(sentMail[0].to).toBe("soul@example.com");
     const html = sentMail[0].html;
     expect(html).toContain("Thank You Wake Up Affirmations");
     expect(html).toContain("$11"); // 1100 minor units, whole dollars
@@ -214,7 +221,12 @@ describe("the receipt letter — once per order, words carrying the door", () =>
     const { sendOrderReceipt } = await import("@/lib/order-receipt");
     const order = await makeOrder({ bookingId: "bk_fixture" });
     await recordChargeEvent(order.id, { type: "settled", chargeId: "ch_fixture" });
-    expect(sentMail.length).toBe(0);
+    /* the BUYER still gets no store receipt — but TASK-518's purchase
+       letter to Love DOES fire for a booking settle (a booking is one of
+       her named purchase kinds); exactly one letter, to her alone */
+    expect(sentMail.filter((m) => m.to === "soul@example.com")).toHaveLength(0);
+    expect(sentMail.length).toBe(1);
+    expect(sentMail[0].to).toBe("love@onecocreation.com");
     const res = await sendOrderReceipt((await getOrder(order.id))!);
     expect(res).toEqual({ sent: false, reason: "a booking order — its own letter rides" });
   });

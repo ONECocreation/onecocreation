@@ -19,8 +19,10 @@ import path from "path";
  *     !cta: line sends the rendered button, never literal "!cta:" text.
  *  3. the one-render law: an override WITHOUT a !cta: line renders no button
  *     (the button lives in the body now; the preview IS the send).
- *  4. PREVIEW-EQUALS-SENT for all eight EDITABLE_LETTERS keys with sample
- *     slots: the sender's html string-equals letterHtml()/letterFor() of the
+ *  4. PREVIEW-EQUALS-SENT for the EDITABLE_LETTERS keys with sample
+ *     slots (nine cases; TASK-518 added purchase-love-notify — T-493 left
+ *     read-with-love without a case, a gap named in T-518's SUMMARY):
+ *     the sender's html string-equals letterHtml()/letterFor() of the
  *     same resolved body. This lane exports letterFor exactly so the slot
  *     letters' documents reconstruct from exported pieces (makeOfferToken,
  *     pill, mintOrderKeyFor; the fragments pinned by content).
@@ -340,7 +342,7 @@ describe("the one-render law: an override without a !cta: line renders no button
   });
 });
 
-describe("preview equals sent: all eight EDITABLE_LETTERS keys with sample slots", () => {
+describe("preview equals sent: eleven EDITABLE_LETTERS keys with sample slots", () => {
   it("lead-magnet: sendLeadMagnetLetter string-equals letterHtml of the same resolved body", async () => {
     const { sendLeadMagnetLetter } = await leadMagnet();
     await sendLeadMagnetLetter("reader@example.com");
@@ -459,6 +461,71 @@ describe("preview equals sent: all eight EDITABLE_LETTERS keys with sample slots
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  /* TASK-518: the purchase letter to Love pours from the same composer —
+     the send string-equals the exported build of the same order (the
+     build is letterFor + the five machine slots; the marker and the
+     switch live outside the words) */
+  it("purchase-love-notify: sendPurchaseLoveNotify string-equals buildPurchaseLoveNotify of the same order", async () => {
+    const { sendPurchaseLoveNotify, buildPurchaseLoveNotify } = await import("@/lib/purchase-love-notify");
+    const order = receiptOrder(); // a settled store order on the catalog fixture
+    const expected = await buildPurchaseLoveNotify(order);
+    const res = await sendPurchaseLoveNotify(order);
+    expect(res).toEqual({ sent: true });
+    expect(sentMail).toHaveLength(1);
+    expect(sentMail[0].to).toBe("love@onecocreation.com");
+    expect(sentMail[0].subject).toBe("A purchase just settled");
+    expect(sentMail[0].subject).toBe(expected.subject);
+    expect(sentMail[0].html).toBe(expected.html);
+    expect(sentMail[0].html).not.toMatch(/\{\{[a-z]+\}\}/); // no raw slot ever ships
+  });
+
+  /* TASK-519: the join letters pour from the same composer too — each
+     builder string-equals letterFor of the same machine parts (the
+     {{session}}/{{when}}/{{link}} fragments pinned by content, the
+     byte-shape copied from src/lib/join-letters.ts so a drift in the
+     module breaks this suite, never ships silent) */
+  const JOIN_STARTS = Date.parse("2026-09-23T19:11:00.000Z"); // Wednesday 1:11 PM MDT
+  const joinParts = {
+    session: "the reading",
+    startsAtMs: JOIN_STARTS,
+    tz: "America/Denver",
+    link: `${SITE}/reading`,
+    linkWords: "Open the reading page",
+  };
+  const joinLinkFragment = `<p style="margin:22px 0;"><a href="${SITE}/reading" style="background:#b4862b;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;">Open the reading page</a></p>`;
+
+  it("join-reminder: joinReminderLetter string-equals letterFor with the same machine parts (TASK-519)", async () => {
+    const { joinReminderLetter } = await import("@/lib/join-letters");
+    const { letterFor } = await pwyc();
+    const built = await joinReminderLetter("reader@example.com", joinParts);
+    const expected = await letterFor("join-reminder", {
+      session: `<p style="margin:0 0 1.15em;line-height:1.75;">The session: <b>the reading</b>.</p>`,
+      when: `<p style="margin:0 0 1.15em;line-height:1.75;">It begins <b>Wednesday, September 23 at 1:11 PM Mountain</b>.</p>`,
+      link: joinLinkFragment,
+    });
+    expect(built.to).toBe("reader@example.com");
+    expect(built.subject).toBe("Your session is coming: the link and the time");
+    expect(built.subject).toBe(expected.subject);
+    expect(built.html).toBe(expected.html);
+    expect(built.html).not.toMatch(/\{\{[a-z]+\}\}/); // no raw slot ever ships
+  });
+
+  it("join-start: joinStartLetter string-equals letterFor with the same machine parts (TASK-519)", async () => {
+    const { joinStartLetter } = await import("@/lib/join-letters");
+    const { letterFor } = await pwyc();
+    const built = await joinStartLetter("reader@example.com", joinParts);
+    const expected = await letterFor("join-start", {
+      session: `<p style="margin:0 0 1.15em;line-height:1.75;">The session: <b>the reading</b>.</p>`,
+      when: `<p style="margin:0 0 1.15em;line-height:1.75;">It opened <b>Wednesday, September 23 at 1:11 PM Mountain</b>.</p>`,
+      link: joinLinkFragment,
+    });
+    expect(built.to).toBe("reader@example.com");
+    expect(built.subject).toBe("The room is open: come on in");
+    expect(built.subject).toBe(expected.subject);
+    expect(built.html).toBe(expected.html);
+    expect(built.html).not.toMatch(/\{\{[a-z]+\}\}/); // no raw slot ever ships
   });
 });
 
