@@ -7,7 +7,7 @@ import { emailForSubject } from "./member-tier";
 import { TIERS } from "./entitlement";
 import { enqueue } from "./mail-queue";
 import { brandShell } from "./mail";
-import { siteBase, addSubscriberTag, READING_SEAT_TAG } from "./subscribers";
+import { siteBase, addSubscriberTag, removeSubscriberTag, READING_SEAT_TAG } from "./subscribers";
 
 /** The doors close kindly, never silently. */
 export async function sendRevokeLetter(to: string, tier: Tier, refunded: boolean): Promise<void> {
@@ -96,6 +96,23 @@ async function npubOfOrder(order: OrderRecord): Promise<string | null> {
   return normalizeNpub(entry?.npub);
 }
 
+/** TASK-537: the tag marks "has a seat". After a refund or dispute, ask the
+ *  one honest question: does this npub still hold a live grant? If not, the
+ *  `reading-seat` tag goes; if so (the lapsed-pass early return leaves the
+ *  membership under the pass standing) it stays. Only the seat tag is ever
+ *  touched, never the free `reading` list tag. Failure-isolated like the
+ *  tag write: a hiccup here must never fail a refund. */
+async function untagReadingSeat(order: OrderRecord, npub: string): Promise<void> {
+  try {
+    const seatEmail = order.contact?.email;
+    if (!seatEmail) return;
+    if (await getEntitlement(npub)) return;
+    await removeSubscriberTag(seatEmail, READING_SEAT_TAG);
+  } catch (err) {
+    console.error("entitlement-fulfil: reading-seat untag failed (the refund stands):", err);
+  }
+}
+
 export async function settleEntitlementFromOrder(order: OrderRecord): Promise<FulfilResult> {
   const grant = await bestPackageGrant(order);
   if (!grant) return { ...NOTHING, note: "not a package order" };
@@ -124,8 +141,8 @@ export async function settleEntitlementFromOrder(order: OrderRecord): Promise<Fu
          the join letters' audience (reading list UNION reading-seat)
          reaches the seat buyers who used to vanish. The tag rides the
          subscribers store so consent and unsubscribe keep ONE meaning;
-         a refund does NOT remove it (subscription data, not an
-         entitlement — flagged in the lane's SUMMARY for a ruling).
+         T-537: a refund or dispute removes it again, but only when the
+         member's access is actually gone (see `untagReadingSeat`).
          Failure-isolated like the revoke letter below: a tag-write
          hiccup must never unsettle money or a grant. */
       try {
@@ -159,6 +176,7 @@ export async function settleEntitlementFromOrder(order: OrderRecord): Promise<Fu
       // the membership under it is not this order's to close. Checked
       // FIRST, before anything reads or touches rooms/tier/letters at all.
       if (await isLapsedPassOrder(npub, order.id)) {
+        await untagReadingSeat(order, npub);
         return { ...NOTHING, tier, note: "the refunded pass had already ended; the membership under it stays" };
       }
       const held = await getEntitlement(npub);
@@ -167,6 +185,7 @@ export async function settleEntitlementFromOrder(order: OrderRecord): Promise<Fu
         ? await removeFromTierRooms(held.mxid, { reason: order.state === "disputed" ? "payment disputed" : "refunded" })
         : [];
       await revokeTier(npub);
+      await untagReadingSeat(order, npub);
       // the kind close (Admiral, 0018.05.18): doors never shut silently
       try {
         const to = order.contact?.email ?? (order.entitlementSubject ? await emailForSubject(order.entitlementSubject) : null);
