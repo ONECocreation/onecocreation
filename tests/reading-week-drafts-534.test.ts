@@ -232,7 +232,9 @@ describe("derive-or-dash", () => {
     const { draftReadingLetters } = await mod();
     cfg.reading = { ...SUNDAY, on: false };
     const stats = await draftReadingLetters(TUE_0900_MDT);
-    expect(stats).toEqual({ nextReading: "skipped", replay: "held", reviewSent: 0 });
+    /* T-538: the recap half is built; with no replays and no seen-set it
+       reports "skipped" (was the "held" placeholder) */
+    expect(stats).toEqual({ nextReading: "skipped", replay: "skipped", reviewSent: 0 });
     expect(store.size).toBe(0);
     expect(sent).toHaveLength(0);
   });
