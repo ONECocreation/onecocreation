@@ -1,6 +1,7 @@
 import { sendMail, capRemaining, onceWithin, type OutgoingMail } from "@/lib/mail";
 import {
   isSubscribed,
+  isOptedOut,
   listSubscribersByTag,
   siteBase,
   unsubscribeUrl,
@@ -155,6 +156,15 @@ export async function joinStartLetter(email: string, parts: JoinSessionParts): P
 
 /* ── the two send paths (the ruled order: capacity, subscribed, claim, send) ── */
 
+/** TASK-537: who may be mailed. "list" (default, the reading half) needs a
+ *  live subscriber record; "not-opted-out" (the booking half) needs only
+ *  the absence of an opt-out. */
+export type JoinConsent = "list" | "not-opted-out";
+
+async function consented(email: string, consent: JoinConsent): Promise<boolean> {
+  return consent === "not-opted-out" ? !(await isOptedOut(email)) : isSubscribed(email);
+}
+
 export type JoinSendResult = "sent" | "skippedCap" | "skippedLate" | "skippedClaimed" | "skippedUnsubscribed";
 
 /** The reminder's ONE send path, one soul at a time. `Date.now()` is
@@ -168,10 +178,11 @@ export async function sendJoinReminder(
   email: string,
   onceKey: string,
   parts: JoinSessionParts,
+  consent: JoinConsent = "list",
 ): Promise<JoinSendResult> {
   if (Date.now() >= parts.startsAtMs) return "skippedLate";
   if (!((await capRemaining()) > 0)) return "skippedCap";
-  if (!(await isSubscribed(email))) return "skippedUnsubscribed";
+  if (!(await consented(email, consent))) return "skippedUnsubscribed";
   if (!(await onceWithin(onceKey, ONCE_WINDOW_MS))) return "skippedClaimed";
   await sendMail("news", await joinReminderLetter(email, parts));
   return "sent";
@@ -184,10 +195,11 @@ export async function sendJoinStart(
   email: string,
   onceKey: string,
   parts: JoinSessionParts,
+  consent: JoinConsent = "list",
 ): Promise<JoinSendResult> {
   if (Date.now() - parts.startsAtMs >= START_WINDOW_MS) return "skippedLate";
   if (!((await capRemaining()) > 0)) return "skippedCap";
-  if (!(await isSubscribed(email))) return "skippedUnsubscribed";
+  if (!(await consented(email, consent))) return "skippedUnsubscribed";
   if (!(await onceWithin(onceKey, ONCE_WINDOW_MS))) return "skippedClaimed";
   await sendMail("news", await joinStartLetter(email, parts));
   return "sent";
@@ -301,9 +313,9 @@ async function sweepBookings(nowMs: number, stats: JoinTickStats): Promise<void>
     };
     try {
       if (startsAtMs - nowMs > 0 && startsAtMs - nowMs <= REMINDER_WINDOW_MS) {
-        tally(stats, "reminder", await sendJoinReminder(email, `join-reminder:booking:${booking.id}`, parts));
+        tally(stats, "reminder", await sendJoinReminder(email, `join-reminder:booking:${booking.id}`, parts, "not-opted-out"));
       } else if (nowMs - startsAtMs >= 0 && nowMs - startsAtMs < START_WINDOW_MS) {
-        tally(stats, "start", await sendJoinStart(email, `join-start:booking:${booking.id}`, parts));
+        tally(stats, "start", await sendJoinStart(email, `join-start:booking:${booking.id}`, parts, "not-opted-out"));
       }
     } catch (err) {
       console.error("join-letters: booking send failed:", booking.id, err);

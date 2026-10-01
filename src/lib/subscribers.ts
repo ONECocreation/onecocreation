@@ -83,6 +83,10 @@ export async function addSubscriber(
     if (prior.optedOut) {
       prior.optedOut = false;
       await kv(["SET", recKey(email), JSON.stringify(prior)]);
+      /* TASK-537: unsubscribing takes a known soul out of the index and a
+         guest's tombstone was never in it, so the re-join puts them back
+         (SADD is idempotent). Without this a re-joined soul never got a list letter. */
+      await kv(["SADD", INDEX, prior.email]);
       return { added: true, already: false };
     }
     return { added: false, already: true };
@@ -217,9 +221,37 @@ export async function markReadingConfirmed(email: string): Promise<void> {
   await kv(["SET", key, JSON.stringify(rec)]);
 }
 
+/**
+ * TASK-537 - the mirror of `addSubscriberTag`: merges `tag` OUT of the
+ * record's `tags`. No record is no write; a record without the tag is no
+ * write; otherwise every other field (`source`, `optedOut`, `joinedAtMs`,
+ * `tz`, the other tags) is byte-preserved. Idempotent by the same rule.
+ */
+export async function removeSubscriberTag(email: string, tag: string): Promise<void> {
+  const key = recKey(email);
+  const existing = await kv(["GET", key]);
+  if (!existing) return;
+  const prior = JSON.parse(existing as string) as SubscriberRecord;
+  if (!prior.tags?.includes(tag)) return;
+  const next: SubscriberRecord = { ...prior, tags: prior.tags.filter((t) => t !== tag) };
+  await kv(["SET", key, JSON.stringify(next)]);
+}
+
 export async function removeSubscriber(email: string): Promise<void> {
   const existing = await kv(["GET", recKey(email)]);
-  if (!existing) return;
+  if (!existing) {
+    /* TASK-537: a soul the vault never saw (a booking guest) can still say
+       no. The tombstone is an opt-out record and nothing else: the index is
+       NOT touched, so no list ever counts them. */
+    const tombstone: SubscriberRecord = {
+      email: email.toLowerCase(),
+      joinedAtMs: Date.now(),
+      source: "unsubscribed",
+      optedOut: true,
+    };
+    await kv(["SET", recKey(email), JSON.stringify(tombstone)]);
+    return;
+  }
   const rec = JSON.parse(existing as string) as SubscriberRecord;
   rec.optedOut = true; // keep the record — "who was on what list" includes who left
   await kv(["SET", recKey(email), JSON.stringify(rec)]);
@@ -288,6 +320,15 @@ export async function isSubscribed(email: string): Promise<boolean> {
   const raw = (await kv(["GET", recKey(email)])) as string | null;
   if (!raw) return false;
   return !(JSON.parse(raw as string) as SubscriberRecord).optedOut;
+}
+
+/** TASK-537: the booking half's consent question. True ONLY when a record
+ *  exists and says the soul opted out; no record is NOT an opt-out (the
+ *  booking confirmation already mails this address the same link). */
+export async function isOptedOut(email: string): Promise<boolean> {
+  const raw = (await kv(["GET", recKey(email)])) as string | null;
+  if (!raw) return false;
+  return !!(JSON.parse(raw as string) as SubscriberRecord).optedOut;
 }
 
 export async function subscriberCount(): Promise<number> {
