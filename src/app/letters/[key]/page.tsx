@@ -14,7 +14,6 @@ import {
   type LetterOverride,
 } from "@/lib/letters";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
-import { tierForSubject } from "@/lib/member-tier";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +25,8 @@ export const dynamic = "force-dynamic";
  *
  * TASK-494: members-only stays members-only. audienceOf names the letter's
  * audience; the pure letterAudienceGate decides who may read it — a
- * signed-in member (valid session AND a resolved tier) or the operator —
+ * signed-in member (any valid session, tier or none: TASK-535, a free
+ * email member reads their letters) or the operator —
  * and everyone else gets the same plain 404 a bad key gets, never a
  * sign-in teaser (a teaser would confirm the letter exists). The gate is
  * resolved ONCE per request below and metadata wears it too, so a
@@ -34,23 +34,14 @@ export const dynamic = "force-dynamic";
  */
 
 /** The ONE wiring of the gate: session + operator from the cookie header
- *  (the rooms/reading idiom), the tier read fails CLOSED (a throw or a
- *  null tier is not a member), the verdict comes from letterAudienceGate
- *  alone. */
+ *  (the rooms/reading idiom); no session is not a member (fail closed),
+ *  the verdict comes from letterAudienceGate alone. */
 async function letterGate(key: string, override: LetterOverride | null) {
   const audience = audienceOf(key, override);
   const cookie = (await headers()).get("cookie");
   const operator = !!operatorFromCookieHeader(cookie);
   const session = sessionsFromCookieHeader(cookie)[0] ?? null;
-  let isMember = false;
-  if (session) {
-    try {
-      isMember = (await tierForSubject(`${session.handle}@${session.space}`)) != null;
-    } catch {
-      isMember = false; // fail closed — a vault error is not a membership
-    }
-  }
-  return letterAudienceGate({ audience, signedIn: !!session, isMember, operator });
+  return letterAudienceGate({ audience, signedIn: !!session, operator });
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ key: string }> }): Promise<Metadata> {

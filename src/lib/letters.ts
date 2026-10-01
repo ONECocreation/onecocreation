@@ -84,24 +84,23 @@ export function audienceOf(k: string, override: LetterOverride | null): LetterAu
 
 export type LetterGateVerdict = "render" | "not-found";
 
-/** TASK-494 — who may read a letter on the SITE, the ONE truth table the
- *  /letters/[key] page and its metadata both wire (never re-derived
- *  per-caller). "members" stays members-only: a signed-in member (a valid
- *  session AND a resolved tier) or the operator (her "preview on the
- *  site" doors stay open); everyone else — signed out, or the signed-in
- *  NON-member state that really exists (an email-space subscriber session
- *  carries no tier) — is gated to a plain 404, never a sign-in teaser (a
- *  teaser would confirm the letter exists). "public" renders for
- *  everyone, signed out included — the /news shelf keeps working. */
+/** TASK-494 + TASK-535 — who may read a letter on the SITE, the ONE truth
+ *  table the /letters/[key] page and its metadata both wire (never
+ *  re-derived per-caller). "members" means a signed-in member: ANY valid
+ *  session, tier or none (there is no free tier; a free email member holds
+ *  a session and no tier, and the Admiral ruled they read their letters),
+ *  or the operator (her "preview on the site" doors stay open). A signed-out
+ *  visitor is gated to a plain 404, never a sign-in teaser (a teaser would
+ *  confirm the letter exists). "public" renders for everyone, signed out
+ *  included — the /news shelf keeps working. */
 export function letterAudienceGate(input: {
   audience: LetterAudience;
   signedIn: boolean;
-  isMember: boolean;
   operator: boolean;
 }): LetterGateVerdict {
   if (input.audience === "public") return "render";
   if (input.operator) return "render";
-  return input.signedIn && input.isMember ? "render" : "not-found";
+  return input.signedIn ? "render" : "not-found";
 }
 
 /** Built-in words for letters with no override yet — the news sample keeps
