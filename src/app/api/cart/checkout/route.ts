@@ -376,7 +376,7 @@ export async function POST(request: Request) {
     await settleEntitlementFromOrder(order);
     await settleBookingFromOrder(order);
     await settleGiftsFromOrder(order);
-    /* TASK-537 — the buyer's receipt, as the store route sends it: caught
+    /* TASK-537: the buyer's receipt, as the store route sends it: caught
        (a mail hiccup never changes the answer), booking orders skip inside */
     await sendOrderReceipt(order).catch(() => {});
     /* TASK-518 — a code-settled basket settles for Love too: her purchase
