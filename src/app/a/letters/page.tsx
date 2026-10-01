@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState } from "react";
+import { isReadingDraftKey } from "@/lib/reading-draft-keys";
 import { insertAtCaret, insertHeroLine, insertLink, insertReadingRoomLink, toggleMark } from "@/lib/letter-marks";
 import { READING_PAGE_PATH } from "@/lib/reading-room";
 import { cartridge } from "@/brand/cartridge";
@@ -280,6 +281,40 @@ export default function LettersRoom() {
 
   const api = (key: string | undefined) => apiLetters.find((l) => l.key === key);
   const composed = apiLetters.filter((l) => l.kind === "composed");
+  const readingDrafts = composed.filter((c) => isReadingDraftKey(c.key));
+
+  /* TASK-534: one composed letter's row. The automatic reading drafts
+   * (next-reading-, after-reading-) render inside the Reading group with a
+   * review tag; every other composed letter stays where it was. */
+  function composedRow(c: ApiLetter, draft: boolean) {
+    return (
+      <li key={c.key} style={glassCard}>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <b>
+            {c.title ?? c.key} ✎
+            <button onClick={() => openEditor(c.key, c.title ?? c.key)} className="ml-2 btn btn-ghost btn-sm">
+              {open === c.key ? "close" : "edit"}
+            </button>
+            <a href={`/a/letters/${c.key}`} className="ml-1 btn btn-sm">
+              send panel →
+            </a>
+            {/* S2: pinned — needs a ruling: this desk page is night chrome (the Tailwind around it never dawns); the theme-aware --ok/--muted would flip at dawn */}
+            <button onClick={() => flipAudience(c.key)}
+              title="public letters show on /news and the guest feed; members letters only in their receivers' /letters"
+              className={`ml-1 btn btn-sm ${c.audience === "public" ? "btn-on" : "btn-ghost"}`}>
+              {c.audience === "public" ? "🌍 public" : "✉ the list"}
+            </button>
+          </b>
+          <span style={{ fontSize: ".75rem", color: "var(--info)" }}>news@ · composed by Love · EDITABLE</span>
+        </div>
+        <p className="mt-1" style={{ color: "var(--ink-body)" }}>&ldquo;{c.override?.subject ?? c.title}&rdquo;</p>
+        {draft && (
+          <p className="mt-2" style={microLabelStyle}>draft, waiting for your review</p>
+        )}
+        {open === c.key && editor(c.key)}
+      </li>
+    );
+  }
 
   /** public = the open /news feed; members = only its receivers' /letters */
   async function flipAudience(key: string) {
@@ -506,30 +541,7 @@ export default function LettersRoom() {
       </div>
 
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-        {composed.map((c) => (
-          <li key={c.key} style={glassCard}>
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <b>
-                {c.title ?? c.key} ✎
-                <button onClick={() => openEditor(c.key, c.title ?? c.key)} className="ml-2 btn btn-ghost btn-sm">
-                  {open === c.key ? "close" : "edit"}
-                </button>
-                <a href={`/a/letters/${c.key}`} className="ml-1 btn btn-sm">
-                  send panel →
-                </a>
-                {/* S2: pinned — needs a ruling: this desk page is night chrome (the Tailwind around it never dawns); the theme-aware --ok/--muted would flip at dawn */}
-                <button onClick={() => flipAudience(c.key)}
-                  title="public letters show on /news and the guest feed; members letters only in their receivers' /letters"
-                  className={`ml-1 btn btn-sm ${c.audience === "public" ? "btn-on" : "btn-ghost"}`}>
-                  {c.audience === "public" ? "🌍 public" : "✉ the list"}
-                </button>
-              </b>
-              <span style={{ fontSize: ".75rem", color: "var(--info)" }}>news@ · composed by Love · EDITABLE</span>
-            </div>
-            <p className="mt-1" style={{ color: "var(--ink-body)" }}>&ldquo;{c.override?.subject ?? c.title}&rdquo;</p>
-            {open === c.key && editor(c.key)}
-          </li>
-        ))}
+        {composed.filter((c) => !isReadingDraftKey(c.key)).map((c) => composedRow(c, false))}
         {LETTERS.map((l, i) => {
           /* TASK-493: a slot row's key is the composed letter CURRENTLY
              riding that automatic send (the slots GET's effective key);
@@ -601,6 +613,7 @@ export default function LettersRoom() {
               </div>
             )}
               </li>
+              {l.group === "Reading" && LETTERS[i + 1]?.group !== "Reading" && readingDrafts.map((c) => composedRow(c, true))}
             </Fragment>
           );
         })}

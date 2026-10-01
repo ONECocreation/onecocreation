@@ -3,6 +3,7 @@ import { tick } from "@/lib/mail-queue";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 import { enqueueReadingDayOf } from "@/lib/reading-letters";
 import { enqueueJoinLetters } from "@/lib/join-letters";
+import { draftReadingLetters } from "@/lib/reading-week-drafts";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -22,6 +23,18 @@ function authorized(request: Request): boolean {
   return false;
 }
 
+/**
+ * TASK-534: the `?draft=now` poke (make this week's draft now) is honored
+ * for the seat secret or an operator cookie ONLY, never for the public cron
+ * bearer's ordinary path. It bypasses the Tuesday check and nothing else.
+ */
+function pokeAllowed(request: Request): boolean {
+  if (new URL(request.url).searchParams.get("draft") !== "now") return false;
+  const seat = request.headers.get("x-seat-secret");
+  if (process.env.SEAT_SECRET && seat === process.env.SEAT_SECRET) return true;
+  return !!operatorFromCookieHeader(request.headers.get("cookie"));
+}
+
 export async function GET(request: Request) {
   if (!authorized(request)) return NextResponse.json({ ok: false }, { status: 401 });
   const result = await tick();
@@ -34,7 +47,18 @@ export async function GET(request: Request) {
      from due-logic like the reading letters (R1), never the queue; the
      call is internally guarded and never throws into this response. */
   const join = await enqueueJoinLetters(Date.now());
-  return NextResponse.json({ ok: true, ...result, reading, join });
+  /* TASK-534: the weekly next-reading DRAFT and its review copy ride the
+     same tick, AFTER the calls above, in their own try/catch: a draft
+     can never fail the tick. It mails only the operator recipient set and
+     never touches the list (the send panel is the only door to the list). */
+  let drafts: Awaited<ReturnType<typeof draftReadingLetters>> | { nextReading: "error"; replay: "held"; reviewSent: 0 };
+  try {
+    drafts = await draftReadingLetters(Date.now(), { force: pokeAllowed(request) });
+  } catch (err) {
+    console.error("mail tick: reading drafts failed:", err);
+    drafts = { nextReading: "error", replay: "held", reviewSent: 0 };
+  }
+  return NextResponse.json({ ok: true, ...result, reading, join, drafts });
 }
 
 export async function POST(request: Request) {
