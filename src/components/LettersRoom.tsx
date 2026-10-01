@@ -14,7 +14,7 @@ import SubscribeForm from "@/components/SubscribeForm";
 /* readable is optional — a stale/uncached response with no field still
    renders as a clickable link (readable-by-default is the safe fallback);
    only an explicit readable === false renders the plain "sent" receipt. */
-interface Entry { key: string; subject: string; atMs: number; readable?: boolean }
+interface Entry { key: string; subject: string; atMs: number; readable?: boolean; pinned?: boolean }
 interface Who { ok: boolean; signedIn: boolean; operator: boolean; email: string | null; letters: Entry[] }
 
 export default function LettersRoom({ recent }: { recent: { key: string; subject: string }[] }) {
@@ -82,6 +82,7 @@ export default function LettersRoom({ recent }: { recent: { key: string; subject
         </p>
         <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
           <Link className="btn btn-sm" href="/me">Your profile</Link>
+          <Link className="btn btn-ghost btn-sm" href="/letters/welcome">Read your welcome letter</Link>
           <Link className="btn btn-ghost btn-sm" href="/news">The public news</Link>
         </div>
         {who.operator && operatorNote}
@@ -93,16 +94,8 @@ export default function LettersRoom({ recent }: { recent: { key: string; subject
   return (
     <div>
       <p className="lead" style={{ marginBottom: 24 }}>
-        {who.letters.length > 0
-          ? "Everything Love has sent you, newest first."
-          : "Welcome to the community, we are so glad you are here."}
+        Everything Love has sent you, newest first.
       </p>
-      {who.letters.length === 0 && (
-        <p className="lead">
-          Nothing has landed in your reading room yet. When Love publishes her next letter, it arrives by email
-          and gathers here too, ready to read any time. Until then, settle in and look around.
-        </p>
-      )}
       <div style={{ display: "grid", gap: 10, textAlign: "left" }}>
         {who.letters.map((l, i) => {
           /* TASK-332: a mailbox key that never resolves to a real letter
@@ -126,7 +119,7 @@ export default function LettersRoom({ recent }: { recent: { key: string; subject
                 <b style={{ display: "block", fontFamily: "var(--font-h3)", fontWeight: 400,
                   fontSize: "1.05rem", color: "var(--ink-strong)" }}>{l.subject}</b>
                 <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>
-                  {new Date(l.atMs).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+                  {l.pinned ? "Welcome" : new Date(l.atMs).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
                 </span>
               </span>
               <span style={{ fontSize: ".72rem", fontWeight: 700, textTransform: "uppercase",
@@ -144,11 +137,9 @@ export default function LettersRoom({ recent }: { recent: { key: string; subject
           );
         })}
       </div>
-      {who.letters.length === 0 && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
-          <Link className="btn btn-ghost btn-sm" href="/news">Browse the public news</Link>
-        </div>
-      )}
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
+        <Link className="btn btn-ghost btn-sm" href="/news">Browse the public news</Link>
+      </div>
       {who.operator && operatorNote}
     </div>
   );

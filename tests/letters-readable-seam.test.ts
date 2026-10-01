@@ -36,7 +36,7 @@ describe("TASK-332 — the LettersRoom readable seam (unresolving mailbox rows r
   it("(a) /api/me/letters annotates each entry with readable, computed by the real isLetterKey", async () => {
     const src = await read(ROUTE);
     expect(src, "isLetterKey must come from @/lib/letters, never reimplemented")
-      .toMatch(/import\s*\{\s*isLetterKey\s*\}\s*from\s*"@\/lib\/letters"/);
+      .toMatch(/import\s*\{[^}]*\bisLetterKey\b[^}]*\}\s*from\s*"@\/lib\/letters"/); // T-536: the same import now also carries getLetterOverride and LETTER_DEFAULTS; isLetterKey is still the real one
     expect(src, "listMailbox's own field shape (key/subject/atMs) must still flow through unmodified")
       .toMatch(/\.\.\.l,\s*readable:\s*await isLetterKey\(l\.key\)/);
     // additive only — the original bare `await listMailbox(email)` return
