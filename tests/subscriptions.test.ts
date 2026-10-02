@@ -40,6 +40,7 @@ import { POST as cancelPOST } from "@/app/api/member/subscription/cancel/route";
 import { POST as undoPOST } from "@/app/api/member/subscription/undo-cancel/route";
 import { POST as upgradePOST } from "@/app/api/member/subscription/upgrade/route";
 import { GET as plansGET, POST as plansPOST } from "@/app/api/admin/store/subscription-plans/route";
+import { GET as reconcileGET } from "@/app/api/subscriptions/reconcile/route";
 import { POST as webhookPOST } from "@/app/api/store/webhook/square/route";
 
 /* ── fake Square ────────────────────────────────────────────────────────── */
@@ -55,7 +56,7 @@ class FakeSquare {
   invoices: any[] = [];
   paymentStatus = "COMPLETED";
   n = 0;
-  reset() { this.calls = []; this.subs.clear(); this.customers = []; this.invoices = []; this.paymentStatus = "COMPLETED"; this.n = 0; }
+  reset() { this.calls = []; this.subs.clear(); this.customers = []; this.invoices = []; this.paymentStatus = "COMPLETED"; }
   count(method: string, re: RegExp) { return this.calls.filter((c) => c.method === method && re.test(c.path)).length; }
   find(method: string, re: RegExp) { return this.calls.filter((c) => c.method === method && re.test(c.path)); }
   sub(id: string) { return this.subs.get(id)!; }
@@ -75,6 +76,7 @@ class FakeSquare {
     if (method === "POST" && path === "/v2/orders") return ok({ order: { id: `ORDER${++this.n}` } });
     if (method === "POST" && path === "/v2/customers/search") return ok({ customers: this.customers.filter((c) => c.reference_id === body.query.filter.reference_id.exact) });
     if (method === "POST" && path === "/v2/customers") { const c = { id: `CUST${++this.n}`, reference_id: body.reference_id }; this.customers.push(c); return ok({ customer: c }); }
+    if (method === "GET" && (m = path.match(/^\/v2\/customers\/(.+)$/))) { const c = this.customers.find((x) => x.id === m![1]); return c ? ok({ customer: c }) : { status: 404, json: {} }; }
     if (method === "POST" && path === "/v2/cards") return ok({ card: { id: `ccof:CARD${++this.n}` } });
     if (method === "POST" && path === "/v2/subscriptions") {
       const id = `00000000-0000-4000-8000-${String(++this.n).padStart(12, "0")}`;
@@ -567,7 +569,7 @@ describe("webhook", () => {
     const before = square.calls.length;
     const r = await webhookPOST(signed(subEvent("subscription.created", "99999999-0000-4000-8000-000000000000")));
     expect(r.status).toBe(200);
-    expect(square.calls.length).toBe(before);
+    expect(square.calls.slice(before).every((c) => c.method === "GET")).toBe(true); // a re-read at most, never a write
   });
 
   it("out of order: an event before the record exists is ignored; later events converge on Square's state", async () => {
@@ -706,5 +708,81 @@ describe("operator plan routes", () => {
     expect(ok.status).toBe(200);
     expect(ok.body.map.tiers.B.standard).toBe(VAR.B);
     expect(ok.body.map.open).toEqual(["standard", "B"]);
+  });
+});
+
+/* ── fix round: production vault, orphans, reconcile ────────────────────── */
+
+describe("production without a vault refuses", () => {
+  beforeEach(freshSetup);
+  it("subscribe errors clearly BEFORE calling Square and writes nothing to disk", async () => {
+    process.env.VERCEL = "1";
+    try {
+      const r = await j(await subscribeAs(fresh()));
+      expect(r.status).toBe(503);
+      expect(r.body.code).toBe("store_unavailable");
+      expect(square.calls.length).toBe(0);
+    } finally {
+      delete process.env.VERCEL;
+    }
+  });
+});
+
+describe("orphaned subscriptions", () => {
+  beforeEach(freshSetup);
+  async function lostReply(name: string) {
+    const orig = square.handle.bind(square);
+    square.handle = (m: string, p: string, b: any) => {
+      const r = orig(m, p, b);
+      return m === "POST" && p === "/v2/subscriptions" ? { status: 500, json: {} } : r; // Square made it, we never heard
+    };
+    const r = await j(await subscribeAs(name));
+    square.handle = orig;
+    return r;
+  }
+  it("a pending intent is written before CreateSubscription, and a webhook adopts the orphan", async () => {
+    const x = fresh();
+    expect((await lostReply(x)).status).toBe(502);
+    expect(await getRecordForSubject(who(x).subject)).toBeNull();
+    const subId = [...square.subs.keys()][0];
+    await webhookPOST(signed(subEvent("subscription.created", subId)));
+    const rec = (await getRecordForSubject(who(x).subject))!;
+    expect(rec.subscriptionId).toBe(subId);
+    expect(rec.tier).toBe("A"); // from OUR intent
+    expect((await getEntitlement(who(x).subject))?.tier).toBe("A");
+  });
+  it("is ignored when the customer is not one we stored for that subject, or no intent exists", async () => {
+    const x = fresh();
+    await lostReply(x);
+    const subId = [...square.subs.keys()][0];
+    // an attacker-made customer tagged with x's subject, same plan: not in our stored set
+    square.customers.push({ id: "EVILCUST", reference_id: who(x).subject });
+    square.sub(subId).customer_id = "EVILCUST";
+    await webhookPOST(signed(subEvent("subscription.updated", subId)));
+    expect(await getRecordForSubject(who(x).subject)).toBeNull();
+    // a subscription with no pending intent at all
+    const y = fresh();
+    await subscribeAs(y);
+    const other = square.handle("POST", "/v2/subscriptions", { customer_id: square.customers.find((c) => c.reference_id === who(y).subject)!.id, card_id: "c", plan_variation_id: VAR.A, start_date: todayIn(), timezone: SUB_TZ }).json.subscription.id;
+    await webhookPOST(signed(subEvent("subscription.updated", other)));
+    expect(await getRecord(other)).toBeNull();
+  });
+});
+
+describe("reconcile route", () => {
+  beforeEach(freshSetup);
+  const r = (headers: Record<string, string> = {}) => new Request(`https://${HOST}/api/subscriptions/reconcile`, { headers });
+  it("401 without a key; the seat secret opens it and it refreshes every record", async () => {
+    operatorOk = false;
+    expect((await reconcileGET(r())).status).toBe(401);
+    expect((await reconcileGET(r({ "x-seat-secret": "wrong" }))).status).toBe(401);
+    const a = fresh(), b = fresh();
+    await subscribeAs(a); await subscribeAs(b);
+    const ids = [(await getRecordForSubject(who(a).subject))!.subscriptionId, (await getRecordForSubject(who(b).subject))!.subscriptionId];
+    square.sub(ids[0]).charged_through_date = addMonths(todayIn(), 2);
+    const res = await j(await reconcileGET(r({ "x-seat-secret": process.env.SEAT_SECRET! })));
+    expect(res.status).toBe(200);
+    expect(res.body.checked).toBeGreaterThanOrEqual(2);
+    expect((await getEntitlement(who(a).subject))!.expiresAtMs).toBe(endOfDayMs(addMonths(todayIn(), 2)));
   });
 });

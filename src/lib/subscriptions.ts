@@ -5,7 +5,7 @@ import { TIERS, RANK_OF, isTier, getEntitlement, grantTier, revokeTier, normaliz
 import { getEntry } from "./registry";
 import { emailForSubject } from "./member-tier";
 import { getSiteConfig } from "./site-config";
-import { kvGet, kvSet, kvDel, kvSetNx, kvHit, kvSadd, kvSmembers } from "./sub-kv";
+import { storeUnavailable, kvGet, kvSet, kvDel, kvSetNx, kvHit, kvSadd, kvSmembers } from "./sub-kv";
 
 /**
  * T-541a: REAL MONTHLY MEMBERSHIPS on the Square Subscriptions API.
@@ -61,6 +61,11 @@ export interface SubRecord {
   updatedAtMs: number;
 }
 
+interface PendingSub {
+  subject: string; grantKey: string; tier: Tier; variant: PlanVariant; variationId: string;
+  idempotencyKey: string; squareCustomerId: string; cardId: string; createdAtMs: number;
+}
+
 export class SubError extends Error {
   constructor(public code: string, public status: number, message?: string) {
     super(message ?? code);
@@ -78,6 +83,9 @@ const K = {
   rec: (id: string) => `oco:sub:rec:${id}`,
   bySubject: (s: string) => `oco:sub:by-subject:${s}`,
   hist: (s: string) => `oco:sub:hist:${s}`,
+  custOf: (s: string) => `oco:sub:cust-of:${s}`,
+  pending: (k: string) => `oco:sub:pending:${k}`,
+  pendingBySubject: (s: string) => `oco:sub:pending-by:${s}`,
   byCustomer: (c: string) => `oco:sub:by-customer:${c}`,
   index: "oco:sub:index",
   planMap: "oco:sub:planmap",
@@ -451,6 +459,7 @@ export async function subscribe(
   opts?: { email?: string; verificationToken?: string },
 ): Promise<SubRecord> {
   requireTier(tier);
+  if (storeUnavailable()) throw new SubError("store_unavailable", 503, "memberships are not available right now");
   if (!isVariant(variant)) throw new SubError("bad_variant", 400, "unknown offer");
   if (typeof cardToken !== "string" || !/^[A-Za-z0-9:_-]{6,200}$/.test(cardToken)) throw new SubError("bad_card", 400, "card token missing");
   const grantKey = await grantKeyOf(subject);
@@ -500,6 +509,12 @@ export async function subscribe(
     const cardId = card.json?.card?.id;
     if (!card.ok || !cardId) throw new SubError("card_declined", 402, "that card could not be saved, try another card");
 
+    // write the intent BEFORE Square can create anything: a subscription whose
+    // reply we lose can then be adopted from its webhook (see adoptOrphan)
+    const pending: PendingSub = { subject, grantKey, tier, variant, variationId, idempotencyKey, squareCustomerId: customerId, cardId, createdAtMs: Date.now() };
+    await kvSet(K.pending(idempotencyKey), JSON.stringify(pending));
+    await kvSet(K.pendingBySubject(subject), idempotencyKey);
+    await kvSadd(K.custOf(subject), customerId);
     const phases = await buildPhases(variationId, idempotencyKey);
     const created = await sq("POST", "/v2/subscriptions", {
       idempotency_key: idemKey(idempotencyKey, "sub"),
@@ -526,6 +541,8 @@ export async function subscribe(
     await kvSadd(K.hist(subject), sub.id);
     await kvSadd(K.byCustomer(customerId), sub.id);
     await kvSadd(K.index, sub.id);
+    await kvDel(K.pending(idempotencyKey)).catch(() => {});
+    await kvDel(K.pendingBySubject(subject)).catch(() => {});
     return (await refresh(sub.id)) ?? rec;
   });
 }
@@ -677,6 +694,57 @@ export async function applyRefund(rec: SubRecord, ref: { invoiceId?: string; ord
 }
 
 /**
+ * An unknown subscription id on a verified event: re-read it at Square; adopt
+ * it ONLY when its customer carries a reference_id (the session subject we
+ * set) AND that customer id is one we stored for that subject AND we hold a
+ * pending intent for that subject (tier and grant key come from OUR intent,
+ * never from Square). Anything else is ignored.
+ */
+async function adoptOrphan(subId: string): Promise<SubRecord | null> {
+  if (!/^[A-Za-z0-9-]{8,64}$/.test(subId)) return null;
+  try {
+    const sub = await readSquareSubscription(subId);
+    const c = await sq("GET", `/v2/customers/${sub.customer_id}`);
+    const subject: unknown = c.json?.customer?.reference_id;
+    if (!c.ok || typeof subject !== "string" || !subject) return null;
+    if (!(await kvSmembers(K.custOf(subject))).includes(sub.customer_id)) return null;
+    const key = await kvGet(K.pendingBySubject(subject));
+    const raw = key ? await kvGet(K.pending(key)) : null;
+    if (!raw) return null;
+    const p = JSON.parse(raw) as PendingSub;
+    if (p.subject !== subject || p.squareCustomerId !== sub.customer_id || p.variationId !== sub.plan_variation_id) return null;
+    const now = Date.now();
+    const rec: SubRecord = {
+      subscriptionId: subId, subject, grantKey: p.grantKey, tier: p.tier, variant: p.variant, planVariationId: p.variationId,
+      squareCustomerId: p.squareCustomerId, cardId: p.cardId, status: "pending", createdAtMs: now, updatedAtMs: now,
+    };
+    await putRecord(rec);
+    await kvSet(K.bySubject(subject), subId);
+    await kvSadd(K.hist(subject), subId);
+    await kvSadd(K.byCustomer(p.squareCustomerId), subId);
+    await kvSadd(K.index, subId);
+    await kvDel(K.pending(p.idempotencyKey)).catch(() => {});
+    await kvDel(K.pendingBySubject(subject)).catch(() => {});
+    console.info("adopted an orphaned subscription from its event");
+    return rec;
+  } catch (e) {
+    void e;
+    return null;
+  }
+}
+
+/** Cron-safe sweep: refresh every record, bounded. Returns counts. */
+export async function reconcileAll(limit = 50): Promise<{ checked: number; failed: number; total: number }> {
+  const all = (await listRecords()).filter((r) => r.status !== "refunded" && (isLiveStatus(r.status) || (r.expiresAtMs ?? 0) > Date.now() - 7 * 86400_000));
+  let failed = 0;
+  const batch = all.slice(0, limit);
+  for (const r of batch) {
+    try { await refresh(r.subscriptionId); } catch { failed++; }
+  }
+  return { checked: batch.length, failed, total: all.length };
+}
+
+/**
  * One verified, de-duplicated Square event -> OUR record by subscription id
  * -> refresh(). Unknown subscription ids are ignored (logged without PII).
  * Returns what it did, for the route and the tests.
@@ -689,6 +757,7 @@ export async function handleSubscriptionEvent(ev: SquareSubEvent): Promise<"igno
     subId = r.json?.invoice?.subscription_id;
   }
   let rec = subId ? await getRecord(subId) : null;
+  if (!rec && subId) rec = await adoptOrphan(subId);
   if (!rec && ev.refund && ev.orderId) {
     // a refund names the invoice's order: find it among our customers' invoices
     for (const r of await listRecords()) {

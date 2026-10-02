@@ -13,6 +13,15 @@ import { vaultCommand, vaultConfigured } from "./entitlement";
 const dir = () => path.join(process.cwd(), "data", "subscriptions");
 const fname = (k: string) => path.join(dir(), encodeURIComponent(k) + ".json");
 
+/** Production (Vercel / NODE_ENV=production) with no vault: the filesystem is
+ *  ephemeral there, so the store REFUSES instead of silently writing to it. */
+export function storeUnavailable(): boolean {
+  return !vaultConfigured() && (process.env.VERCEL === "1" || process.env.NODE_ENV === "production");
+}
+function guard(): void {
+  if (storeUnavailable()) throw new Error("subscriptions: vault not configured in production");
+}
+
 interface FileDoc { v: string | string[]; exp?: number }
 
 async function readFile(k: string): Promise<FileDoc | null> {
@@ -33,6 +42,7 @@ async function writeFile(k: string, doc: FileDoc): Promise<void> {
 }
 
 export async function kvGet(k: string): Promise<string | null> {
+  guard();
   if (vaultConfigured()) {
     const res = await vaultCommand(["GET", k]);
     return typeof res?.result === "string" ? res.result : null;
@@ -42,6 +52,7 @@ export async function kvGet(k: string): Promise<string | null> {
 }
 
 export async function kvSet(k: string, v: string): Promise<void> {
+  guard();
   if (vaultConfigured()) {
     await vaultCommand(["SET", k, v]);
     return;
@@ -50,6 +61,7 @@ export async function kvSet(k: string, v: string): Promise<void> {
 }
 
 export async function kvDel(k: string): Promise<void> {
+  guard();
   if (vaultConfigured()) {
     await vaultCommand(["DEL", k]);
     return;
@@ -59,6 +71,7 @@ export async function kvDel(k: string): Promise<void> {
 
 /** true = we took it (it was absent); false = already there. */
 export async function kvSetNx(k: string, v: string, ttlSec: number): Promise<boolean> {
+  guard();
   if (vaultConfigured()) {
     const res = await vaultCommand(["SET", k, v, "NX", "EX", ttlSec]);
     return res?.result === "OK";
@@ -70,6 +83,7 @@ export async function kvSetNx(k: string, v: string, ttlSec: number): Promise<boo
 
 /** Count one hit in a fixed window; returns the count so far. */
 export async function kvHit(k: string, windowSec: number): Promise<number> {
+  guard();
   if (vaultConfigured()) {
     const res = await vaultCommand(["INCR", k]);
     const n = Number(res?.result ?? 0);
@@ -83,6 +97,7 @@ export async function kvHit(k: string, windowSec: number): Promise<number> {
 }
 
 export async function kvSadd(k: string, member: string): Promise<void> {
+  guard();
   if (vaultConfigured()) {
     await vaultCommand(["SADD", k, member]);
     return;
@@ -94,6 +109,7 @@ export async function kvSadd(k: string, member: string): Promise<void> {
 }
 
 export async function kvSmembers(k: string): Promise<string[]> {
+  guard();
   if (vaultConfigured()) {
     const res = await vaultCommand(["SMEMBERS", k]);
     return Array.isArray(res?.result) ? (res!.result as string[]) : [];
