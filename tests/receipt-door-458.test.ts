@@ -263,7 +263,7 @@ describe("the signed-out next — the feed's own facts the page's (source-pinned
 });
 
 describe("F-03 — settleEntitlementFromOrder is idempotent BEFORE the grant is wired to the reconcile", () => {
-  it("a permanent grant: two settle calls (webhook, then the reconcile right behind it) leave exactly one membership, unchanged", async () => {
+  it("a standing-tier (30-day term, T-539) grant: two settle calls (webhook, then the reconcile right behind it) leave exactly one membership, unchanged", async () => {
     const { getEntitlement } = await import("@/lib/entitlement");
     const { settleEntitlementFromOrder } = await import("@/lib/entitlement-fulfil");
     const order = await makeOrder({ entitlementSubject: "perm@example.com@email", contact: { email: "perm@example.com" } });
@@ -273,7 +273,7 @@ describe("F-03 — settleEntitlementFromOrder is idempotent BEFORE the grant is 
     expect(first.tier).toBe("A");
     const rec1 = await getEntitlement("perm@example.com@email");
     expect(rec1?.tier).toBe("A");
-    expect(rec1?.expiresAtMs).toBeUndefined();
+    expect(rec1?.expiresAtMs).toBeGreaterThan(Date.now() + 29 * 86_400_000); // T-539: a 30-day term, not open-ended
 
     const second = await settleEntitlementFromOrder(order as never);
     expect(second.granted).toBe(true);

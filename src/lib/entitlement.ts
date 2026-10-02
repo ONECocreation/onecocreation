@@ -38,6 +38,27 @@ export const TIERS: Record<Tier, { name: string; priceUsd: number; priceSats: nu
 
 const RANK: Record<Tier, number> = { A: 1, B: 2, C: 3 };
 
+/** T-539 (block 969,584, the Admiral): a tier purchase is a TERM, not a
+ *  forever. Every standing tier item (a `package` with no `entitlementDays`)
+ *  grants this many days. Tasters keep their own `entitlementDays`. This is
+ *  data-free on purpose: the operator never has to type 30 on three items.
+ *  A later Square-subscription lane replaces the term with
+ *  `expiresAtMs = paid-through + grace` from webhooks; `grantTier`'s
+ *  `opts.expiresAtMs` is already that seam. */
+export const TIER_TERM_DAYS = 30;
+
+/** T-539 one-shot migration: every tier held with no end date ends here,
+ *  October 31, 2026, 23:59:59.999 America/Los_Angeles (PDT, UTC-7; DST does
+ *  not end until Nov 1). */
+export const LEGACY_TIER_END_MS = Date.UTC(2026, 10, 1, 6, 59, 59, 999);
+
+/** The days a package catalog item grants: its own `entitlementDays` when
+ *  it is a taster, else the standing term. ONE rule for the grant and the
+ *  notice letter. */
+export function packageDays(item: { entitlementDays?: number }): number {
+  return item.entitlementDays && item.entitlementDays > 0 ? item.entitlementDays : TIER_TERM_DAYS;
+}
+
 /** Does `held` satisfy the `required` tier? Progressive: C ⊇ B ⊇ A. */
 export function tierSatisfies(held: Tier | null, required: Tier): boolean {
   if (!held) return false;
@@ -56,8 +77,10 @@ export interface Entitlement {
   /** matrix id, once the member has linked or been provisioned one */
   mxid?: string;
   revokedAtMs?: number;
-  /** a TASTER grant only — e.g. the $11 one-week pass. Absent = the open-
-   *  ended monthly membership. Read as expired (no access) once past. */
+  /** When this grant closes on its own. Every purchase now sets it (30-day
+   *  tier term, or a taster's days). Absent = a legacy open-ended record
+   *  that predates T-539 and awaits the one-shot migration. Read as expired
+   *  (no access) once past. */
   expiresAtMs?: number;
   /** TASK-462 (block 968,543): the LIVE standing grant this record sits on
    *  top of, when this record is itself a taster that outranked it. The gate
@@ -223,6 +246,17 @@ export async function isLapsedPassOrder(npub: string, orderId: string, now: numb
   if (raw.orderId !== orderId) return false;
   const live = liveGrant(raw, now);
   return live != null && live.orderId !== orderId;
+}
+
+/** T-539: a member whose paid term has ENDED (nothing live, nothing under
+ *  it), for the "Your membership ended on <date>. Renew" notice. Null when
+ *  there is a live grant, a revoke (a refund is not "ended"), or no record. */
+export async function lapsedEntitlement(npub: string, now: number = Date.now()): Promise<{ tier: Tier; endedAtMs: number } | null> {
+  if (!safeNpub(npub)) return null;
+  const rec = await readRec(npub);
+  if (!rec || rec.revokedAtMs || rec.expiresAtMs == null) return null;
+  if (liveGrant(rec, now)) return null;
+  return { tier: rec.tier, endedAtMs: rec.expiresAtMs };
 }
 
 /** Just the tier — what a gate check actually wants. */

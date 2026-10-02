@@ -70,7 +70,7 @@ function item(over: Record<string, unknown>) {
 const CATALOG = {
   schemaVersion: 2,
   items: [
-    // a permanent membership (tier A, open-ended)
+    // a standing membership (tier A, no entitlementDays: the 30-day term)
     item({
       id: "weekly-intuitive",
       title: "Weekly Intuitive",
@@ -315,12 +315,13 @@ describe("the letter's content — derive-or-dash, never an invented word", () =
     expect(sentMail[0].html).toContain("for 7 days");
   });
 
-  it("a permanent membership says open-ended, never an invented date", async () => {
+  it("a standing membership says its 30-day term (T-539), never open-ended", async () => {
     const { sendPurchaseLoveNotify } = await sender();
     const order = orderFixture({ lineItems: [{ itemId: "weekly-intuitive", title: "Weekly Intuitive", qty: 1 }] });
     await sendPurchaseLoveNotify(order as never);
     expect(sentMail[0].html).toContain("Weekly Intuitive");
-    expect(sentMail[0].html).toContain("open-ended");
+    expect(sentMail[0].html).toContain("for 30 days");
+    expect(sentMail[0].html).not.toContain("open-ended");
     expect(sentMail[0].html).not.toContain("for 7 days");
   });
 
