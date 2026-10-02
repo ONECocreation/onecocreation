@@ -34,15 +34,18 @@ function loadSquare(src: string): Promise<void> {
 }
 
 /** The card box wears the page's own tokens, read at run time (no colour literals). */
-function boxStyle(): Record<string, Record<string, string>> {
-  const css = getComputedStyle(document.documentElement);
+function boxStyle(from: HTMLElement): Record<string, Record<string, string>> {
+  const css = getComputedStyle(from);
   const v = (name: string) => css.getPropertyValue(name).trim();
-  return {
-    input: { color: v("--field-ink"), fontSize: "16px", backgroundColor: v("--field-bg") },
-    "input::placeholder": { color: v("--muted") },
-    ".message-text": { color: v("--err") },
-    ".message-icon": { color: v("--err") },
+  const pick = (o: Record<string, string>) => Object.fromEntries(Object.entries(o).filter(([, val]) => val));
+  const out: Record<string, Record<string, string>> = {
+    input: pick({ color: v("--field-ink"), fontSize: "16px" }),
+    "input::placeholder": pick({ color: v("--muted") }),
+    ".message-text": pick({ color: v("--err") }),
+    ".message-icon": pick({ color: v("--err") }),
   };
+  for (const k of Object.keys(out)) if (!Object.keys(out[k]).length) delete out[k];
+  return out;
 }
 
 /**
@@ -90,15 +93,17 @@ export default function JoinWithCard({ tier, tierName, priceUsd, slug }: { tier:
     (async () => {
       try {
         await loadSquare(squareSdkUrl(cfg.environment));
-        if (!live || !window.Square || !boxRef.current) return;
+        const box = boxRef.current;
+        if (!live || !window.Square || !box) return;
         const payments = await window.Square.payments(cfg.applicationId, cfg.locationId);
-        const card = await payments.card({ style: boxStyle() });
-        if (!live || !boxRef.current) { void card.destroy(); return; }
-        await card.attach(boxRef.current);
+        const card = await payments.card({ style: boxStyle(box) });
+        if (!live) { void card.destroy(); return; }
+        await card.attach(box);
         paymentsRef.current = payments;
         cardRef.current = card;
         setCardReady(true);
-      } catch {
+      } catch (e) {
+        console.warn("square card box:", e instanceof Error ? e.message : "failed");
         if (live) setSdkError(true);
       }
     })();
@@ -149,7 +154,7 @@ export default function JoinWithCard({ tier, tierName, priceUsd, slug }: { tier:
         <Link className="kit-btn kit-btn-main" href={`/login?next=${encodeURIComponent(`/packages/${slug}`)}`}>
           Sign in to join
         </Link>
-        <p className="kit-note">{monthlyLine(priceUsd)}</p>
+        <p className="kit-text-quiet">{monthlyLine(priceUsd)}</p>
       </div>
     );
   }
@@ -171,8 +176,8 @@ export default function JoinWithCard({ tier, tierName, priceUsd, slug }: { tier:
   }
   return (
     <div className="kit-stack">
-      <p className="kit-note">{monthlyLine(priceUsd)}</p>
-      {offer.line && <p className="kit-note"><b>Your offer:</b> {offer.line}</p>}
+      <p className="kit-text-quiet">{monthlyLine(priceUsd)}</p>
+      {offer.line && <p className="kit-text-quiet"><b>Your offer:</b> {offer.line}</p>}
       <div ref={boxRef} className="kit-cardbox" aria-label="Card details" />
       {sdkError && <p className="kit-note kit-note-err" role="alert">The card box could not load. Please reload the page and try again.</p>}
       {needEmail && (
@@ -180,7 +185,7 @@ export default function JoinWithCard({ tier, tierName, priceUsd, slug }: { tier:
       )}
       {error && <p className="kit-note kit-note-err" role="alert">{error}</p>}
       <Button onClick={join} disabled={!cardReady || busy || (needEmail && !email.includes("@"))}>
-        {busy ? "Joining..." : `\u{1F4B3} Join ${tierName}`}
+        {busy ? "Joining..." : `\u{1F4B3} Join now`}
       </Button>
     </div>
   );

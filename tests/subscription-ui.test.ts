@@ -90,13 +90,21 @@ describe("/me panel state", () => {
     expect(f.note).toContain("November 5, 2026");
     expect(f.canUpgrade).toBe(false);
   });
+  it("cancelled with paid time left: says when it ends, no controls, owns the notice", () => {
+    const v = view({ status: "canceled", expiresAtMs: T0 + 5 * DAY });
+    const f = panelFacts(v, T0)!;
+    expect(f.stateLine).toBe("Ends on November 7, 2026");
+    expect([f.canCancel, f.canUndo, f.canUpgrade]).toEqual([false, false, false]);
+    expect(subscriptionOwnsNotice(v, T0)).toBe(true);
+    expect(subscriptionOwnsNotice(v, T0 + 6 * DAY)).toBe(false);
+  });
   it("ended or refunded: no panel, and the T-539 notice keeps the story (no duplicate)", () => {
-    expect(panelFacts(view({ status: "canceled" }))).toBeNull();
-    expect(subscriptionOwnsNotice(view({ status: "refunded" }))).toBe(false);
+    expect(panelFacts(view({ status: "canceled", expiresAtMs: T0 - DAY }), T0)).toBeNull();
+    expect(subscriptionOwnsNotice(view({ status: "refunded" }), T0)).toBe(false);
     expect(subscriptionOwnsNotice(null)).toBe(false);
     expect(subscriptionOwnsNotice(undefined)).toBe(false);
-    expect(subscriptionOwnsNotice(view())).toBe(true);
-    expect(subscriptionOwnsNotice(view({ status: "cancelling" }))).toBe(true);
+    expect(subscriptionOwnsNotice(view(), T0)).toBe(true);
+    expect(subscriptionOwnsNotice(view({ status: "cancelling" }), T0)).toBe(true);
   });
 });
 
@@ -104,6 +112,7 @@ describe("Money desk rows", () => {
   it("abbreviates subjects and says one state with its date", () => {
     expect(abbreviateSubject("averyveryverylonghandle@email")).toBe("averyv...ndle@email");
     expect(abbreviateSubject("love@onecocreation")).toBe("love@onecocreation");
+    expect(abbreviateSubject("shots@example.com@email")).toBe("sh...@example.com");
     expect(deskStatus("past_due")).toBe("past due");
     expect(deskStatus("refunded")).toBe("ended");
     expect(deskChip("active", T0)).toBe("Active, renews Nov 2, 2026");

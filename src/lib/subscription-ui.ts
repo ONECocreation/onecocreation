@@ -175,14 +175,24 @@ export function panelFacts(sub: SubView, nowMs: number = Date.now()): PanelFacts
       return { title: sub.tierName, stateLine: "Starting", canCancel: false, canUndo: false, canUpgrade: false, note: "Your membership is being set up." };
     case "paused":
       return { title: sub.tierName, stateLine: "Paused", canCancel: false, canUndo: false, canUpgrade: false, note: null };
+    case "canceled":
+      // cancelled, but paid time is left (e.g. a free first month): say when it ends, no controls
+      if ((sub.expiresAtMs ?? 0) > nowMs) {
+        return {
+          title: sub.tierName,
+          stateLine: `Ends on ${dateWords(sub.expiresAtMs as number)}`,
+          canCancel: false, canUndo: false, canUpgrade: false,
+          note: "This membership is cancelled. You keep your access until then. You can join again any time.",
+        };
+      }
+      return null; // already over: the ended notice owns it
     default:
-      void nowMs;
-      return null; // canceled / refunded: the ended notice owns it
+      return null; // refunded: the ended notice owns it
   }
 }
 
 /** Whether the old "membership ended" notice should stay quiet: a live or ending subscription says everything itself. */
-export const subscriptionOwnsNotice = (sub: SubView | null | undefined): boolean => !!sub && panelFacts(sub) !== null;
+export const subscriptionOwnsNotice = (sub: SubView | null | undefined, nowMs: number = Date.now()): boolean => !!sub && panelFacts(sub, nowMs) !== null;
 
 export const cancelConfirmWords = (endsMs: number | null): string =>
   endsMs
@@ -198,6 +208,9 @@ export const abbreviateSubject = (subject: string): string => {
   const at = subject.lastIndexOf("@");
   const handle = at > 0 ? subject.slice(0, at) : subject;
   const space = at > 0 ? subject.slice(at) : "";
+  // an email door: keep two letters of the address and its domain, drop the "@email" door word
+  const mail = handle.indexOf("@");
+  if (space === "@email" && mail > 0) return `${handle.slice(0, Math.min(2, mail))}...${handle.slice(mail)}`;
   const h = handle.length > 12 ? `${handle.slice(0, 6)}...${handle.slice(-4)}` : handle;
   return `${h}${space}`;
 };

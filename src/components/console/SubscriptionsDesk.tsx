@@ -72,7 +72,7 @@ export default function SubscriptionsDesk() {
     <div className="mt-8">
       <SectionHead label="Subscriptions" />
       <Card>
-        <p className="kit-note">
+        <p className="kit-note" style={{ marginBottom: 12 }}>
           {enabled ? "Monthly memberships are on." : "Monthly memberships are off. Members see the one-time purchase."}
           {env ? ` Square is in ${env} mode.` : ""}
         </p>
