@@ -515,6 +515,60 @@ export function mapSquareWebhookEvent(payload: SquareWebhookPayload): ChargeEven
 }
 
 /**
+ * T-541a: the subscription family of Square events. Pure + exported for
+ * offline tests. It extracts ONLY ids (event_id, subscription id, invoice
+ * id, order id) and a type word: the state of the subscription is never
+ * read from the body, the route re-reads Square (SECURITY-SCOPE risk 3).
+ * Null = not a subscription event (or nothing to key on).
+ */
+export interface SquareSubEventShape {
+  type: string;
+  eventId?: string;
+  subscriptionId?: string;
+  invoiceId?: string;
+  orderId?: string;
+  refund?: boolean;
+}
+
+const SUB_EVENT_TYPES = new Set([
+  "subscription.created",
+  "subscription.updated",
+  "invoice.payment_made",
+  "invoice.scheduled_charge_failed",
+  "invoice.updated",
+  "invoice.refunded",
+  "invoice.canceled",
+  "refund.created",
+  "refund.updated",
+]);
+
+export function mapSquareSubscriptionEvent(payload: unknown): SquareSubEventShape | null {
+  const p = (payload ?? {}) as {
+    type?: string;
+    event_id?: string;
+    data?: { id?: string; object?: { subscription?: { id?: string }; invoice?: { id?: string; subscription_id?: string; order_id?: string }; refund?: { id?: string; order_id?: string; status?: string } } };
+  };
+  const t = p.type;
+  if (typeof t !== "string" || !SUB_EVENT_TYPES.has(t)) return null;
+  const eventId = typeof p.event_id === "string" && p.event_id ? p.event_id : undefined;
+  const obj = p.data?.object;
+  if (t.startsWith("subscription.")) {
+    const id = obj?.subscription?.id ?? p.data?.id;
+    return id ? { type: t, eventId, subscriptionId: id } : null;
+  }
+  if (t.startsWith("invoice.")) {
+    const inv = obj?.invoice;
+    const invoiceId = inv?.id ?? p.data?.id;
+    if (!invoiceId && !inv?.subscription_id) return null;
+    return { type: t, eventId, invoiceId, subscriptionId: inv?.subscription_id, orderId: inv?.order_id, refund: t === "invoice.refunded" };
+  }
+  // refund.*: only a COMPLETED refund can end access, and it names an ORDER
+  const refund = obj?.refund;
+  if (refund?.status !== "COMPLETED" || !refund.order_id) return null;
+  return { type: t, eventId, orderId: refund.order_id, refund: true };
+}
+
+/**
  * TASK-167 (0018.06.17 a₿) — the signature check on its own, exported so
  * the webhook route can tell "the signature FAILED" apart from "verified
  * fine, but an event shape we don't act on" (order.updated with state OPEN

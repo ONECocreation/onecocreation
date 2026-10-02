@@ -23,6 +23,8 @@ import {
 } from "@/lib/booking-orders";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 import { memberFromRequest } from "@/lib/member-auth";
+import { subscriptionBlocksPurchase } from "@/lib/subscriptions";
+import { isTier } from "@/lib/entitlement";
 import { findDiscount, applyDiscount } from "@/lib/discounts";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 import { settleBookingFromOrder } from "@/lib/booking-fulfil";
@@ -241,6 +243,11 @@ export async function POST(request: Request) {
     // whose tier's own standing item just went comingSoon.
     if (!item || !isPurchasableIn(item, catalog)) {
       return NextResponse.json({ ok: false, reason: `"${l.itemId}" left the shelf — remove it and retry` }, { status: 409 });
+    }
+    // T-541a: a subscriber never buys the same (or a lower) tier one-time on top
+    if (fren && !l.giftTo && item.kind === "package" && isTier(item.entitlementTier) &&
+        (await subscriptionBlocksPurchase(`${fren.handle}@${fren.space}`, item.entitlementTier).catch(() => false))) {
+      return NextResponse.json({ ok: false, reason: "you already have a monthly membership at this level or higher" }, { status: 409 });
     }
     const eff = item.sale ?? item.price;
     const priced = railPrice(eff, wantsCard);

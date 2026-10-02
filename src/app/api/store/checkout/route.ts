@@ -18,6 +18,8 @@ import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
 import { orderDoorUrl, sendOrderReceipt } from "@/lib/order-receipt";
 import { sendPurchaseLoveNotify } from "@/lib/purchase-love-notify";
 import { memberFromRequest } from "@/lib/member-auth";
+import { subscriptionBlocksPurchase } from "@/lib/subscriptions";
+import { isTier } from "@/lib/entitlement";
 import { clampQty } from "@/lib/cart";
 
 export const dynamic = "force-dynamic";
@@ -195,6 +197,10 @@ export async function POST(request: Request) {
       );
     }
     entitlementSubject = fren ? `${fren.handle}@${fren.space}` : `${guestEmail}@email`;
+    // T-541a: a subscriber never buys the same (or a lower) tier one-time on top
+    if (fren && item.kind === "package" && isTier(item.entitlementTier) && (await subscriptionBlocksPurchase(entitlementSubject, item.entitlementTier).catch(() => false))) {
+      return NextResponse.json({ ok: false, reason: "you already have a monthly membership at this level or higher" }, { status: 409 });
+    }
   }
 
   // sats-primary: sale price (gold rail) wins when present — EXCEPT on the
