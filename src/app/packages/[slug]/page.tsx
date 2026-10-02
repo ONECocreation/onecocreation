@@ -310,7 +310,7 @@ export default async function TierPage({
                   ))}
                 {upgrade && upgradeLive && (
                   <Link className="btn btn-ghost" style={{ textAlign: "center" }} href={`/packages/${upgrade.slug}`}>
-                    {TIERS[upgrade.tier].name} — Upgrade
+                    Upgrade to {TIERS[upgrade.tier].name}
                   </Link>
                 )}
               </div>
