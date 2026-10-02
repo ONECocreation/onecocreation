@@ -195,7 +195,7 @@
    rows, which use plain <div> lines rather than <p> so no browser
    default paragraph margin fights this gap). Shared and generic —
    never a ReadingNotice-only rule. ── */
-.kit-stack{display:flex;flex-direction:column;gap:6px}
+.kit-stack{display:flex;flex-direction:column;gap:6px;min-width:0}
 
 /* ── PAGE LAYOUT (TASK-391, block 968,088) ────────────────────────
    Five classes lifted verbatim from the approved Saturday-reading
@@ -490,3 +490,13 @@
 .kitx-thumb[aria-current="true"] .kitx-thumb-pic{border:2px solid var(--info)}
 .kitx-stage-play{position:absolute;top:50%;left:50%;width:72px;height:72px;margin:-36px 0 0 -36px;border-radius:50%;background:var(--band-1);border:2px solid var(--ink-strong)}
 .kitx-stage-play::after{content:"";position:absolute;top:50%;left:50%;margin:-13px 0 0 -8px;border-style:solid;border-width:13px 0 13px 22px;border-color:transparent transparent transparent var(--ink-strong)}
+
+/* ── T-541b: the Square card box's frame (the SDK paints its fields in an
+   iframe; the frame wears the field tokens so both themes stay legible) ── */
+.kit-cardbox{background:var(--field-bg);border:1px solid var(--glass-edge);border-radius:12px;padding:12px;min-height:94px;box-sizing:border-box}
+/* two controls (a confirm's pair) sit side by side on the row's right edge; at phone width the row stacks, controls on the right */
+.kit-rows-pair{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:640px){
+  .kit-rows-stackable>li{grid-template-columns:1fr;gap:8px}
+  .kit-rows-stackable .kit-rows-end{justify-self:end}
+}

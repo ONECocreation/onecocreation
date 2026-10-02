@@ -224,6 +224,11 @@ export async function subscriptionBlocksPurchase(subject: string, tier: Tier): P
   return open && RANK_OF[rec.tier] >= RANK_OF[tier];
 }
 
+/** T-541b: has this member ever had a subscription? (promo variants are first-time only) */
+export async function hasSubscriptionHistory(subject: string): Promise<boolean> {
+  try { return (await kvSmembers(K.hist(subject))).length > 0; } catch { return false; }
+}
+
 export async function subscriptionsEnabled(): Promise<boolean> {
   try { return (await getSiteConfig()).features.subscriptions === true; } catch { return false; }
 }

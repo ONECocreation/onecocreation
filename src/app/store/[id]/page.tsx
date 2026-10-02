@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BuyPanel from "@/components/store/BuyPanel";
+import JoinWithCard from "@/components/store/JoinWithCard";
+import { tierPageBySlug } from "@/lib/tiers-content";
+import { TIERS } from "@/lib/entitlement";
 import ImageLightbox from "@/components/store/ImageLightbox";
 import RelatedItems from "@/components/store/RelatedItems";
 import { getItem, listItems, stripPrivateMedia, fullStoryOf, type StoreItem } from "@/lib/store";
@@ -168,7 +171,12 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
                 </div>
               )}
               <div className="reveal" style={{ transitionDelay: ".18s" }}>
-                <BuyPanel item={item} railLive={liveAdapter() !== null} squareLive={liveAdapter("square") !== null} />
+                {switches.features.subscriptions && tierPageBySlug(item.id) ? (
+                  /* T-541b: a membership tier is joined monthly with a card when the switch is ON */
+                  <JoinWithCard tier={tierPageBySlug(item.id)!.tier} tierName={TIERS[tierPageBySlug(item.id)!.tier].name} priceUsd={TIERS[tierPageBySlug(item.id)!.tier].priceUsd} slug={item.id} />
+                ) : (
+                  <BuyPanel item={item} railLive={liveAdapter() !== null} squareLive={liveAdapter("square") !== null} />
+                )}
               </div>
               {/* the item's words, under the buy door (the template's order).
                   TASK-253 (ADDENDUM, 0018.06.24 a₿): the LONG story —
