@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { squareAdapter, squareOrderMetadata, ensureSquareVault, squareWebhookSignatureOk } from "@/lib/payments";
+import { squareAdapter, squareOrderMetadata, ensureSquareVault, squareWebhookSignatureOk, mapSquareSubscriptionEvent } from "@/lib/payments";
+import { claimEvent, releaseEvent, handleSubscriptionEvent } from "@/lib/subscriptions";
 import { recordChargeEvent } from "@/lib/store";
 import { settleBookingFromOrder } from "@/lib/booking-fulfil";
 import { settleEntitlementFromOrder } from "@/lib/entitlement-fulfil";
@@ -71,6 +72,26 @@ export async function POST(request: Request) {
       let eventType = "signed event";
       try { const t = (JSON.parse(rawBody) as { type?: string }).type; if (typeof t === "string" && t) eventType = t; } catch { /* keep the word */ }
       await writeMarker(KV_VERIFIED, { at: new Date().toISOString(), eventType });
+      /* T-541a: the subscription family (subscription.*, invoice.*, refund.*).
+         Verified first, de-duplicated on event_id, then OUR record is looked
+         up by subscription id and refresh() re-reads Square: the body only
+         names ids, it never carries state we trust. */
+      try {
+        const sub = mapSquareSubscriptionEvent(JSON.parse(rawBody));
+        if (sub) {
+          if (sub.eventId && !(await claimEvent(sub.eventId))) return NextResponse.json({ ok: true });
+          try {
+            await handleSubscriptionEvent(sub);
+          } catch (err) {
+            // transient (Square or the vault down): free the event id and let Square retry
+            if (sub.eventId) await releaseEvent(sub.eventId);
+            console.warn("square subscription event failed:", err instanceof Error ? err.message : "error");
+            return NextResponse.json({ ok: false }, { status: 500 });
+          }
+        }
+      } catch {
+        /* unparseable body: nothing to act on */
+      }
       return NextResponse.json({ ok: true });
     }
     if (signed === false) {

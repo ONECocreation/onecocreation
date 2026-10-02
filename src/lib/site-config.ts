@@ -118,6 +118,10 @@ export interface SiteConfig {
         letter, ever — the order, the entitlements, the receipt, and
         every other letter are untouched. */
     purchaseLoveNotify: boolean;
+    /** T-541a (block 969,6xx): real monthly memberships through the Square
+        Subscriptions API. Default OFF; OFF = the member subscription routes
+        answer 404 and the webhook ignores subscription events. */
+    subscriptions: boolean;
   };
   payments: { btcpay: boolean; square: boolean; stripe: boolean };
   meeting: {
@@ -256,6 +260,7 @@ export function defaultSiteConfig(): SiteConfig {
       memberships: true,
       largeSums: false,
       purchaseLoveNotify: true,
+      subscriptions: false,
     },
     payments: { btcpay: true, square: true, stripe: false },
     meeting: {

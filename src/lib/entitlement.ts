@@ -37,6 +37,7 @@ export const TIERS: Record<Tier, { name: string; priceUsd: number; priceSats: nu
 };
 
 const RANK: Record<Tier, number> = { A: 1, B: 2, C: 3 };
+export const RANK_OF = RANK;
 
 /** T-539 (block 969,584, the Admiral): a tier purchase is a TERM, not a
  *  forever. Every standing tier item (a `package` with no `entitlementDays`)
@@ -146,6 +147,10 @@ async function kv(cmd: unknown[]): Promise<{ result: unknown } | null> {
     throw new Error(`entitlements: redis ${err instanceof Error ? err.message : "error"}`);
   }
 }
+
+/** T-541a: the subscriptions store rides the SAME vault transports (REST /
+ *  redis); it adds its own file fallback for dev. */
+export { kv as vaultCommand, vaultConfigured };
 
 const dir = () => path.join(process.cwd(), "data", "entitlements");
 const file = (npub: string) => path.join(dir(), `${npub}.json`);
@@ -321,10 +326,11 @@ export async function grantTier(
   npub: string,
   tier: Tier,
   orderId: string,
-  opts?: { mxid?: string; expiresAtMs?: number },
+  opts?: { mxid?: string; expiresAtMs?: number; absolute?: boolean },
 ): Promise<Entitlement | null> {
   if (!safeNpub(npub) || !isTier(tier)) return null;
   const existing = await getEntitlement(npub);
+  if (opts?.absolute && opts.expiresAtMs != null) return grantAbsolute(npub, tier, orderId, opts.expiresAtMs, existing, opts.mxid);
   if (existing && existing.orderId === orderId && existing.tier === tier) return existing; // retry
   const outranked = existing != null && RANK[existing.tier] > RANK[tier];
   const keep = outranked ? existing!.tier : tier;
@@ -371,6 +377,56 @@ export async function grantTier(
     expiresAtMs,
     under,
   };
+  await write(rec);
+  return rec;
+}
+
+/**
+ * T-541a: the SUBSCRIPTION grant. `expiresAtMs` is an ABSOLUTE instant read
+ * from Square's paid-through (+ grace), never a length, so it is never ADDED
+ * to anything: the same-tier result is max(existing, incoming). That makes
+ * the webhook, a redelivered event and the reconcile poll all converge on
+ * the one expiry Square implies (idempotent, no double time). The retry
+ * shortcut of the length-based path does not apply: a renewal keeps the same
+ * orderId and must still move the end date.
+ */
+async function grantAbsolute(
+  npub: string,
+  tier: Tier,
+  orderId: string,
+  expiresAtMs: number,
+  existing: Entitlement | null,
+  mxid?: string,
+): Promise<Entitlement> {
+  let rec: Entitlement;
+  if (existing && RANK[existing.tier] > RANK[tier]) {
+    // a higher standing grant keeps the top slot; the subscription rides as
+    // `under` (refreshed in place when it is already the one under there)
+    const incoming = { tier, orderId, expiresAtMs };
+    const cur = existing.under;
+    const refreshed = cur && cur.orderId === orderId ? { ...incoming, expiresAtMs: Math.max(cur.expiresAtMs ?? 0, expiresAtMs) } : null;
+    rec = { ...existing, mxid: mxid ?? existing.mxid, under: refreshed ?? (underBeats(incoming, cur) ? incoming : cur) };
+  } else if (existing && existing.tier === tier) {
+    rec = {
+      ...existing,
+      orderId,
+      mxid: mxid ?? existing.mxid,
+      // a legacy open-ended record converts to the paid clock; an expiring
+      // one only ever moves forward
+      expiresAtMs: existing.expiresAtMs == null ? expiresAtMs : Math.max(existing.expiresAtMs, expiresAtMs),
+    };
+  } else {
+    // fresh, or this outranks the standing grant (which becomes `under`)
+    rec = {
+      npub,
+      tier,
+      orderId,
+      grantedAtMs: existing?.grantedAtMs ?? Date.now(),
+      mxid: mxid ?? existing?.mxid,
+      expiresAtMs,
+      under: existing ? underFrom(existing) : undefined,
+    };
+  }
   await write(rec);
   return rec;
 }
