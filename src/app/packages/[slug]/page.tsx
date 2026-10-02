@@ -6,6 +6,7 @@ import SiteFooter from "@/components/SiteFooter";
 import NotOpenYet from "@/components/NotOpenYet";
 import ScrollTop from "@/components/ScrollTop";
 import AddTierButton from "@/components/store/AddTierButton";
+import JoinWithCard from "@/components/store/JoinWithCard";
 import AddonActions from "@/components/store/AddonActions";
 import SubscribeForm from "@/components/SubscribeForm";
 import { TIERS } from "@/lib/entitlement";
@@ -273,7 +274,10 @@ export default async function TierPage({
                 </p>
               )}
               <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
-                {mode === "buy" ? (
+                {mode === "buy" && switches.features.subscriptions ? (
+                  /* T-541b: monthly memberships ON: join with a card (sign-in door first); OFF keeps the one-time buy below */
+                  <JoinWithCard tier={page.tier} tierName={t.name} priceUsd={t.priceUsd} slug={page.slug} />
+                ) : mode === "buy" ? (
                   <AddTierButton itemId={page.slug} label={`${t.name} — YES! $${t.priceUsd}`} />
                 ) : mode === "soon" || mode === "banner" ? (
                   /* TASK-472 (block 968,624): "soon" shares the banner's one

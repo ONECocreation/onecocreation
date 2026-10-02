@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import CardsRailCard, { RailSwitch } from "@/components/console/CardsRailCard";
 import DiscountsDesk from "@/components/console/DiscountsDesk";
 import PwycDesk from "@/components/console/PwycDesk";
+import SubscriptionsDesk from "@/components/console/SubscriptionsDesk";
 import { Chip, SectionHead, field, overlay, sheet } from "@/components/console/glass";
 import { bftDateTime, estimateHeightAt } from "@/lib/bb/bft";
 import type { OrderRecord } from "@/lib/store";
@@ -248,6 +249,7 @@ export default function MoneyRoom() {
 
       <PwycDesk />
       <DiscountsDesk />
+      <SubscriptionsDesk />
 
       <SectionHead label="The order book" />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 10 }}>
