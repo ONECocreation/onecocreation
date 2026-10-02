@@ -1,7 +1,7 @@
 import { getItem, kv, type OrderRecord } from "./store";
 import { getSiteConfig } from "./site-config";
 import { getBooking } from "./booking-orders";
-import { TIERS, isTier, type Tier } from "./entitlement";
+import { TIERS, TIER_TERM_DAYS, isTier, packageDays, type Tier } from "./entitlement";
 import { buyerEmailOf } from "./order-receipt";
 import { offerNotifyTo, letterFor } from "./pwyc-letters";
 import { sendMail } from "./mail";
@@ -117,15 +117,15 @@ async function tierSlot(order: OrderRecord): Promise<string> {
   for (const li of order.lineItems) {
     const it = await getItem(li.itemId);
     if (!it || it.kind !== "package" || !isTier(it.entitlementTier)) continue;
-    const days = it.entitlementDays && it.entitlementDays > 0 ? it.entitlementDays : undefined;
+    const days = packageDays(it);
     if (!best || rank[it.entitlementTier] > rank[best.tier]) best = { tier: it.entitlementTier, days };
-    else if (rank[it.entitlementTier] === rank[best.tier] && best.days != null && days == null) best.days = undefined;
+    else if (rank[it.entitlementTier] === rank[best.tier] && best.days != null && days > best.days) best.days = days;
   }
   if (!best) return `<p ${P}>No membership or pass rides this order.</p>`;
   const name = esc(TIERS[best.tier].name);
-  return best.days
-    ? `<p ${P}>The pass: <b>${name}</b> · for ${best.days} days.</p>`
-    : `<p ${P}>The membership: <b>${name}</b> · open-ended.</p>`;
+  return best.days === TIER_TERM_DAYS
+    ? `<p ${P}>The membership: <b>${name}</b> · for ${best.days} days.</p>`
+    : `<p ${P}>The pass: <b>${name}</b> · for ${best.days} days.</p>`;
 }
 
 function amountSlot(order: OrderRecord): string {

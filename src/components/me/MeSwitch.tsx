@@ -5,6 +5,7 @@ import MePanel from "./MePanel";
 import EmailMemberPanel from "./EmailMemberPanel";
 import MemberQuickCards from "./MemberQuickCards";
 import MemberCalendar from "./MemberCalendar";
+import MembershipEndedNotice from "./MembershipEndedNotice";
 import ConstellationCard from "./ConstellationCard";
 import Card from "@/components/kit/Card";
 import Button from "@/components/kit/Button";
@@ -107,6 +108,8 @@ export default function MeSwitch() {
 
   if (kind === "email") {
     return (
+      <>
+      <MembershipEndedNotice />
       <Tabs
         label="Your account"
         active={activeTab}
@@ -117,10 +120,13 @@ export default function MeSwitch() {
           { id: "purchases", label: "Purchases", content: <MemberQuickCards /> },
         ]}
       />
+      </>
     );
   }
 
   return (
+    <>
+    <MembershipEndedNotice />
     <Tabs
       label="Your account"
       active={activeTab}
@@ -141,5 +147,6 @@ export default function MeSwitch() {
         { id: "purchases", label: "Purchases", content: <MemberQuickCards /> },
       ]}
     />
+    </>
   );
 }

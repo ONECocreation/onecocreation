@@ -903,7 +903,7 @@ export default function StoreRoom() {
                     <input
                       type="number"
                       value={draft.entitlementDays ?? ""}
-                      placeholder="leave blank for the ordinary open-ended membership"
+                      placeholder="leave blank for the ordinary 30-day membership"
                       onChange={(e) =>
                         setDraft({ ...draft, entitlementDays: e.target.value ? Number(e.target.value) : undefined })}
                       className="console-field" style={{ ...field, width: "100%" }}

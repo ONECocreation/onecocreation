@@ -1,7 +1,7 @@
 import type { OrderRecord } from "./store";
 import { getEntry } from "./registry";
 import { getItem } from "./store";
-import { grantTier, revokeTier, getEntitlement, linkMxid, isTier, normalizeNpub, isLapsedPassOrder, type Tier } from "./entitlement";
+import { grantTier, packageDays, revokeTier, getEntitlement, linkMxid, isTier, normalizeNpub, isLapsedPassOrder, type Tier } from "./entitlement";
 import { inviteToTierRooms, removeFromTierRooms, matrixConfigured, isMxid, mxidForSubject, type RoomOutcome } from "./matrix";
 import { emailForSubject } from "./member-tier";
 import { TIERS } from "./entitlement";
@@ -56,20 +56,20 @@ const NOTHING: FulfilResult = { tier: null, granted: false, revoked: false, room
 
 /** The tier an order bought — carts carry many lines, so scan them ALL and
  *  grant the HIGHEST package tier present (tiers include everything below).
- *  `days` rides along when that winning line is a taster (weekly-one-week,
- *  observer-one-week, …) — `item.entitlementDays` on the catalog item — so
- *  the grant knows to close itself instead of standing open-ended. If two
- *  lines land on the same tier, a permanent line beats a taster line. */
-async function bestPackageGrant(order: OrderRecord): Promise<{ tier: Tier; days?: number } | null> {
+ *  `days` always rides along (T-539): a taster's own `entitlementDays`
+ *  (weekly-one-week, observer-one-week, …), else the 30-day tier term
+ *  (`packageDays`). Nothing is granted open-ended any more. If two lines
+ *  land on the same tier, the longer term wins. */
+async function bestPackageGrant(order: OrderRecord): Promise<{ tier: Tier; days: number } | null> {
   const rank: Record<string, number> = { A: 1, B: 2, C: 3 };
-  let best: { tier: Tier; days?: number } | null = null;
+  let best: { tier: Tier; days: number } | null = null;
   for (const li of order.lineItems) {
     const item = await getItem(li.itemId);
     if (!item || item.kind !== "package" || !isTier(item.entitlementTier)) continue;
-    const days = item.entitlementDays && item.entitlementDays > 0 ? item.entitlementDays : undefined;
+    const days = packageDays(item);
     const r = rank[item.entitlementTier];
     if (!best || r > rank[best.tier]) best = { tier: item.entitlementTier, days };
-    else if (r === rank[best.tier] && best.days != null && days == null) best.days = undefined;
+    else if (r === rank[best.tier] && days > best.days) best.days = days; // same tier: the longer term wins
   }
   return best;
 }
@@ -128,7 +128,7 @@ export async function settleEntitlementFromOrder(order: OrderRecord): Promise<Fu
   switch (order.state) {
     case "settled":
     case "fulfilled": {
-      const expiresAtMs = grant.days ? Date.now() + grant.days * 86_400_000 : undefined;
+      const expiresAtMs = Date.now() + grant.days * 86_400_000;
       let rec = await grantTier(npub, tier, order.id, { expiresAtMs });
       if (!rec) return { ...NOTHING, tier, note: "grant refused" };
 

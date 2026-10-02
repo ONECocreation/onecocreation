@@ -68,7 +68,7 @@ function effectiveAmount(item: StoreItem): number {
 
 /** TASK-441 (block 968,222): a TASTER is a package whose grant closes
  *  itself (entitlementDays > 0 — the one-week passes). Days on any other
- *  kind name nothing; a package without days is the ordinary monthly tier. */
+ *  kind name nothing; a package without days is the ordinary 30-day tier (T-539). */
 export function isTasterPass(item: StoreItem): boolean {
   return item.kind === "package" && (item.entitlementDays ?? 0) > 0;
 }

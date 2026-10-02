@@ -156,8 +156,9 @@ export interface StoreItem {
   comingSoon?: boolean;
   entitlementTier?: string;
   /** a TASTER package (the $11/$22 one-week passes) — the grant closes
-   *  itself this many days after purchase instead of standing open-ended.
-   *  Absent = the ordinary monthly membership. */
+   *  itself this many days after purchase. Absent = the ordinary tier
+   *  membership, which grants the standing 30-day term (TIER_TERM_DAYS,
+   *  T-539): the operator never types 30 on a tier item. */
   entitlementDays?: number;
 }
 

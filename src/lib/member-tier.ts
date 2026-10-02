@@ -1,4 +1,4 @@
-import { tierFor, tierSatisfies, isTier, normalizeNpub, TIERS, type Tier } from "./entitlement";
+import { tierFor, lapsedEntitlement, tierSatisfies, isTier, normalizeNpub, TIERS, type Tier } from "./entitlement";
 import { memberGroup } from "./member-links";
 import { getEntry } from "./registry";
 
@@ -57,4 +57,25 @@ export async function emailForSubject(subject: string): Promise<string | null> {
     if (s.endsWith("@email")) return s.slice(0, -"@email".length);
   }
   return null;
+}
+
+/** T-539: the most recent ended term across the member's linked doors, or
+ *  null when ANY door still holds a live tier (or none ever ended). Lookup
+ *  failures are skipped, never read as "ended". */
+export async function endedMembershipForSubject(subject: string): Promise<{ tier: Tier; endedAtMs: number } | null> {
+  if (await tierForSubject(subject)) return null;
+  let best: { tier: Tier; endedAtMs: number } | null = null;
+  for (const s of await memberGroup(subject)) {
+    try {
+      const at = s.lastIndexOf("@");
+      const [h, sp] = at > 0 ? [s.slice(0, at), s.slice(at + 1)] : [s, ""];
+      const entry = sp && sp !== "email" ? await getEntry(h, sp) : null;
+      const hex = normalizeNpub(entry?.npub);
+      const lapsed = (hex ? await lapsedEntitlement(hex) : null) ?? (await lapsedEntitlement(s));
+      if (lapsed && (!best || lapsed.endedAtMs > best.endedAtMs)) best = lapsed;
+    } catch {
+      continue;
+    }
+  }
+  return best;
 }
