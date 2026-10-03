@@ -490,24 +490,24 @@
 .kitx-thumb[aria-current="true"] .kitx-thumb-pic{border:2px solid var(--info)}
 .kitx-stage-play{position:absolute;top:50%;left:50%;width:72px;height:72px;margin:-36px 0 0 -36px;border-radius:50%;background:var(--band-1);border:2px solid var(--ink-strong)}
 .kitx-stage-play::after{content:"";position:absolute;top:50%;left:50%;margin:-13px 0 0 -8px;border-style:solid;border-width:13px 0 13px 22px;border-color:transparent transparent transparent var(--ink-strong)}
-/* ── T-543: the replays player is BIGGER. The section breaks out of the 1080
+/* ── T-543: the THEATER look (first worn by /replays; named so any page can wear it): a BIGGER player. The section breaks out of the 1080
    wrap (up to 1600), the card fills it, and the player + minis share ONE
    width: as wide as the row allows but never taller than the viewport lets
    the whole 16:9 frame (and its title) stay on screen. The header words
    stay calm; the sky-stage precedent above tightens the header gap so the
    frame starts higher. Phones go nearer edge to edge. ── */
-.kitx-replays .kitx-flow{gap:12px}
-.kitx-replays .kitx-flow>.kicker,.kitx-replays .kitx-flow>.kit-h1{margin:0}
+.kitx-theater .kitx-flow{gap:12px}
+.kitx-theater .kitx-flow>.kicker,.kitx-theater .kitx-flow>.kit-h1{margin:0}
 .wrap.kitx-wide{max-width:1600px}
-.kitx-replays-card{--kitx-player-w:min(100%,max(320px,calc((100vh - 390px)*16/9)));max-width:none;width:100%}
-.kitx-replays-card .kitx-player{width:var(--kitx-player-w);margin:0 auto 24px}
-.kitx-replays-card .kitx-thumbs{width:var(--kitx-player-w);margin:0 auto}
-.kitx-replays-card .kitx-thumbs-mini{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.kitx-theater-card{--kitx-player-w:min(100%,max(320px,calc((100vh - 390px)*16/9)));max-width:none;width:100%}
+.kitx-theater-card .kitx-player{width:var(--kitx-player-w);margin:0 auto 24px}
+.kitx-theater-card .kitx-thumbs{width:var(--kitx-player-w);margin:0 auto}
+.kitx-theater-card .kitx-thumbs-mini{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 @media (max-width:640px){
   .wrap.kitx-wide{padding:0 12px}
-  .kitx-replays-card{padding:0}
-  .kitx-replays-card .kit-card-body{padding:12px}
-  .kitx-replays-card .kitx-thumbs-mini{grid-template-columns:repeat(auto-fill,minmax(108px,1fr))}
+  .kitx-theater-card{padding:0}
+  .kitx-theater-card .kit-card-body{padding:12px}
+  .kitx-theater-card .kitx-thumbs-mini{grid-template-columns:repeat(auto-fill,minmax(108px,1fr))}
 }
 
 /* ── T-541b: the Square card box's frame (the SDK paints its fields in an

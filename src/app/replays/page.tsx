@@ -79,7 +79,7 @@ export default async function ReplaysPage({
       <SiteHeader />
       <PaletteVars />
       <main className="center kitx-balanced">
-        <section className="kitx-section kitx-section-first kitx-replays">
+        <section className="kitx-section kitx-section-first kitx-theater">
           <div className="wrap kitx-flow kitx-wide">
             <p className="kicker">Read with Love</p>
             <h1 className="kit-h1">Replays</h1>

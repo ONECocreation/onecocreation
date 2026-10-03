@@ -74,7 +74,7 @@ export default function ReplaysList({
   const newestId = replays[0]?.id ?? "";
 
   return (
-    <div className="card room-card kit-day kitx-replays-card">
+    <div className="card room-card kit-day kitx-theater-card">
       <div className="kit-card-body">
         <div className="kitx-player kit-stack">
           {signedIn ? (

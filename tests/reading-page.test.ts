@@ -355,7 +355,7 @@ describe("the design-drift theme contract — kit.css carries exactly the RULED 
        "the kitx- classes listed there go into kit.css, tokens only". The
        [a-z]+ capture reads -mini/-pic/-play/-title as their stems.
        TASK-543 (the Admiral: "the /replay viewer ... bigger") adds two more
-       stems: kitx-replays (the section + its -card) and kitx-wide (the
+       stems: kitx-theater (the section + its -card) and kitx-wide (the
        1600px wrap breakout) - kit.css, tokens only. */
     expect(unique).toEqual(
       [
@@ -366,7 +366,7 @@ describe("the design-drift theme contract — kit.css carries exactly the RULED 
         ".kitx-mark",
         ".kitx-photo",
         ".kitx-player",
-        ".kitx-replays",
+        ".kitx-theater",
         ".kitx-section",
         ".kitx-stage",
         ".kitx-thumb",
