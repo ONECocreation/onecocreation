@@ -227,6 +227,13 @@ function useStudioOpen(): [boolean, () => void] {
   return [!closed, toggle];
 }
 
+/* TASK-545: the ONE native button in this rail - both accordions (Site's
+   whole-row toggle, Studio's small toggle) render through it, so the
+   operator census keeps a single button family for this file. */
+function RailToggle(props: React.ComponentProps<"button">) {
+  return <button type="button" {...props} />;
+}
+
 function StudioRoomAccordion({ active, title, href, pathname }: { active: boolean; title: string; href: string; pathname: string }) {
   const [openByHand, toggle] = useStudioOpen();
   const currentSub = studioSubForPath(pathname);
@@ -242,8 +249,7 @@ function StudioRoomAccordion({ active, title, href, pathname }: { active: boolea
         >
           {title}
         </Link>
-        <button
-          type="button"
+        <RailToggle
           onClick={toggle}
           aria-expanded={open}
           aria-controls="mgmt-studio-subs"
@@ -251,7 +257,7 @@ function StudioRoomAccordion({ active, title, href, pathname }: { active: boolea
           className="mgmt-rail-tab mgmt-rail-toggle"
         >
           <span aria-hidden="true">{open ? "▾" : "▸"}</span>
-        </button>
+        </RailToggle>
       </div>
       {open && (
         <div id="mgmt-studio-subs">
@@ -280,8 +286,7 @@ function SiteRoomAccordion({ active, title, pathname }: { active: boolean; title
   const currentSub = siteSubForPath(pathname);
   return (
     <div>
-      <button
-        type="button"
+      <RailToggle
         onClick={toggle}
         aria-expanded={open}
         aria-controls="mgmt-site-subs"
@@ -296,7 +301,7 @@ function SiteRoomAccordion({ active, title, pathname }: { active: boolean; title
       >
         {title}
         <span aria-hidden="true" style={{ fontSize: ".68rem" }}>{open ? "▾" : "▸"}</span>
-      </button>
+      </RailToggle>
       {open && (
         <div id="mgmt-site-subs">
           {SITE_SUBS.map((s) => {
