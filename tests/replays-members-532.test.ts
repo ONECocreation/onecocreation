@@ -195,10 +195,17 @@ describe("TASK-532 - the ?play= deep link: a saved id only, anything else falls 
 });
 
 describe("TASK-532 - the stay-in-the-loop block is the NOD's one button (pick 3)", () => {
-  it("one kit-btn-second kit-btn-sm 'Want a reminder email?' to /reading#keep-posted, no heading", async () => {
+  it("one kit-btn-second kit-btn-sm 'Want a reminder email?', no heading; TASK-546: it opens the reading list box in place, never a jump to /reading", async () => {
     await saveSiteConfig({ replays: FIXTURE });
     const html = await renderPage();
-    expect(html).toContain('href="/reading#keep-posted"');
+    /* TASK-546 (the Admiral: "that should just open the text box"): the
+       one button is a disclosure on /replays now; the old link to
+       /reading#keep-posted is gone from this page (the section itself
+       still lives on /reading). */
+    expect(html).toMatch(
+      /<button[^>]*class="kit-btn kit-btn-second kit-btn-sm"[^>]*aria-controls="replays-reminder"[^>]*>Want a reminder email\?<\/button>/,
+    );
+    expect(html).not.toContain('href="/reading#keep-posted"');
     expect(html).toContain("Want a reminder email?");
     expect(html).not.toContain("Want to stay in the loop?");
   });
