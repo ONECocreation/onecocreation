@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { memberFromRequest } from "./member-auth";
 import { operatorFromCookieHeader } from "./operator-auth";
 import { strictSameOrigin } from "./origin-strict";
-import { subscriptionsEnabled, rateLimited, SubError } from "./subscriptions";
+import { subscriptionsEnabled, rateLimited, publicView, SubError, type SubRecord } from "./subscriptions";
+import { tierOpenForJoin } from "./tier-open";
 
 /**
  * T-541a: the one door every member subscription route walks through, in
@@ -36,6 +37,18 @@ export async function memberGate(
     return NextResponse.json({ ok: false, reason: "too many tries, wait a little" }, { status: 429 });
   }
   return { subject };
+}
+
+/**
+ * T-556: the member's view, with `upgrades` cut to the memberships that are
+ * open to join (tierOpenForJoin). A closed tier is never offered as an
+ * Upgrade. No record stays null.
+ */
+export async function memberView(rec: SubRecord | null) {
+  const view = publicView(rec);
+  if (!view) return null;
+  const open = await Promise.all(view.upgrades.map((u) => tierOpenForJoin(u.tier)));
+  return { ...view, upgrades: view.upgrades.filter((_, i) => open[i]) };
 }
 
 export function subErrorResponse(err: unknown): NextResponse {

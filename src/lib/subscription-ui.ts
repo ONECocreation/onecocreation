@@ -59,6 +59,7 @@ const CODE_WORDS: Record<string, string> = {
   use_upgrade: "You already have a membership. Use Upgrade in your account to move up.",
   offer_closed: "That offer is not open right now. You can still join at the regular price.",
   offer_used: "That offer is for first-time members. You can still join at the regular price.",
+  not_open: "This membership is not open yet. Please check back soon.",
   plan_not_configured: "This membership is not ready to join yet. Please check back soon.",
   email_required: "We need an email address for your receipts. Add one below and try again.",
   card_declined: "Your card was declined. Nothing was charged. Please check the details or try another card.",
