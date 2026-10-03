@@ -46,5 +46,8 @@ describe("chat and roster failure words", () => {
     expect(src).toContain("{CHAT_CLOSED_LINE}");
     expect(src).toContain(">Back to the rooms</Link>");
     expect(src).not.toContain("◌ {reason}");
+    // the cause is kept for whoever helps the guest, as an attribute, never as words
+    expect(src).toContain("data-reason={reason || undefined}");
+    expect(src).not.toMatch(/>\s*\{reason\}/);
   });
 });

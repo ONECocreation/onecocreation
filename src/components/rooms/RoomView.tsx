@@ -224,8 +224,9 @@ export function ReactionPicker({ onPick }: { onPick: (key: string) => void }) {
 
 export default function RoomView({ slug, alias, title, kind }: Props) {
   const [state, setState] = useState<"loading" | "signedout" | "locked" | "open" | "error">("loading");
-  /* the reason stays for state bookkeeping only; a guest never reads it (TASK-548) */
-  const [, setReason] = useState("");
+  /* a guest never reads the reason (TASK-548); it rides on the error block as
+     data-reason so whoever helps them can still see the cause */
+  const [reason, setReason] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [reactions, setReactions] = useState<Record<string, Record<string, number>>>({});
   const [myReactions, setMyReactions] = useState<Record<string, Set<string>>>({});
@@ -432,7 +433,7 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
     );
   if (state === "error")
     return (
-      <div>
+      <div data-reason={reason || undefined}>
         <p style={{ color: "var(--muted)" }}>{CHAT_CLOSED_LINE}</p>
         <p><Link href="/classes" style={{ color: "var(--gold-deep)" }}>Back to the rooms</Link></p>
       </div>
