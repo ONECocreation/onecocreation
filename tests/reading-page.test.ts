@@ -353,7 +353,10 @@ describe("the design-drift theme contract — kit.css carries exactly the RULED 
        replays look adds kitx-player, kitx-thumbs(-mini), kitx-thumb(-pic/
        -play/-title) and kitx-stage-play to kit.css - the NOD's own words:
        "the kitx- classes listed there go into kit.css, tokens only". The
-       [a-z]+ capture reads -mini/-pic/-play/-title as their stems. */
+       [a-z]+ capture reads -mini/-pic/-play/-title as their stems.
+       TASK-543 (the Admiral: "the /replay viewer ... bigger") adds two more
+       stems: kitx-replays (the section + its -card) and kitx-wide (the
+       1600px wrap breakout) - kit.css, tokens only. */
     expect(unique).toEqual(
       [
         ".kitx-actions",
@@ -363,10 +366,12 @@ describe("the design-drift theme contract — kit.css carries exactly the RULED 
         ".kitx-mark",
         ".kitx-photo",
         ".kitx-player",
+        ".kitx-replays",
         ".kitx-section",
         ".kitx-stage",
         ".kitx-thumb",
         ".kitx-thumbs",
+        ".kitx-wide",
       ].sort(),
     );
   });
