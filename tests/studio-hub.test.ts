@@ -64,7 +64,8 @@ describe("StudioHub — the merged Studio room (TASK-330)", () => {
     expect(html).toContain("This desk is not for the weekly reading.");
     expect(html).toContain("For the reading, go to");
     expect(html).toMatch(/<a[^>]*href="\/a\/site\/reading"[^>]*>Weekly reading<\/a>/);
-    expect(html).toContain('class="kit-note mb-3"');
+    // the kit's note sets its own margin, so the air comes from a wrapper
+    expect(html).toContain('<div class="mb-3"><p class="kit-note"');
     // it sits above the room-state chip, i.e. first in the page body
     expect(html.indexOf("not for the weekly reading")).toBeLessThan(html.indexOf("Studio · "));
   });

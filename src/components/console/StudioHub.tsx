@@ -129,10 +129,12 @@ export default function StudioHub({
     <div>
       {/* TASK-545 r2 (Admiral): a pointer for anyone who landed here
           looking for the weekly reading, which lives at /a/site/reading */}
-      <p className="kit-note mb-3" id="studio-not-reading">
-        This desk is not for the weekly reading. For the reading, go to{" "}
-        <Link href="/a/site/reading">Weekly reading</Link>.
-      </p>
+      <div className="mb-3">
+        <p className="kit-note" id="studio-not-reading">
+          This desk is not for the weekly reading. For the reading, go to{" "}
+          <Link href="/a/site/reading">Weekly reading</Link>.
+        </p>
+      </div>
       <div
         style={{
           display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 14px",
