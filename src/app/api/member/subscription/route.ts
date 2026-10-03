@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { isTier } from "@/lib/entitlement";
-import { isVariant, mySubscription, publicView, subscribe } from "@/lib/subscriptions";
-import { memberGate, readBody, requestIdempotency, subErrorResponse } from "@/lib/subscription-route";
+import { isVariant, mySubscription, subscribe } from "@/lib/subscriptions";
+import { tierOpenForJoin } from "@/lib/tier-open";
+import { memberGate, memberView, readBody, requestIdempotency, subErrorResponse } from "@/lib/subscription-route";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
   const gate = await memberGate(request, { write: false, bucket: "get", max: 60, windowSec: 600 });
   if (gate instanceof NextResponse) return gate;
   try {
-    return NextResponse.json({ ok: true, subscription: publicView(await mySubscription(gate.subject)) });
+    return NextResponse.json({ ok: true, subscription: await memberView(await mySubscription(gate.subject)) });
   } catch (err) {
     return subErrorResponse(err);
   }
@@ -31,12 +32,13 @@ export async function POST(request: Request) {
   const variant = body.variant === undefined ? "standard" : body.variant;
   if (!isVariant(variant)) return NextResponse.json({ ok: false, reason: "unknown offer" }, { status: 400 });
   if (typeof body.cardToken !== "string" || !body.cardToken) return NextResponse.json({ ok: false, reason: "card token missing" }, { status: 400 });
+  if (!(await tierOpenForJoin(body.tier))) return NextResponse.json({ ok: false, reason: "that membership is not open yet", code: "not_open" }, { status: 409 });
   try {
     const rec = await subscribe(gate.subject, body.tier, variant, body.cardToken, requestIdempotency(gate.subject, body.tier, variant, body.cardToken), {
       email: typeof body.email === "string" ? body.email : undefined,
       verificationToken: typeof body.verificationToken === "string" ? body.verificationToken : undefined,
     });
-    return NextResponse.json({ ok: true, subscription: publicView(rec) });
+    return NextResponse.json({ ok: true, subscription: await memberView(rec) });
   } catch (err) {
     return subErrorResponse(err);
   }

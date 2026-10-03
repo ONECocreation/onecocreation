@@ -9,7 +9,7 @@ import { tierPageBySlug } from "@/lib/tiers-content";
 import { TIERS } from "@/lib/entitlement";
 import ImageLightbox from "@/components/store/ImageLightbox";
 import RelatedItems from "@/components/store/RelatedItems";
-import { getItem, listItems, stripPrivateMedia, fullStoryOf, type StoreItem } from "@/lib/store";
+import { getItem, isPurchasable, listItems, stripPrivateMedia, fullStoryOf, type StoreItem } from "@/lib/store";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 import { getSiteConfig } from "@/lib/site-config";
 import { priceWords, defaultPreferOf, type MoneyPrefer, type MoneyRails } from "@/lib/money-words";
@@ -171,8 +171,8 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
                 </div>
               )}
               <div className="reveal" style={{ transitionDelay: ".18s" }}>
-                {switches.features.subscriptions && tierPageBySlug(item.id) ? (
-                  /* T-541b: a membership tier is joined monthly with a card when the switch is ON */
+                {switches.features.subscriptions && tierPageBySlug(item.id) && isPurchasable(item) ? (
+                  /* T-541b: a membership tier is joined monthly with a card when the switch is ON; T-556: and only when its item is open (not Coming soon) */
                   <JoinWithCard tier={tierPageBySlug(item.id)!.tier} tierName={TIERS[tierPageBySlug(item.id)!.tier].name} priceUsd={TIERS[tierPageBySlug(item.id)!.tier].priceUsd} slug={item.id} />
                 ) : (
                   <BuyPanel item={item} railLive={liveAdapter() !== null} squareLive={liveAdapter("square") !== null} />

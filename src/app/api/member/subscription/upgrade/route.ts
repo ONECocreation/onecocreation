@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { isTier } from "@/lib/entitlement";
-import { upgrade, publicView } from "@/lib/subscriptions";
-import { memberGate, readBody, subErrorResponse } from "@/lib/subscription-route";
+import { upgrade } from "@/lib/subscriptions";
+import { tierOpenForJoin } from "@/lib/tier-open";
+import { memberGate, memberView, readBody, subErrorResponse } from "@/lib/subscription-route";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,9 @@ export async function POST(request: Request) {
   if (gate instanceof NextResponse) return gate;
   const body = await readBody(request);
   if (!isTier(body.tier)) return NextResponse.json({ ok: false, reason: "pick a membership" }, { status: 400 });
+  if (!(await tierOpenForJoin(body.tier))) return NextResponse.json({ ok: false, reason: "that membership is not open yet", code: "not_open" }, { status: 409 });
   try {
-    return NextResponse.json({ ok: true, subscription: publicView(await upgrade(gate.subject, body.tier)) });
+    return NextResponse.json({ ok: true, subscription: await memberView(await upgrade(gate.subject, body.tier)) });
   } catch (err) {
     return subErrorResponse(err);
   }

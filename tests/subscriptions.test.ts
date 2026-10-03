@@ -27,6 +27,11 @@ vi.mock("@/lib/operator-auth", () => ({
   operatorFromCookieHeader: () => (operatorOk ? { email: "op@example.org" } : null),
 }));
 
+// T-556: the join and upgrade routes now ask whether the membership is open (its store item
+// is live). These tests are about Square and identity, not the shelf, so every tier is open
+// here; tests/tier-open-556.test.ts pins the closed cases.
+vi.mock("@/lib/tier-open", () => ({ tierOpenForJoin: async () => true }));
+
 import { makeMemberToken } from "@/lib/member-auth";
 import { saveSiteConfig } from "@/lib/site-config";
 import { getEntitlement, grantTier } from "@/lib/entitlement";
