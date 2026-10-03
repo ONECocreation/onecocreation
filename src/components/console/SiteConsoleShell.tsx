@@ -96,10 +96,6 @@ export const SITE_SUBS = [
   /* TASK-496 (block 969,088+): the Replays list - the links /replays plays,
      pasted one per row. */
   { key: "replays", href: "/a/site/replays", label: "Replays" },
-  /* TASK-381 (block 968,047+): the weekly reading's day/time/zone/length —
-     no public surface yet (the notice is T-382, held on the mockup nod),
-     but the source lives here so Love can set it ahead of that lane. */
-  { key: "reading", href: "/a/site/reading", label: "The weekly reading" },
   /* TASK-387 (block 968,088+): hide the chat fully for a room, or flip it
      live mid-session — the saved default IS the session switch (Named
      decision A). */
@@ -117,10 +113,29 @@ export const SITE_SUBS = [
 
 export type SiteSubKey = (typeof SITE_SUBS)[number]["key"];
 
+/* TASK-545 (Admiral, 2026-10-03): "move the weekly reading left menu to be
+   under the studio. love knows the studio is for this kind of stuff."
+   Menu placement ONLY - the page stays at /a/site/reading (and its /go/<door>
+   one-tap links), it just lists under Studio instead of Site. */
+export const STUDIO_SUBS = [
+  { key: "reading", href: "/a/site/reading", label: "The weekly reading" },
+] as const;
+
+export type StudioSubKey = (typeof STUDIO_SUBS)[number]["key"];
+
+/** Which Studio sub-row a path marks current - /a/site/reading and anything
+    under it (the go/<door> links) mark The weekly reading; all else nothing. */
+export function studioSubForPath(pathname: string): StudioSubKey | null {
+  const sub = STUDIO_SUBS.find((x) => pathname === x.href || pathname.startsWith(`${x.href}/`));
+  return sub ? sub.key : null;
+}
+
 /** Which sub-row a path marks current — /a/site itself is the Switches
     room (the default), an unmapped deeper /a/site/* path marks Switches
     too, and anything outside /a/site marks nothing. */
 export function siteSubForPath(pathname: string): SiteSubKey | null {
+  // TASK-545: the reading lives under Studio now - Site marks nothing for it
+  if (studioSubForPath(pathname)) return null;
   const exact = SITE_SUBS.find((s) => s.href === pathname);
   if (exact) return exact.key;
   if (pathname.startsWith("/a/site/")) {
@@ -168,6 +183,96 @@ function useSiteAccordionOpen(): [boolean, () => void] {
     window.dispatchEvent(new Event(SITE_ACCORDION_EVENT));
   }, []);
   return [open, toggle];
+}
+
+/* TASK-545 - the Studio group: same markup, classes and behaviour as the Site
+   accordion, with two differences the ask names. (1) it is OPEN by default so
+   The weekly reading is in sight the moment Love lands on /a; she can close it
+   by hand, and that is remembered in sessionStorage only (a new browser
+   session or a fresh sign-in shows it open again). (2) the row itself is the
+   link to /a/studio, with a small toggle beside it, so clicking "Studio"
+   still opens the studio. */
+const STUDIO_CLOSED_KEY = "oc-console-studio-closed";
+const STUDIO_CLOSED_EVENT = "oc-console-studio-closed-change";
+
+function readStudioClosed(): boolean {
+  try {
+    return window.sessionStorage.getItem(STUDIO_CLOSED_KEY) === "1";
+  } catch {
+    return false; // storage denied - open is the honest default here
+  }
+}
+
+function useStudioOpen(): [boolean, () => void] {
+  const closed = useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener("storage", onChange);
+      window.addEventListener(STUDIO_CLOSED_EVENT, onChange);
+      return () => {
+        window.removeEventListener("storage", onChange);
+        window.removeEventListener(STUDIO_CLOSED_EVENT, onChange);
+      };
+    },
+    readStudioClosed,
+    () => false, // server paint = open
+  );
+  const toggle = useCallback(() => {
+    try {
+      window.sessionStorage.setItem(STUDIO_CLOSED_KEY, readStudioClosed() ? "0" : "1");
+    } catch {
+      /* storage denied - nothing to remember */
+    }
+    window.dispatchEvent(new Event(STUDIO_CLOSED_EVENT));
+  }, []);
+  return [!closed, toggle];
+}
+
+function StudioRoomAccordion({ active, title, href, pathname }: { active: boolean; title: string; href: string; pathname: string }) {
+  const [openByHand, toggle] = useStudioOpen();
+  const currentSub = studioSubForPath(pathname);
+  // on The weekly reading's own pages the group is always open (the marked row must show)
+  const open = openByHand || currentSub !== null;
+  return (
+    <div>
+      <div className="mgmt-rail-row">
+        <Link
+          href={href}
+          className={`mgmt-rail-tab${active ? " is-active" : ""}`}
+          aria-current={active && currentSub === null ? "page" : undefined}
+        >
+          {title}
+        </Link>
+        <button
+          type="button"
+          onClick={toggle}
+          aria-expanded={open}
+          aria-controls="mgmt-studio-subs"
+          aria-label={`${open ? "Hide" : "Show"} the ${title} pages`}
+          className="mgmt-rail-tab mgmt-rail-toggle"
+        >
+          <span aria-hidden="true">{open ? "▾" : "▸"}</span>
+        </button>
+      </div>
+      {open && (
+        <div id="mgmt-studio-subs">
+          {STUDIO_SUBS.map((s) => {
+            const subActive = currentSub === s.key;
+            return (
+              <Link
+                key={s.key}
+                href={s.href}
+                className={`mgmt-rail-tab${subActive ? " is-active" : ""}`}
+                aria-current={subActive ? "page" : undefined}
+                style={{ paddingLeft: 28, fontSize: ".78rem" }}
+              >
+                {s.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function SiteRoomAccordion({ active, title, pathname }: { active: boolean; title: string; pathname: string }) {
@@ -241,9 +346,28 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
             // TASK-330: Brand folded under Site (a sub-row, not its own
             // rail entry) — the Site row itself must still read active
             // when the current room IS Brand, so it highlights.
-            const active = r.key === current.key || (r.key === "site" && current.key === "brand");
+            // TASK-545: the reading's pages belong to Studio's group, so the
+            // Site row does not light for them (the sub-row is the mark).
+            const onReading = studioSubForPath(pathname) !== null;
+            const active =
+              r.key === "studio"
+                ? r.key === current.key || onReading
+                : r.key === "site"
+                  ? (r.key === current.key || current.key === "brand") && !onReading
+                  : r.key === current.key;
             /* TASK-188: the Site row is the accordion — every other console
                item is the same flat link it always was. */
+            if (r.key === "studio") {
+              return (
+                <StudioRoomAccordion
+                  key={r.key}
+                  active={active}
+                  title={label(r.key, r.label)}
+                  href={r.href}
+                  pathname={pathname}
+                />
+              );
+            }
             if (r.key === "site") {
               return (
                 <SiteRoomAccordion

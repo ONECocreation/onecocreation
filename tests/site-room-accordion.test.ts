@@ -30,9 +30,8 @@ describe("the accordion's rows + the current mark", () => {
       // sibling video room (an honest update - the row is new, the pin
       // grows; nothing existing moves).
       ["replays", "/a/site/replays", "Replays"],
-      // TASK-381 (block 968,047+): the weekly reading's source, no public
-      // surface yet (the notice is T-382, held on the mockup nod).
-      ["reading", "/a/site/reading", "The weekly reading"],
+      // TASK-545: "reading" moved out - The weekly reading lists under
+      // Studio now (STUDIO_SUBS); its route is unchanged.
       // TASK-387 (block 968,088+): hide the chat fully for a room, or flip
       // it live mid-session — the saved default IS the session switch.
       ["chat", "/a/site/chat", "Room chat"],
@@ -52,12 +51,46 @@ describe("the accordion's rows + the current mark", () => {
     expect(siteSubForPath("/a/site/community-door")).toBe("community-door");
     expect(siteSubForPath("/a/site/about-videos")).toBe("about-videos");
     expect(siteSubForPath("/a/site/replays")).toBe("replays"); // TASK-496
-    expect(siteSubForPath("/a/site/reading")).toBe("reading");
+    // TASK-545: the reading is a Studio sub-row now; Site marks nothing for it
+    expect(siteSubForPath("/a/site/reading")).toBeNull();
+    expect(siteSubForPath("/a/site/reading/go/free")).toBeNull();
     expect(siteSubForPath("/a/site/chat")).toBe("chat");
     // a deeper unknown /a/site/* path still marks Switches; outside /a/site nothing marks
     expect(siteSubForPath("/a/site/anything-else")).toBe("switches");
     expect(siteSubForPath("/a/money")).toBeNull();
     expect(siteSubForPath("/a")).toBeNull();
+  });
+
+  it("TASK-545: The weekly reading is Studio's sub-row, same route, open by default, closed per session only", async () => {
+    const { STUDIO_SUBS, studioSubForPath } = await import("@/components/console/SiteConsoleShell");
+    expect(STUDIO_SUBS.map((s) => [s.key, s.href, s.label])).toEqual([
+      ["reading", "/a/site/reading", "The weekly reading"],
+    ]);
+    expect(studioSubForPath("/a/site/reading")).toBe("reading");
+    expect(studioSubForPath("/a/site/reading/go/free")).toBe("reading");
+    expect(studioSubForPath("/a/studio")).toBeNull();
+    expect(studioSubForPath("/a/site/readings")).toBeNull();
+    const shell = await read("src/components/console/SiteConsoleShell.tsx");
+    expect(shell).toContain("window.sessionStorage.getItem(STUDIO_CLOSED_KEY)");
+    expect(shell).toContain("oc-console-studio-closed");
+    expect(shell).toContain('aria-controls="mgmt-studio-subs"');
+  });
+
+  it("TASK-545: the server paint has Studio open with the reading row, and Studio still links to /a/studio", async () => {
+    const { createElement: h } = await import("react");
+    const { renderToStaticMarkup } = await import("react-dom/server");
+    vi.resetModules();
+    vi.doMock("next/navigation", () => ({ usePathname: () => "/a/site/reading" }));
+    const { default: SiteConsoleShell } = await import("@/components/console/SiteConsoleShell");
+    const html = renderToStaticMarkup(h(SiteConsoleShell, { children: h("div", null, "body") }));
+    expect(html).toContain('href="/a/studio"');
+    expect(html).toContain('id="mgmt-studio-subs"');
+    expect(html).toMatch(/<a[^>]*aria-current="page"[^>]*>The weekly reading<\/a>/);
+    // Site row is not lit and marks no sub-row (accordion closed on the server)
+    const siteBtn = html.match(/<button[^>]*aria-controls="mgmt-site-subs"[^>]*>/);
+    expect(siteBtn?.[0]).not.toContain("is-active");
+    vi.doUnmock("next/navigation");
+    vi.resetModules();
   });
 
   /* TASK-330 (0018.06.27 a₿): Brand is NOT under /a/site/* — it's its own
