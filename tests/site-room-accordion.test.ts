@@ -89,6 +89,9 @@ describe("the accordion's rows + the current mark", () => {
     // Site row is not lit and marks no sub-row (accordion closed on the server)
     const siteBtn = html.match(/<button[^>]*aria-controls="mgmt-site-subs"[^>]*>/);
     expect(siteBtn?.[0]).not.toContain("is-active");
+    // the page heading follows the menu: Studio, never Site, on the reading's pages
+    expect(html).toContain('<h1 class="mgmt-title">Studio');
+    expect(html).not.toContain('<h1 class="mgmt-title">Site');
     vi.doUnmock("next/navigation");
     vi.resetModules();
   });

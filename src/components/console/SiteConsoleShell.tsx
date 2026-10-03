@@ -322,6 +322,10 @@ function SiteRoomAccordion({ active, title, pathname }: { active: boolean; title
 export default function SiteConsoleShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/a";
   const current = roomForPath(pathname);
+  // TASK-545: the weekly reading lists under Studio, so its page heading says
+  // Studio too (the route still resolves to the Site room; the rail uses `current`).
+  const headRoom =
+    (studioSubForPath(pathname) !== null && CONSOLE_ROOMS.find((r) => r.key === "studio")) || current;
   // House furniture stays on the house's bridge. An artist running their own
   // shop has no use for a SIMULATOR or a FLEET MAP, and showing them would
   // make their admin feel like someone else's software.
@@ -396,9 +400,9 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
             {/* TASK-135: siteChromeTitle is the one choke point that keeps a
                 houseOnly room's real name (DUTY ROSTER, BRIDGE, …) off this
                 chrome, whichever path resolved to it (Admiral's catch). */}
-            <h1 className="mgmt-title">{siteChromeTitle(current, label(current.key, current.label))}</h1>
-            {!current.houseOnly && blurb(current.key, current.blurb) && (
-              <p className="mgmt-blurb">{blurb(current.key, current.blurb)}</p>
+            <h1 className="mgmt-title">{siteChromeTitle(headRoom, label(headRoom.key, headRoom.label))}</h1>
+            {!headRoom.houseOnly && blurb(headRoom.key, headRoom.blurb) && (
+              <p className="mgmt-blurb">{blurb(headRoom.key, headRoom.blurb)}</p>
             )}
           </header>
           <main className="mgmt-body">{children}</main>
