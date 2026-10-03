@@ -1,7 +1,7 @@
 "use client";
 
 import type { CalendarDayCell } from "@/lib/calendar-view";
-import { WeekRibbon, type CalendarEventPill } from "@/components/calendar";
+import { WeekRibbon, type CalendarDayMarksLookup, type CalendarEventPill } from "@/components/calendar";
 import { bftWeek } from "@/lib/calendar-view";
 import MaterialsShelf from "./MaterialsShelf";
 import RosterPanel from "./RosterPanel";
@@ -41,6 +41,7 @@ export default function WeekAltitude({
   feed,
   rooms,
   liveNowRoomSlug,
+  marks: marksIn,
   todayCivilKey,
   selectedBookingId,
   onSelectBooking,
@@ -55,6 +56,10 @@ export default function WeekAltitude({
   feed: DeskFeed | null;
   rooms: DeskRoom[];
   liveNowRoomSlug: string | null;
+  /** TASK-551: the desk's ONE merged marks lookup (reading + feed), built in
+   *  LovesDesk so Month and Week can never disagree. When omitted the week
+   *  falls back to the feed's own marks, exactly as before. */
+  marks?: CalendarDayMarksLookup;
   todayCivilKey: string;
   selectedBookingId: string | null;
   onSelectBooking: (id: string | null) => void;
@@ -68,7 +73,7 @@ export default function WeekAltitude({
   /** T-248: a booking/live pill inside the ribbon — LovesDesk resolves it. */
   onSelectPill?: (pill: CalendarEventPill, cell: CalendarDayCell) => void;
 }) {
-  const marks = buildDeskMarks(feed, { todayCivilKey, liveNowRoomSlug });
+  const marks = marksIn ?? buildDeskMarks(feed, { todayCivilKey, liveNowRoomSlug });
 
   const cells = bftWeek(bftYear, bftMonth, weekOfMonth);
   const loKey = cells[0]?.civilKey;

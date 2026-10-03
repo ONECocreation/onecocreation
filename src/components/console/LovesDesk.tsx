@@ -17,6 +17,8 @@ import { ROOMS } from "@/lib/matrix-rooms";
 import WeekAltitude from "./desk/WeekAltitude";
 import DayAltitude from "./desk/DayAltitude";
 import { buildDeskMarks, civilKeyOf } from "./desk/marks";
+import { mergeDayMarks, readingDeskMarksLookup } from "@/components/calendar/reading-marks";
+import { useReadingSchedule } from "@/components/calendar/useReadingSchedule";
 import type { DeskFeed, DeskRoom } from "./desk/types";
 import "./desk/loves-desk.css";
 
@@ -60,8 +62,11 @@ function readServerAltitude(): Altitude {
  * own `bookingId` as its `id`. No DOM, no router, no state — a click
  * handler just calls this and branches on the result.
  */
-export type PillAction = { kind: "live" } | { kind: "booking"; bookingId: string };
+export type PillAction = { kind: "live" } | { kind: "reading" } | { kind: "booking"; bookingId: string };
 export function resolvePillAction(pill: CalendarEventPill): PillAction {
+  // TASK-551: the derived weekly-reading pill (`reading-<civilKey>`) opens
+  // Love's own reading page — never mistaken for a booking id.
+  if (pill.id.startsWith("reading-")) return { kind: "reading" };
   if (pill.id === "live-now" || pill.id.startsWith("live-")) return { kind: "live" };
   return { kind: "booking", bookingId: pill.id };
 }
@@ -184,7 +189,14 @@ function DeskInner() {
   }, [altitude]);
 
   const todayCivilKey = civilKeyOf(new Date().toISOString());
-  const monthMarks = buildDeskMarks(feed, { todayCivilKey, liveNowRoomSlug });
+  /* TASK-551: the weekly reading rides the saved schedule (/a/site/reading).
+     Built ONCE here and handed to Week too, so Month and Week never
+     disagree. Reading first so it survives DayCell's two-pill cap. */
+  const readingSchedule = useReadingSchedule();
+  const monthMarks = useMemo(
+    () => mergeDayMarks(readingDeskMarksLookup(readingSchedule), buildDeskMarks(feed, { todayCivilKey, liveNowRoomSlug })),
+    [readingSchedule, feed, todayCivilKey, liveNowRoomSlug],
+  );
 
   function stepMonth(dir: -1 | 1) {
     let m = bftMonth + dir;
@@ -220,6 +232,10 @@ function DeskInner() {
     const action = resolvePillAction(pill);
     if (action.kind === "live") {
       router.push("/a/live");
+      return;
+    }
+    if (action.kind === "reading") {
+      router.push("/a/site/reading");
       return;
     }
     jumpToDay(cell.bftDay);
@@ -275,6 +291,7 @@ function DeskInner() {
           feed={feed}
           rooms={DESK_ROOMS}
           liveNowRoomSlug={liveNowRoomSlug}
+          marks={monthMarks}
           todayCivilKey={todayCivilKey}
           selectedBookingId={selectedBookingId}
           onSelectBooking={setSelectedBookingId}
@@ -299,6 +316,7 @@ function DeskInner() {
             feed={feed}
             rooms={DESK_ROOMS}
             liveNowRoomSlug={liveNowRoomSlug}
+            readingSchedule={readingSchedule}
             selectedRoomSlug={selectedRoomSlug}
             onSelectRoom={setSelectedRoomSlug}
             selectedBookingId={selectedBookingId}

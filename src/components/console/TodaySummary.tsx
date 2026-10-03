@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SectionHead } from "@/components/console/glass";
 import AttentionStrip from "@/components/console/AttentionStrip";
+import { useReadingSchedule } from "@/components/calendar/useReadingSchedule";
+import { readingClockWords, readingOnCivilDay } from "@/components/calendar/reading-marks";
+import { zonedDateParts } from "@/lib/booking-time";
 
 /**
  * T-326 (0018.06.26 a₿ — the Admiral accepted Astra's review-r1, findings
@@ -57,6 +60,17 @@ export default function TodaySummary({
   liveTitle?: string;
 }) {
   const router = useRouter();
+  /* TASK-551: a reading day is never "nothing scheduled". The civil day is
+     read in the schedule's own zone; null schedule/off = no row, no guess. */
+  const schedule = useReadingSchedule();
+  const reading = schedule
+    ? readingOnCivilDay(schedule, zonedDateParts(new Date(), schedule.tz).date)
+    : null;
+  const readingRow = reading ? (
+    <Link className="desk-schedule__row" href="/a/site/reading">
+      <b>{readingClockWords(reading.startsAtMs)}</b> Weekly reading
+    </Link>
+  ) : null;
   return (
     <>
       <SectionHead label="Today" />
@@ -97,11 +111,12 @@ export default function TodaySummary({
             the calendar →
           </span>
         </Link>
-      ) : (
+      ) : reading ? null : (
         <p style={{ margin: 0, padding: "12px 16px", fontSize: ".82rem", color: "var(--muted)" }}>
           🌤 nothing scheduled — the day is yours.
         </p>
       )}
+      {next !== "error" && readingRow}
       {/* T-319's counted pointer, moved inside the summary unchanged — its
           own loading/failed/zero states stand (zero renders null by T-319's
           design; the summary's visible zero is the session line above) */}
