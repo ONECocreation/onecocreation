@@ -46,17 +46,33 @@ describe("the page and the island", () => {
     expect(page).not.toContain('href="/reading#keep-posted"');
   });
 
-  it("the island reuses ReadingSignInBox as a labelled disclosure with focus moved in", async () => {
+  it("r2: a plain list sign-up: no auth routes, no sign-in box, no Heart Field door, one-click member path", async () => {
     const src = await readSrc("src/components/replays/ReplaysReminder.tsx");
-    expect(src).toContain('import ReadingSignInBox from "@/components/rooms/ReadingSignInBox"');
+    expect(src).toContain("postReadingSignUp");
+    expect(src).not.toContain("ReadingSignInBox");
+    expect(src).not.toContain("/api/auth");
+    expect(src).not.toMatch(/applyMemberSession|useRouter|router\./);
+    expect(src).not.toContain("Heart Field");
+    expect(src).not.toContain("heart-field");
+    expect(src).not.toMatch(/<Link|href=/);
+    // signed in with an email: pressing the one button subscribes at once
+    expect(src).toContain("subscribe(memberEmail)");
+    expect(src).toContain('member.space === "email"');
+    // key-only member falls back to the field
+    expect(src).toContain("!memberEmail");
+  });
+
+  it("the island is a labelled disclosure with focus moved into the field, no inline style", async () => {
+    const src = await readSrc("src/components/replays/ReplaysReminder.tsx");
     expect(src).toContain("Want a reminder email?");
     expect(src).toContain("aria-expanded={open}");
     expect(src).toContain('aria-controls="replays-reminder"');
     expect(src).toContain('id="replays-reminder"');
     expect(src).toContain(".focus({ preventScroll: true })");
+    expect(src).toContain('className="kit-inline-form"');
     expect(src).not.toMatch(/style=\{/);
-    expect(src).not.toMatch(/[→←]/);
-    expect(src).not.toContain("—");
+    expect(src).not.toMatch(/[\u2192\u2190]/);
+    expect(src).not.toContain("\u2014");
   });
 
   it("/reading keeps its #keep-posted anchor", async () => {
@@ -64,9 +80,10 @@ describe("the page and the island", () => {
   });
 });
 
-describe("a signup from the /replays box carries the reading tag", () => {
+describe("a signup from the /replays box (signed out or in, the same post) carries the reading tag", () => {
   it("postReadingSignUp -> /api/subscribe -> addReadingTag: source reading + tags [reading]", async () => {
     let posted: { source?: string } = {};
+    const urls: string[] = [];
     vi.stubGlobal("fetch", async (url: string, init?: { body?: string }) => {
       if (String(url).startsWith("https://kv.example")) {
         const cmd = JSON.parse(init?.body ?? "[]") as [string, ...string[]];
@@ -77,6 +94,7 @@ describe("a signup from the /replays box carries the reading tag", () => {
         }
         return Response.json({ result: 1 });
       }
+      urls.push(String(url));
       // the browser's relative POST, handed to the real route
       posted = JSON.parse(init?.body ?? "{}");
       const { POST } = await import("@/app/api/subscribe/route");
@@ -92,6 +110,7 @@ describe("a signup from the /replays box carries the reading tag", () => {
     const out = await postReadingSignUp("Replay.Fan@Example.com");
     expect(out).toEqual({ ok: true, outcome: "joined" });
     expect(posted.source).toBe("reading");
+    expect(urls).toEqual(["/api/subscribe"]);
     const rec = JSON.parse(vault.get("mail:sub:replay.fan@example.com")!);
     expect(rec.source).toBe("reading");
     expect(rec.tags).toEqual(["reading"]);
