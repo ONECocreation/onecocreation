@@ -37,11 +37,11 @@ import { DOORS } from "./rooms-config";
 export default function SiteReadingRoom() {
   return (
     <div className="p-6" style={{ maxWidth: 860 }}>
-      <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>The weekly reading</h1>
+      <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>Weekly reading</h1>
       <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
         Set the reading&apos;s schedule below, then open each room when you&apos;re ready.
       </p>
-      <SectionHead label="The weekly reading — day, time, zone" />
+      <SectionHead label="Weekly reading: day, time, zone" />
       <ReadingScheduleCard />
       <SectionHead label="The rooms" />
       <RoomsCard doors={DOORS} />
