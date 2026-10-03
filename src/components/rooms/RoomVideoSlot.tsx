@@ -427,7 +427,7 @@ export default function RoomVideoSlot({
         </div>
       ) : canEmbed ? (
         <div>
-          <div className="cl-stage-embed">
+          <div className="cl-stage-embed kit-call-tall">
             <JitsiRoom domain={jitsiDomain!} room={liveRoom!} displayName={displayName} height="100%" />
           </div>
           <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem" }}>

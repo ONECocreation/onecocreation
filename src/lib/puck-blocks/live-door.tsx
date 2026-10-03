@@ -76,7 +76,7 @@ export function createLiveDoor() {
         {live ? (
           <>
             {embed && (
-              <div style={{ aspectRatio: "16 / 9", borderRadius: 18, overflow: "hidden", marginBottom: 18 }}>
+              <div className="kit-call-frame kit-call-tall">
                 <JitsiRoom domain={embed.jitsiDomain} room={embed.liveRoom} height="100%" />
               </div>
             )}

@@ -264,6 +264,14 @@
    phone the Playground's IN-CALL frame stands 3:4 — the mockup's proposal,
    ONE modifier class, never an inline ratio */
 @media (max-width:640px){.kit-stage-media--playground{aspect-ratio:3/4}}
+/* TASK-544 (R-093, the Admiral): every OTHER frame that holds a LIVE Jitsi
+   call takes the same phone shape (3:4) so the prejoin card's "Join
+   meeting" button and the in-call toolbar both fit. ONE page-neutral
+   modifier, worn only while the call itself shows (never over waiting or
+   cover art, which keep their own shapes). .kit-call-frame is the /live
+   door's plain frame (its old inline box, 16:9 on desktop, unchanged). */
+.kit-call-frame{aspect-ratio:16/9;border-radius:18px;overflow:hidden;margin-bottom:18px}
+@media (max-width:640px){.kit-stage-media.kit-call-tall,.cl-stage-embed.kit-call-tall,.kit-call-frame.kit-call-tall{aspect-ratio:3/4}}
 .kit-stage-chip{position:absolute;top:14px;left:14px;display:inline-flex;gap:8px;align-items:center;
   padding:6px 12px;border-radius:999px;background:color-mix(in srgb,var(--band-1) 78%,transparent);color:var(--ink-strong);
   font-size:.72rem;font-weight:700;line-height:1;letter-spacing:.18em;text-transform:uppercase}

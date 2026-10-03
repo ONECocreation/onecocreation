@@ -247,7 +247,7 @@ export function ReadingStageBody({
       {phase === "published" && !ended && <p className="kit-body kit-stage-live-line">Love is live now</p>}
       <div className="kit-stage">
         {showRoom ? (
-          <div className={coverUp ? "kit-stage-media kit-stage-waiting kit-stage-waiting--cover" : "kit-stage-media"}>
+          <div className={coverUp ? "kit-stage-media kit-stage-waiting kit-stage-waiting--cover" : "kit-stage-media kit-call-tall"}>
             <div className="kit-stage-viewer">
               {/* TASK-487: onHostVideo is deliberately NOT passed here any
                   more — the cover is driven by `cameraShown` (the door's

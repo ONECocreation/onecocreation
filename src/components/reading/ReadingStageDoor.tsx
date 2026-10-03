@@ -123,7 +123,7 @@ export function ReadingStageDoorBody({
   return (
     <div className="kit-stage">
       {showRoom ? (
-        <div className={coverUp ? "kit-stage-media kit-stage-waiting kit-stage-waiting--cover" : "kit-stage-media"}>
+        <div className={coverUp ? "kit-stage-media kit-stage-waiting kit-stage-waiting--cover" : "kit-stage-media kit-call-tall"}>
           <div className="kit-stage-viewer">
             {/* TASK-487: onHostVideo deliberately NOT passed here any more
                 — the cover is driven by `cameraShown` (the door's own

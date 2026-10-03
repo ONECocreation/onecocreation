@@ -304,7 +304,7 @@ export default function StageView({
                (an EXISTING class: the viewer is position:absolute and
                needs a positioned 16:9 parent; no new CSS, no inline
                style — the drift ceiling holds). */
-            <div className="kit-stage-media">
+            <div className="kit-stage-media kit-call-tall">
               <JitsiViewer domain={storyDomain ?? ""} room={storyRoom} onEnded={storyEnded} onFailed={storyFailed} />
             </div>
           ) : (
