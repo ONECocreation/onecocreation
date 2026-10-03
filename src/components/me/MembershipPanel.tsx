@@ -71,7 +71,7 @@ export default function MembershipSection() {
               <b>Cancel your membership?</b>
               <em>{cancelConfirmWords(endsMs)}</em>
             </div>
-            <div className="kit-rows-end kit-rows-pair">
+            <div className="kit-rows-end kit-rows-pair kit-rows-pair-stack">
               <Button sm disabled={busy} onClick={() => setConfirm(null)}>Keep my membership</Button>
               <Button sm variant="second" disabled={busy} onClick={() => run(() => cancelCall(fetch), "Your membership is set to end. You keep access until then.")}>Yes, cancel it</Button>
             </div>
