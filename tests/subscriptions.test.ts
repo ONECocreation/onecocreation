@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- the fake Square speaks loose JSON */
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach, beforeEach, vi } from "vitest";
 import crypto from "crypto";
 import { isolateCwd } from "./helpers/isolate-cwd";
 
@@ -226,6 +226,7 @@ describe("grantTier absolute (the subscription seam)", () => {
 describe("feature OFF", () => {
   it("every member route is a 404, signed in or not", async () => {
     square.reset();
+    operatorOk = false;
     await saveSiteConfig({ features: { subscriptions: false } });
     const n = fresh();
     expect((await j(await subscribePOST(req("/api/member/subscription", n, { tier: "A", cardToken: "cnon:card-nonce-ok" })))).status).toBe(404);
@@ -233,6 +234,55 @@ describe("feature OFF", () => {
     expect((await j(await cancelPOST(req("/api/member/subscription/cancel", n, {})))).status).toBe(404);
     expect((await j(await undoPOST(req("/api/member/subscription/undo-cancel", n, {})))).status).toBe(404);
     expect((await j(await upgradePOST(req("/api/member/subscription/upgrade", n, { tier: "B" })))).status).toBe(404);
+    expect(square.calls.length).toBe(0);
+  });
+});
+
+describe("T-555: the operator test door (switch OFF)", () => {
+  beforeEach(async () => {
+    await freshSetup();
+    await saveSiteConfig({ features: { subscriptions: false } });
+    operatorOk = false;
+  });
+  afterEach(() => { operatorOk = false; });
+
+  it("an operator who is also a signed-in member can read, subscribe, cancel and undo", async () => {
+    operatorOk = true;
+    const x = fresh();
+    const g = await j(await subscriptionGET(req("/api/member/subscription", x)));
+    expect(g.status).toBe(200);
+    expect(g.body.subscription).toBeNull();
+    const s = await j(await subscribeAs(x));
+    expect(s.status).toBe(200);
+    expect((await getEntitlement(who(x).subject))?.tier).toBe("A"); // the grant landed
+    const c = await j(await cancelPOST(req("/api/member/subscription/cancel", x, {})));
+    expect(c.body.subscription.status).toBe("cancelling");
+    const u = await j(await undoPOST(req("/api/member/subscription/undo-cancel", x, {})));
+    expect(u.body.subscription.status).toBe("active");
+  });
+
+  it("an operator with NO member session gets 401 and never a subscribe", async () => {
+    operatorOk = true;
+    const r = await j(await subscribePOST(req("/api/member/subscription", null, { tier: "A", cardToken: "cnon:card-nonce-ok" })));
+    expect(r.status).toBe(401);
+    expect((await j(await subscriptionGET(req("/api/member/subscription", null)))).status).toBe(401);
+    expect(square.calls.length).toBe(0);
+  });
+
+  it("a non-operator is still a 404 with zero Square calls", async () => {
+    const x = fresh();
+    expect((await j(await subscribeAs(x))).status).toBe(404);
+    expect((await j(await subscriptionGET(req("/api/member/subscription", x)))).status).toBe(404);
+    expect(square.calls.length).toBe(0);
+    expect(await getRecordForSubject(who(x).subject)).toBeNull();
+  });
+
+  it("an operator write with a wrong or missing Origin is still refused", async () => {
+    operatorOk = true;
+    const x = fresh();
+    const body = { tier: "A", cardToken: "cnon:card-nonce-ok" };
+    expect((await j(await subscribePOST(req("/api/member/subscription", x, body, { origin: null })))).status).toBe(403);
+    expect((await j(await subscribePOST(req("/api/member/subscription", x, body, { origin: "https://evil.example" })))).status).toBe(403);
     expect(square.calls.length).toBe(0);
   });
 });
