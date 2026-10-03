@@ -639,6 +639,7 @@ html,body{overflow-x:clip}
 /* TASK-545: Studio row = link + small toggle side by side (the Site accordion's tab look) */
 .mgmt-rail-row{display:flex;align-items:stretch;gap:6px}
 .mgmt-rail-row>a.mgmt-rail-tab{flex:1}
+.mgmt-rail-sub{padding-left:28px;font-size:.78rem}
 .mgmt-rail-toggle{background:none;cursor:pointer;font-family:inherit;font-size:.68rem}
 
 /* ── consolidated nav: sub-menus + hamburger (Admiral, 0018.05.13) ── */

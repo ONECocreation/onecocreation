@@ -261,9 +261,8 @@ function StudioRoomAccordion({ active, title, href, pathname }: { active: boolea
               <Link
                 key={s.key}
                 href={s.href}
-                className={`mgmt-rail-tab${subActive ? " is-active" : ""}`}
+                className={`mgmt-rail-tab mgmt-rail-sub${subActive ? " is-active" : ""}`}
                 aria-current={subActive ? "page" : undefined}
-                style={{ paddingLeft: 28, fontSize: ".78rem" }}
               >
                 {s.label}
               </Link>
