@@ -523,6 +523,11 @@
 .kit-cardbox{background:var(--field-bg);border:1px solid var(--glass-edge);border-radius:12px;padding:12px;min-height:94px;box-sizing:border-box}
 /* two controls (a confirm's pair) sit side by side on the row's right edge; at phone width the row stacks, controls on the right */
 .kit-rows-pair{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+/* T-549: a confirm's pair stacked on the right edge at EVERY width (the phone
+   already did this by wrapping): first control on top, same width, same edge */
+.kit-rows-pair-stack{flex-direction:column;flex-wrap:nowrap;align-items:stretch;justify-self:end}
+/* T-549: the /me welcome card is the kit card, set off from the tabs above it */
+.kit-me-welcome{margin-top:20px}
 @media (max-width:640px){
   .kit-rows-stackable>li{grid-template-columns:1fr;gap:8px}
   .kit-rows-stackable .kit-rows-end{justify-self:end}

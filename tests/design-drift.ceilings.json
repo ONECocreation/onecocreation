@@ -1171,7 +1171,7 @@
     },
     "src/components/me/EmailMemberPanel.tsx": {
       "styleBlocks": 4,
-      "colours": 3,
+      "colours": 1,
       "styledButtons": 0
     },
     "src/components/me/MePanel.tsx": {

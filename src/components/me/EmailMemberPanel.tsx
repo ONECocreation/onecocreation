@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Card from "@/components/kit/Card";
 import ConstellationCard from "@/components/me/ConstellationCard";
 
 /**
@@ -49,17 +50,9 @@ export default function EmailMemberPanel() {
     }
   }
 
-  const card: React.CSSProperties = {
-    padding: "22px 24px",
-    borderRadius: 20,
-    border: "1.5px solid rgba(139,118,196,.35)",
-    background: "rgba(255,255,255,.55)",
-    marginTop: 20,
-  };
-
   return (
     <div>
-      <div style={card}>
+      <Card className="kit-me-welcome" aria-label="Welcome">
         <h2 style={{ fontFamily: "var(--font-h2)", fontWeight: 400, fontSize: "1.2rem", margin: 0 }}>
           {displayName ? `Welcome, ${displayName}` : "Welcome, beautiful soul"}
         </h2>
@@ -89,7 +82,7 @@ export default function EmailMemberPanel() {
             {saved ? "Saved ✓" : "Save"}
           </button>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
