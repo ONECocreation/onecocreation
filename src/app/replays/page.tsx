@@ -4,6 +4,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PaletteVars from "@/components/PaletteVars";
 import ReplaysList from "@/components/replays/ReplaysList";
+import ReplaysReminder from "@/components/replays/ReplaysReminder";
 import { getSiteConfig } from "@/lib/site-config";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { loadReplays } from "@/lib/replays-source";
@@ -106,12 +107,9 @@ export default async function ReplaysPage({
               <>
                 <ReplaysList replays={replays} signedIn={signedIn} initialId={selected.id} />
                 {/* The stay-in-the-loop block, as ruled (NOD pick 3): one
-                    button, no heading, no extra line. */}
-                <div className="kit-btn-row kitx-actions">
-                  <a className="kit-btn kit-btn-second kit-btn-sm" href="/reading#keep-posted">
-                    Want a reminder email?
-                  </a>
-                </div>
+                    button, no heading, no extra line. TASK-546: it opens
+                    the reading list box in place (no jump to /reading). */}
+                <ReplaysReminder />
               </>
             )}
           </div>
