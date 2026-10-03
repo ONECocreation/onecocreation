@@ -53,15 +53,16 @@ describe("the join-the-reading door, re-pointed to /reading (TASK-178 → TASK-4
 });
 
 describe("the hero render (TASK-178, re-trued TASK-437)", () => {
-  it("the door renders under the meditation door with the /reading href and the schedule's words", async () => {
+  it("TASK-547: the reading unit (words, button) comes FIRST and the meditation door follows it, with the /reading href and the schedule's words", async () => {
     const { Hero } = await import("@/components/sections");
     const html = renderToStaticMarkup(createElement(Hero, { reading: TUESDAY }));
     const meditation = html.indexOf("Receive the Free Meditation");
     const words = html.indexOf("Every Tuesday");
     const reading = html.indexOf("Join the Weekly Reading");
     expect(meditation).toBeGreaterThan(-1);
-    expect(words).toBeGreaterThan(meditation); // the words sit between the doors
-    expect(reading).toBeGreaterThan(words); // the reading door comes UNDER the meditation door
+    expect(words).toBeGreaterThan(-1);
+    expect(reading).toBeGreaterThan(words); // the words ride above their own button
+    expect(meditation).toBeGreaterThan(reading); // the meditation door now comes AFTER the reading unit (T-547 flipped this)
     expect(html).toContain('href="/reading"');
   });
 });
