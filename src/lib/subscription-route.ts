@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { memberFromRequest } from "./member-auth";
+import { operatorFromCookieHeader } from "./operator-auth";
 import { strictSameOrigin } from "./origin-strict";
 import { subscriptionsEnabled, rateLimited, SubError } from "./subscriptions";
 
@@ -11,12 +12,22 @@ import { subscriptionsEnabled, rateLimited, SubError } from "./subscriptions";
  * refused), the member session (the ONLY source of "who"), then a per-member
  * rate limit. Returns the session subject `handle@space`, or the response
  * to send.
+ *
+ * T-555, the operator test door: with the switch OFF, a request that ALSO
+ * carries a valid operator session passes the switch check and nothing else
+ * changes. The switch is read first; the operator cookie is read only when
+ * it is off. Everything after is unchanged and in the same order: strict
+ * Origin on writes, the member session as the only source of "who" (an
+ * operator with no member session gets 401, never a subscribe), the rate
+ * limit. This is the only bypass.
  */
 export async function memberGate(
   request: Request,
   opts: { write: boolean; bucket: string; max: number; windowSec: number },
 ): Promise<{ subject: string } | NextResponse> {
-  if (!(await subscriptionsEnabled())) return NextResponse.json({ ok: false, reason: "not found" }, { status: 404 });
+  if (!(await subscriptionsEnabled()) && !operatorFromCookieHeader(request.headers.get("cookie"))) {
+    return NextResponse.json({ ok: false, reason: "not found" }, { status: 404 });
+  }
   if (opts.write && !strictSameOrigin(request)) return NextResponse.json({ ok: false, reason: "cross-origin request refused" }, { status: 403 });
   const fren = memberFromRequest(request);
   if (!fren) return NextResponse.json({ ok: false, reason: "sign in first" }, { status: 401 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import Card from "@/components/kit/Card";
 import Button from "@/components/kit/Button";
 import { Chip, SectionHead } from "@/components/console/glass";
@@ -75,6 +76,9 @@ export default function SubscriptionsDesk() {
         <p className="kit-note" style={{ marginBottom: 12 }}>
           {enabled ? "Monthly memberships are on." : "Monthly memberships are off. Members see the one-time purchase."}
           {env ? ` Square is in ${env} mode.` : ""}
+        </p>
+        <p className="kit-note">
+          <Link href="/a/money/test-join" className="underline">Test a join before switching on</Link>
         </p>
         <h3 className="kit-h2">Members</h3>
         {rows.length === 0 ? (
