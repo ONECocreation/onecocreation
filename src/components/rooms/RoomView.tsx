@@ -38,6 +38,9 @@ interface Props {
 
 /* House accounts (Love herself, the bot seat) keep the gold wash — styling
    keyed on the real sender mxid, never a stand-in name on the label. */
+/** The chat-cannot-open words a guest sees, said once (TASK-548). */
+export const CHAT_CLOSED_LINE = "The chat is not open right now. You can still watch and listen here.";
+
 const TEACHERS = new Set(["adminpacman", "love", "onecocreation"]);
 
 const AVA_GRADIENTS = [
@@ -221,6 +224,8 @@ export function ReactionPicker({ onPick }: { onPick: (key: string) => void }) {
 
 export default function RoomView({ slug, alias, title, kind }: Props) {
   const [state, setState] = useState<"loading" | "signedout" | "locked" | "open" | "error">("loading");
+  /* a guest never reads the reason (TASK-548); it rides on the error block as
+     data-reason so whoever helps them can still see the cause */
   const [reason, setReason] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [reactions, setReactions] = useState<Record<string, Record<string, number>>>({});
@@ -427,7 +432,12 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
       </div>
     );
   if (state === "error")
-    return <p style={{ color: "var(--muted)" }}>◌ {reason} — <Link href="/classes" style={{ color: "var(--gold-deep)" }}>back to the rooms</Link></p>;
+    return (
+      <div data-reason={reason || undefined}>
+        <p style={{ color: "var(--muted)" }}>{CHAT_CLOSED_LINE}</p>
+        <p><Link href="/classes" style={{ color: "var(--gold-deep)" }}>Back to the rooms</Link></p>
+      </div>
+    );
 
   /* ── the room ──────────────────────────────────────────────────────── */
   return (

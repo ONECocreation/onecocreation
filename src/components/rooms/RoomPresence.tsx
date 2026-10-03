@@ -13,7 +13,7 @@
  * helpers over its own route's payload).
  *
  * THE 429 RULE (the ruling): a homeserver "too many requests" renders
- * honest words — "the room is busy — try again in a moment" — never a
+ * honest words — "The room is busy. Try again in a moment." — never a
  * blank room, never an invented roster. A gated visitor (the page skips
  * the read, roster === null) sees the soft door line, as before.
  * Derive-or-dash: an empty truth reads "— nobody here yet".
@@ -88,7 +88,10 @@ export function isLimitReason(reason: string | undefined): boolean {
 }
 
 /** The 429 words, said once — the ruling's own sentence. */
-export const ROOM_BUSY_LINE = "the room is busy — try again in a moment";
+export const ROOM_BUSY_LINE = "The room is busy. Try again in a moment.";
+
+/** The roster-failed words, said once (TASK-548). */
+export const ROSTER_FAILED_LINE = "We could not load who's here. Try again in a moment.";
 
 export default function RoomPresence({ roster }: { roster: RosterResult | null }) {
   const souls = roster?.ok ? soulsOnline(roster.joined, roster.presence) : [];
@@ -100,14 +103,14 @@ export default function RoomPresence({ roster }: { roster: RosterResult | null }
       </h3>
       {/* the gate closed (no read taken) — the soft door line, as before */}
       {roster === null && (
-        <p style={{ color: "var(--muted)", fontSize: ".82rem", margin: 0 }}>opens once this room does, for you</p>
+        <p style={{ color: "var(--muted)", fontSize: ".82rem", margin: 0 }}>This opens once the room does.</p>
       )}
       {/* the homeserver's 429 — honest words, never a blank room */}
       {roster !== null && !roster.ok && isLimitReason(roster.reason) && (
         <p style={{ color: "var(--muted)", fontSize: ".82rem", margin: 0 }}>{ROOM_BUSY_LINE}</p>
       )}
       {roster !== null && !roster.ok && !isLimitReason(roster.reason) && (
-        <p style={{ color: "var(--muted)", fontSize: ".82rem", margin: 0 }}>who&apos;s here didn&apos;t answer — try again in a moment</p>
+        <p style={{ color: "var(--muted)", fontSize: ".82rem", margin: 0 }}>{ROSTER_FAILED_LINE}</p>
       )}
       {roster?.ok && (
         <>

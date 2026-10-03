@@ -27,7 +27,7 @@ import type { MaterialItem } from "@/lib/class-materials";
  *     session-attached items (lessons) from everything else (resources).
  *  6. THE 429 — ONE roster/presence read per open, server-side, cached
  *     per request; a fixture homeserver 429 renders honest words
- *     ("the room is busy — try again in a moment"), never a blank room.
+ *     ("The room is busy. Try again in a moment."), never a blank room.
  */
 
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
@@ -195,7 +195,7 @@ describe("6 · the 429 — one roster read per open, honest words, never a blank
   it("the fixture 429 renders the ruling's words — the room is busy, try again in a moment", async () => {
     const RoomPresence = (await import("@/components/rooms/RoomPresence")).default;
     const html = renderToStaticMarkup(createElement(RoomPresence, { roster: LIMIT }));
-    expect(html).toContain("the room is busy — try again in a moment");
+    expect(html).toContain("The room is busy. Try again in a moment.");
     expect(html).toContain("Who"); // the panel itself still stands — never a blank room
   });
 
@@ -212,10 +212,10 @@ describe("6 · the 429 — one roster read per open, honest words, never a blank
     const failed = renderToStaticMarkup(
       createElement(RoomPresence, { roster: { ok: false as const, reason: "room not found on the homeserver" } }),
     );
-    expect(failed).toContain("didn&#x27;t answer — try again in a moment");
-    expect(failed).not.toContain("the room is busy");
+    expect(failed).toContain("We could not load who&#x27;s here. Try again in a moment.");
+    expect(failed).not.toContain("The room is busy");
     const gated = renderToStaticMarkup(createElement(RoomPresence, { roster: null }));
-    expect(gated).toContain("opens once this room does, for you");
+    expect(gated).toContain("This opens once the room does.");
   });
 
   it("a healthy roster paints the online chips (the roster fold onto the Stage)", async () => {

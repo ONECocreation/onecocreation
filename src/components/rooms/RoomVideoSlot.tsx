@@ -146,6 +146,17 @@ import type { StudioSceneId } from "@/lib/studio/scenes";
  *  nostr.json serves). A handle that isn't a claimed tag (an email member,
  *  or the lookup simply hasn't answered yet) stays null — no picture, no
  *  guess, the house initial tile stands. */
+/** The live line, said once: two lines at every width, no dash (TASK-548). */
+function LiveLine({ roomTitle }: { roomTitle: string }) {
+  return (
+    <>
+      Love is live in {roomTitle} now.
+      <br />
+      The stage is lit.
+    </>
+  );
+}
+
 function useHandleNpub(handle: string): string | null {
   const [npub, setNpub] = useState<string | null>(null);
   useEffect(() => {
@@ -415,7 +426,7 @@ export default function RoomVideoSlot({
             </div>
           )}
           <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem" }}>
-            Love is live in {roomTitle} now — the stage is lit.
+            <LiveLine roomTitle={roomTitle} />
           </p>
           {/* TASK-260: the pill stops lying — never a door back to the page
               you're already on. See `selfLink`'s note above. */}
@@ -431,7 +442,7 @@ export default function RoomVideoSlot({
             <JitsiRoom domain={jitsiDomain!} room={liveRoom!} displayName={displayName} height="100%" />
           </div>
           <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem" }}>
-            Love is live in {roomTitle} now — the stage is lit.
+            <LiveLine roomTitle={roomTitle} />
           </p>
           {!selfLink && (
             <Link href={joinHref} className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -444,7 +455,7 @@ export default function RoomVideoSlot({
           {live ? (
             <div>
               <p style={{ margin: "0 0 12px", color: "var(--ink-body)", fontSize: ".9rem" }}>
-                Love is live in {roomTitle} now — the stage is lit.
+                <LiveLine roomTitle={roomTitle} />
               </p>
               {!selfLink && (
                 <Link href={joinHref} className="btn btn-gold" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
