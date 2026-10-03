@@ -59,6 +59,16 @@ const render = (overrides: Partial<StudioHubProps> = {}) =>
   renderToStaticMarkup(h(StudioHub, { ...props, ...overrides }));
 
 describe("StudioHub — the merged Studio room (TASK-330)", () => {
+  it("TASK-545 r2: a quiet note at the very top says this desk is not for the weekly reading, with a link to /a/site/reading", () => {
+    const html = render();
+    expect(html).toContain("This desk is not for the weekly reading.");
+    expect(html).toContain("Looking for the weekly reading?");
+    expect(html).toMatch(/<a[^>]*href="\/a\/site\/reading"[^>]*>Weekly reading<\/a>/);
+    expect(html).toContain('class="kit-note"');
+    // it sits above the room-state chip, i.e. first in the page body
+    expect(html.indexOf("not for the weekly reading")).toBeLessThan(html.indexOf("Studio · "));
+  });
+
   it("renders BOTH the director's desk and the go-live door, unchanged", () => {
     const html = render();
     // the desk (StudioRoom, unchanged — its own SectionHead + door cards)

@@ -30,6 +30,7 @@
  * JS required, works the same with or without hydration.
  */
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import StudioRoom from "@/components/studio-overlay/StudioRoom";
 import GoLiveRoom, { type GoLiveMeeting } from "@/app/a/live/go-live-room";
@@ -126,6 +127,12 @@ export default function StudioHub({
 
   return (
     <div>
+      {/* TASK-545 r2 (Admiral): a pointer for anyone who landed here
+          looking for the weekly reading, which lives at /a/site/reading */}
+      <p className="kit-note" id="studio-not-reading">
+        This desk is not for the weekly reading. Looking for the weekly reading?{" "}
+        <Link href="/a/site/reading">Weekly reading</Link>
+      </p>
       <div
         style={{
           display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 14px",

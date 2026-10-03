@@ -118,7 +118,7 @@ export type SiteSubKey = (typeof SITE_SUBS)[number]["key"];
    Menu placement ONLY - the page stays at /a/site/reading (and its /go/<door>
    one-tap links), it just lists under Studio instead of Site. */
 export const STUDIO_SUBS = [
-  { key: "reading", href: "/a/site/reading", label: "The weekly reading" },
+  { key: "reading", href: "/a/site/reading", label: "Weekly reading" },
 ] as const;
 
 export type StudioSubKey = (typeof STUDIO_SUBS)[number]["key"];

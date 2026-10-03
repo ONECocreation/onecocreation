@@ -61,10 +61,10 @@ describe("the accordion's rows + the current mark", () => {
     expect(siteSubForPath("/a")).toBeNull();
   });
 
-  it("TASK-545: The weekly reading is Studio's sub-row, same route, open by default, closed per session only", async () => {
+  it("TASK-545: Weekly reading is Studio's sub-row, same route, open by default, closed per session only", async () => {
     const { STUDIO_SUBS, studioSubForPath } = await import("@/components/console/SiteConsoleShell");
     expect(STUDIO_SUBS.map((s) => [s.key, s.href, s.label])).toEqual([
-      ["reading", "/a/site/reading", "The weekly reading"],
+      ["reading", "/a/site/reading", "Weekly reading"],
     ]);
     expect(studioSubForPath("/a/site/reading")).toBe("reading");
     expect(studioSubForPath("/a/site/reading/go/free")).toBe("reading");
@@ -85,7 +85,7 @@ describe("the accordion's rows + the current mark", () => {
     const html = renderToStaticMarkup(h(SiteConsoleShell, { children: h("div", null, "body") }));
     expect(html).toContain('href="/a/studio"');
     expect(html).toContain('id="mgmt-studio-subs"');
-    expect(html).toMatch(/<a[^>]*aria-current="page"[^>]*>The weekly reading<\/a>/);
+    expect(html).toMatch(/<a[^>]*aria-current="page"[^>]*>Weekly reading<\/a>/);
     // Site row is not lit and marks no sub-row (accordion closed on the server)
     const siteBtn = html.match(/<button[^>]*aria-controls="mgmt-site-subs"[^>]*>/);
     expect(siteBtn?.[0]).not.toContain("is-active");
