@@ -35,6 +35,8 @@ export default function ReplaysReminder() {
   const { member, checked } = useMemberSession();
   const memberEmail = checked && member && member.space === "email" ? member.handle : null;
   const [open, setOpen] = useState(false);
+  // set at the press, so a session that resolves late never swaps the field away
+  const [oneClick, setOneClick] = useState(false);
   const [email, setEmail] = useState("");
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const panel = useRef<HTMLDivElement>(null);
@@ -50,10 +52,14 @@ export default function ReplaysReminder() {
     const next = !open;
     setOpen(next);
     // one click for a member with an email on file
-    if (next && memberEmail && (phase.kind === "idle" || phase.kind === "error")) void subscribe(memberEmail);
+    if (next && memberEmail && (phase.kind === "idle" || phase.kind === "error")) {
+      setOneClick(true);
+      void subscribe(memberEmail);
+    }
   }
 
-  const showField = open && !memberEmail && phase.kind !== "done";
+  // no email on file at the press (signed out, or a key-only member) means the field
+  const showField = open && !oneClick && phase.kind !== "done";
 
   useEffect(() => {
     if (!showField) return;
@@ -69,7 +75,7 @@ export default function ReplaysReminder() {
       </div>
       <div id="replays-reminder" ref={panel} hidden={!open}>
         {open &&
-          (phase.kind === "done" || memberEmail ? (
+          (phase.kind === "done" || oneClick ? (
             <p className="kit-text-quiet" role="status">
               {phase.kind === "done" ? OUTCOME_COPY[phase.outcome] : phase.kind === "error" ? phase.message : BUSY}
             </p>

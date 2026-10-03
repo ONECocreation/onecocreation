@@ -58,8 +58,10 @@ describe("the page and the island", () => {
     // signed in with an email: pressing the one button subscribes at once
     expect(src).toContain("subscribe(memberEmail)");
     expect(src).toContain('member.space === "email"');
-    // key-only member falls back to the field
-    expect(src).toContain("!memberEmail");
+    // key-only member falls back to the field; the choice is made at the
+    // press, so a session that resolves late never swaps the field away
+    expect(src).toContain("setOneClick(true)");
+    expect(src).toContain("open && !oneClick");
   });
 
   it("the island is a labelled disclosure with focus moved into the field, no inline style", async () => {
