@@ -59,6 +59,48 @@ export function readingMarksLookup(schedule: ReadingSchedule | null): CalendarDa
   };
 }
 
+/**
+ * TASK-551 — the reading's occurrence on ONE civil day, read in the
+ * SCHEDULE'S OWN zone (`zonedDateParts`), never a UTC-day window. A 7 PM
+ * Mountain reading sits on the next UTC date; this still finds it on the
+ * Mountain day it belongs to. `null` when the schedule is absent, off, or
+ * has no occurrence that civil day. Love's Desk (Month, Week, Day) and
+ * Home's Today line all read through this one function.
+ */
+export function readingOnCivilDay(
+  schedule: ReadingSchedule | null,
+  civilKey: string,
+): { startsAtMs: number } | null {
+  if (!schedule) return null;
+  const anchor = Date.parse(`${civilKey}T00:00:00Z`);
+  if (Number.isNaN(anchor)) return null;
+  const found = readingOccurrencesBetween(schedule, anchor - 86_400_000, anchor + 2 * 86_400_000).find(
+    (o) => zonedDateParts(new Date(o.startsAtMs), schedule.tz).date === civilKey,
+  );
+  return found ? { startsAtMs: found.startsAtMs } : null;
+}
+
+/**
+ * TASK-551 — the ONE gold reading pill for Love's Desk (Month + Week).
+ * Same civil-day rule as `readingOnCivilDay`. The id is `reading-<civilKey>`
+ * (LovesDesk.resolvePillAction sends it to /a/site/reading).
+ */
+export function readingDeskMarksLookup(schedule: ReadingSchedule | null): CalendarDayMarksLookup {
+  return (cell): CalendarDayMarks | undefined => {
+    const occ = readingOnCivilDay(schedule, cell.civilKey);
+    if (!occ) return undefined;
+    return { pills: [{ id: `reading-${cell.civilKey}`, label: readingPillLabel(occ.startsAtMs), variant: "gold" }] };
+  };
+}
+
+/** clock words for the reading's own row ("1:11 PM") in the viewer's zone,
+ *  the same zone `readingPillLabel` prints. */
+export function readingClockWords(startsAtMs: number): string {
+  return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit", hour12: true }).format(
+    new Date(startsAtMs),
+  );
+}
+
 /** "12:12 PM" — mirrors `readingPillLabel`'s own (unexported) time format
  *  exactly, minus its " reading" suffix: `readingDayPartsMarksLookup`
  *  below appends each part's own `AGENDA_ROW_TITLES` name instead. Same

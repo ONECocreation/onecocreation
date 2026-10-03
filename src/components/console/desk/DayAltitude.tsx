@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import type { ReadingSchedule } from "@/lib/reading-schedule";
+import { readingClockWords, readingOnCivilDay } from "@/components/calendar/reading-marks";
 import type { CalendarDayCell } from "@/lib/calendar-view";
 import { field, Chip } from "@/components/console/glass";
 import MaterialsShelf from "./MaterialsShelf";
@@ -109,6 +112,7 @@ export default function DayAltitude({
   feed,
   rooms,
   liveNowRoomSlug,
+  readingSchedule = null,
   selectedRoomSlug,
   onSelectRoom,
   selectedBookingId,
@@ -117,6 +121,8 @@ export default function DayAltitude({
   feed: DeskFeed | null;
   rooms: DeskRoom[];
   liveNowRoomSlug: string | null;
+  /** TASK-551: Love's saved reading schedule (null = unloaded/malformed). */
+  readingSchedule?: ReadingSchedule | null;
   selectedRoomSlug: string | null;
   onSelectRoom: (slug: string) => void;
   /** T-248: set by a booking-pill click (any altitude) via LovesDesk's
@@ -141,6 +147,8 @@ export default function DayAltitude({
   const next = (feed?.bookings ?? [])
     .filter((b) => b.startUtc >= nowIso)
     .sort((a, b) => (a.startUtc < b.startUtc ? -1 : 1))[0] ?? null;
+
+  const reading = readingOnCivilDay(readingSchedule, cell.civilKey);
 
   const room = rooms.find((r) => r.slug === selectedRoomSlug) ?? null;
   const liveHere = !!liveNowRoomSlug && liveNowRoomSlug === selectedRoomSlug;
@@ -178,6 +186,11 @@ export default function DayAltitude({
           {isRetreat && <Chip tone="teal">retreat</Chip>}
           {!isBlackout && !isRetreat && dayBookings.length === 0 && <Chip tone="grey">open</Chip>}
         </div>
+        {reading && (
+          <Link className="desk-schedule__row" href="/a/site/reading">
+            <b>{readingClockWords(reading.startsAtMs)}</b> Weekly reading
+          </Link>
+        )}
         {next
           ? (
             <p className="desk-panel__muted">

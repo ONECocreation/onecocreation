@@ -5,6 +5,8 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   readingMarksLookup,
+  readingDeskMarksLookup,
+  readingOnCivilDay,
   readingPillLabel,
   mergeDayMarks,
   normalizeReadingResponse,
@@ -13,6 +15,8 @@ import BftMonthGrid from "@/components/calendar/BftMonthGrid";
 import { bftMonthGrid, type CalendarDayCell } from "@/lib/calendar-view";
 import { DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { buildPublicMarks } from "@/components/rooms/CircleView";
+import { buildDeskMarks } from "@/components/console/desk/marks";
+import { resolvePillAction } from "@/components/console/LovesDesk";
 import { buildBookingMarks } from "@/components/me/MemberCalendar";
 
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
@@ -190,5 +194,75 @@ describe("source pins — CircleView.tsx and MemberCalendar.tsx wiring never tou
       expect(src).toContain("useReadingSchedule()");
       expect(src).toContain("mergeDayMarks(");
     }
+  });
+});
+
+/* TASK-551 — the reading on Love's Desk (/a Home): Month, Week, Day, Today. */
+describe("TASK-551 Love's Desk shows the weekly reading", () => {
+  const SAT_EVENING: ReadingSchedule = { on: true, weekday: 6, time: "19:11", tz: "America/Denver", durationMin: 60 };
+  const SAT_NOON: ReadingSchedule = { on: true, weekday: 6, time: "13:11", tz: "America/Denver", durationMin: 60 };
+
+  it("the desk wiring merges reading marks (reading first) and hands the SAME marks to Week", async () => {
+    const desk = await read("src/components/console/LovesDesk.tsx");
+    expect(desk).toContain("useReadingSchedule()");
+    expect(desk).toMatch(/mergeDayMarks\(readingDeskMarksLookup\(readingSchedule\), buildDeskMarks\(/);
+    expect(desk).toContain("marks={monthMarks}");
+    const week = await read("src/components/console/desk/WeekAltitude.tsx");
+    expect(week).toContain("marks: marksIn");
+    const day = await read("src/components/console/desk/DayAltitude.tsx");
+    expect(day).toContain('href="/a/site/reading"');
+    expect(day).toContain("Weekly reading");
+    const today = await read("src/components/console/TodaySummary.tsx");
+    expect(today).toContain("readingOnCivilDay(");
+  });
+
+  it("buildDeskMarks itself is untouched (no reading import)", async () => {
+    expect(await read("src/components/console/desk/marks.ts")).not.toContain("reading");
+  });
+
+  it("every Saturday civil day gets exactly one gold reading pill; other days none", () => {
+    const lookup = readingDeskMarksLookup(SAT_NOON);
+    for (const c of bftMonthGrid(18, 6).cells) {
+      const pills = lookup(c)?.pills ?? [];
+      if (c.civilDate.getUTCDay() === 6) {
+        expect(pills).toHaveLength(1);
+        expect(pills[0].variant).toBe("gold");
+        expect(pills[0].id).toBe(`reading-${c.civilKey}`);
+        expect(pills[0].label).toMatch(/ reading$/);
+      } else expect(pills).toHaveLength(0);
+    }
+  });
+
+  it("a 7 PM Mountain reading sits on its own Saturday, not the next UTC day", () => {
+    const lookup = readingDeskMarksLookup(SAT_EVENING);
+    for (const c of bftMonthGrid(18, 6).cells) {
+      expect((lookup(c)?.pills?.length ?? 0) > 0).toBe(c.civilDate.getUTCDay() === 6);
+    }
+  });
+
+  it("on:false and null give no pill and no day row", () => {
+    const { cells } = bftMonthGrid(18, 6);
+    expect(cells.every((c) => readingDeskMarksLookup({ ...SAT_NOON, on: false })(c) === undefined)).toBe(true);
+    expect(cells.every((c) => readingDeskMarksLookup(null)(c) === undefined)).toBe(true);
+    const sat = cells.find((c) => c.civilDate.getUTCDay() === 6)!;
+    expect(readingOnCivilDay({ ...SAT_NOON, on: false }, sat.civilKey)).toBeNull();
+    expect(readingOnCivilDay(SAT_NOON, sat.civilKey)).not.toBeNull();
+  });
+
+  it("merged with the desk feed, reading comes first and Mon/Wed/Fri live pills are unchanged", () => {
+    const merged = mergeDayMarks(readingDeskMarksLookup(SAT_NOON), buildDeskMarks(null, { todayCivilKey: "x" }));
+    const wed = cellMatching((c) => c.civilDate.getUTCDay() === 3);
+    expect(merged(wed)).toBeUndefined(); // null feed: no live pills, no reading on Wednesday
+    const feed = { overrides: [], bookings: [] } as unknown as Parameters<typeof buildDeskMarks>[0];
+    const m2 = mergeDayMarks(readingDeskMarksLookup({ ...SAT_NOON, weekday: 3 }), buildDeskMarks(feed, { todayCivilKey: "x" }));
+    expect(m2(wed)?.pills?.map((p) => p.label)[0]).toMatch(/ reading$/);
+    expect(m2(wed)?.pills?.[1].label).toBe("~11:11 live");
+  });
+
+  it("resolvePillAction: reading-, live-, and booking ids each get their own kind", () => {
+    expect(resolvePillAction({ id: "reading-2026-10-03", label: "x" })).toEqual({ kind: "reading" });
+    expect(resolvePillAction({ id: "live-2026-10-02", label: "x" })).toEqual({ kind: "live" });
+    expect(resolvePillAction({ id: "live-now", label: "x" })).toEqual({ kind: "live" });
+    expect(resolvePillAction({ id: "bk_123", label: "x" })).toEqual({ kind: "booking", bookingId: "bk_123" });
   });
 });
