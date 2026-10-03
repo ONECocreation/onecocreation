@@ -157,7 +157,6 @@ export function Hero({ reading = DEFAULT_READING_SCHEDULE }: { session?: Visitor
             hero (the Admiral's law, 0018.06.17), the house's rose + ghost
             pair — the meditation stays ghost, the reading door wears rose. */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
-          <Link className="btn btn-ghost" href="/#free">Receive the Free Meditation</Link>
           {readingDoor && (
             <>
               <p style={{ margin: "4px 0 0", fontSize: ".9rem", color: "var(--muted)" }}>{readingDoor.words}</p>
@@ -179,6 +178,10 @@ export function Hero({ reading = DEFAULT_READING_SCHEDULE }: { session?: Visitor
               </div>
             </>
           )}
+          {/* TASK-547 (Admiral, live reading day): the reading unit (words
+              above, button, book picture below) comes FIRST; the meditation
+              door follows it. Same classes, same gap, no copy change. */}
+          <Link className="btn btn-ghost" href="/#free">Receive the Free Meditation</Link>
         </div>
       </div>
     </section>
