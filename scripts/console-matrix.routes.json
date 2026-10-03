@@ -25,6 +25,7 @@
     { "route": "/a/live", "siteChrome": "redirect", "alwaysRedirectTo": "/a/studio", "source": "src/app/a/live/page.tsx:71" },
     { "route": "/a/mempool", "siteChrome": "redirect", "alwaysRedirectTo": "/a/connections", "source": "src/app/a/mempool/page.tsx:8" },
     { "route": "/a/money", "siteChrome": "render", "signedOut": "gate", "gateDoor": "api-401" },
+    { "route": "/a/money/test-join", "siteChrome": "render", "signedOut": "gate" },
     { "route": "/a/mud", "siteChrome": "redirect", "alwaysRedirectTo": "/a/connections", "source": "src/app/a/mud/page.tsx:8" },
     { "route": "/a/people", "siteChrome": "render", "signedOut": "gate", "gateDoor": "api-401" },
     { "route": "/a/scar", "siteChrome": "redirect", "alwaysRedirectTo": "/a", "source": "src/app/a/scar/page.tsx:8" },

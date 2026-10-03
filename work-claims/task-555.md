@@ -14,5 +14,6 @@ LANE PORT: 5550
 - `src/components/console/SubscriptionsDesk.tsx`
 - `tests/subscriptions.test.ts`
 - `tests/test-join-page-555.test.ts` (NEW)
+- `scripts/console-matrix.routes.json` (one new policy row for the new page; added by Number One after the first gate)
 
 READ-ONLY: everything else (subscriptions.ts, the webhook, the plan map, JoinWithCard.tsx untouched).
