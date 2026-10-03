@@ -11,5 +11,6 @@ LANE PORT: 5460
 - `src/app/replays/page.tsx` (the reminder link becomes the island mount)
 - `src/components/replays/ReplaysReminder.tsx` (NEW, a tiny disclosure island that mounts the existing ReadingSignInBox)
 - `tests/replays-reminder-546.test.ts` (NEW)
+- `tests/replays-members-532.test.ts` (ONLY the stay-in-the-loop pin: the button opens the box in place, the old `/reading#keep-posted` link on /replays is gone)
 
 READ-ONLY: everything else, including `ReadingSignInBox`, `/api/subscribe`, `subscribers.ts`, kit.css. No new CSS, no new copy beyond the button's own words.
