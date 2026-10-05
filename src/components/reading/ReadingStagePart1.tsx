@@ -21,9 +21,12 @@ export interface ReadingStagePart1Props {
   jitsiDomain: string;
   /** "12:12 PM MDT" — null only when the schedule itself is off */
   whenWords: string | null;
+  /** TASK-557: the words after "Opens" on the closed card (the day too, on a
+   *  day that is not a reading day). Absent reads `whenWords`. */
+  opensWords?: string | null;
 }
 
-export default function ReadingStagePart1({ jitsiDomain, whenWords }: ReadingStagePart1Props) {
+export default function ReadingStagePart1({ jitsiDomain, whenWords, opensWords }: ReadingStagePart1Props) {
   /* the stage chip's own label, built from the SAME `whenWords` the
      agenda row's own title reads ("12:12 PM MDT · The Housewarming") —
      never a second clockWords() call. */
@@ -34,6 +37,7 @@ export default function ReadingStagePart1({ jitsiDomain, whenWords }: ReadingSta
       door="housewarming"
       jitsiDomain={jitsiDomain}
       whenWords={whenWords}
+      opensWords={opensWords}
       label="the Housewarming"
       partLabel={partLabel}
       notOwned={null}

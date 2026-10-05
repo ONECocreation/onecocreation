@@ -19,9 +19,12 @@ export interface ReadingStagePart3Props {
   /** "2:22 PM MDT" (reading-day.ts's clockWords) — null only when the
    *  schedule itself is off */
   whenWords: string | null;
+  /** TASK-557: the words after "Opens" on the closed card (the day too, on a
+   *  day that is not a reading day). Absent reads `whenWords`. */
+  opensWords?: string | null;
 }
 
-export default function ReadingStagePart3({ jitsiDomain, encoreFloor, whenWords }: ReadingStagePart3Props) {
+export default function ReadingStagePart3({ jitsiDomain, encoreFloor, whenWords, opensWords }: ReadingStagePart3Props) {
   /* fix round (block 968,624, the Admiral's Chrome walk) — the stage chip's
      own label, built from the SAME `whenWords` the agenda row's own title
      reads ("2:22 PM MDT · The book talk," the reviewer's own example) —
@@ -51,6 +54,7 @@ export default function ReadingStagePart3({ jitsiDomain, encoreFloor, whenWords 
       door="stage2"
       jitsiDomain={jitsiDomain}
       whenWords={whenWords}
+      opensWords={opensWords}
       label="the Book Talk"
       partLabel={partLabel}
       notOwned={notOwned}
