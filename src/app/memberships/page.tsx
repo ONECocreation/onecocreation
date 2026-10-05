@@ -114,8 +114,13 @@ export default async function MembershipsPage() {
             <p>
               You are the one A-lion-ing in your sovereignty, as I hold an energetic field for
               this work to take place… if you have found me you ARE… ready for this heart
-              connection with you 🌈💕🦁
+              connection with you
             </p>
+            {/* TASK-560 (block 970,084, the Admiral's pin): Love's three
+                glyphs ride their own line, large, with room above and
+                below. The /book header's own class (.constellation) in
+                its large size, never a second emoji treatment. */}
+            <div className="constellation constellation-lg" aria-hidden>🌈 💕 🦁</div>
             <p>
               You are aligning to a higher potential timeline when you are in this space. This
               magnetizes to you the people, places, things, to your highest reality… as you honor

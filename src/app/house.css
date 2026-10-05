@@ -26,6 +26,9 @@
    of its markup. Same font-size as sh-ink/sh-teal — a standalone tone. */
 .stack-hero .sh-rose{font-size:clamp(1.9rem,6.2vw,3.2rem);color:var(--rose)}
 .constellation{font-size:1.25rem;letter-spacing:.4em;margin:12px 0 0}
+/* TASK-560: the same line at its large size, centred on its own row inside
+   a column of copy. The left padding balances the spacing after the last glyph. */
+.constellation-lg{font-size:2.4rem;line-height:1.2;margin:28px 0;padding-left:.4em;text-align:center}
 .btn-teal{background:linear-gradient(135deg,var(--teal-bright),var(--teal-deep));color:#fff}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
