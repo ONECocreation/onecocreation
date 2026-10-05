@@ -93,6 +93,15 @@ export function clockWords(ms: number, tz: string): string {
 const DAY_LABEL: Intl.DateTimeFormatOptions = { weekday: "long", month: "long", day: "numeric" };
 
 /**
+ * TASK-559 - the day of an instant in the given zone, the one formatter
+ * ("Saturday, October 10"). `opensWords` and the buy-ahead card's heading
+ * both read it, so the two never word a day differently.
+ */
+export function dayWords(startsAtMs: number, tz: string): string {
+  return new Intl.DateTimeFormat("en-US", { timeZone: tz, ...DAY_LABEL }).format(new Date(startsAtMs));
+}
+
+/**
  * TASK-557 (block 970,060) - the words after "Opens" on a part's closed top
  * card. The Admiral, shown "Opens 12:12 PM MDT." on a Monday: it "should
  * say opens the next time the site is set to go live. so if she doesnt
@@ -115,7 +124,7 @@ const DAY_LABEL: Intl.DateTimeFormatOptions = { weekday: "long", month: "long", 
 export function opensWords(schedule: ReadingSchedule, nowMs: number, startsAtMs: number): string {
   const clock = clockWords(startsAtMs, schedule.tz);
   if (isReadingDay(schedule, nowMs)) return clock;
-  const day = new Intl.DateTimeFormat("en-US", { timeZone: schedule.tz, ...DAY_LABEL }).format(new Date(startsAtMs));
+  const day = dayWords(startsAtMs, schedule.tz);
   /* the clock's own three words never break apart: on a phone the line
      wraps before the time ("... October 10 at" / "12:12 PM MDT."), never
      between "12:12" and "PM" */

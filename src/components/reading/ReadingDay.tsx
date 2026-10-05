@@ -39,7 +39,7 @@ function deriveNext(schedule: ReadingSchedule) {
   return schedule.on ? nextReading(schedule, Date.now()) : null;
 }
 
-export default async function ReadingDay() {
+export default async function ReadingDay({ ahead = false }: { ahead?: boolean } = {}) {
   const session = sessionsFromCookieHeader((await headers()).get("cookie"))[0] ?? null;
 
   const config = await getSiteConfig();
@@ -83,6 +83,7 @@ export default async function ReadingDay() {
       encoreFloor={encoreFloor}
       qaEntitled={hasQaAccess}
       qaOffer={qaOffer}
+      ahead={ahead}
     />
   );
 }

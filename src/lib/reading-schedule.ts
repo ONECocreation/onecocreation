@@ -231,6 +231,19 @@ export function dayAgendaShows(schedule: ReadingSchedule, nowMs: number, anyDoor
 }
 
 /**
+ * TASK-559 (block 970,084) - the owner, on the signed-in view of /reading:
+ * "if user is signed in. it is probably a good idea to show them the
+ * opportunity to purchase a head of time." TASK-557 hid the day's agenda
+ * off a reading day, and that was the only place to buy the Book Talk and
+ * the Q&A before the day. This is the yes for a small "Coming up" card that
+ * holds just those two rows: true only when the agenda is NOT showing, the
+ * visitor is signed in, and there is a next reading to hang them on.
+ */
+export function buyAheadShows(agendaOn: boolean, signedIn: boolean, hasNext: boolean): boolean {
+  return !agendaOn && signedIn && hasNext;
+}
+
+/**
  * Every occurrence whose START instant lies in `[fromMs, toMs)` (TASK-385,
  * the calendar mark) — a calendar pill belongs to the day a reading
  * STARTS, never to a second day it runs into (a reading that starts

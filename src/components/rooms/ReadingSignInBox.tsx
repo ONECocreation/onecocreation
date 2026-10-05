@@ -292,7 +292,17 @@ export function ReadingSignInCard({ member, justJoined, initialStep = "email", o
   // door, and a button between two cards floated loose in the shots
   // (Number One's review, block 968,561). The door right after a fresh
   // sign-in (Case 2) stays.
+  //
+  // TASK-559 (block 970,055), the owner: "when a user is already signed
+  // in, can we remove the keep me posted letters. they are already signed
+  // up for the mailing list." True of every email member:
+  // /api/auth/email/verify calls addSubscriber on every sign-in. So an
+  // email member who ARRIVED signed in gets no card at all (null; the
+  // page's empty-section CSS, kit.css, closes the band). A key member
+  // (member-key) has no email of theirs on the list, so that card stays
+  // exactly as it was. Case 2 above still wins for the rest of the visit.
   if (member) {
+    if (member.space === "email") return null;
     const memberKind = member.space === "email" ? "member" : "member-key";
     return (
       <div id="sign-up">

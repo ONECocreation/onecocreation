@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { clockWords } from "@/lib/reading-day";
+import { clockWords, dayWords } from "@/lib/reading-day";
 import type { EncoreFloorDoor, QaDoor } from "@/lib/reading-day-doors";
 import ReadingDayUnlockButton from "./ReadingDayUnlockButton";
 import ReadingPartSelectLink from "./ReadingPartSelectLink";
@@ -78,6 +78,10 @@ export interface ReadingDayBodyProps {
   encoreFloor: EncoreFloorDoor;
   qaEntitled: boolean;
   qaOffer: QaDoor;
+  /** TASK-559: the buy-ahead card (a signed-in visitor on a day the
+   *  agenda is hidden): only the two paid rows, under a "Coming up" heading.
+   *  Absent or false renders the agenda exactly as it always was. */
+  ahead?: boolean;
 }
 
 export default function ReadingDayBody({
@@ -91,15 +95,17 @@ export default function ReadingDayBody({
   encoreFloor,
   qaEntitled,
   qaOffer,
+  ahead = false,
 }: ReadingDayBodyProps) {
   return (
     <div className="card room-card kit-day">
-      <h2 className="kit-h2">The day&apos;s agenda</h2>
+      <h2 className="kit-h2">{ahead ? `Coming up ${dayWords(readingStartsAtMs, tz)}` : "The day's agenda"}</h2>
+      {ahead && <p className="kit-text-quiet">These follow the reading. You can unlock them ahead of time.</p>}
       {/* TASK-499: the notice's part-1 flag is forced closed when Row 1
           is hidden, so a hand-opened housewarming door never surfaces a
           pick into a part that does not exist this week. */}
-      <ReadingDayOpenNotice part1On={housewarmingStartsAtMs !== null} />
-      <ul className="kit-rows" aria-label="The day's agenda">
+      {!ahead && <ReadingDayOpenNotice part1On={housewarmingStartsAtMs !== null} />}
+      <ul className="kit-rows" aria-label={ahead ? "Coming up" : "The day's agenda"}>
         {/* ROW 1 — the Housewarming (TASK-469, block 968,567): free, no
             lock, before the reading, the same door as Row 2 (the two-way
             call itself is Love's own /a/studio action, no code here).
@@ -108,7 +114,7 @@ export default function ReadingDayBody({
             clock word is highlighted, never a different room.
             TASK-499: null start (the switch off) skips the row entirely;
             the agenda then starts at The Reading. */}
-        {housewarmingStartsAtMs !== null && (
+        {!ahead && housewarmingStartsAtMs !== null && (
           <li>
             <span>
               <b>{`${clockWords(housewarmingStartsAtMs, tz)} · The Housewarming`}</b>
@@ -127,6 +133,7 @@ export default function ReadingDayBody({
         )}
 
         {/* ROW 2 — the reading itself, free, in the two-way stage above */}
+        {!ahead && (
         <li>
           <span>
             <b>{`${clockWords(readingStartsAtMs, tz)} · The Reading`}</b>
@@ -142,6 +149,7 @@ export default function ReadingDayBody({
             )}
           </span>
         </li>
+        )}
 
         {/* ROW 3 — the book talk (TASK-473, block 968,624: neutral title,
             no "Encore"/"Playground" word anywhere on /reading; the item

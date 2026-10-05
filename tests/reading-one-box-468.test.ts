@@ -204,12 +204,11 @@ describe("ReadingSignInCard — the joined state (just verified this session)", 
 });
 
 describe("ReadingSignInCard — arrived already signed in (outcome unknown): reuse ReadingSignUpCard, don't rebuild it", () => {
-  it("an email member sees the reused public member card (Keep me posted), and no second Heart Field button (the stage card above carries it)", () => {
+  it("an email member who arrived signed in sees no card at all (T-559: they are already on the list), and no Heart Field button (the stage card above carries it)", () => {
     const html = renderToStaticMarkup(
       createElement(ReadingSignInCard, { member: { handle: "reader@example.com", space: "email" } }),
     );
-    expect(html).toContain("Keep me posted");
-    expect(html).toContain("kit-signup"); // ReadingSignUpCard's own public-variant class, reused
+    expect(html).toBe("");
     expect(html).not.toContain(WATCH_CTA);
     expect(html).not.toContain(`href="${HEART_FIELD_HREF}"`);
   });
@@ -230,7 +229,7 @@ describe("ReadingSignInCard — house laws: no em dash, every button kit-btn-sm"
     ["signed-out, code step", createElement(ReadingSignInCard, { member: null, initialStep: "code" })],
     ["joined", createElement(ReadingSignInCard, { member: { handle: "x@example.com", space: "email" }, justJoined: "joined" })],
     ["already in", createElement(ReadingSignInCard, { member: { handle: "x@example.com", space: "email" }, justJoined: "already" })],
-    ["returning member", createElement(ReadingSignInCard, { member: { handle: "x@example.com", space: "email" } })],
+    ["returning key member", createElement(ReadingSignInCard, { member: { handle: "npub1abc", space: "onecocreation" } })],
   ];
 
   for (const [label, el] of cases) {

@@ -526,13 +526,14 @@ describe("ReadingDay — fail-closed: a thrown tier lookup locks BOTH the Encore
 const PAGE_PATH = "src/app/reading/page.tsx";
 
 describe("the page source gains only the mount (one import, one bare <ReadingDay />)", () => {
-  it("exactly one import of ReadingDay, exactly one <ReadingDay /> mount, no props", async () => {
+  it("exactly one import of ReadingDay, one bare <ReadingDay /> mount (T-559 adds a second, <ReadingDay ahead />, for a signed-in visitor off a reading day)", async () => {
     const src = await read(PAGE_PATH);
     expect(src.match(/from "@\/components\/reading\/ReadingDay"/g)?.length).toBe(1);
     expect(src).toContain('import ReadingDay from "@/components/reading/ReadingDay"');
     const mounts = [...src.matchAll(/<ReadingDay(\s*\/>|\s[^>]*\/>)/g)];
-    expect(mounts.length).toBe(1);
+    expect(mounts.length).toBe(2);
     expect(mounts[0][0]).toBe("<ReadingDay />"); // no props threaded from the page
+    expect(mounts[1][0]).toBe("<ReadingDay ahead />"); // T-559: the one flag, nothing else
   });
 
   it("sits right before the WHAT YOU WILL EXPERIENCE section, right after the sign-up section", async () => {
