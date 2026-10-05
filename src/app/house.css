@@ -98,7 +98,9 @@ section{padding:76px 0;position:relative}
    ~0018.05.23 a₿ — confirmed exact against the original-art audit): Open
    Sans 700, 24px, letter-spacing 2px, ALL CAPS, WHITE fill, SQUARE corners
    (border-radius 0), ink #3E3E3E, padding 20px 40px. The original has NO
-   rounded or pill buttons anywhere — square is the brand law for buttons.
+   rounded or pill buttons anywhere — square was the brand law for buttons
+   until TASK-558 (block 970,055): the Admiral ruled a slight round, so the
+   corner now reads var(--btn-radius), the one token in cartridge.css.
    .btn-gold below is the curated fill door (sats / checkout / donations),
    never the default — and since T-121's PINK PASS its gradient pours the
    rose family (the gold tokens carry rose values now), plum ink on top.
@@ -114,7 +116,7 @@ section{padding:76px 0;position:relative}
    alias of the same paint (order-sensitive tests pin `btn btn-rose btn-sm`
    strings) — it needs no shimmer of its own, it always rides beside `.btn`.
    Shape metrics (Open Sans, square corners, 20px 40px) are untouched. ══ */
-.btn{display:inline-block;padding:20px 40px;border-radius:0;
+.btn{display:inline-block;padding:20px 40px;border-radius:var(--btn-radius);
   font-family:var(--font-open-sans),'Open Sans',-apple-system,'Segoe UI',sans-serif;
   font-weight:700;letter-spacing:2px;font-size:1.5rem;line-height:1.25;
   text-transform:uppercase;text-align:center;cursor:pointer;border:0;

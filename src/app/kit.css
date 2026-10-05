@@ -39,7 +39,7 @@
 
 /* main — the .btn/.btn-rose fill law, calm (no shimmer) */
 .kit-btn-main{
-  padding:20px 40px;border-radius:0;
+  padding:20px 40px;border-radius:var(--btn-radius);
   font-family:var(--font-open-sans),'Open Sans',-apple-system,'Segoe UI',sans-serif;
   font-weight:700;letter-spacing:2px;font-size:1.5rem;line-height:1.25;
   text-transform:uppercase;text-align:center;
@@ -52,7 +52,7 @@
 
 /* second/ghost — the .btn-ghost pairing */
 .kit-btn-second{
-  padding:20px 40px;border-radius:0;
+  padding:20px 40px;border-radius:var(--btn-radius);
   font-family:var(--font-open-sans),'Open Sans',-apple-system,'Segoe UI',sans-serif;
   font-weight:700;letter-spacing:2px;font-size:1.5rem;line-height:1.25;
   text-transform:uppercase;text-align:center;
