@@ -105,7 +105,19 @@ export function doorExpired(state: DoorState, nowMs: number): boolean {
   if (state.phase === "closed") return false;
   const anchor = state.publishedAtMs ?? state.openedAtMs;
   if (anchor === null) return true;
-  return zonedDateParts(new Date(anchor), DEFAULT_TZ).date < zonedDateParts(new Date(nowMs), DEFAULT_TZ).date;
+  return doorDay(anchor) < doorDay(nowMs);
+}
+
+/**
+ * THE DOOR'S OWN DAY, pure (TASK-561, block 970,086) — the America/Denver
+ * CALENDAR DATE (`YYYY-MM-DD`) of an instant, the exact comparison key
+ * `doorExpired` above has always used for the midnight close, said once
+ * so the Q&A pass's "one day" (`qa-entitlement.ts`) can never drift to a
+ * second zone or a second boundary. The zone carries the DST rules, so
+ * the day flips at local midnight on the two clock-change weekends too.
+ */
+export function doorDay(ms: number): string {
+  return zonedDateParts(new Date(ms), DEFAULT_TZ).date;
 }
 
 export interface DoorLifecycle {

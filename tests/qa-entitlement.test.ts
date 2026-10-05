@@ -20,7 +20,13 @@ import type { OrderState } from "@/lib/store";
 const SUBJECT = "reader@onecocreation";
 const QA_ITEM_ID = "q-a-meetup-with-love";
 
+/* TASK-561: the pure core now reads an order's id and times (pass order,
+   used-day lookup), so every fixture carries them; no assertion below
+   depends on them (no used-day map is passed = every pass is unused). */
+let seq = 0;
 const order = (overrides: Partial<{ state: OrderState; entitlementSubject: string; itemId: string }> = {}) => ({
+  id: `fixture-${++seq}`,
+  createdAtMs: 1_000 + seq,
   state: overrides.state ?? "settled",
   entitlementSubject: overrides.entitlementSubject ?? SUBJECT,
   lineItems: [{ itemId: overrides.itemId ?? QA_ITEM_ID }],
