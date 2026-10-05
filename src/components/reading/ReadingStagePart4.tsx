@@ -26,9 +26,12 @@ export interface ReadingStagePart4Props {
   qaOffer: QaDoor;
   /** "3:33 PM MDT" — null only when the schedule itself is off */
   whenWords: string | null;
+  /** TASK-557: the words after "Opens" on the closed card (the day too, on a
+   *  day that is not a reading day). Absent reads `whenWords`. */
+  opensWords?: string | null;
 }
 
-export default function ReadingStagePart4({ jitsiDomain, qaOffer, whenWords }: ReadingStagePart4Props) {
+export default function ReadingStagePart4({ jitsiDomain, qaOffer, whenWords, opensWords }: ReadingStagePart4Props) {
   /* fix round (block 968,624, the Admiral's Chrome walk) — the stage
      chip's own label, built from the SAME `whenWords` the agenda row's
      own title reads ("The Q&A with Love") — never a second clockWords()
@@ -52,6 +55,7 @@ export default function ReadingStagePart4({ jitsiDomain, qaOffer, whenWords }: R
       door="qa"
       jitsiDomain={jitsiDomain}
       whenWords={whenWords}
+      opensWords={opensWords}
       label="the Q&A"
       partLabel={partLabel}
       notOwned={notOwned}

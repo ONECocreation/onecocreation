@@ -1,4 +1,5 @@
 import { wallClockToUtc, zonedDateParts } from "./booking-time.ts";
+import { isReadingDay, type ReadingSchedule } from "./reading-schedule.ts";
 
 /**
  * THE DAY'S AGENDA (TASK-467, block 968,561; TASK-469, block 968,567) —
@@ -87,6 +88,38 @@ export function clockWords(ms: number, tz: string): string {
   );
   const zone = zoneParts.find((p) => p.type === "timeZoneName")?.value ?? tz;
   return `${clock} ${zone}`;
+}
+
+const DAY_LABEL: Intl.DateTimeFormatOptions = { weekday: "long", month: "long", day: "numeric" };
+
+/**
+ * TASK-557 (block 970,060) - the words after "Opens" on a part's closed top
+ * card. The Admiral, shown "Opens 12:12 PM MDT." on a Monday: it "should
+ * say opens the next time the site is set to go live. so if she doesnt
+ * have a live scheduled for the week after next, it would react to that
+ * as well."
+ *
+ * On a reading day the part is TODAY, so the clock alone says it
+ * ("12:12 PM MDT"), the words that day has always read. On any other day
+ * the card names the day too ("Saturday, October 10 at 12:12 PM MDT"),
+ * read off `startsAtMs` in the schedule's own zone and never typed: the
+ * caller derives `startsAtMs` from `nextReading`, so a new weekday or time
+ * (and, the day a week can be skipped, a skipped week) changes these words
+ * with nothing to edit here.
+ *
+ * The reading-day test is `isReadingDay`, NOT "is `startsAtMs` today":
+ * `nextReading` rolls to next week the moment the reading's own window
+ * ends, hours before that day's Book Talk and Q&A, and those two must
+ * keep reading as today's.
+ */
+export function opensWords(schedule: ReadingSchedule, nowMs: number, startsAtMs: number): string {
+  const clock = clockWords(startsAtMs, schedule.tz);
+  if (isReadingDay(schedule, nowMs)) return clock;
+  const day = new Intl.DateTimeFormat("en-US", { timeZone: schedule.tz, ...DAY_LABEL }).format(new Date(startsAtMs));
+  /* the clock's own three words never break apart: on a phone the line
+     wraps before the time ("... October 10 at" / "12:12 PM MDT."), never
+     between "12:12" and "PM" */
+  return `${day} at ${clock.replace(/ /g, "\u00a0")}`;
 }
 
 /**

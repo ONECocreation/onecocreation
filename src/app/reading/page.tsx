@@ -14,8 +14,10 @@ import ReadingSignInBox from "@/components/rooms/ReadingSignInBox";
 import ReadingDay from "@/components/reading/ReadingDay";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { getSiteConfig } from "@/lib/site-config";
-import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
+import { nextReading, dayAgendaShows, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt, clockWords } from "@/lib/reading-day";
+/* TASK-557: its own line, so the line above stays the one tests/reading-page.test.ts pins (S8) */
+import { opensWords } from "@/lib/reading-day";
 import { encoreFloorDoor, qaDoor } from "@/lib/reading-day-doors";
 import { getStage1State } from "@/lib/stage1";
 import { getStage2State } from "@/lib/stage2";
@@ -234,6 +236,11 @@ export default async function ReadingPage({
      Reading) — Part 1 does not exist this week, so nothing may open on
      it; the doors array below then picks from parts 2-4 by door state. */
   let defaultPart: ReadingPart = housewarmingOn ? 1 : 2;
+  /* TASK-557 (block 970,051): is ANY part's door open right now? Read off
+     the same `doors` the default above is picked from, never a second
+     fetch. It keeps the agenda on a day that is not a reading day while
+     a door someone opened by hand is live. */
+  let anyDoorOpen = false;
   if (next && encoreStartsAtMs !== null && qaStartsAtMs !== null) {
     const stage2State = await getStage2State();
     /* fix round (block 968,624) — fails CLOSED on a throw: a broken vault
@@ -276,6 +283,7 @@ export default async function ReadingPage({
       { part: 4, title: "The Q&A", startsAtMs: qaStartsAtMs, open: qaState.phase === "published", openedAtMs: qaState.publishedAtMs },
     ];
     defaultPart = defaultReadingPart(doors, asOfMs);
+    anyDoorOpen = doors.some((d) => d.open);
   }
   /* TASK-480 — an explicit `?part=` always wins over the door-based
      default above: a visitor who followed a deep link (the member
@@ -286,6 +294,13 @@ export default async function ReadingPage({
      and the door-based default above stands — never a hidden screen. */
   if (!housewarmingOn && requestedPart === 1) requestedPart = null;
   if (requestedPart !== null) defaultPart = requestedPart;
+
+  /* TASK-557 (block 970,051) - the Admiral: "it's not a reading day. that
+     should be turned off." The day's agenda shows on a reading day, while
+     the reading's window runs, or while a door is open; the rule lives in
+     reading-schedule.ts (`dayAgendaShows`), read against the SAME clock
+     read (`asOfMs`) everything else on this page uses. */
+  const agendaOn = dayAgendaShows(schedule, asOfMs, anyDoorOpen);
 
   return (
     <>
@@ -370,16 +385,21 @@ export default async function ReadingPage({
                 part1={{
                   jitsiDomain: config.meeting.jitsiDomain,
                   whenWords: housewarmingStartsAtMs !== null ? clockWords(housewarmingStartsAtMs, schedule.tz) : null,
+                  /* TASK-557: the closed card names the day on a day that is
+                     not a reading day ("Opens Saturday, October 10 at ...") */
+                  opensWords: housewarmingStartsAtMs !== null ? opensWords(schedule, asOfMs, housewarmingStartsAtMs) : null,
                 }}
                 part3={{
                   jitsiDomain: config.meeting.jitsiDomain,
                   encoreFloor,
                   whenWords: encoreStartsAtMs !== null ? clockWords(encoreStartsAtMs, schedule.tz) : null,
+                  opensWords: encoreStartsAtMs !== null ? opensWords(schedule, asOfMs, encoreStartsAtMs) : null,
                 }}
                 part4={{
                   jitsiDomain: config.meeting.jitsiDomain,
                   qaOffer,
                   whenWords: qaStartsAtMs !== null ? clockWords(qaStartsAtMs, schedule.tz) : null,
+                  opensWords: qaStartsAtMs !== null ? opensWords(schedule, asOfMs, qaStartsAtMs) : null,
                 }}
                 /* TASK-489 (reading day): the countdown back at the top of
                    the page on every screen. TASK-499: its target follows
@@ -414,11 +434,17 @@ export default async function ReadingPage({
               bare mount, no props: ReadingDay reads the session, the
               schedule and the live store on its own — every decision behind
               the four rows lives in its own files, never here. */}
-          <section className="kitx-section">
-            <div className="wrap">
-              <ReadingDay />
-            </div>
-          </section>
+          {/* TASK-557 (block 970,051): the SECTION rides the decision, not
+              only the card - an empty kitx-section would still draw its
+              padding and its dashed line, a blank band between the
+              sign-up box and the replays. */}
+          {agendaOn && (
+            <section className="kitx-section">
+              <div className="wrap">
+                <ReadingDay />
+              </div>
+            </section>
+          )}
 
           {/* THE REPLAYS DOOR (TASK-496, block 969,088+; re-faced by
               TASK-532, block 969,334, the Admiral's round-2 NOD pick 1) -

@@ -191,6 +191,46 @@ export function nextReading(
 }
 
 /**
+ * TASK-557 (block 970,051) - the Admiral, on a Monday: "the /reading page
+ * ... is showing the days agenda right now. and it's not a reading day.
+ * that should be turned off."
+ *
+ * IS `nowMs` ON A READING DAY? True when the civil day `nowMs` falls on, as
+ * the schedule's OWN zone sees it, is the schedule's weekday. The whole
+ * day counts, midnight to midnight in that zone: the Housewarming before
+ * the reading and the Book Talk and Q&A after it all belong to that day,
+ * so this never asks `nextReading` (which rolls to next week the moment
+ * the reading's own window ends, hours before the day's last part).
+ * A schedule that is off or malformed has no reading day at all.
+ */
+export function isReadingDay(schedule: ReadingSchedule, nowMs: number): boolean {
+  if (!Number.isFinite(nowMs)) return false;
+  const checked = validateReadingSchedule(schedule);
+  if (!checked.ok || !checked.value.on) return false;
+  const { date } = zonedDateParts(new Date(nowMs), checked.value.tz);
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay() === checked.value.weekday;
+}
+
+/**
+ * TASK-557 - DOES THE DAY'S AGENDA SHOW on /reading right now? Three ways
+ * to a yes, any one is enough:
+ *  - it is a reading day (`isReadingDay`);
+ *  - the reading's own window is running (a late reading that crosses
+ *    midnight is still that day's reading);
+ *  - a part's door is open right now (`anyDoorOpen`: a door Love or the
+ *    operator opened by hand on another day - a rehearsal, a special
+ *    session - still needs its rows, they are the only part pickers).
+ * Every other moment the answer is no and /reading keeps only the date,
+ * the countdown and the top screen. Off or malformed schedule: no.
+ */
+export function dayAgendaShows(schedule: ReadingSchedule, nowMs: number, anyDoorOpen: boolean): boolean {
+  const next = nextReading(schedule, nowMs);
+  if (!next) return false;
+  return anyDoorOpen || next.phase === "window" || isReadingDay(schedule, nowMs);
+}
+
+/**
  * Every occurrence whose START instant lies in `[fromMs, toMs)` (TASK-385,
  * the calendar mark) — a calendar pill belongs to the day a reading
  * STARTS, never to a second day it runs into (a reading that starts

@@ -68,6 +68,10 @@ export interface ReadingStageDoorBodyProps {
   wire: Wire;
   jitsiDomain: string;
   whenWords: string | null;
+  /** TASK-557: the words after "Opens" on the closed card, when they are
+   *  more than the clock (`opensWords()` names the day on any day that is
+   *  not a reading day). Absent or null reads `whenWords`, as before. */
+  opensWords?: string | null;
   label: string;
   /** fix round (block 968,624, the Admiral's Chrome walk) — "the top
    *  screen must say which part it's showing": the FULL label
@@ -97,6 +101,7 @@ export function ReadingStageDoorBody({
   wire,
   jitsiDomain,
   whenWords,
+  opensWords,
   label,
   partLabel,
   notOwned,
@@ -181,7 +186,7 @@ export function ReadingStageDoorBody({
           ) : (
             <>
               <p className="kit-body">{`${cap} is not live yet.`}</p>
-              {whenWords && <p className="kit-text-quiet">{`Opens ${whenWords}.`}</p>}
+              {(opensWords ?? whenWords) && <p className="kit-text-quiet">{`Opens ${opensWords ?? whenWords}.`}</p>}
             </>
           )}
         </div>
@@ -195,6 +200,8 @@ export interface ReadingStageDoorProps {
   jitsiDomain: string;
   /** "2:22 PM MDT" / "3:33 PM MDT" — null only when the schedule is off */
   whenWords: string | null;
+  /** TASK-557 — see ReadingStageDoorBodyProps */
+  opensWords?: string | null;
   /** the words used in the door's own sentences, e.g. "the book talk" /
    *  "the Q&A" */
   label: string;
@@ -218,6 +225,7 @@ export default function ReadingStageDoor({
   door,
   jitsiDomain,
   whenWords,
+  opensWords,
   label,
   partLabel,
   notOwned,
@@ -284,6 +292,7 @@ export default function ReadingStageDoor({
       wire={wire}
       jitsiDomain={jitsiDomain}
       whenWords={whenWords}
+      opensWords={opensWords}
       label={label}
       partLabel={partLabel}
       notOwned={notOwned}
