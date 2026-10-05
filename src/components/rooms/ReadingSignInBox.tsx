@@ -303,14 +303,9 @@ export function ReadingSignInCard({ member, justJoined, initialStep = "email", o
   // exactly as it was. Case 2 above still wins for the rest of the visit.
   if (member) {
     if (member.space === "email") return null;
-    const memberKind = member.space === "email" ? "member" : "member-key";
     return (
       <div id="sign-up">
-        <ReadingSignUpCard
-          kind={memberKind}
-          memberEmail={memberKind === "member" ? member.handle : null}
-          variant="public"
-        />
+        <ReadingSignUpCard kind="member-key" memberEmail={null} variant="public" />
       </div>
     );
   }
