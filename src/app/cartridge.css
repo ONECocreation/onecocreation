@@ -24,6 +24,8 @@
    the document root inherited (a .oc-pv-dark pane stays night inside a
    dawn document; a .oc-pv-light pane stays dawn inside a night one). ══ */
 :root,.oc-pv-dark{
+  /* TASK-558: the one corner arc for every square-cornered button (the forge's own 6px) */
+  --btn-radius:6px;
   --space:#0a0a14; --panel:rgba(24,19,44,.72); --edge:rgba(139,118,196,.34);
   /* TASK-398 (B12): the header bar's own token — was a bare literal on
      .site-header (house.css:286), so the bar could never follow the theme.
