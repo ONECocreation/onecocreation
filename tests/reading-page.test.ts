@@ -361,6 +361,7 @@ describe("the design-drift theme contract — kit.css carries exactly the RULED 
       [
         ".kitx-actions",
         ".kitx-balanced",
+        ".kitx-even",
         ".kitx-flow",
         ".kitx-group",
         ".kitx-host",

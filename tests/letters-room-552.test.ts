@@ -120,6 +120,11 @@ describe("the room source", () => {
     const tail = src.slice(src.indexOf("  return (\n    <div className=\"p-6 text-sm\""));
     for (const part of [head, tail]) expect(part).not.toMatch(/[—→←\u{1F300}-\u{1FAFF}\u{2700}-\u{27BF}]/u);
   });
+  it("an empty subject says No subject yet, never empty quotes; the control group is the even phone row", () => {
+    expect(src).toContain("No subject yet");
+    expect(src).not.toContain("&ldquo;{c.override?.subject");
+    expect(src).toContain("kit-rows-end kit-rows-pair kitx-even");
+  });
   it("the key field is gone from New letter", () => {
     expect(src).not.toContain("setNewKey");
   });

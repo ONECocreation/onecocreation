@@ -232,6 +232,11 @@ function fixedWords(note: string): string {
   return `${shell} The house fills in ${slots.join(", ")}; your words go around them.`;
 }
 
+/* an empty subject says so, in plain muted words, never an empty pair of quotes */
+function subjectLine(subject: string | null | undefined) {
+  return subject?.trim() ? <em>&ldquo;{subject}&rdquo;</em> : <em className="kit-note">No subject yet</em>;
+}
+
 const weekdayOf = (ms: number) => new Date(ms).toLocaleDateString("en-US", { weekday: "long" });
 
 const GROUPS: LetterGroup[] = ["Welcome sequence", "Reading", "Store", "Sessions", "System"];
@@ -299,7 +304,7 @@ export default function LettersRoom() {
    * themselves have no Send. */
   function rowEnd(key: string, fallbackSubject: string, o: { send: boolean; label?: string; main?: boolean }) {
     return (
-      <span className="kit-rows-end kit-rows-pair">
+      <span className="kit-rows-end kit-rows-pair kitx-even">
         <Button sm variant={o.main ? "main" : "second"} onClick={() => openEditor(key, fallbackSubject)} aria-expanded={open === key}>
           {open === key ? "Close" : (o.label ?? "Edit")}
         </Button>
@@ -360,7 +365,7 @@ export default function LettersRoom() {
       <li key={c.key}>
         <div>
           <b>{c.title ?? c.key}</b>
-          <em>&ldquo;{c.override?.subject ?? c.title}&rdquo;</em>
+          {subjectLine(c.override?.subject ?? c.title)}
           <em>{draftWhoWords(c.key, c.createdAtMs, weekdayOf, words)}</em>
         </div>
         {rowEnd(c.key, c.title ?? c.key, { send: false, label: words ? "Review" : "Keep writing", main: words })}
@@ -375,7 +380,7 @@ export default function LettersRoom() {
       <li key={c.key}>
         <div>
           <b>{c.title ?? c.key}</b>
-          <em>&ldquo;{c.override?.subject ?? c.title}&rdquo;</em>
+          {subjectLine(c.override?.subject ?? c.title)}
           <em>Composed by you. {c.audience === "public" ? "Emailed and shown on /news." : "Emailed to the list."}</em>
           <em>{fixedWords("")}</em>
         </div>
@@ -666,7 +671,7 @@ export default function LettersRoom() {
                     <li key={l.name}>
                       <div>
                         <b>{l.name}{api(rowKey)?.override ? " (edited)" : ""}</b>
-                        <em>&ldquo;{api(rowKey)?.override?.subject ?? l.subject}&rdquo;</em>
+                        {subjectLine(api(rowKey)?.override?.subject ?? l.subject)}
                         {/* the when line, said once, under the row's words */}
                         <em>{l.when}</em>
                         <em>{l.key || l.slot ? fixedWords(l.note) : "System letter: every part is fixed, the copy lives in code for now."}</em>
