@@ -6,6 +6,7 @@ import { READING_PAGE_PATH } from "@/lib/reading-room";
 import { cartridge } from "@/brand/cartridge";
 import { glassCard, field } from "@/components/console/glass";
 import { Button, Card, Field } from "@/components/kit";
+import { CONSOLE_CHROME } from "@/lib/console";
 import { draftWhoWords, isDrafted } from "@/lib/letters-drafts";
 
 /**
@@ -605,8 +606,13 @@ export default function LettersRoom() {
     <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
       <div className="kitx-flow">
         <div className="kitx-group">
-          <h2 className="kit-h2">Letters</h2>
-          <p className="kit-text-quiet">Every email the house sends. Pick one to write it and see it as the reader will.</p>
+          {/* one title: under the site chrome the frame already prints the page head */}
+          {CONSOLE_CHROME !== "site" && (
+            <>
+              <h2 className="kit-h2">Letters</h2>
+              <p className="kit-text-quiet">Every email the house sends. Pick one to write it and see it as the reader will.</p>
+            </>
+          )}
           <div>
             <Button sm variant="second" onClick={() => { setComposing(!composing); setNote(""); }} aria-expanded={composing}>
               New letter

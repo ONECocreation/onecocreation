@@ -13,6 +13,7 @@ PLAN: `~/dev/briefings/oc-letters-m17v3-969725/PLAN-T552-T553.md` section 4 (thi
 - `src/lib/letters-drafts.ts` (NEW)
 - `src/app/api/admin/letters/route.ts` (GET meta fields, PUT stamp)
 - `src/app/kit.css` (`kitx-group`, `kitx-row`)
+- `src/lib/console.ts` (round 4: the letters room subtitle only, no long dash)
 - `tests/letters-render-golden.test.ts` and `tests/fixtures/letters-render-golden.json` (NEW)
 - `tests/letters-room-552.test.ts` (NEW)
 - `tests/reading-page.test.ts` (kitx stem pin, +2 stems)

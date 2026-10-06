@@ -120,7 +120,7 @@ describe("the room source", () => {
     expect(end.indexOf("aria-label=\"Send\"")).toBeLessThan(end.indexOf("openEditor("));
     expect(end.indexOf("openEditor(")).toBeLessThan(end.indexOf("openPreview("));
     const css = readFileSync(resolve(__dirname, "../src/app/kit.css"), "utf8");
-    expect(css).toMatch(/\.kitx-even>\.kit-btn\{[^}]*width:12rem/);
+    expect(css).toMatch(/\.kitx-even>\.kit-btn\{[^}]*width:10rem/);
   });
   it("names the fixed parts on every row", () => {
     expect(src).toContain("Fixed: the logo header and the footer.");
@@ -135,6 +135,11 @@ describe("the room source", () => {
     expect(src).toContain("No subject yet");
     expect(src).not.toContain("&ldquo;{c.override?.subject");
     expect(src).toContain("kit-rows-end kit-rows-pair kitx-even");
+  });
+  it("under the site chrome the room prints no head of its own; the frame subtitle has no long dash", () => {
+    expect(src).toContain('CONSOLE_CHROME !== "site"');
+    const con = readFileSync(resolve(__dirname, "../src/lib/console.ts"), "utf8");
+    expect(con).toContain("Every letter the house sends, and the ones Love will bring.");
   });
   it("the key field is gone from New letter", () => {
     expect(src).not.toContain("setNewKey");

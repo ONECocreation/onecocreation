@@ -258,7 +258,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/letters",
     label: "LETTERS",
     short: "LETTERS",
-    blurb: "every letter the house sends — and the ones Love will bring",
+    blurb: "Every letter the house sends, and the ones Love will bring.",
     tone: "pink",
   },
   {
