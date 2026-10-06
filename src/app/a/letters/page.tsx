@@ -7,7 +7,7 @@ import { cartridge } from "@/brand/cartridge";
 import { glassCard, field } from "@/components/console/glass";
 import { Button, Card, Field } from "@/components/kit";
 import { CONSOLE_CHROME } from "@/lib/console";
-import { draftWhoWords, isDrafted } from "@/lib/letters-drafts";
+import { draftWhoWords, isDrafted, testsLast } from "@/lib/letters-drafts";
 
 /**
  * LETTERS — every letter the house sends, in one room (wireframe v2).
@@ -306,7 +306,7 @@ export default function LettersRoom() {
   const api = (key: string | undefined) => apiLetters.find((l) => l.key === key);
   const composed = apiLetters.filter((l) => l.kind === "composed");
   const drafted = composed.filter((c) => isDrafted(c.key, c));
-  const yours = composed.filter((c) => !isDrafted(c.key, c));
+  const yours = testsLast(composed.filter((c) => !isDrafted(c.key, c)));
 
   /* T-552: one row's right edge. Edit, Preview and Send are the same size, in
    * one group. Edit opens the existing inline editor, Preview opens the

@@ -148,3 +148,19 @@ describe("the room source", () => {
     expect(src).not.toContain("setNewKey");
   });
 });
+
+describe("T-552 r6: test letters sit at the bottom of Your letters", () => {
+  it("moves letters titled or subjected 'test' last, keeps the rest in order", async () => {
+    const { testsLast, isTestLetter } = await import("@/lib/letters-drafts");
+    const live = [
+      { key: "new-public-test-public-letter", title: "New Public Test Public letter", override: { subject: "New Public Test Public letter" } },
+      { key: "test-title", title: "Test title", override: { subject: "Test title" } },
+      { key: "story-time-welcome", title: "Story Time Welcome", override: { subject: "Story Time Welcome" } },
+      { key: "weekly-reading-with-love", title: "Weekly Reading with Love", override: { subject: "Weekly Reading with Love" } },
+    ];
+    expect(testsLast(live).map((l) => l.key)).toEqual([
+      "story-time-welcome", "weekly-reading-with-love", "new-public-test-public-letter", "test-title",
+    ]);
+    expect(isTestLetter({ title: "Testimony night", override: null })).toBe(false);
+  });
+});

@@ -25,3 +25,13 @@ export function draftWhoWords(key: string, createdAtMs: number | null | undefine
   const day = createdAtMs ? ` on ${weekday(createdAtMs)}` : "";
   return isReadingDraftKey(key) ? `Drafted by the helper${day}, waiting for you.` : `Started by you${day}, ${hasWords ? "waiting for your review" : "not finished yet"}.`;
 }
+
+/** a letter we wrote to try the room ("Test title"): the word "test" in its title or subject */
+export function isTestLetter(l: { title?: string | null; override?: { subject?: string | null } | null }): boolean {
+  return /\btest\b/i.test(`${l.title ?? ""} ${l.override?.subject ?? ""}`);
+}
+
+/** Your letters in their own order, the test letters moved to the bottom */
+export function testsLast<T extends { title?: string | null; override?: { subject?: string | null } | null }>(letters: T[]): T[] {
+  return [...letters.filter((l) => !isTestLetter(l)), ...letters.filter(isTestLetter)];
+}
