@@ -15,6 +15,7 @@ import ReadingDay from "@/components/reading/ReadingDay";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, dayAgendaShows, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
+import { buyAheadShows } from "@/lib/reading-schedule";
 import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt, clockWords } from "@/lib/reading-day";
 /* TASK-557: its own line, so the line above stays the one tests/reading-page.test.ts pins (S8) */
 import { opensWords } from "@/lib/reading-day";
@@ -301,6 +302,9 @@ export default async function ReadingPage({
      reading-schedule.ts (`dayAgendaShows`), read against the SAME clock
      read (`asOfMs`) everything else on this page uses. */
   const agendaOn = dayAgendaShows(schedule, asOfMs, anyDoorOpen);
+  /* TASK-559 (block 970,084): a signed-in visitor on a day the agenda is
+     hidden still gets the two paid rows, ahead of time ("Coming up"). */
+  const aheadOn = buyAheadShows(agendaOn, !!session, next !== null);
 
   return (
     <>
@@ -442,6 +446,13 @@ export default async function ReadingPage({
             <section className="kitx-section">
               <div className="wrap">
                 <ReadingDay />
+              </div>
+            </section>
+          )}
+          {aheadOn && (
+            <section className="kitx-section">
+              <div className="wrap">
+                <ReadingDay ahead />
               </div>
             </section>
           )}

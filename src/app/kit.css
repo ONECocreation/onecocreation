@@ -459,6 +459,9 @@
 .kitx-section{padding:64px 0}
 .kitx-section+.kitx-section{border-top:1px dashed color-mix(in srgb,var(--lavender) 28%,transparent)}
 .kitx-section.kitx-section-first{padding-top:40px}
+/* T-559: a section whose .wrap holds nothing (a signed-in email member's letters card) draws no band, and the section after it loses its dashed line */
+.kitx-section:has(> .wrap:empty){display:none}
+.kitx-section:has(> .wrap:empty)+.kitx-section{border-top:0;padding-top:40px}
 
 /* ── Stay in the know: one field + one button in a row, stacked on a
       phone ── */
