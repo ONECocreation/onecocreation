@@ -238,15 +238,20 @@ KV_PID=""
 APP_PID=""
 TENANT_PID=""
 # TASK-294: the --seed-puck SEEDS[slug] dump rides ONE throwaway vitest test
-# file at this fixed path — cleanup() below removes it unconditionally
-# (rm -f is a no-op if --seed-puck was never used, or if it was already
-# deleted after the dump ran) so a mid-run crash never leaves it behind for
-# a later `git add` to pick up.
+# file at this fixed path. T-585: the house never deletes, so the file is
+# MOVED out of tests/ into the run's --out folder (park_dump_test) after the
+# dump and again in cleanup(); a mid-run crash still never leaves it behind
+# for a later `git add` to pick up.
 DUMP_TEST_PATH="$REPO_ROOT/tests/oc-shots-dump-puck-seed.tmp.test.ts"
+park_dump_test() {
+  [ -f "$DUMP_TEST_PATH" ] || return 0
+  local dest="${OUT:-$REPO_ROOT/.shots-parked}"
+  mkdir -p "$dest" && mv -f "$DUMP_TEST_PATH" "$dest/.oc-shots-dump-puck-seed.$$.ts.used"
+}
 
 cleanup() {
   RC=$?
-  rm -f "$DUMP_TEST_PATH"
+  park_dump_test
   for pid in "$TENANT_PID" "$APP_PID" "$KV_PID"; do
     [ -n "$pid" ] && kill "$pid" 2>/dev/null
   done
@@ -316,7 +321,7 @@ DUMPEOF
     DUMP_RC=0
     OC_SHOTS_DUMP_SLUGS="$DUMP_SLUGS_JSON" OC_SHOTS_DUMP_DIR="$OUT" \
       npx vitest run "tests/oc-shots-dump-puck-seed.tmp.test.ts" > "$OUT/dump-puck-seed.log" 2>&1 || DUMP_RC=$?
-    rm -f "$DUMP_TEST_PATH"
+    park_dump_test
     if [ "$DUMP_RC" -ne 0 ]; then
       echo "shots-fixture.sh: --seed-puck dump failed — see $OUT/dump-puck-seed.log" >&2
       exit 1
