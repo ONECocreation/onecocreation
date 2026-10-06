@@ -3,7 +3,7 @@ import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { getQaState } from "@/lib/qa-door";
 import { tierForSubject } from "@/lib/member-tier";
-import { qaEntitled } from "@/lib/qa-entitlement";
+import { qaAccess, markQaPassUsed, type QaAccess } from "@/lib/qa-entitlement";
 import { qaDoor as qaOfferDoor } from "@/lib/reading-day-doors";
 import { probeJitsiReachable } from "@/app/api/stage2/route";
 
@@ -40,6 +40,20 @@ export const dynamic = "force-dynamic";
  * `qaDoor()`), reused rather than reinvented. The order read itself only
  * ever runs AFTER the not-published early return above — a closed Q&A
  * costs zero KV/order reads.
+ *
+ * TASK-561 (block 970,086, the Admiral: "the qa pass 33.33 is a one time
+ * deal for that one session.") — a pass opens ONE Q&A day. This route is
+ * the ONLY writer: at the exact step it is about to answer `decision:
+ * "open"` (published door, signed in, entitled, the room actually handed over;
+ * an unreachable call hands none and spends nothing), and ONLY when access came
+ * by a pass with no used day yet (`access.firstUse`), it stamps that
+ * order with today's door day (`markQaPassUsed`, write-once). Tier C, a
+ * pass already used today, a closed door and a signed-out caller never
+ * write; a closed door and a signed-out caller still read no orders, tier
+ * C reads none either. The stamp's failure is a DELIBERATE choice: a
+ * paying guest is never locked out by a failed write on the day, so a
+ * throw is logged (`console.error`) and the buyer is let in anyway. The
+ * wire shape of every response is unchanged.
  *
  * TASK-487 (block 968,624+, the Admiral's ruling, option C) — the SITE
  * SWITCH is the authority for the /reading waiting picture now, never a
@@ -83,12 +97,13 @@ export async function GET(request: Request) {
      belt-and-braces against a future regression, the same defensive
      shape stage1's route keeps around a call built never to throw. This
      is the exact step stage2's own decideStage2 occupies. */
-  let entitled: boolean;
+  let access: QaAccess;
   try {
-    entitled = await qaEntitled(subject, tier);
+    access = await qaAccess(subject, tier);
   } catch {
     return jsonNoStore({ ok: false, reason: "membership check failed" }, 503);
   }
+  const entitled = access.entitled;
 
   /* the not-entitled visitor's door: the pass/Evening Star offer, NEVER a
      room, and the probe never fires for them */
@@ -101,6 +116,18 @@ export async function GET(request: Request) {
   /* unreachable never hands back a room a member can't use — and with no
      room to show, camera never rides the envelope either (TASK-487) */
   if (!reachable) return jsonNoStore({ ok: true, open: true, decision: "open", reachable, room: null });
+
+  /* TASK-561: the pass is spent the first time its buyer is actually
+     handed the room of a published Q&A (an unreachable call hands none,
+     so it spends nothing). A failed write must never lock a paying guest
+     out. */
+  if (access.via === "pass" && access.firstUse && access.orderId) {
+    try {
+      await markQaPassUsed(access.orderId);
+    } catch (err) {
+      console.error("qa pass stamp failed:", err);
+    }
+  }
   const camera = state.cameraShownAtMs !== null ? "shown" : "hidden";
   return jsonNoStore({ ok: true, open: true, decision: "open", reachable, room: state.room, camera });
 }

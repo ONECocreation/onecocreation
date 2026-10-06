@@ -34,6 +34,11 @@ function fakeTransport() {
   const kv = new Map<string, string>();
   let reachable: number | "throw" = 200;
   let heads = 0;
+  /* TASK-561: every `qa:pass-used:` write that reached the transport, and
+     every order-ledger read (a by-subject SMEMBERS or an order GET) */
+  const stamps: { key: string; value: string; nx: boolean }[] = [];
+  let orderReads = 0;
+  let failStamp = false;
 
   const fetchMock = async (_url: string | URL, init?: RequestInit) => {
     const method = (init?.method ?? "GET").toUpperCase();
@@ -43,8 +48,15 @@ function fakeTransport() {
       return new Response(null, { status: reachable });
     }
     const cmd = JSON.parse(String(init?.body)) as unknown[];
-    const [op, key, value] = cmd as [string, string, string?];
+    const [op, key, value, flag] = cmd as [string, string, string?, string?];
+    if (key.startsWith("store:order") && (op === "SMEMBERS" || op === "GET")) orderReads += 1;
+    if (op === "SET" && key.startsWith("qa:pass-used:")) {
+      if (failStamp) return new Response("boom", { status: 500 });
+      stamps.push({ key, value: value as string, nx: flag === "NX" });
+    }
     if (op === "SET") {
+      /* the real KV's SET ... NX: refuse (result null) when the key exists */
+      if (flag === "NX" && kv.has(key)) return new Response(JSON.stringify({ result: null }), { status: 200 });
       kv.set(key, value as string);
       return new Response(JSON.stringify({ result: "OK" }), { status: 200 });
     }
@@ -71,6 +83,14 @@ function fakeTransport() {
     fetchMock,
     kv,
     headCount: () => heads,
+    stamps,
+    orderReads: () => orderReads,
+    resetOrderReads: () => {
+      orderReads = 0;
+    },
+    setFailStamp: (v: boolean) => {
+      failStamp = v;
+    },
     setReachable: (v: typeof reachable) => {
       reachable = v;
     },
@@ -106,6 +126,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   global.fetch = realFetch;
   delete process.env.KV_REST_API_URL;
   delete process.env.KV_REST_API_TOKEN;
@@ -254,5 +275,123 @@ describe("/api/qa-door — fail closed on a thrown tier lookup", () => {
     const data = await res.json();
     expect(data.ok).toBe(false);
     expect(res.headers.get("Cache-Control")).toBe("no-store");
+  });
+});
+
+/**
+ * TASK-561 (block 970,086) — "the qa pass 33.33 is a one time deal for that
+ * one session." The route stamps a pass order's used day the first time its
+ * buyer is handed the room of a published Q&A; the next day that pass is
+ * spent. Days are the door's own (America/Denver); the clock is faked on
+ * `Date` only (the door re-publishes each day, since it self-closes at
+ * Denver midnight).
+ */
+describe("/api/qa-door — a pass opens ONE Q&A day (TASK-561)", () => {
+  const DAY1 = "2026-10-10T20:00:00Z";
+  const DAY2 = "2026-10-11T20:00:00Z";
+  const at = (iso: string) => vi.useFakeTimers({ toFake: ["Date"], now: new Date(iso) });
+  const passStamps = () => transport.stamps.filter((s) => s.nx);
+
+  it("unused pass + published door: open, stamped once with today's day; same-day second call opens and does not stamp again", async () => {
+    mockTier.mockResolvedValue(null);
+    at(DAY1);
+    transport.seedOrder(ORDER_ID(10), baseOrder({ createdAtMs: Date.now() }));
+    const published = await publish();
+    const first = await (await memberGet(memberCookie)).json();
+    expect(first).toEqual({ ok: true, open: true, decision: "open", reachable: true, room: published.room, camera: "hidden" });
+    expect(transport.stamps).toEqual([{ key: `qa:pass-used:${ORDER_ID(10)}`, value: "2026-10-10", nx: true }]);
+    const second = await (await memberGet(memberCookie)).json();
+    expect(second.decision).toBe("open");
+    expect(transport.stamps).toHaveLength(1);
+  });
+
+  it("the next day, the same single pass is spent: package, no room, no stamp", async () => {
+    mockTier.mockResolvedValue(null);
+    at(DAY1);
+    transport.seedOrder(ORDER_ID(11), baseOrder({ createdAtMs: Date.now() }));
+    await publish();
+    expect((await (await memberGet(memberCookie)).json()).decision).toBe("open");
+    at(DAY2);
+    await publish();
+    const later = await (await memberGet(memberCookie)).json();
+    expect(later.decision).toBe("package");
+    expect(later.room).toBeUndefined();
+    expect(transport.stamps).toHaveLength(1);
+  });
+
+  it("a buyer with a second unused pass is let in the next day, and the SECOND order is stamped", async () => {
+    mockTier.mockResolvedValue(null);
+    at(DAY1);
+    transport.seedOrder(ORDER_ID(12), baseOrder({ createdAtMs: 1_000 }));
+    transport.seedOrder(ORDER_ID(13), baseOrder({ createdAtMs: 2_000 }));
+    await publish();
+    await memberGet(memberCookie);
+    at(DAY2);
+    await publish();
+    expect((await (await memberGet(memberCookie)).json()).decision).toBe("open");
+    expect(transport.stamps.map((s) => [s.key, s.value])).toEqual([
+      [`qa:pass-used:${ORDER_ID(12)}`, "2026-10-10"],
+      [`qa:pass-used:${ORDER_ID(13)}`, "2026-10-11"],
+    ]);
+    at("2026-10-12T20:00:00Z");
+    await publish();
+    expect((await (await memberGet(memberCookie)).json()).decision).toBe("package");
+  });
+
+  it("an unreachable call hands no room and spends nothing", async () => {
+    mockTier.mockResolvedValue(null);
+    transport.setReachable(500);
+    transport.seedOrder(ORDER_ID(14), baseOrder());
+    await publish();
+    const data = await (await memberGet(memberCookie)).json();
+    expect(data.room).toBeNull();
+    expect(transport.stamps).toHaveLength(0);
+  });
+
+  it("tier C: open, no stamp, no order read", async () => {
+    mockTier.mockResolvedValue("C");
+    await publish();
+    transport.resetOrderReads();
+    expect((await (await memberGet(memberCookie)).json()).decision).toBe("open");
+    expect(transport.stamps).toHaveLength(0);
+    expect(transport.orderReads()).toBe(0);
+  });
+
+  it("a closed door reads no orders and stamps nothing; signed out reads no orders", async () => {
+    mockTier.mockResolvedValue(null);
+    transport.seedOrder(ORDER_ID(15), baseOrder());
+    transport.resetOrderReads();
+    await memberGet(memberCookie);
+    expect(transport.orderReads()).toBe(0);
+    expect(transport.stamps).toHaveLength(0);
+    await publish();
+    transport.resetOrderReads();
+    await memberGet();
+    expect(transport.orderReads()).toBe(0);
+    expect(transport.stamps).toHaveLength(0);
+  });
+
+  it("a stamp write that throws still answers open (a paying guest is never locked out), and logs", async () => {
+    mockTier.mockResolvedValue(null);
+    transport.seedOrder(ORDER_ID(16), baseOrder());
+    transport.setFailStamp(true);
+    const published = await publish();
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    const data = await (await memberGet(memberCookie)).json();
+    expect(data.decision).toBe("open");
+    expect(data.room).toBe(published.room);
+    expect(err).toHaveBeenCalled();
+    err.mockRestore();
+  });
+
+  it("a stamp already on file (older ledger entry, or a raced device) is never moved", async () => {
+    mockTier.mockResolvedValue(null);
+    at(DAY1);
+    transport.seedOrder(ORDER_ID(17), baseOrder({ createdAtMs: Date.now() }));
+    transport.kv.set(`qa:pass-used:${ORDER_ID(17)}`, "2026-10-10");
+    await publish();
+    expect((await (await memberGet(memberCookie)).json()).decision).toBe("open");
+    expect(transport.stamps).toHaveLength(0);
+    expect(passStamps()).toHaveLength(0);
   });
 });
