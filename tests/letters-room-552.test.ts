@@ -111,16 +111,19 @@ describe("the room source", () => {
     expect(src).toContain("href={`/a/letters/${key}`}");
     expect(src).toContain("send: !l.noPublish");
   });
-  it("Send is a paper-airplane icon button named Send, first in the group, same box as the others", () => {
+  it("every row control is a small icon button with an accessible name, Send first, no visible words", () => {
     const end = src.slice(src.indexOf("function rowEnd("), src.indexOf("function openedRow("));
-    expect(end).toContain('aria-label="Send"');
-    expect(end).toContain('title="Send this letter"');
-    expect(end).toContain("<svg");
-    expect(end).not.toMatch(/>\s*Send\s*</);
-    expect(end.indexOf("aria-label=\"Send\"")).toBeLessThan(end.indexOf("openEditor("));
+    for (const name of ["Send this letter", "Edit this letter", "Preview this letter", "Review this draft"]) expect(end).toContain(name);
+    expect(end.match(/<RowIcon>/g)?.length).toBe(3); // airplane, pencil, eye
+    expect(end).not.toMatch(/>\s*(Send|Edit|Preview|Review|Close)\s*</);
+    expect(end.indexOf('aria-label="Send this letter"')).toBeLessThan(end.indexOf("openEditor("));
     expect(end.indexOf("openEditor(")).toBeLessThan(end.indexOf("openPreview("));
+    expect(src).toContain('aria-hidden="true"');
+  });
+  it("the one size rule: every control in the group is a 2.5rem square; phone keeps one left-aligned row", () => {
     const css = readFileSync(resolve(__dirname, "../src/app/kit.css"), "utf8");
-    expect(css).toMatch(/\.kitx-even>\.kit-btn\{[^}]*width:10rem/);
+    expect(css).toMatch(/\.kitx-even>\.kit-btn\{[^}]*width:2\.5rem;height:2\.5rem/);
+    expect(css).toMatch(/max-width:640px\)\{\s*\.kit-rows-stackable>li>\.kitx-even\{display:flex;justify-content:flex-start/);
   });
   it("names the fixed parts on every row", () => {
     expect(src).toContain("Fixed: the logo header and the footer.");

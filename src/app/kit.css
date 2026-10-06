@@ -544,9 +544,8 @@
 .kit-rows>li>.kitx-row{grid-column:1/-1;display:flex;flex-direction:column;gap:12px;padding-top:4px;min-width:0}
 /* T-552 round 2: at phone width a row's control group is ONE even line under
    its words, every control the same width, whether the row has two or three */
-.kitx-even>.kit-btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:10rem;padding-inline:8px;text-align:center}
+.kitx-even{align-self:center}
+.kitx-even>.kit-btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:2.5rem;height:2.5rem;padding:0}
 @media (max-width:640px){
-  .kitx-even>.kit-btn{width:auto}
-  .kit-rows-stackable>li>.kitx-even{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;justify-self:stretch;width:100%}
-  .kitx-even>.kit-btn{padding-inline:8px;text-align:center}
+  .kit-rows-stackable>li>.kitx-even{display:flex;justify-content:flex-start;justify-self:start;gap:8px;width:auto}
 }

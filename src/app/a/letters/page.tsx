@@ -238,6 +238,16 @@ function subjectLine(subject: string | null | undefined) {
   return subject?.trim() ? <em>&ldquo;{subject}&rdquo;</em> : <em className="kit-note">No subject yet</em>;
 }
 
+/* T-552 round 5: the row controls are small icon buttons, drawn inline in
+ * currentColor so they follow the theme; the words live in aria-label/title */
+function RowIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      {children}
+    </svg>
+  );
+}
+
 const weekdayOf = (ms: number) => new Date(ms).toLocaleDateString("en-US", { weekday: "long" });
 
 const GROUPS: LetterGroup[] = ["Welcome sequence", "Reading", "Store", "Sessions", "System"];
@@ -307,18 +317,27 @@ export default function LettersRoom() {
     return (
       <span className="kit-rows-end kit-rows-pair kitx-even">
         {o.send && (
-          <a className="kit-btn kit-btn-second kit-btn-sm" href={`/a/letters/${key}`} aria-label="Send" title="Send this letter">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+          <a className="kit-btn kit-btn-second kit-btn-sm" href={`/a/letters/${key}`} aria-label="Send this letter" title="Send this letter">
+            <RowIcon>
               <path d="M22 2 11 13" />
               <path d="M22 2 15 22l-4-9-9-4 20-7Z" />
-            </svg>
+            </RowIcon>
           </a>
         )}
-        <Button sm variant={o.main ? "main" : "second"} onClick={() => openEditor(key, fallbackSubject)} aria-expanded={open === key}>
-          {open === key ? "Close" : (o.label ?? "Edit")}
+        <Button sm variant={o.main ? "main" : "second"} onClick={() => openEditor(key, fallbackSubject)} aria-expanded={open === key}
+          aria-label={o.label ? `${o.label === "Review" ? "Review this draft" : o.label}` : "Edit this letter"}
+          title={o.label ? (o.label === "Review" ? "Review this draft" : o.label) : "Edit this letter"}>
+          <RowIcon>
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </RowIcon>
         </Button>
-        <Button sm variant="second" onClick={() => openPreview(key, fallbackSubject)} aria-pressed={previewOpen === key}>
-          Preview
+        <Button sm variant="second" onClick={() => openPreview(key, fallbackSubject)} aria-pressed={previewOpen === key}
+          aria-label="Preview this letter" title="Preview this letter">
+          <RowIcon>
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12Z" />
+            <circle cx="12" cy="12" r="3" />
+          </RowIcon>
         </Button>
       </span>
     );
