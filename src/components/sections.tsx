@@ -122,7 +122,7 @@ export function weeklyReadingDoor(
   const s = checked.value;
   return {
     href: "/reading",
-    words: `Every ${weekdayName(s.weekday)} at ${clockWords(s.time)} ${FRIENDLY_ZONE[s.tz] ?? s.tz} — live with Love, free.`,
+    words: `Every ${weekdayName(s.weekday)} at ${clockWords(s.time)} ${FRIENDLY_ZONE[s.tz] ?? s.tz}. Live with Love, free.`,
   };
 }
 
