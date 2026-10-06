@@ -636,7 +636,21 @@ html,body{overflow-x:clip}
 }
 .mgmt-rail{display:flex;flex-direction:column;gap:6px;position:sticky;top:92px;z-index:10;
   background:var(--glass);border:1.5px solid var(--glass-edge);border-radius:16px;padding:12px 10px}
-@media(max-width:760px){.mgmt-rail{position:static;flex-direction:row;flex-wrap:wrap}}
+/* TASK-586: on a phone the rail is a SIDE MENU - off-canvas left until the
+   Rooms button opens it, over the page with a scrim. Same 760px as the grid
+   collapse above. visibility:hidden keeps the closed menu out of tab order. */
+button.mgmt-rooms-btn{display:none}
+@media(max-width:760px){
+  button.mgmt-rooms-btn{display:inline-block;justify-self:start}
+  .mgmt-rail{position:fixed;top:0;left:0;bottom:0;width:min(84vw,320px);z-index:70;overflow-y:auto;
+    border-radius:0 16px 16px 0;padding:14px 12px;background:var(--glass-strong);
+    transform:translateX(-102%);visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s}
+  .mgmt-rail.is-open{transform:none;visibility:visible;transition:transform .22s ease}
+  .mgmt-rooms-scrim{position:fixed;inset:0;z-index:65;background:rgba(8,6,16,.62)}
+  .mgmt-rail-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+  .mgmt-rail-headname{font-size:.84rem;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+}
+@media(prefers-reduced-motion:reduce){.mgmt-rail,.mgmt-rail.is-open{transition:none}}
 .mgmt-rail-tab{display:block;padding:9px 14px;border-radius:10px;font-family:var(--sans);
   font-size:.84rem;letter-spacing:.03em;color:var(--muted);border:1.5px solid transparent}
 .mgmt-rail-tab:hover{color:var(--ink);border-color:rgba(139,118,196,.4)}
