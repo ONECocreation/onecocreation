@@ -301,6 +301,24 @@ export async function listSubscribersByTag(tag: string): Promise<SubscriberRecor
   return (await readRecords(emails)).filter((r) => r.tags?.includes(tag));
 }
 
+/**
+ * T-577 (the Admiral, block 970,203: the reading reminder goes to the WHOLE
+ * mailing list) — every record in INDEX that is not opted out, deduped by
+ * email (case-insensitive). Like `listSubscribersByTag` it is a snapshot,
+ * never send-time truth: every caller still runs `isSubscribed` right
+ * before it sends.
+ */
+export async function listActiveSubscribers(): Promise<SubscriberRecord[]> {
+  const emails = ((await kv(["SMEMBERS", INDEX])) as string[]) ?? [];
+  const byEmail = new Map<string, SubscriberRecord>();
+  for (const rec of await readRecords(emails)) {
+    if (rec.optedOut) continue;
+    const key = rec.email.toLowerCase();
+    if (!byEmail.has(key)) byEmail.set(key, rec);
+  }
+  return [...byEmail.values()];
+}
+
 /** Every door with live souls behind it, with counts — DERIVED from the
  *  records, never a hardcoded list. The send panel renders this verbatim. */
 export async function subscriberSegments(): Promise<{ source: string; count: number }[]> {

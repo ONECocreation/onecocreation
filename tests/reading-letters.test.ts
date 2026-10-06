@@ -71,6 +71,7 @@ vi.mock("@/lib/subscribers", async (importActual) => {
     addReadingTag: async () => ({ outcome: readingTagControl.outcome }),
     isSubscribed: async (email: string) => subscribedState.has(email.toLowerCase()),
     listSubscribersByTag: async () => recordsState,
+    listActiveSubscribers: async () => recordsState.filter((r) => !r.optedOut),
     markReadingConfirmed: async (email: string) => {
       markCalls.push(email.toLowerCase());
     },
