@@ -1,11 +1,13 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
-import { isReadingDraftKey } from "@/lib/reading-draft-keys";
+import { useEffect, useRef, useState } from "react";
 import { insertAtCaret, insertHeroLine, insertLink, insertReadingRoomLink, toggleMark } from "@/lib/letter-marks";
 import { READING_PAGE_PATH } from "@/lib/reading-room";
 import { cartridge } from "@/brand/cartridge";
 import { glassCard, field } from "@/components/console/glass";
+import { Button, Card, Field } from "@/components/kit";
+import { CONSOLE_CHROME } from "@/lib/console";
+import { draftWhoWords, isDrafted, testsLast } from "@/lib/letters-drafts";
 
 /**
  * LETTERS — every letter the house sends, in one room (wireframe v2).
@@ -19,6 +21,12 @@ import { glassCard, field } from "@/components/console/glass";
  * queued letters say "the next mail run", never a number of minutes).
  * The two Reading `slot` rows name the automatic sends: which composed
  * letter rides each is read live from /api/admin/letters/slots.
+ * T-552 (the letters room rebuild, lane 1): the room is built on the kit
+ * (Card, Button, Field, kit-rows). Drafted sits on top and holds the helper's
+ * reading drafts and any letter Love started herself; a letter leaves Drafted
+ * when she presses Publish. Her published letters wait in "Your letters". Each
+ * row has Edit, Preview and Send (Send only where the letter has a send panel);
+ * all three open the EXISTING editor, preview and send panel. No mail changes.
  */
 type LetterGroup = "Welcome sequence" | "Reading" | "Store" | "Sessions" | "System";
 const LETTERS: { key?: string; slot?: "reading-confirm" | "reading-dayof"; name: string; from: string; kind: string; subject: string; note: string; when: string; group: LetterGroup; noPublish?: boolean }[] = [
@@ -211,25 +219,38 @@ const LETTERS: { key?: string; slot?: "reading-confirm" | "reading-dayof"; name:
   },
 ];
 
-/* TASK-493: hoisted shared styles. noteInline pays for groupLabel — the
- * two duplicated `{ alignSelf: "center", fontSize: ".75rem", color:
- * "var(--muted)" }` literals (the composer's and the editor's note spans)
- * collapse into one const, so the group labels add ZERO net style objects
- * (the design-drift ceiling for this page is 22 blocks; the census's 30).
- * The label is not a control and never sits on a row's right edge (the /a
- * uniformity law); it rides the list's own flow between groups. */
+/* the editor's own note span (the editor keeps its inline look until lane 553a) */
 const noteInlineStyle = { alignSelf: "center", fontSize: ".75rem", color: "var(--muted)" } as const;
-/* the micro-label under a row (system letter / send-panel pointer /
- * one-soul note / automatic-send note) — one shape, four sites */
-const microLabelStyle = { fontSize: ".62rem", textTransform: "uppercase", color: "var(--muted)" } as const;
-const groupLabelStyle = {
-  fontSize: ".62rem",
-  textTransform: "uppercase",
-  letterSpacing: ".06em",
-  color: "var(--muted)",
-  padding: "6px 2px 0",
-  listStyle: "none",
-} as const;
+
+/* T-552: the fixed parts of a letter, said once under its words. The house
+ * fills the {{slots}} named in the row's note; the logo header and the footer
+ * are the shell. Lane 553a makes the words editable in place; this only says
+ * plainly what Love cannot move. */
+function fixedWords(note: string): string {
+  const slots = [...new Set([...note.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]))];
+  const shell = "Fixed: the logo header and the footer.";
+  if (slots.length === 0) return shell;
+  return `${shell} The house fills in ${slots.join(", ")}; your words go around them.`;
+}
+
+/* an empty subject says so, in plain muted words, never an empty pair of quotes */
+function subjectLine(subject: string | null | undefined) {
+  return subject?.trim() ? <em>&ldquo;{subject}&rdquo;</em> : <em className="kit-note">No subject yet</em>;
+}
+
+/* T-552 round 5: the row controls are small icon buttons, drawn inline in
+ * currentColor so they follow the theme; the words live in aria-label/title */
+function RowIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      {children}
+    </svg>
+  );
+}
+
+const weekdayOf = (ms: number) => new Date(ms).toLocaleDateString("en-US", { weekday: "long" });
+
+const GROUPS: LetterGroup[] = ["Welcome sequence", "Reading", "Store", "Sessions", "System"];
 
 interface ApiLetter {
   key: string;
@@ -238,6 +259,10 @@ interface ApiLetter {
   default: { subject: string; body: string } | null;
   audience: "public" | "members";
   title: string | null;
+  createdAtMs?: number | null;
+  updatedAtMs?: number | null;
+  draft?: boolean;
+  reviewedAtMs?: number | null;
 }
 
 export default function LettersRoom() {
@@ -250,7 +275,6 @@ export default function LettersRoom() {
   // TASK-131: the "New letter" composer
   const [composing, setComposing] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [newKey, setNewKey] = useState("");
   const [newAudience, setNewAudience] = useState<"list" | "public">("list");
 
   function refresh() {
@@ -281,37 +305,110 @@ export default function LettersRoom() {
 
   const api = (key: string | undefined) => apiLetters.find((l) => l.key === key);
   const composed = apiLetters.filter((l) => l.kind === "composed");
-  const readingDrafts = composed.filter((c) => isReadingDraftKey(c.key));
+  const drafted = composed.filter((c) => isDrafted(c.key, c));
+  const yours = testsLast(composed.filter((c) => !isDrafted(c.key, c)));
 
-  /* TASK-534: one composed letter's row. The automatic reading drafts
-   * (next-reading-, after-reading-) render inside the Reading group with a
-   * review tag; every other composed letter stays where it was. */
-  function composedRow(c: ApiLetter, draft: boolean) {
+  /* T-552: one row's right edge. Edit, Preview and Send are the same size, in
+   * one group. Edit opens the existing inline editor, Preview opens the
+   * existing "as the email renders" preview, Send is a link to the existing
+   * send panel (the typed headcount lives there). Letters that send
+   * themselves have no Send. */
+  function rowEnd(key: string, fallbackSubject: string, o: { send: boolean; label?: string; main?: boolean }) {
     return (
-      <li key={c.key} style={glassCard}>
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <b>
-            {c.title ?? c.key} ✎
-            <button onClick={() => openEditor(c.key, c.title ?? c.key)} className="ml-2 btn btn-ghost btn-sm">
-              {open === c.key ? "close" : "edit"}
-            </button>
-            <a href={`/a/letters/${c.key}`} className="ml-1 btn btn-sm">
-              send panel →
-            </a>
-            {/* S2: pinned — needs a ruling: this desk page is night chrome (the Tailwind around it never dawns); the theme-aware --ok/--muted would flip at dawn */}
-            <button onClick={() => flipAudience(c.key)}
-              title="public letters show on /news and the guest feed; members letters only in their receivers' /letters"
-              className={`ml-1 btn btn-sm ${c.audience === "public" ? "btn-on" : "btn-ghost"}`}>
-              {c.audience === "public" ? "🌍 public" : "✉ the list"}
-            </button>
-          </b>
-          <span style={{ fontSize: ".75rem", color: "var(--info)" }}>news@ · composed by Love · EDITABLE</span>
-        </div>
-        <p className="mt-1" style={{ color: "var(--ink-body)" }}>&ldquo;{c.override?.subject ?? c.title}&rdquo;</p>
-        {draft && (
-          <p className="mt-2" style={microLabelStyle}>draft, waiting for your review</p>
+      <span className="kit-rows-end kit-rows-pair kitx-even">
+        {o.send && (
+          <a className="kit-btn kit-btn-second kit-btn-sm" href={`/a/letters/${key}`} aria-label="Send this letter" title="Send this letter">
+            <RowIcon>
+              <path d="M22 2 11 13" />
+              <path d="M22 2 15 22l-4-9-9-4 20-7Z" />
+            </RowIcon>
+          </a>
         )}
-        {open === c.key && editor(c.key)}
+        <Button sm variant={o.main ? "main" : "second"} onClick={() => openEditor(key, fallbackSubject)} aria-expanded={open === key}
+          aria-label={o.label ? `${o.label === "Review" ? "Review this draft" : o.label}` : "Edit this letter"}
+          title={o.label ? (o.label === "Review" ? "Review this draft" : o.label) : "Edit this letter"}>
+          <RowIcon>
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </RowIcon>
+        </Button>
+        <Button sm variant="second" onClick={() => openPreview(key, fallbackSubject)} aria-pressed={previewOpen === key}
+          aria-label="Preview this letter" title="Preview this letter">
+          <RowIcon>
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12Z" />
+            <circle cx="12" cy="12" r="3" />
+          </RowIcon>
+        </Button>
+      </span>
+    );
+  }
+
+  /* T-552: what used to ride the row's edge (public or members, the site
+   * preview) moves into the opened row, one control per strip. */
+  function openedRow(key: string, o: { flip: boolean; pointer?: string }) {
+    return (
+      <div className="kitx-row">
+        {editor(key)}
+        <ul className="kit-rows kit-rows-stackable">
+          {o.flip && (
+            <li>
+              <div>
+                <b>Who sees it on the site</b>
+                <em>Public letters show on /news and the guest feed. Members letters show only in their receivers&apos; letters.</em>
+              </div>
+              <span className="kit-rows-end">
+                <Button sm variant="second" onClick={() => flipAudience(key)} aria-pressed={api(key)?.audience === "public"}>
+                  {api(key)?.audience === "public" ? "Public" : "Members only"}
+                </Button>
+              </span>
+            </li>
+          )}
+          <li>
+            <div>
+              <b>See it on the site</b>
+              <em>The page a reader gets to open.</em>
+            </div>
+            <span className="kit-rows-end">
+              <a className="kit-btn kit-btn-second kit-btn-sm" href={`/letters/${key}`} target="_blank" rel="noreferrer">
+                Open
+              </a>
+            </span>
+          </li>
+        </ul>
+        {o.pointer && <p className="kit-note">{o.pointer}</p>}
+      </div>
+    );
+  }
+
+  /* T-552: a draft's row (Drafted group): a draft with words says Review, an
+   * empty one says Keep writing. */
+  function draftRow(c: ApiLetter) {
+    const words = (c.override?.body ?? "").trim().length > 0;
+    return (
+      <li key={c.key}>
+        <div>
+          <b>{c.title ?? c.key}</b>
+          {subjectLine(c.override?.subject ?? c.title)}
+          <em>{draftWhoWords(c.key, c.createdAtMs, weekdayOf, words)}</em>
+        </div>
+        {rowEnd(c.key, c.title ?? c.key, { send: false, label: words ? "Review" : "Keep writing", main: words })}
+        {open === c.key && openedRow(c.key, { flip: true, pointer: "Nothing is sent until you press Publish and then send it from its send panel." })}
+      </li>
+    );
+  }
+
+  /* T-552: a letter Love published herself (no longer a draft) */
+  function yoursRow(c: ApiLetter) {
+    return (
+      <li key={c.key}>
+        <div>
+          <b>{c.title ?? c.key}</b>
+          {subjectLine(c.override?.subject ?? c.title)}
+          <em>Composed by you. {c.audience === "public" ? "Emailed and shown on /news." : "Emailed to the list."}</em>
+          <em>{fixedWords("")}</em>
+        </div>
+        {rowEnd(c.key, c.title ?? c.key, { send: true })}
+        {open === c.key && openedRow(c.key, { flip: true, pointer: "Sending lives in the send panel: pick who, send yourself a test copy, type the count." })}
       </li>
     );
   }
@@ -334,6 +431,22 @@ export default function LettersRoom() {
     setSubj(l?.override?.subject ?? l?.default?.subject ?? fallbackSubject);
     setBodyTxt(l?.override?.body ?? l?.default?.body ?? "");
     setNote("");
+  }
+
+  /* T-552: the row's Preview control. Opens the row and its existing
+   * "as the email renders" preview in one press; pressing it again closes it. */
+  function openPreview(key: string, fallbackSubject: string) {
+    if (open === key && previewOpen === key) {
+      setOpen(null);
+      setPreviewOpen(null);
+      return;
+    }
+    const l = api(key);
+    setSubj(l?.override?.subject ?? l?.default?.subject ?? fallbackSubject);
+    setBodyTxt(l?.override?.body ?? l?.default?.body ?? "");
+    setNote("");
+    setOpen(key);
+    setPreviewOpen(key);
   }
 
   const [uploading, setUploading] = useState(false);
@@ -403,22 +516,23 @@ export default function LettersRoom() {
   }
 
   async function createNew() {
+    const title = newTitle.trim();
     const res = await fetch("/api/admin/letters", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: newTitle,
-        audience: newAudience,
-        ...(newKey.trim() ? { key: newKey.trim() } : {}),
-      }),
+      body: JSON.stringify({ title: newTitle, audience: newAudience }),
     }).then((r) => r.json()).catch(() => null);
     if (res?.ok) {
       setComposing(false);
       setNewTitle("");
-      setNewKey("");
       setNewAudience("list");
       refresh();
-      setNote(`letter “${res.key}” born — write it below, then send from its panel`);
+      /* the new letter opens in Drafted, ready to write */
+      setOpen(res.key);
+      setPreviewOpen(null);
+      setSubj(title);
+      setBodyTxt("");
+      setNote(`Letter created. Write it below, then press Publish.`);
     } else setNote(res?.reason ?? "create failed");
   }
 
@@ -426,12 +540,12 @@ export default function LettersRoom() {
     const res = await fetch("/api/admin/letters", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key, subject: subj, body: bodyTxt }),
+      body: JSON.stringify({ key, subject: subj, body: bodyTxt, publish: true }),
     });
     if ((await res.json().catch(() => ({ ok: false }))).ok) {
       refresh();
-      setNote("saved ✓ — this is the version that sends");
-    } else setNote("save failed — subject and body both required");
+      setNote("Published. This is the version that sends.");
+    } else setNote("Not published. Subject and body are both required.");
   }
 
   /* TASK-214: the NEW side-panel preview — "no preview found" on the call.
@@ -489,7 +603,7 @@ export default function LettersRoom() {
             placeholder="the letter body — blank line makes a new paragraph; the brand shell wraps it"
             className="w-full console-field" style={field} />
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={() => save(key)} className="btn btn-sm">SAVE</button>
+            <button onClick={() => save(key)} className="btn btn-sm">PUBLISH</button>
             {note && <span style={noteInlineStyle}>{note}</span>}
           </div>
         </div>
@@ -509,120 +623,110 @@ export default function LettersRoom() {
 
   return (
     <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
-      {/* TASK-131: the composer — a new letter beyond the seeded set */}
-      <div className="mb-3" style={glassCard}>
-        {composing ? (
-          <div className="space-y-2">
-            <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="letter title — e.g. Lions Gate Gathering"
-              className="w-full console-field" style={field} />
-            <input value={newKey} onChange={(e) => setNewKey(e.target.value)} placeholder="key (optional — derived from the title)"
-              className="w-full console-field" style={field} />
-            <div className="flex flex-wrap items-center gap-3" style={{ fontSize: ".78rem" }}>
-              <label className="flex items-center gap-1">
-                <input type="radio" checked={newAudience === "list"} onChange={() => setNewAudience("list")} />
-                ✉ the list — emailed, members-only
-              </label>
-              <label className="flex items-center gap-1">
-                <input type="radio" checked={newAudience === "public"} onChange={() => setNewAudience("public")} />
-                🌍 public — emailed AND shown on /news
-              </label>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button onClick={createNew} className="btn btn-sm">CREATE LETTER</button>
-              <button onClick={() => setComposing(false)} className="btn btn-ghost btn-sm">cancel</button>
-              {note && <span style={noteInlineStyle}>{note}</span>}
-            </div>
+      <div className="kitx-flow">
+        <div className="kitx-group">
+          {/* one title: under the site chrome the frame already prints the page head */}
+          {CONSOLE_CHROME !== "site" && (
+            <>
+              <h2 className="kit-h2">Letters</h2>
+              <p className="kit-text-quiet">Every email the house sends. Pick one to write it and see it as the reader will.</p>
+            </>
+          )}
+          <div>
+            <Button sm variant="second" onClick={() => { setComposing(!composing); setNote(""); }} aria-expanded={composing}>
+              New letter
+            </Button>
           </div>
-        ) : (
-          <button onClick={() => { setComposing(true); setNote(""); }} className="btn btn-sm">
-            + NEW LETTER
-          </button>
-        )}
-      </div>
+        </div>
 
-      <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-        {composed.filter((c) => !isReadingDraftKey(c.key)).map((c) => composedRow(c, false))}
-        {LETTERS.map((l, i) => {
-          /* TASK-493: a slot row's key is the composed letter CURRENTLY
-             riding that automatic send (the slots GET's effective key);
-             before the fetch lands the row shows its words with no doors. */
-          const rowKey = l.key ?? (l.slot ? autoSlots[l.slot] : undefined);
-          const showLabel = i === 0 || LETTERS[i - 1].group !== l.group;
-          return (
-            <Fragment key={l.name}>
-              {showLabel && (
-                <li aria-hidden="true" style={groupLabelStyle}>
-                  {l.group}
-                </li>
-              )}
-              <li style={glassCard}>
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <b>
-                {l.name}{api(rowKey)?.override ? " ✎" : ""}
-                {rowKey && (
-                  <>
-                    <button onClick={() => openEditor(rowKey, l.subject)} className="ml-2 btn btn-ghost btn-sm">
-                      {open === rowKey ? "close" : "edit"}
-                    </button>
-                    <a href={`/letters/${rowKey}`} target="_blank" rel="noreferrer" className="ml-1 btn btn-ghost btn-sm">
-                      preview
-                    </a>
-                    {!l.noPublish && (
-                      <>
-                        <a href={`/a/letters/${rowKey}`} className="ml-1 btn btn-sm">
-                          send panel →
-                        </a>
-                        {/* S2: pinned — needs a ruling: this desk page is night chrome (the Tailwind around it never dawns); the theme-aware --ok/--muted would flip at dawn */}
-                        <button onClick={() => flipAudience(rowKey)}
-                          title="public letters show on /news and the guest feed; members letters only in their receivers' /letters"
-                          className={`ml-1 btn btn-sm ${api(rowKey)?.audience === "public" ? "btn-on" : "btn-ghost"}`}>
-                          {api(rowKey)?.audience === "public" ? "🌍 public" : "🔒 members"}
-                        </button>
-                      </>
-                    )}
-                  </>
-                )}
-              </b>
-              <span style={{ fontSize: ".75rem", color: "var(--info)" }}>{l.from} · {l.kind}</span>
+        {composing && (
+          <Card>
+            <form className="kit-inline-form" onSubmit={(e) => { e.preventDefault(); createNew(); }}>
+              <Field id="new-letter-title" label="Letter title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="for example, Lions Gate Gathering" />
+              <Button type="submit" sm disabled={!newTitle.trim()}>Create letter</Button>
+            </form>
+            <div className="kit-btn-row" role="radiogroup" aria-label="Who it is for">
+              <label className="kit-field-label">
+                <input type="radio" name="new-letter-audience" checked={newAudience === "list"} onChange={() => setNewAudience("list")} />{" "}
+                The list: emailed, members only
+              </label>
+              <label className="kit-field-label">
+                <input type="radio" name="new-letter-audience" checked={newAudience === "public"} onChange={() => setNewAudience("public")} />{" "}
+                Public: emailed and shown on /news
+              </label>
             </div>
-            <p className="mt-1" style={{ color: "var(--ink-body)" }}>&ldquo;{api(rowKey)?.override?.subject ?? l.subject}&rdquo;</p>
-            {/* the when line rides the row's existing note element — one
-                state per row, said once, UNDER the row's words */}
-            <p className="mt-1" style={{ fontSize: ".75rem", color: "var(--muted)" }}>{l.note ? `${l.when} · ${l.note}` : l.when}</p>
-            {l.key || l.slot ? null : (
-              <p className="mt-2" style={microLabelStyle}>system letter — copy lives in code for now</p>
+            <Button sm variant="quiet" onClick={() => setComposing(false)}>Cancel</Button>
+            {note && <p className="kit-note">{note}</p>}
+          </Card>
+        )}
+
+        <div className="kitx-group">
+          <p className="kicker">Drafted</p>
+          <Card>
+            <p className="kit-text-quiet">
+              Drafts written for you by the helper, and letters you started yourself. Nothing is sent until you have looked it over and pressed Publish.
+            </p>
+            {drafted.length > 0 ? (
+              <ul className="kit-rows kit-rows-stackable">{drafted.map(draftRow)}</ul>
+            ) : (
+              <p className="kit-note">Nothing is waiting. A new draft shows up here.</p>
             )}
-            {open === rowKey && rowKey && (
-              <div>
-                {editor(rowKey)}
-                {!l.noPublish && (
-                  <p className="mt-2" style={microLabelStyle}>
-                    sending moved to the <a href={`/a/letters/${rowKey}`} style={{ textDecoration: "underline", color: "var(--info)" }}>send panel</a> — segment, test copy, typed count
-                  </p>
-                )}
-                {l.noPublish && !l.slot && (
-                  <p className="mt-2" style={microLabelStyle}>
-                    one-soul letter — sends itself when its moment comes; never a list blast
-                  </p>
-                )}
-                {l.slot && (
-                  <p className="mt-2" style={microLabelStyle}>
-                    automatic send — the letter above rides this slot; change the riding letter on its own page
-                  </p>
-                )}
-              </div>
-            )}
-              </li>
-              {l.group === "Reading" && LETTERS[i + 1]?.group !== "Reading" && readingDrafts.map((c) => composedRow(c, true))}
-            </Fragment>
-          );
-        })}
-      </ul>
-      <p className="mt-4" style={{ fontSize: ".75rem", color: "var(--muted)" }}>
-        Every letter wears the brand shell — logo header, gold accents, honest unsubscribe where
-        the law wants it. A letter you compose here can be emailed to the whole list or one
-        door&rsquo;s people, and — marked public — published on /news too.
-      </p>
+            {!composing && note && <p className="kit-note">{note}</p>}
+          </Card>
+        </div>
+
+        {yours.length > 0 && (
+          <div className="kitx-group">
+            <p className="kicker">Your letters</p>
+            <Card>
+              <ul className="kit-rows kit-rows-stackable">{yours.map(yoursRow)}</ul>
+            </Card>
+          </div>
+        )}
+
+        {GROUPS.map((g) => (
+          <div className="kitx-group" key={g}>
+            <p className="kicker">{g}</p>
+            <Card>
+              <ul className="kit-rows kit-rows-stackable">
+                {LETTERS.filter((l) => l.group === g).map((l) => {
+                  /* TASK-493: a slot row's key is the composed letter CURRENTLY
+                     riding that automatic send (the slots GET's effective key);
+                     before the fetch lands the row shows its words with no doors. */
+                  const rowKey = l.key ?? (l.slot ? autoSlots[l.slot] : undefined);
+                  return (
+                    <li key={l.name}>
+                      <div>
+                        <b>{l.name}{api(rowKey)?.override ? " (edited)" : ""}</b>
+                        {subjectLine(api(rowKey)?.override?.subject ?? l.subject)}
+                        {/* the when line, said once, under the row's words */}
+                        <em>{l.when}</em>
+                        <em>{l.key || l.slot ? fixedWords(l.note) : "System letter: every part is fixed, the copy lives in code for now."}</em>
+                      </div>
+                      {rowKey ? rowEnd(rowKey, l.subject, { send: !l.noPublish }) : null}
+                      {open === rowKey && rowKey && openedRow(rowKey, {
+                        flip: !l.noPublish,
+                        pointer: l.slot
+                          ? "Automatic send. The letter above rides this slot; change the riding letter on its own page."
+                          : l.noPublish
+                            ? "One-soul letter. It sends itself when its moment comes, never a list blast."
+                            : "Sending lives in the send panel: pick who, send yourself a test copy, type the count.",
+                      })}
+                    </li>
+                  );
+                })}
+              </ul>
+            </Card>
+          </div>
+        ))}
+
+        <p className="kit-note">
+          Every letter wears the brand shell: logo header, accents, an honest unsubscribe where
+          the law wants it. A letter you compose here can be emailed to the whole list or one
+          door&rsquo;s people, and, marked public, published on /news too.
+        </p>
+      </div>
     </div>
   );
 }

@@ -454,10 +454,10 @@ describe("the Reading group of /a/letters", () => {
     expect(isReadingDraftKey("after-reading-2026-10-11-1")).toBe(true);
     expect(isReadingDraftKey("weekly-reading-with-love")).toBe(false);
   });
-  it("the room renders those letters inside the Reading group with the review tag", () => {
+  it("the room (T-552) holds those letters in the Drafted group through the one Drafted helper", () => {
     const p = fs.readFileSync(path.join(__dirname, "..", "src/app/a/letters/page.tsx"), "utf8");
-    expect(p).toMatch(/isReadingDraftKey/);
-    expect(p).toContain("draft, waiting for your review");
+    expect(p).toMatch(/isDrafted\(/);
+    expect(p).toContain("draftWhoWords");
     expect(p).not.toMatch(/reading-week-drafts/);
   });
   it("the send panel and the send route are untouched by this lane", () => {

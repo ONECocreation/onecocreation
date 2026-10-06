@@ -535,3 +535,17 @@
   .kit-rows-stackable>li{grid-template-columns:1fr;gap:8px}
   .kit-rows-stackable .kit-rows-end{justify-self:end}
 }
+
+/* T-552: the letters room. A group = its kicker label hugging its card;
+   a row's opened area spans the whole row under its words and controls. */
+.kitx-group{display:flex;flex-direction:column;gap:10px}
+.kitx-group>.kicker,.kitx-group>.kit-h2,.kitx-group>.kit-text-quiet{margin:0}
+.kitx-group .kit-card-body>*+*{margin-top:14px}
+.kit-rows>li>.kitx-row{grid-column:1/-1;display:flex;flex-direction:column;gap:12px;padding-top:4px;min-width:0}
+/* T-552 round 2: at phone width a row's control group is ONE even line under
+   its words, every control the same width, whether the row has two or three */
+.kitx-even{align-self:center}
+.kitx-even>.kit-btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:2.5rem;height:2.5rem;padding:0}
+@media (max-width:640px){
+  .kit-rows-stackable>li>.kitx-even{display:flex;justify-content:flex-start;justify-self:start;gap:8px;width:auto}
+}

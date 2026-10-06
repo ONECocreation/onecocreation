@@ -9,6 +9,7 @@ import {
   isLetterKey,
   listLetterKeys,
   saveLetterOverride,
+  touchLetterMeta,
   type LetterAudience,
   type LetterKey,
 } from "@/lib/letters";
@@ -34,13 +35,19 @@ export async function GET(request: Request) {
   for (const k of await listLetterKeys()) {
     const seeded = (EDITABLE_LETTERS as readonly string[]).includes(k);
     const o = await getLetterOverride(k);
+    const meta = seeded ? null : await getLetterMeta(k);
     letters.push({
       key: k,
       kind: seeded ? "seeded" : "composed",
       override: o,
       default: seeded ? (LETTER_DEFAULTS[k as LetterKey] ?? null) : null,
       audience: audienceOf(k, o),
-      title: seeded ? null : ((await getLetterMeta(k))?.title ?? null),
+      title: seeded ? null : (meta?.title ?? null),
+      /* T-552: the room's Drafted group reads these (composed letters only) */
+      createdAtMs: meta?.createdAtMs ?? null,
+      updatedAtMs: meta?.updatedAtMs ?? null,
+      draft: meta?.draft === true,
+      reviewedAtMs: meta?.reviewedAtMs ?? null,
     });
   }
   let segments: { source: string; count: number }[] = [];
@@ -80,6 +87,8 @@ export async function PUT(request: Request) {
     body?: string;
     audience?: string;
     reset?: boolean;
+    /** T-552: the Publish press (clears Drafted for a composed letter) */
+    publish?: boolean;
   } | null;
   // TASK-131: seeded keys AND Love's composed letters both save here
   if (!body?.key || !(await isLetterKey(body.key))) {
@@ -108,5 +117,6 @@ export async function PUT(request: Request) {
     body: body.body.trim(),
     ...(keepAudience ? { audience: keepAudience } : {}),
   });
+  await touchLetterMeta(k, { publish: body.publish === true });
   return NextResponse.json({ ok: true });
 }
