@@ -55,6 +55,14 @@ export interface ComposedLetterMeta {
   key: string;
   title: string;
   createdAtMs: number;
+  /** T-552: a letter born in the room stays Drafted until Love presses
+   *  Publish. Optional on purpose: a legacy letter has no flag and is never a draft. */
+  draft?: boolean;
+  /** T-552: last time Love saved the words (set by the room's save) */
+  updatedAtMs?: number;
+  /** T-552: when Love looked a letter over and published it (a reading
+   *  draft the helper wrote leaves Drafted once this is set) */
+  reviewedAtMs?: number;
 }
 
 export const DEFAULT_AUDIENCE: Record<LetterKey, LetterAudience> = {
@@ -471,6 +479,22 @@ export async function getLetterMeta(k: string): Promise<ComposedLetterMeta | nul
   }
 }
 
+/** T-552: stamp a composed letter's meta when Love saves it. `publish` is
+ *  the Publish press: it clears the draft flag and records the review time.
+ *  Seeded letters have no meta and are skipped. Never touches the words or
+ *  any mail path. */
+export async function touchLetterMeta(k: string, opts: { publish?: boolean } = {}): Promise<void> {
+  const meta = await getLetterMeta(k);
+  if (!meta) return;
+  const now = Date.now();
+  const next: ComposedLetterMeta = { ...meta, updatedAtMs: now };
+  if (opts.publish) {
+    next.draft = false;
+    next.reviewedAtMs = now;
+  }
+  await kv(["SET", metaKey(k), JSON.stringify(next)]);
+}
+
 /** Every letter key: the seeded nine first, then Love's own in creation order. */
 export async function listLetterKeys(): Promise<string[]> {
   return [...EDITABLE_LETTERS, ...(await composedLetterKeys())];
@@ -500,10 +524,17 @@ export async function createLetter(opts: {
 }): Promise<{ key: string }> {
   const title = opts.title.trim();
   if (!title) throw new Error("a letter needs a title");
-  const k = (opts.key ?? slugify(title)).trim();
+  let k = (opts.key ?? slugify(title)).trim();
   if (!SLUG_RE.test(k)) throw new Error("the key must be a slug — lowercase letters, digits, dashes");
+  /* T-552: no key given = the key is derived, so a taken one gets a numeric
+   * suffix (-2, -3, ...) instead of an error. A key Love typed still refuses. */
+  if (opts.key === undefined && (await isLetterKey(k))) {
+    const base = k.slice(0, 60);
+    for (let n = 2; n < 1000 && (await isLetterKey(k)); n++) k = `${base}-${n}`;
+  }
   if (await isLetterKey(k)) throw new Error("a letter with that key already exists");
-  const meta: ComposedLetterMeta = { key: k, title, createdAtMs: Date.now() };
+  const now = Date.now();
+  const meta: ComposedLetterMeta = { key: k, title, createdAtMs: now, draft: true, updatedAtMs: now };
   await kv(["SET", metaKey(k), JSON.stringify(meta)]);
   await saveLetterOverride(k, {
     subject: title,
