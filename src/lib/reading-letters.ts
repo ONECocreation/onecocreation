@@ -1,5 +1,5 @@
 import { sendMail, capRemaining, onceWithin, brandShell, type OutgoingMail } from "@/lib/mail";
-import { siteBase, unsubscribeUrl, isSubscribed, listSubscribersByTag, markReadingConfirmed } from "@/lib/subscribers";
+import { siteBase, unsubscribeUrl, isSubscribed, listSubscribersByTag, listActiveSubscribers, markReadingConfirmed } from "@/lib/subscribers";
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
 import { zonedDateParts } from "@/lib/booking-time";
@@ -363,7 +363,9 @@ async function sendDayOfIfDue(nowMs: number, stats: ReadingTickStats): Promise<v
   const due = await dueOccurrenceNow(nowMs);
   if (!due) return;
 
-  const records = await listSubscribersByTag("reading");
+  // T-577: the WHOLE mailing list (every record not opted out), not only the
+  // "reading" tag. Once-key, isSubscribed and the cap are unchanged below.
+  const records = await listActiveSubscribers();
   for (const rec of records) {
     try {
       const result = await sendReadingDayOf(rec.email, due.startsAtMs, due.tz);

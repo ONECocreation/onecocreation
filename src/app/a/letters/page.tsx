@@ -82,7 +82,7 @@ const LETTERS: { key?: string; slot?: "reading-confirm" | "reading-dayof"; name:
     kind: "automatic · composed letter",
     subject: "the letter riding the day-of slot",
     note: "the composed letter named on this row is the one that sends",
-    when: "Sends on the reading day after 2 a.m. in the schedule's zone, before the reading begins; a late same-day sign-up gets it right away.",
+    when: "Goes to the whole mailing list on the reading day after 2 a.m. in the schedule's zone, before the reading begins; a late same-day sign-up gets it right away.",
     group: "Reading",
     noPublish: true,
   },
