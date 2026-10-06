@@ -646,7 +646,7 @@ export type RailKey = "btcpay" | "square" | "stripe";
 
 const RAIL_LABEL: Record<RailKey, string> = {
   btcpay: "Bitcoin (BTCPay)",
-  square: "Card (Square)",
+  square: "Card checkout (one-time payments)",
   stripe: "Card (Stripe)",
 };
 

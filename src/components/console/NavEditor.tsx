@@ -57,7 +57,7 @@ const FEATURE_LABELS: Record<keyof SiteConfig["features"], string> = {
   // featuresFor() never surfaces this label in practice.
   purchaseLoveNotify: "Purchase letters to Love",
   // T-541a (forced edit, same shape as above): gates routes, not a nav page.
-  subscriptions: "Monthly memberships (Square)",
+  subscriptions: "Monthly memberships (recurring billing)",
 };
 
 /** TASK-187: a route may need more than one switch ON now (PAGE_CATALOG's
