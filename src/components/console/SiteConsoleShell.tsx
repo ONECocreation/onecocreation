@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { CONSOLE_ROOMS, CONSOLE_OVERVIEW, roomForPath, siteChromeTitle } from "@/lib/console";
 import { SiteChromeHeader, SiteChromeFooter } from "./site-chrome";
@@ -230,9 +230,34 @@ function useStudioOpen(): [boolean, () => void] {
 /* TASK-545: the ONE native button in this rail - both accordions (Site's
    whole-row toggle, Studio's small toggle) render through it, so the
    operator census keeps a single button family for this file. */
-function RailToggle(props: React.ComponentProps<"button">) {
-  return <button type="button" {...props} />;
+/* TASK-586: `menu` = the two side-menu buttons (Rooms, Close) - the house
+   ghost pill, one size, through this same single button. */
+function RailToggle({ menu, ...props }: React.ComponentProps<"button"> & { menu?: boolean }) {
+  return <button type="button" {...props} className={menu ? `btn btn-ghost btn-sm ${props.className ?? ""}`.trim() : props.className} />;
 }
+
+/* TASK-586 (Admiral, forge set oc-t552-letters-room-r4, phone shot of
+   /a/letters): "this nav on top looks bad. can we make them a side menu".
+   On a phone the rooms are a SIDE MENU: hidden until one "Rooms" button opens
+   it, slides in from the left over the page with a scrim. The breakpoint is
+   the one the rail already stacked at (house.css, 760px) - ONE number, so the
+   old pill block and the new menu can never both show. Desktop is untouched:
+   the same nav, the same rows; only a CSS-hidden button rides beside it. */
+export const ROOMS_PHONE_QUERY = "(max-width: 760px)";
+
+function useIsPhone(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia(ROOMS_PHONE_QUERY);
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(ROOMS_PHONE_QUERY).matches,
+    () => false, // server paint = desktop
+  );
+}
+
+const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 function StudioRoomAccordion({ active, title, href, pathname }: { active: boolean; title: string; href: string; pathname: string }) {
   const [openByHand, toggle] = useStudioOpen();
@@ -339,6 +364,52 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
   // too), Brand folds into Site as a sub-row (below). Chained after the
   // existing sort so SITE_NAV_ORDER/siteRoomOrder's own contract (and
   // tests/console.test.ts's import of it) stays exactly as it was.
+  const isPhone = useIsPhone();
+  const [openRaw, setOpen] = useState(false);
+  const open = openRaw && isPhone; // a wide screen never keeps the drawer open
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const close = useCallback(() => {
+    setOpen(false);
+    triggerRef.current?.focus(); // focus goes home to the button
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    closeRef.current?.focus();
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close();
+        return;
+      }
+      if (e.key !== "Tab" || !navRef.current) return;
+      const els = Array.from(navRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
+      if (els.length === 0) return;
+      const first = els[0];
+      const last = els[els.length - 1];
+      const at = document.activeElement;
+      if (!navRef.current.contains(at)) {
+        e.preventDefault();
+        first.focus();
+      } else if (e.shiftKey && at === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && at === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open, close]);
+
   const rooms = siteRoomOrder([CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly)).filter(
     (r) => r.key !== "live" && r.key !== "brand",
   );
@@ -349,7 +420,37 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
 
       <div className="mgmt-wrap mgmt-shell">
         {/* the LEFT RAIL — wireframe v2: tabs down the side, stage beside */}
-        <nav className="mgmt-rail" aria-label="Management sections">
+        {/* TASK-586: phone only (CSS hides it above 760px) - the one door to the side menu */}
+        <RailToggle
+          ref={triggerRef}
+          onClick={() => setOpen(true)}
+          aria-expanded={open}
+          aria-controls="mgmt-rooms-nav"
+          className="mgmt-rooms-btn"
+          menu
+        >
+          Rooms
+        </RailToggle>
+        {open && <div className="mgmt-rooms-scrim" onClick={close} aria-hidden="true" />}
+        <nav
+          id="mgmt-rooms-nav"
+          ref={navRef}
+          className={`mgmt-rail${open ? " is-open" : ""}`}
+          aria-label="Management sections"
+          {...(open ? { role: "dialog", "aria-modal": true } : {})}
+          onClick={(e) => {
+            // choosing a room (any real link) closes the menu; accordion toggles do not
+            if (open && (e.target as HTMLElement).closest("a[href]")) setOpen(false);
+          }}
+        >
+          {open && (
+            <div className="mgmt-rail-head">
+              <span className="mgmt-rail-headname">Rooms</span>
+              <RailToggle ref={closeRef} onClick={close} menu>
+                Close
+              </RailToggle>
+            </div>
+          )}
           {rooms.map((r) => {
             // TASK-330: Brand folded under Site (a sub-row, not its own
             // rail entry) — the Site row itself must still read active
