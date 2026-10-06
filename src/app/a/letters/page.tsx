@@ -305,17 +305,20 @@ export default function LettersRoom() {
   function rowEnd(key: string, fallbackSubject: string, o: { send: boolean; label?: string; main?: boolean }) {
     return (
       <span className="kit-rows-end kit-rows-pair kitx-even">
+        {o.send && (
+          <a className="kit-btn kit-btn-second kit-btn-sm" href={`/a/letters/${key}`} aria-label="Send" title="Send this letter">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+              <path d="M22 2 11 13" />
+              <path d="M22 2 15 22l-4-9-9-4 20-7Z" />
+            </svg>
+          </a>
+        )}
         <Button sm variant={o.main ? "main" : "second"} onClick={() => openEditor(key, fallbackSubject)} aria-expanded={open === key}>
           {open === key ? "Close" : (o.label ?? "Edit")}
         </Button>
         <Button sm variant="second" onClick={() => openPreview(key, fallbackSubject)} aria-pressed={previewOpen === key}>
           Preview
         </Button>
-        {o.send && (
-          <a className="kit-btn kit-btn-second kit-btn-sm" href={`/a/letters/${key}`}>
-            Send
-          </a>
-        )}
       </span>
     );
   }

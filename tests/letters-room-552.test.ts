@@ -111,6 +111,17 @@ describe("the room source", () => {
     expect(src).toContain("href={`/a/letters/${key}`}");
     expect(src).toContain("send: !l.noPublish");
   });
+  it("Send is a paper-airplane icon button named Send, first in the group, same box as the others", () => {
+    const end = src.slice(src.indexOf("function rowEnd("), src.indexOf("function openedRow("));
+    expect(end).toContain('aria-label="Send"');
+    expect(end).toContain('title="Send this letter"');
+    expect(end).toContain("<svg");
+    expect(end).not.toMatch(/>\s*Send\s*</);
+    expect(end.indexOf("aria-label=\"Send\"")).toBeLessThan(end.indexOf("openEditor("));
+    expect(end.indexOf("openEditor(")).toBeLessThan(end.indexOf("openPreview("));
+    const css = readFileSync(resolve(__dirname, "../src/app/kit.css"), "utf8");
+    expect(css).toMatch(/\.kitx-even>\.kit-btn\{[^}]*width:12rem/);
+  });
   it("names the fixed parts on every row", () => {
     expect(src).toContain("Fixed: the logo header and the footer.");
     expect(src).toContain("every part is fixed");
