@@ -197,7 +197,7 @@ export async function buildReceiptLetter(order: OrderRecord): Promise<{ subject:
   }
 
   const tpl = (await getLetterOverride("order-receipt")) ?? LETTER_DEFAULTS["order-receipt"];
-  const subject = tpl?.subject ?? "Your order — received with love";
+  const subject = tpl?.subject ?? "Your order, received with love";
   let body = tpl?.body ?? `Thank you — your order is settled.\n\n{{lines}}\n\n{{door}}`;
   /* the offer-letters doctrine: a slot Love edits out is appended at the
      end — nothing load-bearing (what was bought, the door) can be lost */

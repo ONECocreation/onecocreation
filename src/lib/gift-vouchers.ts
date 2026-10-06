@@ -118,7 +118,7 @@ export async function settleGiftsFromOrder(order: OrderRecord): Promise<string[]
       try {
         await enqueue([{
           to: l.giftTo,
-          subject: `A gift for you — ${l.title} 🕊️`,
+          subject: `A gift for you: ${l.title} 🕊️`,
           html: brandShell(
             `<p>Someone who loves you has gifted you a session:</p>
              <p style="font-size:1.15em"><b>${l.title}</b></p>

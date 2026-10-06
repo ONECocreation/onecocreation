@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   }
   await sendMail(persona, {
     to,
-    subject: `One Cocreation mail rail — test from ${persona}@`,
+    subject: `One Cocreation mail rail: test from ${persona}@`,
     html: brandShell(
       `<p>The rail is lit. This letter left through the <b>${persona}</b> mailbox
        over the house SMTP relay — if you are reading it, transactional mail works

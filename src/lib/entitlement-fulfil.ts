@@ -15,7 +15,7 @@ export async function sendRevokeLetter(to: string, tier: Tier, refunded: boolean
   // S2: the gold CTA below stays literal — decorative gold awaits the taste-maker's ruling (gold law).
   await enqueue([{
     to,
-    subject: `The door rests — ${name}`,
+    subject: `The door rests: ${name}`,
     html: brandShell(
       `<p>Your <b>${name}</b> membership has closed${refunded ? " with your refund" : ""}, and its rooms are resting.</p>
        <p>Everything you wrote in the community stays yours, and the field remembers you. Whenever

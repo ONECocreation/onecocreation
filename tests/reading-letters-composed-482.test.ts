@@ -163,7 +163,7 @@ describe("buildReadingDayOfLetter — the weekly-reading-with-love-2 key", () =>
   it("falls back to the built-in words when no override has ever been saved", async () => {
     const { buildReadingDayOfLetter } = await lib();
     const mail = await buildReadingDayOfLetter("reader@example.com", STARTS_AT_MS, "America/Denver");
-    expect(mail.subject).toBe("Don't forget — the reading is today");
+    expect(mail.subject).toBe("Don't forget: the reading is today");
   });
 
   it("falls back to the built-in words when the saved override's body is blank", async () => {
@@ -171,7 +171,7 @@ describe("buildReadingDayOfLetter — the weekly-reading-with-love-2 key", () =>
     await saveLetterOverride("weekly-reading-with-love-2", { subject: "Anything", body: "\n \n", audience: "members" });
     const { buildReadingDayOfLetter } = await lib();
     const mail = await buildReadingDayOfLetter("reader@example.com", STARTS_AT_MS, "America/Denver");
-    expect(mail.subject).toBe("Don't forget — the reading is today");
+    expect(mail.subject).toBe("Don't forget: the reading is today");
   });
 
   it("falls back to the built-in words when the vault errors", async () => {
@@ -180,7 +180,7 @@ describe("buildReadingDayOfLetter — the weekly-reading-with-love-2 key", () =>
     });
     const { buildReadingDayOfLetter } = await lib();
     const mail = await buildReadingDayOfLetter("reader@example.com", STARTS_AT_MS, "America/Denver");
-    expect(mail.subject).toBe("Don't forget — the reading is today");
+    expect(mail.subject).toBe("Don't forget: the reading is today");
   });
 });
 

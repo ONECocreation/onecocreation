@@ -213,7 +213,7 @@ describe("the receipt letter — once per order, words carrying the door", () =>
     expect(html).toMatch(door);
     // THE LEAK RULE — the paid file's pointer never rides the letter
     expect(html).not.toContain("fixture-meditation.mp3");
-    expect(sentMail[0].subject).toBe("Your order — received with love");
+    expect(sentMail[0].subject).toBe("Your order, received with love");
   });
 
   it("a booking order's settle sends no store receipt (its own letter rides mail-booking)", async () => {

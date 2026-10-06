@@ -119,7 +119,7 @@ describe("the real send path routes through letterHtml() — directives render, 
     await enqueueDayTwoWelcome("reader@example.com");
     expect(enqueued).toHaveLength(1);
     const job = enqueued[0][0];
-    expect(job.subject).toBe("Welcome to the field — a note from One Cocreation");
+    expect(job.subject).toBe("Welcome to the field, a note from One Cocreation");
     expect(job.html).toContain("Step into the field");
     expect(job.html).toContain('href="http://localhost:3000/memberships"');
     expect(job.html).not.toContain("The store");

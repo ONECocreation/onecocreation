@@ -212,7 +212,7 @@ describe("the lead-magnet default carries the button in Love's own format", () =
   it("the default body: a !cta: download line plus a Listen markdown line; subject and stale host", async () => {
     const { LETTER_DEFAULTS } = await letters();
     const tpl = LETTER_DEFAULTS["lead-magnet"]!;
-    expect(tpl.subject).toBe("Your free meditation — Unzip Into the New You");
+    expect(tpl.subject).toBe("Your free meditation: Unzip Into the New You");
     expect(tpl.body).toContain("!cta: Download: Unzip Into the New You | /meditation/download");
     expect(tpl.body).toContain("[Listen in your browser](/audio/unzip-into-the-new-you.mp3)");
     expect(tpl.body).not.toContain("onecocreation-adminpacmans");
@@ -349,7 +349,7 @@ describe("preview equals sent: eleven EDITABLE_LETTERS keys with sample slots", 
     expect(sentMail).toHaveLength(1);
     const { LETTER_DEFAULTS, letterHtml } = await letters();
     const { unsubscribeUrl } = await import("@/lib/subscribers");
-    expect(sentMail[0].subject).toBe("Your free meditation — Unzip Into the New You");
+    expect(sentMail[0].subject).toBe("Your free meditation: Unzip Into the New You");
     expect(sentMail[0].html).toBe(
       letterHtml(LETTER_DEFAULTS["lead-magnet"]!.body, { unsubscribeUrl: unsubscribeUrl("reader@example.com") }),
     );
@@ -391,7 +391,7 @@ describe("preview equals sent: eleven EDITABLE_LETTERS keys with sample slots", 
     const job = enqueued[0][0];
     const { LETTER_DEFAULTS, letterHtml } = await letters();
     const { unsubscribeUrl } = await import("@/lib/subscribers");
-    expect(job.subject).toBe("[test] Greetings and Cheers — from One Cocreation");
+    expect(job.subject).toBe("[test] Greetings and Cheers from One Cocreation");
     expect(job.html).toBe(
       letterHtml(LETTER_DEFAULTS["news-sample"]!.body, {
         webUrl: "/letters/news-sample",
@@ -456,7 +456,7 @@ describe("preview equals sent: eleven EDITABLE_LETTERS keys with sample slots", 
         .replace("{{door}}", door)
         .replace(/\n{3,}/g, "\n\n")
         .trim();
-      expect(built.subject).toBe("Your order — received with love");
+      expect(built.subject).toBe("Your order, received with love");
       expect(built.html).toBe(letterHtml(resolved));
     } finally {
       vi.useRealTimers();

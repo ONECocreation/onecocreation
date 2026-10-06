@@ -164,7 +164,7 @@ describe("sendDayOfToOneIfDue — the one soul's immediate send", () => {
     const result = await sendDayOfToOneIfDue("a@example.com", TICK_15Z);
     expect(result).toBe("sent");
     expect(sent).toHaveLength(1);
-    expect(sent[0].subject).toBe("Don't forget — the reading is today");
+    expect(sent[0].subject).toBe("Don't forget: the reading is today");
   });
 
   it("once the reading has begun: notDue, nothing sent", async () => {
@@ -196,7 +196,7 @@ describe("sendDayOfToOneIfDue — the one soul's immediate send", () => {
     vi.setSystemTime(TICK_15Z + 60_000);
     const tick = await enqueueReadingDayOf(TICK_15Z + 60_000);
     expect(tick.dayOfSent).toBe(0); // the once-key this call already claimed stops the sweep's own attempt
-    expect(sent.filter((m) => m.subject === "Don't forget — the reading is today")).toHaveLength(1);
+    expect(sent.filter((m) => m.subject === "Don't forget: the reading is today")).toHaveLength(1);
   });
 });
 
@@ -221,7 +221,7 @@ describe("the subscribe route — a genuinely new reading sign-up gets the confi
     expect(await res.json()).toEqual({ ok: true, outcome: "joined" });
     expect(sent).toHaveLength(2);
     expect(sent[0].subject).toBe("You're on the list for the reading");
-    expect(sent[1].subject).toBe("Don't forget — the reading is today");
+    expect(sent[1].subject).toBe("Don't forget: the reading is today");
     expect(markCalls).toEqual(["reader@example.com"]); // the confirmation's own stamp, unaffected
   });
 

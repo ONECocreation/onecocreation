@@ -56,7 +56,7 @@ export function holdReminderLetters(opts: {
   );
   const mk = (offsetH: number) => ({
     to: opts.to,
-    subject: `Still holding your time — ${opts.serviceTitle}`,
+    subject: `Still holding your time: ${opts.serviceTitle}`,
     html: body(Math.max(1, Math.round((opts.holdUntilMs - Date.now() - offsetH * 3600_000) / 3600_000))),
     notBefore: okTimeMs(Date.now() + offsetH * 3600_000, opts.artistTz),
     guard: { kind: "cart-hold" as const, cartId: opts.cartId, holdId: opts.holdId },

@@ -160,7 +160,7 @@ describe("readingDayOfLetter — the pure builder", () => {
   it("says the time in words ('today at <clock> Mountain'), never a countdown, with the Stage link and an unsubscribe URL", async () => {
     const { readingDayOfLetter } = await lib();
     const mail = readingDayOfLetter("reader@example.com", STARTS_AT_MS, "America/Denver");
-    expect(mail.subject).toBe("Don't forget — the reading is today");
+    expect(mail.subject).toBe("Don't forget: the reading is today");
     expect(mail.html).toContain("today at 1:11 PM Mountain");
     expect(mail.html).not.toMatch(/this morning|tonight/i);
     expect(mail.html).toContain(`href="${SITE}/reading"`);
@@ -260,7 +260,7 @@ describe("sendReadingDayOf — per-recipient send (R1/R2/R3)", () => {
     const result = await sendReadingDayOf("reader@example.com", STARTS_AT_MS, "America/Denver");
     expect(result).toBe("sent");
     expect(sent).toHaveLength(1);
-    expect(sent[0].subject).toBe("Don't forget — the reading is today");
+    expect(sent[0].subject).toBe("Don't forget: the reading is today");
   });
 
   it("R1: silent once the reading has begun — evaluated at the moment of the send (a fresh Date.now(), never a stale nowMs)", async () => {
@@ -339,7 +339,7 @@ describe("enqueueReadingDayOf — the day-of gate (R5, decision A's tick, the pu
     const { enqueueReadingDayOf } = await lib();
     const stats = await enqueueReadingDayOf(TICK_15Z);
     expect(stats.dayOfSent).toBe(2);
-    expect(sent.filter((m) => m.subject === "Don't forget — the reading is today")).toHaveLength(2);
+    expect(sent.filter((m) => m.subject === "Don't forget: the reading is today")).toHaveLength(2);
   });
 
   it("silent before 02:00 local, even on the reading's own day", async () => {
@@ -398,7 +398,7 @@ describe("enqueueReadingDayOf — the day-of gate (R5, decision A's tick, the pu
     const second = await enqueueReadingDayOf(TICK_15Z);
     expect(first.dayOfSent).toBe(1);
     expect(second.dayOfSent).toBe(0);
-    expect(sent.filter((m) => m.subject === "Don't forget — the reading is today")).toHaveLength(1);
+    expect(sent.filter((m) => m.subject === "Don't forget: the reading is today")).toHaveLength(1);
   });
 });
 
