@@ -271,6 +271,11 @@ export default function LettersRoom() {
   const [subj, setSubj] = useState("");
   const [bodyTxt, setBodyTxt] = useState("");
   const [note, setNote] = useState("");
+  /* T-591: "Send me a copy" on every row: which row's strip is open, the
+     address (remembered on this device only), and the strip's answer */
+  const [copyFor, setCopyFor] = useState<string | null>(null);
+  const [copyTo, setCopyTo] = useState("");
+  const [copyNote, setCopyNote] = useState("");
 
   // TASK-131: the "New letter" composer
   const [composing, setComposing] = useState(false);
@@ -339,7 +344,51 @@ export default function LettersRoom() {
             <circle cx="12" cy="12" r="3" />
           </RowIcon>
         </Button>
+        <Button sm variant="second" onClick={() => openCopy(key)} aria-expanded={copyFor === key}
+          aria-label="Send me a copy" title="Send me a copy">
+          <RowIcon>
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="m22 7-10 6L2 7" />
+          </RowIcon>
+        </Button>
       </span>
+    );
+  }
+
+  /* T-591: open or close a row's copy strip; the address last used on this
+   * device fills in (read on the press, so the server render never sees it) */
+  function openCopy(key: string) {
+    setCopyFor(copyFor === key ? null : key);
+    setCopyNote("");
+    if (!copyTo) {
+      try { setCopyTo(localStorage.getItem("oc-letter-copy-to") ?? ""); } catch { /* private window: start empty */ }
+    }
+  }
+
+  /* T-591: one copy of this letter to one address, "[test]" on the subject,
+   * the blanks filled with sample words. Never the list. */
+  async function sendCopy(key: string) {
+    const to = copyTo.trim();
+    try { localStorage.setItem("oc-letter-copy-to", to); } catch { /* fine without it */ }
+    setCopyNote("Sending...");
+    const d = await fetch("/api/admin/letters/copy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, to }),
+    }).then((r) => r.json()).catch(() => null);
+    setCopyNote(d?.ok ? `Sent to ${to}. It goes out on the next mail run, with [test] on the subject.` : `Not sent. ${d?.reason ?? "Try again in a moment."}`);
+  }
+
+  function copyStrip(key: string) {
+    return (
+      <div className="kitx-row">
+        <form className="kit-inline-form" onSubmit={(e) => { e.preventDefault(); sendCopy(key); }}>
+          <Field id={`copy-to-${key}`} label="Send a copy of this letter to" type="email" value={copyTo}
+            onChange={(e) => setCopyTo(e.target.value)} placeholder="you@example.com" />
+          <Button type="submit" sm disabled={!copyTo.includes("@")}>Send me a copy</Button>
+        </form>
+        <p className="kit-note">{copyNote || "Only this address gets it. Blanks like the order lines or the join link show sample words."}</p>
+      </div>
     );
   }
 
@@ -392,6 +441,7 @@ export default function LettersRoom() {
           <em>{draftWhoWords(c.key, c.createdAtMs, weekdayOf, words)}</em>
         </div>
         {rowEnd(c.key, c.title ?? c.key, { send: false, label: words ? "Review" : "Keep writing", main: words })}
+        {copyFor === c.key && copyStrip(c.key)}
         {open === c.key && openedRow(c.key, { flip: true, pointer: "Nothing is sent until you press Publish and then send it from its send panel." })}
       </li>
     );
@@ -408,6 +458,7 @@ export default function LettersRoom() {
           <em>{fixedWords("")}</em>
         </div>
         {rowEnd(c.key, c.title ?? c.key, { send: true })}
+        {copyFor === c.key && copyStrip(c.key)}
         {open === c.key && openedRow(c.key, { flip: true, pointer: "Sending lives in the send panel: pick who, send yourself a test copy, type the count." })}
       </li>
     );
@@ -536,6 +587,19 @@ export default function LettersRoom() {
     } else setNote(res?.reason ?? "create failed");
   }
 
+  /* T-591: keep a draft's words without publishing it; it stays in Drafted */
+  async function saveDraft(key: string) {
+    const res = await fetch("/api/admin/letters", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, subject: subj, body: bodyTxt }),
+    });
+    if ((await res.json().catch(() => ({ ok: false }))).ok) {
+      refresh();
+      setNote("Draft saved. It stays in Drafted, and nothing sends until you press Publish.");
+    } else setNote("Not saved. A draft needs a subject and some words.");
+  }
+
   async function save(key: string) {
     const res = await fetch("/api/admin/letters", {
       method: "PUT",
@@ -603,6 +667,9 @@ export default function LettersRoom() {
             placeholder="the letter body — blank line makes a new paragraph; the brand shell wraps it"
             className="w-full console-field" style={field} />
           <div className="flex flex-wrap items-center gap-2">
+            {isDrafted(key, api(key)) && (
+              <Button sm variant="second" onClick={() => saveDraft(key)}>Save draft</Button>
+            )}
             <button onClick={() => save(key)} className="btn btn-sm">PUBLISH</button>
             {note && <span style={noteInlineStyle}>{note}</span>}
           </div>
@@ -705,6 +772,7 @@ export default function LettersRoom() {
                         <em>{l.key || l.slot ? fixedWords(l.note) : "System letter: every part is fixed, the copy lives in code for now."}</em>
                       </div>
                       {rowKey ? rowEnd(rowKey, l.subject, { send: !l.noPublish }) : null}
+                      {rowKey && copyFor === rowKey && copyStrip(rowKey)}
                       {open === rowKey && rowKey && openedRow(rowKey, {
                         flip: !l.noPublish,
                         pointer: l.slot

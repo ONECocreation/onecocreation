@@ -114,7 +114,7 @@ describe("the room source", () => {
   it("every row control is a small icon button with an accessible name, Send first, no visible words", () => {
     const end = src.slice(src.indexOf("function rowEnd("), src.indexOf("function openedRow("));
     for (const name of ["Send this letter", "Edit this letter", "Preview this letter", "Review this draft"]) expect(end).toContain(name);
-    expect(end.match(/<RowIcon>/g)?.length).toBe(3); // airplane, pencil, eye
+    expect(end.match(/<RowIcon>/g)?.length).toBe(4); // airplane, pencil, eye, envelope (T-591 Send me a copy)
     expect(end).not.toMatch(/>\s*(Send|Edit|Preview|Review|Close)\s*</);
     expect(end.indexOf('aria-label="Send this letter"')).toBeLessThan(end.indexOf("openEditor("));
     expect(end.indexOf("openEditor(")).toBeLessThan(end.indexOf("openPreview("));
