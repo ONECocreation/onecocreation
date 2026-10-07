@@ -651,17 +651,31 @@ export default function LettersRoom() {
           <input value={subj} onChange={(e) => setSubj(e.target.value)} placeholder="subject"
             className="w-full console-field" style={field} />
           <div className="flex flex-wrap items-center gap-1">
-            <button onClick={() => applyToggle("**")} className="btn btn-ghost btn-sm" style={{ fontWeight: 700 }}>B</button>
-            <button onClick={() => applyToggle("*")} className="btn btn-ghost btn-sm" style={{ fontStyle: "italic" }}>I</button>
-            <button onClick={applyLink} className="btn btn-ghost btn-sm">link</button>
-            <button onClick={() => uploadImage()} className="btn btn-ghost btn-sm">{uploading ? "uploading…" : "📷 image"}</button>
+            {/* T-591 r2 (his pins): bold, italic, link and picture are small icon squares, one size */}
+            <span className="kitx-even flex gap-1">
+              <Button sm variant="second" onClick={() => applyToggle("**")} aria-label="Bold" title="Bold: **words**">
+                <RowIcon><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8" /></RowIcon>
+              </Button>
+              <Button sm variant="second" onClick={() => applyToggle("*")} aria-label="Italic" title="Italic: *words*">
+                <RowIcon><path d="M19 4h-9" /><path d="M14 20H5" /><path d="M15 4 9 20" /></RowIcon>
+              </Button>
+              <Button sm variant="second" onClick={applyLink} aria-label="Add a link" title="Add a link: [text](address)">
+                <RowIcon>
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </RowIcon>
+              </Button>
+              <Button sm variant="second" onClick={() => uploadImage()} disabled={uploading}
+                aria-label={uploading ? "Uploading the picture" : "Add a picture"} title={uploading ? "Uploading the picture" : "Add a picture"}>
+                <RowIcon><rect width="18" height="18" x="3" y="3" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></RowIcon>
+              </Button>
+            </span>
             <button onClick={insertReadingRoom} className="btn btn-ghost btn-sm">Reading room</button>
             <button onClick={insertSitePicture} className="btn btn-ghost btn-sm">Site picture</button>
             <button onClick={() => togglePreview(key)}
               className={`btn btn-sm ${previewOpen === key ? "btn-on" : "btn-ghost"}`} aria-pressed={previewOpen === key}>
               {previewOpen === key ? "✕ close preview" : "👁 preview"}
             </button>
-            <span style={{ alignSelf: "center", fontSize: ".68rem", color: "var(--muted)" }}>**bold** · *italic* · [text](url) or [text](/site-path) · Reading room → the weekly reading&apos;s link · Site picture → the banner image · emojis type right in 💛</span>
           </div>
           <textarea id={`ta-${key}`} ref={textareaRef} value={bodyTxt} onChange={(e) => setBodyTxt(e.target.value)} rows={10}
             placeholder="the letter body — blank line makes a new paragraph; the brand shell wraps it"
