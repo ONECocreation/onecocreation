@@ -71,7 +71,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       try {
         await enqueue([{
           to: email,
-          subject: `Your time moved — ${booking.serviceTitle}`,
+          subject: `Your time moved: ${booking.serviceTitle}`,
           // S2: pinned — needs a ruling: the button gold stays a literal — mail clients don't resolve var()
           html: brandShell(
             `<p>All set — your session found its new moment:</p>
@@ -101,7 +101,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
         try {
           await enqueue([{
             to,
-            subject: `Your gift is open again — ${booking.serviceTitle}`,
+            subject: `Your gift is open again: ${booking.serviceTitle}`,
             // S2: pinned — needs a ruling: the button gold stays a literal — mail clients don't resolve var()
             html: brandShell(
               `<p>Your session is canceled, and your gift is safe — choose a new time whenever you're ready:</p>
@@ -127,7 +127,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
         try {
           await enqueue([{
             to: email,
-            subject: `Canceled with love — ${booking.serviceTitle}`,
+            subject: `Canceled with love: ${booking.serviceTitle}`,
             // S2: pinned — needs a ruling: the button gold stays a literal — mail clients don't resolve var()
             html: brandShell(
               `<p>Your session is canceled — no hard feelings, only love.</p>

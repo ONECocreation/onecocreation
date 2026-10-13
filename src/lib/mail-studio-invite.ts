@@ -70,7 +70,7 @@ export async function sendStudioInvite(inv: StudioInvite): Promise<StudioInviteR
   if (!(await onceWithin(`studio-invite:${to}:${inv.joinUrl}`, 10_000))) {
     return { ok: false, code: "duplicate", reason: "just sent — that letter is already on its way" };
   }
-  const subject = `${roomName(inv)} — you're invited`;
+  const subject = `${roomName(inv)}: you're invited`;
   try {
     await sendMail("bookings", { to, subject, html: studioInviteHtml(inv) });
   } catch (e) {

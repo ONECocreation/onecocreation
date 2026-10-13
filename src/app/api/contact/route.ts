@@ -27,7 +27,7 @@ export async function POST(request: Request) {
      the gold quote-bar is decorative (gold law). All three stay literal. */
   await enqueue([{
     to: process.env.CONTACT_INBOX ?? "love@onecocreation.com",
-    subject: `✉️ ${subject} — from ${name}`,
+    subject: `✉️ ${subject} (from ${name})`,
     html: `<div style="font-family:Arial,Helvetica,sans-serif;line-height:1.7;color:#3f3a4e;max-width:560px">
       <p><b>${esc(name)}</b> &lt;${esc(email)}&gt; wrote through the site:</p>
       <blockquote style="border-left:3px solid #d9b24e;margin:0;padding:6px 0 6px 16px;white-space:pre-line">${esc(message)}</blockquote>
