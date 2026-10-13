@@ -67,7 +67,7 @@ describe("Publish and Save draft", () => {
     expect(src).toMatch(/onClick=\{\(\) => put\(false\)\}[^>]*>Save draft</);
   });
   it("Save draft shows only where the room shows it (isDrafted), Publish on every editable letter", () => {
-    expect(src).toMatch(/isDrafted\(key, letter\) && \(\s*<Button variant="second" onClick=\{\(\) => put\(false\)\}/);
+    expect(src).toMatch(/isDrafted\(key, letter\) && \(\s*<Button sm variant="second" onClick=\{\(\) => put\(false\)\}/);
     expect(src).toContain("Publishing makes this the version that sends.");
     expect(src).not.toContain("noPublish");
   });

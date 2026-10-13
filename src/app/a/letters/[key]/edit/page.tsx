@@ -188,11 +188,11 @@ export default function LetterEditPage({ params }: { params: Promise<{ key: stri
               </p>
             )}
             <div className="kit-btn-row">
-              <Button onClick={() => put(true)} disabled={noWords}>Publish</Button>
+              <Button sm onClick={() => put(true)} disabled={noWords}>Publish</Button>
               {isDrafted(key, letter) && (
-                <Button variant="second" onClick={() => put(false)} disabled={noWords}>Save draft</Button>
+                <Button sm variant="second" onClick={() => put(false)} disabled={noWords}>Save draft</Button>
               )}
-              <Button variant="second" onClick={sendCopy} disabled={noWords || copy?.canCopy === false}>Send me a test copy</Button>
+              <Button sm variant="second" onClick={sendCopy} disabled={noWords || copy?.canCopy === false}>Send me a test copy</Button>
             </div>
             <p className="kit-note">Publishing makes this the version that sends.</p>
             {note && <p className={note.kind === "err" ? "kit-note kit-note-err" : note.kind === "ok" ? "kit-note kit-note-ok" : "kit-note"} aria-live="polite">{note.text}</p>}
