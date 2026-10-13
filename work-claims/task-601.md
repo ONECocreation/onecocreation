@@ -15,6 +15,7 @@ THE RULE: every "next reading" draft (and, for the greeting / no-members / sign-
 - `src/lib/mail.ts` (the cta pill style only: a "cta" variant of pill() wearing the site .btn paint; primary and muted variants untouched)
 - `tests/reading-week-drafts-534.test.ts`, `tests/after-reading-draft-538.test.ts` (pin tests updated to the new words, never deleted)
 - `tests/letters-one-render.test.ts` (the PILL_FILL render pin follows the cta pill's new paint; pinned-string-across-lanes lesson, said in the SUMMARY)
+- `tests/fixtures/letters-render-golden.json` (the T-552 golden, regenerated ON PURPOSE through its own UPDATE_LETTERS_GOLDEN=1 path: change 6 repaints the cta pill, so exactly the cta-carrying bodies' hashes move)
 - `~/dev/kimi/outbox/task-601/`
 
 READ-ONLY: `src/lib/letters.ts` (admitsDirectiveUrl verified, unchanged), `src/components/sections.tsx`, `src/lib/reading-letters.ts`, `src/lib/join-letters.ts`, the schedule modules, the live site. Not the October 17 draft in the room (hand paste, Number One's), not the three time buttons, not render order (lane 553c1), not T-602/T-603.
