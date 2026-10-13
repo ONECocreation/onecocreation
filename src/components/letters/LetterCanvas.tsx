@@ -83,7 +83,7 @@ export default function LetterCanvas({ model, seeded, onEdit, problems, onAddWor
           <div className="kitx-letter-fixed">
             <p className="kicker">{FIXED_MIDDLE}</p>
             <div className="kitx-letter-cta">
-              <span className="kit-btn kit-btn-main" aria-hidden="true">{cta.label}</span>
+              <span className="kit-btn kit-btn-main kit-btn-sm" aria-hidden="true">{cta.label}</span>
             </div>
           </div>
         )}
