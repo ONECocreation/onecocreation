@@ -321,7 +321,7 @@ export function admitsLinkAddress(u: string): boolean {
   const t = u.trim();
   return /^https:\/\/[^\s)]+$/.test(t) || /^\/(?!\/)[^\s)]*$/.test(t);
 }
-export const LINK_REFUSAL = "A link needs a full address starting with https:// or a page on this site that starts with a single /.";
+export const LINK_REFUSAL = "Links start with https:// (another site) or with / (a page on this site).";
 
 /**
  * Replace one text segment with an edited document. The segment's own blank

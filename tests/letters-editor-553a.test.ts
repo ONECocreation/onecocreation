@@ -119,7 +119,14 @@ describe("the text block", () => {
   });
   it("the link box refuses with the plain words", () => {
     expect(src).toContain("LINK_REFUSAL");
-    expect(read("src/lib/letter-model.ts")).toContain("A link needs a full address starting with https:// or a page on this site that starts with a single /.");
+    expect(read("src/lib/letter-model.ts")).toContain("Links start with https:// (another site) or with / (a page on this site).");
+  });
+  it("the link box keeps one button beside the field and Remove link on its own row (round 2)", () => {
+    const css = read("src/app/kit.css");
+    expect(css).toContain(".kitx-block .kit-inline-form .kit-field-input:focus-visible{outline-offset:-2px}");
+    expect(css).toContain(".kitx-block .kit-inline-form:has(>.kit-field)>.kit-btn-second{grid-column:1/-1;grid-row:4;justify-self:start}");
+    expect(css).toContain("@media (max-width:640px){.kitx-block .kit-inline-form:has(>.kit-field)>.kit-btn-second{grid-column:1;grid-row:auto;justify-self:center}}");
+    expect(src).toContain('<Button type="submit" sm>');
   });
   it("the canvas loads the editor in the browser only", () => {
     const canvas = read("src/components/letters/LetterCanvas.tsx");

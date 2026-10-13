@@ -550,6 +550,12 @@
   .kit-rows-stackable>li>.kitx-even{display:flex;justify-content:flex-start;justify-self:start;gap:8px;width:auto}
 }
 
+/* T-604 round 2: the link box inside a text block. The field's focus ring is drawn inside
+   its box so the box and the button beside it share one top and one bottom edge; Remove link
+   takes its own row under the field instead of stacking on the Add link cell. */
+.kitx-block .kit-inline-form .kit-field-input:focus-visible{outline-offset:-2px}
+.kitx-block .kit-inline-form:has(>.kit-field)>.kit-btn-second{grid-column:1/-1;grid-row:4;justify-self:start}
+@media (max-width:640px){.kitx-block .kit-inline-form:has(>.kit-field)>.kit-btn-second{grid-column:1;grid-row:auto;justify-self:center}}
 /* T-604 (letters 553a): the letter page. The pane holds the letter column;
    the ground is the mail's own night (the pane wears oc-pv-dark so the letter
    stays night inside a dawn document); the card, its header and footer bands
