@@ -329,14 +329,14 @@ export default function LettersRoom() {
             </RowIcon>
           </a>
         )}
-        <Button sm variant={o.main ? "main" : "second"} onClick={() => openEditor(key, fallbackSubject)} aria-expanded={open === key}
+        <a className={`kit-btn ${o.main ? "kit-btn-main" : "kit-btn-second"} kit-btn-sm`} href={`/a/letters/${key}/edit`}
           aria-label={o.label ? `${o.label === "Review" ? "Review this draft" : o.label}` : "Edit this letter"}
           title={o.label ? (o.label === "Review" ? "Review this draft" : o.label) : "Edit this letter"}>
           <RowIcon>
             <path d="M12 20h9" />
             <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
           </RowIcon>
-        </Button>
+        </a>
         <Button sm variant="second" onClick={() => openPreview(key, fallbackSubject)} aria-pressed={previewOpen === key}
           aria-label="Preview this letter" title="Preview this letter">
           <RowIcon>
@@ -475,15 +475,6 @@ export default function LettersRoom() {
     if (res?.ok) refresh();
   }
 
-  function openEditor(key: string, fallbackSubject: string) {
-    setOpen(open === key ? null : key);
-    setPreviewOpen(null); // a fresh editor never opens onto a stale preview
-    const l = api(key);
-    setSubj(l?.override?.subject ?? l?.default?.subject ?? fallbackSubject);
-    setBodyTxt(l?.override?.body ?? l?.default?.body ?? "");
-    setNote("");
-  }
-
   /* T-552: the row's Preview control. Opens the row and its existing
    * "as the email renders" preview in one press; pressing it again closes it. */
   function openPreview(key: string, fallbackSubject: string) {
@@ -577,13 +568,9 @@ export default function LettersRoom() {
       setComposing(false);
       setNewTitle("");
       setNewAudience("list");
-      refresh();
-      /* the new letter opens in Drafted, ready to write */
-      setOpen(res.key);
-      setPreviewOpen(null);
-      setSubj(title);
-      setBodyTxt("");
-      setNote(`Letter created. Write it below, then press Publish.`);
+      /* T-604: the new letter opens on its own page, ready to write */
+      void title;
+      window.location.assign(`/a/letters/${res.key}/edit`);
     } else setNote(res?.reason ?? "create failed");
   }
 
@@ -670,12 +657,11 @@ export default function LettersRoom() {
                 <RowIcon><rect width="18" height="18" x="3" y="3" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></RowIcon>
               </Button>
             </span>
-            <button onClick={insertReadingRoom} className="btn btn-ghost btn-sm">Reading room</button>
-            <button onClick={insertSitePicture} className="btn btn-ghost btn-sm">Site picture</button>
-            <button onClick={() => togglePreview(key)}
-              className={`btn btn-sm ${previewOpen === key ? "btn-on" : "btn-ghost"}`} aria-pressed={previewOpen === key}>
+            <Button sm variant="second" onClick={insertReadingRoom}>Reading room</Button>
+            <Button sm variant="second" onClick={insertSitePicture}>Site picture</Button>
+            <Button sm variant="second" onClick={() => togglePreview(key)} aria-pressed={previewOpen === key}>
               {previewOpen === key ? "✕ close preview" : "👁 preview"}
-            </button>
+            </Button>
           </div>
           <textarea id={`ta-${key}`} ref={textareaRef} value={bodyTxt} onChange={(e) => setBodyTxt(e.target.value)} rows={10}
             placeholder="the letter body — blank line makes a new paragraph; the brand shell wraps it"
@@ -684,7 +670,7 @@ export default function LettersRoom() {
             {isDrafted(key, api(key)) && (
               <Button sm variant="second" onClick={() => saveDraft(key)}>Save draft</Button>
             )}
-            <button onClick={() => save(key)} className="btn btn-sm">PUBLISH</button>
+            <Button sm onClick={() => save(key)}>PUBLISH</Button>
             {note && <span style={noteInlineStyle}>{note}</span>}
           </div>
         </div>

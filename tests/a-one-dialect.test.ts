@@ -17,6 +17,7 @@ const SIX_PAGES = [
   "src/app/a/page.tsx",
   "src/app/a/letters/page.tsx",
   "src/app/a/letters/[key]/page.tsx",
+  "src/app/a/letters/[key]/edit/page.tsx",
   "src/app/a/people/page.tsx",
   "src/app/a/briefs/page.tsx",
   "src/app/a/money/page.tsx",
@@ -80,6 +81,7 @@ describe("one root padding", () => {
   const expectP6 = [
     "src/app/a/letters/page.tsx",
     "src/app/a/letters/[key]/page.tsx",
+    "src/app/a/letters/[key]/edit/page.tsx",
     "src/app/a/people/page.tsx",
     "src/app/a/money/page.tsx",
   ];

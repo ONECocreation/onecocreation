@@ -356,16 +356,25 @@ describe("the design-drift theme contract — kit.css carries exactly the RULED 
        [a-z]+ capture reads -mini/-pic/-play/-title as their stems.
        TASK-543 (the Admiral: "the /replay viewer ... bigger") adds two more
        stems: kitx-theater (the section + its -card) and kitx-wide (the
-       1600px wrap breakout) - kit.css, tokens only. */
+       1600px wrap breakout) - kit.css, tokens only.
+       T-604 (letters 553a) adds six more stems for the letter page: kitx-block,
+       kitx-chip, kitx-frame, kitx-ground, kitx-letter (with its -head/-foot/
+       -text/-cards variants) and kitx-pane - kit.css, tokens only. */
     expect(unique).toEqual(
       [
         ".kitx-actions",
         ".kitx-balanced",
+        ".kitx-block",
+        ".kitx-chip",
         ".kitx-even",
         ".kitx-flow",
+        ".kitx-frame",
+        ".kitx-ground",
         ".kitx-group",
         ".kitx-host",
+        ".kitx-letter",
         ".kitx-mark",
+        ".kitx-pane",
         ".kitx-photo",
         ".kitx-player",
         ".kitx-row",
