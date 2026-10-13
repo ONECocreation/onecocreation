@@ -129,6 +129,20 @@ describe("text blocks and the editor document", () => {
       expect(docToText(doc), t).toEqual({ ok: false, reason: REFUSE_STAR_OR_BRACKET });
     }
   });
+  it("a link mark the editor decorates (target, rel, class) still writes back", () => {
+    const doc = {
+      type: "doc" as const,
+      content: [{ type: "paragraph" as const, content: [
+        { type: "text" as const, text: "Hi", marks: [{ type: "link" as const, attrs: { href: "https://example.com/x", target: "_blank", rel: "noopener", class: null } as never }, { type: "bold" as const }] },
+        { type: "text" as const, text: " there", marks: [{ type: "link" as const, attrs: { href: "https://example.com/x", target: "_blank" } as never }] },
+      ] }],
+    };
+    expect(docToText(doc)).toEqual({ ok: true, lines: ["[**Hi** there](https://example.com/x)"] });
+  });
+  it("the editor's own key order (marks before text) writes back", () => {
+    const doc = JSON.parse('{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"}],"text":"Welcome"},{"type":"text","text":" home."}]}]}');
+    expect(docToText(doc)).toEqual({ ok: true, lines: ["**Welcome** home."] });
+  });
   it("refuses bold and italic on the same words", () => {
     const doc = { type: "doc" as const, content: [{ type: "paragraph" as const, content: [{ type: "text" as const, text: "both", marks: [{ type: "bold" as const }, { type: "italic" as const }] }] }] };
     expect(docToText(doc)).toEqual({ ok: false, reason: REFUSE_BOLD_ITALIC });

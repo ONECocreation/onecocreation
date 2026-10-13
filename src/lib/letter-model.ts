@@ -248,8 +248,11 @@ function canonical(doc: LetterDoc): DocNode[][][] {
     for (const n of p.content ?? []) {
       if (n.type === "hardBreak") lines.push([]);
       else {
-        const marks = n.type === "text" && n.marks ? [...n.marks].sort((a, b) => rank(a) - rank(b)) : undefined;
-        lines[lines.length - 1].push(n.type === "text" ? (marks?.length ? { ...n, marks } : { type: "text", text: n.text }) : n);
+        /* a link mark keeps only its address: the editor adds target, rel and class the format cannot hold */
+        const marks = n.type === "text" && n.marks
+          ? n.marks.map((m): DocMark => (m.type === "link" ? { type: "link", attrs: { href: m.attrs.href } } : { type: m.type })).sort((a, b) => rank(a) - rank(b))
+          : undefined;
+        lines[lines.length - 1].push(n.type === "text" ? (marks?.length ? { type: "text", text: n.text, marks } : { type: "text", text: n.text }) : n);
       }
     }
     lines = lines.map((l) => merge(l));
