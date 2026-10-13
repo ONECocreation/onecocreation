@@ -4,6 +4,7 @@ import { offerNotifyTo } from "@/lib/pwyc-letters";
 import { siteBase } from "@/lib/subscribers";
 import { getSiteConfig } from "@/lib/site-config";
 import { DEFAULT_READING_SCHEDULE, nextReading, type ReadingSchedule } from "@/lib/reading-schedule";
+import { READING_COVER_SRC } from "@/lib/reading-cover";
 import { zonedDateParts } from "@/lib/booking-time";
 import { createHash } from "crypto";
 import { loadReplays } from "@/lib/replays-source";
@@ -44,12 +45,14 @@ const MIN_LEAD_MS = DAY_MS;
 const MAX_LEAD_MS = 8 * DAY_MS;
 const TUESDAY = 2;
 
-const FRIENDLY_ZONE: Record<string, string> = { "America/Denver": "Mountain" };
-
 /* ── the pure words ─────────────────────────────────────────────────────── */
 
+/* TASK-601 (block 971,279): Love's standing adjustment 3: the LETTER reads
+   the zone's exact short abbreviation from Intl (MDT until the November
+   clock change, MST after), never the friendly word. The FRIENDLY_ZONE
+   short-cut is gone from this module; the home page hero keeps "Mountain"
+   (its own zoneLabel in ReadingHeroCountdown / sections.tsx, not this lane). */
 function zoneLabel(atMs: number, tz: string): string {
-  if (FRIENDLY_ZONE[tz]) return FRIENDLY_ZONE[tz];
   const part = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" })
     .formatToParts(new Date(atMs))
     .find((p) => p.type === "timeZoneName");
@@ -69,7 +72,7 @@ function dayWords(atMs: number, tz: string): string {
   return new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long", month: "long", day: "numeric" }).format(new Date(atMs));
 }
 
-/** "Sunday, October 11 at 1:11 PM Mountain" - every word from the instant and
+/** "Sunday, October 11 at 1:11 PM MDT" - every word from the instant and
  *  the schedule's own zone, never typed. */
 export function whenWords(startsAtMs: number, tz: string): string {
   return `${dayWords(startsAtMs, tz)} at ${clockWords(startsAtMs, tz)} ${zoneLabel(startsAtMs, tz)}`;
@@ -84,18 +87,31 @@ export function nextReadingKey(startsAtMs: number, tz: string): string {
   return `next-reading-${readingDateKey(startsAtMs, tz)}`;
 }
 
-/** Love's voice, her sign-off, no em dash, no Housewarming promise. */
+/* Love's own sign-off (her mail of 2026-10-06, adjustment 8), her words and
+   her emoji exactly as she wrote them; the house no-emoji law is for OUR
+   words, never hers. */
+const LOVE_SIGN_OFF = "Smiles\nLove\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation";
+
+/* Adjustment 7, her words verbatim (she wrote MST here and it stays hers). */
+const LIVES_PARAGRAPH =
+  "Love's weekly YouTube Lives, Monday, Wednesday and Friday, Live with Love or A Moment with Love, will continue as long as signal allows, at 11:11 MST. Keep those notifications on, as she may show up at other Angel number times to adjust for the signal needed. We appreciate your ability to Flow with the Go.";
+
+/** Love's voice, her sign-off, no em dash, no Housewarming promise. The hero
+ *  is the stage's own cover (READING_COVER_SRC) made absolute through
+ *  siteBase(); the one button says the reading's own time. */
 export function nextReadingLetter(startsAtMs: number, tz: string): { subject: string; body: string } {
   const when = whenWords(startsAtMs, tz);
   return {
     subject: `The next reading: ${when}`,
     body: [
-      "Hello, beautiful soul.",
+      `!hero: ${siteBase()}${READING_COVER_SRC}`,
+      "Hello, beautiful soul!",
       `The next reading is ${when}. Come and read with me, free.`,
-      "!cta: Join the reading | /reading",
-      "Missed one? Every recorded reading is kept for our members in the Replays.",
+      `!cta: ${clockWords(startsAtMs, tz)} | /reading`,
+      "Missed one? Every replay is kept for you in the Heart Field.",
       "[Watch the replays](/replays)",
-      "With love,\nLove · ONE Cocreation",
+      LIVES_PARAGRAPH,
+      LOVE_SIGN_OFF,
     ].join("\n\n"),
   };
 }
@@ -295,7 +311,10 @@ export function replayTitle(raw: unknown): string {
   return t.slice(0, TITLE_CAP).trim();
 }
 
-/** Love's voice and sign-off, no em dash. One title names it; several say so. */
+/** Love's voice and sign-off, no em dash. One title names it; several say so.
+ *  TASK-601: the recap letter carries adjustments 2, 4 and 8 only: the
+ *  greeting's exclamation, no "members" word (the sign-in line says what it
+ *  takes without it), and her own sign-off. Its subject stays. */
 export function afterReadingLetter(rawTitles: unknown[]): { subject: string; body: string } {
   const titles = rawTitles.map(replayTitle).filter(Boolean);
   const subject =
@@ -303,12 +322,12 @@ export function afterReadingLetter(rawTitles: unknown[]): { subject: string; bod
   return {
     subject,
     body: [
-      "Hello, beautiful soul.",
+      "Hello, beautiful soul!",
       "The latest reading is now kept in the Replays, to play again whenever you like.",
       ...(titles.length ? [titles.slice(0, MAX_TITLES).join("\n")] : []),
       "!cta: Watch the replay | /replays",
-      "A free membership is all it takes to watch: your email and a six-digit code.",
-      "With love,\nLove · ONE Cocreation",
+      "All it takes to watch is your email and a six-digit code.",
+      LOVE_SIGN_OFF,
     ].join("\n\n"),
   };
 }

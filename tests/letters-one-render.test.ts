@@ -41,7 +41,7 @@ const KV_URL = "http://kv.fixture";
 const SITE = "https://onecocreation.test";
 const FROZEN = new Date("2026-09-30T12:00:00.000Z").getTime();
 const ORDER_ID = "0123456789abcdef01234567";
-const PILL_FILL = 'bgcolor="#AD5470"'; // the rich shell's rendered button (mail.ts pill)
+const PILL_FILL = 'bgcolor="#C56E8B"'; // the rich shell's rendered !cta button (mail.ts pill "cta" variant; T-601: the site .btn paint, the gradient's dark stop as the bgcolor fallback)
 
 const sentMail = vi.hoisted(() => [] as Array<{ to: string; subject: string; html: string }>);
 const enqueued = vi.hoisted(() => [] as Array<Array<{ to: string; subject: string; html: string }>>);

@@ -186,25 +186,37 @@ describe("the Tuesday rule (draftableReading)", () => {
 describe("the words (derived, Love's voice)", () => {
   it("derives the date words from the instant and the schedule's zone", async () => {
     const { whenWords, nextReadingKey } = await mod();
-    expect(whenWords(SUN_READING, "America/Denver")).toBe("Sunday, October 11 at 1:11 PM Mountain");
+    /* T-601: the letter reads the Intl short abbreviation, never "Mountain" */
+    expect(whenWords(SUN_READING, "America/Denver")).toBe("Sunday, October 11 at 1:11 PM MDT");
     expect(whenWords(Date.UTC(2026, 9, 11, 17, 30), "America/New_York")).toBe("Sunday, October 11 at 1:30 PM EDT");
     expect(nextReadingKey(SUN_READING, "America/Denver")).toBe("next-reading-2026-10-11");
     // 20:00 UTC on Oct 11 is already Oct 12 in Auckland: the key follows the zone
     expect(nextReadingKey(Date.UTC(2026, 9, 11, 20, 0), "Pacific/Auckland")).toBe("next-reading-2026-10-12");
   });
 
-  it("writes the ruled subject and body, ends with Love's sign-off, and no em dash, arrow or emoji", async () => {
+  it("writes the ruled subject and body with Love's standing adjustments, her sign-off, no em dash or arrow, and no emoji but her own", async () => {
     const { nextReadingLetter } = await mod();
     const l = nextReadingLetter(SUN_READING, "America/Denver");
-    expect(l.subject).toBe("The next reading: Sunday, October 11 at 1:11 PM Mountain");
-    expect(l.body).toContain("Hello, beautiful soul.");
-    expect(l.body).toContain("The next reading is Sunday, October 11 at 1:11 PM Mountain. Come and read with me, free.");
-    expect(l.body).toContain("!cta: Join the reading | /reading");
+    expect(l.subject).toBe("The next reading: Sunday, October 11 at 1:11 PM MDT");
+    /* T-601 adjustment 1: the stage's cover rides first, absolute */
+    expect(l.body.startsWith("!hero: https://site.test/images/reading-love-cover.jpg")).toBe(true);
+    expect(l.body).toContain("Hello, beautiful soul!");
+    expect(l.body).toContain("The next reading is Sunday, October 11 at 1:11 PM MDT. Come and read with me, free.");
+    /* adjustment 5: the one button says the time */
+    expect(l.body).toContain("!cta: 1:11 PM | /reading");
+    /* adjustment 4: no "members"; the replays live in the Heart Field */
+    expect(l.body).toContain("Missed one? Every replay is kept for you in the Heart Field.");
+    expect(l.body).not.toMatch(/member/i);
     expect(l.body).toContain("[Watch the replays](/replays)");
-    expect(l.body.endsWith("With love,\nLove · ONE Cocreation")).toBe(true);
+    /* adjustment 7: the YouTube Lives paragraph, her words */
+    expect(l.body).toContain(
+      "Love's weekly YouTube Lives, Monday, Wednesday and Friday, Live with Love or A Moment with Love, will continue as long as signal allows, at 11:11 MST. Keep those notifications on, as she may show up at other Angel number times to adjust for the signal needed. We appreciate your ability to Flow with the Go.",
+    );
+    /* adjustment 8: her five-line sign-off, her emoji */
+    expect(l.body.endsWith("Smiles\nLove\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation")).toBe(true);
     for (const s of [l.subject, l.body]) {
       expect(s).not.toMatch(/[—–]/);
-      expect(s).not.toMatch(/[←-⇿➡➔\u{1F300}-\u{1FAFF}☀-➿]/u);
+      expect(s.replace("🌈💫", "")).not.toMatch(/[←-⇿➡➔\u{1F300}-\u{1FAFF}☀-➿]/u);
     }
     expect(l.body).not.toContain("/pac");
   });
@@ -221,7 +233,7 @@ describe("the Housewarming-off week (T-499 switch)", () => {
       const stats = await draftReadingLetters(TUE_0900_MDT);
       expect(stats.nextReading).toBe("drafted");
       const o = await getLetterOverride("next-reading-2026-10-11");
-      expect(o?.subject).toContain("1:11 PM Mountain");
+      expect(o?.subject).toContain("1:11 PM MDT");
       expect(o?.body).not.toMatch(/housewarming|12:12/i);
     }
   });
@@ -246,13 +258,13 @@ describe("derive-or-dash", () => {
     expect(sent).toHaveLength(0);
   });
 
-  it("reads DEFAULT_READING_SCHEDULE (Wednesday 1:11 PM Mountain) when the site has none saved", async () => {
+  it("reads DEFAULT_READING_SCHEDULE (Wednesday 1:11 PM MDT) when the site has none saved", async () => {
     const { draftReadingLetters } = await mod();
     const { getLetterOverride } = await lettersMod();
     cfg.reading = undefined;
     const stats = await draftReadingLetters(TUE_0900_MDT);
     expect(stats.key).toBe("next-reading-2026-10-07");
-    expect((await getLetterOverride("next-reading-2026-10-07"))?.subject).toBe("The next reading: Wednesday, October 7 at 1:11 PM Mountain");
+    expect((await getLetterOverride("next-reading-2026-10-07"))?.subject).toBe("The next reading: Wednesday, October 7 at 1:11 PM MDT");
   });
 });
 
@@ -291,7 +303,7 @@ describe("the once-key", () => {
     await createLetter({ key: "next-reading-2026-10-11", title: "x", audience: "list" });
     const a = await draftReadingLetters(TUE_0900_MDT);
     expect(a.nextReading).toBe("drafted");
-    expect((await getLetterOverride("next-reading-2026-10-11"))?.body).toContain("Hello, beautiful soul.");
+    expect((await getLetterOverride("next-reading-2026-10-11"))?.body).toContain("Hello, beautiful soul!");
     // Love edits; a later poke must not touch her words
     await saveLetterOverride("next-reading-2026-10-11", { subject: "Mine", body: "Her words", audience: "members" });
     store.delete("letters:draft-once:next-reading:2026-10-11");
@@ -316,11 +328,17 @@ describe("the review copy", () => {
     expect(sentPersonas).toEqual(["news", "news"]);
     expect(sent.map((m) => m.to).sort()).toEqual(["admiral@example.org", "love@onecocreation.com"]);
     for (const m of sent) {
-      expect(m.subject).toBe("Draft for your review: The next reading: Sunday, October 11 at 1:11 PM Mountain");
+      expect(m.subject).toBe("Draft for your review: The next reading: Sunday, October 11 at 1:11 PM MDT");
       expect(m.html).toContain("This letter was prepared automatically for Love&#39;s review. Nothing has gone to the list.");
       expect(m.html).toContain('href="https://site.test/a/letters/next-reading-2026-10-11"');
       expect(m.html).toContain("Open it to edit and send");
-      expect(m.html).toContain("Hello, beautiful soul.");
+      expect(m.html).toContain("Hello, beautiful soul!");
+      /* T-601 adjustment 6: the cta pill wears the site's .btn paint — the
+         gradient is the shine, email cannot run the shimmer */
+      expect(m.html).toContain("background:linear-gradient(135deg,#E7B2C3,#C56E8B)");
+      expect(m.html).toContain('<span style="color:#2E0E1D !important;">1:11 PM</span>');
+      /* adjustment 1: the cover hero renders, absolute */
+      expect(m.html).toContain('src="https://site.test/images/reading-love-cover.jpg"');
       expect(m.html).not.toMatch(/[—]/);
       expect(m.unsubscribeUrl).toBeUndefined();
     }

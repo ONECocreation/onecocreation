@@ -142,11 +142,14 @@ describe("the trigger: a replay id the site has not seen", () => {
     const o = await body(key);
     expect(o?.subject).toBe("The replay is here: Reading three");
     expect(o?.audience).toBe("members");
-    expect(o?.body).toContain("Hello, beautiful soul.");
+    expect(o?.body).toContain("Hello, beautiful soul!");
     expect(o?.body).toContain("Reading three");
     expect(o?.body).toContain("!cta: Watch the replay | /replays");
-    expect(o?.body).toContain("A free membership is all it takes to watch: your email and a six-digit code.");
-    expect(o?.body?.endsWith("With love,\nLove · ONE Cocreation")).toBe(true);
+    /* T-601 adjustment 4: no "members" word; the sign-in line stays factual */
+    expect(o?.body).toContain("All it takes to watch is your email and a six-digit code.");
+    expect(o?.body).not.toMatch(/member/i);
+    /* adjustment 8: her five-line sign-off, her emoji */
+    expect(o?.body?.endsWith("Smiles\nLove\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation")).toBe(true);
     expect(seen().sort()).toEqual([A.id, B.id, C.id]);
   });
 
@@ -355,10 +358,10 @@ describe("THE LAW and the words", () => {
     const strings = src.match(/"[^"\n]*"|`[^`]*`/g) ?? [];
     for (const s of strings) expect(s).not.toMatch(/[—→➡➔⮕]/);
   });
-  it("the composed words carry no em dash, arrow or emoji", async () => {
+  it("the composed words carry no em dash, arrow, or emoji but her own (T-601: her sign-off's rainbow and sparkle are hers)", async () => {
     const { afterReadingLetter } = await mod();
     const w = afterReadingLetter(["One", "Two"]);
-    expect(w.subject + w.body).not.toMatch(/[—–→➡➔⮕\u{1F300}-\u{1FAFF}☀-➿]/u);
+    expect((w.subject + w.body).replace("🌈💫", "")).not.toMatch(/[—–→➡➔⮕\u{1F300}-\u{1FAFF}☀-➿]/u);
   });
   it("every mail the recap run sends goes to the operator set only", async () => {
     replays.result = [A];
