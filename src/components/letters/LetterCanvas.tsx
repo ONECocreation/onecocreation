@@ -43,7 +43,7 @@ export default function LetterCanvas({ model, seeded, onEdit, problems, onAddWor
           <div>
             <p className="kicker">Fixed part: the header</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/onecocreation-lockup-email.png" alt="One Cocreation" />
+            <img className="brandmark-lockup" src={cartridge.logo.lockup} alt={cartridge.name} width={174} height={72} />
           </div>
           <b>MEMBERSHIPS</b>
         </div>
@@ -97,7 +97,7 @@ export default function LetterCanvas({ model, seeded, onEdit, problems, onAddWor
           <p>
             <small>OneCocreation{seeded ? " | View on the site" : ""}</small>
           </p>
-          <span className="kit-btn kit-btn-second kit-btn-sm" aria-hidden="true">Unsubscribe</span>
+          <p className="kitx-letter-unsub"><span>Unsubscribe</span></p>
         </div>
       </div>
     </div>

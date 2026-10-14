@@ -133,6 +133,19 @@ describe("the text block", () => {
     expect(canvas).toContain('className={hero === cartridge.hero.heavenEarth ? "about-script" : undefined}');
     expect(read("src/app/house.css")).toContain(".about-script{filter:drop-shadow(.5px 0 0 #fff)");
   });
+  it("round 4: the site's own logo, uniform card pictures, a plain Unsubscribe link, centred phone controls", () => {
+    const canvas = read("src/components/letters/LetterCanvas.tsx");
+    const css = read("src/app/kit.css");
+    expect(canvas).toContain("cartridge.logo.lockup");
+    expect(canvas).not.toContain("kit-btn-second kit-btn-sm\" aria-hidden=\"true\">Unsubscribe");
+    expect(canvas).toContain("kitx-letter-unsub");
+    expect(css).toContain(".kitx-letter-card>img{width:180px;flex:0 0 180px;aspect-ratio:1;object-fit:cover;");
+    expect(css).toContain(".kitx-pane>.kit-btn-row{justify-content:center}");
+    expect(read("src/lib/mail.ts")).toContain('text-align:right;font-family:Arial,sans-serif;font-size:12px;"><a href="${letter.unsubscribeUrl}"');
+    const seed = read("src/lib/letters.ts");
+    expect(seed).toContain("popup-free-guide/unzip-9141826.png | /meditation |");
+    expect(seed).toContain("!cta: Open the News page | /news");
+  });
   it("the canvas loads the editor in the browser only", () => {
     const canvas = read("src/components/letters/LetterCanvas.tsx");
     expect(canvas).toContain("ssr: false");

@@ -565,24 +565,30 @@
 .kitx-ground{background:var(--ground);color:var(--ink);border-radius:16px;padding:18px 10px;display:flex;justify-content:center;min-width:0}
 .kitx-letter{width:100%;max-width:600px;min-width:0;background:var(--mail-panel);color:var(--ink);font-size:15px;line-height:1.75;overflow:hidden}
 .kitx-letter img{display:block;max-width:100%}
-.kitx-letter .kicker{font-size:.62rem;letter-spacing:.2em;line-height:1.5;margin:0 0 6px;color:var(--muted)}
+.kitx-letter .kicker{font-size:.7rem;letter-spacing:.2em;line-height:1.5;margin:0 0 6px;color:var(--muted)}
 .kitx-letter-head{background:var(--mail-deep);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.kitx-letter-head img{height:42px;width:auto}
+.kitx-letter-head img{width:auto}
 .kitx-letter-head b{font-size:12px;letter-spacing:.06em;font-weight:400;color:var(--ghost-ink)}
 .kitx-letter-foot{background:var(--mail-cream-2);color:var(--field-ink);padding:22px 34px;font-size:13px;line-height:1.6}
 .kitx-letter-foot .kicker{color:var(--field-ink)}
 .kitx-letter-foot img{width:40px;height:40px;margin-bottom:8px}
 .kitx-letter-foot p{margin:0 0 10px}
-.kitx-letter-foot .kit-btn{color:var(--field-ink);border-color:var(--field-ink);background:transparent}
+.kitx-letter-foot .kitx-letter-unsub{text-align:right;margin:14px 0 0;font-size:12px}
+.kitx-letter-foot .kitx-letter-unsub span{color:var(--field-ink);text-decoration:underline}
 .kitx-letter-foot small{font-size:12px;color:var(--mail-muted-2)}
 .kitx-letter-fixed{padding:14px 34px;border-top:1px dashed var(--glass-edge)}
 .kitx-letter-cards{display:flex;flex-direction:column;gap:14px;padding:6px 34px 14px}
 .kitx-letter-card{display:flex;gap:18px;align-items:flex-start}
-.kitx-letter-card>img{width:180px;flex:0 0 180px;border-radius:10px}
+.kitx-letter-card>img{width:180px;flex:0 0 180px;aspect-ratio:1;object-fit:cover;border-radius:10px}
 .kitx-letter-card p{margin:0 0 6px}
 .kitx-letter-card .kit-note{font-size:14px;line-height:1.6;color:var(--muted)}
 .kitx-letter-cta{display:flex;justify-content:center;padding:14px 34px 26px}
 .kitx-letter-text{padding:30px 34px 8px;display:flex;flex-direction:column;gap:12px}
+/* T-604 r4: on a phone the controls under the letter and their notes sit on the centre line */
+@media (max-width:640px){
+  .kitx-pane>.kit-btn-row{justify-content:center}
+  .kitx-pane>.kit-note{text-align:center;text-wrap:balance}
+}
 @media (max-width:640px){
   .kitx-letter-text,.kitx-letter-fixed,.kitx-letter-cards{padding-inline:18px}
   .kitx-letter-card{flex-direction:column}

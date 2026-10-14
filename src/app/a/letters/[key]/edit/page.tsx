@@ -204,7 +204,7 @@ export default function LetterEditPage({ params }: { params: Promise<{ key: stri
                     ? `A test copy goes to ${copy.to} only, with what is on the screen.`
                     : "A test copy goes to your own address only, with what is on the screen.")}
             </p>
-            <div>
+            <div className="kit-btn-row">
               <Button sm variant="second" aria-expanded={previewOpen} onClick={() => setPreviewOpen((o) => !o)}>
                 See it as the inbox gets it
               </Button>
