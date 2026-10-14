@@ -60,8 +60,8 @@ describe("the memberships seed carries the lion as the band's ground", () => {
 describe("/memberships designer branch wears the lion page", () => {
   const src = readFileSync("src/app/memberships/page.tsx", "utf8");
   it("the Puck branch's <main> is .lions-gate-dark and renders applyLionToPuck(puck)", () => {
-    expect(src).toContain('<main className="lions-gate-dark lion-in-band"><Render config={config} data={applyLionToPuck(puck as Data)} /></main>');
-    expect(src).toContain('import { applyLionToPuck } from "@/lib/puck-seeds"');
+    expect(src).toContain('<main className="lions-gate-dark lion-in-band"><Render config={config} data={applyLionToPuck(applyEmojiLineToPuck(puck as Data))} /></main>');
+    expect(src).toContain('import { applyEmojiLineToPuck, applyLionToPuck } from "@/lib/puck-seeds"');
   });
   it("the hand-built branch keeps its own lion main", () => {
     expect(src.split('<main className="lions-gate-dark lion-in-band">').length - 1).toBe(1);

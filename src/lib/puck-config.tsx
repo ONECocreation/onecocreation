@@ -15,6 +15,7 @@ import { createAccountDoor } from "@/lib/puck-blocks/account-door";
 import { createBbConsole } from "@/lib/puck-blocks/bb-console";
 import { createBftClock } from "@/lib/puck-blocks/bft-clock";
 import { createLiveDoor } from "@/lib/puck-blocks/live-door";
+import { createEmojiLine } from "@/lib/puck-blocks/emoji-line";
 import { NIP05_DOMAIN, SPACE_NAME } from "@/lib/identity-config";
 
 /**
@@ -166,6 +167,11 @@ components.LiveDoor = createLiveDoor() as unknown as (typeof components)[string]
    reordered (the same append-only law the wave B pairs set). */
 components.AccountDoor = createAccountDoor() as unknown as (typeof components)[string];
 
+/* TASK-611 (L18): EmojiLine - the glyph line the /memberships route draws
+   after the paragraph that used to end with them (applyEmojiLineToPuck).
+   LOCAL; the vendored Text block is untouched. Appended, never reordered. */
+components.EmojiLine = createEmojiLine() as unknown as (typeof components)[string];
+
 /* the library rail: ParallaxBand (and the data-bound blocks, TASK-231's
    RetreatsList + TASK-232's PackagesGrid) join the Layout group, appended
    at the end (after Divider — the package's array order is never reordered) */
@@ -180,7 +186,7 @@ export const config = {
   categories: {
     ...categories,
     layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid", "LettersRoom", "CartPanel", "LiveDoor"] },
-    actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors", "MeSwitch", "LoginDoor", "BbConsole", "BftClock", "AccountDoor"] },
+    actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors", "MeSwitch", "LoginDoor", "BbConsole", "BftClock", "AccountDoor", "EmojiLine"] },
   },
   /* STUDIO P1: page-level SEO lives on the Puck root — plain fields edited
      through Puck.Fields' root section; the registry's root RENDER stays the
