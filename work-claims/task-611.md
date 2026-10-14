@@ -11,5 +11,6 @@ WORKTREE: `~/dev/worktrees/task-611`
 - `src/lib/puck-blocks/emoji-line.tsx` (NEW)
 - `src/lib/puck-config.tsx` (register EmojiLine)
 - `tests/memberships-emoji-line-611.test.ts` (NEW)
+- `tests/memberships-lion.test.ts` (the one source pin on the route's Render line, re-pointed to the new call)
 
 READ-ONLY: the vendored Text block, house.css, the T-560 fallback JSX and test.
