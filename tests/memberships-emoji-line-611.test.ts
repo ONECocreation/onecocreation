@@ -43,7 +43,7 @@ describe("applyEmojiLineToPuck (TASK-611)", () => {
       expect(slot.map((b) => b.props.id)).toEqual(["mb-3", "mb-4", "mb-4-emoji-line", "mb-5"]);
       expect(slot[1].props.text).toBe("ready for this heart connection with you");
       expect(slot[2]).toEqual({ type: "EmojiLine", props: { id: "mb-4-emoji-line", text: RUN } });
-      expect(slot[1].props.style).toEqual({ color: "ink" });
+      expect(slot[1].props.style).toEqual({ color: "ink", spaceBelow: 16 });
     }
   });
 
@@ -75,6 +75,30 @@ describe("applyEmojiLineToPuck (TASK-611)", () => {
     const page = await fs.readFile(path.join(process.cwd(), "src/app/memberships/page.tsx"), "utf8");
     expect(page).toContain("applyLionToPuck(applyEmojiLineToPuck(puck as Data))");
     const blk = await fs.readFile(path.join(process.cwd(), "src/lib/puck-blocks/emoji-line.tsx"), "utf8");
-    expect(blk).toContain('className="constellation constellation-lg"');
+    expect(blk).toContain('className="constellation constellation-center"');
+    expect(blk).not.toContain("constellation-lg");
+    const css = await fs.readFile(path.join(process.cwd(), "src/app/house.css"), "utf8");
+    expect(css).toMatch(/\.constellation\{font-size:1\.25rem/);
+    expect(css).toMatch(/\.constellation-center\{[^}]*margin:24px 0/);
+    expect(css).not.toMatch(/\.constellation-center\{[^}]*font-size/);
+  });
+
+  it("r2: gives each paragraph of her block a gap, and a wider one before the button", () => {
+    const doc = { content: [{ type: "Band", props: { id: "b", content: [
+      { type: "Text", props: { id: "t1", text: "One." } },
+      { type: "Text", props: { id: "t2", text: "Two with you 🌈💕🦁" } },
+      { type: "Text", props: { id: "t3", text: "Heading", style: { spaceBelow: 8 } } },
+      { type: "Text", props: { id: "t4", text: "Last." } },
+      { type: "Button", props: { id: "bt" } },
+    ] } }] };
+    const slot = applyEmojiLineToPuck(doc).content[0].props.content as B[];
+    const gap = (id: string) => (slot.find((b) => b.props.id === id)!.props.style as { spaceBelow?: number } | undefined)?.spaceBelow;
+    expect(gap("t1")).toBe(16);
+    expect(gap("t2")).toBe(16);
+    expect(gap("t3")).toBe(8);
+    expect(gap("t4")).toBe(36);
+    expect(applyEmojiLineToPuck(applyEmojiLineToPuck(doc))).toEqual(applyEmojiLineToPuck(doc));
+    const none = live("with you");
+    expect(applyEmojiLineToPuck(none)).toBe(none);
   });
 });

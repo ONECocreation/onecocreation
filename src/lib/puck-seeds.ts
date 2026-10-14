@@ -234,7 +234,7 @@ export function applyLionToPuck<T extends { content?: unknown[] }>(data: T, lion
  * a published page exists. This render-time transform finds a Text block whose
  * text ends with the run (spaces allowed between), strips the run from the
  * paragraph and inserts an EmojiLine block right after it (drawn as
- * `constellation constellation-lg`, the /book header class at the T-560 size).
+ * `constellation constellation-center`, the /book header size).
  * Idempotent: once the glyphs are gone from the Text, or the Text is only the
  * glyphs, nothing matches, so a later studio Publish cannot double them.
  * Walks slots (any prop array of blocks). Pure; never touches the store.
@@ -246,6 +246,7 @@ const isBlockLike = (v: unknown): v is PuckBlockLike =>
 
 function emojiLineList(list: unknown[]): { list: unknown[]; changed: boolean } {
   let changed = false;
+  let matchedHere = false;
   const out: unknown[] = [];
   for (const item of list) {
     if (!isBlockLike(item) || !item.props) { out.push(item); continue; }
@@ -258,6 +259,7 @@ function emojiLineList(list: unknown[]): { list: unknown[]; changed: boolean } {
       out.push({ ...item, props: { ...props, text: text.replace(EMOJI_RUN, "") } });
       out.push({ type: "EmojiLine", props: { id: `${id}-emoji-line`, text: run } });
       changed = true;
+      matchedHere = true;
       continue;
     }
     let nextProps: Record<string, unknown> | null = null;
@@ -270,7 +272,24 @@ function emojiLineList(list: unknown[]): { list: unknown[]; changed: boolean } {
     if (nextProps) block = { ...item, props: nextProps };
     out.push(block);
   }
-  return { list: out, changed };
+  return { list: out, changed, ...(matchedHere ? { list: paragraphRhythm(out) } : {}) };
+}
+
+/* TASK-611 r2 - Love's copy lines sit with no space between them. In the same
+   list where the glyphs moved, each Text with no spaceBelow of its own gets the
+   house paragraph gap, and the Text right before a Button gets a wider one so
+   the button does not touch the last line. Render time only. */
+const PARA_GAP = 16;
+const BEFORE_BUTTON_GAP = 36;
+function paragraphRhythm(list: unknown[]): unknown[] {
+  return list.map((item, i) => {
+    if (!isBlockLike(item) || item.type !== "Text" || !item.props) return item;
+    const style = (item.props.style ?? {}) as Record<string, unknown>;
+    if (style.spaceBelow) return item;
+    const next = list[i + 1];
+    const gap = isBlockLike(next) && next.type === "Button" ? BEFORE_BUTTON_GAP : PARA_GAP;
+    return { ...item, props: { ...item.props, style: { ...style, spaceBelow: gap } } };
+  });
 }
 
 export function applyEmojiLineToPuck<T extends { content?: unknown[] }>(data: T): T {
