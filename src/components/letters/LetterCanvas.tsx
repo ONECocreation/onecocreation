@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Button } from "@/components/kit";
+import { cartridge } from "@/brand/cartridge";
 import { directivesOf, editableIndexes, textToDoc, type LetterDoc, type LetterModel } from "@/lib/letter-model";
 
 /* the editor loads on this page only, in the browser only */
@@ -49,8 +50,9 @@ export default function LetterCanvas({ model, seeded, onEdit, problems, onAddWor
         {hero && (
           <div className="kitx-letter-fixed">
             <p className="kicker">{FIXED_MIDDLE}</p>
+            {/* the Heaven and Earth script wears the same white stroke it wears on /about (.about-script, house.css) so it stands off the dark canvas */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={hero} alt="" />
+            <img className={hero === cartridge.hero.heavenEarth ? "about-script" : undefined} src={hero} alt="" />
           </div>
         )}
         <div className="kitx-letter-text">

@@ -128,6 +128,11 @@ describe("the text block", () => {
     expect(css).toContain("@media (max-width:640px){.kitx-block .kit-inline-form:has(>.kit-field)>.kit-btn-second{grid-column:1;grid-row:auto;justify-self:center}}");
     expect(src).toContain('<Button type="submit" sm>');
   });
+  it("the Heaven and Earth script on the canvas wears the same stroke as /about (round 3)", () => {
+    const canvas = read("src/components/letters/LetterCanvas.tsx");
+    expect(canvas).toContain('className={hero === cartridge.hero.heavenEarth ? "about-script" : undefined}');
+    expect(read("src/app/house.css")).toContain(".about-script{filter:drop-shadow(.5px 0 0 #fff)");
+  });
   it("the canvas loads the editor in the browser only", () => {
     const canvas = read("src/components/letters/LetterCanvas.tsx");
     expect(canvas).toContain("ssr: false");
