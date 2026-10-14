@@ -227,6 +227,58 @@ export function applyLionToPuck<T extends { content?: unknown[] }>(data: T, lion
   return { ...data, content: [patched, ...current.slice(1)] } as T;
 }
 
+/**
+ * TASK-611 (L18) - the three glyphs on a line of their own. The published
+ * /memberships Text block ends "...heart connection with you <rainbow><hearts>
+ * <lion>"; the T-560 fix lived only in the fallback JSX, which never runs while
+ * a published page exists. This render-time transform finds a Text block whose
+ * text ends with the run (spaces allowed between), strips the run from the
+ * paragraph and inserts an EmojiLine block right after it (drawn as
+ * `constellation constellation-lg`, the /book header class at the T-560 size).
+ * Idempotent: once the glyphs are gone from the Text, or the Text is only the
+ * glyphs, nothing matches, so a later studio Publish cannot double them.
+ * Walks slots (any prop array of blocks). Pure; never touches the store.
+ */
+const EMOJI_RUN = /\s*🌈\s*💕\s*🦁\s*$/u;
+type PuckBlockLike = { type?: string; props?: Record<string, unknown> };
+const isBlockLike = (v: unknown): v is PuckBlockLike =>
+  !!v && typeof v === "object" && typeof (v as PuckBlockLike).type === "string";
+
+function emojiLineList(list: unknown[]): { list: unknown[]; changed: boolean } {
+  let changed = false;
+  const out: unknown[] = [];
+  for (const item of list) {
+    if (!isBlockLike(item) || !item.props) { out.push(item); continue; }
+    let block: PuckBlockLike = item;
+    const props = item.props;
+    const text = props.text;
+    if (item.type === "Text" && typeof text === "string" && EMOJI_RUN.test(text) && text.replace(EMOJI_RUN, "").trim() !== "") {
+      const run = "🌈 💕 🦁"; /* spaced like the /book line, however it was typed */
+      const id = typeof props.id === "string" ? props.id : "text";
+      out.push({ ...item, props: { ...props, text: text.replace(EMOJI_RUN, "") } });
+      out.push({ type: "EmojiLine", props: { id: `${id}-emoji-line`, text: run } });
+      changed = true;
+      continue;
+    }
+    let nextProps: Record<string, unknown> | null = null;
+    for (const [k, v] of Object.entries(props)) {
+      if (Array.isArray(v) && v.some(isBlockLike)) {
+        const r = emojiLineList(v);
+        if (r.changed) { nextProps = { ...(nextProps ?? props), [k]: r.list }; changed = true; }
+      }
+    }
+    if (nextProps) block = { ...item, props: nextProps };
+    out.push(block);
+  }
+  return { list: out, changed };
+}
+
+export function applyEmojiLineToPuck<T extends { content?: unknown[] }>(data: T): T {
+  if (!Array.isArray(data.content)) return data;
+  const r = emojiLineList(data.content);
+  return r.changed ? ({ ...data, content: r.list } as T) : data;
+}
+
 export function applyFeaturedToPuck<T extends { content?: unknown[] }>(
   data: T,
   featured: AboutVideo | undefined,
