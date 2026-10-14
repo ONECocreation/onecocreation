@@ -110,14 +110,17 @@ describe("the room source", () => {
     expect(src).toContain("openPreview(key, fallbackSubject)");
     expect(src).toContain("href={`/a/letters/${key}`}");
     expect(src).toContain("send: !l.noPublish");
+    /* T-604: Edit is a link to the letter's own page, in the Send link's kit classes */
+    expect(src).toContain("href={`/a/letters/${key}/edit`}");
+    expect(src).toContain("window.location.assign(`/a/letters/${res.key}/edit`)");
   });
   it("every row control is a small icon button with an accessible name, Send first, no visible words", () => {
     const end = src.slice(src.indexOf("function rowEnd("), src.indexOf("function openedRow("));
     for (const name of ["Send this letter", "Edit this letter", "Preview this letter", "Review this draft"]) expect(end).toContain(name);
     expect(end.match(/<RowIcon>/g)?.length).toBe(4); // airplane, pencil, eye, envelope (T-591 Send me a copy)
     expect(end).not.toMatch(/>\s*(Send|Edit|Preview|Review|Close)\s*</);
-    expect(end.indexOf('aria-label="Send this letter"')).toBeLessThan(end.indexOf("openEditor("));
-    expect(end.indexOf("openEditor(")).toBeLessThan(end.indexOf("openPreview("));
+    expect(end.indexOf('aria-label="Send this letter"')).toBeLessThan(end.indexOf("/edit`}"));
+    expect(end.indexOf("/edit`}")).toBeLessThan(end.indexOf("openPreview("));
     expect(src).toContain('aria-hidden="true"');
   });
   it("the one size rule: every control in the group is a 2.5rem square; phone keeps one left-aligned row", () => {

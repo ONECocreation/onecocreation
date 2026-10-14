@@ -364,7 +364,7 @@ export function richShell(letter: RichLetter): string {
       <a href="${site()}" style="color:#9a8fae !important;">OneCocreation</a>
       ${letter.webUrl ? ` &nbsp;|&nbsp; <a href="${abs(letter.webUrl)}" style="color:#9a8fae !important;">View on the site</a>` : ""}
     </p>
-    ${letter.unsubscribeUrl ? `<p style="margin:14px 0 0;">${pill(letter.unsubscribeUrl, "Unsubscribe", "sm", "muted")}</p>` : ""}
+    ${letter.unsubscribeUrl ? `<p style="margin:14px 0 0;text-align:right;font-family:Arial,sans-serif;font-size:12px;"><a href="${letter.unsubscribeUrl}" style="color:#4a4458 !important;text-decoration:underline;">Unsubscribe</a></p>` : ""}
   </td></tr>
 </table>
 </td></tr></table>

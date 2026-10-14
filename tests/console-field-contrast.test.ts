@@ -42,6 +42,7 @@ const CONSUMERS = [
   "src/app/a/booking/page.tsx",
   "src/app/a/letters/page.tsx",
   "src/app/a/letters/[key]/page.tsx",
+  "src/app/a/letters/[key]/edit/page.tsx",
   "src/app/a/people/page.tsx",
   "src/app/a/site/SiteRoom.tsx",
   "src/app/a/site/about-videos/AboutVideosCard.tsx",
