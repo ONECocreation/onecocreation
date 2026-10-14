@@ -40,7 +40,7 @@ vi.mock("@/lib/mail-queue", () => ({
 
 const STARTS_AT_MS = Date.parse("2026-09-23T19:11:00.000Z"); // Wednesday 1:11 PM MDT
 const TICK_15Z = Date.parse("2026-09-23T15:00:00.000Z");
-const SUBJECT = "Don't forget — the reading is today";
+const SUBJECT = "Don't forget: the reading is today";
 
 let vault: Map<string, string>;
 let index: string[];

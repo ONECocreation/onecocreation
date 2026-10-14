@@ -153,7 +153,7 @@ export function readingDayOfLetter(email: string, startsAtMs: number, tz: string
   const unsub = unsubscribeUrl(email);
   return {
     to: email,
-    subject: "Don't forget — the reading is today",
+    subject: "Don't forget: the reading is today",
     html: brandShell(
       `<p>Just a gentle note: the reading is today at ${clockWords(startsAtMs, tz)} ${zoneLabel(startsAtMs, tz)}.</p>
        ${stageDoorHtml("Join the reading")}

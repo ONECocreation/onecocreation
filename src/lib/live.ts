@@ -321,7 +321,7 @@ export async function sendClassStartingLetters(
      <p>With love,<br/>One Cocreation</p>`,
   );
   const queued = await enqueue(
-    to.map((addr) => ({ to: addr, subject: `● ${room.title} — the door is open`, html })),
+    to.map((addr) => ({ to: addr, subject: `● ${room.title}: the door is open`, html })),
   );
   return { audience: to.length, queued };
 }

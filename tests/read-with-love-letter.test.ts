@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
  * TASK-126 (0018.06.16 a₿) + TASK-132 (0018.06.17 a₿): the Read with Love
  * letter. A subscriber joining through the second square
  * (`source === "readwithlove"`) receives the weekly-reading welcome —
- * subject "Read with Love — your seat". TASK-132: Zoom leaves Love's words;
+ * subject "Read with Love: your seat". TASK-132: Zoom leaves Love's words;
  * the room line is built from the site's meeting config
  * (getSiteConfig().meeting, T-129 — mocked here per test so the pin is the
  * LETTER, not the fs/KV drivers): jitsi → https://<jitsiDomain>/
@@ -98,7 +98,7 @@ describe("the Read with Love letter (TASK-126 + TASK-132)", () => {
     const { sendReadWithLoveLetter } = await leadMagnet();
     await sendReadWithLoveLetter("reader@example.com");
     expect(sent).toHaveLength(1);
-    expect(sent[0].subject).toBe("Read with Love — your seat");
+    expect(sent[0].subject).toBe("Read with Love: your seat");
     expect(sent[0].html).toContain(`href="${(await import("@/lib/subscribers")).siteBase()}/reading"`);
     expect(sent[0].html).toContain("moderator"); // guests wait for Love — said in the letter
     expect(sent[0].html.toLowerCase()).not.toContain("zoom");
@@ -155,7 +155,7 @@ describe("the Read with Love letter (TASK-126 + TASK-132)", () => {
   it("the meditation letter is unchanged for every other source", async () => {
     const { sendLeadMagnetLetter } = await leadMagnet();
     await sendLeadMagnetLetter("reader@example.com");
-    expect(sent[0].subject).toBe("Your free meditation — Unzip Into the New You");
+    expect(sent[0].subject).toBe("Your free meditation: Unzip Into the New You");
     expect(sent[0].html).toContain("Unzip Into the New You");
     expect(sent[0].html).not.toContain("Read with Love");
   });
@@ -166,7 +166,7 @@ describe("the subscribe route's source branch (TASK-126)", () => {
     const { POST } = await route();
     const res = await POST(join("readwithlove"));
     expect(res.status).toBe(200);
-    expect(sent.map((m) => m.subject)).toEqual(["Read with Love — your seat"]);
+    expect(sent.map((m) => m.subject)).toEqual(["Read with Love: your seat"]);
     expect(enqueued).toHaveLength(0); // the day-two note is about the meditation
   });
 
@@ -174,7 +174,7 @@ describe("the subscribe route's source branch (TASK-126)", () => {
     const { POST } = await route();
     const res = await POST(join("footer"));
     expect(res.status).toBe(200);
-    expect(sent.map((m) => m.subject)).toEqual(["Your free meditation — Unzip Into the New You"]);
+    expect(sent.map((m) => m.subject)).toEqual(["Your free meditation: Unzip Into the New You"]);
     expect(enqueued).toHaveLength(1);
   });
 });

@@ -92,7 +92,7 @@ export async function sendBookingConfirmation(
 
   await sendMail("bookings", {
     to,
-    subject: `Confirmed: ${title} — ${when}`,
+    subject: `Confirmed: ${title}, ${when}`,
     html: brandShell(
       `<p>Hello${name},</p>
        <p>Your booking is <b>confirmed</b>. We look forward to seeing you.</p>

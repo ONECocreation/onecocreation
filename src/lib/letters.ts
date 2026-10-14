@@ -120,7 +120,7 @@ export function letterAudienceGate(input: {
  *  Plain paragraphs flow as the greeting/body. */
 export const LETTER_DEFAULTS: Partial<Record<LetterKey, LetterOverride>> = {
   "lead-magnet": {
-    subject: "Your free meditation — Unzip Into the New You",
+    subject: "Your free meditation: Unzip Into the New You",
     body: `Welcome, beautiful soul.
 
 Here is your free guided meditation, with love:
@@ -141,7 +141,7 @@ One Cocreation`,
    * this default, a seam fixed alongside) are both gone: day two stays "just
    * a hello" and carries ONE next step, nothing more. */
   "welcome-day-two": {
-    subject: "Welcome to the field — a note from One Cocreation",
+    subject: "Welcome to the field, a note from One Cocreation",
     body: `Beautiful soul — welcome, truly.
 
 Yesterday you received your meditation; today is just a hello. This field is a gathering of people saying YES to themselves, and you belong here — you are the bridge, where heaven and earth meet.
@@ -175,7 +175,7 @@ With love,
 Love · ONE Cocreation`,
   },
   "news-sample": {
-    subject: "Greetings and Cheers — from One Cocreation",
+    subject: "Greetings and Cheers from One Cocreation",
     body: `!hero: /images/heaven-earth.webp
 
 Greetings and Cheers!
@@ -211,7 +211,7 @@ Two doors, one tap each — the desk does the rest and the kind letter goes out 
 These doors stay open seven days; after that (or any time), the offers desk on /a holds the same two buttons.`,
   },
   "pwyc-accept": {
-    subject: "Your offer — received with love",
+    subject: "Your offer, received with love",
     body: `Your offer was received with love 💛
 
 {{lines}}
@@ -222,7 +222,7 @@ With love,
 One Cocreation`,
   },
   "pwyc-decline": {
-    subject: "Your offer — and your sats coming back",
+    subject: "Your offer, and your sats coming back",
     body: `Thank you for your offer 🕊️
 
 {{lines}}
@@ -240,7 +240,7 @@ One Cocreation`,
    * paid), {{door}} = the signed download link for a digital item. A slot
    * Love edits out is appended at the end so the door can never be lost. */
   "order-receipt": {
-    subject: "Your order — received with love",
+    subject: "Your order, received with love",
     body: `Thank you, beautiful soul — your order is settled and held with love.
 
 {{lines}}
@@ -260,7 +260,7 @@ One Cocreation`,
    * doctrine: a slot Love leaves out is appended at send time so the door
    * to the room can never be edited away. */
   "read-with-love": {
-    subject: "Read with Love — your seat",
+    subject: "Read with Love: your seat",
     body: `Welcome, beautiful soul — your seat is saved.
 
 Read with Love is a weekly live book reading: we gather, I read aloud, and the field listens together. Bring the book if you have it; bring yourself either way.

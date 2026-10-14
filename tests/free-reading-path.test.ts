@@ -156,12 +156,12 @@ describe("the sign-in success hook — first sign-in only (TASK-156)", () => {
     // the free meditation rides out now (the house's one free item — the
     // lead-magnet letter is its delivery rail; no store entry is marked free)
     expect(sent).toHaveLength(1);
-    expect(sent[0].subject).toBe("Your free meditation — Unzip Into the New You");
+    expect(sent[0].subject).toBe("Your free meditation: Unzip Into the New You");
 
     // the welcome letter AND the day-two note are queued, in that order
     expect(enqueued).toHaveLength(2);
     expect(enqueued[0][0].subject).toBe("Welcome home");
-    expect(enqueued[1][0].subject).toBe("Welcome to the field — a note from One Cocreation");
+    expect(enqueued[1][0].subject).toBe("Welcome to the field, a note from One Cocreation");
   });
 
   it("a REPEAT sign-in still subscribes (idempotent) but pours nothing again", async () => {

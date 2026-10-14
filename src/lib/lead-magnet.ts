@@ -25,7 +25,7 @@ export async function sendLeadMagnetLetter(email: string): Promise<void> {
   const tpl = (await getLetterOverride("lead-magnet")) ?? LETTER_DEFAULTS["lead-magnet"];
   await sendMail("news", {
     to: email,
-    subject: tpl?.subject ?? "Your free meditation — Unzip Into the New You",
+    subject: tpl?.subject ?? "Your free meditation: Unzip Into the New You",
     html: tpl
       ? letterHtml(tpl.body, { unsubscribeUrl: unsub })
       : brandShell(
@@ -108,7 +108,7 @@ export async function sendReadWithLoveLetter(email: string): Promise<void> {
   html = html.split(marker).join(roomLine);
   await sendMail("news", {
     to: email,
-    subject: tpl?.subject ?? "Read with Love — your seat",
+    subject: tpl?.subject ?? "Read with Love: your seat",
     html,
     unsubscribeUrl: unsub,
   });
@@ -161,7 +161,7 @@ export async function enqueueDayTwoWelcome(email: string): Promise<void> {
     {
       to: email,
       notBefore: Date.now() + 24 * 3600 * 1000,
-      subject: tpl?.subject ?? "Welcome to the field — a note from One Cocreation",
+      subject: tpl?.subject ?? "Welcome to the field, a note from One Cocreation",
       html: tpl
         ? letterHtml(tpl.body, { unsubscribeUrl: unsub })
         : brandShell(
