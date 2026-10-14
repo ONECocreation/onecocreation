@@ -98,7 +98,11 @@ const LIVES_PARAGRAPH =
 
 /** Love's voice, her sign-off, no em dash, no Housewarming promise. The hero
  *  is the stage's own cover (READING_COVER_SRC) made absolute through
- *  siteBase(); the one button says the reading's own time. */
+ *  siteBase(); the one button says the reading's own time. Round 2 (the
+ *  Admiral's pins on the forge render): the date-time words in the first
+ *  paragraph are bold, and the one button rides INLINE right under that
+ *  paragraph through the positional !pill: directive; the end-of-letter cta
+ *  stays empty for this letter, so the letter has exactly one button. */
 export function nextReadingLetter(startsAtMs: number, tz: string): { subject: string; body: string } {
   const when = whenWords(startsAtMs, tz);
   return {
@@ -106,8 +110,8 @@ export function nextReadingLetter(startsAtMs: number, tz: string): { subject: st
     body: [
       `!hero: ${siteBase()}${READING_COVER_SRC}`,
       "Hello, beautiful soul!",
-      `The next reading is ${when}. Come and read with me, free.`,
-      `!cta: ${clockWords(startsAtMs, tz)} | /reading`,
+      `The next reading is **${when}**. Come and read with me, free.`,
+      `!pill: ${clockWords(startsAtMs, tz)} | /reading`,
       "Missed one? Every replay is kept for you in the Heart Field.",
       "[Watch the replays](/replays)",
       LIVES_PARAGRAPH,

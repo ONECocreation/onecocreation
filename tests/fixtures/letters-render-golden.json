@@ -61,5 +61,11 @@
  "edge:link-forms:list": "724ccc681b8476653b6fda01b1c28decd61b6ddcbedbb1aa0a20f380f329266d",
  "edge:rich-all:none": "a3043cd3d946827c334b1d9eebc585930141c5eb92d9cd37f3e1b79818092bb9",
  "edge:rich-all:web": "cfed0acf469aee77bdef41edeb4bf27b378cf36cfe8788f31ac5e0ee26b546a5",
- "edge:rich-all:list": "2a0bd5c728c7a30c4baac4ff318af712080e252ac078e7f29f8ca5d6fb4e9c05"
+ "edge:rich-all:list": "2a0bd5c728c7a30c4baac4ff318af712080e252ac078e7f29f8ca5d6fb4e9c05",
+ "edge:pill-inline:none": "8356c846ac21eb735d4ad6c69f52525945ad9992948efcd10b39694d8a9367d3",
+ "edge:pill-inline:web": "8356c846ac21eb735d4ad6c69f52525945ad9992948efcd10b39694d8a9367d3",
+ "edge:pill-inline:list": "9d99def1cde44555ed5c911ad619d15379195bb88c3980c853ff96a0f4fc1d1b",
+ "edge:bad-url-pill:none": "f8d4025a907534a62b1943cf7fef379bd39667b4315094d488b37928845d6ce2",
+ "edge:bad-url-pill:web": "f8d4025a907534a62b1943cf7fef379bd39667b4315094d488b37928845d6ce2",
+ "edge:bad-url-pill:list": "a89fe2615a6df613cd4baaaa848d30079900e6f82851cb2a37f5d799a5fd6e14"
 }

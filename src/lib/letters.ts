@@ -1,4 +1,4 @@
-import { brandShell, richShell, type LetterSection } from "./mail";
+import { brandShell, pill, richShell, type LetterSection } from "./mail";
 import { siteBase } from "./subscribers";
 /**
  * LETTER TEMPLATES (Letters room, wireframe v2): editable copies of the
@@ -117,6 +117,7 @@ export function letterAudienceGate(input: {
  *    !hero: /images/…            — the big picture up top
  *    !section: Title | /img | /link | blurb    — one feature card
  *    !cta: Label | /link         — the big button at the end
+ *    !pill: Label | /link        - a button inline, exactly where the line sits
  *  Plain paragraphs flow as the greeting/body. */
 export const LETTER_DEFAULTS: Partial<Record<LetterKey, LetterOverride>> = {
   "lead-magnet": {
@@ -584,6 +585,13 @@ export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUr
   let heroUrl: string | undefined;
   const sections: LetterSection[] = [];
   let cta: { label: string; href: string } | undefined;
+  /* TASK-601 round 2 (the Admiral's B on the forge render): the POSITIONAL
+     button. richShell carries ONE end-of-letter cta; a `!pill: Label | /link`
+     line renders the same cta-variant pill inline, centered, exactly where
+     the line sits in the body (the mechanism the T-603 mockup recommended).
+     The line becomes a placeholder paragraph, swapped for the pill after
+     bodyToHtml; the same T-494 escaping and directive-URL policy as !cta. */
+  const pills: { label: string; href: string }[] = [];
   const plain: string[] = [];
 
   for (const line of body.split("\n")) {
@@ -591,6 +599,7 @@ export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUr
     const hero = /^!hero:\s*(\S+)/.exec(t);
     const sec = /^!section:\s*([^|]+)\|([^|]*)\|([^|]+)\|(.+)$/.exec(t);
     const c = /^!cta:\s*([^|]+)\|(.+)$/.exec(t);
+    const p = /^!pill:\s*([^|]+)\|(.+)$/.exec(t);
     /* TASK-494: every directive value is escaped BEFORE it reaches
      * richShell (directives bypass bodyToHtml entirely), and every URL
      * field passes the policy first — a failed line ships as literal
@@ -604,10 +613,20 @@ export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUr
         blurb: escHtml(sec[4].trim()),
       });
     else if (c && admitsDirectiveUrl(c[2].trim())) cta = { label: escHtml(c[1].trim()), href: escHtml(c[2].trim()) };
-    else plain.push(line);
+    else if (p && admitsDirectiveUrl(p[2].trim())) {
+      plain.push(`@@PILL${pills.length}@@`);
+      pills.push({ label: escHtml(p[1].trim()), href: escHtml(p[2].trim()) });
+    } else plain.push(line);
   }
 
-  const bodyHtml = bodyToHtml(plain.join("\n").trim());
+  let bodyHtml = bodyToHtml(plain.join("\n").trim());
+  pills.forEach((pl, i) => {
+    const inline = `<p style="margin:0 0 1.15em;line-height:1.75;text-align:center;">${pill(pl.href, pl.label, "lg", "cta")}</p>`;
+    const wrapped = `<p style="margin:0 0 1.15em;line-height:1.75;">@@PILL${i}@@</p>`;
+    /* the placeholder normally stands alone in its own paragraph; if a hand
+       wrote it beside other text the bare token still swaps, never leaks */
+    bodyHtml = bodyHtml.includes(wrapped) ? bodyHtml.replace(wrapped, inline) : bodyHtml.replace(`@@PILL${i}@@`, inline);
+  });
   if (!heroUrl && sections.length === 0 && !cta) {
     return brandShell(bodyHtml, opts);
   }

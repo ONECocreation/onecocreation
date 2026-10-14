@@ -29,6 +29,10 @@ const EDGE: Record<string, string> = {
   "brand-only": "Just a plain letter.\n\nWith love,\nLove",
   "link-forms": "A [site](/rooms/x) and [out](https://example.com/y) and [bad](javascript:x) and ![pic](https://example.com/p.png)",
   "rich-all": "!hero: /images/h.png\n\nWords.\n\n!section: Card | /images/c.png | /store | Blurb here\n!cta: Go | /go",
+  /* T-601 round 2: the positional !pill: directive: inline where it sits,
+     and the T-494 URL policy: a bad URL ships the line as literal text */
+  "pill-inline": "Before.\n\n!pill: 1:11 PM | /reading\n\nAfter.",
+  "bad-url-pill": "Hi.\n\n!pill: x | javascript:alert(1)",
 };
 
 async function renderAll(): Promise<Record<string, string>> {
