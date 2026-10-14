@@ -13,7 +13,11 @@ BRIEF: `~/dev/kimi/inbox/TASK-604-letters-553a-click-right-here-and-edit.md`
 - `src/lib/letter-model.ts` (NEW)
 - `src/app/a/letters/page.tsx` (the Edit control, `createNew`, the four raw buttons only)
 - `src/app/api/admin/letters/copy/route.ts`
-- `src/app/kit.css` (the six `kitx-` rules only)
+- `src/app/kit.css` (the `kitx-` rules only: the six, plus the round 4 additions for the letter head logo, card pictures, link row, mobile padding and centred actions)
+- `src/lib/letters.ts` (round 4, the Admiral's marks: the `news-sample` default seed only, its meditation picture and its button label)
+- `src/lib/mail.ts` (round 4, the Admiral's mark: the richShell Unsubscribe pill becomes a plain link, nothing else)
+- `tests/fixtures/letters-render-golden.json` (round 4: only the hashes of letters this change renders differently, regenerated on purpose)
+- `tests/mail-pill-brand.test.ts` and `tests/letters-editor-553a.test.ts` (round 4: pins that read the Unsubscribe pill and the new canvas rules, by name)
 - `package.json` and `package-lock.json` (the nine TipTap packages only)
 - `tests/letter-model-553a.test.ts` (NEW)
 - `tests/letters-editor-553a.test.ts` (NEW)
@@ -26,4 +30,4 @@ BRIEF: `~/dev/kimi/inbox/TASK-604-letters-553a-click-right-here-and-edit.md`
 - `work-claims/task-604.md` (NEW)
 
 ## READ-ONLY
-`src/lib/letters.ts`, `src/lib/mail.ts`, `src/lib/letters-drafts.ts`, `src/lib/letter-marks.ts`, `src/lib/letter-samples.ts`, `src/app/a/letters/[key]/page.tsx`, `src/app/api/admin/letters/route.ts`, `src/app/api/admin/letters/preview/route.ts`, `src/app/api/admin/letters/send/route.ts`, `src/app/house.css`, `src/app/cartridge.css`, `tests/fixtures/letters-render-golden.json`, `tests/letters-render-golden.test.ts`, the live site.
+`src/lib/letters-drafts.ts`, `src/lib/letter-marks.ts`, `src/lib/letter-samples.ts`, `src/app/a/letters/[key]/page.tsx`, `src/app/api/admin/letters/route.ts`, `src/app/api/admin/letters/preview/route.ts`, `src/app/api/admin/letters/send/route.ts`, `src/app/house.css`, `src/app/cartridge.css`, `tests/fixtures/letters-render-golden.json`, `tests/letters-render-golden.test.ts`, the live site.
