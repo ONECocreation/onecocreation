@@ -20,5 +20,6 @@ THE RULE: every "next reading" draft (and, for the greeting / no-members / sign-
 
 ROUND 2 (the Admiral's B on the forge render, his pins on next-reading-390.png: "move the item 1 to item 2 position. item 3 can be bolded to show the date time."): the letter's one button moves INLINE under the first paragraph through the positional `!pill: Label | /link` directive (the mechanism the T-603 mockup recommended), the end-of-letter cta stays EMPTY for this letter, and the date-time words in the first paragraph are bold, derived from the schedule. OWNS grows by:
 - `src/lib/letters.ts` (round 2: letterHtml learns the positional `!pill:` directive; the T-494 escaping and directive-URL policy apply)
+- `tests/letters-render-golden.test.ts` (round 2: the EDGE corpus gains the pill-inline and bad-url-pill cases that pin the new directive)
 
 READ-ONLY: `src/components/sections.tsx`, `src/lib/reading-letters.ts`, `src/lib/join-letters.ts`, the schedule modules, the live site. Not the October 17 draft in the room (hand paste, Number One's), not the three time buttons, not T-602/T-603.
