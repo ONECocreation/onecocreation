@@ -41,7 +41,7 @@ const KV_URL = "http://kv.fixture";
 const SITE = "https://onecocreation.test";
 const FROZEN = new Date("2026-09-30T12:00:00.000Z").getTime();
 const ORDER_ID = "0123456789abcdef01234567";
-const PILL_FILL = 'bgcolor="#AD5470"'; // the rich shell's rendered button (mail.ts pill)
+const PILL_FILL = 'bgcolor="#C56E8B"'; // the rich shell's rendered !cta button (mail.ts pill "cta" variant; T-601: the site .btn paint, the gradient's dark stop as the bgcolor fallback)
 
 const sentMail = vi.hoisted(() => [] as Array<{ to: string; subject: string; html: string }>);
 const enqueued = vi.hoisted(() => [] as Array<Array<{ to: string; subject: string; html: string }>>);
@@ -339,6 +339,35 @@ describe("the one-render law: an override without a !cta: line renders no button
     expect(html).not.toContain(PILL_FILL); // no button at all
     expect(html).not.toContain("/meditation/download"); // the hardcoded pill never sneaks back
     expect(html).not.toContain("unzip-into-the-new-you.mp3");
+  });
+});
+
+/* T-601 round 2 (the Admiral's pins on the forge render): the positional
+   !pill: directive: a button inline, exactly where the line sits. */
+describe("the positional !pill: directive (T-601 round 2)", () => {
+  it("renders the cta-variant pill inline, centered, between the paragraphs it sits between", async () => {
+    const { letterHtml } = await import("@/lib/letters");
+    const html = letterHtml("Before words.\n\n!pill: 1:11 PM | /reading\n\nAfter words.");
+    expect(html).toContain(PILL_FILL); // the cta paint (gradient dark-stop fallback)
+    const at = html.indexOf("1:11 PM</span>");
+    expect(at).toBeGreaterThan(html.indexOf("Before words."));
+    expect(at).toBeLessThan(html.indexOf("After words."));
+    expect(html).not.toContain("!pill:");
+    expect(html).not.toContain("@@PILL");
+  });
+
+  it("a bad URL fails the T-494 policy and the line ships as literal text, never an attribute", async () => {
+    const { letterHtml } = await import("@/lib/letters");
+    const html = letterHtml("Hi.\n\n!pill: x | javascript:alert(1)");
+    expect(html).not.toContain('href="javascript:');
+    expect(html).toContain("!pill: x | javascript:alert(1)");
+  });
+
+  it("a letter with only a !pill: (no hero/section/cta) still rides the plain brand shell", async () => {
+    const { letterHtml } = await import("@/lib/letters");
+    const html = letterHtml("Just words.\n\n!pill: Go | /go");
+    expect(html).toContain("Go</span>");
+    expect(html).not.toContain("@@PILL");
   });
 });
 

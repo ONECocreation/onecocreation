@@ -6,6 +6,7 @@ import Link from "next/link";
 import JitsiRoom from "@/components/booking/JitsiRoom";
 import ReadingPartSelectLink from "./ReadingPartSelectLink";
 import { useReadingPart } from "./ReadingPartContext";
+import { READING_COVER_SRC } from "@/lib/reading-cover";
 
 /**
  * READING STAGE (TASK-438, block 968,222; HOLD LIFTED block 968,269) —
@@ -188,8 +189,10 @@ export function readingShownNext(
 
 /* T-456 (block 968,445, the Admiral): until Love goes live, /reading waits
    on the cover of the book she is reading ("Love BOOK.jpeg"). The
-   Playground, the home page and the Heart Field keep the heart-book art. */
-const COVER_SRC = "/images/reading-love-cover.jpg";
+   Playground, the home page and the Heart Field keep the heart-book art.
+   T-601: the constant moved to src/lib/reading-cover.ts so the weekly
+   next-reading letter's hero shows the SAME book the stage shows. */
+const COVER_SRC = READING_COVER_SRC;
 const COVER_ALT = "Love, by Leo Buscaglia: the word LOVE in white over a swirling violet and rose nebula";
 
 /* TASK-466 (block 968,561, ruling 1) — the ended card's lock glyph: a

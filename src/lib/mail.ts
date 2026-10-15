@@ -290,7 +290,7 @@ const abs = (u: string) => (u.startsWith("http") ? u : `${site()}${u}`);
  *  white ink, 5.65:1) is unchanged — it was never broken; white was always
  *  the ink a "make it dark-mode safe" pass leaves alone, which is the whole
  *  lesson this pill's ink now follows too. */
-export function pill(href: string, label: string, size: "sm" | "lg" = "sm", variant: "primary" | "muted" = "primary"): string {
+export function pill(href: string, label: string, size: "sm" | "lg" = "sm", variant: "primary" | "muted" | "cta" = "primary"): string {
   const pad = size === "lg" ? "13px 30px" : "10px 24px";
   const fs = size === "lg" ? "15px" : "13px";
   if (variant === "muted") {
@@ -299,6 +299,25 @@ export function pill(href: string, label: string, size: "sm" | "lg" = "sm", vari
     return `<table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-table;"><tr>
     <td bgcolor="${bg}" style="border-radius:999px;background:${bg};">
       <a href="${abs(href)}" style="display:inline-block;padding:${pad};font-family:Arial,sans-serif;font-size:${fs};color:${ink};text-decoration:none;border-radius:999px;"><font color="${ink}">${label}</font></a>
+    </td></tr></table>`;
+  }
+  if (variant === "cta") {
+    /* TASK-601 (block 971,279, the Admiral's A on Love's standing
+       adjustments): the letter's one button wears the site's .btn paint
+       (src/app/house.css, the LAW per Number One's K171) — the rose gradient
+       135deg #E7B2C3 to #C56E8B, the --rose-btn-ink #2E0E1D, bold,
+       letter-spacing 2px, uppercase, rounded by --btn-radius (6px). Email
+       cannot run the shimmer sweep: the gradient IS the shine. Literal hex
+       inline is the mail shell's own idiom (inboxes do not resolve var()).
+       bgcolor/background-color fall back to the gradient's dark stop for
+       clients that strip gradients; the ink keeps the T-308 four-way
+       redundancy. Contrast: the house measures the ink at 9.65 / 7.57 /
+       4.99:1 across the two stops. */
+    const fallback = "#C56E8B"; // the gradient's dark stop
+    const ink = "#2E0E1D"; // --rose-btn-ink
+    return `<table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-table;"><tr>
+    <td bgcolor="${fallback}" style="border-radius:6px;background:linear-gradient(135deg,#E7B2C3,#C56E8B);background-color:${fallback};color:${ink};">
+      <a href="${abs(href)}" style="display:inline-block;padding:${pad};font-family:Arial,sans-serif;font-size:${fs};font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:${ink} !important;text-decoration:none;border-radius:6px;"><font color="${ink}"><span style="color:${ink} !important;">${label}</span></font></a>
     </td></tr></table>`;
   }
   // primary — deep rose fill, WHITE ink (TASK-308, 0018.06.25 a₿): a dark
@@ -354,7 +373,7 @@ export function richShell(letter: RichLetter): string {
   ${letter.heroUrl ? `<tr><td style="background:#0e0c18;"><a href="${site()}"><img src="${abs(letter.heroUrl)}" width="600" alt="" style="display:block;width:100%;"/></a></td></tr>` : ""}
   <tr><td style="padding:30px 34px 8px;font-size:15px;line-height:1.75;color:#E9E2F2;">${letter.bodyHtml}</td></tr>
   ${cards ? `<tr><td style="padding:6px 34px 8px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cards}</table></td></tr>` : ""}
-  ${letter.cta ? `<tr><td align="center" style="padding:26px 34px 34px;">${pill(letter.cta.href, letter.cta.label, "lg")}</td></tr>` : ""}
+  ${letter.cta ? `<tr><td align="center" style="padding:26px 34px 34px;">${pill(letter.cta.href, letter.cta.label, "lg", "cta")}</td></tr>` : ""}
   <tr><td bgcolor="#efe9df" style="background:#efe9df;padding:22px 34px;">
     <img src="${site()}/brand/onecocreation-mark-email.png" width="40" height="40" alt="✦" style="display:block;margin-bottom:8px;border:0;"/>
     <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#4a4458;">
