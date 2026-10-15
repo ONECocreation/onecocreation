@@ -3,8 +3,6 @@ import { headers } from "next/headers";
 import OperatorGate from "@/components/OperatorGate";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import SiteReadingRoom from "./SiteReadingRoom";
-import HousewarmingSwitchCard from "./HousewarmingSwitchCard";
-import PartSwitchCard from "./PartSwitchCard";
 
 /**
  * /a/site/reading — THE WEEKLY READING room (TASK-381, block 968,047+).
@@ -17,13 +15,9 @@ import PartSwitchCard from "./PartSwitchCard";
  * on its row (`STAGE2_FLOOR_NAME` still lives in `stage2-access.ts`, read
  * by `/reading` itself).
  *
- * TASK-499 (block 969,306+): the Housewarming-this-week switch card
- * mounts HERE, directly below `<SiteReadingRoom />` and behind the same
- * gate — never inside SiteReadingRoom.tsx, which task-446's stale live
- * claim owns (the brief's decision 3).
- *
- * TASK-614: the Book Talk (Part 3) and Q&A (Part 4) switches mount below
- * it, the same card pattern (PartSwitchCard.tsx, used twice).
+ * TASK-499 / TASK-614: the Housewarming, Book Talk and Q&A week switches
+ * are rows of the Weekly reading card now (ReadingScheduleCard.tsx, under
+ * the "Show the next reading time" row), not mounted here.
  */
 
 export const metadata: Metadata = {
@@ -39,26 +33,5 @@ export default async function SiteReadingPage() {
   if (!operator) {
     return <OperatorGate configured={operatorsConfigured()} />;
   }
-  return (
-    <>
-      <SiteReadingRoom />
-      <HousewarmingSwitchCard />
-      <PartSwitchCard
-        switchKey="bookTalk"
-        label="Book Talk this week"
-        onWords="this week has the Book Talk at 2:22, the paid group call"
-        offWords="no Book Talk this week; the day goes from the Reading to the Q&A"
-        onNote="saved - the Book Talk is back on the reading page's next render"
-        offNote="saved - no Book Talk this week; the reading page hides it on its next render"
-      />
-      <PartSwitchCard
-        switchKey="qa"
-        label="Q&A with Love this week"
-        onWords="this week ends with the Q&A with Love at 3:33"
-        offWords="no Q&A this week; the day ends after the Book Talk"
-        onNote="saved - the Q&A is back on the reading page's next render"
-        offNote="saved - no Q&A this week; the reading page hides it on its next render"
-      />
-    </>
-  );
+  return <SiteReadingRoom />;
 }

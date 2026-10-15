@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Chip, SectionHead } from "@/components/console/glass";
-import Button from "@/components/kit/Button";
-import Card from "@/components/kit/Card";
+import SwitchRow from "./SwitchRow";
 import type { SiteConfig } from "@/lib/site-config";
 
 /**
@@ -11,14 +9,14 @@ import type { SiteConfig } from "@/lib/site-config";
  * are not going to be doing the book talk or the q&a. would like the
  * ability to turn off those items in the /a/site/reading"). One shared
  * card, mounted twice by `./page.tsx` (`bookTalk` for Part 3, `qa` for
- * Part 4), in the exact pattern of HousewarmingSwitchCard.tsx (TASK-499):
+ * Part 4; round 2 adds `housewarming`), in the exact pattern of HousewarmingSwitchCard.tsx (TASK-499):
  * persisted as DATA on the site-config doc, ABSENT MEANS ON, the flip is
  * IMMEDIATE on tap (PUT, read back the SAVED config, note in words), a
  * real ref guards the double-tap race, one state line under the words.
  * The button is the kit Button (no raw `.btn`), kit and console classes
  * only.
  */
-export type PartSwitchKey = "bookTalk" | "qa";
+export type PartSwitchKey = "housewarming" | "bookTalk" | "qa";
 
 export default function PartSwitchCard({
   switchKey,
@@ -91,37 +89,15 @@ export default function PartSwitchCard({
     }
   }
 
+  if (on === null) return <p className="kit-text-quiet">reading the {label} switch…</p>;
   return (
-    <div className="p-6">
-      <SectionHead label={label} />
-      {on === null ? (
-        <p className="kit-text-quiet">reading the switch…</p>
-      ) : (
-        <Card>
-          <ul className="kit-rows">
-            <li>
-              <span>
-                <b>{label}</b>
-                <em>{busy ? "saving the switch…" : (note ?? (on ? onWords : offWords))}</em>
-              </span>
-              <span className="kit-rows-end">
-                <Button
-                  sm
-                  variant="main"
-                  className={on ? "btn-on" : "btn-ghost"}
-                  aria-pressed={on}
-                  aria-label={`${label} - currently ${on ? "on" : "off"}`}
-                  disabled={busy}
-                  onClick={flip}
-                >
-                  {on ? "ON" : "OFF"}
-                </Button>
-                <Chip tone={on ? "green" : "grey"}>{on ? "showing" : "hidden"}</Chip>
-              </span>
-            </li>
-          </ul>
-        </Card>
-      )}
-    </div>
+    <SwitchRow
+      on={on}
+      label={label}
+      quiet={busy ? "saving the switch…" : (note ?? (on ? onWords : offWords))}
+      ariaLabel={`${label} - currently ${on ? "on" : "off"}`}
+      disabled={busy}
+      onFlip={flip}
+    />
   );
 }
