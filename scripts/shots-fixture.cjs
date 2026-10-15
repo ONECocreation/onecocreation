@@ -119,6 +119,14 @@ async function shootOne(ctx, base, route, theme, width, cookie) {
   await sleep(1000);
   await dismissPopup(page);
   await setTheme(page, theme);
+  /* TASK-613 (block 971,505): the site's body background is
+     background-attachment:fixed, which a fullPage capture paints for the
+     first screen only - every section below came out on white with pale
+     text (the Admiral read it as a washed-out light mode). Shots only:
+     let the background scroll and give <html> the theme's ground. */
+  if (FULL_PAGE) {
+    await page.addStyleTag({ content: "html{background:var(--ground)}body{background-attachment:scroll!important}" });
+  }
   await sleep(300);
 
   const slug = slugFor(route);
