@@ -51,6 +51,7 @@
 .kit-btn-main:hover{transform:translateY(-3px)}
 /* TASK-614: the ON/OFF switch buttons (PartSwitchCard) wear the Housewarming switch card's own
    .btn-on / .btn-ghost fills, through the kit Button, so the three switch cards read as one */
+.kit-btn.btn-on,.kit-btn.btn-ghost{border-radius:var(--btn-radius)}
 .kit-btn.btn-on{background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:#fff}
 .kit-btn.btn-ghost{background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px var(--edge)}
 
