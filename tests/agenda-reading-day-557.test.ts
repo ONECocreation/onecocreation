@@ -134,7 +134,9 @@ describe("TASK-557 /reading's own source", () => {
 
   it("the sign-up box above it is not touched by the decision (it works without a date, K122 item 13)", async () => {
     const src = await read("src/app/reading/page.tsx");
-    expect(src).toMatch(/<section className="kitx-section kitx-section-first" id="keep-posted">\s*<div className="wrap">\s*<ReadingSignInBox \/>/);
+    /* TASK-613 (block 971,481): the replays door moved up under the viewer
+       and took kitx-section-first with it; the box itself is unchanged. */
+    expect(src).toMatch(/<section className="kitx-section" id="keep-posted">\s*<div className="wrap">\s*<ReadingSignInBox \/>/);
     expect(src).not.toMatch(/agendaOn &&[^]{0,80}ReadingSignInBox/);
   });
 });
