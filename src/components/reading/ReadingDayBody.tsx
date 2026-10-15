@@ -68,8 +68,10 @@ export interface ReadingDayBodyProps {
    *  render then, and the open notice's part-1 flag is forced closed */
   housewarmingStartsAtMs: number | null;
   readingStartsAtMs: number;
-  encoreStartsAtMs: number;
-  qaStartsAtMs: number;
+  /** TASK-614: null when the Book Talk switch is off - Row 3 does not render */
+  encoreStartsAtMs: number | null;
+  /** TASK-614: null when the Q&A switch is off - Row 4 does not render */
+  qaStartsAtMs: number | null;
   /** rows 1 and 2 only — rows 3/4 gate on entitlement alone (the cart
    *  itself meets a signed-out visitor with its own sign-in gate, spec's
    *  words) */
@@ -104,7 +106,13 @@ export default function ReadingDayBody({
       {/* TASK-499: the notice's part-1 flag is forced closed when Row 1
           is hidden, so a hand-opened housewarming door never surfaces a
           pick into a part that does not exist this week. */}
-      {!ahead && <ReadingDayOpenNotice part1On={housewarmingStartsAtMs !== null} />}
+      {!ahead && (
+        <ReadingDayOpenNotice
+          part1On={housewarmingStartsAtMs !== null}
+          part3On={encoreStartsAtMs !== null}
+          part4On={qaStartsAtMs !== null}
+        />
+      )}
       <ul className="kit-rows" aria-label={ahead ? "Coming up" : "The day's agenda"}>
         {/* ROW 1 — the Housewarming (TASK-469, block 968,567): free, no
             lock, before the reading, the same door as Row 2 (the two-way
@@ -155,6 +163,7 @@ export default function ReadingDayBody({
             no "Encore"/"Playground" word anywhere on /reading; the item
             id, encoreFloor/encoreEntitled names and ENCORE_TIME constant
             are UNCHANGED — only the visible words moved). */}
+        {encoreStartsAtMs !== null && (
         <li>
           <span>
             <b>{`${clockWords(encoreStartsAtMs, tz)} · The Book Talk`}</b>
@@ -195,8 +204,10 @@ export default function ReadingDayBody({
             )}
           </span>
         </li>
+        )}
 
         {/* ROW 4 — the channeled Q&A with Love */}
+        {qaStartsAtMs !== null && (
         <li>
           <span>
             <b>{`${clockWords(qaStartsAtMs, tz)} · The Q&A with Love`}</b>
@@ -227,6 +238,7 @@ export default function ReadingDayBody({
             )}
           </span>
         </li>
+        )}
       </ul>
     </div>
   );

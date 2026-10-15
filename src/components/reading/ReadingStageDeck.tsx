@@ -56,6 +56,8 @@ export default function ReadingStageDeck({
   part4,
   countdownUntilMs = null,
   part1On = true,
+  part3On = true,
+  part4On = true,
   asOfMs = 0,
 }: {
   stage1: ReadingStageProps;
@@ -70,6 +72,11 @@ export default function ReadingStageDeck({
   /** TASK-499: false = the Housewarming is hidden this week — a
    *  selection of 1 falls through to Part 2's screen (default true). */
   part1On?: boolean;
+  /** TASK-614: false = the Book Talk (Part 3) is hidden this week - a
+   *  stale selection of 3 falls through to Part 2's screen (default true). */
+  part3On?: boolean;
+  /** TASK-614: same for the Q&A (Part 4). */
+  part4On?: boolean;
   asOfMs?: number;
 }) {
   const { selected } = useReadingPart();
@@ -81,7 +88,7 @@ export default function ReadingStageDeck({
   return (
     <>
       {counting && selected !== 2 && stage1.countdown}
-      <DeckScreen selected={selected} stage1={stage1} part1={part1} part3={part3} part4={part4} part1On={part1On} />
+      <DeckScreen selected={selected} stage1={stage1} part1={part1} part3={part3} part4={part4} part1On={part1On} part3On={part3On} part4On={part4On} />
     </>
   );
 }
@@ -93,6 +100,8 @@ function DeckScreen({
   part3,
   part4,
   part1On = true,
+  part3On = true,
+  part4On = true,
 }: {
   selected: number;
   stage1: ReadingStageProps;
@@ -100,12 +109,16 @@ function DeckScreen({
   part3: ReadingStagePart3Props;
   part4: ReadingStagePart4Props;
   part1On?: boolean;
+  part3On?: boolean;
+  part4On?: boolean;
 }) {
   /* TASK-499: with the switch off a selection of 1 can only be a stale
      client state — fall through to Part 2's screen, never mount a
      hidden part. The on-branch line below is byte-for-byte today's. */
   if (selected === 1 && part1On === false) return <ReadingStage {...stage1} />;
   if (selected === 1) return <ReadingStagePart1 {...part1} />;
+  /* TASK-614: the same guard for the Book Talk and the Q&A */
+  if ((selected === 3 && part3On === false) || (selected === 4 && part4On === false)) return <ReadingStage {...stage1} />;
   if (selected === 3) return <ReadingStagePart3 {...part3} />;
   if (selected === 4) return <ReadingStagePart4 {...part4} />;
   return <ReadingStage {...stage1} />;

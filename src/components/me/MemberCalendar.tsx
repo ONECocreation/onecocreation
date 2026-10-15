@@ -12,7 +12,7 @@ import {
   type CalendarDayMarks,
   type CalendarDayMarksLookup,
 } from "@/components/calendar";
-import { useHousewarmingOn, useReadingSchedule } from "@/components/calendar/useReadingSchedule";
+import { useBookTalkQaOn, useHousewarmingOn, useReadingSchedule } from "@/components/calendar/useReadingSchedule";
 import { readingDayPartsMarksLookup, mergeDayMarks } from "@/components/calendar/reading-marks";
 
 /** TASK-480 — the calendar shows all FOUR reading-day parts (see
@@ -82,6 +82,8 @@ export default function MemberCalendar() {
   /* TASK-499 — the Housewarming switch, the same public GET through the
      sibling hook; false drops the part-1 pill below. */
   const housewarmingOn = useHousewarmingOn();
+  /* TASK-614 - the Book Talk and Q&A switches, same public GET */
+  const { bookTalkOn, qaOn } = useBookTalkQaOn();
 
   const today = useMemo(() => bftToday(nowMs), [nowMs]);
   const [bftYear, setBftYear] = useState(today.year);
@@ -113,8 +115,8 @@ export default function MemberCalendar() {
      fetch says otherwise) drops the part-1 pill in a no-Housewarming
      week. */
   const marks = useMemo(
-    () => mergeDayMarks(readingDayPartsMarksLookup(readingSchedule, housewarmingOn), buildBookingMarks(bookings)),
-    [bookings, readingSchedule, housewarmingOn],
+    () => mergeDayMarks(readingDayPartsMarksLookup(readingSchedule, housewarmingOn, bookTalkOn, qaOn), buildBookingMarks(bookings)),
+    [bookings, readingSchedule, housewarmingOn, bookTalkOn, qaOn],
   );
 
   function stepMonth(dir: -1 | 1) {

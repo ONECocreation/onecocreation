@@ -156,6 +156,9 @@ function partClockWords(ms: number): string {
 export function readingDayPartsMarksLookup(
   schedule: ReadingSchedule | null,
   housewarmingOn = true,
+  /* TASK-614: the Book Talk and Q&A switches, the same flag shape */
+  bookTalkOn = true,
+  qaOn = true,
 ): CalendarDayMarksLookup {
   return (cell): CalendarDayMarks | undefined => {
     if (!schedule) return undefined;
@@ -175,8 +178,10 @@ export function readingDayPartsMarksLookup(
         ? [{ part: 1 as ReadingPart, ms: sameDayAt(occurrence.startsAtMs, schedule.tz, HOUSEWARMING_TIME) }]
         : []),
       { part: 2, ms: occurrence.startsAtMs },
-      { part: 3, ms: sameDayAt(occurrence.startsAtMs, schedule.tz, ENCORE_TIME) },
-      { part: 4, ms: sameDayAt(occurrence.startsAtMs, schedule.tz, QA_TIME) },
+      ...(bookTalkOn
+        ? [{ part: 3 as ReadingPart, ms: sameDayAt(occurrence.startsAtMs, schedule.tz, ENCORE_TIME) }]
+        : []),
+      ...(qaOn ? [{ part: 4 as ReadingPart, ms: sameDayAt(occurrence.startsAtMs, schedule.tz, QA_TIME) }] : []),
     ];
 
     const pills: CalendarEventPill[] = parts.map(({ part, ms }) => ({
@@ -298,12 +303,24 @@ export function normalizeReadingResponse(status: number, body: unknown): Reading
  * explicit saved `false` drops the part-1 pill.
  */
 export function normalizeHousewarmingResponse(status: number, body: unknown): boolean {
+  return normalizeSwitchResponse(status, body, "housewarming");
+}
+
+/**
+ * TASK-614 - the same read for any of the three part switches
+ * (`housewarming`, `bookTalk`, `qa`): every failure mode reads ON.
+ */
+export function normalizeSwitchResponse(
+  status: number,
+  body: unknown,
+  key: "housewarming" | "bookTalk" | "qa",
+): boolean {
   if (status < 200 || status >= 300) return true;
   if (!body || typeof body !== "object") return true;
   const o = body as Record<string, unknown>;
   if (o.ok !== true) return true;
   const config = o.config;
   if (!config || typeof config !== "object") return true;
-  const raw = (config as Record<string, unknown>).housewarming;
+  const raw = (config as Record<string, unknown>)[key];
   return raw !== false;
 }

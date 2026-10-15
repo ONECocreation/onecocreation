@@ -104,6 +104,9 @@ export interface ReadingStageProps {
    *  share this one door, but the visitor picked ONE of the two rows). */
   housewarmingLabel: string | null;
   readingLabel: string | null;
+  /** TASK-614: false = the Book Talk is switched off this week, so the
+   *  stage drops every line that invites the visitor to it (default true) */
+  bookTalkOn?: boolean;
 }
 
 export interface ReadingStageBodyProps {
@@ -151,6 +154,8 @@ export interface ReadingStageBodyProps {
   joined?: boolean;
   /** TASK-488: JitsiRoom's own join signal, passed straight through. */
   onJoined?: (joined: boolean) => void;
+  /** TASK-614: false = no Book Talk this week (default true) */
+  bookTalkOn?: boolean;
 }
 
 /** The wire body `/api/stage1` answers with (its exact four keys). */
@@ -224,6 +229,7 @@ export function ReadingStageBody({
   cameraShown = false,
   joined = true,
   onJoined,
+  bookTalkOn = true,
 }: ReadingStageBodyProps) {
   /* the ONE gate for mounting the real two-way room: published, signed
      in, not left, not ended, and a room the poll actually gave us. */
@@ -300,13 +306,15 @@ export function ReadingStageBody({
             {/* TASK-473 (block 968,624): the visitor picks Part 3 IN PAGE
                 now — never a Link to /reading/playground (that address is
                 retired from every door on /reading). */}
+            {bookTalkOn && (
             <div className="kit-btn-row">
               <ReadingPartSelectLink part={3}>
                 {playgroundLock.locked && PLAYGROUND_LOCK_ICON}
                 Watch the Book Talk
               </ReadingPartSelectLink>
             </div>
-            {playgroundLock.locked && (
+            )}
+            {bookTalkOn && playgroundLock.locked && (
               <p className="kit-text-quiet">The Book Talk is for {playgroundLock.floorName} members and up.</p>
             )}
           </div>
@@ -344,8 +352,9 @@ export function ReadingStageBody({
         ) : (
           <div className="kit-stage-controls">
             <p className="kit-body">
-              The reading is live to watch, free. Want to join the discussion? Stay after for a live group video
-              call with Love.
+              {bookTalkOn
+                ? "The reading is live to watch, free. Want to join the discussion? Stay after for a live group video call with Love."
+                : "The reading is live to watch, free."}
             </p>
             <p className="kit-text-quiet">
               It plays right here, everyone in view. Your seat opens the moment Love goes live.
@@ -376,11 +385,12 @@ export default function ReadingStage({
   playgroundLock,
   housewarmingLabel,
   readingLabel,
+  bookTalkOn = true,
 }: ReadingStageProps) {
   /* fix round (block 968,624) — parts 1/2 share this one door, but the
      chip names whichever ROW the visitor actually picked. */
   const { selected } = useReadingPart();
-  const partLabel = selected === 2 ? readingLabel : housewarmingLabel;
+  const partLabel = selected === 1 ? housewarmingLabel : readingLabel;
   /* prepared is PRIVATE — a visitor's phase is closed until published */
   const [phase, setPhase] = useState<"closed" | "published">(initialPhase === "published" ? "published" : "closed");
   const [room, setRoom] = useState<string | null>(null);
@@ -532,6 +542,7 @@ export default function ReadingStage({
       cameraShown={cameraShown}
       joined={joined}
       onJoined={setJoined}
+      bookTalkOn={bookTalkOn}
     />
   );
 }

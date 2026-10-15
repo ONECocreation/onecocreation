@@ -171,6 +171,13 @@ export interface SiteConfig {
       drops back to absent (sanitizeHousewarming below), which reads ON
       — a broken doc must never hide a part that exists. */
   housewarming?: boolean;
+  /** TASK-614: the Book Talk (Part 3) switch, set from /a/site/reading,
+      the exact TASK-499 shape: ABSENT MEANS ON, only an explicit saved
+      `false` hides Part 3 on /reading and the member calendar; a
+      malformed stored value drops to absent (sanitizeSwitch), reading ON. */
+  bookTalk?: boolean;
+  /** TASK-614: the Q&A with Love (Part 4) switch, same rule as bookTalk. */
+  qa?: boolean;
   /** TASK-387 (block 968,088+): the per-room chat switch, set from
       /a/site/chat — Love's own studio ask, "hide the chat fully for some
       of the rooms. even during some sessions turn it on and off." Keyed
@@ -215,6 +222,9 @@ export type SiteConfigPatch = {
       value; omitted leaves her saved flip (or the absent-means-ON
       default) untouched */
   housewarming?: boolean;
+  /** TASK-614: bare booleans like housewarming; omitted leaves the saved flip alone */
+  bookTalk?: boolean;
+  qa?: boolean;
   /** TASK-387: PARTIAL keyed map, unlike reading/about/nav's whole-object
       rule above — a save carries only the changed slug(s)
       (`{ rooms: { "<slug>": { chat } } }`), and saveSiteConfig merges
@@ -340,6 +350,8 @@ function sanitize(raw: unknown): SiteConfig {
     replays: sanitizeReplays(o.replays),
     reading: sanitizeReading(o.reading),
     housewarming: sanitizeHousewarming(o.housewarming),
+    bookTalk: sanitizeHousewarming(o.bookTalk),
+    qa: sanitizeHousewarming(o.qa),
     rooms: sanitizeRooms(o.rooms),
   };
 }
@@ -726,6 +738,9 @@ export async function saveSiteConfig(patch: SiteConfigPatch): Promise<SiteConfig
     // her saved flip (or the absent-means-ON default) alone, so no
     // unrelated save can erase it.
     housewarming: patch.housewarming !== undefined ? patch.housewarming : current.housewarming,
+    // TASK-614: same rule for the Book Talk and Q&A switches
+    bookTalk: patch.bookTalk !== undefined ? patch.bookTalk : current.bookTalk,
+    qa: patch.qa !== undefined ? patch.qa : current.qa,
     // TASK-387: PER-SLUG merge, unlike every field above -- a rooms patch
     // never replaces the whole map. Every slug named in the patch
     // replaces that slug's own entry; every other stored slug rides
