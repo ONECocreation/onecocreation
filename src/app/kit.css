@@ -58,6 +58,7 @@
 .kit-switch-row-text{flex:1;min-width:220px}
 .kit-switch-row-text b{font-size:.9rem}
 .kit-switch-row-text span{font-size:.78rem;color:var(--muted)}
+.kit-switch-row>.kit-btn{min-width:78px;box-sizing:border-box;text-align:center}
 .kit-btn.btn-on{background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:#fff}
 .kit-btn.btn-ghost{background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px var(--edge)}
 
