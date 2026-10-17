@@ -63,11 +63,11 @@ describe("TASK-444: reading doors open the public reading page", () => {
     }
   });
 
-  it("leaves Memberships' Heart Field door pointing to the room", () => {
+  it("Community's Heart Field door points to the room (T-615: moved from Memberships)", () => {
     const config = defaultSiteConfig();
     config.features.memberships = true;
-    const memberships = buildDefaultMenu(config).find((row) => row.label === "Memberships");
-    expect(memberships?.subs).toContainEqual({ label: "Heart Field", href: readingRoom.READING_ROOM_PATH });
+    const community = buildDefaultMenu(config).find((row) => row.label === "Community");
+    expect(community?.subs).toContainEqual({ label: "Heart Field", href: readingRoom.READING_ROOM_PATH });
   });
 
   it("points the member menu's Read with Love door to the public page", () => {

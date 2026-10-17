@@ -1,34 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Chip, field } from "@/components/console/glass";
-import { PAGE_CATALOG, buildDefaultMenu, type MenuItem } from "@/components/NavMenu";
+import { useEffect, useRef, useState } from "react";
+import { field, Sheet } from "@/components/console/glass";
+import Button from "@/components/kit/Button";
+import Card from "@/components/kit/Card";
+import { PAGE_CATALOG, buildDefaultMenu, buildMenu, type MenuItem } from "@/components/NavMenu";
 import type { NavChild, NavItem, SiteConfig } from "@/lib/site-config";
-import { moveRow, nestUnder as nestRowUnder, type RowRef } from "@/lib/nav-edit";
+import { canPlaceUnder, moveRowTo, slotToPlace, type PlaceRef, type RowRef } from "@/lib/nav-edit";
 
 /**
- * NAV EDITOR (TASK-137, cut 0018.06.17 a₿) — "We are missing the ability to
- * configure the navigation: rename, choose what pages sit under each
- * header. The user shouldn't need an AI to set this up — this is our gift
- * to the people. They don't need credits." (the Admiral)
+ * NAV EDITOR (TASK-137; rebuilt T-615, round 2 of Love's menu desk).
  *
- * Rename a label inline, reorder with the up/down buttons OR drag a row by
- * its ⠿ handle (TASK-188 — the house's own HTML5 drag primitives; @dnd-kit
- * is not importable at the top level and no new dependency is allowed), add
- * a real page from the picker (PAGE_CATALOG — the same table buildMenu
- * uses to filter the public menu), nest a top-level leaf one level under a
- * header, remove a row, or Reset to the switch-driven default. Every move
- * — arrow or drag — runs through the pure helpers in lib/nav-edit.ts
- * (moveRow / nestUnder), so the tests exercise the exact state changes.
- * Switches
- * still win: a page whose feature is OFF renders greyed here with "hidden
- * by the <name> switch" and never renders public — buildMenu applies the
- * exact same filter on the live site, so this editor can never promise a
- * door the switches won't actually open.
+ * "We are missing the ability to configure the navigation ... The user
+ * shouldn't need an AI to set this up" (the Admiral). Round 2 drawing: one
+ * card per tab, one row per page, a grip on every row. A row drags into ANY
+ * tab, or out to become a tab; every row also has ONE Change control that
+ * opens a small sheet (name, where it sits, its place there, take it off the
+ * menu) - the sheet is the way on a phone, where a drag does not exist. The
+ * three room buttons (Add a page, Start over, Save) are plain round buttons
+ * in one row at the TOP, one size and one style with every button below.
+ * A live copy of the real bar follows each move. Every move runs through
+ * the pure helpers in lib/nav-edit.ts (moveRowTo, slotToPlace). Every change
+ * saves itself a moment later (debounced), with a status line at the top;
+ * Save stays as a manual retry. Start over asks first (two steps).
  *
- * Self-contained (own fetch/save), the same pattern as RetreatsDesk inside
- * /a/booking — TASK-188 gave it its own sub-room at /a/site/menu under the
- * Site accordion.
+ * Switches still win: a page whose feature is OFF renders greyed here with
+ * "Hidden on the site: the X switch is off" and never renders public -
+ * buildMenu applies the exact same filter on the live site.
+ *
+ * Self-contained (own fetch/save) under /a/site/menu.
  */
 
 const FEATURE_LABELS: Record<keyof SiteConfig["features"], string> = {
@@ -86,7 +86,7 @@ function rowHidden(features: SiteConfig["features"], item: NavItem): string | nu
   const children = item.children ?? [];
   if (children.length === 0) return hiddenNote(features, item.href);
   return children.every((c) => hiddenNote(features, c.href) !== null)
-    ? "hidden — every page under it is off"
+    ? "hidden: every page under it is off"
     : null;
 }
 
@@ -105,59 +105,222 @@ function labelFor(href: string): string {
   return PAGE_CATALOG.find((p) => p.href === href)?.label ?? href;
 }
 
-const rowStyle: React.CSSProperties = {
-  display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
-  background: "var(--glass)", border: "1px solid rgba(139,118,196,.22)",
-  borderRadius: 10, padding: "8px 12px", marginBottom: 6,
-};
+type Status = "idle" | "saving" | "saved" | "failed";
 
-const iconBtn: React.CSSProperties = {
-  background: "none", border: "1px solid rgba(139,118,196,.35)", borderRadius: 6,
-  width: 26, height: 26, cursor: "pointer", fontSize: ".8rem", lineHeight: 1, color: "var(--ink)",
-};
+/** a row as the editor draws it: its place, its words, what it holds */
+interface RowView {
+  at: RowRef;
+  label: string;
+  href?: string;
+  /** child rows under a tab (empty for a child or a single page) */
+  kids: number;
+}
 
-/** the thin landing line between rows of one level (TASK-188 drag) —
-    module scope: a component born inside render remounts every paint */
-function DropLine({ show }: { show: boolean }) {
+function viewAt(rows: NavItem[], at: RowRef): RowView | null {
+  if (at.parent === null) {
+    const r = rows[at.index];
+    return r ? { at, label: r.label, href: r.href, kids: r.children?.length ?? 0 } : null;
+  }
+  const c = rows[at.parent]?.children?.[at.index];
+  return c ? { at, label: c.label, href: c.href, kids: 0 } : null;
+}
+
+function renameAt(rows: NavItem[], at: RowRef, label: string): NavItem[] {
+  const next = rows.slice();
+  if (at.parent === null) {
+    if (!next[at.index]) return rows;
+    next[at.index] = { ...next[at.index], label };
+    return next;
+  }
+  const header = next[at.parent];
+  const kids = (header?.children ?? []).slice();
+  if (!kids[at.index]) return rows;
+  kids[at.index] = { ...kids[at.index], label };
+  next[at.parent] = { ...header, children: kids };
+  return next;
+}
+
+function removeAt(rows: NavItem[], at: RowRef): NavItem[] {
+  if (at.parent === null) return rows.filter((_, i) => i !== at.index);
+  const next = rows.slice();
+  const header = next[at.parent];
+  const kids = (header.children ?? []).filter((_, i) => i !== at.index);
+  if (kids.length > 0) next[at.parent] = { ...header, children: kids };
+  else if (header.href) {
+    const { children: gone, ...bare } = header;
+    void gone;
+    next[at.parent] = bare;
+  } else return rows.filter((_, i) => i !== at.parent);
+  return next;
+}
+
+/** the rows already on the menu, as hrefs, so "Add a page" offers the rest */
+function hrefsOnMenu(rows: NavItem[]): Set<string> {
+  const out = new Set<string>();
+  for (const r of rows) {
+    if (r.href) out.add(r.href);
+    for (const c of r.children ?? []) out.add(c.href);
+  }
+  return out;
+}
+
+/** the plain-words line under a greyed row (no dash, no arrow) */
+function hiddenLine(note: string): string {
+  if (!note.startsWith("hidden by the ")) return "Hidden on the site: every page under it is off";
+  const what = note.slice("hidden by the ".length);
+  return `Hidden on the site: the ${what} ${what.endsWith("switches") ? "are" : "is"} off`;
+}
+
+function tabLine(item: NavItem): string {
+  const n = item.children?.length ?? 0;
+  return n === 0 ? "Tab · a single page" : `Tab · ${n} page${n === 1 ? "" : "s"} under it`;
+}
+
+/** the live copy of the real bar: exactly what buildMenu would show the
+    public for these rows and these switches. A tab opens to show its pages. */
+function BarPreview({ config, rows }: { config: SiteConfig; rows: NavItem[] }) {
+  const menu: MenuItem[] = buildMenu({ ...config, nav: { items: rows } });
+  const [open, setOpen] = useState<string | null>(null);
+  const shown = menu.find((m) => m.label === open && m.subs) ?? menu.find((m) => m.subs) ?? null;
   return (
-    <div
-      aria-hidden="true"
-      style={{
-        height: 3, borderRadius: 2, margin: "2px 0",
-        background: show ? "var(--lavender, #8b76c4)" : "transparent",
-        transition: "background .08s",
-      }}
-    />
+    <div className="menued-preview" aria-label="How the top of the site looks">
+      <div className="menued-preview-bar">
+        {menu.map((m) => (
+          <Button
+            key={m.label}
+            variant="quiet"
+            className="menued-preview-tab"
+            aria-pressed={shown?.label === m.label}
+            onClick={() => setOpen(m.label)}
+          >
+            {m.label}
+          </Button>
+        ))}
+      </div>
+      {shown?.subs && (
+        <div className="menued-preview-subs">
+          {shown.subs.map((s) => (
+            <span key={s.href + s.label}>{s.label}</span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
-/** the ⠿ handle — the drag affordance; the arrows beside it stay for
-    keyboard accessibility */
-function DragHandle({ at, label, onStart, onEnd }: {
-  at: RowRef;
-  label: string;
-  onStart: (e: React.DragEvent, at: RowRef) => void;
-  onEnd: () => void;
+/** the Change sheet: name, where it sits, its place there, take it off */
+function ChangeSheet({
+  rows, view, onClose, onApply, onRemove,
+}: {
+  rows: NavItem[];
+  view: RowView;
+  onClose: () => void;
+  onApply: (name: string, place: PlaceRef) => void;
+  onRemove: () => void;
 }) {
+  const [name, setName] = useState(view.label);
+  const [where, setWhere] = useState<number | null>(view.at.parent);
+  // "Its place there": a final index in the chosen level, counted without this row
+  const [pos, setPos] = useState<number>(view.at.index);
+  const places = rows
+    .map((r, i) => ({ r, i }))
+    .filter(({ i }) => canPlaceUnder(rows, view.at, i));
+  const level: { label: string }[] = (where === null ? rows : rows[where]?.children ?? [])
+    .filter((_, idx) => !(where === view.at.parent && idx === view.at.index))
+    .map((x) => ({ label: x.label }));
+  const posIndex = Math.min(pos, level.length);
   return (
-    <span
-      draggable
-      onDragStart={(e) => onStart(e, at)}
-      onDragEnd={onEnd}
-      title={`drag ${label} to move it`}
-      aria-hidden="true"
-      style={{ cursor: "grab", color: "var(--muted)", fontSize: ".9rem", userSelect: "none", touchAction: "none" }}
-    >
-      ⠿
-    </span>
+    <Sheet open onClose={onClose} maxWidth={400}>
+      <div className="menued-sheet">
+        <p className="menued-label">The menu</p>
+        <h2>{view.label}</h2>
+        <label htmlFor="menued-name">Name on the menu</label>
+        <input id="menued-name" className="console-field" style={field} value={name} maxLength={60}
+          onChange={(e) => setName(e.target.value)} />
+        <label htmlFor="menued-where">Where it sits</label>
+        <select id="menued-where" className="console-field" style={field}
+          value={where === null ? "top" : String(where)}
+          onChange={(e) => { setWhere(e.target.value === "top" ? null : Number(e.target.value)); setPos(99); }}>
+          <option value="top">A tab of its own</option>
+          {places.map(({ r, i }) => (
+            <option key={r.id + i} value={i}>Under {r.label}</option>
+          ))}
+        </select>
+        <label htmlFor="menued-place">Its place there</label>
+        <select id="menued-place" className="console-field" style={field} value={posIndex}
+          onChange={(e) => setPos(Number(e.target.value))}>
+          <option value={0}>First</option>
+          {level.map((x, k) => (
+            <option key={k} value={k + 1}>{k + 1 === level.length ? `Last, after ${x.label}` : `After ${x.label}`}</option>
+          ))}
+        </select>
+        <Button variant="second" className="kit-pill" onClick={() => onApply(name.trim() || view.label, { parent: where, index: posIndex })}>Done</Button>
+        <Button variant="second" className="kit-pill" onClick={onRemove}>Take it off the menu</Button>
+        <Button variant="second" className="kit-pill" onClick={onClose}>Never mind</Button>
+      </div>
+    </Sheet>
   );
 }
 
 export default function NavEditor() {
-  const [features, setFeatures] = useState<SiteConfig["features"] | null>(null);
+  const [config, setConfig] = useState<SiteConfig | null>(null);
   const [rows, setRows] = useState<NavItem[] | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
+  const [status, setStatus] = useState<Status>("idle");
+  const [reason, setReason] = useState<string | null>(null);
+  const [sheet, setSheet] = useState<
+    | { kind: "change"; at: RowRef }
+    | { kind: "add" }
+    | { kind: "reset" }
+    | null
+  >(null);
+  const [addHref, setAddHref] = useState("");
+
+  /* ── auto save: every change schedules one save a moment later; one save
+     in flight at a time, the newest rows always win ── */
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latest = useRef<NavItem[] | null>(null);
+  const inflight = useRef(false);
+  const again = useRef(false);
+
+  async function save() {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+    if (!latest.current) return;
+    if (inflight.current) { again.current = true; return; }
+    inflight.current = true;
+    setStatus("saving");
+    setReason(null);
+    const sent = latest.current;
+    try {
+      const res = await fetch("/api/admin/site", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nav: { items: sent } }),
+      });
+      const data = await res.json().catch(() => null);
+      if (data?.ok) {
+        setConfig(data.config as SiteConfig);
+        setStatus("saved");
+      } else {
+        setReason(data?.reason ?? "the site would not take it");
+        setStatus("failed");
+      }
+    } catch {
+      setReason("the connection dropped");
+      setStatus("failed");
+    } finally {
+      inflight.current = false;
+      if (again.current) { again.current = false; void save(); }
+    }
+  }
+
+  /** every edit goes through here: new rows, then a save a moment later */
+  function change(next: NavItem[]) {
+    setRows(next);
+    latest.current = next;
+    setStatus("saving");
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => { void save(); }, 700);
+  }
 
   useEffect(() => {
     (async () => {
@@ -165,350 +328,191 @@ export default function NavEditor() {
       if (!res.ok) return;
       const data = await res.json();
       if (!data.ok) return;
-      const config = data.config as SiteConfig;
-      setFeatures(config.features);
-      setRows(config.nav?.items?.length ? config.nav.items : menuToNav(buildDefaultMenu(config)));
+      const c = data.config as SiteConfig;
+      setConfig(c);
+      setRows(c.nav?.items?.length ? c.nav.items : menuToNav(buildDefaultMenu(c)));
     })();
+    return () => { if (timer.current) clearTimeout(timer.current); };
   }, []);
 
-  function resetToDefault() {
-    if (!features) return;
-    setRows(menuToNav(buildDefaultMenu({ features, payments: { btcpay: false, square: false, stripe: false },
-      meeting: { rail: "jitsi", jitsiDomain: "", allowStaticLinks: false, vdoRoomPrefix: "", vdoHost: "", staticUrl: "" } })));
-    setNote(null);
-  }
-
-  function move<T>(list: T[], i: number, dir: -1 | 1): T[] {
-    const j = i + dir;
-    if (j < 0 || j >= list.length) return list;
-    const next = list.slice();
-    [next[i], next[j]] = [next[j], next[i]];
-    return next;
-  }
-
-  function renameTop(i: number, label: string) {
-    if (!rows) return;
-    const next = rows.slice();
-    next[i] = { ...next[i], label };
-    setRows(next);
-  }
-
-  function renameChild(i: number, j: number, label: string) {
-    if (!rows) return;
-    const next = rows.slice();
-    const children = (next[i].children ?? []).slice();
-    children[j] = { ...children[j], label };
-    next[i] = { ...next[i], children };
-    setRows(next);
-  }
-
-  function removeTop(i: number) {
-    if (!rows) return;
-    setRows(rows.filter((_, idx) => idx !== i));
-  }
-
-  function removeChild(i: number, j: number) {
-    if (!rows) return;
-    const next = rows.slice();
-    next[i] = { ...next[i], children: (next[i].children ?? []).filter((_, idx) => idx !== j) };
-    setRows(next);
-  }
-
-  function addTopPage(href: string) {
-    if (!rows || !href) return;
-    setRows([...rows, { id: href, label: labelFor(href), href }]);
-  }
-
-  function addChildPage(i: number, href: string) {
-    if (!rows || !href) return;
-    const next = rows.slice();
-    const children = [...(next[i].children ?? []), { id: href, label: labelFor(href), href }];
-    next[i] = { ...next[i], children };
-    setRows(next);
-  }
-
-  /** nest one level: pull a top-level LEAF (no children of its own) out and
-      drop it as the last child of the chosen header row — the pure helper
-      (lib/nav-edit.ts) holds the law; the same helper the drag lands on */
-  function nestUnder(i: number, targetIndex: number) {
-    if (!rows) return;
-    setRows(nestRowUnder(rows, i, targetIndex));
-  }
-
-  /* ── TASK-188 (0018.06.18 a₿ · block 966,112) — drag-and-drop ──
-     "Could be better with a drag-and-drop area" (the Admiral). The house's
-     own HTML5 drag primitives, no library (@dnd-kit is not importable at
-     the top level — puck nests it). Drag a row by its ⠿ handle: over a row
-     of the SAME level a drop line shows where it lands (moveRow); a
-     top-level LEAF held over the middle of a header row highlights it as
-     the nest target (nestUnder — one level, the existing law). The
-     keyboard arrows stay untouched for accessibility, Save is unchanged. */
+  /* ── drag: a grip starts it, a drop line shows where it lands ── */
   const [dragging, setDragging] = useState<RowRef | null>(null);
-  const [dropLine, setDropLine] = useState<RowRef | null>(null); // lands BEFORE this row; index may be the level's length (after the last)
-  const [nestTarget, setNestTarget] = useState<number | null>(null); // header index lit as the nest landing
+  const [drop, setDrop] = useState<{ key: string; mode: "before" | "after" | "into" } | null>(null);
 
-  function clearDrag() {
-    setDragging(null);
-    setDropLine(null);
-    setNestTarget(null);
+  function targetFor(at: RowRef, mode: "before" | "after" | "into"): PlaceRef | null {
+    if (!rows) return null;
+    if (mode === "into") return { parent: at.index, index: rows[at.index]?.children?.length ?? 0 };
+    if (at.parent === null) return { parent: null, index: at.index + (mode === "after" ? 1 : 0) };
+    return { parent: at.parent, index: at.index + (mode === "after" ? 1 : 0) };
   }
 
-  function onDragStartRow(e: React.DragEvent, at: RowRef) {
-    setDragging(at);
-    e.dataTransfer.effectAllowed = "move";
-    try {
-      e.dataTransfer.setData("text/plain", "nav row");
-    } catch {
-      /* some test drivers deny setData — the state above already knows */
-    }
-  }
-
-  function onRowDragOver(e: React.DragEvent, parent: number | null, index: number, isHeader: boolean) {
-    if (!dragging) return;
+  function overRow(e: React.DragEvent, at: RowRef) {
+    if (!dragging || !rows) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     const rect = e.currentTarget.getBoundingClientRect();
     const y = rect.height > 0 ? (e.clientY - rect.top) / rect.height : 0.5;
-    // a top-level LEAF held over the middle band of a top-level row = "nest
-    // me here" (nestUnder itself refuses a header or an href-less row)
-    const dragged = dragging.parent === null ? rows?.[dragging.index] : undefined;
-    const draggedIsLeaf = !!dragged && !dragged.children?.length && !!dragged.href;
-    if (
-      isHeader && parent === null && draggedIsLeaf &&
-      dragging.index !== index && y > 0.25 && y < 0.75
-    ) {
-      setNestTarget(index);
-      setDropLine(null);
-      return;
-    }
-    setNestTarget(null);
-    // reorder only ever happens within the row's own level
-    if (dragging.parent !== parent) {
-      setDropLine(null);
-      return;
-    }
-    setDropLine({ parent, index: y < 0.5 ? index : index + 1 });
+    let mode: "before" | "after" | "into" = y < 0.5 ? "before" : "after";
+    // the middle band of a tab row drops INTO the tab, when the one-level law lets it
+    if (at.parent === null && y > 0.3 && y < 0.7 && canPlaceUnder(rows, dragging, at.index)) mode = "into";
+    setDrop({ key: `${at.parent ?? "t"}:${at.index}`, mode });
   }
 
-  function onEndZoneDragOver(e: React.DragEvent, parent: number | null, length: number) {
-    if (!dragging || dragging.parent !== parent) return;
+  function dropOnRow(e: React.DragEvent, at: RowRef) {
     e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setNestTarget(null);
-    setDropLine({ parent, index: length });
-  }
-
-  function onRowDrop(e: React.DragEvent) {
-    e.preventDefault();
-    if (rows && dragging) {
-      if (nestTarget !== null) {
-        if (dragging.parent === null && dragging.index !== nestTarget) {
-          setRows(nestRowUnder(rows, dragging.index, nestTarget));
-        }
-      } else if (dropLine && dropLine.parent === dragging.parent) {
-        // the line's index counts the row being dragged; taking it out
-        // first shifts every later landing spot down by one
-        let to = dropLine.index;
-        if (dragging.index < to) to -= 1;
-        if (to !== dragging.index) setRows(moveRow(rows, dragging, to));
+    if (rows && dragging && drop) {
+      const slot = targetFor(at, drop.mode);
+      if (slot) {
+        const to = drop.mode === "into" ? slot : slotToPlace(dragging, slot);
+        const next = moveRowTo(rows, dragging, to);
+        if (next !== rows) change(next);
       }
     }
-    clearDrag();
+    setDragging(null);
+    setDrop(null);
   }
 
-  async function save() {
-    if (!rows) return;
-    setBusy(true);
-    setNote(null);
-    try {
-      const res = await fetch("/api/admin/site", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nav: { items: rows } }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        setFeatures(data.config.features);
-        setRows(data.config.nav?.items?.length ? data.config.nav.items : menuToNav(buildDefaultMenu(data.config)));
-        setNote("saved ✓ the public menu reads this on its next render");
-      } else setNote(data.reason ?? "save failed");
-    } catch {
-      setNote("save failed");
-    } finally {
-      setBusy(false);
-    }
+  if (!config || !rows) return <p style={{ fontSize: ".82rem", color: "var(--muted)" }}>reading the menu…</p>;
+  const features = config.features;
+
+  const offered = PAGE_CATALOG.filter((p) => !hrefsOnMenu(rows).has(p.href));
+  const changeView = sheet?.kind === "change" ? viewAt(rows, sheet.at) : null;
+
+  const statusWords =
+    status === "saving" ? "Saving..."
+    : status === "saved" ? "Saved. The site shows this menu."
+    : status === "failed" ? `Not saved: ${reason ?? "the site would not take it"}. Press Save to try again.`
+    : "Every change saves itself.";
+
+  function rowEl(at: RowRef, label: string, sub: string, dim: boolean, isChild: boolean) {
+    const key = `${at.parent ?? "t"}:${at.index}`;
+    const isDrag = dragging?.parent === at.parent && dragging?.index === at.index;
+    const mark = drop?.key === key && !isDrag ? drop.mode : undefined;
+    return (
+      <li
+        key={key}
+        data-row=""
+        className={`menued-row${isChild ? " is-child" : ""}${dim ? " is-dim" : ""}${isDrag ? " is-dragging" : ""}`}
+        data-drop={mark === "into" ? undefined : mark}
+        onDragOver={(e) => overRow(e, at)}
+        onDrop={(e) => dropOnRow(e, at)}
+      >
+        <span
+          className="menued-grip"
+          draggable
+          aria-hidden="true"
+          title={`Drag ${label} to move it`}
+          onDragStart={(e) => {
+            setDragging(at);
+            e.dataTransfer.effectAllowed = "move";
+            try {
+              e.dataTransfer.setData("text/plain", "menu row");
+              const li = (e.currentTarget as HTMLElement).closest("[data-row]");
+              if (li) e.dataTransfer.setDragImage(li, 24, 20);
+            } catch { /* some drivers deny it; the state knows */ }
+          }}
+          onDragEnd={() => { setDragging(null); setDrop(null); }}
+        >
+          ⠿
+        </span>
+        <span>
+          <span className="menued-name">{label}</span>
+          <span className="menued-sub">{sub}</span>
+        </span>
+        <Button variant="second" className="kit-pill" aria-label={`Change ${label}`} onClick={() => setSheet({ kind: "change", at })}>
+          Change
+        </Button>
+      </li>
+    );
   }
-
-  if (!features || !rows) return <p style={{ fontSize: ".82rem", color: "var(--muted)" }}>reading the menu…</p>;
-
-  const unusedTop = PAGE_CATALOG.filter((p) => !rows.some((r) => r.href === p.href));
 
   return (
     <div style={{ marginBottom: 12 }}>
-      <p style={{ fontSize: ".8rem", color: "var(--muted)", margin: "0 0 10px", maxWidth: 640 }}>
-        Rename a door, drag a row by its ⠿ handle — a line shows where it lands, and a page held over a header
-        nests under it (the arrows do the same for the keyboard) — add a real page from the list. A page whose
-        switch is off still shows here (greyed) so you can arrange it ahead of time — it never shows on the live
-        site until its switch is on.
-      </p>
+      <div className="menued-bar-actions">
+        <Button variant="second" className="kit-pill" onClick={() => { setAddHref(offered[0]?.href ?? ""); setSheet({ kind: "add" }); }}>Add a page</Button>
+        <Button variant="second" className="kit-pill" onClick={() => setSheet({ kind: "reset" })}>Start over</Button>
+        <Button variant="second" className="kit-pill" disabled={status === "saving"} onClick={() => { latest.current = rows; void save(); }}>Save</Button>
+      </div>
+      <p className="menued-status" data-state={status} role="status" aria-live="polite">{statusWords}</p>
 
-      {rows.map((item, i) => {
-        const note1 = rowHidden(features, item);
-        return (
-          <div key={item.id + i} style={{ marginBottom: 4 }}>
-            {/* the landing line above this row (TASK-188 drag) */}
-            <DropLine show={dropLine?.parent === null && dropLine.index === i} />
-            <div
-              style={{
-                ...rowStyle, opacity: note1 ? 0.6 : 1,
-                /* lit while a dragged leaf hovers it as the nest landing */
-                ...(nestTarget === i
-                  ? { borderColor: "var(--lavender, #8b76c4)", boxShadow: "0 0 0 2px rgba(139,118,196,.35)" }
-                  : {}),
-              }}
-              onDragOver={(e) => onRowDragOver(e, null, i, true)}
-              onDrop={onRowDrop}
-            >
-              <DragHandle at={{ parent: null, index: i }} label={item.label} onStart={onDragStartRow} onEnd={clearDrag} />
-              <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <button type="button" style={iconBtn} disabled={i === 0} onClick={() => setRows(move(rows, i, -1))} aria-label={`move ${item.label} up`}>▲</button>
-                <button type="button" style={iconBtn} disabled={i === rows.length - 1} onClick={() => setRows(move(rows, i, 1))} aria-label={`move ${item.label} down`}>▼</button>
-              </span>
-              <input
-                value={item.label}
-                onChange={(e) => renameTop(i, e.target.value)}
-                className="console-field" style={{ ...field, minWidth: 180, fontWeight: 700 }}
-                aria-label={`label for ${item.label}`}
-              />
-              {item.children?.length ? (
-                <Chip tone="lavender">header · {item.children.length} page{item.children.length === 1 ? "" : "s"}</Chip>
-              ) : (
-                <Chip tone="grey">{item.href}</Chip>
-              )}
-              {note1 && <Chip tone="grey">{note1}</Chip>}
-              {!item.children?.length && item.href && rows.length > 1 && (
-                <select
-                  defaultValue=""
-                  onChange={(e) => {
-                    const idx = Number(e.target.value);
-                    if (!Number.isNaN(idx)) nestUnder(i, idx);
-                    e.target.value = "";
-                  }}
-                  className="console-field" style={{ ...field, fontSize: ".76rem" }}
-                  aria-label={`nest ${item.label} under…`}
-                >
-                  <option value="" disabled>nest under…</option>
-                  {rows.map((r, idx) =>
-                    idx === i ? null : (
-                      <option key={r.id + idx} value={idx}>{r.label}</option>
-                    ),
-                  )}
-                </select>
-              )}
-              <button type="button" onClick={() => removeTop(i)} style={{ ...iconBtn, width: "auto", padding: "0 8px", color: "var(--err)" }}>
-                remove
-              </button>
-            </div>
+      <p className="menued-label">How it looks</p>
+      <BarPreview config={config} rows={rows} />
 
-            {item.children?.map((child, j) => {
-              const note2 = hiddenNote(features, child.href);
-              return (
-                <div key={child.id + j}>
-                  <DropLine show={dropLine?.parent === i && dropLine.index === j} />
-                  <div
-                    style={{ ...rowStyle, marginLeft: 30, opacity: note2 ? 0.6 : 1 }}
-                    onDragOver={(e) => onRowDragOver(e, i, j, false)}
-                    onDrop={onRowDrop}
-                  >
-                    <DragHandle at={{ parent: i, index: j }} label={child.label} onStart={onDragStartRow} onEnd={clearDrag} />
-                    <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                      <button type="button" style={iconBtn} disabled={j === 0} onClick={() => setRows((r) => (r ? (() => {
-                        const next = r.slice();
-                        next[i] = { ...next[i], children: move(next[i].children ?? [], j, -1) };
-                        return next;
-                      })() : r))} aria-label={`move ${child.label} up`}>▲</button>
-                      <button type="button" style={iconBtn} disabled={j === (item.children?.length ?? 1) - 1} onClick={() => setRows((r) => (r ? (() => {
-                        const next = r.slice();
-                        next[i] = { ...next[i], children: move(next[i].children ?? [], j, 1) };
-                        return next;
-                      })() : r))} aria-label={`move ${child.label} down`}>▼</button>
-                    </span>
-                    <input
-                      value={child.label}
-                      onChange={(e) => renameChild(i, j, e.target.value)}
-                      className="console-field" style={{ ...field, minWidth: 180 }}
-                      aria-label={`label for ${child.label}`}
-                    />
-                    <Chip tone="grey">{child.href}</Chip>
-                    {note2 && <Chip tone="grey">{note2}</Chip>}
-                    <button type="button" onClick={() => removeChild(i, j)} style={{ ...iconBtn, width: "auto", padding: "0 8px", color: "var(--err)" }}>
-                      remove
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+      <p className="menued-label">Arrange it</p>
+      <div className="menued-cards">
+        {rows.map((item, i) => {
+          const topNote = rowHidden(features, item);
+          const into = drop?.key === `t:${i}` && drop.mode === "into";
+          return (
+            <Card key={item.id + i} body={false} className={`menued-card${into ? " is-into" : ""}`}>
+              <ul className="kit-rows menued-rows">
+                {rowEl({ parent: null, index: i }, item.label,
+                  topNote ? hiddenLine(topNote) : tabLine(item),
+                  !!topNote, false)}
+                {item.children?.map((c, j) => {
+                  const n = hiddenNote(features, c.href);
+                  return rowEl({ parent: i, index: j }, c.label, n ? hiddenLine(n) : `Under ${item.label}`, !!n, true);
+                })}
+              </ul>
+            </Card>
+          );
+        })}
+      </div>
 
-            {item.children !== undefined && (
-              <div
-                style={{ ...rowStyle, marginLeft: 30, background: "transparent", border: "1px dashed rgba(139,118,196,.3)" }}
-                onDragOver={(e) => onEndZoneDragOver(e, i, item.children?.length ?? 0)}
-                onDrop={onRowDrop}
-              >
-                <DropLine show={dropLine?.parent === i && dropLine.index === (item.children?.length ?? 0)} />
-                <select
-                  defaultValue=""
-                  onChange={(e) => {
-                    addChildPage(i, e.target.value);
-                    e.target.value = "";
-                  }}
-                  className="console-field" style={field}
-                  aria-label={`add a page under ${item.label}`}
-                >
-                  <option value="" disabled>+ add a page under {item.label}…</option>
-                  {PAGE_CATALOG.map((p) => (
-                    <option key={p.href} value={p.href}>{p.label}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        );
-      })}
-
-      {/* after the last top-level row — the end landing line + the add row
-          double as the drop zone for "move to the bottom" */}
-      <DropLine show={dropLine?.parent === null && dropLine.index === rows.length} />
-      <div
-        style={{ ...rowStyle, background: "transparent", border: "1px dashed rgba(139,118,196,.3)" }}
-        onDragOver={(e) => onEndZoneDragOver(e, null, rows.length)}
-        onDrop={onRowDrop}
-      >
-        <select
-          defaultValue=""
-          onChange={(e) => {
-            addTopPage(e.target.value);
-            e.target.value = "";
+      {sheet?.kind === "change" && changeView && (
+        <ChangeSheet
+          key={`${sheet.at.parent}:${sheet.at.index}`}
+          rows={rows}
+          view={changeView}
+          onClose={() => setSheet(null)}
+          onApply={(name, place) => {
+            let next = renameAt(rows, changeView.at, name);
+            const samePlace = place.parent === changeView.at.parent && place.index === changeView.at.index;
+            if (!samePlace) next = moveRowTo(next, changeView.at, place);
+            if (next !== rows) change(next);
+            setSheet(null);
           }}
-          className="console-field" style={field}
-          aria-label="add a top-level page"
-        >
-          <option value="" disabled>+ add a page to the menu…</option>
-          {unusedTop.map((p) => (
-            <option key={p.href} value={p.href}>{p.label}</option>
-          ))}
-        </select>
-      </div>
+          onRemove={() => { change(removeAt(rows, changeView.at)); setSheet(null); }}
+        />
+      )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10 }}>
-        <button type="button" className="btn btn-gold btn-sm" disabled={busy} onClick={save} style={busy ? { opacity: 0.5 } : undefined}>
-          {busy ? "Saving…" : "Save the menu"}
-        </button>
-        <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={resetToDefault}>
-          Reset to default
-        </button>
-        {note && <span style={{ fontSize: ".8rem", color: note.startsWith("saved") ? "var(--ok)" : "var(--err)" }}>{note}</span>}
-      </div>
+      {sheet?.kind === "add" && (
+        <Sheet open onClose={() => setSheet(null)} maxWidth={400}>
+          <div className="menued-sheet">
+            <p className="menued-label">The menu</p>
+            <h2>Add a page</h2>
+            {offered.length === 0 ? (
+              <p>Every page is already on the menu.</p>
+            ) : (
+              <>
+                <label htmlFor="menued-add">Page</label>
+                <select id="menued-add" className="console-field" style={field} value={addHref} onChange={(e) => setAddHref(e.target.value)}>
+                  {offered.map((p) => (<option key={p.href} value={p.href}>{p.label}</option>))}
+                </select>
+                <Button variant="second" className="kit-pill" onClick={() => {
+                  if (!addHref) return;
+                  const label = labelFor(addHref);
+                  change([...rows, { id: addHref, label, href: addHref }]);
+                  setSheet(null);
+                }}>Add it</Button>
+              </>
+            )}
+            <Button variant="second" className="kit-pill" onClick={() => setSheet(null)}>Never mind</Button>
+          </div>
+        </Sheet>
+      )}
+
+      {sheet?.kind === "reset" && (
+        <Sheet open onClose={() => setSheet(null)} maxWidth={400}>
+          <div className="menued-sheet">
+            <p className="menued-label">The menu</p>
+            <h2>Start over?</h2>
+            <p>This puts the built-in menu back and saves it. Your own names and places go.</p>
+            <Button variant="second" className="kit-pill" onClick={() => { change(menuToNav(buildDefaultMenu(config))); setSheet(null); }}>Yes, start over</Button>
+            <Button variant="second" className="kit-pill" onClick={() => setSheet(null)}>Never mind</Button>
+          </div>
+        </Sheet>
+      )}
     </div>
   );
 }

@@ -118,90 +118,38 @@ function pageOn(s: SiteConfig | null, href: string): boolean {
     Exported so the nav editor can seed its rows and answer "Reset to
     default" without re-deriving this logic. */
 export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
-  const menu: MenuItem[] = [
-    { label: "About", href: "/about" },
-  ];
-  // TASK-187 (0018.06.18 a₿ · block 966,104): the whole Memberships door
-  // follows its own switch now — default ON, so this keeps standing exactly
-  // as before until Love (or the Admiral) turns it off.
-  if (s?.features.memberships) {
-    menu.push({
-      label: "Memberships",
-      href: "/memberships",
-      /* TASK-210 (0018.06.23 a₿, Love's 0018.06.18 call 01:53:35 "a
-         heart-field link lands in the wrong place"): the Heart Field row
-         pointed at /memberships — the same page as its own header, so the
-         click went nowhere. The Heart Field IS a room (the Commons, T-174's
-         free room): the row leads to its Stage, derived from the registry
-         (KNOWN_NAV_HREFS carries every room's path). A guest meets the
-         rooms' sign-in door with ?next= back — honest, never a dead click.
-         Derive-or-dash: no free room in the registry → the memberships
-         page, where the Heart Field is described. */
-      subs: [
-        { label: "Heart Field", href: READING_ROOM_PATH ?? "/memberships" },
-        { label: "Three packages", href: "/packages" },
-      ],
-    });
-  }
-  if (s?.features.sessions) {
-    menu.push({
-      label: "Sessions",
-      href: "/book",
-      subs: [
-        { label: "Book a time", href: "/book" },
-        ...(s.features.cuts ? [{ label: "ConsciousCuts & Waxing", href: "/services" }] : []),
-      ],
-    });
-  }
-  if (s?.features.store) {
-    menu.push({
-      label: "Store",
-      href: "/store",
-      /* Love's meeting (0018.06.17 a₿, RESUME NOTE): under the Store header,
-         two buttons — Meditations and Memberships. The header itself stays
-         the click-through door to the whole shelf (/store); store OFF still
-         hides the header and its buttons with it. Plain routes (not #anchors)
-         so a seeded nav survives sanitize()'s KNOWN_NAV_HREFS round-trip.
-         TASK-176 (0018.06.18 a₿): the buttons open the shelf's own filtered
-         routes now — Meditations → /store/meditations (the free meditation
-         rides there as a card), Memberships → /store/memberships. The old
-         /meditation button sent visitors to the gift page and they never
-         saw the paid shelf; saved navs that still say /meditation under the
-         Store header migrate on read in site-config.ts. The Community
-         header's "Free meditation" child keeps /meditation — it IS the gift. */
-      subs: [
-        { label: "Meditations", href: "/store/meditations" },
-        // TASK-187: the shelf's Memberships button follows the memberships
-        // switch too, same as the header door and the home hero's doors.
-        ...(s.features.memberships ? [{ label: "Memberships", href: "/store/memberships" }] : []),
-      ],
-    });
-  }
+  /* T-615 (the Admiral: "ok to move to this layout"): the built-in menu is
+     About | Store | Community | Support. Store carries Sessions (Book a time
+     folds into it, same /book page), Meditations, Memberships and Three
+     packages; Community carries Read with Love, Replays, Heart Field, 11:11
+     Live with Love, Free meditation, then Classes and News & letters (each
+     behind its own switch). There is no separate Memberships tab or Sessions
+     tab any more: their pages stay, reached through Store. Every row follows
+     its own page's switch (pageOn), so a header with nothing left on drops
+     away, exactly like a saved menu does in buildMenu. */
+  const store: MenuItem["subs"] = [
+    { label: "Sessions", href: "/book" },
+    ...(s?.features.cuts ? [{ label: "ConsciousCuts & Waxing", href: "/services" }] : []),
+    { label: "Meditations", href: "/store/meditations" },
+    { label: "Memberships", href: "/store/memberships" },
+    { label: "Three packages", href: "/packages" },
+  ].filter((c) => pageOn(s, c.href));
+  const menu: MenuItem[] = [{ label: "About", href: "/about" }];
+  if (store.length > 0) menu.push({ label: "Store", href: s?.features.store ? "/store" : store[0].href, subs: store });
   // Community is a HEADER (TASK-137): Free meditation and 11:11 Live with
-  // Love always exist, so this always renders — the community SWITCH only
-  // still gates the deeper rooms (Classes follows `classes`, same as it
-  // always has; `community` itself no longer hides the header).
-  // TASK-213 (0018.06.23 a₿, Love's call #19): the reading gets its OWN
-  // door here — the combined "Classes & rooms" split into two doors,
-  // Classes and the reading room. The reading room's gate is the room's
-  // own presence in the registry (derive-or-dash), independent of the
-  // classes switch — same standing as Free meditation and 11:11.
+  // Love always exist, so it always renders. Heart Field is the free room
+  // (derive-or-dash: no free room in the registry, no row).
   menu.push({
     label: "Community",
     href: "/classes",
     subs: [
-      ...(s?.features.news ? [{ label: "News & letters", href: "/news" }] : []),
-      { label: "Free meditation", href: "/meditation" },
-      { label: "11:11 Live with Love", href: "/contact" },
-      ...(s?.features.classes ? [{ label: "Classes", href: "/classes" }] : []),
       { label: "Read with Love", href: READING_PAGE_PATH },
-      /* TASK-496 (block 969,088+): Replays rides under Community (the
-         Admiral's ruling, NOT Sessions), right after the reading's own
-         row. Code-side default only - a SAVED nav doc wins instead, so
-         production may need the row added by hand in /a/site/menu (the
-         lane's Operator runbook); "/replays" is in KNOWN_NAV_HREFS so a
-         saved row survives sanitize. */
       { label: "Replays", href: "/replays" },
+      ...(READING_ROOM_PATH ? [{ label: "Heart Field", href: READING_ROOM_PATH }] : []),
+      { label: "11:11 Live with Love", href: "/contact" },
+      { label: "Free meditation", href: "/meditation" },
+      ...(s?.features.classes ? [{ label: "Classes", href: "/classes" }] : []),
+      ...(s?.features.news ? [{ label: "News & letters", href: "/news" }] : []),
     ],
   });
   menu.push({ label: "Support", href: "/support" });

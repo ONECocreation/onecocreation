@@ -122,10 +122,10 @@ describe("TASK-210 — one reading room, three doors", () => {
     const { defaultSiteConfig, KNOWN_NAV_HREFS } = await import("@/lib/site-config");
     const { ROOMS } = await import("@/lib/matrix-rooms");
     const { roomPath } = await import("@/lib/reading-room");
-    const memberships = buildDefaultMenu(defaultSiteConfig()).find((m) => m.label === "Memberships")!;
-    const heart = memberships.subs!.find((s) => s.label === "Heart Field")!;
+    const community = buildDefaultMenu(defaultSiteConfig()).find((m) => m.label === "Community")!;
+    const heart = community.subs!.find((s) => s.label === "Heart Field")!;
     expect(heart.href).toBe("/rooms/heart-field");
-    expect(heart.href).not.toBe(memberships.href);
+    expect(heart.href).not.toBe(community.href);
     // every room's Stage is a known nav href — derived, so a saved row pointing at a room survives sanitize
     for (const r of ROOMS) expect(KNOWN_NAV_HREFS).toContain(roomPath(r.id));
     expect(KNOWN_NAV_HREFS).toContain("/rooms/heart-field");

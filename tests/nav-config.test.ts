@@ -115,23 +115,33 @@ describe("buildMenu's default — Community is a header, not a switch", () => {
     expect(community?.subs?.map((s) => s.label)).toContain("11:11 Live with Love");
   });
 
-  it("store ON: the Store header carries Love's two buttons — Meditations and Memberships", () => {
-    // Love's meeting (0018.06.17 a₿, RESUME NOTE): under the Store header,
-    // two buttons; the header itself stays the click-through door to /store.
-    // TASK-176 (0018.06.18 a₿): the buttons open the shelf's own filtered
-    // routes — Meditations → /store/meditations, Memberships →
-    // /store/memberships. The free gift keeps /meditation under Community.
+  it("store ON: the Store header carries Sessions, Meditations, Memberships and Three packages (T-615)", () => {
+    // T-615 (the Admiral: "ok to move to this layout"): Sessions and Three
+    // packages moved under Store; the Memberships TAB folded away. The
+    // header stays the click-through door to /store. The free gift keeps
+    // /meditation under Community.
     const c = defaultSiteConfig();
     c.features.store = true;
-    const store = buildMenu(c).find((m) => m.label === "Store");
+    c.features.sessions = true;
+    c.features.memberships = true;
+    const menu = buildMenu(c);
+    expect(menu.map((m) => m.label)).toEqual(["About", "Store", "Community", "Support"]);
+    const store = menu.find((m) => m.label === "Store");
     expect(store?.href).toBe("/store");
-    expect(store?.subs?.map((s) => s.label)).toEqual(["Meditations", "Memberships"]);
-    expect(store?.subs?.map((s) => s.href)).toEqual(["/store/meditations", "/store/memberships"]);
-    // the Community header's Free meditation child keeps /meditation — it IS the gift
-    const community = buildMenu(c).find((m) => m.label === "Community");
+    expect(store?.subs?.map((s) => s.label)).toEqual(["Sessions", "Meditations", "Memberships", "Three packages"]);
+    expect(store?.subs?.map((s) => s.href)).toEqual(["/book", "/store/meditations", "/store/memberships", "/packages"]);
+    const community = menu.find((m) => m.label === "Community");
     expect(community?.subs?.find((s) => s.label === "Free meditation")?.href).toBe("/meditation");
-    // store OFF hides the whole header, buttons with it
-    expect(buildMenu(defaultSiteConfig()).map((m) => m.label)).not.toContain("Store");
+    expect(community?.subs?.map((s) => s.label).slice(0, 2)).toEqual(["Read with Love", "Replays"]);
+    // every href appears once in the whole menu (nothing doubled by the moves)
+    const hrefs = menu.flatMap((m) => (m.subs ? m.subs.map((x) => x.href) : [m.href]));
+    expect(new Set(hrefs).size).toBe(hrefs.length);
+    // store OFF keeps only the rows whose own switch is on (no meditations shelf)
+    const off = defaultSiteConfig();
+    off.features.store = false;
+    off.features.sessions = false;
+    off.features.memberships = false;
+    expect(buildMenu(off).map((m) => m.label)).not.toContain("Store");
   });
 });
 
@@ -357,38 +367,22 @@ describe("TASK-176 — the nav underline ruling (Admiral, 0018.06.17)", () => {
       sanitize (KNOWN_NAV_HREFS never lost these hrefs). */
 
 describe("TASK-187 — the memberships switch", () => {
-  it("buildDefaultMenu: memberships ON (the default) — the top-level door stands with its two subs", () => {
+  it("buildDefaultMenu (T-615): no Memberships tab and no Sessions tab; Three packages sits under Store, Heart Field under Community", () => {
     const menu = buildDefaultMenu(defaultSiteConfig());
-    const memberships = menu.find((m) => m.label === "Memberships");
-    expect(memberships).toBeTruthy();
-    expect(memberships?.href).toBe("/memberships");
-    expect(memberships?.subs?.map((s) => s.label)).toEqual(["Heart Field", "Three packages"]);
-    /* TASK-210 (0018.06.23 a₿): the Heart Field row leads to the Commons'
-       Stage now — it pointed back at its own header (Love's call, 01:53:35) */
-    expect(memberships?.subs?.map((s) => s.href)).toEqual(["/rooms/heart-field", "/packages"]);
-  });
-
-  it("buildDefaultMenu: memberships OFF — the top-level door disappears entirely", () => {
-    const c = defaultSiteConfig();
-    c.features.memberships = false;
-    const menu = buildDefaultMenu(c);
     expect(menu.map((m) => m.label)).not.toContain("Memberships");
+    expect(menu.map((m) => m.label)).not.toContain("Sessions");
+    expect(menu.find((m) => m.label === "Store")?.subs?.map((s) => s.href)).toContain("/packages");
+    expect(menu.find((m) => m.label === "Community")?.subs?.map((s) => s.href)).toContain("/rooms/heart-field");
   });
 
-  it("the Store header's Memberships button follows memberships too, on top of the store switch", () => {
+  it("the Store header's Memberships row follows memberships too, on top of the store switch", () => {
     const c = defaultSiteConfig();
     c.features.store = true;
-    // memberships ON (the default) + store ON → both buttons
-    expect(buildDefaultMenu(c).find((m) => m.label === "Store")?.subs?.map((s) => s.label)).toEqual([
-      "Meditations",
-      "Memberships",
-    ]);
-    // store ON, memberships OFF → only Meditations — the button follows its OWN switch even
-    // though the header itself is store's to show
+    c.features.sessions = false;
+    const labels = () => buildDefaultMenu(c).find((m) => m.label === "Store")?.subs?.map((s) => s.label);
+    expect(labels()).toEqual(["Meditations", "Memberships", "Three packages"]);
     c.features.memberships = false;
-    expect(buildDefaultMenu(c).find((m) => m.label === "Store")?.subs?.map((s) => s.label)).toEqual([
-      "Meditations",
-    ]);
+    expect(labels()).toEqual(["Meditations"]);
   });
 
   it("PAGE_CATALOG: /memberships and /packages carry feature: \"memberships\"; /store/memberships needs both switches", () => {

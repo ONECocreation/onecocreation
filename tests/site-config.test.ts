@@ -138,11 +138,13 @@ describe("the switches — the nav MENU is built from them", () => {
   // gate (`vitest run` must pass), not a cosmetic touch-up.
   const labels = (menu: { label: string }[]) => menu.map((m) => m.label);
 
-  it("defaults: no Store, no Sessions — Community stands anyway (always doors)", () => {
+  it("defaults: no Sessions tab ever (T-615 folded it under Store) — Community stands anyway (always doors)", () => {
     const menu = buildMenu(defaultSiteConfig());
-    expect(labels(menu)).not.toContain("Store");
     expect(labels(menu)).not.toContain("Sessions");
-    expect(labels(menu)).toEqual(["About", "Memberships", "Community", "Support"]);
+    expect(labels(menu)).not.toContain("Memberships");
+    // the store switch is OFF: the Store header keeps only Three packages (memberships ON)
+    expect(menu.find((m) => m.label === "Store")?.subs?.map((s) => s.label)).toEqual(["Three packages"]);
+    expect(labels(menu)).toEqual(["About", "Store", "Community", "Support"]);
     // meditation and 11:11 always ride Community now, switch or no switch
     const community = menu.find((m) => m.label === "Community");
     expect(community?.subs?.map((s) => s.label)).toContain("Free meditation");
@@ -159,12 +161,12 @@ describe("the switches — the nav MENU is built from them", () => {
     expect(menu.find((m) => m.label === "Support")?.subs).toBeUndefined();
   });
 
-  it("everything ON: Store, Sessions appear too, and Community gains Classes beside the reading room", () => {
+  it("everything ON: Store carries Sessions too, and Community gains Classes beside the reading room", () => {
     const all = defaultSiteConfig();
     for (const k of Object.keys(all.features) as (keyof typeof all.features)[]) all.features[k] = true;
     const menu = buildMenu(all);
     expect(labels(menu)).toContain("Store");
-    expect(labels(menu)).toContain("Sessions");
+    expect(menu.find((m) => m.label === "Store")?.subs?.map((s) => s.label)).toContain("Sessions");
     expect(labels(menu)).toContain("Community");
     const community = menu.find((m) => m.label === "Community");
     expect(community?.subs?.map((s) => s.label)).toContain("Free meditation");
