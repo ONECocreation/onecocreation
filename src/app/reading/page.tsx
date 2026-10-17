@@ -187,6 +187,10 @@ export default async function ReadingPage({
      ONCE here: absent means ON (every stored doc is already valid), only
      an explicit saved `false` hides Part 1 and retargets the countdown. */
   const housewarmingOn = config.housewarming !== false;
+  /* TASK-614 - the Book Talk (Part 3) and Q&A (Part 4) switches, read the
+     same way: absent means ON, only a saved `false` hides the part. */
+  const bookTalkOn = config.bookTalk !== false;
+  const qaOn = config.qa !== false;
   const { asOfMs, next, housewarmingNext } = deriveReading(schedule, housewarmingOn);
   /* K122 item 7 — the occurrence AFTER next: the island's ended words
      name the next reading, never the one that just ended (a visitor who
@@ -230,8 +234,10 @@ export default async function ReadingPage({
      Stage 2's and the Q&A door's own state are read directly (server
      functions, never the public routes) so `openedAtMs` is a real
      timestamp, not a guess. */
-  const encoreStartsAtMs = next ? sameDayAt(next.startsAtMs, schedule.tz, ENCORE_TIME) : null;
-  const qaStartsAtMs = next ? sameDayAt(next.startsAtMs, schedule.tz, QA_TIME) : null;
+  /* TASK-614: a switched-off part has a null start, exactly like the
+     Housewarming above - every consumer below reads null as hidden. */
+  const encoreStartsAtMs = bookTalkOn && next ? sameDayAt(next.startsAtMs, schedule.tz, ENCORE_TIME) : null;
+  const qaStartsAtMs = qaOn && next ? sameDayAt(next.startsAtMs, schedule.tz, QA_TIME) : null;
   const housewarmingStartsAtMs = housewarmingOn && next ? sameDayAt(next.startsAtMs, schedule.tz, HOUSEWARMING_TIME) : null;
   /* TASK-499: with the switch off the initial selection is Part 2 (the
      Reading) — Part 1 does not exist this week, so nothing may open on
@@ -242,8 +248,8 @@ export default async function ReadingPage({
      fetch. It keeps the agenda on a day that is not a reading day while
      a door someone opened by hand is live. */
   let anyDoorOpen = false;
-  if (next && encoreStartsAtMs !== null && qaStartsAtMs !== null) {
-    const stage2State = await getStage2State();
+  if (next) {
+    const stage2State = encoreStartsAtMs !== null ? await getStage2State() : null;
     /* fix round (block 968,624) — fails CLOSED on a throw: a broken vault
        reads as the Q&A door's own IDLE (closed), never a guessed-open
        door. getQaState() already fails closed internally (the same
@@ -251,10 +257,12 @@ export default async function ReadingPage({
        belt-and-braces against a future regression, the same defensive
        shape the stage1 route keeps around a call built never to throw. */
     let qaState = QA_IDLE;
-    try {
-      qaState = await getQaState();
-    } catch {
-      qaState = QA_IDLE;
+    if (qaStartsAtMs !== null) {
+      try {
+        qaState = await getQaState();
+      } catch {
+        qaState = QA_IDLE;
+      }
     }
     /* TASK-481 (block 968,624+): Part 1's open truth is the Housewarming's
        OWN door now, never Stage 1's `phase` (Part 2's own truth alone) —
@@ -280,8 +288,14 @@ export default async function ReadingPage({
         ? [{ part: 1 as ReadingPart, title: "The Housewarming", startsAtMs: housewarmingStartsAtMs, open: housewarmingState.phase === "published", openedAtMs: housewarmingState.publishedAtMs }]
         : []),
       { part: 2, title: "The Reading", startsAtMs: next.startsAtMs, open: stage1Phase === "published", openedAtMs: stage1State.publishedAtMs },
-      { part: 3, title: "The Book Talk", startsAtMs: encoreStartsAtMs, open: stage2State.phase === "published", openedAtMs: stage2State.publishedAtMs },
-      { part: 4, title: "The Q&A", startsAtMs: qaStartsAtMs, open: qaState.phase === "published", openedAtMs: qaState.publishedAtMs },
+      /* TASK-614: parts 3 and 4 drop out of the doors the same way when
+         their switch is off (null start). */
+      ...(encoreStartsAtMs !== null && stage2State
+        ? [{ part: 3 as ReadingPart, title: "The Book Talk", startsAtMs: encoreStartsAtMs, open: stage2State.phase === "published", openedAtMs: stage2State.publishedAtMs }]
+        : []),
+      ...(qaStartsAtMs !== null
+        ? [{ part: 4 as ReadingPart, title: "The Q&A", startsAtMs: qaStartsAtMs, open: qaState.phase === "published", openedAtMs: qaState.publishedAtMs }]
+        : []),
     ];
     defaultPart = defaultReadingPart(doors, asOfMs);
     anyDoorOpen = doors.some((d) => d.open);
@@ -294,6 +308,9 @@ export default async function ReadingPage({
      no Housewarming this week, so a `?part=1` reads as NO request (null)
      and the door-based default above stands — never a hidden screen. */
   if (!housewarmingOn && requestedPart === 1) requestedPart = null;
+  /* TASK-614: the same neutralization for ?part=3 and ?part=4 */
+  if (!bookTalkOn && requestedPart === 3) requestedPart = null;
+  if (!qaOn && requestedPart === 4) requestedPart = null;
   if (requestedPart !== null) defaultPart = requestedPart;
 
   /* TASK-557 (block 970,051) - the Admiral: "it's not a reading day. that
@@ -304,7 +321,9 @@ export default async function ReadingPage({
   const agendaOn = dayAgendaShows(schedule, asOfMs, anyDoorOpen);
   /* TASK-559 (block 970,084): a signed-in visitor on a day the agenda is
      hidden still gets the two paid rows, ahead of time ("Coming up"). */
-  const aheadOn = buyAheadShows(agendaOn, !!session, next !== null);
+  /* TASK-614: the buy-ahead card holds only the two paid rows - with both
+     switched off there is nothing to buy ahead. */
+  const aheadOn = buyAheadShows(agendaOn, !!session, next !== null) && (bookTalkOn || qaOn);
 
   return (
     <>
@@ -385,6 +404,7 @@ export default async function ReadingPage({
                      second literal. Null only when the schedule is off. */
                   housewarmingLabel: housewarmingStartsAtMs !== null ? `${clockWords(housewarmingStartsAtMs, schedule.tz)} · The Housewarming` : null,
                   readingLabel: next !== null ? `${clockWords(next.startsAtMs, schedule.tz)} · The Reading` : null,
+                  bookTalkOn,
                 }}
                 part1={{
                   jitsiDomain: config.meeting.jitsiDomain,
@@ -415,6 +435,8 @@ export default async function ReadingPage({
                    Part 1 when the switch is off, even on a stale client
                    selection (decision 5). */
                 part1On={housewarmingOn}
+                part3On={bookTalkOn}
+                part4On={qaOn}
                 asOfMs={asOfMs}
               />
             </div>
@@ -512,7 +534,10 @@ export default async function ReadingPage({
                     instead. TASK-473 (block 968,624): "the Playground" word
                     is retired from this line too — no "Encore"/"Playground"
                     survives anywhere in /reading's visible copy. */}
-                <li>{`Join the discussion after: a live group video call with Love, with every membership from ${STAGE2_FLOOR_NAME} up`}</li>
+                {/* TASK-614: the line is about the Book Talk, so it goes with it */}
+                {bookTalkOn && (
+                  <li>{`Join the discussion after: a live group video call with Love, with every membership from ${STAGE2_FLOOR_NAME} up`}</li>
+                )}
               </ul>
             </div>
           </section>

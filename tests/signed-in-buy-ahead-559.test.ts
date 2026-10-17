@@ -163,7 +163,7 @@ describe("TASK-559 source pins", () => {
   });
   it("the page keeps its bare mount and adds the ahead mount in its own section", async () => {
     const src = await read("src/app/reading/page.tsx");
-    expect(src).toContain("const aheadOn = buyAheadShows(agendaOn, !!session, next !== null);");
+    expect(src).toContain("const aheadOn = buyAheadShows(agendaOn, !!session, next !== null) && (bookTalkOn || qaOn);"); // TASK-614: moved by the Book Talk / Q&A switches
     expect(src).toMatch(/\{agendaOn && \(\s*<section className="kitx-section">\s*<div className="wrap">\s*<ReadingDay \/>\s*<\/div>\s*<\/section>\s*\)\}/);
     expect(src).toMatch(/\{aheadOn && \(\s*<section className="kitx-section">\s*<div className="wrap">\s*<ReadingDay ahead \/>\s*<\/div>\s*<\/section>\s*\)\}/);
     expect(src).toContain('import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt, clockWords } from "@/lib/reading-day";');

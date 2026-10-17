@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { ReadingSchedule } from "@/lib/reading-schedule";
-import { normalizeHousewarmingResponse, normalizeReadingResponse } from "./reading-marks";
+import { normalizeHousewarmingResponse, normalizeReadingResponse, normalizeSwitchResponse } from "./reading-marks";
 
 /**
  * TASK-385, Named decision B — the ONE shared fetch for the weekly reading
@@ -61,6 +61,38 @@ export function useHousewarmingOn(): boolean {
       })
       .catch(() => {
         if (alive) setOn(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return on;
+}
+
+/**
+ * TASK-614 - the Book Talk and Q&A switches, one fetch of the same public
+ * GET /api/admin/site. Both default ON in every unresolved or failed state
+ * (normalizeSwitchResponse's own law), so the member calendar failing to
+ * learn a switch never hides a part that exists.
+ */
+export function useBookTalkQaOn(): { bookTalkOn: boolean; qaOn: boolean } {
+  const [on, setOn] = useState({ bookTalkOn: true, qaOn: true });
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/admin/site", { cache: "no-store" })
+      .then(async (r) => {
+        const body = await r.json().catch(() => null);
+        if (alive) {
+          setOn({
+            bookTalkOn: normalizeSwitchResponse(r.status, body, "bookTalk"),
+            qaOn: normalizeSwitchResponse(r.status, body, "qa"),
+          });
+        }
+      })
+      .catch(() => {
+        if (alive) setOn({ bookTalkOn: true, qaOn: true });
       });
     return () => {
       alive = false;

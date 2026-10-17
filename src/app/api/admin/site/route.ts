@@ -62,6 +62,15 @@ export function housewarmingPatchError(raw: unknown): string | null {
   return typeof raw === "boolean" ? null : "the housewarming switch must be true or false";
 }
 
+/** TASK-614: the Book Talk and Q&A switches, the same rule and shape as
+    housewarmingPatchError: only a real boolean may persist. */
+export function bookTalkPatchError(raw: unknown): string | null {
+  return typeof raw === "boolean" ? null : "the Book Talk switch must be true or false";
+}
+export function qaPatchError(raw: unknown): string | null {
+  return typeof raw === "boolean" ? null : "the Q&A switch must be true or false";
+}
+
 export async function GET(request: Request) {
   const operator = operatorFromCookieHeader(request.headers.get("cookie"));
   /* Dual-mode read (TASK-129): the SWITCHES THEMSELVES are public — they only
@@ -124,6 +133,15 @@ export async function PUT(request: Request) {
      or any other save is untouched by this check. */
   if ("housewarming" in patch) {
     const reason = housewarmingPatchError((patch as Record<string, unknown>).housewarming);
+    if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
+  }
+  /* TASK-614: the Book Talk and Q&A switches, refused IN WORDS the same way */
+  if ("bookTalk" in patch) {
+    const reason = bookTalkPatchError((patch as Record<string, unknown>).bookTalk);
+    if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
+  }
+  if ("qa" in patch) {
+    const reason = qaPatchError((patch as Record<string, unknown>).qa);
     if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
   }
   const config = await saveSiteConfig(patch);

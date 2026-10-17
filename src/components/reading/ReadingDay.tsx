@@ -49,8 +49,16 @@ export default async function ReadingDay({ ahead = false }: { ahead?: boolean } 
      drops Row 1 (the prop below reads null) and forces the open
      notice's part-1 flag closed. */
   const housewarmingOn = config.housewarming !== false;
+  /* TASK-614: the Book Talk (Part 3) and Q&A (Part 4) switches, the same
+     read: a saved false drops that row and forces its open-notice flag
+     closed. */
+  const bookTalkOn = config.bookTalk !== false;
+  const qaOn = config.qa !== false;
   const next = deriveNext(schedule);
   if (!next) return null;
+  /* TASK-614: the buy-ahead card holds only the two paid rows; with both
+     switched off it has nothing to show. */
+  if (ahead && !bookTalkOn && !qaOn) return null;
 
   const subject = session ? `${session.handle}@${session.space}` : null;
   let tier: Tier | null = null;
@@ -76,8 +84,8 @@ export default async function ReadingDay({ ahead = false }: { ahead?: boolean } 
       tz={schedule.tz}
       housewarmingStartsAtMs={housewarmingOn ? sameDayAt(next.startsAtMs, schedule.tz, HOUSEWARMING_TIME) : null}
       readingStartsAtMs={next.startsAtMs}
-      encoreStartsAtMs={sameDayAt(next.startsAtMs, schedule.tz, ENCORE_TIME)}
-      qaStartsAtMs={sameDayAt(next.startsAtMs, schedule.tz, QA_TIME)}
+      encoreStartsAtMs={bookTalkOn ? sameDayAt(next.startsAtMs, schedule.tz, ENCORE_TIME) : null}
+      qaStartsAtMs={qaOn ? sameDayAt(next.startsAtMs, schedule.tz, QA_TIME) : null}
       signedIn={!!session}
       encoreEntitled={tierSatisfies(tier, STAGE2_MIN_TIER)}
       encoreFloor={encoreFloor}

@@ -49,6 +49,18 @@
      gradient is theme-independent, like the ink) */
 }
 .kit-btn-main:hover{transform:translateY(-3px)}
+/* TASK-614: the ON/OFF switch buttons (PartSwitchCard) wear the Housewarming switch card's own
+   .btn-on / .btn-ghost fills, through the kit Button, so the three switch cards read as one */
+.kit-btn.btn-on,.kit-btn.btn-ghost{border-radius:var(--btn-radius)}
+/* T-614 round 2: the one on/off switch row (SwitchRow.tsx) - the same look the Weekly reading
+   card's "Show the next reading time" row always had: button left, bold label + quiet line, chip right */
+.kit-switch-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--glass);border:1px solid rgba(139,118,196,.22);border-radius:12px;padding:10px 14px;margin-bottom:8px}
+.kit-switch-row-text{flex:1;min-width:220px}
+.kit-switch-row-text b{font-size:.9rem}
+.kit-switch-row-text span{font-size:.78rem;color:var(--muted)}
+.kit-switch-row>.kit-btn{min-width:78px;box-sizing:border-box;text-align:center}
+.kit-btn.btn-on{background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:#fff}
+.kit-btn.btn-ghost{background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px var(--edge)}
 
 /* second/ghost — the .btn-ghost pairing */
 .kit-btn-second{

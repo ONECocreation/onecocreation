@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Chip, field } from "@/components/console/glass";
+import { field } from "@/components/console/glass";
+import SwitchRow from "./SwitchRow";
+import HousewarmingSwitchCard from "./HousewarmingSwitchCard";
+import PartSwitchCard from "./PartSwitchCard";
 import type { SiteConfig } from "@/lib/site-config";
 import {
   DEFAULT_READING_SCHEDULE,
@@ -36,6 +39,7 @@ const WEEKDAYS: { value: number; label: string }[] = [
 /* the same row/field vocabulary SiteRoom.tsx and AboutVideosCard.tsx both
    already use — copied, not reinvented, so every /a/site/* card still
    reads as one house. */
+
 const row: React.CSSProperties = {
   display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
   background: "var(--glass)", border: "1px solid rgba(139,118,196,.22)",
@@ -114,24 +118,31 @@ export default function ReadingScheduleCard() {
           : "This is the built-in default — save once to make it your own."}
       </p>
 
-      <div style={row}>
-        <button
-          type="button"
-          aria-pressed={schedule.on}
-          aria-label={`Show the next reading time on the site — currently ${schedule.on ? "on" : "off"}`}
-          onClick={() => update({ on: !schedule.on })}
-          className={`btn btn-sm ${schedule.on ? "btn-on" : "btn-ghost"}`}
-        >
-          {schedule.on ? "ON" : "OFF"}
-        </button>
-        <div style={{ flex: 1, minWidth: 220 }}>
-          <b style={{ fontSize: ".9rem" }}>Show the next reading time on the site</b>
-          <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>
-            {" "}— {schedule.on ? "visitors see the next time" : 'visitors see a "stay tuned" message instead'}
-          </span>
-        </div>
-        <Chip tone={schedule.on ? "green" : "grey"}>{schedule.on ? "ON — showing" : "OFF — hidden"}</Chip>
-      </div>
+      <SwitchRow
+        on={schedule.on}
+        label="Show the next reading time on the site"
+        quiet={schedule.on ? "visitors see the next time" : 'visitors see a "stay tuned" message instead'}
+        ariaLabel={`Show the next reading time on the site - currently ${schedule.on ? "on" : "off"}`}
+        onFlip={() => update({ on: !schedule.on })}
+      />
+      {/* T-614 round 2: the three week switches ride right under it, the same row */}
+      <HousewarmingSwitchCard />
+      <PartSwitchCard
+        switchKey="bookTalk"
+        label="Book Talk this week"
+        onWords="the Book Talk at 2:22, the paid group call, is on"
+        offWords="no Book Talk this week; the day goes from the Reading to the Q&A"
+        onNote="saved - the Book Talk is back on the reading page's next render"
+        offNote="saved - no Book Talk this week; the reading page hides it on its next render"
+      />
+      <PartSwitchCard
+        switchKey="qa"
+        label="Q&A with Love this week"
+        onWords="the Q&A with Love at 3:33 is on"
+        offWords="no Q&A this week; the day ends after the Book Talk"
+        onNote="saved - the Q&A is back on the reading page's next render"
+        offNote="saved - no Q&A this week; the reading page hides it on its next render"
+      />
 
       <div style={row}>
         <div style={{ flex: 1, minWidth: 220 }}>

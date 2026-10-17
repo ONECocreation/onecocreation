@@ -34,6 +34,9 @@ import { openDoorNotice, CLOSED_FLAGS, type OpenFlags, type OpenDoorNotice } fro
  * forces `flags.part1` closed when the Housewarming switch is off — a
  * hand-opened housewarming door can never surface a "Pick it below"
  * into a hidden part.
+ *
+ * TASK-614: `part3On` / `part4On` (default true) do the same for the Book
+ * Talk and Q&A switches.
  */
 
 export function ReadingDayOpenNoticeBody({ notice }: { notice: OpenDoorNotice | null }) {
@@ -51,7 +54,15 @@ export function ReadingDayOpenNoticeBody({ notice }: { notice: OpenDoorNotice | 
 
 const POLL_MS = 20_000;
 
-export default function ReadingDayOpenNotice({ part1On = true }: { part1On?: boolean }) {
+export default function ReadingDayOpenNotice({
+  part1On = true,
+  part3On = true,
+  part4On = true,
+}: {
+  part1On?: boolean;
+  part3On?: boolean;
+  part4On?: boolean;
+}) {
   const { selected } = useReadingPart();
   const [flags, setFlags] = useState<OpenFlags>(CLOSED_FLAGS);
 
@@ -72,8 +83,8 @@ export default function ReadingDayOpenNotice({ part1On = true }: { part1On?: boo
            never surface a "Pick it below" into a hidden part. */
         const open1 = part1On && hw?.ok ? hw.open === true : false;
         const open2 = s1?.ok ? s1.phase === "published" : false;
-        const open3 = s2?.ok ? s2.open === true : false;
-        const open4 = qa?.ok ? qa.open === true : false;
+        const open3 = part3On && s2?.ok ? s2.open === true : false;
+        const open4 = part4On && qa?.ok ? qa.open === true : false;
         setFlags({ part1: open1, part2: open2, part3: open3, part4: open4 });
       });
     }
@@ -83,7 +94,7 @@ export default function ReadingDayOpenNotice({ part1On = true }: { part1On?: boo
       alive = false;
       clearInterval(id);
     };
-  }, [part1On]);
+  }, [part1On, part3On, part4On]);
 
   const notice = openDoorNotice(flags, selected);
   return <ReadingDayOpenNoticeBody notice={notice} />;
