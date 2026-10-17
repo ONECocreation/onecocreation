@@ -213,13 +213,11 @@ describe("ReadingSignInCard — arrived already signed in (outcome unknown): reu
     expect(html).not.toContain(`href="${HEART_FIELD_HREF}"`);
   });
 
-  it("a key-signed member sees the reused member-key card (the field, never a silent skip)", () => {
+  it("a key-signed member sees no card either (T-618: signed in = no Stay in the know card, the emails already come)", () => {
     const html = renderToStaticMarkup(
       createElement(ReadingSignInCard, { member: { handle: "npub1abc", space: "onecocreation" } }),
     );
-    expect(html).toContain("<input");
-    expect(html).toContain("Keep me posted");
-    expect(html).not.toContain(WATCH_CTA);
+    expect(html).toBe("");
   });
 });
 
@@ -229,7 +227,6 @@ describe("ReadingSignInCard — house laws: no em dash, every button kit-btn-sm"
     ["signed-out, code step", createElement(ReadingSignInCard, { member: null, initialStep: "code" })],
     ["joined", createElement(ReadingSignInCard, { member: { handle: "x@example.com", space: "email" }, justJoined: "joined" })],
     ["already in", createElement(ReadingSignInCard, { member: { handle: "x@example.com", space: "email" }, justJoined: "already" })],
-    ["returning key member", createElement(ReadingSignInCard, { member: { handle: "npub1abc", space: "onecocreation" } })],
   ];
 
   for (const [label, el] of cases) {

@@ -470,18 +470,6 @@ export default async function ReadingPage({
             </div>
           </section>
 
-          {/* SIGN ME UP · KEEP ME POSTED (TASK-468, block 968,561) — one box,
-              never gated on schedule.on/next (K122 item 13's law carries
-              over: the one door that works without a date); email + code,
-              never a navigation away from /reading. TASK-532 (block
-              969,334): the id="keep-posted" anchor is /replays' "Want a
-              reminder email?" button's target (the round-2 NOD, pick 3). */}
-          <section className="kitx-section" id="keep-posted">
-            <div className="wrap">
-              <ReadingSignInBox />
-            </div>
-          </section>
-
           {/* THE DAY'S AGENDA (TASK-467, block 968,561) — Love's own words on
               the call: "put this whole room brick right in the other on the
               weekly reading page … with three buttons of the times." One
@@ -561,6 +549,22 @@ export default async function ReadingPage({
                   </div>
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* SIGN ME UP · KEEP ME POSTED (TASK-468, block 968,561) — one box,
+              never gated on schedule.on/next (K122 item 13's law carries
+              over: the one door that works without a date); email + code,
+              never a navigation away from /reading. T-618 (the Admiral): the box
+              sits at the BOTTOM of the page, below the agenda and everything
+              else, and a signed-in member never sees it (their emails already
+              arrive); the box renders null for them, so the section closes.
+              TASK-532 (block
+              969,334): the id="keep-posted" anchor is /replays' "Want a
+              reminder email?" button's target (the round-2 NOD, pick 3). */}
+          <section className="kitx-section" id="keep-posted">
+            <div className="wrap">
+              <ReadingSignInBox />
             </div>
           </section>
         </main>

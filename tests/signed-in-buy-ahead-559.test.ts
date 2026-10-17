@@ -135,11 +135,8 @@ describe("TASK-559 ReadingSignInCard, the letters card", () => {
   it("an email member who arrived signed in gets nothing", () => {
     expect(render2({ member: { handle: "walker@example.test", space: "email" } })).toBe("");
   });
-  it("a key member keeps the card", () => {
-    const h = render2({ member: { handle: "npub1abc", space: "onecocreation" } });
-    expect(h).toContain("Keep me posted");
-    expect(h).toContain("<input");
-    expect(h).not.toContain("—");
+  it("a key member gets nothing either (T-618: signed in = no card)", () => {
+    expect(render2({ member: { handle: "npub1abc", space: "onecocreation" } })).toBe("");
   });
   it("You're in still wins for an email member who just joined", () => {
     for (const outcome of ["joined", "already"] as const) {

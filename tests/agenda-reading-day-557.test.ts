@@ -132,7 +132,7 @@ describe("TASK-557 /reading's own source", () => {
     expect(src.match(/<ReadingDay \/>/g)?.length).toBe(1);
   });
 
-  it("the sign-up box above it is not touched by the decision (it works without a date, K122 item 13)", async () => {
+  it("the sign-up box (now at the foot of the page, T-618) is not touched by the decision (it works without a date, K122 item 13)", async () => {
     const src = await read("src/app/reading/page.tsx");
     /* TASK-613 (block 971,481): the replays door moved up under the viewer
        and took kitx-section-first with it; the box itself is unchanged. */
