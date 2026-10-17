@@ -67,7 +67,7 @@ describe("TASK-464's own banner kicker is retired along with the whole banner (T
 describe("TASK-464/471 — every surviving button on the card is the small kit button", () => {
   it("published, signed out: Sign me up is kit-btn-sm", () => {
     const html = render(bodyProps({ phase: "published", signedIn: false, room: ROOM }));
-    expect(html).toMatch(/<a class="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">\s*Sign me up\s*<\/a>/);
+    expect(html).toMatch(/<button type="button" class="kit-btn kit-btn-main kit-btn-sm" aria-haspopup="dialog">Sign me up<\/button>/);
   });
 
   it("left-while-published: Back to the reading is kit-btn-sm", () => {

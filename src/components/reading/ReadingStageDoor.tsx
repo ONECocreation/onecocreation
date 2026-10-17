@@ -1,9 +1,9 @@
 /* eslint-disable @next/next/no-img-element -- the book art is the same static house asset ReadingStage.tsx carries */
 "use client";
 
+import { SignUpSheetTrigger } from "@/components/reading/SignMeUpSheet";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import Link from "next/link";
 import JitsiRoom from "@/components/booking/JitsiRoom";
 
 /**
@@ -178,9 +178,7 @@ export function ReadingStageDoorBody({
             <>
               <p className="kit-body">{`${cap} is live now. Sign in with your email and come straight back here to join it.`}</p>
               <div className="kit-btn-row">
-                <Link href="#sign-up" className="kit-btn kit-btn-main kit-btn-sm">
-                  Sign me up
-                </Link>
+                <SignUpSheetTrigger />
               </div>
             </>
           ) : (
