@@ -16,7 +16,7 @@
     { "route": "/a/booking", "siteChrome": "render", "signedOut": "gate", "gateDoor": "api-401" },
     { "route": "/a/bots", "siteChrome": "redirect", "signedOut": "gate", "source": "src/app/a/bots/page.tsx:66" },
     { "route": "/a/brand", "siteChrome": "render", "signedOut": "gate" },
-    { "route": "/a/briefs", "siteChrome": "render", "signedOut": "gate", "pending": "Q1 → redirect" },
+    { "route": "/a/briefs", "siteChrome": "redirect", "signedOut": "gate", "source": "src/app/a/briefs/page.tsx:25" },
     { "route": "/a/chat", "siteChrome": "redirect", "alwaysRedirectTo": "/a/connections", "source": "src/app/a/chat/page.tsx:8" },
     { "route": "/a/connections", "siteChrome": "redirect", "signedOut": "gate", "source": "src/app/a/connections/page.tsx:45" },
     { "route": "/a/decisions", "siteChrome": "redirect", "alwaysRedirectTo": "/a", "source": "src/app/a/decisions/page.tsx:8" },

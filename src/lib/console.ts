@@ -297,6 +297,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
        Registered as Mr. Kim's seam 1 follow-through, the same play as the
        studio berth. */
     key: "live",
+    houseOnly: true, // T-623: /a/live only redirects to /a/studio now; no row in Love's menu
     href: "/a/live",
     label: "GO LIVE",
     short: "LIVE",
