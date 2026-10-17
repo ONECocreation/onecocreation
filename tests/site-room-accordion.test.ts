@@ -26,10 +26,8 @@ describe("the accordion's rows + the current mark", () => {
       ["menu", "/a/site/menu", "Menu"],
       ["community-door", "/a/site/community-door", "Community door"],
       ["about-videos", "/a/site/about-videos", "Videos on About"],
-      // TASK-496 (block 969,088+): the Replays list Love pastes, beside its
-      // sibling video room (an honest update - the row is new, the pin
-      // grows; nothing existing moves).
-      ["replays", "/a/site/replays", "Replays"],
+      // T-619: "replays" moved out - the Replays list lists under Studio
+      // now (STUDIO_SUBS); its route is unchanged.
       // TASK-545: "reading" moved out - The weekly reading lists under
       // Studio now (STUDIO_SUBS); its route is unchanged.
       // TASK-387 (block 968,088+): hide the chat fully for a room, or flip
@@ -50,7 +48,8 @@ describe("the accordion's rows + the current mark", () => {
     expect(siteSubForPath("/a/site/menu")).toBe("menu");
     expect(siteSubForPath("/a/site/community-door")).toBe("community-door");
     expect(siteSubForPath("/a/site/about-videos")).toBe("about-videos");
-    expect(siteSubForPath("/a/site/replays")).toBe("replays"); // TASK-496
+    // T-619: Replays is a Studio sub-row now; Site marks nothing for it
+    expect(siteSubForPath("/a/site/replays")).toBeNull();
     // TASK-545: the reading is a Studio sub-row now; Site marks nothing for it
     expect(siteSubForPath("/a/site/reading")).toBeNull();
     expect(siteSubForPath("/a/site/reading/go/free")).toBeNull();
@@ -65,8 +64,10 @@ describe("the accordion's rows + the current mark", () => {
     const { STUDIO_SUBS, studioSubForPath } = await import("@/components/console/SiteConsoleShell");
     expect(STUDIO_SUBS.map((s) => [s.key, s.href, s.label])).toEqual([
       ["reading", "/a/site/reading", "Weekly reading"],
+      ["replays", "/a/site/replays", "Replays"], // T-619
     ]);
     expect(studioSubForPath("/a/site/reading")).toBe("reading");
+    expect(studioSubForPath("/a/site/replays")).toBe("replays"); // T-619
     expect(studioSubForPath("/a/site/reading/go/free")).toBe("reading");
     expect(studioSubForPath("/a/studio")).toBeNull();
     expect(studioSubForPath("/a/site/readings")).toBeNull();
