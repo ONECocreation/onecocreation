@@ -52,7 +52,7 @@ export default function MudPanel() {
       }
       setStatus(data);
     } catch {
-      setError("couldn't reach the app — try again");
+      setError("couldn't reach the app. Try again");
     } finally {
       setBusy(false);
     }
@@ -77,7 +77,7 @@ export default function MudPanel() {
       </p>
       <h1 className="mb-3 font-display text-4xl text-cyan glow-cyan">MUD NODE</h1>
       <p className="mb-8 font-mono text-[11px] text-white/50">
-        POINT THIS DEPLOYMENT AT YOUR OWN P.O.K.E. MUD NODE — TEST — VERIFIED
+        POINT THIS DEPLOYMENT AT YOUR OWN P.O.K.E. MUD NODE · TEST · VERIFIED
       </p>
 
       {error && <p className="mb-4 font-pixel text-[10px] uppercase text-ghost">{error}</p>}
@@ -110,7 +110,7 @@ export default function MudPanel() {
               )}
             </Row>
             <Row label="WORLD">
-              {worldName ? <span className="text-cyan">{String(worldName)}</span> : "—"}
+              {worldName ? <span className="text-cyan">{String(worldName)}</span> : "none"}
             </Row>
             {status?.reason && (
               <Row label="NOTE">
@@ -129,8 +129,8 @@ export default function MudPanel() {
               <span className="font-mono text-cyan">:4001</span>). Run it, then set{" "}
               <span className="font-mono text-cyan">MUD_NODE_URL</span> and{" "}
               <span className="font-mono text-cyan">MUD_ADMIN_TOKEN</span> in this deployment&apos;s
-              env and reload. The game can be dark and everything else here still works —
-              tickets don&apos;t need the game running.
+              env and reload. The game can be dark and everything else here still works. 
+              Tickets don&apos;t need the game running.
             </p>
             <p className="font-mono text-[11px] text-white/50">MUD_NODE_URL=http://127.0.0.1:4001</p>
           </div>

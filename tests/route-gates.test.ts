@@ -27,7 +27,7 @@ import { isolateCwd } from "./helpers/isolate-cwd";
  * Part B (Love's Desk roster shows who is here NOW):
  *  · RosterPanel runs T-149's exported soulsOnline over the route's
  *    joined × presence payload — online-only, display names, mxid keys,
- *    "— nobody here yet" on the empty truth;
+ *    "nobody here yet" on the empty truth;
  *  · matrix.ts's roomRoster reads the homeserver's own presence endpoint
  *    with the bot's token, one bounded batch, null for a refused lookup.
  *
@@ -171,7 +171,7 @@ describe("TASK-160 — Love's Desk roster shows who is here NOW", () => {
     const src = await read("src/components/console/desk/RosterPanel.tsx");
     expect(src).toContain('soulsOnline, type Soul } from "@/components/rooms/RoomPresence"');
     expect(src).toContain("soulsOnline(d.joined ?? {}, d.presence ?? {})");
-    expect(src).toContain("— nobody here yet");
+    expect(src).toContain("nobody here yet");
     expect(src).toContain("key={s.mxid}"); // the T-133 duplicate-key fix rides along
   });
 

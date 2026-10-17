@@ -56,10 +56,10 @@ export default function RankTrackPanel() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
       <p className="lcars-eyebrow mb-3" data-accent="pink">
-        RANK TRACK · COMMENDATIONS — HONOR ONLY, NEVER SPEND
+        RANK TRACK · COMMENDATIONS · HONOR ONLY, NEVER SPEND
       </p>
       <p className="mb-5 font-body text-sm text-white/55">
-        The SCAR fleet ladder walks on <b className="text-white/75">Bitcoin time</b> — tenure in
+        The SCAR fleet ladder walks on <b className="text-white/75">Bitcoin time</b>: tenure in
         blocks since your tag claim, certs to open the officer track. Every count below is the
         board&apos;s own; nothing is invented.
       </p>
@@ -73,14 +73,14 @@ export default function RankTrackPanel() {
           {!read && !err && <p className="mt-3 font-body text-sm text-white/50">Reading the ladder…</p>}
           {err && (
             <p className="mt-3 font-body text-sm text-white/50">
-              The ladder didn&apos;t answer — sign in again and reload.
+              The ladder didn&apos;t answer. Sign in again and reload.
             </p>
           )}
           {read && !read.tag && (
             /* honest empty state — no tag, no invented rank */
             <div className="mt-3">
               <p className="font-body text-sm text-white/60">
-                This key holds no tag on this ship yet. The ladder starts at the claim — every
+                This key holds no tag on this ship yet. The ladder starts at the claim. Every
                 member is enlisted the block their tag lands.
               </p>
               <Link href="/" className="btn-pill mt-4" data-accent="pink">
@@ -94,7 +94,7 @@ export default function RankTrackPanel() {
               <p className="mt-1 font-mono text-[11px] text-white/50">
                 {read.rank.grade} · {read.rank.abbrev} · {read.tag}
                 {read.rank.draft && (
-                  <span className="text-white/30"> · name is draft — GLYPH&apos;s canvas</span>
+                  <span className="text-white/30"> · name is a draft, GLYPH&apos;s canvas</span>
                 )}
               </p>
               {read.office && (
@@ -121,12 +121,12 @@ export default function RankTrackPanel() {
                   </div>
                   <p className="mt-2 font-mono text-[11px] text-white/50">
                     {read.blocksSinceClaim.toLocaleString()} blocks on the board ·{" "}
-                    {read.months ?? "—"} BFT month{read.months === 1 ? "" : "s"}
+                    {read.months ?? "unknown"} BFT month{read.months === 1 ? "" : "s"}
                   </p>
                 </div>
               ) : (
                 <p className="mt-3 font-mono text-[11px] text-white/40">
-                  claim block unknown (pre-R2 tag) — tenure starts counting when the profile
+                  claim block unknown (pre-R2 tag): tenure starts counting when the profile
                   backfills it
                 </p>
               )}
@@ -135,7 +135,7 @@ export default function RankTrackPanel() {
               </p>
               {read.next && (
                 <p className="mt-1 font-mono text-[11px] text-white/40">
-                  next: {read.next.name} ({read.next.grade}) — certs open the officer ladder,
+                  next: {read.next.name} ({read.next.grade}) · certs open the officer ladder,
                   tenure walks the hall
                 </p>
               )}
@@ -151,7 +151,7 @@ export default function RankTrackPanel() {
           {!read && !err && <p className="mt-3 font-body text-sm text-white/50">Reading the board…</p>}
           {read && read.commendations.length === 0 && (
             <p className="mt-3 font-body text-sm text-white/60">
-              No commendations logged yet — resolutions on the duty roster earn them. The first
+              No commendations logged yet. Resolutions on the duty roster earn them. The first
               resolved ticket starts the board.
             </p>
           )}
@@ -177,7 +177,7 @@ export default function RankTrackPanel() {
             </ol>
           )}
           <p className="mt-4 border-t border-edge pt-3 font-mono text-[10.5px] leading-relaxed text-white/35">
-            crew:xxxxxxxx is a key prefix, not a name — npub is plumbing; the tag lands when the
+            crew:xxxxxxxx is a key prefix, not a name. Npub is plumbing; the tag lands when the
             crew member links theirs. Counts come straight off resolved tickets.
           </p>
         </div>

@@ -20,7 +20,7 @@ import { effectiveMudNode } from "@/lib/nodeconfig";
  * Same key-is-the-operator gate as every /a tab.
  */
 export const metadata: Metadata = {
-  title: "Simulator — One Cocreation admin",
+  title: "Simulator · One Cocreation admin",
   robots: { index: false, follow: false },
 };
 
@@ -44,7 +44,7 @@ export default async function AdminSimulatorPage() {
         </p>
         <h1 className="mb-3 mgmt-title">Simulator</h1>
         <p className="max-w-2xl font-body text-sm mgmt-lede">
-          The sim runs on <b>play money</b> — swing hard, break things.
+          The sim runs on <b>play money</b>. Swing hard, break things.
           Nothing on this deck can spend real sats.
         </p>
       </div>
@@ -61,7 +61,7 @@ export default async function AdminSimulatorPage() {
                 NODE LINKED
               </span>
               <p className="mt-3 font-body text-sm text-white/70">
-                This deck fronts your own P.O.K.E. MUD node — the battle terminal, the KHA0S
+                This deck fronts your own P.O.K.E. MUD node: the battle terminal, the KHA0S
                 sims, and the traces-of-fun telemetry all run there, on its own metal.
               </p>
               <p className="mt-2 break-all font-mono text-[11px] text-cyan">{mudUrl}</p>
@@ -84,7 +84,7 @@ export default async function AdminSimulatorPage() {
             <div className="console-card p-5" data-accent="neon">
               <span className="pill pill--muted">NO SIM NODE LINKED</span>
               <p className="mt-3 font-body text-sm text-white/70">
-                The sim deck fronts a P.O.K.E. MUD node (knowledge-engine) — this console never
+                The sim deck fronts a P.O.K.E. MUD node (knowledge-engine). This console never
                 fakes the battle terminal. Wire your node on the Fleet Map and this deck lights
                 up with the real thing.
               </p>
@@ -101,7 +101,7 @@ export default async function AdminSimulatorPage() {
       {/* ── TRAINING MODULES — honest SOON berth ─────────────────────────── */}
       <section id="modules" className="mx-auto max-w-5xl scroll-mt-20 px-6 py-10">
         <p className="lcars-eyebrow mb-3" data-accent="cyan">
-          TRAINING MODULES · LVL — MODULE — PATH — ACCESS — CERT RUNE
+          TRAINING MODULES · LVL · MODULE · PATH · ACCESS · CERT RUNE
         </p>
         <div className="max-w-2xl">
           <div className="console-card p-5" data-accent="cyan">
@@ -109,11 +109,11 @@ export default async function AdminSimulatorPage() {
             <p className="mt-3 font-body text-sm text-white/70">
               The module table (levels, topic paths, VERSE•PREFIX•CODE cert runes, the
               Architect&apos;s proposed slots) lands when the node&apos;s <code>/modules</code>{" "}
-              door is real — today it&apos;s a stub, and a stub table would be a fake shelf.
+              door is real: today it&apos;s a stub, and a stub table would be a fake shelf.
               This berth is cut and waiting for its wiring.
             </p>
             <p className="mt-3 font-mono text-[11px] uppercase tracking-wider text-white/40">
-              Gated modules are pacBOT understanding-checks — free, never paid.
+              Gated modules are pacBOT understanding-checks. Free, never paid.
             </p>
           </div>
         </div>

@@ -260,12 +260,12 @@ export default function StudioRoom({
           the page — was "VDO links" at the bottom (T-261); moved up,
           nothing removed. Each row keeps its heading, blurb, and Copy
           button; OPEN (new tab) is the new primary door. ─────────────── */}
-      <SectionHead label={`${roomTitle ?? "the studio"} — ${vdo.room}`} />
+      <SectionHead label={roomTitle ?? "the studio"} />
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={card}>
           <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>your director&apos;s desk</b>
           <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
-            scene switching, mute-all, the room&apos;s own controls — {vdo.room}
+            scene switching, mute-all, the room&apos;s own controls. Room: {vdo.room}.
           </p>
           <div style={doorStack}>
             <a href={director} target="_blank" rel="noopener" className="btn btn-sm">
@@ -277,7 +277,7 @@ export default function StudioRoom({
         <div style={card}>
           <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>on camera</b>
           <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
-            step onto camera yourself — {vdo.room}
+            step onto camera yourself.
           </p>
           <div style={doorStack}>
             <a href={vdo.push} target="_blank" rel="noopener" className="btn btn-sm">
@@ -289,7 +289,7 @@ export default function StudioRoom({
         <div style={card}>
           <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>a guest&apos;s door</b>
           <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
-            camera and mic off until they choose — you can unmute from the desk — opens on the site, {vdo.room}
+            camera and mic off until they choose. You can unmute from the desk. Opens on the site.
           </p>
           <div style={doorStack}>
             <a href={guestDoor} target="_blank" rel="noopener" className="btn btn-sm">
@@ -315,7 +315,7 @@ export default function StudioRoom({
       {/* TASK-305: words only, never the key itself — the doors above
           already carry it. Honest either way: derive-or-dash. */}
       <p style={{ margin: "8px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>
-        {roomKeyed ? "Room key: on · rotates with the seat secret" : "room unkeyed — SEAT_SECRET unset"}
+        {roomKeyed ? "Room key: on · rotates with the seat secret" : "room unkeyed: SEAT_SECRET unset"}
       </p>
       {/* TASK-304: the stub grew teeth — pick one member, confirm, and the
           site mails them the guest door (never the keyed director link). */}
@@ -332,7 +332,7 @@ export default function StudioRoom({
           type="button"
           onClick={toggleDesk}
           aria-expanded={deskOpen}
-          title={deskOpen ? "fold this away" : "guest-panel setup, timers, the scene/overlay URL list — moving to the director view"}
+          title={deskOpen ? "fold this away" : "guest-panel setup, timers, the scene/overlay URL list. Moving to the director view"}
           style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", padding: "2px 0",
             marginBottom: deskOpen ? 10 : 0, background: "none", border: "none", cursor: "pointer",
             textAlign: "left", fontSize: ".78rem", fontWeight: 700, letterSpacing: ".04em",
@@ -344,10 +344,10 @@ export default function StudioRoom({
         {deskOpen && (
           <>
             <p style={{ margin: "0 0 4px", fontSize: ".85rem", color: "var(--muted)" }}>
-              the broadcast studio&apos;s desk — pick the scene, type the names, paste the overlay URL into OBS.
+              the broadcast studio&apos;s desk. Pick the scene, type the names, paste the overlay URL into OBS.
             </p>
             <p style={{ margin: "0 0 4px", fontSize: ".78rem", color: "var(--muted)" }}>
-              the cameras&apos; live state comes with the studio kit — this room is the scenes, the names, and the links.
+              the cameras&apos; live state comes with the studio kit. This room is the scenes, the names, and the links.
             </p>
             {error && (
               <p style={{ margin: "10px 0 0", padding: "8px 14px", borderRadius: 10, fontSize: ".82rem",
@@ -451,7 +451,7 @@ export default function StudioRoom({
           </label>
         </div>
         <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
-          left blank, &ldquo;starting soon&rdquo; shows the words alone — no clock, ever.
+          left blank, &ldquo;starting soon&rdquo; shows the words alone. No clock, ever.
         </p>
         <div style={doorStack}>
           <button
@@ -470,11 +470,11 @@ export default function StudioRoom({
       {/* ── the guest roster ─────────────────────────────────────────── */}
       <SectionHead label="Guest roster" />
       <p style={{ margin: "0 0 10px", fontSize: ".78rem", color: "var(--muted)" }}>
-        name + specialty each — the side-by-side and phone scenes lower-third the FIRST guest
+        name + specialty each. The side-by-side and phone scenes lower-third the FIRST guest
       </p>
       {doc.guests.length === 0 && (
         <p style={{ fontSize: ".82rem", color: "var(--muted)" }}>
-          No guests yet — add one and the duo and phone scenes have their second name.
+          No guests yet: add one and the duo and phone scenes have their second name.
         </p>
       )}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -482,7 +482,7 @@ export default function StudioRoom({
           <div key={i} style={card}>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block">
-                <span style={fieldLabel}>guest {i + 1} — name</span>
+                <span style={fieldLabel}>guest {i + 1}: name</span>
                 <input value={g.name} onChange={(e) => setGuest(i, { name: e.target.value })} className="console-field" style={{ ...field, width: "100%" }} />
               </label>
               <label className="block">
@@ -528,7 +528,7 @@ export default function StudioRoom({
       <SectionHead label="Overlay URLs" />
       {!overlayReady && (
         <p style={{ fontSize: ".82rem", color: "var(--err)" }}>
-          the overlay is closed on this deployment — the operator seat secret (SEAT_SECRET) is unset,
+          the overlay is closed on this deployment. The operator seat secret (SEAT_SECRET) is unset,
           so no signed URL can be minted.
         </p>
       )}
@@ -551,7 +551,7 @@ export default function StudioRoom({
         ))}
       </div>
       <p style={{ margin: "10px 0 0", fontSize: ".78rem", color: "var(--muted)" }}>
-        paste one into OBS as a browser source, 1920×1080 — the on-camera scenes are transparent, the
+        paste one into OBS as a browser source, 1920×1080. The on-camera scenes are transparent, the
         full-screen scenes are opaque; &ldquo;Show … in the studio&rdquo; pushes a full scene straight into the VDO
         room instead, via its own &amp;website source.
       </p>

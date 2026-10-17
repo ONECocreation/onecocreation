@@ -92,13 +92,13 @@ export function Stage1CardBody({ state, busy, error, onAct }: Stage1CardBodyProp
       target="_blank"
       rel="noreferrer"
     >
-      Open the reading as host →
+      Open the reading as host
     </a>
   ) : (
     /* disabled until a room exists: the same anchor in the same place,
        no href, honestly marked — never a dead button that LOOKS live */
     <a className="kit-btn kit-btn-second kit-btn-sm" aria-disabled="true">
-      Open the reading as host →
+      Open the reading as host
     </a>
   );
 
@@ -118,7 +118,7 @@ export function Stage1CardBody({ state, busy, error, onAct }: Stage1CardBodyProp
         </li>
         <li data-row="host">
           <span>
-            The host door — the reading&apos;s own room, opened as love.
+            The host door: the reading&apos;s own room, opened as love.
             <em data-host={state.phase}>{HOST_WORDS[state.phase]}</em>
           </span>
           <span className="kit-rows-end">{hostControl}</span>
@@ -185,7 +185,7 @@ export default function Stage1Card() {
           void refresh();
         }
       } catch {
-        setError("the stage didn't answer — try again");
+        setError("the stage didn't answer. Try again");
         void refresh();
       } finally {
         setBusy(null);

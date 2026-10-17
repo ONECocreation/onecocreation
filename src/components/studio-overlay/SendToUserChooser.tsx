@@ -63,13 +63,13 @@ export default function SendToUserChooser({ roomTitle }: { roomTitle?: string })
       });
       const d = await r.json().catch(() => null);
       if (d?.ok) {
-        setNote({ ok: true, line: `sent — the guest door is on its way to ${picked}${d.warning ? ` · ${d.warning}` : ""}` });
+        setNote({ ok: true, line: `sent: the guest door is on its way to ${picked}${d.warning ? ` · ${d.warning}` : ""}` });
         setPicked(null);
       } else {
-        setNote({ ok: false, line: d?.reason ?? `the send came back ${r.status} — nothing was mailed` });
+        setNote({ ok: false, line: d?.reason ?? `the send came back ${r.status} · nothing was mailed` });
       }
     } catch {
-      setNote({ ok: false, line: "the request never reached the site — nothing was mailed" });
+      setNote({ ok: false, line: "the request never reached the site. Nothing was mailed" });
     }
     setBusy(false);
   }
@@ -90,7 +90,7 @@ export default function SendToUserChooser({ roomTitle }: { roomTitle?: string })
   return (
     <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
       <p style={{ margin: 0, fontSize: ".78rem", color: "var(--muted)" }}>
-        Send this guest door to a member — one letter, just them
+        Send this guest door to a member. One letter, just them
       </p>
       {note && (
         <p style={{ margin: 0, fontSize: ".78rem", color: note.ok ? "var(--ok, #7fb98f)" : "var(--bad, #d98a8a)" }}>
@@ -100,7 +100,7 @@ export default function SendToUserChooser({ roomTitle }: { roomTitle?: string })
       {picked ? (
         <>
           <p style={{ margin: 0, fontSize: ".82rem", color: "var(--ink-strong)" }}>
-            the guest door ({roomTitle ?? "the studio"}) goes to <b>{picked}</b> — one letter, just them
+            the guest door ({roomTitle ?? "the studio"}) goes to <b>{picked}</b>, one letter, just them
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <button type="button" className="btn btn-sm" disabled={busy} onClick={send}>
@@ -125,7 +125,7 @@ export default function SendToUserChooser({ roomTitle }: { roomTitle?: string })
               <p style={{ margin: 0, fontSize: ".78rem", color: "var(--muted)" }}>reading the field…</p>
             ) : shown.length === 0 ? (
               <p style={{ margin: 0, fontSize: ".78rem", color: "var(--muted)" }}>
-                no email members match — letters travel by email
+                no email members match. Letters travel by email
               </p>
             ) : (
               shown.slice(0, 12).map((p) => (

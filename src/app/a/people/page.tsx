@@ -14,7 +14,7 @@ interface Person {
 const subjectOf = (p: Person) => (p.kind === "email" ? `${p.member}@email` : p.member);
 
 /** PEOPLE — who's in the field: purchases held, sessions booked. Sign-in
- *  tracking and class progress land with their rails (shown honestly as —). */
+ *  tracking and class progress land with their rails (shown honestly as none). */
 export default function PeopleRoom() {
   const [people, setPeople] = useState<Person[] | null>(null);
   const [denied, setDenied] = useState(false);
@@ -36,7 +36,7 @@ export default function PeopleRoom() {
   if (denied)
     return (
       <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>
-        operator session required — <a href="/a" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>sign in at the door</a>
+        operator session required: <a href="/a" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>sign in at the door</a>
       </p>
     );
   if (people === null) return <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>reading the field…</p>;
@@ -56,7 +56,7 @@ export default function PeopleRoom() {
       <input id="people-search" aria-label="Search members" value={q} onChange={(e) => setQ(e.target.value)} placeholder="search members…"
         className="mb-3 w-full max-w-sm console-field" style={field} />
       {people.length === 0 ? (
-        <p style={{ color: "var(--muted)" }}>No members known yet — signups and purchases land here.</p>
+        <p style={{ color: "var(--muted)" }}>No members known yet. Signups and purchases land here.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px]" style={{ borderCollapse: "separate", borderSpacing: "0 6px", fontSize: ".82rem" }}>
@@ -74,21 +74,21 @@ export default function PeopleRoom() {
                   <td style={{ ...td, borderRadius: "12px 0 0 12px", borderLeft: "1px solid rgba(139,118,196,.16)", fontWeight: 700, color: "var(--ink-strong)" }}>{p.member}</td>
                   <td style={td}>{p.kind}</td>
                   <td style={td}>
-                    {p.packages.length ? p.packages.join(", ") : "—"}
+                    {p.packages.length ? p.packages.join(", ") : "none"}
                   </td>
-                  <td style={td}>{p.sessions || "—"}</td>
+                  <td style={td}>{p.sessions || "none"}</td>
                   <td style={td}>
-                    {p.lastOrderMs ? new Date(p.lastOrderMs).toLocaleDateString() : "—"}
+                    {p.lastOrderMs ? new Date(p.lastOrderMs).toLocaleDateString() : "none"}
                   </td>
-                  <td style={{ ...td, color: "var(--muted)" }}>—</td>
-                  <td style={{ ...td, borderRadius: "0 12px 12px 0", borderRight: "1px solid rgba(139,118,196,.16)", color: "var(--muted)" }}>—</td>
+                  <td style={{ ...td, color: "var(--muted)" }}>none</td>
+                  <td style={{ ...td, borderRadius: "0 12px 12px 0", borderRight: "1px solid rgba(139,118,196,.16)", color: "var(--muted)" }}>none</td>
                 </tr>
               ))}
             </tbody>
           </table>
           {openRow && (
             <div className="mt-3" style={glassCard}>
-              <b style={{ fontSize: ".75rem", textTransform: "uppercase", color: "var(--info)" }}>Merge accounts — {openRow}</b>
+              <b style={{ fontSize: ".75rem", textTransform: "uppercase", color: "var(--info)" }}>Merge accounts: {openRow}</b>
               <p className="mt-1" style={{ fontSize: ".75rem", color: "var(--muted)" }}>
                 Tie this member to their other door (email + key = one soul). Purchases, bookings
                 and the member home unify; neither login is destroyed.
@@ -111,7 +111,7 @@ export default function PeopleRoom() {
                       body: JSON.stringify({ a: subjectOf(me), b: mergeTarget }),
                     });
                     setMergeNote((await res.json().catch(() => ({ ok: false }))).ok
-                      ? "linked ✓ — both doors now see one member"
+                      ? "linked ✓: both doors now see one member"
                       : "link failed");
                   }}
                   className="btn btn-sm"
@@ -125,7 +125,7 @@ export default function PeopleRoom() {
         </div>
       )}
       <p className="mt-3" style={{ fontSize: ".75rem", color: "var(--muted)" }}>
-        Last sign-in and class progress are shown honestly as — until their rails exist (session
+        Last sign-in and class progress are shown honestly as none until their rails exist (session
         tracking · Matrix rooms). The trainer grant and PWYC approvals will live on this desk.
       </p>
     </div>

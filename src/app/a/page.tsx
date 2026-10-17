@@ -31,7 +31,7 @@ async function TipJarsCard({ banner = false }: { banner?: boolean }) {
   } catch {
     return (
       <p style={{ ...glassCard, padding: "8px 16px", fontSize: ".75rem", color: "var(--muted)" }}>
-        jars unreachable — check the BTCPay key&apos;s &quot;view invoices&quot; permission
+        jars unreachable: check the BTCPay key&apos;s &quot;view invoices&quot; permission
       </p>
     );
   }
@@ -69,7 +69,7 @@ async function TipJarsCard({ banner = false }: { banner?: boolean }) {
  *   duty roster. (Admiral's catch, 0018.05.10 — sign-offs were leaking.)
  */
 export const metadata: Metadata = {
-  title: `Overview — ${CONSOLE_SITE.domain} admin`,
+  title: `Overview: ${CONSOLE_SITE.domain} admin`,
   robots: { index: false, follow: false },
 };
 
@@ -122,18 +122,18 @@ export default async function ConsoleOverviewPage() {
         <details style={{ ...glassCard, marginTop: 26 }}>
           <summary style={{ cursor: "pointer", fontSize: ".82rem", fontWeight: 700, color: "var(--ink-body)",
             minHeight: 44, padding: "12px 0", boxSizing: "border-box" }}>
-            Routine checks — the weekly rhythm, tucked away
+            Routine checks: the weekly rhythm, tucked away
           </summary>
           <ul style={{ margin: "8px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column",
             gap: 4, fontSize: ".82rem", color: "var(--ink-body)" }}>
-            <li>🎥 <b>Go live</b> — the class door moved: <Link href="/a/live" style={{ color: "var(--info)", textDecoration: "underline" }}>the Go-Live room</Link> holds
+            <li><b>Go live</b>: the class door moved, and <Link href="/a/live" style={{ color: "var(--info)", textDecoration: "underline" }}>the Go-Live room</Link> holds
               the strip and the four ways in: the rooms, YouTube, today&apos;s calls, a guest</li>
-            <li>📺 {liveRoom ? <>🔴 <b>LIVE now</b> — <Link href="/live" style={{ color: "var(--info)", textDecoration: "underline" }}>{liveRoom.title}</Link> is open · the banner is up</> : <><b>{LIVE_SCHEDULE}</b> — go live on <a href={LIVE_YOUTUBE} target="_blank" rel="noreferrer" style={{ color: "var(--info)", textDecoration: "underline" }}>YouTube</a></>}</li>
-            <li>⚑ <b>Daily</b> — tap a flagged session on the calendar above; saving notes closes it out</li>
-            <li>✉️ <b>Weekly</b> — write &amp; publish the news: <Link href="/a/letters" style={{ color: "var(--info)", textDecoration: "underline" }}>Letters</Link> (it lands on <Link href="/news" style={{ color: "var(--info)", textDecoration: "underline" }}>/news</Link> + every inbox)</li>
-            <li>🎁 <b>Every visit</b> — give-what-you-can offers waiting: <Link href="/a/money" style={{ color: "var(--info)", textDecoration: "underline" }}>Money Jars · offers desk</Link></li>
-            <li>📅 <b>Weekly</b> — hours &amp; days off ring true: <Link href="/a/booking" style={{ color: "var(--info)", textDecoration: "underline" }}>Sessions &amp; hours</Link></li>
-            <li>👥 <b>Monthly</b> — who&apos;s new, who needs a hand: <Link href="/a/people" style={{ color: "var(--info)", textDecoration: "underline" }}>People</Link></li>
+            <li>{liveRoom ? <><b>LIVE now</b>: <Link href="/live" style={{ color: "var(--info)", textDecoration: "underline" }}>{liveRoom.title}</Link> is open · the banner is up</> : <><b>{LIVE_SCHEDULE}</b>: go live on <a href={LIVE_YOUTUBE} target="_blank" rel="noreferrer" style={{ color: "var(--info)", textDecoration: "underline" }}>YouTube</a></>}</li>
+            <li>⚑ <b>Daily</b>: tap a flagged session on the calendar above; saving notes closes it out</li>
+            <li><b>Weekly</b>: write &amp; publish the news: <Link href="/a/letters" style={{ color: "var(--info)", textDecoration: "underline" }}>Letters</Link> (it lands on <Link href="/news" style={{ color: "var(--info)", textDecoration: "underline" }}>/news</Link> + every inbox)</li>
+            <li><b>Every visit</b>: give-what-you-can offers waiting: <Link href="/a/money" style={{ color: "var(--info)", textDecoration: "underline" }}>Money Jars · offers desk</Link></li>
+            <li><b>Weekly</b>: hours &amp; days off ring true: <Link href="/a/booking" style={{ color: "var(--info)", textDecoration: "underline" }}>Sessions &amp; hours</Link></li>
+            <li><b>Monthly</b>: who&apos;s new, who needs a hand: <Link href="/a/people" style={{ color: "var(--info)", textDecoration: "underline" }}>People</Link></li>
           </ul>
         </details>
         {/* the jars, as a scoreboard strip (Admiral, 0018.05.18) — the big
@@ -153,7 +153,7 @@ export default async function ConsoleOverviewPage() {
         </p>
         <h1 className="mb-3 mgmt-title">Overview</h1>
         <p className="max-w-2xl font-body text-sm mgmt-lede">
-          The console&apos;s front page — how <b>{CONSOLE_SITE.domain}</b>{" "}
+          The console&apos;s front page. How <b>{CONSOLE_SITE.domain}</b>{" "}
           is doing at a glance, and where a first captain begins. The rooms live in the ribbon.
         </p>
       </div>

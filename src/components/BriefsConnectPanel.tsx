@@ -49,7 +49,7 @@ export default function BriefsConnectPanel() {
       if (data.ok) setConfig(data.config);
       else setErr(data.reason ?? "couldn't read the config");
     } catch {
-      setErr("couldn't reach the app — try again");
+      setErr("couldn't reach the app. Try again");
     }
   }, []);
 
@@ -66,28 +66,28 @@ export default function BriefsConnectPanel() {
       </p>
       <h2 className="mb-3 font-display text-4xl text-cyan glow-cyan">BRIEFS</h2>
       <p className="mb-8 font-mono text-[11px] text-white/50">
-        THE TWO SOURCES · POINT — SAVE · PULL FROM THE BRIEFS PAGE
+        THE TWO SOURCES · POINT · SAVE · PULL FROM THE BRIEFS PAGE
       </p>
 
       {err && <p className="mb-4 font-pixel text-[10px] uppercase text-ghost">{err}</p>}
 
       <div className="max-w-2xl space-y-6">
         <SourceBox
-          title="SHARED SOURCE — PUBLIC REPO · NO TOKEN"
+          title="SHARED SOURCE · PUBLIC REPO · NO TOKEN"
           tone="cyan"
-          repoLabel="REPO (owner/name) — PUBLIC"
+          repoLabel="REPO (owner/name) PUBLIC"
           defaults={DEFAULTS.shared}
           repo={config?.sharedBriefsRepo ?? ""}
           branch={config?.sharedBriefsBranch ?? ""}
           fields={{ repo: "sharedBriefsRepo", branch: "sharedBriefsBranch" }}
           onSaved={load}
-          note="Pulled with NO token — public read, so a captain needs no key for these. Honest empty / not-found state on the Briefs page until this repo exists."
+          note="Pulled with NO token. Public read, so a captain needs no key for these. Honest empty / not-found state on the Briefs page until this repo exists."
         />
 
         <SourceBox
-          title="PERSONAL SOURCE — PRIVATE REPO · TOKEN REQUIRED"
+          title="PERSONAL SOURCE · PRIVATE REPO · TOKEN REQUIRED"
           tone="pink"
-          repoLabel="REPO (owner/name) — PRIVATE"
+          repoLabel="REPO (owner/name) PRIVATE"
           defaults={DEFAULTS.personal}
           repo={config?.briefsRepo ?? ""}
           branch={config?.briefsBranch ?? ""}
@@ -111,11 +111,11 @@ export default function BriefsConnectPanel() {
         />
 
         <p className="text-center font-mono text-[11px] text-white/40">
-          THE ⟳ PULL LIVES ON THE{" "}
+          THE PULL LIVES ON THE{" "}
           <a href="/a/briefs" className="text-cyan underline hover:text-white">
             BRIEFS PAGE
           </a>{" "}
-          — IT PULLS BOTH SOURCES AT ONCE. CONTENT FLOWS REPO → STORE, NEVER INTO GIT.
+          IT PULLS BOTH SOURCES AT ONCE. CONTENT FLOWS REPO / STORE, NEVER INTO GIT.
         </p>
       </div>
     </div>
@@ -173,14 +173,14 @@ function SourceBox({
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.ok) {
-        setErr(data?.reason ?? "couldn't save — try again");
+        setErr(data?.reason ?? "couldn't save: try again");
         return;
       }
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
       onSaved();
     } catch {
-      setErr("save hiccuped — try again");
+      setErr("save hiccuped: try again");
     } finally {
       setSaving(false);
     }
@@ -258,7 +258,7 @@ function BriefsTokenField({ tokenSet, onSaved }: { tokenSet: boolean; onSaved: (
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.ok) {
-        setErr(data?.reason ?? "couldn't save — try again");
+        setErr(data?.reason ?? "couldn't save: try again");
         return;
       }
       setToken(""); // never keep the secret in state after it's stored
@@ -266,7 +266,7 @@ function BriefsTokenField({ tokenSet, onSaved }: { tokenSet: boolean; onSaved: (
       setTimeout(() => setSaved(false), 2500);
       onSaved();
     } catch {
-      setErr("save hiccuped — try again");
+      setErr("save hiccuped: try again");
     } finally {
       setSaving(false);
     }
@@ -302,8 +302,8 @@ function BriefsTokenField({ tokenSet, onSaved }: { tokenSet: boolean; onSaved: (
         </button>
       </div>
       <p className="mt-2 font-body text-xs text-white/50">
-        Fine-grained PAT with <span className="font-mono text-white/70">frens-briefs</span> → Contents:
-        read. Stored write-only — never shown again. Empty falls back to the GitHub PAT below.
+        Fine-grained PAT with <span className="font-mono text-white/70">frens-briefs</span>, Contents:
+        read. Stored write-only: never shown again. Empty falls back to the GitHub PAT below.
       </p>
       {err && <p className="mt-2 font-pixel text-[9px] uppercase text-ghost">{err}</p>}
     </div>

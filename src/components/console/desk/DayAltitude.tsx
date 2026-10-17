@@ -54,8 +54,8 @@ function PinEditor({ roomSlug, roomTitle }: { roomSlug: string | null; roomTitle
     if (!res?.ok) { setNote(res?.reason ?? "save failed"); return; }
     setNote(
       res.matrixPinned
-        ? "pinned ✓ — also live-pinned in the room"
-        : `saved ✓ — the room mirror didn't land (${res.matrixReason ?? "unknown reason"})`,
+        ? "pinned ✓: also live-pinned in the room"
+        : `saved ✓: the room mirror didn't land (${res.matrixReason ?? "unknown reason"})`,
     );
     setEditing(false);
     load();
@@ -73,7 +73,7 @@ function PinEditor({ roomSlug, roomTitle }: { roomSlug: string | null; roomTitle
   return (
     <div className="desk-panel">
       <div className="desk-panel__head">
-        <h3>Pinned welcome — {roomTitle}</h3>
+        <h3>Pinned welcome: {roomTitle}</h3>
         {!editing && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setDraft(pin?.text ?? ""); setEditing(true); }}>
             edit
@@ -81,7 +81,7 @@ function PinEditor({ roomSlug, roomTitle }: { roomSlug: string | null; roomTitle
         )}
       </div>
       {!editing && (pin
-        ? <p className="desk-pin__text">📌 {pin.text}</p>
+        ? <p className="desk-pin__text">{pin.text}</p>
         : <p className="desk-panel__muted">no welcome pinned yet</p>)}
       {editing && (
         <div>
@@ -194,7 +194,7 @@ export default function DayAltitude({
         {next
           ? (
             <p className="desk-panel__muted">
-              next up: <b>{next.title}</b> — {timeLabel(next.startUtc)}
+              next up: <b>{next.title}</b> at {timeLabel(next.startUtc)}
             </p>
           )
           : <p className="desk-panel__muted">nothing else on the books</p>}

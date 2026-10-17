@@ -49,7 +49,7 @@ export const SITE_LABELS: Record<string, string> = {
     onboarding voice, not an artist's dashboard. */
 const SITE_BLURBS: Record<string, string> = {
   overview: "today's sessions, the jars, and your week at a glance",
-  studio: "the broadcast desk — scenes, overlays, and guest links",
+  studio: "the broadcast desk: scenes, overlays, and guest links",
 };
 
 /* TASK-323 (0018.06.26 a₿) — the rail follows Love's day, not the registry.
@@ -128,6 +128,14 @@ export type StudioSubKey = (typeof STUDIO_SUBS)[number]["key"];
 /** Which Studio sub-row a path marks current - /a/site/reading and anything
     under it (the go/<door> links) mark The weekly reading, /a/site/replays
     marks Replays (T-619); all else nothing. */
+/** T-622: a Studio sub-room says its OWN name once in the page header (title
+    and short subtitle), with no Studio block above it. The rail still groups
+    these rows under Studio; only the heading changes. */
+export const STUDIO_SUB_HEADS: Record<StudioSubKey, { title: string; blurb: string }> = {
+  reading: { title: "Weekly reading", blurb: "Set the schedule, then open each room when you're ready." },
+  replays: { title: "Replays", blurb: "The list the Replays page plays." },
+};
+
 export function studioSubForPath(pathname: string): StudioSubKey | null {
   const sub = STUDIO_SUBS.find((x) => pathname === x.href || pathname.startsWith(`${x.href}/`));
   return sub ? sub.key : null;
@@ -359,6 +367,8 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
   // Studio too (the route still resolves to the Site room; the rail uses `current`).
   const headRoom =
     (studioSubForPath(pathname) !== null && CONSOLE_ROOMS.find((r) => r.key === "studio")) || current;
+  const subKey = studioSubForPath(pathname);
+  const subHead = subKey ? STUDIO_SUB_HEADS[subKey] : null;
   // House furniture stays on the house's bridge. An artist running their own
   // shop has no use for a SIMULATOR or a FLEET MAP, and showing them would
   // make their admin feel like someone else's software.
@@ -509,9 +519,18 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
             {/* TASK-135: siteChromeTitle is the one choke point that keeps a
                 houseOnly room's real name (DUTY ROSTER, BRIDGE, …) off this
                 chrome, whichever path resolved to it (Admiral's catch). */}
-            <h1 className="mgmt-title">{siteChromeTitle(headRoom, label(headRoom.key, headRoom.label))}</h1>
-            {!headRoom.houseOnly && blurb(headRoom.key, headRoom.blurb) && (
-              <p className="mgmt-blurb">{blurb(headRoom.key, headRoom.blurb)}</p>
+            {subHead ? (
+              <>
+                <h1 className="mgmt-title">{subHead.title}</h1>
+                <p className="mgmt-blurb">{subHead.blurb}</p>
+              </>
+            ) : (
+              <>
+                <h1 className="mgmt-title">{siteChromeTitle(headRoom, label(headRoom.key, headRoom.label))}</h1>
+                {!headRoom.houseOnly && blurb(headRoom.key, headRoom.blurb) && (
+                  <p className="mgmt-blurb">{blurb(headRoom.key, headRoom.blurb)}</p>
+                )}
+              </>
             )}
           </header>
           <main className="mgmt-body">{children}</main>

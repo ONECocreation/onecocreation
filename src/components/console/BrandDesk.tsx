@@ -44,12 +44,12 @@ export default function BrandDesk() {
     <div className="p-6" style={{ maxWidth: 900 }}>
       <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>Brand</h1>
       <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
-        The five colours your Style-built pages draw from, and the site&apos;s top faces — edit a
+        The five colours your Style-built pages draw from, and the site&apos;s top faces. Edit a
         swatch or pick a face and the example below moves with it.
       </p>
 
       {/* ── the example ── */}
-      <SectionHead label="Example — built in the slots' own roles" />
+      <SectionHead label="Example: built in the slots' own roles" />
       <div style={{ border: "1px solid var(--glass-edge)", borderRadius: 16, overflow: "hidden" }}>
         {/* p5 Deep: "ground shade -- band backgrounds"; p3 Soft: "warm
             secondary -- kickers, highlights" */}
@@ -79,13 +79,13 @@ export default function BrandDesk() {
       </div>
 
       <p style={{ fontSize: ".72rem", color: "var(--muted)", margin: "8px 0 0", maxWidth: 640 }}>
-        The header above this desk and the sign-in below are the site&apos;s own — they wear the
+        The header above this desk and the sign-in below are the site&apos;s own. They wear the
         cartridge, not these five slots (one brand, one cartridge; only Style-built pages draw
-        from p1&ndash;p5).
+        from p1 to p5).
       </p>
 
       {/* ── the swatches + faces — the board's top half, working pickers ── */}
-      <SectionHead label="Swatches and faces — the five slots, the top faces" />
+      <SectionHead label="Swatches and faces" />
       <BrandPaletteDesk bp={bp} />
 
       {/* ── the real front door ── */}

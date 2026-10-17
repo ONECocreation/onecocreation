@@ -31,7 +31,7 @@ const row: React.CSSProperties = {
 const STATE_CHIP: Record<ReadinessState, { tone: "green" | "rose" | "grey"; label: string }> = {
   ok: { tone: "green", label: "ok" },
   missing: { tone: "rose", label: "missing" },
-  unknown: { tone: "grey", label: "— the site can't tell" },
+  unknown: { tone: "grey", label: "the site can't tell" },
 };
 
 export default function CommunityDoorCard() {
@@ -70,7 +70,7 @@ export default function CommunityDoorCard() {
         setCommunityOn(data.config.features.community === true);
         setNote(
           data.config.features.community
-            ? "saved ✓ the Community door is open — the nav, the home section and the rooms follow on their next render"
+            ? "saved ✓ the Community door is open. The nav, the home section and the rooms follow on their next render"
             : "saved ✓ the Community stays hidden",
         );
       } else setNote(data.reason ?? "save failed");
@@ -89,7 +89,7 @@ export default function CommunityDoorCard() {
   return (
     <div style={{ marginBottom: 12 }}>
       <p style={{ fontSize: ".8rem", color: "var(--muted)", margin: "0 0 10px", maxWidth: 640 }}>
-        Five honest checks, asked live each time this room opens — nothing here is remembered or guessed.
+        Five honest checks, asked live each time this room opens. Nothing here is remembered or guessed.
         A row the site can&apos;t answer says so, it never pretends.
       </p>
 
@@ -108,7 +108,7 @@ export default function CommunityDoorCard() {
         <button
           type="button"
           aria-pressed={communityOn}
-          aria-label={`Community — currently ${communityOn ? "on" : "off"}`}
+          aria-label={`Community: currently ${communityOn ? "on" : "off"}`}
           disabled={busy}
           onClick={flip}
           className={`btn btn-sm ${communityOn ? "btn-on" : "btn-ghost"}`}
@@ -119,13 +119,13 @@ export default function CommunityDoorCard() {
         <div style={{ flex: 1, minWidth: 220 }}>
           <b style={{ fontSize: ".9rem" }}>Community</b>
           <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>
-            {" "}— {communityOn ? "showing: the Community door, the home section and the rooms are open" : "hidden: the Community door stays closed"}.
-            The rule: flip ON when every row above reads ok — {okCount} of {rows.length}{" "}
+            {" "}{communityOn ? "showing: the Community door, the home section and the rooms are open" : "hidden: the Community door stays closed"}.
+            The rule: flip ON when every row above reads ok. {okCount} of {rows.length}{" "}
             {okCount === 1 ? "reads" : "read"}{" "}ok right now.
             Your call, always; this card only says what&apos;s missing.
           </span>
         </div>
-        <Chip tone={communityOn ? "green" : "grey"}>{communityOn ? "ON — showing" : "OFF — hidden"}</Chip>
+        <Chip tone={communityOn ? "green" : "grey"}>{communityOn ? "ON · showing" : "OFF · hidden"}</Chip>
         {note && (
           <div style={{ width: "100%", fontSize: ".8rem", color: note.startsWith("saved") ? "var(--ok)" : "var(--err)" }}>
             {note}

@@ -129,7 +129,7 @@ export default function MaterialsShelf({
         <Chip tone="lavender">{KIND_LABEL[m.kind]}</Chip>
         {sessionKey && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => toggleAttach(m)}>
-            {m.attachedTo.kind === "session" ? `→ ${sessionLabel}` : "shelf — all sessions"}
+            {m.attachedTo.kind === "session" ? `For ${sessionLabel}` : "shelf: all sessions"}
           </button>
         )}
         <button type="button" className="btn btn-ghost btn-sm" onClick={() => remove(m.id)} title="remove">✕</button>
@@ -165,18 +165,18 @@ export default function MaterialsShelf({
       {!roomSlug && <p className="desk-panel__muted">pick a room to see its shelf</p>}
       {roomSlug && items === null && <p className="desk-panel__muted">loading…</p>}
       {roomSlug && items !== null && items.length === 0 && (
-        <p className="desk-panel__muted">nothing on the shelf yet — drop a file here or press + upload</p>
+        <p className="desk-panel__muted">nothing on the shelf yet. Drop a file here or press + upload</p>
       )}
       {note && <p className="desk-panel__note">{note}</p>}
       {roomSlug && items && items.length > 0 && (
         <>
           {sessionKey && forThis.length > 0 && (
             <>
-              <p className="desk-shelf__label">→ {sessionLabel}</p>
+              <p className="desk-shelf__label">For {sessionLabel}</p>
               <ul className="desk-shelf__list">{forThis.map(row)}</ul>
             </>
           )}
-          <p className="desk-shelf__label">shelf — all sessions</p>
+          <p className="desk-shelf__label">shelf: all sessions</p>
           <ul className="desk-shelf__list">{forShelf.map(row)}</ul>
         </>
       )}

@@ -363,20 +363,20 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
     return (
       <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
         <p style={{ color: "var(--ink-body)" }}>Unknown letter “{key}”.</p>
-        <Link href="/a/letters" style={{ color: "var(--info)", textDecoration: "underline" }}>← back to the letters room</Link>
+        <Link href="/a/letters" style={{ color: "var(--info)", textDecoration: "underline" }}>Back to the letters room</Link>
       </div>
     );
   }
 
   return (
     <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
-      <Link href="/a/letters" style={{ fontSize: ".75rem", color: "var(--info)", textDecoration: "underline" }}>← the letters room</Link>
+      <Link href="/a/letters" style={{ fontSize: ".75rem", color: "var(--info)", textDecoration: "underline" }}>Back to the letters room</Link>
       <div className="mt-2" style={glassCard}>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <b>{letter.title ?? letter.key}</b>
           <span style={{ fontSize: ".75rem", color: "var(--info)" }}>
             {letter.kind === "composed" ? "composed by Love" : "seeded"} ·{" "}
-            {letter.audience === "public" ? "🌍 public (also on /news)" : "✉ the list"}
+            {letter.audience === "public" ? "public (also on /news)" : "the list"}
           </span>
         </div>
         <p className="mt-1" style={{ color: "var(--ink-body)" }}>&ldquo;{subject}&rdquo;</p>
@@ -389,12 +389,12 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
           </a>
         ) : (
           <p className="mt-1" style={{ fontSize: ".62rem", textTransform: "uppercase", color: "var(--muted)" }}>
-            composed letter — its site page arrives with the /news seam (flagged)
+            composed letter: its site page arrives with the /news seam (flagged)
           </p>
         )}
         {!hasBody && (
           <p className="mt-2" style={{ fontSize: ".75rem", color: "var(--muted)" }}>
-            This letter has no words yet — <Link href="/a/letters" style={{ textDecoration: "underline", color: "var(--info)" }}>write it in the room</Link> before sending.
+            This letter has no words yet. <Link href="/a/letters" style={{ textDecoration: "underline", color: "var(--info)" }}>write it in the room</Link> before sending.
           </p>
         )}
         {/* T-482: only a letter Love composes may ride an automatic send
@@ -433,20 +433,20 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         )}
       </div>
 
-      <SectionHead label="Send to the list — pick the door" />
+      <SectionHead label="Send to the list. Pick the door" />
       <div style={glassCard}>
         <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
           {segments.map((s) => (
             <li key={s.source}>
               <label className="flex items-center gap-2" style={{ ...field, cursor: "pointer" }}>
                 <input type="radio" name="segment" checked={segment === s.source} onChange={() => pickSegment(s.source)} />
-                <span className="flex-1">{s.source === "all" ? "All — the whole list" : s.source}</span>
+                <span className="flex-1">{s.source === "all" ? "All: the whole list" : s.source}</span>
                 <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>{s.count} {s.count === 1 ? "person" : "people"}</span>
               </label>
             </li>
           ))}
           {segments.length === 0 && (
-            <li style={{ fontSize: ".75rem", color: "var(--muted)" }}>no subscriber vault configured — the list is unreadable here</li>
+            <li style={{ fontSize: ".75rem", color: "var(--muted)" }}>no subscriber vault configured. The list is unreadable here</li>
           )}
         </ul>
 
@@ -467,7 +467,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
             </button>
             {finish && (
               <p style={{ fontSize: ".75rem", color: "var(--muted)" }}>
-                ⏳ the hourly cap ({cap}/hour) drips this — done by ≈ {finish.toLocaleString()}
+                ⏳ the hourly cap ({cap}/hour) drips this: done by ≈ {finish.toLocaleString()}
                 {sendAt ? " after the scheduled start" : ""}
               </p>
             )}

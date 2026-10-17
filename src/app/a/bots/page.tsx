@@ -17,7 +17,7 @@ import { CONSOLE_SITE } from "@/lib/console";
  * Same key-is-the-operator gate as every /a tab.
  */
 export const metadata: Metadata = {
-  title: "Bot deck — One Cocreation admin",
+  title: "Bot deck · One Cocreation admin",
   robots: { index: false, follow: false },
 };
 
@@ -32,13 +32,13 @@ const BOTS: {
   {
     name: "PACBOT",
     role: "OPS BOT · TUTOR",
-    desc: "May read stats/events and act on your behalf. Runs the understanding-checks that gate training modules — free, never paid.",
+    desc: "May read stats/events and act on your behalf. Runs the understanding-checks that gate training modules. Free, never paid.",
     accent: "pink",
   },
   {
     name: "POKE-ENGINEER",
     role: "CHIEF ENGINEER · AUDITS",
-    desc: "Audits the node on a cadence — configs, caps, cert chains — and opens tickets only when something's really wrong.",
+    desc: "Audits the node on a cadence (configs, caps, cert chains) and opens tickets only when something's really wrong.",
     accent: "neon",
   },
   {
@@ -50,7 +50,7 @@ const BOTS: {
   {
     name: "ARCHITECT",
     role: "ORGANISATION · NAMING",
-    desc: "Owns level ladders, topic paths and the VERSE•PREFIX•CODE rune pattern. Proposes — the operator stays the editor.",
+    desc: "Owns level ladders, topic paths and the VERSE•PREFIX•CODE rune pattern. Proposes: the operator stays the editor.",
     accent: "pink",
   },
 ];
@@ -77,7 +77,7 @@ export default async function AdminBotDeckPage() {
         </p>
         <h1 className="mb-3 mgmt-title">Bots</h1>
         <p className="max-w-2xl font-body text-sm mgmt-lede">
-          Owner-toggled add-ons. Bots may read stats/events and act on your behalf —{" "}
+          Owner-toggled add-ons. Bots may read stats/events and act on your behalf. {" "}
           <b>OFF by default, your call always</b>.
         </p>
       </div>
@@ -88,7 +88,7 @@ export default async function AdminBotDeckPage() {
             <div key={b.name} className="console-card p-5" data-accent={b.accent}>
               <div className="flex items-center justify-between gap-3">
                 <span className={`font-display text-xl ${NAME_TINT[b.accent]}`}>{b.name}</span>
-                <span className="pill pill--muted">OFF — NOT WIRED</span>
+                <span className="pill pill--muted">OFF · NOT WIRED</span>
               </div>
               <p className="mt-1.5 font-pixel text-[10px] uppercase tracking-widest text-white/40">
                 {b.role}
@@ -98,9 +98,9 @@ export default async function AdminBotDeckPage() {
               <span
                 className="btn-pill btn-pill--muted mt-4 opacity-45"
                 aria-disabled="true"
-                title="the toggle rides the node link — wiring SOON"
+                title="the toggle rides the node link. Wiring SOON"
               >
-                TOGGLE — SOON
+                TOGGLE · SOON
               </span>
             </div>
           ))}
@@ -108,7 +108,7 @@ export default async function AdminBotDeckPage() {
 
         <div className="console-card mt-6 max-w-2xl p-5" data-accent="cyan">
           <p className="font-body text-sm text-white/70">
-            The bot swarm rides the P.O.K.E. MUD node, not this console — these berths light up
+            The bot swarm rides the P.O.K.E. MUD node, not this console. These berths light up
             (real toggles, real telemetry, Admiral-gated sliders) once that node is linked and
             its bot doors are opened. No node, no pretend switches.
           </p>

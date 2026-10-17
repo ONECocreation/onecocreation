@@ -218,7 +218,7 @@ describe("the desk's honest key line (StudioRoom.tsx) — never prints the key i
     expect(keyedLine).not.toContain("keyabc123x");
 
     const unkeyed = render(false);
-    expect(unkeyed).toContain("room unkeyed — SEAT_SECRET unset");
+    expect(unkeyed).toContain("room unkeyed: SEAT_SECRET unset");
     expect(unkeyed).not.toContain("Room key: on");
   });
 });

@@ -137,13 +137,13 @@ describe("the checklist — all five on Vercel, connection proven", () => {
     const rows = deriveSquareRows(fixture({ envSet: ALL_ENV, connection: CONN_OK }));
     const [token, location, env, sigKey, url] = rows;
     expect(token.mark).toBe("check");
-    expect(token.note).toBe("verified 2026-09-08 — Square answers as OneCocreation");
+    expect(token.note).toBe("verified 2026-09-08 · Square answers as OneCocreation");
     expect(location.mark).toBe("check");
     expect(env.mark).toBe("check");
-    expect(env.note).toBe("verified — connect.squareup.com answered (production)");
+    expect(env.note).toBe("verified: connect.squareup.com answered (production)");
     // the webhook pair cannot be proven until Square knocks — honest waiting
     expect(sigKey.mark).toBe("pending");
-    expect(sigKey.note).toBe("waiting for Square's first event — send a test event from Webhooks → Subscriptions");
+    expect(sigKey.note).toBe("waiting for Square's first event. Send a test event from Webhooks / Subscriptions");
     expect(url.mark).toBe("pending");
     // Vercel-set rows never show a paste input
     expect(rows.every((r) => r.where === "on Vercel")).toBe(true);
@@ -158,7 +158,7 @@ describe("the checklist — all five on Vercel, connection proven", () => {
       webhook: { verified: { at: "2026-09-08T13:00:00.000Z", eventType: "payment.updated" }, rejected: null },
     }));
     expect(rows[3].mark).toBe("check");
-    expect(rows[3].note).toBe("verified 2026-09-08 — last event payment.updated");
+    expect(rows[3].note).toBe("verified 2026-09-08 · last event payment.updated");
     expect(rows[4].mark).toBe("check");
     expect(squareChip(rows, CONN_OK)).toEqual({ tone: "green", words: "live" });
   });
@@ -197,7 +197,7 @@ describe("the checklist — failing connection, mixed, none", () => {
   it("a failing locations call marks the token + location rows with the error sentence", () => {
     const rows = deriveSquareRows(fixture({ envSet: ALL_ENV, connection: CONN_BAD }));
     expect(rows[0].mark).toBe("error");
-    expect(rows[0].note).toBe("This merchant is not enabled for OAuth — fix it on Vercel, then redeploy");
+    expect(rows[0].note).toBe("This merchant is not enabled for OAuth: fix it on Vercel, then redeploy");
     expect(rows[0].canPaste).toBe(false); // Vercel-set: fixed on Vercel, not here
     expect(rows[1].mark).toBe("error");
     // environment itself can't fail — it says so, honestly pending
@@ -217,7 +217,7 @@ describe("the checklist — failing connection, mixed, none", () => {
     expect(rows[0].mark).toBe("error");
     expect(rows[0].note).toBe("This merchant is not enabled for OAuth");
     expect(rows[0].canPaste).toBe(true);
-    expect(squareChip(rows, CONN_BAD)).toEqual({ tone: "rose", words: "partly set up · 2 of 5 — needs a fix" });
+    expect(squareChip(rows, CONN_BAD)).toEqual({ tone: "rose", words: "partly set up · 2 of 5, needs a fix" });
   });
 
   it("mixed: 2 of 5 set and proven, the rest honestly empty/pending", () => {
@@ -228,7 +228,7 @@ describe("the checklist — failing connection, mixed, none", () => {
     expect(rows[0].mark).toBe("check");
     expect(rows[1].mark).toBe("check");
     expect(rows[2].mark).toBe("empty");
-    expect(rows[2].note).toBe("not set — the house assumes sandbox");
+    expect(rows[2].note).toBe("not set: the house assumes sandbox");
     expect(rows[2].canPaste).toBe(true);
     expect(rows[3].mark).toBe("empty");
     expect(squareChip(rows, CONN_OK)).toEqual({ tone: "lavender", words: "partly set up · 2 of 5" });
@@ -255,7 +255,7 @@ describe("the section chips — words, never jargon", () => {
   it("Stripe: not set up / partly · 1 of 2 / keys saved — not built yet (never live, never 'next build')", () => {
     expect(stripeChip(0)).toEqual({ tone: "grey", words: "not set up" });
     expect(stripeChip(1)).toEqual({ tone: "lavender", words: "partly set up · 1 of 2" });
-    expect(stripeChip(2)).toEqual({ tone: "lavender", words: "keys saved — not built yet" });
+    expect(stripeChip(2)).toEqual({ tone: "lavender", words: "keys saved: not built yet" });
   });
 
   it("the reject sentence the desk shows is the webhook route's own words", () => {
@@ -392,8 +392,8 @@ describe("the rail switch — one PUT, one truth (TASK-169)", () => {
   it("the words say the state in plain English, plus the not-configured rule", () => {
     expect(railSwitchWords(true, true)).toBe("this rail is ON for visitors");
     expect(railSwitchWords(false, true)).toBe("this rail is OFF for visitors");
-    expect(railSwitchWords(true, false)).toBe("not configured — the switch stays dark until the rail's env names are set");
-    expect(railSwitchWords(false, false)).toBe("not configured — the switch stays dark until the rail's env names are set");
+    expect(railSwitchWords(true, false)).toBe("not configured: the switch stays dark until the rail's env names are set");
+    expect(railSwitchWords(false, false)).toBe("not configured: the switch stays dark until the rail's env names are set");
   });
 
   it("the rendered row: pressed state, the words, and the also-on-/a/site pointer", () => {

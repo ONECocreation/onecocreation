@@ -76,7 +76,7 @@ export default function CalendarOptions({ className }: { className?: string }) {
           </div>
 
           <p className="cal-options__hint">
-            a₿ is the block calendar — 13 months of 28 days. AD is the civil calendar. The
+            a₿ is the block calendar, 13 months of 28 days. AD is the civil calendar. The
             site-wide default is set in /admin; these switches are yours alone.
           </p>
         </div>

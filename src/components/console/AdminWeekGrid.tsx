@@ -310,7 +310,7 @@ export default function AdminWeekGrid() {
           <span style={{ fontFamily: "var(--font-h3)", fontSize: "1.15rem", color: "var(--ink-strong)", minWidth: 150, textAlign: "center" }}>
             {view === "month"
               ? monthLabel
-              : `${days7[0].toLocaleDateString(undefined, { month: "short", day: "numeric" })} – ${days7[6].toLocaleDateString(undefined, { month: "short", day: "numeric" })}`}
+              : `${days7[0].toLocaleDateString(undefined, { month: "short", day: "numeric" })} to ${days7[6].toLocaleDateString(undefined, { month: "short", day: "numeric" })}`}
           </span>
           <button onClick={() => step(1)} aria-label="next" className="btn-round"
             style={{ "--size": "34px", background: "var(--glass)", borderColor: "rgba(139,118,196,.45)", color: "var(--info)", fontSize: "1rem" } as React.CSSProperties}>›</button>
@@ -332,7 +332,7 @@ export default function AdminWeekGrid() {
         }
         return (
           <div>
-            {shown.length === 0 && <p style={{ color: "var(--muted)", fontSize: ".9rem" }}>nothing on the books for the next six weeks ✨</p>}
+            {shown.length === 0 && <p style={{ color: "var(--muted)", fontSize: ".9rem" }}>nothing on the books for the next six weeks</p>}
             {[...byDay.entries()].map(([k, chips]) => {
               const d = new Date(chips[0].startUtc);
               const isToday = k === todayKey;
@@ -360,7 +360,7 @@ export default function AdminWeekGrid() {
                         <b style={{ color: "var(--teal-bright, #8FD0D8)" }}>
                           {new Date(c.startUtc).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
                         </b>{" "}
-                        <b>{c.title}</b> — {c.customer}
+                        <b>{c.title}</b> with {c.customer}
                         <span style={{ color: "var(--muted)", fontSize: ".75rem" }}> · {c.state}</span>
                         {c.needsFulfil && <b> ⚑</b>}
                       </button>
@@ -371,7 +371,7 @@ export default function AdminWeekGrid() {
             })}
             {upcoming.length > shown.length && (
               <p style={{ color: "var(--muted)", fontSize: ".78rem", marginTop: 4 }}>
-                the next {shown.length} of {upcoming.length} coming up — the month view holds the rest
+                the next {shown.length} of {upcoming.length} coming up: the month view holds the rest
               </p>
             )}
           </div>
@@ -425,7 +425,7 @@ export default function AdminWeekGrid() {
                               maxWidth: 130, fontSize: ".68rem",
                               fontWeight: c.needsFulfil ? 700 : 400, fontFamily: "inherit", color: "inherit",
                             }}
-                            title={`${c.title} — ${c.customer} (${c.state})`}
+                            title={`${c.title} with ${c.customer} (${c.state})`}
                           >
                             {new Date(c.startUtc).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}{" "}
                             {c.title}{c.needsFulfil ? " ⚑" : ""}
@@ -489,7 +489,7 @@ export default function AdminWeekGrid() {
                                   ? "rgba(78,138,95,.10)"
                                   : "rgba(255,255,255,.4)",
                         }}
-                        title={off ? `${retreatDay ? "" : "day off"}${off.note ? `${retreatDay ? "" : " — "}${off.note}` : ""}` : works ? "working day — tap for the week" : "resting day"}
+                        title={off ? `${retreatDay ? "" : "day off"}${off.note ? `${retreatDay ? "" : ": "}${off.note}` : ""}` : works ? "working day: tap for the week" : "resting day"}
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                           <span style={{ fontWeight: isToday ? 700 : 500, fontSize: ".82rem", color: isToday ? "var(--teal-bright)" : "var(--ink-strong)" }}>{d.getDate()}</span>
@@ -512,7 +512,7 @@ export default function AdminWeekGrid() {
                               fontSize: ".64rem", color: "var(--ink-strong)", fontWeight: c.needsFulfil ? 700 : 400,
                               fontFamily: "inherit",
                             }}
-                            title={`${c.title} — ${c.customer} (${c.state})`}
+                            title={`${c.title} with ${c.customer} (${c.state})`}
                           >
                             {new Date(c.startUtc).toLocaleTimeString(undefined, { hour: "numeric" })} {c.title}{c.needsFulfil ? " ⚑" : ""}
                           </button>
@@ -561,7 +561,7 @@ export default function AdminWeekGrid() {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
               {detail.meetingUrl && (
                 <a className="btn btn-sm" href={detail.meetingUrl} target="_blank" rel="noreferrer">
-                  Join the meeting →
+                  Join the meeting
                 </a>
               )}
               {detail.customerEmail && (
@@ -570,21 +570,20 @@ export default function AdminWeekGrid() {
                   href={`mailto:${detail.customerEmail}?subject=${encodeURIComponent(`About your ${detail.title}`)}&body=${encodeURIComponent(
                     `Hi ${detail.customer},\n\nAbout our session on ${new Date(detail.startUtc).toLocaleString(undefined, {
                       weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit",
-                    })} —\n\nIf you need to move or cancel it, your receipt page can do both:\n${typeof window !== "undefined" ? window.location.origin : ""}/book/receipt/${detail.bookingId}\n\nWith love,\nLove`
+                    })} · \n\nIf you need to move or cancel it, your receipt page can do both:\n${typeof window !== "undefined" ? window.location.origin : ""}/book/receipt/${detail.bookingId}\n\nWith love,\nLove`
                   )}`}
                 >
-                  Message {detail.customer.split(" ")[0]} ✉
-                </a>
+                  Message {detail.customer.split(" ")[0]}</a>
               )}
               <Link className="btn btn-ghost btn-sm" href={`/book/receipt/${detail.bookingId}`}>
-                Open receipt →
+                Open receipt
               </Link>
             </div>
             {/* the session's own notebook — discovery-call impressions, what
                 was taught, what to remember. Only Love ever sees these. */}
             <p style={{ fontSize: ".62rem", letterSpacing: ".1em", textTransform: "uppercase",
               color: "var(--muted)", margin: "16px 0 4px" }}>
-              Session notes — only you see these
+              Session notes: only you see these
             </p>
             <textarea
               value={notesDraft}
@@ -596,7 +595,7 @@ export default function AdminWeekGrid() {
             />
             {detail.needsFulfil && (
               <p style={{ fontSize: ".76rem", color: "var(--warn)", margin: "6px 0 0" }}>
-                ⚑ paid — saving notes closes this session out in the books
+                ⚑ paid: saving notes closes this session out in the books
               </p>
             )}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
@@ -612,7 +611,7 @@ export default function AdminWeekGrid() {
         <Sheet open onClose={() => setModal(null)}>
             <h3 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: "1.25rem", marginBottom: 4 }}>Working hours</h3>
             <p style={{ fontSize: ".82rem", color: "var(--muted)", marginBottom: 14 }}>
-              Pick the days and the window — these hours shade green and open for booking.
+              Pick the days and the window. These hours shade green and open for booking.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
               {WEEKDAYS.map((name, i) => (
@@ -653,14 +652,14 @@ export default function AdminWeekGrid() {
                   .map((r) => (
                     <li key={r.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid rgba(139,118,196,.2)" }}>
                       <span style={{ flex: 1 }}>
-                        {WEEKDAYS[r.weekday]} {r.start}–{r.end}
+                        {WEEKDAYS[r.weekday]} {r.start} to {r.end}
                         {r.serviceIds.length > 0 && <span style={{ color: "var(--muted)" }}> · {r.serviceIds.join(", ")}</span>}
                       </span>
                       <button className="btn btn-ghost btn-sm" onClick={() => remove("rule", r.id)} disabled={busyUi} title="remove">✕</button>
                     </li>
                   ))
               ) : (
-                <li style={{ color: "var(--muted)" }}>{cfg ? "none yet — the calendar is closed" : "loading…"}</li>
+                <li style={{ color: "var(--muted)" }}>{cfg ? "none yet: the calendar is closed" : "loading…"}</li>
               )}
             </ul>
         </Sheet>
@@ -670,7 +669,7 @@ export default function AdminWeekGrid() {
         <Sheet open onClose={() => setModal(null)}>
             <h3 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: "1.25rem", marginBottom: 4 }}>Days off</h3>
             <p style={{ fontSize: ".82rem", color: "var(--muted)", marginBottom: 14 }}>
-              Block a date — the whole day, or just a window if you set times. Slots there vanish for everyone.
+              Block a date: the whole day, or just a window if you set times. Slots there vanish for everyone.
             </p>
             <div style={{ display: "grid", gap: 10, marginBottom: 14 }}>
               <label style={{ fontSize: ".85rem" }}>date <input type="date" value={offDate} onChange={(e) => setOffDate(e.target.value)} style={field} /></label>
@@ -699,14 +698,14 @@ export default function AdminWeekGrid() {
                   .map((o) => (
                     <li key={o.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid rgba(139,118,196,.2)" }}>
                       <span style={{ flex: 1 }}>
-                        {o.date} · {o.kind === "blocked" ? (o.start ? `off ${o.start}–${o.end}` : "day off") : `extra ${o.start}–${o.end}`}
+                        {o.date} · {o.kind === "blocked" ? (o.start ? `off ${o.start} to ${o.end}` : "day off") : `extra ${o.start} to ${o.end}`}
                         {o.note && <span style={{ color: "var(--muted)" }}> · {o.note}</span>}
                       </span>
                       <button className="btn btn-ghost btn-sm" onClick={() => remove("override", o.id)} disabled={busyUi} title="remove">✕</button>
                     </li>
                   ))
               ) : (
-                <li style={{ color: "var(--muted)" }}>{cfg ? "none — every scheduled day stands" : "loading…"}</li>
+                <li style={{ color: "var(--muted)" }}>{cfg ? "none: every scheduled day stands" : "loading…"}</li>
               )}
             </ul>
         </Sheet>
@@ -716,8 +715,8 @@ export default function AdminWeekGrid() {
         <Sheet open onClose={() => setModal(null)}>
             <h3 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: "1.25rem", marginBottom: 4 }}>Sync external calendar</h3>
             <p style={{ fontSize: ".82rem", color: "var(--muted)", marginBottom: 14 }}>
-              Paste your calendar&apos;s <b>secret iCal address</b> (Google Calendar → Settings →
-              &quot;Secret address in iCal format&quot;). Its events become busy time — those slots
+              Paste your calendar&apos;s <b>secret iCal address</b> (Google Calendar / Settings, then 
+              &quot;Secret address in iCal format&quot;). Its events become busy time. Those slots
               simply vanish from the public board. Refreshes about every 10 minutes.
             </p>
             {cfg?.icalUrl ? (
@@ -728,12 +727,12 @@ export default function AdminWeekGrid() {
                 {feed?.ical && (
                   <p style={{ fontSize: ".78rem", color: "var(--muted)", marginTop: 4 }}>
                     {feed.ical.error
-                      ? `⚠ last read failed: ${feed.ical.error}`
+                      ? `last read failed: ${feed.ical.error}`
                       : feed.ical.fetchedAtMs
                         ? `last read ${new Date(feed.ical.fetchedAtMs).toLocaleTimeString()} · ${feed.busy?.length ?? 0} busy windows in view`
                         : "reading…"}
                     {feed.ical.skippedRecurring > 0 &&
-                      ` · ${feed.ical.skippedRecurring} complex repeating events skipped (monthly repeats etc.) — mirror those as Days off`}
+                      ` · ${feed.ical.skippedRecurring} complex repeating events skipped (monthly repeats etc.). Mirror those as Days off`}
                   </p>
                 )}
                 <button className="btn btn-ghost btn-sm" style={{ marginTop: 10 }} onClick={() => saveIcal("")} disabled={busyUi}>
@@ -756,7 +755,7 @@ export default function AdminWeekGrid() {
             )}
             {err && <p style={{ color: "var(--err)", fontSize: ".82rem" }}>{err}</p>}
             <p style={{ fontSize: ".75rem", color: "var(--muted)", marginTop: 8 }}>
-              The secret address is read-only and stays on the server — never shown to visitors.
+              The secret address is read-only and stays on the server. Never shown to visitors.
             </p>
         </Sheet>
       )}

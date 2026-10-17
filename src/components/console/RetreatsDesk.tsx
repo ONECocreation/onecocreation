@@ -89,9 +89,9 @@ export default function RetreatsDesk() {
           <li key={r.id} style={{ background: "var(--glass)", border: "1px solid rgba(139,118,196,.22)",
             borderRadius: 12, padding: "10px 14px", marginBottom: 8, fontSize: ".85rem" }}>
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
-              <b>🏜️ {r.title}</b>
+              <b>{r.title}</b>
               <span style={{ color: "var(--muted)", fontSize: ".78rem" }}>
-                {r.location} · {r.startDate} → {r.endDate} · {r.seats} seats ·{" "}
+                {r.location} · {r.startDate}  {r.endDate} · {r.seats} seats ·{" "}
                 <span style={{ color: "var(--gold-deep)" }}>{r.priceSats.toLocaleString()} sats</span>
                 {r.depositSats != null && ` (deposit ${r.depositSats.toLocaleString()})`}
               </span>
@@ -117,7 +117,7 @@ export default function RetreatsDesk() {
           </li>
         ))}
         {retreats.length === 0 && (
-          <li style={{ color: "var(--muted)", fontSize: ".85rem" }}>no retreats yet — name the first one below ✨</li>
+          <li style={{ color: "var(--muted)", fontSize: ".85rem" }}>no retreats yet: name the first one below</li>
         )}
       </ul>
 
@@ -129,13 +129,13 @@ export default function RetreatsDesk() {
         <div style={{ marginTop: 12, background: "var(--glass)", border: "1px solid rgba(139,118,196,.25)",
           borderRadius: 14, padding: "14px 16px", maxWidth: 640 }}>
           <h4 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: "1.05rem", margin: 0 }}>
-            {draft.id ? `Edit — ${draft.title || draft.id}` : "A new retreat"}
+            {draft.id ? `Edit: ${draft.title || draft.id}` : "A new retreat"}
           </h4>
           <label style={fieldLabel}>name</label>
           <input value={draft.title} placeholder="Way of the Heart · Sedona"
             onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="console-field" style={{ ...field, width: "100%" }} />
           <label style={fieldLabel}>location</label>
-          <input value={draft.location} placeholder="Sedona, Arizona — exact address shared after booking"
+          <input value={draft.location} placeholder="Sedona, Arizona: exact address shared after booking"
             onChange={(e) => setDraft({ ...draft, location: e.target.value })} className="console-field" style={{ ...field, width: "100%" }} />
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <span style={{ flex: 1, minWidth: 130 }}>
@@ -171,8 +171,8 @@ export default function RetreatsDesk() {
               <select value={draft.status}
                 onChange={(e) => setDraft({ ...draft, status: e.target.value as Retreat["status"] })}
                 className="console-field" style={{ ...field, width: "100%" }}>
-                <option value="hidden">○ hidden — still shaping it</option>
-                <option value="live">● live — doors open</option>
+                <option value="hidden">○ hidden: still shaping it</option>
+                <option value="live">● live: doors open</option>
               </select>
             </span>
           </div>
@@ -188,7 +188,7 @@ export default function RetreatsDesk() {
             <button className="btn btn-ghost btn-sm" onClick={() => setDraft(null)}>Close</button>
           </div>
           <p style={{ fontSize: ".72rem", color: "var(--muted)", margin: "10px 0 0" }}>
-            a deposit seat counts as a held seat — the remainder settles by letter, your hand for now.
+            a deposit seat counts as a held seat. The remainder settles by letter, your hand for now.
           </p>
         </div>
       )}

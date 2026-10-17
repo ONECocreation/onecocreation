@@ -73,7 +73,7 @@ export default function PwycDesk() {
       </div>
       {orders.length === 0 ? (
         <p style={{ color: "var(--muted)", fontSize: ".85rem", margin: "4px 0 0" }}>
-          no offers waiting — every basket paid the listed price.
+          no offers waiting: every basket paid the listed price.
         </p>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
@@ -88,20 +88,20 @@ export default function PwycDesk() {
                 </p>
                 {offered.map((l) => (
                   <p key={l.itemId} style={{ margin: "4px 0 0", fontSize: ".88rem" }}>
-                    <b>{l.title}</b> — offered{" "}
+                    <b>{l.title}</b>: offered{" "}
                     <span style={{ color: "var(--gold-deep)", fontFamily: "var(--serif)" }}>{l.offerSats!.toLocaleString()} sats</span>
                     <span style={{ color: "var(--muted)" }}> of {l.listSats!.toLocaleString()} listed</span>
                   </p>
                 ))}
                 <p style={{ margin: "4px 0 0", fontSize: ".74rem", color: "var(--muted)" }}>
-                  the gap: {gap.toLocaleString()} sats — accepted, the Pay-It-Forward jar may carry it.
+                  the gap: {gap.toLocaleString()} sats: accepted, the Pay-It-Forward jar may carry it.
                 </p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
                   <button className="btn btn-gold btn-sm" onClick={() => decide(o.id, "pwyc-accept")} disabled={busy === o.id}>
                     Accept with love
                   </button>
                   <button className="btn btn-ghost btn-sm" onClick={() => decide(o.id, "pwyc-decline")} disabled={busy === o.id}>
-                    Decline — refund owed
+                    Decline: refund owed
                   </button>
                 </div>
               </li>
@@ -111,16 +111,16 @@ export default function PwycDesk() {
       )}
       {lastRefund && (
         <p style={{ margin: "8px 0 0", fontSize: ".76rem", color: "var(--warn)" }}>
-          refund minted — the member&apos;s letter carries this claim link:{" "}
+          refund minted: the member&apos;s letter carries this claim link:{" "}
           <a href={lastRefund} target="_blank" rel="noreferrer" style={{ textDecoration: "underline", color: "var(--warn)" }}>{lastRefund}</a>
         </p>
       )}
       <p style={{ margin: "10px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>
-        🎁 the Pay-It-Forward jar has carried{" "}
+        the Pay-It-Forward jar has carried{" "}
         <b style={{ color: "var(--gold-deep)" }}>{carried.toLocaleString()} sats</b> across{" "}
         {all.filter((o) => o.events?.some((e) => e.type === "pwyc_accepted")).length} blessings
-        {declined.length > 0 && <> · {declined.length} declined{refundsOwed > 0 ? ` (${refundsOwed} refund${refundsOwed > 1 ? "s" : ""} still to send by hand)` : " — refunds minted"}</>}
-        {" — every decision sends a kind letter; a decline on a paid order mints a claim-your-sats link automatically."}
+        {declined.length > 0 && <> · {declined.length} declined{refundsOwed > 0 ? ` (${refundsOwed} refund${refundsOwed > 1 ? "s" : ""} still to send by hand)` : ": refunds minted"}</>}
+        {": every decision sends a kind letter; a decline on a paid order mints a claim-your-sats link automatically."}
       </p>
     </div>
   );

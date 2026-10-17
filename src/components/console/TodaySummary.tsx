@@ -47,7 +47,7 @@ export function formatSessionTime(next: TodayNext): string {
   const end = new Date(next.endUtc).toLocaleTimeString("en-US", {
     timeZone: tz, hour12: false, hour: "2-digit", minute: "2-digit",
   });
-  return `${start} – ${end}`;
+  return `${start} to ${end}`;
 }
 
 export default function TodaySummary({
@@ -78,10 +78,10 @@ export default function TodaySummary({
         <div style={{ marginBottom: 10, padding: "12px 16px", borderRadius: 12, fontSize: ".85rem",
           background: "rgba(197,110,139,.12)", border: "1.5px solid rgba(197,110,139,.5)", color: "var(--ink-body)",
           display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <span>🔴 <b>LIVE now</b>{liveTitle ? <> — {liveTitle}</> : null}</span>
+          <span><b>LIVE now</b>{liveTitle ? <>: {liveTitle}</> : null}</span>
           <Link href="/a/live" style={{ marginLeft: "auto", color: "var(--info)", textDecoration: "underline",
             display: "inline-flex", alignItems: "center", minHeight: 44 }}>
-            open the Go-Live room →
+            open the Go-Live room
           </Link>
         </div>
       )}
@@ -89,7 +89,7 @@ export default function TodaySummary({
         <div style={{ padding: "10px 16px", borderRadius: 12, fontSize: ".85rem",
           background: "rgba(231,178,195,.14)", border: "1.5px solid rgba(231,178,195,.5)", color: "var(--ink-body)",
           display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <span>⚑ couldn&apos;t load the schedule — something may be on the books.</span>
+          <span>⚑ couldn&apos;t load the schedule. Something may be on the books.</span>
           <button type="button" className="btn btn-sm" style={{ minHeight: 44 }}
             onClick={() => router.refresh()}>
             Retry
@@ -108,12 +108,12 @@ export default function TodaySummary({
             {formatSessionTime(next)} · <b>{next.serviceTitle}</b>
           </span>
           <span style={{ marginLeft: "auto", fontSize: ".72rem", textTransform: "uppercase", letterSpacing: ".08em", color: "var(--muted)" }}>
-            the calendar →
+            the calendar
           </span>
         </Link>
       ) : reading ? null : (
         <p style={{ margin: 0, padding: "12px 16px", fontSize: ".82rem", color: "var(--muted)" }}>
-          🌤 nothing scheduled — the day is yours.
+          nothing scheduled: the day is yours.
         </p>
       )}
       {next !== "error" && readingRow}

@@ -126,7 +126,7 @@ function LiveDoor({ roomSlug }: { roomSlug: string | null }) {
     const title = feed.rooms.find((r) => r.slug === feed.state.room)?.title ?? feed.state.room;
     return (
       <button type="button" className="btn btn-sm desk-live-door desk-live-door--on" onClick={() => act("close")} disabled={busy}>
-        ● LIVE — {title} · close
+        ● LIVE · {title} · close
       </button>
     );
   }
@@ -208,7 +208,7 @@ function DeskInner() {
   }
 
   const civilRangeLabel = firstCell && lastCell
-    ? `${firstCell.civilMonthAbbr} ${firstCell.civilDayNum} – ${lastCell.civilMonthAbbr} ${lastCell.civilDayNum}`
+    ? `${firstCell.civilMonthAbbr} ${firstCell.civilDayNum} to ${lastCell.civilMonthAbbr} ${lastCell.civilDayNum}`
     : "";
   const countsLabel = counts && firstCell ? ` · day ${firstCell.dayOfYear} · W${firstCell.weekOfYear}` : "";
   const header = primary === "bft"

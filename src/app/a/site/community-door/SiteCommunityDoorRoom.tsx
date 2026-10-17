@@ -15,9 +15,9 @@ export default function SiteCommunityDoorRoom() {
     <div className="p-6" style={{ maxWidth: 860 }}>
       <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>The Community door</h1>
       <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
-        What the Community door needs before it opens — and the switch, when the rows read ok.
+        The switch is here too, for when the rows read ok.
       </p>
-      <SectionHead label="Community door — what it needs before it opens" />
+      <SectionHead label="What it needs before it opens" />
       <CommunityDoorCard />
     </div>
   );

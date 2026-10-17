@@ -47,7 +47,7 @@ export default function RosterPanel({ roomSlug, roomTitle }: { roomSlug: string 
         <h3>Roster</h3>
         {roomSlug && (
           <Link className="btn btn-ghost btn-sm" href={`/rooms/${roomSlug}`}>
-            open {roomTitle ?? "room"} live room →
+            open {roomTitle ?? "room"} live room
           </Link>
         )}
       </div>
@@ -55,7 +55,7 @@ export default function RosterPanel({ roomSlug, roomTitle }: { roomSlug: string 
       {roomSlug && state === "loading" && <p className="desk-panel__muted">reading the room…</p>}
       {roomSlug && state === "dark" && (
         <p className="desk-panel__muted">
-          the matrix bot isn&apos;t configured here — <Link href={`/rooms/${roomSlug}`}>open the live room</Link> instead
+          the matrix bot isn&apos;t configured here. <Link href={`/rooms/${roomSlug}`}>open the live room</Link> instead
         </p>
       )}
       {roomSlug && state === "ok" && (
@@ -64,7 +64,7 @@ export default function RosterPanel({ roomSlug, roomTitle }: { roomSlug: string 
             {count} joined · {souls.length} here now
           </p>
           {souls.length === 0 ? (
-            <p className="desk-panel__muted">— nobody here yet</p>
+            <p className="desk-panel__muted">nobody here yet</p>
           ) : (
             <ul className="desk-shelf__list">
               {souls.slice(0, 12).map((s) => <li key={s.mxid} className="desk-roster__name">{s.name}</li>)}

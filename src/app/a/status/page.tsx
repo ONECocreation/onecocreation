@@ -16,7 +16,7 @@ import { CONSOLE_SITE } from "@/lib/console";
  * operator gate as every /a tab.
  */
 export const metadata: Metadata = {
-  title: "Bridge — One Cocreation admin",
+  title: "Bridge · One Cocreation admin",
   robots: { index: false, follow: false },
 };
 
@@ -37,7 +37,7 @@ export default async function AdminStatusPage() {
         </p>
         <h1 className="mb-3 mgmt-title">Status</h1>
         <p className="max-w-2xl font-body text-sm mgmt-lede">
-          Where everything stands, the moment you land — the in-flight work and everything that
+          Where everything stands, the moment you land. The in-flight work and everything that
           needs you (sign · review · vote), each report one select from its reader.{" "}
           <b>Briefs</b> sits beside it in the ribbon.
         </p>

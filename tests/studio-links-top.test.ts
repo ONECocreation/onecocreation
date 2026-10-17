@@ -80,7 +80,8 @@ describe("the links card — moved to the top, OPEN + Copy, the room's plain nam
 
   it("titles the card with the room's plain name and the derived room id", () => {
     const html = renderRoom();
-    expect(html).toContain(`${ROOM_TITLE} — ${VDO.room}`);
+    expect(html).toContain(ROOM_TITLE);
+    expect(html).toContain(`Room: ${VDO.room}.`);
   });
 
   it("falls back to a generic title when no roomTitle is given (derive-or-dash, never invent a name)", () => {
@@ -96,7 +97,7 @@ describe("the links card — moved to the top, OPEN + Copy, the room's plain nam
         guestDoor: GUEST_DOOR,
       }),
     );
-    expect(html).toContain(`the studio — ${VDO.room}`);
+    expect(html).toContain(`Room: ${VDO.room}.`);
   });
 
   it("three OPEN anchors carry target=\"_blank\" rel=\"noopener\" and their exact door URLs", () => {

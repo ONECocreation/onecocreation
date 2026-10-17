@@ -119,7 +119,7 @@ const LETTERS: { key?: string; slot?: "reading-confirm" | "reading-dayof"; name:
   {
     key: "offer-love-notify",
     name: "Offer on the doorstep (to Love)",
-    from: "news@ → love@",
+    from: "news@, then love@",
     kind: "on under-list offer · EDITABLE",
     subject: "💛 An offer on the doorstep",
     note: "who + offered vs listed + the two one-tap doors; {{who}} {{lines}} {{doors}} place the machine-built parts",
@@ -133,7 +133,7 @@ const LETTERS: { key?: string; slot?: "reading-confirm" | "reading-dayof"; name:
     from: "news@",
     kind: "on accept · EDITABLE",
     subject: "Your offer, received with love",
-    note: "the yes letter — the jar carries the gap; {{lines}} places the offered items",
+    note: "the yes letter: the jar carries the gap; {{lines}} places the offered items",
     when: "Sends the moment the offer is decided, from the email door or the desk.",
     group: "Store",
     noPublish: true,
@@ -144,7 +144,7 @@ const LETTERS: { key?: string; slot?: "reading-confirm" | "reading-dayof"; name:
     from: "news@",
     kind: "on decline · EDITABLE",
     subject: "Your offer, and your sats coming back",
-    note: "the kind no — {{lines}} places the items, {{refund}} the claim-your-sats-back link",
+    note: "the kind no: {{lines}} places the items, {{refund}} the claim-your-sats-back link",
     when: "Sends the moment the offer is decided, from the email door or the desk.",
     group: "Store",
     noPublish: true,
@@ -204,7 +204,7 @@ const LETTERS: { key?: string; slot?: "reading-confirm" | "reading-dayof"; name:
     from: "news@",
     kind: "publish/schedule · EDITABLE · rich layout",
     subject: "Greetings and Cheers from One Cocreation",
-    note: "hero + feature cards + big button — !hero / !section / !cta lines shape it; the sample keeps test blocking so Love can SEE it",
+    note: "hero + feature cards + big button. !hero / !section / !cta lines shape it; the sample keeps test blocking so Love can SEE it",
     when: "Sends only when Love sends it herself from the send panel.",
     group: "System",
   },
@@ -226,11 +226,10 @@ const noteInlineStyle = { alignSelf: "center", fontSize: ".75rem", color: "var(-
  * fills the {{slots}} named in the row's note; the logo header and the footer
  * are the shell. Lane 553a makes the words editable in place; this only says
  * plainly what Love cannot move. */
-function fixedWords(note: string): string {
+function fixedWords(note: string): string | null {
   const slots = [...new Set([...note.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]))];
-  const shell = "Fixed: the logo header and the footer.";
-  if (slots.length === 0) return shell;
-  return `${shell} The house fills in ${slots.join(", ")}; your words go around them.`;
+  if (slots.length === 0) return null;
+  return `The house fills in ${slots.join(", ")}; your words go around them.`;
 }
 
 /* an empty subject says so, in plain muted words, never an empty pair of quotes */
@@ -455,7 +454,6 @@ export default function LettersRoom() {
           <b>{c.title ?? c.key}</b>
           {subjectLine(c.override?.subject ?? c.title)}
           <em>Composed by you. {c.audience === "public" ? "Emailed and shown on /news." : "Emailed to the list."}</em>
-          <em>{fixedWords("")}</em>
         </div>
         {rowEnd(c.key, c.title ?? c.key, { send: true })}
         {copyFor === c.key && copyStrip(c.key)}
@@ -660,11 +658,11 @@ export default function LettersRoom() {
             <Button sm variant="second" onClick={insertReadingRoom}>Reading room</Button>
             <Button sm variant="second" onClick={insertSitePicture}>Site picture</Button>
             <Button sm variant="second" onClick={() => togglePreview(key)} aria-pressed={previewOpen === key}>
-              {previewOpen === key ? "✕ close preview" : "👁 preview"}
+              {previewOpen === key ? "✕ close preview" : "preview"}
             </Button>
           </div>
           <textarea id={`ta-${key}`} ref={textareaRef} value={bodyTxt} onChange={(e) => setBodyTxt(e.target.value)} rows={10}
-            placeholder="the letter body — blank line makes a new paragraph; the brand shell wraps it"
+            placeholder="the letter body: blank line makes a new paragraph; the brand shell wraps it"
             className="w-full console-field" style={field} />
           <div className="flex flex-wrap items-center gap-2">
             {isDrafted(key, api(key)) && (
@@ -678,10 +676,10 @@ export default function LettersRoom() {
           <div className="w-full shrink-0 lg:w-[380px]" style={{ ...glassCard, padding: 0, overflow: "hidden" }}>
             <div style={{ padding: "6px 10px", fontSize: ".62rem", textTransform: "uppercase", letterSpacing: ".06em",
               color: "var(--info)", borderBottom: "1px solid var(--glass-edge)" }}>
-              preview — as the email renders
+              preview: as the email renders
             </div>
             {previewLoading && <p style={{ padding: 8, fontSize: ".75rem", color: "var(--muted)" }}>rendering…</p>}
-            <iframe title={`letter preview — ${key}`} srcDoc={previewHtml} sandbox="" className="w-full" style={{ height: 520, background: "#fff", border: 0 }} />
+            <iframe title={`letter preview: ${key}`} srcDoc={previewHtml} sandbox="" className="w-full" style={{ height: 520, background: "#fff", border: 0 }} />
           </div>
         )}
       </div>
@@ -769,7 +767,9 @@ export default function LettersRoom() {
                         {subjectLine(api(rowKey)?.override?.subject ?? l.subject)}
                         {/* the when line, said once, under the row's words */}
                         <em>{l.when}</em>
-                        <em>{l.key || l.slot ? fixedWords(l.note) : "System letter: every part is fixed, the copy lives in code for now."}</em>
+                        {l.key || l.slot
+                          ? (fixedWords(l.note) ? <em>{fixedWords(l.note)}</em> : null)
+                          : <em>System letter: every part is fixed, the copy lives in code for now.</em>}
                       </div>
                       {rowKey ? rowEnd(rowKey, l.subject, { send: !l.noPublish }) : null}
                       {rowKey && copyFor === rowKey && copyStrip(rowKey)}
@@ -790,7 +790,7 @@ export default function LettersRoom() {
         ))}
 
         <p className="kit-note">
-          Every letter wears the brand shell: logo header, accents, an honest unsubscribe where
+          Fixed on every letter: the logo header and the footer, with an honest unsubscribe where
           the law wants it. A letter you compose here can be emailed to the whole list or one
           door&rsquo;s people, and, marked public, published on /news too.
         </p>

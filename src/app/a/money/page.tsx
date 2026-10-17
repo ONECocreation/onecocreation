@@ -166,7 +166,7 @@ export default function MoneyRoom() {
   if (denied)
     return (
       <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>
-        operator session required — <a href="/a" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>sign in at the door</a>
+        operator session required: <a href="/a" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>sign in at the door</a>
       </p>
     );
 
@@ -189,9 +189,8 @@ export default function MoneyRoom() {
               <div style={{ fontSize: ".72rem", color: "var(--muted)" }}>
                 {t?.count ?? 0} gifts{pulse?.thisMoon ? ` · ${pulse.thisMoon} this moon` : ""}
                 {key === "payforward" && (
-                  <span title="Love passes this jar onward — the doors live on /store">
-                    {" "}· flows onward 🦁🌳🐘
-                  </span>
+                  <span title="Love passes this jar onward. The doors live on /store">
+                    {" "}· flows onward</span>
                 )}
               </div>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 24, marginTop: 8 }}
@@ -207,7 +206,7 @@ export default function MoneyRoom() {
         })}
       </div>
       <p style={{ margin: "8px 0 0", fontSize: ".72rem", color: "var(--muted)" }}>
-        Tips break out per artist once trainers land — every jar keeps its own line in the books.
+        Tips break out per artist once trainers land. Every jar keeps its own line in the books.
       </p>
 
       <SectionHead label="Money rails" />
@@ -228,8 +227,8 @@ export default function MoneyRoom() {
         </div>
         <p style={{ margin: "6px 0 8px", fontSize: ".78rem", color: "var(--muted)" }}>
           {railBtcpay
-            ? "Connected — sats settle straight to Love's own BTCPay Server, on-chain or lightning."
-            : "Love runs her own BTCPay Server — there's no vault paste here, just these three env names on the deploy:"}
+            ? "Connected: sats settle straight to Love's own BTCPay Server, on-chain or lightning."
+            : "Love runs her own BTCPay Server. There's no vault paste here, just these three env names on the deploy:"}
         </p>
         {!railBtcpay && (
           <ul style={{ margin: "0 0 4px", paddingLeft: 20, fontSize: ".8rem", fontFamily: "monospace" }}>
@@ -265,15 +264,15 @@ export default function MoneyRoom() {
           <option value="all">all time</option>
         </select>
         <span style={{ flex: 1 }} />
-        <a className="btn btn-sm" href={exportHref("csv")} download>Download CSV ⚡</a>
+        <a className="btn btn-sm" href={exportHref("csv")} download>Download CSV</a>
         <a className="btn btn-ghost btn-sm" href={exportHref("quickbooks")} download>QuickBooks</a>
       </div>
       {kind === "tips" ? (
         <p style={{ color: "var(--muted)", fontSize: ".85rem" }}>
-          tips live in the jars above — the download buttons carry them into the books.
+          tips live in the jars above. The download buttons carry them into the books.
         </p>
       ) : shown.length === 0 ? (
-        <p style={{ color: "var(--muted)", fontSize: ".85rem" }}>nothing in this window — an honest empty book.</p>
+        <p style={{ color: "var(--muted)", fontSize: ".85rem" }}>nothing in this window. An honest empty book.</p>
       ) : (
         <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 6px", fontSize: ".82rem" }}>
           <thead>
@@ -295,9 +294,9 @@ export default function MoneyRoom() {
                 <tr key={o.id} onClick={() => setDetail(o)} title="tap for the order's popup">
                   <td style={{ ...td, borderRadius: "12px 0 0 12px", borderLeft: "1px solid rgba(139,118,196,.16)",
                     whiteSpace: "nowrap", color: "var(--muted)" }}>
-                    {/* fleet ruling 0018.05.26 a₿ — dashes over estimates:
-                        an order records no block height, so no ~guess */}
-                    —
+                    {/* fleet ruling 0018.05.26 a₿: no estimates.
+                        An order records no block height, so no ~guess */}
+                    none
                   </td>
                   <td style={td}>
                     {o.lineItems[0]?.title}
@@ -312,7 +311,7 @@ export default function MoneyRoom() {
                   </td>
                   <td style={{ ...td, borderRadius: "0 12px 12px 0", borderRight: "1px solid rgba(139,118,196,.16)" }}>
                     {attentionIds.includes(o.id) && (
-                      <span title="waiting on your hand — tap for the popup, mark fulfilled there"
+                      <span title="waiting on your hand. Tap for the popup, mark fulfilled there"
                         style={{ marginRight: 6, cursor: "default" }}>⚑</span>
                     )}
                     <Chip tone={stateTone(o.state)}>{o.state}</Chip>
@@ -336,7 +335,7 @@ export default function MoneyRoom() {
                   records no block height, so the ledger stamp is an honest dash;
                   the real wall-clock moment beside it wears the BFT calendar with
                   the ~ of a modeled height (gate 0018.05.25 a₿ — never Gregorian) */}
-              — · ~{bftDateTime(estimateHeightAt(detail.createdAtMs))}
+              : · ~{bftDateTime(estimateHeightAt(detail.createdAtMs))}
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 10px" }}>
               {detail.lineItems.map((l, i) => (
@@ -344,7 +343,7 @@ export default function MoneyRoom() {
                   <b>{l.title}</b>
                   {l.qty > 1 && ` × ${l.qty}`}
                   {l.size && <span style={{ color: "var(--muted)" }}> · size {l.size}</span>}
-                  {l.giftTo && <span style={{ color: "var(--muted)" }}> · 🎁 for {l.giftTo}</span>}
+                  {l.giftTo && <span style={{ color: "var(--muted)" }}> · for {l.giftTo}</span>}
                   {l.offerSats != null && l.listSats != null && l.offerSats < l.listSats && (
                     <span style={{ color: "var(--warn)" }}> · offered {l.offerSats.toLocaleString()} of {l.listSats.toLocaleString()}</span>
                   )}

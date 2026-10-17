@@ -119,7 +119,7 @@ export default function ConsoleShell({ children }: { children: React.ReactNode }
               <Link
                 href={CONSOLE_SITE.home}
                 className="scar-siteexit"
-                title={`Leave the console — open ${CONSOLE_SITE.domain}`}
+                title={`Leave the console: open ${CONSOLE_SITE.domain}`}
               >
                 <span aria-hidden="true">⌂</span> {CONSOLE_SITE.domain}
               </Link>
@@ -145,7 +145,7 @@ export default function ConsoleShell({ children }: { children: React.ReactNode }
                     setStoredTheme(next);
                     tabBleep();
                   }}
-                  title="theme — the default look → LCARS tribute → the brand cartridge (a placeholder token remap for now; your key-resolved home-space cartridge lands SOON)"
+                  title="theme: the default look / LCARS tribute, then the brand cartridge (a placeholder token remap for now; your key-resolved home-space cartridge lands SOON)"
                 >
                   THEME: {THEME_LABEL[theme]}
                 </button>
@@ -158,7 +158,7 @@ export default function ConsoleShell({ children }: { children: React.ReactNode }
                     setSoundOn(next);
                     if (next) coinBleep(true);
                   }}
-                  title="console bleeps — off by default, your call always"
+                  title="console bleeps: off by default, your call always"
                 >
                   SND: {snd ? "ON" : "OFF"}
                 </button>
@@ -175,8 +175,8 @@ export default function ConsoleShell({ children }: { children: React.ReactNode }
 
           {/* the ONE brand statement — footer brandline only */}
           <p className="scar-brandline">
-            <b>SCAR·LET</b> — <b>Sovereign Corps Access Relay</b> ·{" "}
-            <b>Ledger Etched Time</b> — the operator console.
+            <b>SCAR·LET</b>: <b>Sovereign Corps Access Relay</b> ·{" "}
+            <b>Ledger Etched Time</b>, the operator console.
           </p>
         </div>
       </div>
@@ -193,7 +193,7 @@ export default function ConsoleShell({ children }: { children: React.ReactNode }
           onClick={() => setMenuOpen((v) => !v)}
         >
           <span className="scar-mbar__caret" aria-hidden="true">
-            ▲
+            <svg width="12" height="12" viewBox="0 0 12 12" focusable="false"><path d="M2 8l4-4 4 4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </span>
           <span className="scar-mbar__menulbl" aria-hidden="true">
             {menuOpen ? "CLOSE" : "MENU"}

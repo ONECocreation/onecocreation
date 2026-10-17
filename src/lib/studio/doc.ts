@@ -68,7 +68,7 @@ function cleanPerson(raw: unknown): StudioPerson | null {
 function cleanStartsAt(raw: unknown): string {
   if (raw === undefined || raw === null || raw === "") return "";
   if (typeof raw !== "string" || Number.isNaN(Date.parse(raw))) {
-    throw new Error(`"starts at" must be a real date and time, or left blank — got ${JSON.stringify(raw)}`);
+    throw new Error(`"starts at" must be a real date and time, or left blank. Got ${JSON.stringify(raw)}`);
   }
   return raw;
 }

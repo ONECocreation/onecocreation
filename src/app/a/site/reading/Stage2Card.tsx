@@ -110,27 +110,27 @@ export default function Stage2Card({ floorName }: { floorName: string }) {
               Copy the Stage 2 link
             </button>
             <a className="btn btn-ghost btn-sm" href={url} target="_blank" rel="noreferrer">
-              Open Stage 2 as moderator →
+              Open Stage 2 as moderator
             </a>
             <div className="kit-text-quiet">
-              log in as yourself to become the moderator — the same link a member gets, minus the login prompt.
+              log in as yourself to become the moderator. The same link a member gets, minus the login prompt.
             </div>
           </>
         )}
 
         {state.phase === "prepared" && (
           <>
-            <div className="kit-text-quiet">members can&apos;t see this yet — start the call above first, then Publish.</div>
-            <Chip tone="gold">PREPARED — not visible to members</Chip>
+            <div className="kit-text-quiet">members can&apos;t see this yet. Start the call above first, then Publish.</div>
+            <Chip tone="gold">PREPARED · not visible to members</Chip>
             <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => act("publish")}>
-              {busy ? "Publishing…" : "Publish — let paid members in"}
+              {busy ? "Publishing…" : "Publish: let paid members in"}
             </button>
           </>
         )}
 
         {state.phase === "published" && (
           <>
-            <Chip tone="green">PUBLISHED — the door is live</Chip>
+            <Chip tone="green">PUBLISHED · the door is live</Chip>
             {/* TASK-439 (block 968,218, rulings 1 & 4): the admin GET
                 carries no package name, so the words name no tier letter
                 and no price — the door itself speaks the package.

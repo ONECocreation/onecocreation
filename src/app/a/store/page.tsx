@@ -266,7 +266,7 @@ export default function StoreRoom() {
       });
       const data = await res.json().catch(() => ({ ok: false }));
       if (!data.ok) {
-        setNote(data.reason ?? `rename stopped at "${it.title}" — check the shelf and try again`);
+        setNote(data.reason ?? `rename stopped at "${it.title}" · check the shelf and try again`);
         load();
         return;
       }
@@ -294,7 +294,7 @@ export default function StoreRoom() {
     if ((await res.json().catch(() => ({ ok: false }))).ok) {
       setDraft(null);
       load();
-    } else setNote("delete failed — check the shelf and try again");
+    } else setNote("delete failed: check the shelf and try again");
   }
 
   /** Product shots → the operator-gated upload route → draft.media.images. */
@@ -318,7 +318,7 @@ export default function StoreRoom() {
           setNote(data.reason ?? "upload failed");
         }
       } catch {
-        setNote("upload unreachable — try again");
+        setNote("upload unreachable: try again");
       }
     }
     setUploading(false);
@@ -364,7 +364,7 @@ export default function StoreRoom() {
           : d
       );
       setDReplace(false);
-      setDNote("uploaded ✓ — press Save to attach it to the item");
+      setDNote("uploaded ✓: press Save to attach it to the item");
     } catch (err) {
       setNote(err instanceof Error ? err.message : "upload failed");
     } finally {
@@ -393,7 +393,7 @@ export default function StoreRoom() {
   if (denied) {
     return (
       <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>
-        operator session required —{" "}
+        operator session required: {" "}
         <a href="/a" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>
           sign in at the door
         </a>
@@ -432,7 +432,7 @@ export default function StoreRoom() {
         <>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", margin: "0 0 12px" }}>
             <input
-              placeholder="🔍 search the shelf…"
+              placeholder="search the shelf…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="console-field" style={{ ...field, borderRadius: 999, padding: "9px 18px", flex: 1, minWidth: 170 }}
@@ -460,7 +460,7 @@ export default function StoreRoom() {
           {shown.length === 0 && (
             <p style={{ color: "var(--muted)" }}>
               {items.length === 0
-                ? "nothing on the shelf yet — add the first item ✨"
+                ? "nothing on the shelf yet. Add the first item"
                 : catFilter
                   ? `nothing in "${catFilter}"${q ? " matches that search" : ""}`
                   : "nothing matches that search"}
@@ -500,7 +500,7 @@ export default function StoreRoom() {
                           {KIND_WORD[item.kind]}
                           {item.category && item.category.trim().toLowerCase() !== KIND_WORD[item.kind] &&
                             ` · ${item.category}`}
-                          {item.bundle && ` · 🎁 ${item.bundle}`}
+                          {item.bundle && ` · ${item.bundle}`}
                           {item.sku && ` · №${item.sku}`}
                           {item.sizes && item.sizes.length > 0 && ` · ${item.sizes.join(" ")}`}
                           {item.media?.deliverable &&
@@ -524,7 +524,7 @@ export default function StoreRoom() {
                             )}
                           </span>
                         ) : (
-                          <span style={{ color: "var(--muted)" }} title="unlimited">—</span>
+                          <span style={{ color: "var(--muted)" }} title="unlimited">unlimited</span>
                         )}
                       </td>
                       <td style={td}>
@@ -559,7 +559,7 @@ export default function StoreRoom() {
       {tab === "categories" && (
         cats.length === 0 ? (
           <p style={{ color: "var(--muted)" }}>
-            no categories yet — give an item a category word (meditation, membership, ware, session…) and it appears here
+            no categories yet: give an item a category word (meditation, membership, ware, session…) and it appears here
           </p>
         ) : (
           <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))" }}>
@@ -593,7 +593,7 @@ export default function StoreRoom() {
                     </button>
                   </>
                 )}
-                <p style={fieldHint}>a category is a word on its items — renaming rewrites the word on each of them</p>
+                <p style={fieldHint}>a category is a word on its items. Renaming rewrites the word on each of them</p>
               </div>
             ))}
           </div>
@@ -609,7 +609,7 @@ export default function StoreRoom() {
               <div style={editorCard}>
                 <b style={{ fontSize: ".88rem" }}>Printful</b> <Chip tone="green">connected</Chip>
                 <p style={{ margin: "6px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>
-                  print-on-demand — pick Printful on an item and paid orders push over automatically
+                  print-on-demand: pick Printful on an item and paid orders push over automatically
                 </p>
               </div>
             )}
@@ -617,7 +617,7 @@ export default function StoreRoom() {
               <div style={editorCard}>
                 <b style={{ fontSize: ".88rem" }}>Fourthwall</b> <Chip tone="green">connected</Chip>
                 <p style={{ margin: "6px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>
-                  their product, our checkout — paid orders land in your Fourthwall dashboard
+                  their product, our checkout. Paid orders land in your Fourthwall dashboard
                 </p>
               </div>
             )}
@@ -664,14 +664,14 @@ export default function StoreRoom() {
                   {/* TASK-253 (ADDENDUM, 0018.06.24 a₿ — the Admiral: "we
                       needed a short description for the back of the card,
                       and a long description for the full view") */}
-                  <p style={fieldHint}>a line or two — the back of the card; the long story goes below</p>
+                  <p style={fieldHint}>a line or two. The back of the card; the long story goes below</p>
                   {!draft.description?.trim() && draft.blurb.length > 280 && (
                     <p style={{ ...fieldHint, color: "var(--info)" }}>
-                      this blurb is long for a card back — move the story into Full description
+                      this blurb is long for a card back. Move the story into Full description
                     </p>
                   )}
                   <label style={fieldLabel}>Full description (the full view)</label>
-                  <textarea value={draft.description ?? ""} placeholder="the long story — the item's own page tells it in full"
+                  <textarea value={draft.description ?? ""} placeholder="the long story: the item's own page tells it in full"
                     onChange={(e) => setDraft({ ...draft, description: e.target.value || undefined })}
                     className="console-field" style={{ ...field, width: "100%", minHeight: 120, resize: "vertical" }} />
                   <label style={fieldLabel}>category</label>
@@ -687,7 +687,7 @@ export default function StoreRoom() {
                     {categoryOptionsFor(draft.kind, draft.category).map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                   <p style={fieldHint}>
-                    the real set the shelf groups its headers by — every item resolves under one
+                    the real set the shelf groups its headers by. Every item resolves under one
                   </p>
                   <label style={fieldLabel}>bundle (optional)</label>
                   <input value={draft.bundle ?? ""} list="oc-shelf-bundles"
@@ -698,7 +698,7 @@ export default function StoreRoom() {
                     {bundles.map((b) => <option key={b.name} value={b.name} />)}
                   </datalist>
                   <p style={fieldHint}>
-                    one word — items sharing it cluster together on the shelf under one heading; each keeps its own price and its own door
+                    one word: items sharing it cluster together on the shelf under one heading; each keeps its own price and its own door
                   </p>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ flex: 1, minWidth: 120 }}>
@@ -758,7 +758,7 @@ export default function StoreRoom() {
                     />
                   </label>
                   <p style={{ margin: "8px 0 0", fontSize: ".72rem", color: "var(--muted)" }}>
-                    png/jpg/webp/gif/avif up to 4 MB each — the ★ default picture is the item&apos;s face on the shelf
+                    png/jpg/webp/gif/avif up to 4 MB each. The ★ default picture is the item&apos;s face on the shelf
                   </p>
                 </div>
               </div>
@@ -785,17 +785,17 @@ export default function StoreRoom() {
                           setDraft({ ...draft, price: { ...draft.price,
                             fiat: e.target.value === "" ? undefined : { amount: Math.round(Number(e.target.value) * 100), currency: "USD" } } })}
                         className="console-field" style={{ ...field, width: "100%" }} />
-                      <p style={fieldHint}>USD as dollars and cents — 33.33 means $33.33</p>
+                      <p style={fieldHint}>USD as dollars and cents. 33.33 means $33.33</p>
                     </span>
                   </div>
                   <p style={fieldHint}>
-                    one price is enough to go live — sats or USD. Both are your own numbers; neither is ever guessed from the other.
+                    one price is enough to go live. Sats or USD. Both are your own numbers; neither is ever guessed from the other.
                   </p>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ flex: 1, minWidth: 120 }}>
                       <label style={fieldLabel}>sale in USD (optional)</label>
                       <input type="number" step="0.01" min="0" inputMode="decimal"
-                        value={draft.sale?.fiat ? (draft.sale.fiat.amount / 100).toString() : ""} placeholder="—"
+                        value={draft.sale?.fiat ? (draft.sale.fiat.amount / 100).toString() : ""} placeholder="none"
                         onChange={(e) =>
                           setDraft({ ...draft, sale: saleWith({ ...draft.sale,
                             fiat: e.target.value === "" ? undefined : { amount: Math.round(Number(e.target.value) * 100), currency: "USD" } }) })}
@@ -804,7 +804,7 @@ export default function StoreRoom() {
                     </span>
                     <span style={{ flex: 1, minWidth: 120 }}>
                       <label style={fieldLabel}>sale sats (optional)</label>
-                      <input type="number" value={draft.sale?.sats ?? ""} placeholder="—"
+                      <input type="number" value={draft.sale?.sats ?? ""} placeholder="none"
                         onChange={(e) =>
                           setDraft({ ...draft, sale: saleWith({ ...draft.sale,
                             sats: e.target.value ? Number(e.target.value) : undefined }) })}
@@ -818,7 +818,7 @@ export default function StoreRoom() {
                           setDraft({ ...draft, inventory: e.target.value === "" ? undefined : Number(e.target.value) })}
                         className="console-field" style={{ ...field, width: "100%" }} />
                       <p style={fieldHint}>
-                        how many are on the shelf — each paid order counts it down and 0 marks it sold out; blank = unlimited
+                        how many are on the shelf. Each paid order counts it down and 0 marks it sold out; blank = unlimited
                       </p>
                     </span>
                   </div>
@@ -849,21 +849,21 @@ export default function StoreRoom() {
 
                 <div style={editorCard}>
                   <h4 style={cardHead}>Who fulfills it</h4>
-                  <label style={{ ...fieldLabel, marginTop: 0 }}>type — what it is</label>
+                  <label style={{ ...fieldLabel, marginTop: 0 }}>type: what it is</label>
                   <select
                     value={draft.kind}
                     onChange={(e) =>
                       setDraft({ ...draft, kind: e.target.value as StoreItem["kind"], fulfillment: e.target.value as StoreItem["kind"] })}
                     className="console-field" style={{ ...field, width: "100%" }}
                   >
-                    <option value="self">ware — merch Love packs &amp; ships</option>
-                    <option value="digital">meditation / digital — instant download</option>
-                    <option value="package">membership — a tier that opens doors</option>
-                    <option value="service">session — a booked service</option>
-                    <option value="retreat">retreat seat — a place held</option>
+                    <option value="self">ware: merch Love packs &amp; ships</option>
+                    <option value="digital">meditation / digital: instant download</option>
+                    <option value="package">membership: a tier that opens doors</option>
+                    <option value="service">session: a booked service</option>
+                    <option value="retreat">retreat seat: a place held</option>
                   </select>
                   <p style={fieldHint}>
-                    the ShinePages words mapped onto the house kinds — the type decides how a paid order is filled
+                    the ShinePages words mapped onto the house kinds. The type decides how a paid order is filled
                   </p>
                   {anyPartner && (
                     <>
@@ -874,12 +874,12 @@ export default function StoreRoom() {
                           setDraft({ ...draft, partner: (e.target.value || undefined) as StoreItem["partner"] })}
                         className="console-field" style={{ ...field, width: "100%" }}
                       >
-                        <option value="">no partner — as above</option>
-                        {partners.printful && <option value="printful">Printful — printed &amp; shipped on demand</option>}
-                        {partners.fourthwall && <option value="fourthwall">Fourthwall — their product, our checkout</option>}
+                        <option value="">no partner: as above</option>
+                        {partners.printful && <option value="printful">Printful: printed &amp; shipped on demand</option>}
+                        {partners.fourthwall && <option value="fourthwall">Fourthwall: their product, our checkout</option>}
                       </select>
                       <p style={{ margin: "8px 0 0", fontSize: ".72rem", color: "var(--muted)" }}>
-                        paid in sats here → the order flies to the partner → tracking lands on the receipt
+                        paid in sats here, then the order flies to the partner, then tracking lands on the receipt
                       </p>
                     </>
                   )}
@@ -894,7 +894,7 @@ export default function StoreRoom() {
                       onChange={(e) => setDraft({ ...draft, entitlementTier: e.target.value || undefined })}
                       className="console-field" style={{ ...field, width: "100%" }}
                     >
-                      <option value="">— no tier (this item won&apos;t unlock anything) —</option>
+                      <option value="">no tier (this item won&apos;t unlock anything)</option>
                       {(["A", "B", "C"] as Tier[]).map((t) => (
                         <option key={t} value={t}>{tiers?.[t]?.name ?? t}</option>
                       ))}
@@ -909,7 +909,7 @@ export default function StoreRoom() {
                       className="console-field" style={{ ...field, width: "100%" }}
                     />
                     <p style={{ margin: "8px 0 0", fontSize: ".72rem", color: "var(--muted)" }}>
-                      set this for a one-week taster (weekly-one-week, observer-one-week, …) — the grant
+                      set this for a one-week taster (weekly-one-week, observer-one-week, …). The grant
                       closes itself this many days after purchase instead of standing open
                     </p>
                   </div>
@@ -972,7 +972,7 @@ export default function StoreRoom() {
                         </p>
                       ) : (
                         <p style={{ margin: 0, fontSize: ".78rem", color: "var(--muted)" }}>
-                          no file yet — buyers get no download button until one is attached
+                          no file yet: buyers get no download button until one is attached
                         </p>
                       )}
                       {draft.media.deliverable.blobPath && !dReplace ? (
@@ -1003,12 +1003,12 @@ export default function StoreRoom() {
                       {dNote && <p style={{ margin: "6px 0 0", fontSize: ".75rem", color: "var(--ok)" }}>{dNote}</p>}
                       <p style={{ margin: "8px 0 0", fontSize: ".72rem", color: "var(--muted)" }}>
                         {directUp
-                          ? "audio/video/zip/pdf up to 1 GB — uploads go from your browser straight to the file vault; the buyer's receipt grows a download button once payment settles"
+                          ? "audio/video/zip/pdf up to 1 GB. Uploads go from your browser straight to the file vault; the buyer's receipt grows a download button once payment settles"
                           : "dev driver: the file lands in data/deliverables/ on this machine; the buyer's receipt grows a download button once payment settles"}
                       </p>
                     </div>
                   )}
-                  <label style={fieldLabel}>public teaser URL (optional — never the paid file)</label>
+                  <label style={fieldLabel}>public teaser URL (optional. Never the paid file)</label>
                   <input
                     value={draft.media?.preview ?? ""}
                     placeholder="https://…"

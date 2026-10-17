@@ -185,7 +185,7 @@ export default function StatusReportsPanel() {
             code: `DECISION · ${d.source ?? d.id}`,
             title: d.question,
             meta: `✦ Number One recommends “${rec?.label ?? d.recommendation}”`,
-            detail: [d.context, `✦ Recommended — ${rec?.label ?? d.recommendation}: ${d.recommendationWhy}`],
+            detail: [d.context, `✦ Recommended: ${rec?.label ?? d.recommendation}: ${d.recommendationWhy}`],
           });
         }
         setRows(built);
@@ -244,7 +244,7 @@ export default function StatusReportsPanel() {
                   {current.gesture.label}
                 </Link>
                 <p className="mt-2 font-mono text-[11px] text-white/40">
-                  the act itself lives on its own board — this opens it
+                  the act itself lives on its own board. This opens it
                 </p>
               </div>
             )}
@@ -363,8 +363,7 @@ export default function StatusReportsPanel() {
             })}
             {all.length === 0 && (
               <p className="console-card p-4 font-body text-sm text-white/60">
-                The board is clear — nothing in flight, nothing waiting on you. 🌱
-              </p>
+                The board is clear. Nothing in flight, nothing waiting on you.</p>
             )}
           </div>
         )}

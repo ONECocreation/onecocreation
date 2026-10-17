@@ -21,7 +21,7 @@ import SiteReadingRoom from "./SiteReadingRoom";
  */
 
 export const metadata: Metadata = {
-  title: "The weekly reading — admin",
+  title: "The weekly reading · admin",
   robots: { index: false, follow: false },
 };
 

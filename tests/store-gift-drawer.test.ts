@@ -142,7 +142,7 @@ describe("7. the stale location words — money room and the /support Puck seed"
   it("the money room's jar title no longer points at /support", () => {
     const src = readSrc("src/app/a/money/page.tsx");
     expect(src).not.toContain("the doors live on /support");
-    expect(src).toContain("the doors live on /store");
+    expect(src).toContain("The doors live on /store");
   });
 
   it("the /support seed carries no jar bands, but the wild-doors note survives", () => {

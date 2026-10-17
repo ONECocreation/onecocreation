@@ -56,7 +56,7 @@ function BftStamp({ e }: { e: QueuedEntry }) {
         {bftDateTime(e.blockHeight)}
       </>
     );
-  return <>—</>;
+  return <>none</>;
 }
 
 function Pill({ ok, children }: { ok: boolean; children: ReactNode }) {
@@ -97,7 +97,7 @@ export default function SpacesPanel({ space }: { space: string }) {
       }
       setStatus(data);
     } catch {
-      setError("couldn't reach the app — try again");
+      setError("couldn't reach the app. Try again");
     } finally {
       setStatusBusy(false);
     }
@@ -238,7 +238,7 @@ function NodeTab({
       setTimeout(() => setSaved(false), 2500);
       onSaved(data.config);
     } catch {
-      setErr("save hiccuped — try again");
+      setErr("save hiccuped: try again");
     } finally {
       setSaving(false);
     }
@@ -253,11 +253,11 @@ function NodeTab({
       {/* your server — the boxes the admiral asked for */}
       <div className="console-card p-4" data-accent="cyan">
         <p className="mb-3 font-pixel text-[10px] uppercase tracking-widest text-white/40">
-          YOUR SERVER — POINT · SAVE · TEST
+          YOUR SERVER · POINT · SAVE · TEST
         </p>
         <label className="block">
           <span className="font-pixel text-[9px] uppercase text-white/40">
-            NODE URL — YOUR spaced JSON-RPC (OR ITS PROXY)
+            NODE URL · YOUR spaced JSON-RPC (OR ITS PROXY)
           </span>
           <input
             value={url}
@@ -268,7 +268,7 @@ function NodeTab({
         </label>
         <label className="mt-3 block">
           <span className="font-pixel text-[9px] uppercase text-white/40">
-            TOKEN {config?.spacesTokenSet ? "— SET ✓ (ENTER TO REPLACE)" : "— OPTIONAL (PROXY BEARER)"}
+            TOKEN {config?.spacesTokenSet ? "SET ✓ (ENTER TO REPLACE)" : "OPTIONAL (PROXY BEARER)"}
           </span>
           <input
             value={token}
@@ -309,14 +309,14 @@ function NodeTab({
               <Pill ok={false}>UNREACHABLE</Pill>
             )}
           </Row>
-          <Row label="CHAIN">{status?.chain ?? "—"}</Row>
+          <Row label="CHAIN">{status?.chain ?? "none"}</Row>
           <Row label="BLOCK">
             {tip?.height != null ? (
               <span className="text-cyan glow-cyan">
                 <span className="starbox" aria-hidden="true" /> {tip.height.toLocaleString()} · {bftDate(tip.height)}
               </span>
             ) : (
-              "—"
+              "none"
             )}
           </Row>
           <Row label={`OWNS @${space}`}>
@@ -325,7 +325,7 @@ function NodeTab({
             ) : reachable ? (
               <Pill ok={false}>NOT FOUND</Pill>
             ) : (
-              "—"
+              "none"
             )}
           </Row>
           {status?.reason && (
@@ -410,7 +410,7 @@ function AnchorTab({
       setResult({ committed: data.committed, skipped: data.skipped });
       onReload();
     } catch {
-      setErr("commit hiccuped — try again");
+      setErr("commit hiccuped: try again");
     } finally {
       setCommitting(false);
     }
@@ -422,7 +422,7 @@ function AnchorTab({
         <div className="mb-3 flex items-center justify-between">
           <p className="font-pixel text-xs">
             <span className="text-neon glow-neon">{queue?.length ?? 0} QUEUED</span>{" "}
-            <span className="text-white/40">— the next batch&apos;s passenger list</span>
+            <span className="text-white/40">the next batch&apos;s passenger list</span>
           </p>
           <button
             onClick={onReload}
@@ -430,7 +430,7 @@ function AnchorTab({
             data-accent="cyan"
             className="btn-pill btn-pill--muted"
           >
-            {busy ? "…" : "⟳ RELOAD"}
+            {busy ? "…" : "RELOAD"}
           </button>
         </div>
         {!queue || queue.length === 0 ? (
@@ -455,7 +455,7 @@ function AnchorTab({
                   data-accent="ghost"
                   className={`btn-pill ${confirming === e.handle ? "" : "btn-pill--muted"}`}
                 >
-                  {confirming === e.handle ? "SURE? 🗑" : "🗑"}
+                  {confirming === e.handle ? "SURE?" : ""}
                 </button>
               </div>
             ))}
@@ -475,7 +475,7 @@ function AnchorTab({
       <div className="space-y-4">
         <label className="block">
           <span className="font-pixel text-[9px] uppercase text-white/40">
-            BATCH ID — ON-CHAIN ROOT / TXID
+            BATCH ID · ON-CHAIN ROOT / TXID
           </span>
           <input
             value={batchId}
@@ -485,7 +485,7 @@ function AnchorTab({
         </label>
         <label className="block">
           <span className="font-pixel text-[9px] uppercase text-white/40">
-            PROOFS — JSON ARRAY OF {"{ handle, proof }"}
+            PROOFS · JSON ARRAY OF {"{ handle, proof }"}
           </span>
           <textarea
             value={proofsText}
@@ -556,7 +556,7 @@ function CeremonyTab({
       setTimeout(() => setSaved(false), 2500);
       onSaved(data.config);
     } catch {
-      setErr("save hiccuped — try again");
+      setErr("save hiccuped: try again");
     } finally {
       setSaving(false);
     }
@@ -565,7 +565,7 @@ function CeremonyTab({
   return (
     <div className="max-w-2xl space-y-5">
       <p className="font-body text-sm text-white/70">
-        What a batch ceremony <span className="text-cyan">sends</span> — configurable per POKE
+        What a batch ceremony <span className="text-cyan">sends</span>, configurable per POKE
         node. The certificate ships as box art (the block decides the case), and the welcome
         letter greets every member etched in the batch.{" "}
         <span className="text-white/40">
@@ -580,20 +580,20 @@ function CeremonyTab({
           onChange={(e) => setCertTemplate(e.target.value)}
           className="mt-1 w-full rounded-lg border-2 border-edge bg-void px-3 py-2 font-mono text-xs text-cyan focus:border-cyan focus:outline-none"
         >
-          <option value="bft-auto">BFT AUTO — the block picks the case (house default)</option>
-          <option value="keepsake">KEEPSAKE — naming-ceremony inscription card</option>
-          <option value="plain">PLAIN — rune + proof, no dressing</option>
+          <option value="bft-auto">BFT AUTO · the block picks the case (house default)</option>
+          <option value="keepsake">KEEPSAKE · naming-ceremony inscription card</option>
+          <option value="plain">PLAIN · rune + proof, no dressing</option>
         </select>
       </label>
       <label className="block">
         <span className="font-pixel text-[9px] uppercase text-white/40">
-          THE WELCOME LETTER — SENT WITH EVERY ETCH
+          THE WELCOME LETTER · SENT WITH EVERY ETCH
         </span>
         <textarea
           value={welcomeMessage}
           onChange={(e) => setWelcomeMessage(e.target.value)}
           rows={6}
-          placeholder="Welcome home — your name is on the block now…"
+          placeholder="Welcome home: your name is on the block now…"
           className="mt-1 w-full rounded-lg border-2 border-edge bg-void px-3 py-2 font-body text-sm text-white/80 placeholder:text-white/25 focus:border-cyan focus:outline-none"
         />
       </label>
@@ -603,7 +603,7 @@ function CeremonyTab({
         data-accent="cyan"
         className="btn-pill btn-pill--solid flex w-full"
       >
-        {saving ? "SAVING…" : saved ? "✓ SAVED — RIDES THE NEXT CEREMONY" : "SAVE CEREMONY"}
+        {saving ? "SAVING…" : saved ? "✓ SAVED · RIDES THE NEXT CEREMONY" : "SAVE CEREMONY"}
       </button>
       {err && <p className="font-pixel text-[10px] uppercase text-ghost">{err}</p>}
     </div>

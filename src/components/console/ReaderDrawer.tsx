@@ -94,7 +94,6 @@ export function ScarConsole({
                 onClick={() => setFull((f) => !f)}
                 aria-pressed={full}
               >
-                <span aria-hidden="true">{full ? "↙" : "⤢"}</span>
                 {full ? "Back to list" : "Expand"}
               </button>
               <button
