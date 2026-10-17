@@ -93,9 +93,7 @@ export const SITE_SUBS = [
   { key: "menu", href: "/a/site/menu", label: "Menu" },
   { key: "community-door", href: "/a/site/community-door", label: "Community door" },
   { key: "about-videos", href: "/a/site/about-videos", label: "Videos on About" },
-  /* TASK-496 (block 969,088+): the Replays list - the links /replays plays,
-     pasted one per row. */
-  { key: "replays", href: "/a/site/replays", label: "Replays" },
+  /* TASK-496's Replays row moved to STUDIO_SUBS (T-619). */
   /* TASK-387 (block 968,088+): hide the chat fully for a room, or flip it
      live mid-session — the saved default IS the session switch (Named
      decision A). */
@@ -119,12 +117,17 @@ export type SiteSubKey = (typeof SITE_SUBS)[number]["key"];
    one-tap links), it just lists under Studio instead of Site. */
 export const STUDIO_SUBS = [
   { key: "reading", href: "/a/site/reading", label: "Weekly reading" },
+  /* T-619 (the Admiral, block 971,816): "the /a/site/replays should be under
+     the studio menu on the left." Menu placement ONLY, same as T-545: the
+     page stays at /a/site/replays (TASK-496's list of links /replays plays). */
+  { key: "replays", href: "/a/site/replays", label: "Replays" },
 ] as const;
 
 export type StudioSubKey = (typeof STUDIO_SUBS)[number]["key"];
 
 /** Which Studio sub-row a path marks current - /a/site/reading and anything
-    under it (the go/<door> links) mark The weekly reading; all else nothing. */
+    under it (the go/<door> links) mark The weekly reading, /a/site/replays
+    marks Replays (T-619); all else nothing. */
 export function studioSubForPath(pathname: string): StudioSubKey | null {
   const sub = STUDIO_SUBS.find((x) => pathname === x.href || pathname.startsWith(`${x.href}/`));
   return sub ? sub.key : null;
