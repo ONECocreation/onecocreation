@@ -165,7 +165,7 @@ export default function ReplaysCard() {
   if (!rows) return <p className="kit-note">Reading the list…</p>;
 
   return (
-    <Card className="kit-rooms-card">
+    <Card className="kit-rooms-card kit-replays-card">
       <p className="kit-text-quiet">
         Paste a YouTube link: the watch link, the youtu.be share link, or a Shorts link all work, and the house
         keeps only the video&apos;s id. The top row plays first on the page.{" "}
@@ -177,7 +177,7 @@ export default function ReplaysCard() {
       {/* TASK-532 - the YouTube PLAYLIST field (its own doc and route).
           The honest words are the Admiral's own ruling: the feed shares
           only the latest 15, so older videos stay a hand-added row. */}
-      <div className="kit-stack">
+      <div className="kit-stack kit-replays-part" data-part="playlist">
         <p className="kit-text-quiet">
           Paste a public YouTube playlist link. The Replays page then shows what is in it, newest first, and picks
           up new videos on its own. YouTube shares only the latest 15 videos this way, so older ones need to be
@@ -202,10 +202,10 @@ export default function ReplaysCard() {
             aria-label="YouTube playlist link or id"
           />
         </div>
-        <div className="kit-btn-row">
+        <div className="kit-btn-row kit-replays-actions">
           <button
             type="button"
-            className="kit-btn kit-btn-main kit-btn-sm"
+            className="kit-btn kit-pill"
             disabled={playlistBusy || !playlistInput.trim()}
             onClick={() => savePlaylistField(false)}
           >
@@ -214,7 +214,7 @@ export default function ReplaysCard() {
           {playlistId && (
             <button
               type="button"
-              className="kit-btn kit-btn-second kit-btn-sm"
+              className="kit-btn kit-pill"
               disabled={playlistBusy}
               onClick={() => savePlaylistField(true)}
             >
@@ -227,41 +227,7 @@ export default function ReplaysCard() {
         )}
       </div>
 
-      {rows.length > 0 && (
-        <ul className="kit-rows" aria-label="The replays list">
-          {rows.map((v, i) => (
-            <li key={v.id} data-row={v.id}>
-              <span>
-                <b>{v.title}</b>
-                <em>
-                  {v.id} · {v.ratio === "9/16" ? "portrait" : "landscape"}
-                </em>
-              </span>
-              <span className="kit-rows-end">
-                <button type="button" className="kit-btn kit-btn-quiet" disabled={i === 0} aria-label={`move ${v.title} up`} onClick={() => setRows(move(rows, i, -1))}>
-                  Up
-                </button>
-                <button type="button" className="kit-btn kit-btn-quiet" disabled={i === rows.length - 1} aria-label={`move ${v.title} down`} onClick={() => setRows(move(rows, i, 1))}>
-                  Down
-                </button>
-                <button
-                  type="button"
-                  className="kit-btn kit-btn-quiet"
-                  aria-label={`${v.title}, currently ${v.ratio === "9/16" ? "portrait" : "landscape"}, flip the shape`}
-                  onClick={() => setRows(rows.map((r, idx) => (idx === i ? { ...r, ratio: r.ratio === "9/16" ? "16/9" : "9/16" } : r)))}
-                >
-                  {v.ratio === "9/16" ? "portrait" : "landscape"}
-                </button>
-                <button type="button" className="kit-btn kit-btn-quiet" onClick={() => setRows(rows.filter((_, idx) => idx !== i))}>
-                  Remove
-                </button>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="kit-stack">
+      <div className="kit-stack kit-replays-part" data-part="add">
         <div className="kit-field">
           <label className="kit-field-label" htmlFor="replays-link">
             YouTube link
@@ -295,31 +261,75 @@ export default function ReplaysCard() {
               : "not a YouTube video link the house knows"
             : "watch, youtu.be, Shorts, embed, or the bare 11-character id"}
         </p>
-        <div className="kit-btn-row" role="group" aria-label="replay shape">
-          {(["16/9", "9/16"] as const).map((r) => (
-            <button
-              key={r}
-              type="button"
-              aria-pressed={ratio === r}
-              onClick={() => setRatio(r)}
-              className={`kit-btn kit-btn-sm ${ratio === r ? "kit-btn-main" : "kit-btn-second"}`}
-            >
-              {r === "9/16" ? "portrait" : "landscape"}
-            </button>
-          ))}
-          <button type="button" className="kit-btn kit-btn-second kit-btn-sm" onClick={add}>
-            + add to the list
+        <div className="kit-field kit-replays-shape">
+          <span className="kit-field-label" id="replays-shape-label">
+            Shape
+          </span>
+          <div className="kit-btn-row kit-replays-actions" role="group" aria-labelledby="replays-shape-label" aria-label="replay shape">
+            {(["16/9", "9/16"] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                aria-pressed={ratio === r}
+                onClick={() => setRatio(r)}
+                className={`kit-btn kit-pill kit-replays-choice${ratio === r ? " is-on" : ""}`}
+              >
+                {r === "9/16" ? "portrait" : "landscape"}
+              </button>
+            ))}
+          </div>
+          <p className="kit-note">chosen shape: {ratio === "9/16" ? "portrait" : "landscape"}</p>
+        </div>
+        <div className="kit-btn-row kit-replays-actions">
+          <button type="button" className="kit-btn kit-pill" onClick={add}>
+            Add to the list
           </button>
         </div>
         {err && <p className="kit-field-error">{err}</p>}
       </div>
 
-      <div className="kit-btn-row">
-        <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled={busy} onClick={saveList}>
+      <div className="kit-stack kit-replays-part" data-part="list">
+      {rows.length > 0 && (
+        <ul className="kit-rows" aria-label="The replays list">
+          {rows.map((v, i) => (
+            <li key={v.id} data-row={v.id}>
+              <span>
+                <b>{v.title}</b>
+                <em>
+                  {v.id} · {v.ratio === "9/16" ? "portrait" : "landscape"}
+                </em>
+              </span>
+              <span className="kit-rows-end">
+                <button type="button" className="kit-btn kit-pill" disabled={i === 0} aria-label={`move ${v.title} up`} onClick={() => setRows(move(rows, i, -1))}>
+                  Up
+                </button>
+                <button type="button" className="kit-btn kit-pill" disabled={i === rows.length - 1} aria-label={`move ${v.title} down`} onClick={() => setRows(move(rows, i, 1))}>
+                  Down
+                </button>
+                <button
+                  type="button"
+                  className="kit-btn kit-pill"
+                  aria-label={`${v.title}, currently ${v.ratio === "9/16" ? "portrait" : "landscape"}, flip the shape`}
+                  onClick={() => setRows(rows.map((r, idx) => (idx === i ? { ...r, ratio: r.ratio === "9/16" ? "16/9" : "9/16" } : r)))}
+                >
+                  {v.ratio === "9/16" ? "portrait" : "landscape"}
+                </button>
+                <button type="button" className="kit-btn kit-pill" onClick={() => setRows(rows.filter((_, idx) => idx !== i))}>
+                  Remove
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="kit-btn-row kit-replays-actions">
+        <button type="button" className="kit-btn kit-pill" disabled={busy} onClick={saveList}>
           {busy ? "Saving…" : "Save the replays"}
         </button>
       </div>
       {note && <p className={`kit-note${note.startsWith("saved") ? " kit-note-ok" : " kit-note-err"}`}>{note}</p>}
+      </div>
     </Card>
   );
 }

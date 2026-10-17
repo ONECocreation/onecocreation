@@ -330,3 +330,18 @@ describe("TASK-496 - the /a room (the RoomsCard layout idiom, the AboutVideosCar
     }
   });
 });
+
+describe("T-621 - the /a/site/replays card wears ONE pill button, three clear parts", () => {
+  it("every action and row button is the house kit-pill; the shape is a two-way pressed choice; no old button looks", async () => {
+    const card = await readSrc("src/app/a/site/replays/ReplaysCard.tsx");
+    expect(card).not.toMatch(/kit-btn-(main|second|quiet|sm)/);
+    expect((card.match(/kit-btn kit-pill/g) ?? []).length).toBeGreaterThanOrEqual(7);
+    expect(card).toContain("kit-replays-card");
+    for (const part of ["playlist", "add", "list"]) expect(card).toContain(`data-part="${part}"`);
+    expect(card).toContain("aria-pressed={ratio === r}");
+    expect(card).toContain("Add to the list");
+    expect(card).not.toContain("+ add to the list");
+    const css = await readSrc("src/app/kit.css");
+    expect(css).toContain(".kit-replays-card .kit-btn.kit-pill{width:168px");
+  });
+});
