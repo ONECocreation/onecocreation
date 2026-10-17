@@ -265,6 +265,16 @@ describe("TASK-496 - the /reading door and the Community menu row", () => {
     expect(page).toContain("reading-book-thumb.webp");
   });
 
+  it("TASK-613: the replays door sits right under the reading viewer, ahead of the sign-up box (source pin)", async () => {
+    const page = await readSrc("src/app/reading/page.tsx");
+    const stageEnd = page.indexOf("<ReadingStageDeck");
+    const door = page.indexOf('href="/replays"');
+    const signUp = page.indexOf('id="keep-posted"');
+    expect(stageEnd).toBeGreaterThan(-1);
+    expect(door).toBeGreaterThan(stageEnd);
+    expect(door).toBeLessThan(signUp);
+  });
+
   it("buildDefaultMenu's Community subs carry Replays → /replays after Read with Love", async () => {
     const { buildDefaultMenu } = await import("@/components/NavMenu");
     const { defaultSiteConfig } = await import("@/lib/site-config");
