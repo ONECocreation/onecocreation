@@ -8,6 +8,7 @@ import { SPACE_NAME, domainForSpace } from "./identity-config.ts";
 import { YOUTUBE_ID_RE } from "./youtube-id.ts";
 import type { AboutVideo } from "./about-content.ts";
 import { validateReadingSchedule, type ReadingSchedule } from "./reading-schedule.ts";
+import { isOpenNavHref } from "./nav-edit.ts";
 
 /**
  * THE SWITCHES (TASK-129, cut 0018.06.16 a₿) — one site-config doc so Love
@@ -534,13 +535,17 @@ export function roomsPatchError(raw: unknown): string | null {
 /** One child row: a leaf that must point at a real, known route — an
     unknown href (hand-edited doc, or a route this house never built) is
     simply dropped, never fabricated into a dead link. */
+function navHrefOk(h: string): boolean {
+  return KNOWN_NAV_HREFS.includes(h) || isOpenNavHref(h);
+}
+
 function sanitizeNavChild(raw: unknown): NavChild | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
   const href = typeof o.href === "string" ? o.href : "";
-  if (!KNOWN_NAV_HREFS.includes(href)) return null;
+  if (!navHrefOk(href)) return null;
   const label = typeof o.label === "string" && o.label.trim() ? o.label.trim().slice(0, 60) : href;
-  const id = typeof o.id === "string" && o.id.trim() ? o.id.trim().slice(0, 60) : href;
+  const id = typeof o.id === "string" && o.id.trim() ? o.id.trim().slice(0, 300) : href;
   return { id, label, href };
 }
 
@@ -564,8 +569,12 @@ function sanitizeNavItem(raw: unknown): NavItem | null {
     .filter((c): c is NavChild => c !== null)
     .slice(0, 12);
   const hrefRaw = typeof o.href === "string" ? o.href : undefined;
-  const href = hrefRaw && KNOWN_NAV_HREFS.includes(hrefRaw) ? hrefRaw : undefined;
-  if (!href && children.length === 0) return null;
+  const href = hrefRaw && navHrefOk(hrefRaw) ? hrefRaw : undefined;
+  // T-620 mockup: a tab may be a heading only (children: [] and a name), kept
+  // while Love fills it; buildMenu hides it until it holds a page.
+  const headingOnly = !href && children.length === 0 && Array.isArray(o.children) &&
+    typeof o.label === "string" && o.label.trim().length > 0;
+  if (!href && children.length === 0 && !headingOnly) return null;
   const migrated = href === "/store"
     ? children.map((c) => (c.href === "/meditation" ? { ...c, href: "/store/meditations" } : c))
     : children;
@@ -573,7 +582,7 @@ function sanitizeNavItem(raw: unknown): NavItem | null {
   const label = typeof o.label === "string" && o.label.trim() ? o.label.trim().slice(0, 60) : fallbackLabel;
   const fallbackId = href ?? `header-${children[0]?.id ?? "x"}`;
   const id = typeof o.id === "string" && o.id.trim() ? o.id.trim().slice(0, 60) : fallbackId;
-  return { id, label, ...(href ? { href } : {}), ...(migrated.length ? { children: migrated } : {}) };
+  return { id, label, ...(href ? { href } : {}), ...(migrated.length ? { children: migrated } : headingOnly ? { children: [] } : {}) };
 }
 
 /** The whole nav doc → known-good rows, or `undefined` when there's nothing

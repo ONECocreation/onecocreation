@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { moveRow, nestUnder, moveRowTo, canPlaceUnder, slotToPlace, type RowRef } from "@/lib/nav-edit";
+import { moveRow, nestUnder, moveRowTo, canPlaceUnder, slotToPlace, addTab, addPage, isOpenNavHref, type RowRef } from "@/lib/nav-edit";
 import type { NavItem } from "@/lib/site-config";
 
 /**
@@ -204,5 +204,33 @@ describe("slotToPlace - a drop line becomes a final place (T-615)", () => {
     expect(slotToPlace({ parent: 1, index: 0 }, { parent: 1, index: 2 })).toEqual({ parent: 1, index: 1 });
     expect(slotToPlace({ parent: 1, index: 0 }, { parent: 4, index: 2 })).toEqual({ parent: 4, index: 2 });
     expect(slotToPlace({ parent: null, index: 2 }, { parent: 3, index: 0 })).toEqual({ parent: 3, index: 0 });
+  });
+});
+
+describe("T-620 the board's new doors", () => {
+  const base: NavItem[] = [
+    { id: "/about", label: "About", href: "/about" },
+    { id: "/store", label: "Store", href: "/store", children: [{ id: "/book", label: "Sessions", href: "/book" }] },
+  ];
+  it("addTab puts a page tab or a heading-only tab at the end", () => {
+    expect(addTab(base, "Support", "/support")[2]).toEqual({ id: "/support", label: "Support", href: "/support" });
+    const h = addTab(base, "Gifts")[2];
+    expect(h.label).toBe("Gifts");
+    expect(h.children).toEqual([]);
+    expect(h.href).toBeUndefined();
+    expect(addTab(base, "   ")).toBe(base);
+  });
+  it("addPage adds a tab or the last card under a tab, any link included", () => {
+    expect(addPage(base, "Travels", "https://lovestravels.example", null)[2].href).toBe("https://lovestravels.example");
+    const under = addPage(base, "Meditations", "/store/meditations", 1);
+    expect(under[1].children?.map((c) => c.label)).toEqual(["Sessions", "Meditations"]);
+    expect(addPage(base, "", "/x", null)).toBe(base);
+  });
+  it("isOpenNavHref takes https links and plain paths only", () => {
+    expect(isOpenNavHref("https://a.example/x")).toBe(true);
+    expect(isOpenNavHref("/travels")).toBe(true);
+    expect(isOpenNavHref("http://a.example")).toBe(false);
+    expect(isOpenNavHref("javascript:alert(1)")).toBe(false);
+    expect(isOpenNavHref("//evil.example")).toBe(false);
   });
 });
