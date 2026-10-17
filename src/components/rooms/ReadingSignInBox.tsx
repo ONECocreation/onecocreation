@@ -7,7 +7,7 @@ import Card from "@/components/kit/Card";
 import Field from "@/components/kit/Field";
 import Button from "@/components/kit/Button";
 import useMemberSession, { applyMemberSession } from "@/hooks/useMemberSession";
-import { ReadingSignUpCard, postReadingSignUp, OUTCOME_COPY } from "./ReadingSignUp";
+import { postReadingSignUp, OUTCOME_COPY } from "./ReadingSignUp";
 import { classifySignUpKind, type ReadingTagOutcome } from "./reading-sign-up-state";
 
 /**
@@ -301,14 +301,12 @@ export function ReadingSignInCard({ member, justJoined, initialStep = "email", o
   // page's empty-section CSS, kit.css, closes the band). A key member
   // (member-key) has no email of theirs on the list, so that card stays
   // exactly as it was. Case 2 above still wins for the rest of the visit.
-  if (member) {
-    if (member.space === "email") return null;
-    return (
-      <div id="sign-up">
-        <ReadingSignUpCard kind="member-key" memberEmail={null} variant="public" />
-      </div>
-    );
-  }
+  //
+  // T-618 (the Admiral): "the user that's already signed in should be
+  // getting the emails already so no need to show that for them at all."
+  // A key member gets no card either, so every signed-in arrival is null
+  // (the section closes); only the signed-out box and Case 2 remain.
+  if (member) return null;
 
   // Case 1 — signed out: email, then (same box) the code.
   return (

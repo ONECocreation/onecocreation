@@ -536,15 +536,15 @@ describe("the page source gains only the mount (one import, one bare <ReadingDay
     expect(mounts[1][0]).toBe("<ReadingDay ahead />"); // T-559: the one flag, nothing else
   });
 
-  it("sits right before the WHAT YOU WILL EXPERIENCE section, right after the sign-up section", async () => {
+  it("sits right before the WHAT YOU WILL EXPERIENCE section, and (T-618) the sign-up section now sits at the foot, after it", async () => {
     const src = await read(PAGE_PATH);
-    // TASK-468 replaced the old <ReadingSignUp variant="public"> with the one box
     const signUp = src.indexOf("<ReadingSignInBox");
     const mount = src.indexOf("<ReadingDay");
     const experience = src.indexOf("WHAT YOU WILL EXPERIENCE");
     expect(signUp).toBeGreaterThan(-1);
-    expect(mount).toBeGreaterThan(signUp);
+    expect(mount).toBeGreaterThan(-1);
     expect(experience).toBeGreaterThan(mount);
+    expect(signUp).toBeGreaterThan(experience);
   });
 
   it("still carries no payment word and no TIERS import — the law this page's own house test pins", async () => {
