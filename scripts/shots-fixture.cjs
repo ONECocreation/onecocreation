@@ -139,6 +139,18 @@ async function shootOne(ctx, base, route, theme, width, cookie) {
   console.log(`shot ${file} — status ${resp ? resp.status() : "?"} — title "${title}" — h1 "${h1}"`);
   await page.screenshot({ path: path.join(OUT, file), fullPage: FULL_PAGE });
 
+  /* T-621: optional page-slop pass on the SIGNED-IN page. PAGE_SLOP_SCRIPT = a file made by
+     `page-slop.py --emit-script`; the findings land beside the picture as <name>.slop.json. */
+  if (process.env.PAGE_SLOP_SCRIPT) {
+    const code = fs.readFileSync(process.env.PAGE_SLOP_SCRIPT, "utf8");
+    const rep = await page.evaluate((c, orphans) => {
+      if (orphans) window.__PAGE_SLOP_ORPHANS__ = true;
+      (0, eval)(c);
+      return JSON.parse(document.getElementById("page-slop-report").textContent);
+    }, code, width <= 400);
+    fs.writeFileSync(path.join(OUT, file.replace(/\.png$/, ".slop.json")), JSON.stringify(rep, null, 1));
+  }
+
   if (CLICK_SEL) {
     const clicked = await page.evaluate((sel) => {
       const el = document.querySelector(sel);

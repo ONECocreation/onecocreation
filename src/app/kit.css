@@ -681,3 +681,23 @@
   .menued-preview{padding:10px 10px}
   .menued-preview-bar{gap:4px 10px}
 }
+
+/* ── T-621: /a/site/replays. The card reads as three parts (playlist, add one by hand, the list
+   and its save) with even air between them; every button is the T-615 pill, one size ── */
+.kit-replays-card .kit-card-body{display:flex;flex-direction:column;gap:24px}
+.kit-replays-card .kit-replays-part{gap:14px;padding-top:24px;border-top:1px solid color-mix(in srgb,var(--lavender) 35%,transparent)}
+.kit-replays-card .kit-replays-part:first-of-type{padding-top:0;border-top:none}
+.kit-replays-card .kit-card-body>p,.kit-replays-card .kit-replays-part>p{margin:0}
+.kit-replays-card .kit-rows{margin:0}
+.kit-replays-card .kit-replays-actions{gap:12px;align-items:center}
+.kit-replays-card .kit-btn.kit-pill{width:168px;padding:0 12px}
+.kit-replays-card .kit-rows-end>button.kit-btn.kit-pill{min-width:0;width:112px}
+.kit-replays-card .kit-btn.kit-pill.is-on{
+  background:color-mix(in srgb,var(--lavender) 30%,transparent);border-color:var(--lavender);
+  box-shadow:0 0 0 2px var(--lavender)
+}
+@media(max-width:640px){
+  .kit-replays-card .kit-replays-actions>.kit-btn.kit-pill{flex:1 1 0;width:auto;min-width:0}
+  .kit-replays-card .kit-rows-end{width:100%}
+  .kit-replays-card .kit-rows-end>button.kit-btn.kit-pill{flex:1 1 calc(50% - 4px);width:auto}
+}
