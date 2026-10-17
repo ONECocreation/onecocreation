@@ -44,6 +44,19 @@ export const DOORS: DoorConfig[] = [
   { id: "qa", label: "Q&A · 3:33", adminPath: "/api/admin/qa-door" },
 ];
 
+/** TASK-631 (block 971,896): which week switch (a `SiteConfig` key,
+ *  `PartSwitchCard.tsx`'s `PartSwitchKey`) governs each door. `stage1`,
+ *  the Reading, has NO switch and always shows. Plain strings here so
+ *  this stays a no-"use client" module the server route can import. */
+export const DOOR_SWITCH: Record<string, "housewarming" | "bookTalk" | "qa" | undefined> = {
+  housewarming: "housewarming",
+  stage2: "bookTalk",
+  qa: "qa",
+};
+
+/** The one line under a row that is switched off but still open. */
+export const SWITCHED_OFF_OPEN_WORDS = "This part is switched off this week. Close the room when you're done.";
+
 export interface DoorRowState {
   phase: "closed" | "prepared" | "published";
   room: string | null;

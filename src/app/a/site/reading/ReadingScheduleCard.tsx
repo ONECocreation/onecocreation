@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { field } from "@/components/console/glass";
 import SwitchRow from "./SwitchRow";
 import HousewarmingSwitchCard from "./HousewarmingSwitchCard";
-import PartSwitchCard from "./PartSwitchCard";
+import PartSwitchCard, { type PartSwitchKey } from "./PartSwitchCard";
 import type { SiteConfig } from "@/lib/site-config";
 import {
   DEFAULT_READING_SCHEDULE,
@@ -46,7 +46,9 @@ const row: React.CSSProperties = {
   borderRadius: 12, padding: "10px 14px", marginBottom: 8,
 };
 
-export default function ReadingScheduleCard() {
+/* TASK-631: `onSwitchValue` hands each week switch's SAVED value up to
+   `SiteReadingRoom.tsx`, which hides/shows the matching room row. */
+export default function ReadingScheduleCard({ onSwitchValue }: { onSwitchValue?: (key: PartSwitchKey, on: boolean) => void } = {}) {
   const [schedule, setSchedule] = useState<ReadingSchedule | null>(null);
   const [savedYet, setSavedYet] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -126,9 +128,10 @@ export default function ReadingScheduleCard() {
         onFlip={() => update({ on: !schedule.on })}
       />
       {/* T-614 round 2: the three week switches ride right under it, the same row */}
-      <HousewarmingSwitchCard />
+      <HousewarmingSwitchCard onValue={onSwitchValue} />
       <PartSwitchCard
         switchKey="bookTalk"
+        onValue={onSwitchValue}
         label="Book Talk this week"
         onWords="the Book Talk at 2:22, the paid group call, is on"
         offWords="no Book Talk this week; the day goes from the Reading to the Q&A"
@@ -137,6 +140,7 @@ export default function ReadingScheduleCard() {
       />
       <PartSwitchCard
         switchKey="qa"
+        onValue={onSwitchValue}
         label="Q&A with Love this week"
         onWords="the Q&A with Love at 3:33 is on"
         offWords="no Q&A this week; the day ends after the Book Talk"

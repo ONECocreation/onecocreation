@@ -1,9 +1,11 @@
 "use client";
 
 import { SectionHead } from "@/components/console/glass";
+import { useCallback, useState } from "react";
 import ReadingScheduleCard from "./ReadingScheduleCard";
 import RoomsCard from "./RoomsCard";
 import { DOORS } from "./rooms-config";
+import type { PartSwitchKey } from "./PartSwitchCard";
 
 /**
  * /a/site/reading — the WEEKLY READING sub-room (TASK-381, block 968,047+;
@@ -32,15 +34,25 @@ import { DOORS } from "./rooms-config";
  * client/server boundary trap this avoids) so both this page and the
  * go/[door] route read the SAME array, never a second, driftable copy
  * of the four doors.
+ *
+ * TASK-631 (block 971,896, the Admiral: "the switches that are at the top
+ * for house warming should also show hide the available rooms for love to
+ * open at the bottom of the same page"): the three week switches' SAVED
+ * values are lifted into this component (each switch announces its
+ * server-read value, never the optimistic tap) and handed to The rooms
+ * card, which hides a switched-off part's row at once, no reload. Until a
+ * switch has loaded its row stays shown.
  */
 
 export default function SiteReadingRoom() {
+  const [switches, setSwitches] = useState<Partial<Record<PartSwitchKey, boolean>>>({});
+  const onSwitchValue = useCallback((key: PartSwitchKey, on: boolean) => setSwitches((s) => (s[key] === on ? s : { ...s, [key]: on })), []);
   return (
     <div className="p-6" style={{ maxWidth: 860 }}>
       <SectionHead label="Day, time, zone" />
-      <ReadingScheduleCard />
+      <ReadingScheduleCard onSwitchValue={onSwitchValue} />
       <SectionHead label="The rooms" />
-      <RoomsCard doors={DOORS} />
+      <RoomsCard doors={DOORS} switches={switches} />
     </div>
   );
 }

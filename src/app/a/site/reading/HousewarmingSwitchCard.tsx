@@ -1,6 +1,6 @@
 "use client";
 
-import PartSwitchCard from "./PartSwitchCard";
+import PartSwitchCard, { type PartSwitchKey } from "./PartSwitchCard";
 
 /**
  * THE HOUSEWARMING SWITCH (TASK-499, block 969,306+) - one weekly operator
@@ -15,10 +15,11 @@ import PartSwitchCard from "./PartSwitchCard";
  * the three week switches; this is the Housewarming's own row, drawn by
  * the same SwitchRow as the "Show the next reading time" row above it.
  */
-export default function HousewarmingSwitchCard() {
+export default function HousewarmingSwitchCard({ onValue }: { onValue?: (key: PartSwitchKey, on: boolean) => void }) {
   return (
     <PartSwitchCard
       switchKey="housewarming"
+      onValue={onValue}
       label="Housewarming this week"
       onWords="this week starts with the Housewarming at 12:12"
       offWords="no Housewarming this week; the day starts at the Reading"
