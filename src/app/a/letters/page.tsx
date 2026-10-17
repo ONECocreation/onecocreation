@@ -119,7 +119,7 @@ const LETTERS: { key?: string; slot?: "reading-confirm" | "reading-dayof"; name:
   {
     key: "offer-love-notify",
     name: "Offer on the doorstep (to Love)",
-    from: "news@, then love@",
+    from: "news@ to love@",
     kind: "on under-list offer · EDITABLE",
     subject: "💛 An offer on the doorstep",
     note: "who + offered vs listed + the two one-tap doors; {{who}} {{lines}} {{doors}} place the machine-built parts",
