@@ -154,7 +154,7 @@ describe("the sub-routes — each renders its one card", () => {
     // TASK-241: body moved to SiteMenuRoom.tsx.
     const page = await read("src/app/a/site/menu/SiteMenuRoom.tsx");
     expect(page).toContain("<NavEditor />");
-    expect(page).toContain("Menu — the doors Love shapes");
+    expect(page).toContain("The doors across the top of the site");
   });
 
   it("/a/site/community-door renders T-162's card", async () => {
@@ -187,15 +187,15 @@ describe("the menu editor's drag-and-drop (source pins)", () => {
   it("drags through the pure helpers, keeps the arrows, and shows the landing line", async () => {
     const editor = await read("src/components/console/NavEditor.tsx");
     expect(editor).toContain('from "@/lib/nav-edit"');
-    expect(editor).toContain("moveRow");
-    expect(editor).toContain("nestUnder");
-    // the drop line + the drag handle
-    expect(editor).toContain("DropLine");
+    // T-615: the rebuilt editor moves rows through moveRowTo / slotToPlace,
+    // every row has a grip and ONE Change control, and every change saves itself
+    expect(editor).toContain("moveRowTo");
+    expect(editor).toContain("slotToPlace");
     expect(editor).toContain("draggable");
     expect(editor).toContain("onDragOver");
     expect(editor).toContain("onDrop");
-    // the keyboard arrows stay for accessibility; Save is unchanged
-    expect(editor).toContain("aria-label={`move ${item.label} up`}");
-    expect(editor).toContain("Save the menu");
+    expect(editor).toContain("aria-label={`Change ${label}`}");
+    expect(editor).toContain("Every change saves itself.");
+    expect(editor).toContain("Yes, start over");
   });
 });
