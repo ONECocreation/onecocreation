@@ -17,11 +17,11 @@ export type StudioSave = { ok: true; doc: StudioDoc } | { ok: false; reason: str
 
 export async function saveStudio(raw: unknown): Promise<StudioSave> {
   const operator = operatorFromCookieHeader((await headers()).get("cookie"));
-  if (!operator) return { ok: false, reason: "operator session required — sign in at the door" };
+  if (!operator) return { ok: false, reason: "operator session required: sign in at the door" };
   try {
     return { ok: true, doc: await saveStudioDoc(raw) };
   } catch (e) {
-    return { ok: false, reason: `the stage doc would not take the write — ${e instanceof Error ? e.message : "error"}` };
+    return { ok: false, reason: `the stage doc would not take the write. ${e instanceof Error ? e.message : "error"}` };
   }
 }
 
@@ -31,12 +31,12 @@ export type JitsiDoorMint = { ok: true; room: string } | { ok: false; reason: st
 
 export async function mintJitsiDoor(): Promise<JitsiDoorMint> {
   const operator = operatorFromCookieHeader((await headers()).get("cookie"));
-  if (!operator) return { ok: false, reason: "operator session required — sign in at the door" };
+  if (!operator) return { ok: false, reason: "operator session required: sign in at the door" };
   try {
     const room = mintJitsiRoom();
     await setJitsiDoor(room);
     return { ok: true, room };
   } catch (e) {
-    return { ok: false, reason: `the room name would not take the write — ${e instanceof Error ? e.message : "error"}` };
+    return { ok: false, reason: `the room name would not take the write. ${e instanceof Error ? e.message : "error"}` };
   }
 }

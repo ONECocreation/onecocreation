@@ -54,7 +54,7 @@ export default function WeekRibbon({
       <div
         className={gridClass}
         role="grid"
-        aria-label={`BFT week ${first?.bftKey ?? ""} — 7 days`}
+        aria-label={`BFT week ${first?.bftKey ?? ""} · 7 days`}
       >
         {cells.map((cell) => (
           <DayCell

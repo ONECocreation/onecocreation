@@ -74,7 +74,7 @@ export default function BftMonthGrid({
       <div
         className={gridClass}
         role="grid"
-        aria-label={`BFT month ${bftYear}.${String(bftMonth).padStart(2, "0")} — 28 days`}
+        aria-label={`BFT month ${bftYear}.${String(bftMonth).padStart(2, "0")} · 28 days`}
       >
         {cells.map((cell, i) => (
           <DayCell
@@ -99,7 +99,7 @@ export default function BftMonthGrid({
           )}
           <span><span className="cal-legend__swatch cal-legend__swatch--multiday" />multi-day</span>
           <span><span className="cal-legend__swatch cal-legend__swatch--today" />today</span>
-          <span>28 days, always — a₿ months never grow a day 29</span>
+          <span>28 days, always: a₿ months never grow a day 29</span>
         </p>
       )}
     </div>

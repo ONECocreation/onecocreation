@@ -39,9 +39,9 @@ interface NodesConfig {
 }
 
 const SOURCE_LABEL: Record<ChatStatus["source"], string> = {
-  stored: "YOUR NODE — SAVED HERE",
+  stored: "YOUR NODE · SAVED HERE",
   env: "ENV BOOTSTRAP (CHAT_NODE_URL)",
-  default: "HOUSE FLOOR — DEFAULT",
+  default: "HOUSE FLOOR · DEFAULT",
 };
 
 function Pill({ ok, children }: { ok: boolean; children: ReactNode }) {
@@ -89,7 +89,7 @@ export default function ChatPanel() {
          null → the dash, never an estimate (fleet ruling 0018.05.26 a₿) */
       setChecked(await currentBlockInfo());
     } catch {
-      setError("couldn't reach the app — try again");
+      setError("couldn't reach the app. Try again");
     } finally {
       setBusy(false);
     }
@@ -134,7 +134,7 @@ export default function ChatPanel() {
       setConfig(data.config);
       loadStatus();
     } catch {
-      setSaveErr("save hiccuped — try again");
+      setSaveErr("save hiccuped: try again");
     } finally {
       setSaving(false);
     }
@@ -149,7 +149,7 @@ export default function ChatPanel() {
       </p>
       <h1 className="mb-3 font-display text-4xl text-cyan glow-cyan">CHAT FLOOR</h1>
       <p className="mb-8 font-mono text-[11px] text-white/50">
-        ORBEE — THE FLOOR CHAT · POINT — SAVE — TEST — OPEN THE DOOR
+        ORBEE · THE FLOOR CHAT · POINT · SAVE · TEST · OPEN THE DOOR
       </p>
 
       {error && <p className="mb-4 font-pixel text-[10px] uppercase text-ghost">{error}</p>}
@@ -159,10 +159,10 @@ export default function ChatPanel() {
         {status && !linked && (
           <div className="rounded-xl border-2 border-cyan/60 bg-cyan/5 p-4 font-body text-sm text-white/80">
             <p className="mb-2 font-pixel text-[10px] uppercase text-cyan">
-              CHAT NODE NOT LINKED YET — POINT IT BELOW
+              CHAT NODE NOT LINKED YET · POINT IT BELOW
             </p>
             <p>
-              No chat door is set yet — the site shows its empty state until you point one.
+              No chat door is set yet. The site shows its empty state until you point one.
               Orbee needs no write (the floor resolves tags live), so pointing your own orbee
               here is all it takes.
             </p>
@@ -172,11 +172,11 @@ export default function ChatPanel() {
         {/* your floor — the boxes: point, save, test */}
         <div className="console-card p-4" data-accent="cyan">
           <p className="mb-3 font-pixel text-[10px] uppercase tracking-widest text-white/40">
-            YOUR FLOOR — POINT · SAVE · TEST
+            YOUR FLOOR · POINT · SAVE · TEST
           </p>
           <label className="block">
             <span className="font-pixel text-[9px] uppercase text-white/40">
-              CHAT URL — YOUR ORBEE DOOR
+              CHAT URL · YOUR ORBEE DOOR
             </span>
             <input
               value={url}
@@ -214,7 +214,7 @@ export default function ChatPanel() {
           <div className="space-y-3 p-4 font-mono text-xs">
             <Row label="STATUS">
               {!status ? (
-                <span className="text-white/40">{busy ? "checking…" : "—"}</span>
+                <span className="text-white/40">{busy ? "checking…" : "none"}</span>
               ) : status.reachable ? (
                 <Pill ok={true}>REACHABLE</Pill>
               ) : (
@@ -222,14 +222,14 @@ export default function ChatPanel() {
               )}
             </Row>
             <Row label="DOOR">
-              <span className="break-all text-cyan">{status?.url ?? "—"}</span>
+              <span className="break-all text-cyan">{status?.url ?? "none"}</span>
             </Row>
-            <Row label="SOURCE">{status ? SOURCE_LABEL[status.source] : "—"}</Row>
+            <Row label="SOURCE">{status ? SOURCE_LABEL[status.source] : "none"}</Row>
             <Row label="CHECKED">
               {checked?.height != null ? (
                 <span className="text-white/60">{bftDateTime(checked.height)}</span>
               ) : (
-                "—"
+                "none"
               )}
             </Row>
             {status?.reason && (
@@ -253,7 +253,7 @@ export default function ChatPanel() {
         >
           OPEN THE CHAT </a>
         <p className="text-center font-pixel text-[9px] uppercase text-white/40">
-          THE DOOR IS /chat — THE SIGN-IN GATE. THE NODE ITSELF IS NEVER LINKED RAW.
+          THE DOOR IS /chat. THE SIGN-IN GATE. THE NODE ITSELF IS NEVER LINKED RAW.
         </p>
       </div>
     </div>

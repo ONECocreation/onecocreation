@@ -13,7 +13,7 @@ import SiteCommunityDoorRoom from "./SiteCommunityDoorRoom";
  */
 
 export const metadata: Metadata = {
-  title: "Community door — admin",
+  title: "Community door · admin",
   robots: { index: false, follow: false },
 };
 

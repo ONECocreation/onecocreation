@@ -70,7 +70,7 @@ describe("the VDO links card — three doors, each named and carrying the room",
     // TASK-305: the guest-door blurb changed (Love's both-off ruling,
     // call #4 item 6) — the words moved, the intent (a guest's door row)
     // this test pins is unchanged.
-    expect(html).toContain("camera and mic off until they choose — you can unmute from the desk");
+    expect(html).toContain("camera and mic off until they choose. You can unmute from the desk");
     // the room's name rides all three lines
     expect(html.split("onecocreation_studio").length - 1).toBeGreaterThanOrEqual(4); // the caption line + the 3 door names
   });

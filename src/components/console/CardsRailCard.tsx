@@ -129,14 +129,14 @@ export function deriveSquareRows(
       if (set) {
         if (d.connection?.ok) {
           mark = "check";
-          note = `verified ${day(d.connection.at)} — Square answers as ${d.connection.locationName ?? "your location"}`;
+          note = `verified ${day(d.connection.at)} · Square answers as ${d.connection.locationName ?? "your location"}`;
         } else if (d.connection) {
           mark = "error";
           note = d.connection.reason ?? "the connection test failed";
-          if (where === "on Vercel") note += " — fix it on Vercel, then redeploy";
+          if (where === "on Vercel") note += ": fix it on Vercel, then redeploy";
         } else {
           mark = "pending";
-          note = "set — the token and the location ID prove together; set both, then test";
+          note = "set: the token and the location ID prove together; set both, then test";
         }
       }
     } else if (name === "environment") {
@@ -144,16 +144,16 @@ export function deriveSquareRows(
         if (d.connection?.ok) {
           mark = "check";
           const host = d.connection.host ?? "";
-          note = `verified — ${host} answered (${host === "connect.squareup.com" ? "production" : "sandbox"})`;
+          note = `verified: ${host} answered (${host === "connect.squareup.com" ? "production" : "sandbox"})`;
         } else if (d.connection) {
           mark = "pending";
-          note = "set — the connection test above couldn't prove it this time";
+          note = "set: the connection test above couldn't prove it this time";
         } else {
           mark = "pending";
-          note = "set — proven together with the access token test";
+          note = "set: proven together with the access token test";
         }
       } else {
-        note = "not set — the house assumes sandbox";
+        note = "not set: the house assumes sandbox";
       }
     } else {
       // the webhook pair — provable only by Square's own knock
@@ -164,13 +164,13 @@ export function deriveSquareRows(
         const rAt = r?.at ? Date.parse(r.at) : -1;
         if (rAt >= 0 && rAt > vAt) {
           mark = "error";
-          note = (r?.reason ?? WEBHOOK_REJECT_SENTENCE) + (r?.detail ? ` — ${r.detail}` : "");
+          note = (r?.reason ?? WEBHOOK_REJECT_SENTENCE) + (r?.detail ? `: ${r.detail}` : "");
         } else if (vAt >= 0) {
           mark = "check";
-          note = `verified ${day(v?.at)} — last event ${v?.eventType ?? "—"}`;
+          note = `verified ${day(v?.at)} · last event ${v?.eventType ?? "none"}`;
         } else {
           mark = "pending";
-          note = "waiting for Square's first event — send a test event from Webhooks → Subscriptions";
+          note = "waiting for Square's first event. Send a test event from Webhooks / Subscriptions";
         }
       }
     }
@@ -199,7 +199,7 @@ export function squareChip(rows: ChecklistRow[], connection: ConnectionVerdict |
   if (failing) {
     return setCount === SQUARE_FIELD_ORDER.length
       ? { tone: "rose", words: "needs a fix" }
-      : { tone: "rose", words: `partly set up · ${setCount} of 5 — needs a fix` };
+      : { tone: "rose", words: `partly set up · ${setCount} of 5, needs a fix` };
   }
   return { tone: "lavender", words: `partly set up · ${setCount} of 5` };
 }
@@ -208,7 +208,7 @@ export function squareChip(rows: ChecklistRow[], connection: ConnectionVerdict |
 export function stripeChip(savedCount: number): ChipWords {
   if (savedCount <= 0) return { tone: "grey", words: "not set up" };
   if (savedCount === 1) return { tone: "lavender", words: "partly set up · 1 of 2" };
-  return { tone: "lavender", words: "keys saved — not built yet" };
+  return { tone: "lavender", words: "keys saved: not built yet" };
 }
 
 // ── rendering ─────────────────────────────────────────────────────────────
@@ -235,7 +235,7 @@ async function saveSquareField(fieldName: SquareFieldName, value: string): Promi
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ field: fieldName, value }),
-  }).then((r) => r.json()).catch(() => ({ ok: false, reason: "the vault didn't answer — try again" }));
+  }).then((r) => r.json()).catch(() => ({ ok: false, reason: "the vault didn't answer. Try again" }));
 }
 
 const SQUARE_PLACEHOLDER: Record<SquareFieldName, string> = {
@@ -269,7 +269,7 @@ function SquareVaultForm({
       setValue("");
       onSaved();
     } else {
-      setNote(res?.reason ?? "the vault didn't answer — try again");
+      setNote(res?.reason ?? "the vault didn't answer. Try again");
     }
   }
 
@@ -375,7 +375,7 @@ function SquareSection() {
     setTestBusy(false);
     setTestResult(res?.ok
       ? { ok: true, text: res.message }
-      : { ok: false, text: res?.reason ?? "the desk didn't answer — try again" });
+      : { ok: false, text: res?.reason ?? "the desk didn't answer. Try again" });
     refresh(); // the button's verdict is the checklist's verdict — one cache
   }
 
@@ -386,7 +386,7 @@ function SquareSection() {
     : data.source === "env"
       ? "the five values live on Vercel"
       : data.source === "vault"
-        ? "values from the vault — live at once, no redeploy"
+        ? "values from the vault. Live at once, no redeploy"
         : "";
 
   const step: React.CSSProperties = { margin: "0 0 10px", fontSize: ".85rem", lineHeight: 1.65 };
@@ -440,13 +440,13 @@ function SquareSection() {
                 Open the{" "}
                 <a href="https://developer.squareup.com/apps" target="_blank" rel="noreferrer"
                   style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>Square developer dashboard</a>{" "}
-                → your application → <b>Production</b> → <b>Credentials</b> — copy the <b>Access token</b>.
+                / your application / <b>Production</b> / <b>Credentials</b>. Copy the <b>Access token</b>.
               </li>
               <li style={step}>
-                Still in the dashboard: <b>Locations</b> — copy the <b>Location ID</b>.
+                Still in the dashboard: <b>Locations</b>: copy the <b>Location ID</b>.
               </li>
               <li style={step}>
-                <b>Webhooks → Subscriptions</b> → add a subscription: URL{" "}
+                <b>Webhooks / Subscriptions</b>, then add a subscription: URL{" "}
                 <span style={{ fontFamily: "monospace", fontSize: ".78rem", wordBreak: "break-all",
                   display: "inline-block", background: "rgba(139,118,196,.1)", borderRadius: 6, padding: "2px 6px" }}>
                   {data.defaultWebhookUrl}
@@ -455,16 +455,16 @@ function SquareSection() {
                 <b style={{ fontFamily: "monospace" }}>payment.updated</b> and{" "}
                 <b style={{ fontFamily: "monospace" }}>order.updated</b> (add{" "}
                 <b style={{ fontFamily: "monospace" }}>payment.created</b> and{" "}
-                <b style={{ fontFamily: "monospace" }}>order.fulfillment.updated</b> too) — then copy the{" "}
+                <b style={{ fontFamily: "monospace" }}>order.fulfillment.updated</b> too), then copy the{" "}
                 <b>Signature key</b>.
               </li>
               <li style={step}>
-                Put the five values on <b>Vercel → Settings → Environment Variables → Production</b>, then{" "}
-                <b>redeploy</b> — or paste them here instead (the vault rows above go live at once, no redeploy).
+                Put the five values on <b>Vercel / Settings / Environment Variables / Production</b>, then{" "}
+                <b>redeploy</b>, or paste them here instead (the vault rows above go live at once, no redeploy).
               </li>
               <li style={step}>
                 Back here: press <b>Test the connection</b>, then send a test event from{" "}
-                <b>Webhooks → Subscriptions</b> so the two webhook rows can prove themselves.
+                <b>Webhooks / Subscriptions</b> so the two webhook rows can prove themselves.
               </li>
             </ol>
           </details>
@@ -514,7 +514,7 @@ function StripeRow({
       setOpen(false);
       onSaved();
     } else {
-      setNote(res?.reason ?? "the vault didn't answer — try again");
+      setNote(res?.reason ?? "the vault didn't answer. Try again");
     }
   }
 
@@ -528,7 +528,7 @@ function StripeRow({
         </span>
       </div>
       <div style={{ marginLeft: 23, fontSize: ".78rem", color: "var(--muted)" }}>
-        {saved ? "saved — never shown back, never in an email" : "not set — the rail will need it once built"}
+        {saved ? "saved: never shown back, never in an email" : "not set: the rail will need it once built"}
       </div>
       <div style={{ marginLeft: 23, marginTop: 4 }}>
         <button className="btn btn-ghost btn-sm" onClick={() => setOpen((o) => !o)}>
@@ -587,7 +587,7 @@ function StripeSection() {
         {chip && <Chip tone={chip.tone}>{chip.words}</Chip>}
       </div>
       <p style={{ margin: "6px 0 4px", fontSize: ".78rem", color: "var(--muted)" }}>
-        The Stripe card rail is <b>not built yet</b> — keys you save wait in the vault, and nothing
+        The Stripe card rail is <b>not built yet</b>: keys you save wait in the vault, and nothing
         charges until the rail ships.
       </p>
 
@@ -609,21 +609,21 @@ function StripeSection() {
               <li style={step}>
                 Open <a href="https://dashboard.stripe.com" target="_blank" rel="noreferrer"
                   style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>dashboard.stripe.com</a>{" "}
-                → <b>Developers → API keys</b> → <b>Create restricted key</b>. Name it{" "}
-                <b>&ldquo;One Cocreation site&rdquo;</b> and give it <b>Checkout Sessions</b> — <b>Write</b>.
+                then <b>Developers / API keys</b>, then <b>Create restricted key</b>. Name it{" "}
+                <b>&ldquo;One Cocreation site&rdquo;</b> and give it <b>Checkout Sessions</b>: <b>Write</b>.
                 Copy the key (it starts <b style={{ fontFamily: "monospace" }}>rk_</b>) and paste it above.
               </li>
               <li style={step}>
-                <b>Developers → Webhooks</b> → <b>Add endpoint</b>: URL{" "}
+                <b>Developers / Webhooks</b>, then <b>Add endpoint</b>: URL{" "}
                 <span style={{ fontFamily: "monospace", fontSize: ".78rem", wordBreak: "break-all",
                   display: "inline-block", background: "rgba(139,118,196,.1)", borderRadius: 6, padding: "2px 6px" }}>
-                  {origin ? `${origin}/api/store/webhook/stripe` : "—"}
+                  {origin ? `${origin}/api/store/webhook/stripe` : "your site address"}
                 </span>{" "}
                 listening for <b style={{ fontFamily: "monospace" }}>checkout.session.completed</b>, then reveal
                 the <b>Signing secret</b> (starts <b style={{ fontFamily: "monospace" }}>whsec_</b>) and paste it above.
               </li>
               <li style={step}>
-                That&apos;s all there is to do — the Stripe card rail itself is <b>not built yet</b>, so the
+                That&apos;s all there is to do. The Stripe card rail itself is <b>not built yet</b>, so the
                 keys simply wait in the vault until it ships.
               </li>
             </ol>
@@ -661,7 +661,7 @@ export function railFlipPatch(key: RailKey, on: boolean): { payments: Partial<Re
  *  site page's own: a switch can hide a configured rail, never conjure an
  *  unconfigured one, so the toggle stays dark until the env names are set. */
 export function railSwitchWords(on: boolean, configured: boolean | null): string {
-  if (configured === false) return "not configured — the switch stays dark until the rail's env names are set";
+  if (configured === false) return "not configured: the switch stays dark until the rail's env names are set";
   return `this rail is ${on ? "ON" : "OFF"} for visitors`;
 }
 
@@ -682,7 +682,7 @@ export function RailSwitchView({
       <button
         type="button"
         aria-pressed={on}
-        aria-label={`${RAIL_LABEL[railKey]} rail — currently ${on ? "on" : "off"} for visitors`}
+        aria-label={`${RAIL_LABEL[railKey]} rail: currently ${on ? "on" : "off"} for visitors`}
         disabled={busy || dark}
         onClick={onFlip}
         className={`btn btn-sm ${on ? "btn-on" : "btn-ghost"}`}
@@ -736,7 +736,7 @@ export function RailSwitch({ railKey }: { railKey: RailKey }) {
       setOn(Boolean(res.config?.payments?.[railKey]));
       if (res.rails) setConfigured(Boolean(res.rails[railKey]?.configured));
     } else {
-      setNote(res?.reason ?? "the switch didn't take — try again");
+      setNote(res?.reason ?? "the switch didn't take. Try again");
     }
   }
 

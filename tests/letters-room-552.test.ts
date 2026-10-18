@@ -128,8 +128,9 @@ describe("the room source", () => {
     expect(css).toMatch(/\.kitx-even>\.kit-btn\{[^}]*width:2\.5rem;height:2\.5rem/);
     expect(css).toMatch(/max-width:640px\)\{\s*\.kit-rows-stackable>li>\.kitx-even\{display:flex;justify-content:flex-start/);
   });
-  it("names the fixed parts on every row", () => {
-    expect(src).toContain("Fixed: the logo header and the footer.");
+  it("names the fixed parts once on the page, and the filled slots on a row", () => {
+    expect(src).toContain("Fixed on every letter: the logo header and the footer");
+    expect(src).toContain("The house fills in");
     expect(src).toContain("every part is fixed");
   });
   it("the room's new copy has no long dash, arrow or emoji (the editor's old labels are lane 553a)", () => {

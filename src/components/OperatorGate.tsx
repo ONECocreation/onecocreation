@@ -73,20 +73,20 @@ export default function OperatorGate({ configured, next = null }: { configured: 
       }
       if (!res.ok || !data?.ok) {
         return (
-          data?.reason ?? `the server hiccuped (HTTP ${res.status}) — your key is fine; check the deployment env`
+          data?.reason ?? `the server hiccuped (HTTP ${res.status}). Your key is fine; check the deployment env`
         );
       }
       window.location.reload();
       return null;
     } catch {
-      return "couldn't reach the server — check your connection and try again";
+      return "couldn't reach the server. Check your connection and try again";
     }
   }
 
   async function verify() {
     setError(null);
     if (!window.nostr) {
-      setError("no signer extension in this browser — use the phone doors below, or install nos2x / Alby");
+      setError("no signer extension in this browser. Use the phone doors below, or install nos2x / Alby");
       return;
     }
     setBusy(true);
@@ -101,7 +101,7 @@ export default function OperatorGate({ configured, next = null }: { configured: 
         content: `PACS-CONSOLE-${Date.now()}`,
       });
     } catch {
-      setError("signing was declined — nothing sent");
+      setError("signing was declined: nothing sent");
       setBusy(false);
       return;
     }
@@ -169,7 +169,7 @@ export default function OperatorGate({ configured, next = null }: { configured: 
               className="console-card p-4 font-pixel text-[10px] uppercase leading-relaxed text-cyan"
               data-accent="cyan"
             >
-              NO OPERATOR KEYS CONFIGURED — SET{" "}
+              NO OPERATOR KEYS CONFIGURED. SET{" "}
               <span className="text-white/80">OPERATOR_NPUBS</span> IN THE DEPLOYMENT ENV
               (COMMA-SEPARATED NPUBS), THEN RELOAD
             </p>

@@ -76,7 +76,7 @@ function roomStateLine(state: RoomStateFeed | null): string {
     const t = new Date(state.scene.startsAt);
     if (!Number.isNaN(t.getTime())) {
       const when = t.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-      return `Studio · Not live — starts ${when}`;
+      return `Studio · Not live. Starts ${when}`;
     }
   }
   return "Studio · Not live";
@@ -146,7 +146,7 @@ export default function StudioHub({
           {overlayReady ? "Relay ready" : "Relay not configured"}
         </span>
         <a href="#studio-live" className="btn btn-sm btn-ghost" style={{ marginLeft: "auto" }}>
-          Go to live controls ↓
+          Go to live controls
         </a>
       </div>
 

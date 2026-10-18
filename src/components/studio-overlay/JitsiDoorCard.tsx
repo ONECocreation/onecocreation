@@ -42,7 +42,7 @@ export default function JitsiDoorCard({ domain, room, minting, onMint }: JitsiDo
     <div style={card}>
       <b style={{ fontSize: ".92rem", color: "var(--ink-strong)" }}>one-time private room (Jitsi)</b>
       <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
-        a fresh, unguessable room on {domain} — better suited to a personal, one-on-one conversation than the
+        a fresh, unguessable room on {domain}, better suited to a personal, one-on-one conversation than the
         studio room above.
       </p>
       {url ? (
@@ -58,7 +58,7 @@ export default function JitsiDoorCard({ domain, room, minting, onMint }: JitsiDo
       )}
       <p style={{ margin: 0, fontSize: ".72rem", color: "var(--muted)" }}>
         Open it and sign in as yourself to host (the login prompt is {domain}&apos;s own moderator gate). Send this
-        SAME link to your guest — they join straight in, no account. Who&apos;s actually in the room is Jitsi&apos;s
+        SAME link to your guest. They join straight in, no account. Who&apos;s actually in the room is Jitsi&apos;s
         own participant list inside the call.
       </p>
       <div style={doorStack}>

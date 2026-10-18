@@ -44,7 +44,7 @@ export default function SwitchRow({
         <b>{label}</b>
         <span>{` - ${quiet}`}</span>
       </div>
-      <Chip tone={on ? "green" : "grey"}>{on ? "ON — showing" : "OFF — hidden"}</Chip>
+      <Chip tone={on ? "green" : "grey"}>{on ? "ON · showing" : "OFF · hidden"}</Chip>
     </div>
   );
 }

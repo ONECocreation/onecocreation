@@ -15,10 +15,10 @@
 export const STUDIO_SCENES = [
   { id: "solo", label: "Solo + runner", blurb: "the host full-frame, the runner along the foot", kind: "overlay" },
   { id: "duo", label: "Side by side", blurb: "the host and the first guest, paired lower thirds", kind: "overlay" },
-  { id: "phone", label: "Phone go-live", blurb: "a caller on the line — the guest's lower third leads", kind: "overlay" },
+  { id: "phone", label: "Phone go-live", blurb: "a caller on the line. The guest's lower third leads", kind: "overlay" },
   { id: "starting", label: "Starting soon", blurb: "the book picture, the show title, a countdown to go-live", kind: "full" },
-  { id: "brb", label: "Be right back", blurb: "a short pause — the mark and a breath", kind: "full" },
-  { id: "ending", label: "Thank you", blurb: "the closing card — the after-hours line and the door home", kind: "full" },
+  { id: "brb", label: "Be right back", blurb: "a short pause: the mark and a breath", kind: "full" },
+  { id: "ending", label: "Thank you", blurb: "the closing card: the after-hours line and the door home", kind: "full" },
 ] as const;
 
 export type StudioSceneId = (typeof STUDIO_SCENES)[number]["id"];

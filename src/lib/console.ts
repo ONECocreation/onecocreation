@@ -126,7 +126,7 @@ export const CONSOLE_OVERVIEW: ConsoleRoom = {
   href: "/a",
   label: "SCAR·LET Overview",
   short: "OVERVIEW",
-  blurb: "the console front page — site health, what needs you, where a first captain begins",
+  blurb: "the console front page. Site health, what needs you, where a first captain begins",
   tone: "cyan",
 };
 
@@ -146,7 +146,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/status",
     label: "BRIDGE",
     short: "BRIDGE",
-    blurb: "the live board — status reports + the briefs library",
+    blurb: "the live board: status reports + the briefs library",
     tone: "cyan",
     subs: [
       {
@@ -177,7 +177,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/sim",
     label: "SIMULATOR",
     short: "SIMULATOR",
-    blurb: "the sim deck — play money only — and the training modules berth",
+    blurb: "the sim deck, play money only, and the training modules berth",
     tone: "neon",
     subs: [
       { key: "deck", label: "SIM DECK", href: "/a/sim#deck" },
@@ -190,7 +190,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/bots",
     label: "BOT DECK",
     short: "BOT DECK",
-    blurb: "owner-toggled add-ons — OFF by default, your call always",
+    blurb: "owner-toggled add-ons: OFF by default, your call always",
     tone: "cyan",
   },
   {
@@ -199,7 +199,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/connections",
     label: "FLEET MAP",
     short: "FLEET MAP",
-    blurb: "your nodes & doors, plus the dressing room — nothing here is hardwired",
+    blurb: "your nodes & doors, plus the dressing room. Nothing here is hardwired",
     tone: "cyan",
     subs: [
       {
@@ -235,7 +235,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/store",
     label: "STORE",
     short: "STORE",
-    blurb: "the shelf manager — wares, prices, the order book",
+    blurb: "the shelf manager: wares, prices, the order book",
     tone: "neon",
   },
   {
@@ -246,7 +246,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/booking",
     label: "CALENDAR",
     short: "CAL",
-    blurb: "sessions and your week — what you offer, when you work",
+    blurb: "sessions and your week. What you offer, when you work",
     tone: "cyan",
   },
   /* ── the artist-console rooms (wireframe v2, Admiral-blessed 0018.05.12).
@@ -266,7 +266,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/people",
     label: "PEOPLE",
     short: "PEOPLE",
-    blurb: "who's in the field — packages held, progress, offers awaiting you",
+    blurb: "who's in the field. Packages held, progress, offers awaiting you",
     tone: "cyan",
   },
   {
@@ -274,7 +274,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/money",
     label: "MONEY JARS",
     short: "MONEY",
-    blurb: "the jars, the codes, and the books — exports by type and date",
+    blurb: "the jars, the codes, and the books. Exports by type and date",
     tone: "neon",
   },
   {
@@ -300,7 +300,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/live",
     label: "GO LIVE",
     short: "LIVE",
-    blurb: "the go-live door — the rooms, YouTube, today's calls, a guest",
+    blurb: "the go-live door: the rooms, YouTube, today's calls, a guest",
     tone: "pink",
   },
   {
@@ -311,7 +311,7 @@ export const CONSOLE_ROOMS: ConsoleRoom[] = [
     href: "/a/studio",
     label: "STUDIO",
     short: "STUDIO",
-    blurb: "the broadcast desk — scenes, names, the overlay and VDO links",
+    blurb: "the broadcast desk: scenes, names, the overlay and VDO links",
     tone: "pink",
   },
   {

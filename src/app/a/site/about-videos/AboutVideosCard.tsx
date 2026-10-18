@@ -79,11 +79,11 @@ export default function AboutVideosCard() {
     if (!rows) return;
     setFeatErr(null);
     if (!featParsed) {
-      setFeatErr("That doesn't look like a YouTube video link — paste the watch link, the youtu.be share link, or the 11-character video id.");
+      setFeatErr("That doesn't look like a YouTube video link. Paste the watch link, the youtu.be share link, or the 11-character video id.");
       return;
     }
     if (!featTitle.trim()) {
-      setFeatErr("The video needs a title — what visitors read under it.");
+      setFeatErr("The video needs a title. What visitors read under it.");
       return;
     }
     setFeatBusy(true);
@@ -143,11 +143,11 @@ export default function AboutVideosCard() {
     if (!rows) return;
     setErr(null);
     if (!parsed) {
-      setErr("That doesn't look like a YouTube video link — paste the watch link, the youtu.be share link, a Shorts link, or the 11-character video id.");
+      setErr("That doesn't look like a YouTube video link. Paste the watch link, the youtu.be share link, a Shorts link, or the 11-character video id.");
       return;
     }
     if (!title.trim()) {
-      setErr("The video needs a title — the words visitors see on its folded row.");
+      setErr("The video needs a title. The words visitors see on its folded row.");
       return;
     }
     if (rows.some((r) => r.id === parsed.id)) {
@@ -193,10 +193,10 @@ export default function AboutVideosCard() {
           malformed link refused in words; Save / Clear, not a list. */}
       <b style={{ fontSize: ".9rem" }}>Top of About</b>
       <p style={{ fontSize: ".8rem", color: "var(--muted)", margin: "4px 0 10px", maxWidth: 640 }}>
-        One video that plays, muted, the instant a visitor opens /about — she taps the speaker to hear it.{" "}
+        One video that plays, muted, the instant a visitor opens /about. She taps the speaker to hear it.{" "}
         {featured
           ? "This is your saved video."
-          : "Nothing plays yet — /about shows nothing at the top until you save one."}
+          : "Nothing plays yet: /about shows nothing at the top until you save one."}
       </p>
       {featured && (
         <div style={row}>
@@ -215,14 +215,14 @@ export default function AboutVideosCard() {
             onChange={(e) => { setFeatLink(e.target.value); setFeatErr(null); }}
             placeholder="paste the YouTube link or the video id…"
             className="console-field" style={{ ...field, width: "100%" }}
-            aria-label="Top of About — YouTube link or video id"
+            aria-label="Top of About: YouTube link or video id"
           />
           <input
             value={featTitle}
             onChange={(e) => setFeatTitle(e.target.value)}
             placeholder="the title visitors see under it…"
             className="console-field" style={{ ...field, width: "100%" }}
-            aria-label="Top of About — video title"
+            aria-label="Top of About: video title"
           />
           <span style={{ fontSize: ".74rem", color: featParsed ? "var(--ok)" : "var(--muted)" }}>
             {featLink.trim()
@@ -246,31 +246,31 @@ export default function AboutVideosCard() {
 
       <b style={{ fontSize: ".9rem", display: "block", marginTop: 20 }}>Playlist</b>
       <p style={{ fontSize: ".8rem", color: "var(--muted)", margin: "4px 0 10px", maxWidth: 640 }}>
-        Paste a YouTube link — the watch link, the youtu.be share link, or a Shorts link all work; the house keeps
+        Paste a YouTube link. The watch link, the youtu.be share link, or a Shorts link all work; the house keeps
         only the video&apos;s id. Reorder with the arrows; the first video stands open on the page, the rest folded.{" "}
         {savedYet
-          ? "This is your saved list — the About page shows exactly these."
-          : "This is the built-in list — the About page shows these until you save your own."}
+          ? "This is your saved list. The About page shows exactly these."
+          : "This is the built-in list. The About page shows these until you save your own."}
       </p>
 
       {rows.length === 0 && (
         <p style={{ fontSize: ".8rem", color: "var(--muted)", margin: "0 0 10px" }}>
-          The list is empty — the About page says its quiet &quot;no videos yet&quot; line until you add one.
+          The list is empty. The About page says its quiet &quot;no videos yet&quot; line until you add one.
         </p>
       )}
 
       {rows.map((v, i) => (
         <div key={v.id} style={row}>
           <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <button type="button" style={videoIconBtn} disabled={i === 0} onClick={() => setRows(move(rows, i, -1))} aria-label={`move ${v.title} up`}>▲</button>
-            <button type="button" style={videoIconBtn} disabled={i === rows.length - 1} onClick={() => setRows(move(rows, i, 1))} aria-label={`move ${v.title} down`}>▼</button>
+            <button type="button" style={videoIconBtn} disabled={i === 0} onClick={() => setRows(move(rows, i, -1))} aria-label={`move ${v.title} up`}><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 8l4-4 4 4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+            <button type="button" style={videoIconBtn} disabled={i === rows.length - 1} onClick={() => setRows(move(rows, i, 1))} aria-label={`move ${v.title} down`}><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
           </span>
           <b style={{ fontSize: ".88rem", flex: 1, minWidth: 200 }}>{v.title}</b>
           <Chip tone="grey">{v.id}</Chip>
           <button
             type="button"
             className="btn btn-ghost btn-sm"
-            aria-label={`${v.title} — currently ${v.ratio === "9/16" ? "portrait" : "landscape"}, flip the shape`}
+            aria-label={`${v.title} · currently ${v.ratio === "9/16" ? "portrait" : "landscape"}, flip the shape`}
             onClick={() =>
               setRows(rows.map((r, idx) => (idx === i ? { ...r, ratio: r.ratio === "9/16" ? "16/9" : "9/16" } : r)))}
           >

@@ -24,7 +24,7 @@ import { SPACE_NAME } from "@/lib/identity-config";
  * ribbon. Same key-is-the-operator gate as every /a tab.
  */
 export const metadata: Metadata = {
-  title: "Fleet map — One Cocreation admin",
+  title: "Fleet map · One Cocreation admin",
   robots: { index: false, follow: false },
 };
 
@@ -56,7 +56,7 @@ export default async function AdminConnectionsPage() {
         </p>
         <h1 className="mb-3 mgmt-title">Connections</h1>
         <p className="mb-5 max-w-2xl font-body text-sm mgmt-lede">
-          Your nodes and doors — point each one at your own server, save, and test. Leave one
+          Your nodes and doors. Point each one at your own server, save, and test. Leave one
           empty and it falls back honestly. Nothing here is hardwired.
         </p>
         {/* jump rail — MOBILE fallback (the desktop ribbon accordion owns this sub-nav) */}
@@ -124,7 +124,7 @@ export default async function AdminConnectionsPage() {
           </p>
           <h2 className="mb-3 font-display text-4xl text-cyan glow-cyan">SHIP</h2>
           <p className="mb-2 font-mono text-[11px] mgmt-lede">
-            THE DOOR TO PRODUCTION · CONNECT — SIGN — DEPLOY
+            THE DOOR TO PRODUCTION · CONNECT · SIGN · DEPLOY
           </p>
         </div>
         <DeployPanel />
@@ -137,7 +137,7 @@ export default async function AdminConnectionsPage() {
           </p>
           <h2 className="mb-3 font-display text-4xl text-cyan glow-cyan">TORRENTS</h2>
           <p className="mb-8 font-mono text-[11px] mgmt-lede">
-            SEED THE KNOWLEDGE · POINT — SAVE — TEST
+            SEED THE KNOWLEDGE · POINT · SAVE · TEST
           </p>
           <div className="max-w-2xl">
             <div className="console-card p-5" data-accent="cyan">
@@ -145,7 +145,7 @@ export default async function AdminConnectionsPage() {
                 COMING SOON
               </span>
               <p className="mt-3 font-body text-sm text-white/70">
-                A torrent berth for the fleet — seed the archive so the knowledge survives even if
+                A torrent berth for the fleet. Seed the archive so the knowledge survives even if
                 a node goes dark. Same POINT · SAVE · TEST rail as the nodes above; this berth is
                 cut and waiting for its wiring.
               </p>

@@ -30,9 +30,9 @@ interface NodesConfig {
 }
 
 const SOURCE_LABEL: Record<MempoolStatus["source"], string> = {
-  stored: "YOUR NODE — SAVED HERE",
+  stored: "YOUR NODE · SAVED HERE",
   env: "ENV BOOTSTRAP (MEMPOOL_NODE_URL)",
-  default: "PUBLIC MEMPOOL.SPACE — FALLBACK",
+  default: "PUBLIC MEMPOOL.SPACE · FALLBACK",
 };
 
 function Pill({ ok, children }: { ok: boolean; children: ReactNode }) {
@@ -83,7 +83,7 @@ export default function MempoolPanel() {
         height: data.reachable && typeof data.height === "number" ? data.height : null,
       });
     } catch {
-      setError("couldn't reach the app — try again");
+      setError("couldn't reach the app. Try again");
     } finally {
       setBusy(false);
     }
@@ -128,7 +128,7 @@ export default function MempoolPanel() {
       setConfig(data.config);
       loadStatus();
     } catch {
-      setSaveErr("save hiccuped — try again");
+      setSaveErr("save hiccuped: try again");
     } finally {
       setSaving(false);
     }
@@ -143,7 +143,7 @@ export default function MempoolPanel() {
       </p>
       <h1 className="mb-3 font-display text-4xl text-cyan glow-cyan">CHAIN NODE</h1>
       <p className="mb-8 font-mono text-[11px] text-white/50">
-        THE BLOCK TIP + MEMPOOL FILL · POINT — SAVE — TEST
+        THE BLOCK TIP + MEMPOOL FILL · POINT · SAVE · TEST
       </p>
 
       {error && <p className="mb-4 font-pixel text-[10px] uppercase text-ghost">{error}</p>}
@@ -153,14 +153,14 @@ export default function MempoolPanel() {
         {status && onDefault && (
           <div className="rounded-xl border-2 border-cyan/60 bg-cyan/5 p-4 font-body text-sm text-white/80">
             <p className="mb-2 font-pixel text-[10px] uppercase text-cyan">
-              USING THE PUBLIC MEMPOOL.SPACE (FALLBACK) — POINT YOUR OWN BELOW
+              USING THE PUBLIC MEMPOOL.SPACE (FALLBACK) · POINT YOUR OWN BELOW
             </p>
             <p>
               The fleet reads the block tip and the live mempool fill through this node. Right now
               that is the public{" "}
-              <span className="font-mono text-cyan">mempool.space</span> — a third party. Stand up
+              <span className="font-mono text-cyan">mempool.space</span>, a third party. Stand up
               your own mempool instance against bitcoind and point it here; the fleet stops phoning
-              out. No token — it is read-only public chain data, no key ever touches it.
+              out. No token: it is read-only public chain data, no key ever touches it.
             </p>
           </div>
         )}
@@ -168,11 +168,11 @@ export default function MempoolPanel() {
         {/* your node — the boxes: point, save, test */}
         <div className="console-card p-4" data-accent="cyan">
           <p className="mb-3 font-pixel text-[10px] uppercase tracking-widest text-white/40">
-            YOUR NODE — POINT · SAVE · TEST
+            YOUR NODE · POINT · SAVE · TEST
           </p>
           <label className="block">
             <span className="font-pixel text-[9px] uppercase text-white/40">
-              MEMPOOL URL — YOUR OWN INSTANCE
+              MEMPOOL URL · YOUR OWN INSTANCE
             </span>
             <input
               value={url}
@@ -210,7 +210,7 @@ export default function MempoolPanel() {
           <div className="space-y-3 p-4 font-mono text-xs">
             <Row label="STATUS">
               {!status ? (
-                <span className="text-white/40">{busy ? "checking…" : "—"}</span>
+                <span className="text-white/40">{busy ? "checking…" : "none"}</span>
               ) : status.reachable ? (
                 <Pill ok={true}>REACHABLE</Pill>
               ) : (
@@ -218,9 +218,9 @@ export default function MempoolPanel() {
               )}
             </Row>
             <Row label="NODE">
-              <span className="break-all text-cyan">{status?.url ?? "—"}</span>
+              <span className="break-all text-cyan">{status?.url ?? "none"}</span>
             </Row>
-            <Row label="SOURCE">{status ? SOURCE_LABEL[status.source] : "—"}</Row>
+            <Row label="SOURCE">{status ? SOURCE_LABEL[status.source] : "none"}</Row>
             <Row label="TIP">
               {status?.reachable && status.height != null ? (
                 <span className="text-white/80">
@@ -228,16 +228,16 @@ export default function MempoolPanel() {
                   <span className="text-white/40">· {bftDate(status.height)}</span>
                 </span>
               ) : (
-                <span className="text-white/40">—</span>
+                <span className="text-white/40">none</span>
               )}
             </Row>
             <Row label="CHECKED">
               {checked == null ? (
-                "—"
+                "none"
               ) : checked.height != null ? (
                 <span className="text-white/60">{bftDateTime(checked.height)}</span>
               ) : (
-                <span className="text-white/40">— · node dark, no reading</span>
+                <span className="text-white/40">node dark, no reading</span>
               )}
             </Row>
             {status?.reason && (
@@ -249,7 +249,7 @@ export default function MempoolPanel() {
         </div>
 
         <p className="text-center font-pixel text-[9px] uppercase text-white/40">
-          NO TOKEN — READ-ONLY PUBLIC CHAIN DATA. THE FLEET READS THE TIP THROUGH /api/chain/tip.
+          NO TOKEN · READ-ONLY PUBLIC CHAIN DATA. THE FLEET READS THE TIP THROUGH /api/chain/tip.
         </p>
       </div>
     </div>

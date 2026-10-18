@@ -25,11 +25,11 @@ interface DeployRecord {
   ts: number;
 }
 
-/** BFT stamp, honest: no height when no node answered → "—" (ruling
+/** BFT stamp, honest: no height when no node answered → "none" (ruling
     0018.05.26 a₿: dashes over estimates). The `~ ` prefix survives only on
     legacy pre-ruling records whose height is a genesis estimate. */
 const stamp = (at?: number | null, estimated?: boolean) =>
-  at == null ? "—" : `${estimated ? "~ " : ""}${bftDateTime(at)}`;
+  at == null ? "none" : `${estimated ? "~ " : ""}${bftDateTime(at)}`;
 
 export default function DeployPanel() {
   const [configured, setConfigured] = useState<boolean | null>(null);
@@ -55,7 +55,7 @@ export default function DeployPanel() {
       setConfigured(!!data.configured);
       setDeploys(Array.isArray(data.deploys) ? data.deploys : []);
     } catch {
-      setErr("couldn't reach the app — try again");
+      setErr("couldn't reach the app. Try again");
     }
   }, []);
 
@@ -70,7 +70,7 @@ export default function DeployPanel() {
     setErr(null);
     setNote(null);
     if (!window.nostr?.signEvent) {
-      setErr("no signer extension found — your signature is the authorization");
+      setErr("no signer extension found. Your signature is the authorization");
       return;
     }
     setBusy(true);
@@ -83,7 +83,7 @@ export default function DeployPanel() {
         content: `PACS-DEPLOY-${Date.now()}`,
       });
     } catch {
-      setErr("signing was declined — nothing shipped");
+      setErr("signing was declined: nothing shipped");
       setBusy(false);
       return;
     }
@@ -95,13 +95,13 @@ export default function DeployPanel() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.ok) {
-        setErr(data?.reason ?? `the server hiccuped (HTTP ${res.status}) — your signature was fine`);
+        setErr(data?.reason ?? `the server hiccuped (HTTP ${res.status}) · your signature was fine`);
         return;
       }
       setNote(data.note ?? "deploy triggered ✓");
       load();
     } catch {
-      setErr("couldn't reach the server — check your connection and try again");
+      setErr("couldn't reach the server. Check your connection and try again");
     } finally {
       setBusy(false);
     }
@@ -123,7 +123,7 @@ export default function DeployPanel() {
         <div className="console-card p-5" data-accent="neon">
           <p className="font-body text-sm text-white/70">
             The deploy hook is connected (stored write-only). Sign to ship the current{" "}
-            <span className="font-mono text-neon">main</span> to production — pushes don&apos;t
+            <span className="font-mono text-neon">main</span> to production: pushes don&apos;t
             deploy, so you stay in control.
           </p>
           <button
@@ -132,7 +132,7 @@ export default function DeployPanel() {
             data-accent="neon"
             className="btn-pill btn-pill--solid mt-4 text-base"
           >
-            {busy ? "SIGNING…" : "▲ SHIP — DEPLOY TO PRODUCTION"}
+            {busy ? "SIGNING…" : "SHIP TO PRODUCTION"}
           </button>
 
           {deploys.length > 0 && (
@@ -147,7 +147,7 @@ export default function DeployPanel() {
                     className="flex flex-wrap items-baseline justify-between gap-x-3 font-mono text-[11px] text-white/50"
                   >
                     <span>
-                      ▲ shipped by <span className="text-white/70">{d.by.slice(0, 8)}…</span>
+                      shipped by <span className="text-white/70">{d.by.slice(0, 8)}…</span>
                       {d.jobId && <span className="ml-2 text-white/30">job {d.jobId.slice(0, 10)}</span>}
                     </span>
                     <span className="text-neon">{stamp(d.at, d.atEstimated)}</span>
@@ -186,13 +186,13 @@ function ConnectDeployHook({ onConnected }: { onConnected: () => void }) {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.ok) {
-        setErr(data?.reason ?? "couldn't save the hook — try again");
+        setErr(data?.reason ?? "couldn't save the hook. Try again");
         return;
       }
       setUrl("");
       onConnected();
     } catch {
-      setErr("couldn't reach the server — check your connection and try again");
+      setErr("couldn't reach the server. Check your connection and try again");
     } finally {
       setBusy(false);
     }
@@ -201,12 +201,12 @@ function ConnectDeployHook({ onConnected }: { onConnected: () => void }) {
   return (
     <div className="console-card p-4" data-accent="neon">
       <p className="mb-2 font-pixel text-[10px] uppercase text-neon">
-        CONNECT THE DEPLOY HOOK — ONE-TIME SETUP
+        CONNECT THE DEPLOY HOOK · ONE-TIME SETUP
       </p>
       <p className="mb-3 font-body text-xs leading-relaxed text-white/70">
-        Vercel → <span className="text-neon">onecocreation</span> → Settings → Git: connect this repo,
+        Vercel <span className="text-neon">onecocreation</span>, Settings / Git: connect this repo,
         then turn <span className="text-neon">OFF</span> automatic production deployments (pushes
-        won&apos;t deploy — you stay in control). Settings → Git → Deploy Hooks: create one for
+        won&apos;t deploy. You stay in control). Settings / Git / Deploy Hooks: create one for
         branch <span className="font-mono text-neon">main</span>, copy the URL, paste it here. It&apos;s
         stored write-only and never shown again.
       </p>

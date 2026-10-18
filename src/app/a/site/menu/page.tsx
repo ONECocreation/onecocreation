@@ -13,7 +13,7 @@ import SiteMenuRoom from "./SiteMenuRoom";
  */
 
 export const metadata: Metadata = {
-  title: "Menu — admin",
+  title: "Menu · admin",
   robots: { index: false, follow: false },
 };
 

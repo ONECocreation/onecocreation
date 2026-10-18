@@ -11,7 +11,7 @@ import { mintStudioDirectorTarget } from "../mint";
 import DirectorDeskEndCard from "./end-card";
 
 export const metadata: Metadata = {
-  title: "Director's desk — admin",
+  title: "Director's desk · admin",
   robots: { index: false, follow: false },
 };
 
@@ -66,12 +66,12 @@ export default async function DirectorDeskPage({ params }: { params: Promise<{ r
   return (
     <div className="p-2 text-sm" style={{ color: "var(--ink)" }}>
       <p style={{ margin: "0 0 4px", fontSize: ".85rem", color: "var(--muted)" }}>
-        your director&apos;s desk — {roomTitle} · the room, the guests, the controls, inside the site.
+        your director&apos;s desk: {roomTitle} · the room, the guests, the controls, inside the site.
       </p>
       <VdoRoom
         src={src}
         vdoHost={config.meeting.vdoHost}
-        title={`${roomTitle} — the director's desk`}
+        title={`${roomTitle} · the director's desk`}
         height="78vh"
         endCard={<DirectorDeskEndCard />}
       />

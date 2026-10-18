@@ -101,14 +101,14 @@ export default function OverviewPanel() {
         <div className="scar-stat" data-accent="cyan">
           <div className="scar-stat__n" style={{ fontSize: 15 }}>
             <span className="scar-starbox" aria-hidden="true" />{" "}
-            {tip === undefined ? "…" : tip === null ? "—" : tip.toLocaleString()}
+            {tip === undefined ? "…" : tip === null ? "unknown" : tip.toLocaleString()}
           </div>
           <div className="scar-stat__l">Chain tip</div>
           <div className="scar-stat__sub">
             {tip === undefined
               ? "reading the tip…"
               : tip === null
-                ? "node dark — no live reading · wire a node"
+                ? "node dark: no live reading · wire a node"
                 : "the fleet's own door · read-only"}
           </div>
         </div>
@@ -130,8 +130,8 @@ export default function OverviewPanel() {
         </div>
       </section>
 
-      {grp("pink", "NEEDS YOUR KEY", "each card is a door — the counts are the boards' own")}
-      <section className="scar-stats" aria-label="what needs you — doors into the rooms">
+      {grp("pink", "NEEDS YOUR KEY", "each card is a door. The counts are the boards' own")}
+      <section className="scar-stats" aria-label="what needs you: doors into the rooms">
         <Link href="/a/status#sign" className="scar-stat" data-accent="pink">
           <div className="scar-stat__n">{n(counts?.signoffs)}</div>
           <div className="scar-stat__l">Sign-offs</div>
@@ -149,7 +149,7 @@ export default function OverviewPanel() {
         </Link>
       </section>
       <p className="mt-3 font-mono text-[11px] text-white/40">
-        Every count reads live from its own board — a <b className="text-white/60">people-and-work
+        Every count reads live from its own board. A <b className="text-white/60">people-and-work
         count, never a money figure</b>; coin stays money-only.
       </p>
 
@@ -162,7 +162,7 @@ export default function OverviewPanel() {
             accent: "pink",
             title: "Claim your @space",
             detail:
-              "Register your name on the Spaces protocol — the site's front door walks you from watching the auction block to the claim.",
+              "Register your name on the Spaces protocol. The site's front door walks you from watching the auction block to the claim.",
             href: CONSOLE_SITE.home,
             cta: `Open ${CONSOLE_SITE.domain}`,
           },
@@ -170,9 +170,9 @@ export default function OverviewPanel() {
             step: "STEP 02",
             pill: "read",
             accent: "cyan",
-            title: "Read the briefs — how the world works",
+            title: "Read the briefs: how the world works",
             detail:
-              "What a top-level costs the block, self-custody, the BFT clock. Learn before you etch — we are the defenders of the block.",
+              "What a top-level costs the block, self-custody, the BFT clock. Learn before you etch. We are the defenders of the block.",
             href: "/a/briefs",
             cta: "Open the briefs",
           },
@@ -182,7 +182,7 @@ export default function OverviewPanel() {
             accent: "cyan",
             title: "Wire the Fleet Map",
             detail:
-              "Point the console at your own nodes — Spaces, Chat, MUD, Chain, Briefs. Leave one empty and it falls back honestly.",
+              "Point the console at your own nodes. Spaces, Chat, MUD, Chain, Briefs. Leave one empty and it falls back honestly.",
             href: "/a/connections",
             cta: "Open the Fleet Map",
           },

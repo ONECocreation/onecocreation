@@ -71,7 +71,7 @@ describe("the folded-in door model — the Heart Field first", () => {
   it("groups free → classes → community, unknown slugs never crash it", () => {
     const groups = doorRoomGroups([...ROOM_FIXTURES, { slug: "not-a-room", title: "Ghost", kind: "class" }]);
     expect(groups.map((g) => g.label)).toEqual([
-      "The Heart Field — free for every member",
+      "The Heart Field: free for every member",
       "Classes",
       "Community rooms",
     ]);
@@ -124,7 +124,7 @@ describe("the Discovery card — today's confirmed bookings from the booking sto
 
   it("an empty day says so in words; the closed card wears the honest count", () => {
     const open = renderRoom({ sessions: [], initialOpen: "call" });
-    expect(open).toContain("— no confirmed calls today (UTC)");
+    expect(open).toContain("no confirmed calls today (UTC)");
     const closed = renderRoom({ sessions: confirmedToday(bookings, nowMs) });
     expect(closed).toContain("2 today");
   });
@@ -233,7 +233,7 @@ describe("the co-create card — the guest link derived from the meeting config"
     expect(html).toContain("room name");
     expect(html).toContain("Jitsi");
     expect(html).toContain("VDO");
-    expect(html).toContain("— type a room name and the guest link derives here");
+    expect(html).toContain("type a room name and the guest link derives here");
   });
 });
 
@@ -246,7 +246,7 @@ describe("one door open at a time", () => {
 
   it("the page says so in words, and the four doors are the ruling's four", () => {
     const html = renderRoom();
-    expect(html).toContain("opening one closes the others");
+    expect(html).toContain("Opening one closes the others");
     expect(html).toContain("Read live on the site");
     expect(html).toContain("YouTube live");
     expect(html).toContain("Discovery call · 1:1");

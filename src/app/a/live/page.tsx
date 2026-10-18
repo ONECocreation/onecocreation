@@ -37,7 +37,7 @@ import { redirect } from "next/navigation";
  */
 
 export const metadata: Metadata = {
-  title: "Studio — admin",
+  title: "Studio · admin",
   robots: { index: false, follow: false },
 };
 

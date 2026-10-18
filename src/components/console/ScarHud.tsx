@@ -53,11 +53,11 @@ export default function ScarHud() {
     <div
       className="scar-hud"
       role="group"
-      aria-label="operator HUD — ship node, rank, points, commendations"
+      aria-label="operator HUD: ship node, rank, points, commendations"
     >
       <span
         className="scar-hud__seg scar-hud__seg--node"
-        title="this console's ship node — the name is config, not code"
+        title="this console's ship node. The name is config, not code"
       >
         <span className="scar-clockdot" aria-hidden="true" />
         {CONSOLE_NODE.name}
@@ -71,7 +71,7 @@ export default function ScarHud() {
         /* honest empty state — the board didn't answer, so the HUD stays dark */
         <span
           className="scar-hud__seg scar-hud__seg--dim"
-          title="the rank board didn't answer — the HUD goes dark rather than invent numbers"
+          title="the rank board didn't answer. The HUD goes dark rather than invent numbers"
         >
           BOARD NO READ
         </span>
@@ -81,18 +81,18 @@ export default function ScarHud() {
         <>
           <span
             className="scar-hud__seg scar-hud__seg--rank"
-            title="your rank — office label first (Pac's ruling)"
+            title="your rank: office label first (Pac's ruling)"
           > {hud.read.office ?? hud.read.rank?.name ?? "NO TAG YET"}
           </span>
           <span
             className="scar-hud__seg"
-            title="points — the board's own count"
+            title="points: the board's own count"
           >
             PTS <b>{hud.read.points}</b>
           </span>
           <span
             className="scar-hud__seg"
-            title="commendations — straight off resolved tickets"
+            title="commendations: straight off resolved tickets"
           >
             CMDS <b>{hud.read.commendations.reduce((sum, c) => sum + c.n, 0)}</b>
           </span>

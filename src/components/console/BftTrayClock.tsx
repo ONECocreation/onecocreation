@@ -56,8 +56,8 @@ export default function BftTrayClock({ variant }: { variant: "rail" | "bar" }) {
   const date = h != null ? bftDatePlain(h) : "----.--.--";
   const height = h != null ? h.toLocaleString() : "…";
   const title =
-    "Bitcoin Federated Time — the block is the clock (the StarDate is our block height)";
-  const abTitle = "a₿ · Anno Bitcoin — the BFT era marker (display only)";
+    "Bitcoin Federated Time: the block is the clock (the StarDate is our block height)";
+  const abTitle = "a₿ · Anno Bitcoin. The BFT era marker (display only)";
 
   if (variant === "bar") {
     return (

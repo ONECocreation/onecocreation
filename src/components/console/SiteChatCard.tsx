@@ -114,7 +114,7 @@ export default function SiteChatCard() {
         }
         setSaved(next);
         setDraft(next);
-        setNote("saved — rooms follow within about one poll after Save");
+        setNote("saved: rooms follow within about one poll after Save");
       } else {
         setNote(data.reason ?? "save failed");
       }
@@ -131,7 +131,7 @@ export default function SiteChatCard() {
 
   return (
     <div style={wrap}>
-      <p style={muted}>Save to apply — rooms follow within about one poll after Save, no reload needed.</p>
+      <p style={muted}>Save to apply: rooms follow within about one poll after Save, no reload needed.</p>
 
       {ROOMS.map((r) => {
         const slug = roomSlug(r.id);
@@ -142,7 +142,7 @@ export default function SiteChatCard() {
             <button
               type="button"
               aria-pressed={value === "on"}
-              aria-label={`${r.title} — chat currently ${value === "on" ? "on" : "hidden"}`}
+              aria-label={`${r.title} · chat currently ${value === "on" ? "on" : "hidden"}`}
               onClick={() => toggle(slug)}
               className={`btn btn-sm ${value === "on" ? "btn-on" : "btn-ghost"}`}
             >
@@ -150,9 +150,9 @@ export default function SiteChatCard() {
             </button>
             <b style={roomLabel}>{r.title}</b>
             <Chip tone={value === "on" ? "green" : "grey"}>
-              {value === "on" ? "chat ON — members see it" : "chat HIDDEN — no chat column"}
+              {value === "on" ? "chat ON: members see it" : "chat HIDDEN: no chat column"}
             </Chip>
-            {isDirty && <Chip tone="lavender">pending — not yet saved</Chip>}
+            {isDirty && <Chip tone="lavender">pending: not yet saved</Chip>}
           </div>
         );
       })}

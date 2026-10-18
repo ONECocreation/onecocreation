@@ -16,7 +16,7 @@ import SiteRoom from "./SiteRoom";
  */
 
 export const metadata: Metadata = {
-  title: "Site — admin",
+  title: "Site · admin",
   robots: { index: false, follow: false },
 };
 

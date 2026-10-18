@@ -115,7 +115,7 @@ export default function ReadingScheduleCard() {
       <p style={{ fontSize: ".8rem", color: "var(--muted)", margin: "0 0 10px", maxWidth: 640 }}>
         {savedYet
           ? "This is your saved schedule."
-          : "This is the built-in default — save once to make it your own."}
+          : "This is the built-in default. Save once to make it your own."}
       </p>
 
       <SwitchRow
@@ -195,7 +195,7 @@ export default function ReadingScheduleCard() {
       <div style={row}>
         <div style={{ flex: 1, minWidth: 220 }}>
           <b style={{ fontSize: ".9rem" }}>How long it runs</b>
-          <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — minutes</span>
+          <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> minutes</span>
         </div>
         <input
           type="number"

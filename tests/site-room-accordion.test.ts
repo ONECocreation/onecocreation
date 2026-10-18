@@ -90,8 +90,9 @@ describe("the accordion's rows + the current mark", () => {
     // Site row is not lit and marks no sub-row (accordion closed on the server)
     const siteBtn = html.match(/<button[^>]*aria-controls="mgmt-site-subs"[^>]*>/);
     expect(siteBtn?.[0]).not.toContain("is-active");
-    // the page heading follows the menu: Studio, never Site, on the reading's pages
-    expect(html).toContain('<h1 class="mgmt-title">Studio');
+    // T-622: the page heading is the reading's own name, never Studio (doubled) or Site
+    expect(html).toContain('<h1 class="mgmt-title">Weekly reading');
+    expect(html).not.toContain('<h1 class="mgmt-title">Studio');
     expect(html).not.toContain('<h1 class="mgmt-title">Site');
     vi.doUnmock("next/navigation");
     vi.resetModules();
@@ -162,14 +163,14 @@ describe("the sub-routes — each renders its one card", () => {
     // TASK-241: body moved to SiteCommunityDoorRoom.tsx.
     const page = await read("src/app/a/site/community-door/SiteCommunityDoorRoom.tsx");
     expect(page).toContain("<CommunityDoorCard />");
-    expect(page).toContain("Community door — what it needs before it opens");
+    expect(page).toContain("What it needs before it opens");
   });
 
   it("/a/site/about-videos renders T-161's playlist card", async () => {
     // TASK-241: body moved to SiteAboutVideosRoom.tsx.
     const page = await read("src/app/a/site/about-videos/SiteAboutVideosRoom.tsx");
     expect(page).toContain("<AboutVideosCard />");
-    expect(page).toContain("Videos on About — the playlist Love pastes");
+    expect(page).toContain("Videos on About: the playlist Love pastes");
     // the card itself moved verbatim — still self-contained through /api/admin/site
     const card = await read("src/app/a/site/about-videos/AboutVideosCard.tsx");
     expect(card).toContain('fetch("/api/admin/site"');

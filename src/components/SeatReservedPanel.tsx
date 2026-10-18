@@ -50,7 +50,7 @@ export default function SeatReservedPanel({ space }: { space: string }) {
       setEntry(data.entry);
       setPhase("seated");
     } catch {
-      setError("the request didn't reach the registry — check the connection and try again");
+      setError("the request didn't reach the registry. Check the connection and try again");
       setPhase("form");
     }
   }
@@ -59,7 +59,7 @@ export default function SeatReservedPanel({ space }: { space: string }) {
     return (
       <div className="console-card max-w-xl p-5" data-accent="cyan">
         <p className="mb-3 font-pixel text-xs text-cyan glow-cyan">
-          SEATED — THE NAME IS ON THE BOARD
+          SEATED · THE NAME IS ON THE BOARD
         </p>
         <div className="space-y-1 font-mono text-xs text-white/80">
           <p>
@@ -74,7 +74,7 @@ export default function SeatReservedPanel({ space }: { space: string }) {
               moment has no recorded block yet, so the stamp is an honest
               dash, never a ~guess from the wall clock */}
           <p>
-            SEATED: <span className="whitespace-nowrap">—</span>
+            SEATED: <span className="whitespace-nowrap">none</span>
           </p>
           {typeof entry.blockHeight === "number" && (
             <p>
@@ -140,7 +140,7 @@ export default function SeatReservedPanel({ space }: { space: string }) {
     <div className="console-card max-w-xl p-5" data-accent="cyan">
       <p className="mb-1 font-pixel text-xs text-cyan">SEAT A RESERVED NAME</p>
       <p className="mb-5 font-body text-sm text-white/70">
-        Reserved names are protected from the public queue — they only enter the registry
+        Reserved names are protected from the public queue. They only enter the registry
         here, by your hand. The seated key signs in and serves NIP-05 immediately.
       </p>
       <label className="block">

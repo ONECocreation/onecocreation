@@ -261,7 +261,7 @@ describe("TASK-162 — the door + the card's words", () => {
     expect(card).toContain("flip ON when every row above reads ok");
     expect(card).toContain("Your call, always");
     // the three states ride words on the chips — never color alone
-    expect(card).toContain('"— the site can\'t tell"');
+    expect(card).toContain('"the site can\'t tell"');
     expect(card).toContain('label: "missing"');
     expect(card).toContain('label: "ok"');
   });
@@ -274,7 +274,7 @@ describe("TASK-162 — the door + the card's words", () => {
     // operator-gate wrapper) to SiteCommunityDoorRoom.tsx.
     const page = await read("src/app/a/site/community-door/SiteCommunityDoorRoom.tsx");
     expect(page).toContain("<CommunityDoorCard />");
-    expect(page.indexOf("Community door — what it needs before it opens")).toBeGreaterThan(-1);
+    expect(page.indexOf("What it needs before it opens")).toBeGreaterThan(-1);
   });
 
   it("the invariants stay: the T-160 /classes gate and the T-137 header Community link (source pin)", async () => {

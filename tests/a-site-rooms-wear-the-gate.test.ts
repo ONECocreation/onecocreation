@@ -59,7 +59,7 @@ describe("the six Site rooms wear the operator gate (source pins)", () => {
 describe("the studio words (naming law: StudioPac = \"the studio\")", () => {
   it("the meeting-rail chip reads The studio; the vdo key value never changes", async () => {
     const room = await read("src/app/a/site/SiteRoom.tsx");
-    expect(room).toContain('{ key: "vdo", label: "The studio", about: "sessions meet in your studio — guest and director links on this site" }');
+    expect(room).toContain('{ key: "vdo", label: "The studio", about: "sessions meet in your studio. Guest and director links on this site" }');
   });
 
   it("no VDO.Ninja text is left anywhere under src/app/a/site", async () => {

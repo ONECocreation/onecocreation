@@ -128,7 +128,7 @@ export default function BookingRoom() {
   if (denied)
     return (
       <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>
-        operator session required — <a href="/a" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>sign in at the door</a>
+        operator session required: <a href="/a" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>sign in at the door</a>
       </p>
     );
   if (!config) return <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>reading the calendar…</p>;
@@ -227,7 +227,7 @@ export default function BookingRoom() {
             ...(siteMeeting?.allowStaticLinks ? [["static", "Zoom / any link"] as const] : []),
             ["jitsi", "Jitsi"],
             ["matrix", "Matrix room"],
-            ["inPerson", "In person — the studio"],
+            ["inPerson", "In person: the studio"],
           ] as const).map(([kind, label]) => (
             <button
               key={kind}
@@ -288,7 +288,7 @@ export default function BookingRoom() {
               value={draft.meetingRail.address ?? ""}
               onChange={(e) => setDraft({ ...draft, meetingRail: { ...draft.meetingRail, kind: "inPerson", address: e.target.value } })}
               className="console-field" style={{ ...field, width: "100%" }}
-              placeholder="where the RV parks — street, city, state"
+              placeholder="where the RV parks. Street, city, state"
             />
           </Field>
           <Field label="geotag / map link (optional)" wide>
@@ -327,7 +327,7 @@ export default function BookingRoom() {
   return (
     <div className="p-2 text-sm" style={{ color: "var(--ink)" }}>
       <p style={{ margin: "0 0 4px", fontSize: ".85rem", color: "var(--muted)" }}>
-        what you offer, and when you work — times are your wall clock, visitors see their own.
+        Times are your wall clock, visitors see their own.
       </p>
       {error && (
         <p style={{ margin: "10px 0 0", padding: "8px 14px", borderRadius: 10, fontSize: ".82rem",
@@ -349,7 +349,7 @@ export default function BookingRoom() {
 
       {config.services.length === 0 && !draft && (
         <p style={{ fontSize: ".82rem", color: "var(--muted)" }}>
-          No sessions yet — <b>working windows alone don&apos;t show on the booking page.</b>{" "}
+          No sessions yet: <b>working windows alone don&apos;t show on the booking page.</b>{" "}
           Hit <b>+ New session</b> (name, length, price), set it LIVE, and it appears at /book
           inside the windows you&apos;ve set.
         </p>
@@ -385,13 +385,13 @@ export default function BookingRoom() {
       {/* ── weekly rules ─────────────────────────────────────────────── */}
       <SectionHead label="Your Week" />
       <p style={{ margin: "0 0 10px", fontSize: ".78rem", color: "var(--muted)" }}>
-        recurring windows in your wall clock — 9:00 stays 9:00 across daylight saving
+        recurring windows in your wall clock, so 9:00 stays 9:00 across daylight saving
       </p>
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
         {config.rules.map((r) => (
           <li key={r.id} style={{ ...glassRow, display: "flex", alignItems: "center", gap: 10, fontSize: ".85rem" }}>
             <span style={{ flex: 1 }}>
-              <b>{WEEKDAYS[r.weekday]}</b> {r.start}–{r.end}
+              <b>{WEEKDAYS[r.weekday]}</b> {r.start} to {r.end}
               <span style={{ marginLeft: 8, color: "var(--muted)", fontSize: ".78rem" }}>
                 {r.serviceIds.length === 0 ? "all sessions" : r.serviceIds.join(", ")}
               </span>
@@ -422,7 +422,7 @@ export default function BookingRoom() {
                 ) : (
                   <Chip tone="green">extra</Chip>
                 )}{" "}
-                {o.date} {o.start && o.end ? `${o.start}–${o.end}` : "(all day)"}
+                {o.date} {o.start && o.end ? `${o.start} to ${o.end}` : "(all day)"}
                 {o.note && <span style={{ marginLeft: 8, color: "var(--muted)", fontSize: ".78rem" }}>{o.note}</span>}
               </span>
               {!retreat && (

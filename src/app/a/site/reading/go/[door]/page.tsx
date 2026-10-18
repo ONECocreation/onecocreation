@@ -41,7 +41,7 @@ import GoRoom from "./GoRoom";
  * safe on either side of the boundary.
  */
 export const metadata: Metadata = {
-  title: "Open the room — admin",
+  title: "Open the room · admin",
   robots: { index: false, follow: false },
 };
 

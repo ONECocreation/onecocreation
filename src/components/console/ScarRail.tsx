@@ -106,7 +106,7 @@ export default function ScarRail({ onNavigate }: { onNavigate: () => void }) {
       <Link
         href={CONSOLE_SITE.home}
         className="scar-rail__elbow"
-        title={`Leave the console — open ${CONSOLE_SITE.domain}`}
+        title={`Leave the console: open ${CONSOLE_SITE.domain}`}
       >
         <span>{CONSOLE_SITE.domain}</span>
       </Link>
@@ -117,7 +117,7 @@ export default function ScarRail({ onNavigate }: { onNavigate: () => void }) {
         className="scar-rail__brand"
         aria-current={isOverview ? "page" : undefined}
         onClick={onNavigate}
-        title="SCAR·LET Overview — the console front page"
+        title="SCAR·LET Overview: the console front page"
       >
         <b>SCAR·LET</b>
         <small>Overview</small>
@@ -231,7 +231,7 @@ export default function ScarRail({ onNavigate }: { onNavigate: () => void }) {
 
       {/* the ship-node block — the v2 sidebar's node readout, restored. The
           officers are Pac's identity ruling (display only, never auth). */}
-      <div className="scar-railnode" title="this console's ship node — the name is config, not code">
+      <div className="scar-railnode" title="this console's ship node. The name is config, not code">
         <span className="scar-railnode__name">
           <span className="scar-clockdot" aria-hidden="true" /> NODE: {CONSOLE_NODE.name}
         </span>

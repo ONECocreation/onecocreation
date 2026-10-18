@@ -41,7 +41,7 @@ export default function DiscountsDesk() {
     <div>
       <SectionHead label="Discount codes" />
       <p style={{ margin: "0 0 10px", fontSize: ".78rem", color: "var(--muted)" }}>
-        Store-level — the code reprices before any invoice; a 100% code marks the order paid with no
+        Store-level: the code reprices before any invoice; a 100% code marks the order paid with no
         invoice at all. A code with an expiry works through that whole day, then refuses on its own.
       </p>
       <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: ".78rem",

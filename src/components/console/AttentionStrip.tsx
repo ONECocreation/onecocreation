@@ -76,7 +76,7 @@ export default function AttentionStrip() {
       <div style={{ marginTop: 16, padding: "10px 16px", borderRadius: 12, fontSize: ".85rem",
         background: "rgba(231,178,195,.14)", border: "1.5px solid rgba(231,178,195,.5)", color: "var(--ink-body)",
         display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <span>⚑ the order book didn&apos;t answer — something may be waiting on your hand.</span>
+        <span>⚑ the order book didn&apos;t answer. Something may be waiting on your hand.</span>
         <button type="button" className="btn btn-sm" onClick={() => { setState("loading"); load(); }}>Retry</button>
       </div>
     );
@@ -97,10 +97,10 @@ export default function AttentionStrip() {
       <span style={{ fontSize: ".85rem" }}>
         {goods > 0 && `${goods} to ship or hand over`}
         {goods > 0 && offers > 0 && " · "}
-        {offers > 0 && `🎁 ${offers} give-what-you-can ${offers === 1 ? "offer waits" : "offers wait"} on your yes`}
+        {offers > 0 && `${offers} give-what-you-can ${offers === 1 ? "offer waits" : "offers wait"} on your yes`}
       </span>
       <span style={{ marginLeft: "auto", fontSize: ".72rem", textTransform: "uppercase", letterSpacing: ".08em" }}>
-        the order book →
+        the order book
       </span>
     </Link>
   );

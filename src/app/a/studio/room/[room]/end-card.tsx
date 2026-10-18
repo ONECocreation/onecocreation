@@ -13,10 +13,9 @@ export default function DirectorDeskEndCard() {
   return (
     <div className="card" style={{ padding: 32, textAlign: "center" }}>
       <p style={{ fontFamily: "var(--sans)", fontWeight: 600, fontSize: "1.4rem", margin: "0 0 8px" }}>
-        The field holds what you brought 🕊️
-      </p>
+        The field holds what you brought</p>
       <p style={{ color: "var(--muted)", margin: "0 0 20px" }}>
-        The desk is closed for now — everything waits where you left it.
+        The desk is closed for now. Everything waits where you left it.
       </p>
       <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
         <Link className="btn" href="/a/studio">Back to the studio desk</Link>

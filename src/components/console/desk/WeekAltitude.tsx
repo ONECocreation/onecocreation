@@ -18,7 +18,7 @@ export function BookingBreadcrumb({ altitude, selected }: { altitude: "Week" | "
   if (!selected) return null;
   return (
     <p className="desk-breadcrumb">
-      Desk › {altitude} › <b>{selected.title} · {timeLabel(selected.startUtc)}</b> — you&apos;re working this meeting
+      Desk › {altitude} › <b>{selected.title} · {timeLabel(selected.startUtc)}</b>: you&apos;re working this meeting
     </p>
   );
 }
@@ -112,7 +112,7 @@ export default function WeekAltitude({
                   onClick={() => onSelectBooking(b.bookingId === selectedBookingId ? null : b.bookingId)}
                   aria-pressed={b.bookingId === selectedBookingId}
                 >
-                  <b>{timeLabel(b.startUtc)}</b> {b.title} — {b.customer}
+                  <b>{timeLabel(b.startUtc)}</b> {b.title} with {b.customer}
                   {b.needsFulfil && <span aria-hidden="true"> ⚑</span>}
                 </button>
               </li>

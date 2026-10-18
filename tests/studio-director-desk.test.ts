@@ -246,7 +246,7 @@ describe("the end card — the console's farewell through VdoRoom's endCard prop
   it("DirectorDeskEndCard: the house's line verbatim, doors back to the console", async () => {
     const { default: DirectorDeskEndCard } = await import("@/app/a/studio/room/[room]/end-card");
     const html = renderToStaticMarkup(h(DirectorDeskEndCard));
-    expect(html).toContain("The field holds what you brought 🕊️");
+    expect(html).toContain("The field holds what you brought");
     expect(html).toContain('href="/a/studio"');
     expect(html).toContain('href="/a/live"');
     expect(html).not.toContain('href="/me"'); // the guest's member doors are not hers

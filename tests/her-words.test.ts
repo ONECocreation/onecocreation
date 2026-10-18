@@ -68,9 +68,9 @@ describe("#17 — \"The Heart Field\", two words, no \"Commons\", no dash", () =
     expect(src).toContain("Step into The Heart Field");
   });
 
-  it("LiveDoorCard.tsx: the picker's free-room group reads \"The Heart Field — free for every member\"", async () => {
+  it("LiveDoorCard.tsx: the picker's free-room group reads \"The Heart Field: free for every member\"", async () => {
     const src = await read("src/components/console/LiveDoorCard.tsx");
-    expect(src).toContain("The Heart Field — free for every member");
+    expect(src).toContain("The Heart Field: free for every member");
   });
 });
 

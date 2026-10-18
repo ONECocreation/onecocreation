@@ -203,11 +203,11 @@ describe("ADDENDUM — the store desk (/a/store) carries the Full description fi
   });
 
   it("the muted hint under the blurb field", () => {
-    expect(deskSrc).toMatch(/a line or two — the back of the card; the long story goes below/);
+    expect(deskSrc).toMatch(/a line or two. The back of the card; the long story goes below/);
   });
 
   it("the honest long-blurb-no-description hint, gated on both conditions", () => {
-    expect(deskSrc).toMatch(/this blurb is long for a card back — move the story into Full description/);
+    expect(deskSrc).toMatch(/this blurb is long for a card back. Move the story into Full description/);
     expect(deskSrc).toMatch(/!draft\.description\?\.trim\(\) && draft\.blurb\.length > 280/);
   });
 });

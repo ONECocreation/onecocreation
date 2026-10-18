@@ -36,8 +36,8 @@ const FEATURE_ROWS: { key: keyof SiteConfig["features"]; label: string; about: s
   { key: "cuts", label: "ConsciousCuts", about: "the ConsciousCuts & Waxing door on the home's Connect row" },
   { key: "jars", label: "Tip jars", about: "the tip jars in the Support section" },
   { key: "news", label: "News & letters", about: "the News & letters door in the nav" },
-  { key: "memberships", label: "Memberships", about: "the Memberships door in the nav, the Store header's Memberships button, the home hero's package doors, and /memberships + /packages themselves — each package's own door is its item in Items" },
-  { key: "largeSums", label: "Large Sums of Money", about: "the \"Large Sums of Money\" affirmation on the home shelf and the packages add-ons strip — off until the offer is ready" },
+  { key: "memberships", label: "Memberships", about: "the Memberships door in the nav, the Store header's Memberships button, the home hero's package doors, and /memberships + /packages themselves. Each package's own door is its item in Items" },
+  { key: "largeSums", label: "Large Sums of Money", about: "the \"Large Sums of Money\" affirmation on the home shelf and the packages add-ons strip. Off until the offer is ready" },
   { key: "purchaseLoveNotify", label: "Purchase letters to Love", about: "the short letter to love@ when any order settles; who bought, what, the amount" },
   { key: "subscriptions", label: "Monthly memberships (recurring billing)", about: "real monthly memberships billed by Square: the card box, cancel and upgrade. Off until the plans are mapped and the live test passes" },
 ];
@@ -45,12 +45,12 @@ const FEATURE_ROWS: { key: keyof SiteConfig["features"]; label: string; about: s
 const RAIL_ROWS: { key: keyof SiteConfig["payments"]; label: string; about: string }[] = [
   { key: "btcpay", label: "Bitcoin (BTCPay)", about: "bitcoin / lightning checkout, straight to Love's own node" },
   { key: "square", label: "Card checkout (one-time payments)", about: "card checkout through Square's own hosted page" },
-  { key: "stripe", label: "Card (Stripe)", about: "card checkout through Stripe — the adapter isn't built yet; keys live in the Money room's key drawer" },
+  { key: "stripe", label: "Card (Stripe)", about: "card checkout through Stripe. The adapter isn't built yet; keys live in the Money room's key drawer" },
 ];
 
 const MEETING_RAILS: { key: SiteConfig["meeting"]["rail"]; label: string; about: string }[] = [
-  { key: "jitsi", label: "Jitsi", about: "sessions meet on your own Jitsi — the room opens on this site" },
-  { key: "vdo", label: "The studio", about: "sessions meet in your studio — guest and director links on this site" },
+  { key: "jitsi", label: "Jitsi", about: "sessions meet on your own Jitsi. The room opens on this site" },
+  { key: "vdo", label: "The studio", about: "sessions meet in your studio. Guest and director links on this site" },
   { key: "static", label: "Zoom / any link", about: "sessions meet at a pasted link" },
 ];
 
@@ -109,7 +109,7 @@ export default function SiteRoom() {
   if (denied)
     return (
       <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>
-        operator session required — <a href="/a" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>sign in at the door</a>
+        operator session required: <a href="/a" style={{ color: "var(--gold-deep)", textDecoration: "underline" }}>sign in at the door</a>
       </p>
     );
   if (!config || !rails) return <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>reading the switches…</p>;
@@ -133,64 +133,64 @@ export default function SiteRoom() {
       <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>The Switches</h1>
       <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
         Hide what isn&apos;t finished, turn the payment types on and off. A rail is live only when its
-        switch is ON <em>and</em> its keys are configured — the words under each toggle say which.
+        switch is ON <em>and</em> its keys are configured. The words under each toggle say which.
       </p>
 
       {/* ── the features ── */}
-      <SectionHead label="Features — what the site shows" />
+      <SectionHead label="Features: what the site shows" />
       {FEATURE_ROWS.map((r) => {
         const on = config.features[r.key];
         return (
           <div key={r.key} style={row}>
-            {toggle(on, false, `${r.label} — currently ${on ? "on" : "off"}`, () =>
+            {toggle(on, false, `${r.label} · currently ${on ? "on" : "off"}`, () =>
               setConfig({ ...config, features: { ...config.features, [r.key]: !on } }))}
             <div style={{ flex: 1, minWidth: 220 }}>
               <b style={{ fontSize: ".9rem" }}>{r.label}</b>
-              <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — {on ? "showing" : "hidden"}: {r.about}</span>
+              <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: {on ? "showing" : "hidden"}, {r.about}</span>
             </div>
-            <Chip tone={on ? "green" : "grey"}>{on ? "ON — showing" : "OFF — hidden"}</Chip>
+            <Chip tone={on ? "green" : "grey"}>{on ? "ON · showing" : "OFF · hidden"}</Chip>
           </div>
         );
       })}
 
       {/* ── the payment rails ── */}
-      <SectionHead label="Payments — which rails can take money" />
+      <SectionHead label="Payments: which rails can take money" />
       {RAIL_ROWS.map((r) => {
         const on = config.payments[r.key];
         const status = rails[r.key];
         const disabled = !status.configured;
         return (
           <div key={r.key} style={{ ...row, opacity: disabled ? 0.72 : 1 }}>
-            {toggle(on && status.configured, disabled, `${r.label} — currently ${on ? "on" : "off"}`, () =>
+            {toggle(on && status.configured, disabled, `${r.label} · currently ${on ? "on" : "off"}`, () =>
               setConfig({ ...config, payments: { ...config.payments, [r.key]: !on } }))}
             <div style={{ flex: 1, minWidth: 220 }}>
               <b style={{ fontSize: ".9rem" }}>{r.label}</b>
-              <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — {r.about}</span>
+              <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: {r.about}</span>
               <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 3 }}>
                 {status.env.length > 0 ? (
                   <>
                     env: {status.env.map((n) => <code key={n} style={{ marginRight: 8 }}>{n}</code>)}
-                    — {status.configured ? "configured ✓" : "not configured — the toggle stays dark until these are set"}
+                    {" "}{status.configured ? "configured ✓" : "not configured: the toggle stays dark until these are set"}
                   </>
                 ) : (
-                  "no env — keys are pasted in the Money room's Stripe drawer; the rail itself ships separately"
+                  "no env: keys are pasted in the Money room's Stripe drawer; the rail itself ships separately"
                 )}
               </div>
             </div>
             <Chip tone={!status.configured ? "grey" : on ? "green" : "gold"}>
-              {!status.configured ? "not configured" : on ? "ON — live" : "OFF — hidden"}
+              {!status.configured ? "not configured" : on ? "ON · live" : "OFF · hidden"}
             </Chip>
           </div>
         );
       })}
 
       {/* ── how sessions meet ── */}
-      <SectionHead label="Meetings — how sessions open" />
+      <SectionHead label="Meetings: how sessions open" />
       <div style={row}>
         <div style={{ flex: 1, minWidth: 220 }}>
           <b style={{ fontSize: ".9rem" }}>The meeting rail</b>
           <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>
-            {" "}— new services default to this: {MEETING_RAILS.find((m) => m.key === config.meeting.rail)?.about}
+            {" "}Default for new services: {MEETING_RAILS.find((m) => m.key === config.meeting.rail)?.about}
           </span>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -219,9 +219,9 @@ export default function SiteRoom() {
         <div style={row}>
           <div style={{ flex: 1, minWidth: 220 }}>
             <b style={{ fontSize: ".9rem" }}>Jitsi domain</b>
-            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — where the Jitsi rooms open; prefilled with this site&apos;s own</span>
+            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: where the Jitsi rooms open; prefilled with this site&apos;s own</span>
             <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
-              room name pattern (read-only): each session opens at <code>{config.meeting.jitsiDomain}/&lt;booking id&gt;</code> —
+              room name pattern (read-only): each session opens at <code>{config.meeting.jitsiDomain}/&lt;booking id&gt;</code>: 
               the booking&apos;s own id, never a name you have to invent
             </div>
           </div>
@@ -237,9 +237,9 @@ export default function SiteRoom() {
         <div style={row}>
           <div style={{ flex: 1, minWidth: 220 }}>
             <b style={{ fontSize: ".9rem" }}>Studio room prefix</b>
-            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — defaults to the site&apos;s own name</span>
+            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: defaults to the site&apos;s own name</span>
             <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
-              guests get <code>?room={config.meeting.vdoRoomPrefix || "prefix"}-&lt;booking&gt;</code> — a new session&apos;s room name starts with this prefix
+              guests get <code>?room={config.meeting.vdoRoomPrefix || "prefix"}-&lt;booking&gt;</code>: a new session&apos;s room name starts with this prefix
             </div>
           </div>
           <input
@@ -254,9 +254,9 @@ export default function SiteRoom() {
         <div style={row}>
           <div style={{ flex: 1, minWidth: 220 }}>
             <b style={{ fontSize: ".9rem" }}>Studio host</b>
-            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — where the VDO rooms open; prefilled with this site&apos;s own studio</span>
+            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: where the VDO rooms open; prefilled with this site&apos;s own studio</span>
             <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
-              a bare host only — no <code>https://</code>, no path — every guest/push/director link on this rail opens at{" "}
+              a bare host only. No <code>https://</code>, no path: every guest/push/director link on this rail opens at{" "}
               <code>{config.meeting.vdoHost || "host"}</code>
             </div>
           </div>
@@ -273,9 +273,9 @@ export default function SiteRoom() {
         <div style={row}>
           <div style={{ flex: 1, minWidth: 220 }}>
             <b style={{ fontSize: ".9rem" }}>Standing meeting link</b>
-            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> — Zoom, Webex, anything; a new session defaults to this link</span>
+            <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: Zoom, Webex, anything; a new session defaults to this link</span>
             <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
-              choosing this rail already allows &quot;any link&quot; per session — there&apos;s no separate switch to flip
+              choosing this rail already allows &quot;any link&quot; per session: there&apos;s no separate switch to flip
             </div>
           </div>
           <input
@@ -285,7 +285,7 @@ export default function SiteRoom() {
             placeholder="https://zoom.us/j/…"
             aria-label="Standing meeting link"
           />
-          <Chip tone="green">any link — allowed</Chip>
+          <Chip tone="green">any link: allowed</Chip>
         </div>
       )}
 

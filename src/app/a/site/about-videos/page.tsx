@@ -14,7 +14,7 @@ import SiteAboutVideosRoom from "./SiteAboutVideosRoom";
  */
 
 export const metadata: Metadata = {
-  title: "Videos on About — admin",
+  title: "Videos on About · admin",
   robots: { index: false, follow: false },
 };
 

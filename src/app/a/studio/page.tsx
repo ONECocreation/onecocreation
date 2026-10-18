@@ -46,7 +46,7 @@ import { getJitsiDoor } from "@/lib/studio/jitsi-door";
  */
 
 export const metadata: Metadata = {
-  title: "Studio — admin",
+  title: "Studio · admin",
   robots: { index: false, follow: false },
 };
 

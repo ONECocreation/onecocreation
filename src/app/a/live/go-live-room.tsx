@@ -272,9 +272,9 @@ export default function GoLiveRoom({
       if (d?.ok) {
         setNote(
           action === "open"
-            ? `● open — the word landed in the room${d.letters ? ` · letter queued to ${d.letters.queued ?? 0} of ${d.letters.audience ?? 0}` : ""}`
+            ? `● open: the word landed in the room${d.letters ? ` · letter queued to ${d.letters.queued ?? 0} of ${d.letters.audience ?? 0}` : ""}`
             : d.closed
-              ? `the room rests${d.goodbye?.ok ? " — the goodbye landed" : " — the goodbye did not land; the flag is down"}`
+              ? `the room rests${d.goodbye?.ok ? ": the goodbye landed" : ": the goodbye did not land; the flag is down"}`
               : "the room was already dark",
         );
         if (action === "open") setMessage("");
@@ -354,23 +354,23 @@ export default function GoLiveRoom({
     : null;
 
   const DOORS: { id: GoLiveDoorId; title: string; blurb: string }[] = [
-    { id: "read", title: "Read live on the site", blurb: "open a room — the banner lights, the words land in the room" },
-    { id: "youtube", title: "YouTube live", blurb: "the studio's VDO links — your camera in, a guest's door" },
-    { id: "call", title: "Discovery call · 1:1", blurb: "today's confirmed calls from the booking store — you host" },
+    { id: "read", title: "Read live on the site", blurb: "open a room: the banner lights, the words land in the room" },
+    { id: "youtube", title: "YouTube live", blurb: "the studio's VDO links. Your camera in, a guest's door" },
+    { id: "call", title: "Discovery call · 1:1", blurb: "today's confirmed calls from the booking store. You host" },
     { id: "cocreate", title: "Co-create with a guest", blurb: "a one-off room, the guest link derived from the meeting config" },
   ];
 
   return (
     <div className="p-2 text-sm" style={{ color: "var(--ink)" }}>
       <p style={{ margin: "0 0 4px", fontSize: ".85rem", color: "var(--muted)" }}>
-        one door on Love&apos;s desk, four ways in — opening one closes the others.
+        one door on Love&apos;s desk, four ways in. Opening one closes the others.
       </p>
 
       {/* ── the strip: the desk's one truth about what is live ────────── */}
       <div style={{ ...glassCard, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 14px", marginTop: 10 }}>
         {!feed && <span style={muted}>reading the flag…</span>}
         {feed && !feed.state.live && (
-          <span style={muted}>— not live · the rooms rest; the strip on the member header stays dark</span>
+          <span style={muted}>not live · the rooms rest; the strip on the member header stays dark</span>
         )}
         {feed?.state.live && (
           <>
@@ -381,12 +381,12 @@ export default function GoLiveRoom({
             )}
             <span style={muted}>
               who&apos;s here: {roster && roster.slug === liveSlug
-                ? `${roster.count} joined${roster.names.length ? ` — ${roster.names.slice(0, 3).join(", ")}${roster.names.length > 3 ? "…" : ""}` : ""}`
-                : "—"}
+                ? `${roster.count} joined${roster.names.length ? `: ${roster.names.slice(0, 3).join(", ")}${roster.names.length > 3 ? "…" : ""}` : ""}`
+                : "none yet"}
             </span>
             <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
               <button type="button" className="btn btn-sm btn-ghost" onClick={() => act("close")} disabled={busy}>
-                {busy ? "Ending…" : "End the session 🕊️"}
+                {busy ? "Ending…" : "End the session"}
               </button>
             </span>
           </>
@@ -409,9 +409,9 @@ export default function GoLiveRoom({
                 {feed?.state.live ? (
                   <>
                     <p style={muted}>
-                      ● <b>{liveTitle}</b> is open — the banner is up. The Stage:{" "}
+                      ● <b>{liveTitle}</b> is open: the banner is up. The Stage:{" "}
                       <Link href={`/rooms/${liveSlug}`} style={{ color: "var(--gold-deep)" }}>/rooms/{liveSlug}</Link>{" "}
-                      — sign in as Love at the door; the room&apos;s own gate knows your key.
+                      Sign in as Love at the door; the room&apos;s own gate knows your key.
                     </p>
                     {meeting.rail === "vdo" && (
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -419,7 +419,7 @@ export default function GoLiveRoom({
                         <a href={studioDirector} target="_blank" rel="noopener noreferrer" className="btn btn-sm" style={{ alignSelf: "flex-start" }}>
                           Open your director&apos;s desk
                         </a>
-                        <p style={muted}>scene switching, mute-all, the room&apos;s own controls — opens in a new tab</p>
+                        <p style={muted}>scene switching, mute-all, the room&apos;s own controls. Opens in a new tab</p>
                         <a href={studioVdo.push} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-ghost" style={{ alignSelf: "flex-start" }}>
                           Step on camera
                         </a>
@@ -469,24 +469,24 @@ export default function GoLiveRoom({
                     {room && (
                       <p style={muted}>
                         The Stage: <Link href={`/rooms/${room}`} style={{ color: "var(--gold-deep)" }}>/rooms/{room}</Link>{" "}
-                        — sign in as Love at the door; the room&apos;s own gate knows your key.
+                        Sign in as Love at the door; the room&apos;s own gate knows your key.
                       </p>
                     )}
                     <input
                       type="text"
                       className="console-field" style={{ ...field, width: "100%", fontSize: ".82rem" }}
-                      placeholder="Opening word (optional — blank carries the house words)"
+                      placeholder="Opening word (optional: blank carries the house words)"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       maxLength={300}
                     />
                     <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".74rem", color: "var(--muted)" }}>
                       <input type="checkbox" checked={letter} onChange={(e) => setLetter(e.target.checked)} />
-                      also queue the class-starting letter (off by default — the mail rail is reputation armor)
+                      also queue the class-starting letter (off by default, the mail rail is reputation armor)
                     </label>
                     {railsDark && (
                       <p style={{ ...muted, color: "var(--err)" }}>
-                        the rails are dark here (matrix bot token / live vault) — the door opens on the live site
+                        the rails are dark here (matrix bot token / live vault). The door opens on the live site
                       </p>
                     )}
                   </>
@@ -538,7 +538,7 @@ export default function GoLiveRoom({
                     <p style={muted}>
                       then at{" "}
                       {new Date(afterHours.at * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
-                      {" → "}
+                      {" "}
                       {afterHoursRoomTitle}
                     </p>
                   )}
@@ -549,7 +549,7 @@ export default function GoLiveRoom({
             {open === d.id && d.id === "youtube" && (
               <>
                 <p style={muted}>
-                  the studio&apos;s state comes with the kit — this card carries the links, never an invented
+                  the studio&apos;s state comes with the kit. This card carries the links, never an invented
                   camera state. The room derives from the meeting config: <code>{studioVdo.room}</code>
                 </p>
                 <p style={muted}>
@@ -562,7 +562,7 @@ export default function GoLiveRoom({
                   <input readOnly value={studioVdo.push} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".74rem" }} />
                 </label>
                 <label style={{ display: "block" }}>
-                  <span style={fieldLabel}>a guest&apos;s door — opens on the site</span>
+                  <span style={fieldLabel}>a guest&apos;s door: opens on the site</span>
                   <input readOnly value={studioGuestDoor} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".74rem" }} />
                 </label>
               </>
@@ -571,17 +571,17 @@ export default function GoLiveRoom({
             {open === d.id && d.id === "call" && (
               <>
                 {sessions.length === 0 ? (
-                  <p style={muted}>— no confirmed calls today (UTC)</p>
+                  <p style={muted}>no confirmed calls today (UTC)</p>
                 ) : (
                   <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
                     {sessions.map((s) => (
                       <li key={s.bookingId} style={{ fontSize: ".82rem", color: "var(--ink)" }}>
-                        <b>{s.startUtc.slice(11, 16)} UTC</b> · {s.title} — {s.customer}
+                        <b>{s.startUtc.slice(11, 16)} UTC</b> · {s.title} with {s.customer}
                       </li>
                     ))}
                   </ul>
                 )}
-                <p style={muted}>you host — your director seat rides the same page as the member&apos;s door.</p>
+                <p style={muted}>you host: your director seat rides the same page as the member&apos;s door.</p>
               </>
             )}
 
@@ -622,7 +622,7 @@ export default function GoLiveRoom({
                     <input readOnly value={guestLink} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".74rem" }} />
                   </label>
                 ) : (
-                  <p style={muted}>— type a room name and the guest link derives here</p>
+                  <p style={muted}>type a room name and the guest link derives here</p>
                 )}
               </>
             )}
@@ -632,7 +632,7 @@ export default function GoLiveRoom({
               {d.id === "read" && open === "read" && (
                 feed?.state.live ? (
                   <button type="button" className="btn btn-sm" onClick={() => act("close")} disabled={busy}>
-                    {busy ? "Closing…" : "Close the room 🕊️"}
+                    {busy ? "Closing…" : "Close the room"}
                   </button>
                 ) : (
                   <button type="button" className="btn btn-sm" onClick={() => act("open")} disabled={busy || !room || railsDark}>
@@ -655,7 +655,7 @@ export default function GoLiveRoom({
               {d.id === "call" && open === "call" &&
                 sessions.map((s) => (
                   <Link key={s.bookingId} className="btn btn-sm" href={`/meet/${s.bookingId}`}>
-                    Open the room — {s.startUtc.slice(11, 16)} UTC · {s.customer}
+                    Open the room: {s.startUtc.slice(11, 16)} UTC · {s.customer}
                   </Link>
                 ))}
               {d.id === "cocreate" && open === "cocreate" && guestLink && (
