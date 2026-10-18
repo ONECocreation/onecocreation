@@ -15,6 +15,14 @@ import type { SiteConfig } from "@/lib/site-config";
  * real ref guards the double-tap race, one state line under the words.
  * The button is the kit Button (no raw `.btn`), kit and console classes
  * only.
+ *
+ * TASK-631 (block 971,896, the Admiral: "the switches that are at the
+ * top for house warming should also show hide the available rooms for
+ * love to open at the bottom of the same page"): the optional `onValue`
+ * callback announces the SAVED value (the first server read, and each
+ * flip read back from the PUT's saved config) so `SiteReadingRoom.tsx`
+ * can hide or show the matching row of The rooms card. Nothing about
+ * the card's own look or flow changes.
  */
 export type PartSwitchKey = "housewarming" | "bookTalk" | "qa";
 
@@ -25,6 +33,7 @@ export default function PartSwitchCard({
   offWords,
   onNote,
   offNote,
+  onValue,
 }: {
   switchKey: PartSwitchKey;
   /** the card's heading and the row's bold words, e.g. "Book Talk this week" */
@@ -35,6 +44,9 @@ export default function PartSwitchCard({
   /** the note after a saved flip to ON / OFF */
   onNote: string;
   offNote: string;
+  /** TASK-631: announces the SAVED value (the first read, and every
+   *  saved flip), never the optimistic tap */
+  onValue?: (key: PartSwitchKey, on: boolean) => void;
 }) {
   const [on, setOn] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
@@ -42,6 +54,12 @@ export default function PartSwitchCard({
   /* the double-tap race guard (RoomsCard's T-486 fix): a real ref refuses
      the second tap before it starts. */
   const busyRef = useRef(false);
+  /* TASK-631: the latest announce callback, read through a ref so the
+     one mount read never re-runs when the parent re-renders. */
+  const onValueRef = useRef(onValue);
+  useEffect(() => {
+    onValueRef.current = onValue;
+  });
 
   useEffect(() => {
     let alive = true;
@@ -51,7 +69,9 @@ export default function PartSwitchCard({
         const data = res.ok ? await res.json() : null;
         if (!alive || !data?.ok) return;
         /* absent means ON — the exact read every consumer makes */
-        setOn((data.config as SiteConfig)[switchKey] !== false);
+        const read = (data.config as SiteConfig)[switchKey] !== false;
+        setOn(read);
+        onValueRef.current?.(switchKey, read);
       } catch {
         /* no switch read, no flip offered — `on` stays null */
       }
@@ -77,6 +97,7 @@ export default function PartSwitchCard({
         /* read back the SAVED config, never the hoped-for value */
         const saved = (data.config as SiteConfig)[switchKey] !== false;
         setOn(saved);
+        onValueRef.current?.(switchKey, saved);
         setNote(saved ? onNote : offNote);
       } else {
         setNote(data?.reason ?? "save failed");

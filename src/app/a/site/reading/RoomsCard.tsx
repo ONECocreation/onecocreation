@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Card from "@/components/kit/Card";
-import { jitsiRoomUrl, doorStateWords, type DoorBusy, type DoorConfig, type DoorRowState } from "./rooms-config";
+import { jitsiRoomUrl, doorStateWords, DOOR_SWITCH, SWITCHED_OFF_OPEN_WORDS, type DoorBusy, type DoorConfig, type DoorRowState } from "./rooms-config";
 
 /**
  * THE ONE HOST AREA (TASK-475, block 968,624) — the Admiral's ruling: "i
@@ -110,6 +110,16 @@ import { jitsiRoomUrl, doorStateWords, type DoorBusy, type DoorConfig, type Door
  * controls on their OWN LINE under the words, right-aligned, at EVERY
  * width (not just the narrow `@media` this used to be scoped to) — see
  * `kit.css`'s own TASK-487 comment.
+ *
+ * TASK-631 (block 971,896, the Admiral: "the switches that are at the top
+ * for house warming should also show hide the available rooms for love to
+ * open at the bottom of the same page"): `RoomsCardBody` takes an optional
+ * `switches` map (the SAVED week-switch values, lifted into
+ * `SiteReadingRoom.tsx`). A door whose switch (`DOOR_SWITCH`) is OFF drops
+ * out of the list; the Reading has no switch and always shows. Until a
+ * switch has loaded (no key in the map) its row shows, as before. SAFETY:
+ * a switched-off door that is still OPEN keeps its row, with one short
+ * line so Love can close it. The row's look is unchanged.
  */
 
 export type Lock = { current: boolean };
@@ -161,9 +171,11 @@ export interface DoorRowProps {
   onClose: () => void;
   onShowCamera: () => void;
   onHideCamera: () => void;
+  /** TASK-631: this door's week switch is OFF (row only renders while open) */
+  switchedOff?: boolean;
 }
 
-export function DoorRow({ door, state, busy, error, onOpen, onClose, onShowCamera, onHideCamera }: DoorRowProps) {
+export function DoorRow({ door, state, busy, error, onOpen, onClose, onShowCamera, onHideCamera, switchedOff }: DoorRowProps) {
   const phase = state?.phase ?? "closed";
   const isOpen = phase !== "closed";
   const cameraOn = state?.camera === "shown";
@@ -245,6 +257,11 @@ export function DoorRow({ door, state, busy, error, onOpen, onClose, onShowCamer
       <span className="kit-row-link">
         <a href={`/a/site/reading/go/${door.id}`}>Room link</a>
       </span>
+      {switchedOff && isOpen && (
+        <span className="kit-row-link" data-switched-off="true">
+          {SWITCHED_OFF_OPEN_WORDS}
+        </span>
+      )}
     </li>
   );
 }
@@ -258,16 +275,26 @@ export interface RoomsCardBodyProps {
   onClose: (door: DoorConfig) => void;
   onShowCamera: (door: DoorConfig) => void;
   onHideCamera: (door: DoorConfig) => void;
+  /** TASK-631: the SAVED week-switch values; a missing key = not loaded yet = show */
+  switches?: Partial<Record<"housewarming" | "bookTalk" | "qa", boolean>>;
 }
 
-export function RoomsCardBody({ doors, states, busy, errors, onOpen, onClose, onShowCamera, onHideCamera }: RoomsCardBodyProps) {
+export function RoomsCardBody({ doors, states, busy, errors, onOpen, onClose, onShowCamera, onHideCamera, switches }: RoomsCardBodyProps) {
+  const judged = doors.map((door) => {
+    const key = DOOR_SWITCH[door.id];
+    const off = key !== undefined && switches?.[key] === false;
+    const open = (states[door.id]?.phase ?? "closed") !== "closed";
+    return { door, off, hidden: off && !open };
+  });
+  const shown = judged.filter((r) => !r.hidden);
   return (
     <Card className="kit-rooms-card">
       <ul className="kit-rows">
-        {doors.map((door) => (
+        {shown.map(({ door, off }) => (
           <DoorRow
             key={door.id}
             door={door}
+            switchedOff={off}
             state={states[door.id] ?? null}
             busy={busy[door.id] ?? null}
             error={errors[door.id] ?? null}
@@ -370,7 +397,7 @@ export async function hideCameraDoor(door: DoorConfig): Promise<DoorActionOutcom
   return outcomeFromPut(data, res);
 }
 
-export default function RoomsCard({ doors }: { doors: DoorConfig[] }) {
+export default function RoomsCard({ doors, switches }: { doors: DoorConfig[]; switches?: RoomsCardBodyProps["switches"] }) {
   const [states, setStates] = useState<Record<string, DoorRowState | null>>({});
   const [busy, setBusy] = useState<Record<string, DoorBusy>>({});
   const [errors, setErrors] = useState<Record<string, string | null>>({});
@@ -443,6 +470,7 @@ export default function RoomsCard({ doors }: { doors: DoorConfig[] }) {
       onClose={close}
       onShowCamera={showCamera}
       onHideCamera={hideCamera}
+      switches={switches}
     />
   );
 }
