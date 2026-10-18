@@ -171,3 +171,34 @@ export function slotToPlace(from: RowRef, slot: PlaceRef): PlaceRef {
   const sameLevel = from.parent === slot.parent;
   return sameLevel && from.index < slot.index ? { parent: slot.parent, index: slot.index - 1 } : slot;
 }
+
+/* ── T-620: the menu board's two new doors ─────────────────────────────── */
+
+/** A new tab at the END of the bar. With a page it is a single-page tab; with
+    none it is a heading only (children: []) that the public bar hides until
+    a page is dragged in. */
+export function addTab(items: NavItem[], label: string, href?: string): NavItem[] {
+  const name = label.trim().slice(0, 60);
+  if (!name) return items;
+  const id = href ?? `heading-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${items.length}`;
+  return [...items, href ? { id, label: name, href } : { id, label: name, children: [] }];
+}
+
+/** Add one page (a site page or ANY link) as a tab (`parent` null) or as the
+    last card under tab `parent`. */
+export function addPage(items: NavItem[], label: string, href: string, parent: number | null): NavItem[] {
+  const name = label.trim().slice(0, 60);
+  if (!name || !href) return items;
+  if (parent === null) return [...items, { id: href, label: name, href }];
+  const tab = items[parent];
+  if (!tab) return items;
+  const next = items.slice();
+  next[parent] = { ...tab, children: [...(tab.children ?? []), { id: href, label: name, href }] };
+  return next;
+}
+
+/** A menu row may also point at ANY outside link (https) or a site path that
+    does not exist yet (a page coming later). Nothing else. Client-safe. */
+export function isOpenNavHref(h: string): boolean {
+  return h.length <= 300 && (/^https:\/\/[^\s"<>]+$/.test(h) || /^\/[a-z0-9/_-]*$/.test(h));
+}

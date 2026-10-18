@@ -195,7 +195,9 @@ describe("the menu editor's drag-and-drop (source pins)", () => {
     expect(editor).toContain("draggable");
     expect(editor).toContain("onDragOver");
     expect(editor).toContain("onDrop");
-    expect(editor).toContain("aria-label={`Change ${label}`}");
+    expect(editor).toContain("aria-label={`Change ${c.label}`}");
+    expect(editor).toContain("Add a tab");
+    expect(editor).toContain("Any link");
     expect(editor).toContain("Every change saves itself.");
     expect(editor).toContain("Yes, start over");
   });

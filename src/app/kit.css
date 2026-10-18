@@ -701,3 +701,46 @@
   .kit-replays-card .kit-rows-end{width:100%}
   .kit-replays-card .kit-rows-end>button.kit-btn.kit-pill{flex:1 1 calc(50% - 4px);width:auto}
 }
+
+/* ── T-620: the menu board. One column per tab; cards are its pages. Columns
+   wrap (flex), so a phone stacks them one under another with no side scroll. ── */
+.menued-bar-actions{flex-wrap:wrap}
+.menued-bar-actions>.kit-btn.kit-pill{flex:1 1 calc(50% - 5px)}
+@media(min-width:641px){.menued-bar-actions>.kit-btn.kit-pill{flex:0 0 auto}}
+.menub{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;align-items:start;margin:0 0 14px}
+.menub-col{min-width:0;overflow:hidden}
+.menub-col.is-into{box-shadow:0 0 0 2px var(--lavender)}
+.menub-col.is-dragging{opacity:.45}
+.menub-head{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:14px 14px;position:relative;border-bottom:1px solid var(--glass-edge)}
+.menub-head[data-drop="before"]{box-shadow:inset 3px 0 0 var(--lavender)}
+.menub-head[data-drop="after"]{box-shadow:inset -3px 0 0 var(--lavender)}
+.menub-head.is-dim .menued-name,.menub-head.is-dim .menued-sub{opacity:.6}
+.menub-head .menued-name{font-size:1.02rem}
+.menub-text{min-width:0}
+.menub-cards{margin:0;padding:0;list-style:none}
+.menub-cards>li.menub-card{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;position:relative;border-top:0;border-bottom:1px solid var(--glass-edge)}
+.menub-cards>li.menub-card:last-child{border-bottom:0}
+.menub-cards>li.menub-card.is-dim .menued-name,.menub-cards>li.menub-card.is-dim .menued-sub{opacity:.6}
+.menub-cards>li.menub-card.is-dragging{opacity:.4}
+.menub-cards>li.menub-card[data-drop="before"]{box-shadow:inset 0 3px 0 var(--lavender)}
+.menub-cards>li.menub-card[data-drop="after"]{box-shadow:inset 0 -3px 0 var(--lavender)}
+.menub-cards .menued-name{font-size:.92rem}
+.menub-col .kit-btn.kit-pill{height:36px;padding:0 14px;font-size:.68rem}
+.menub-hold{margin:10px;box-sizing:border-box;height:52px;display:flex;align-items:center;justify-content:center;padding:0 8px;border:1.5px dashed color-mix(in srgb,var(--muted) 45%,transparent);border-radius:14px;font-size:.72rem;line-height:1.35;color:var(--muted);text-align:center;text-wrap:balance}
+.menub-choice{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.menub-choice>.kit-btn.kit-pill{width:100%;padding:0 8px}
+.menub-choice>.kit-btn.kit-pill[aria-pressed="true"]{border-color:var(--lavender);background:color-mix(in srgb,var(--lavender) 22%,transparent)}
+.menued-sheet p[data-state="bad"]{color:var(--err)}
+@media(max-width:640px){.menub-col .kit-btn.kit-pill{height:38px;padding:0 12px}}
+@media(max-width:640px){.menub-col .menued-grip,.menub-hold{display:none}.menub-head{grid-template-columns:1fr auto}.menub-cards>li.menub-card{grid-template-columns:1fr auto}}
+
+/* T-620 r2: four tabs fit one row at 1440 (the console column is about 820px):
+   tight padding, small same-size pills on every card and header */
+.menub-head{grid-template-columns:auto 1fr auto;gap:6px;padding:12px 10px}
+.menub-cards>li.menub-card{gap:6px;padding:9px 10px}
+.menub-col .menued-grip{padding:6px 0;font-size:.9rem}
+.menub-col .kit-btn.kit-pill{height:30px;padding:0 10px;font-size:.6rem;letter-spacing:.05em}
+.menub-head .menued-name{font-size:.95rem}
+.menub-cards .menued-name{font-size:.85rem;line-height:1.3}
+@media(max-width:640px){.menub-col .kit-btn.kit-pill{height:38px;padding:0 12px;font-size:.68rem}.menub-head .menued-name{font-size:1.02rem}.menub-cards .menued-name{font-size:.92rem}.menub-head{gap:10px;padding:14px}.menub-cards>li.menub-card{gap:10px;padding:10px 12px}}
+@media(max-width:640px){.menub-head{grid-template-columns:1fr auto}.menub-cards>li.menub-card{grid-template-columns:1fr auto}}

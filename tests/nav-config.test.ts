@@ -220,10 +220,23 @@ describe("a nav config Love saved — rename, reorder, nest, and the switch filt
 
   it("a broken/empty nav doc never blanks the menu — sanitize falls back to the default", async () => {
     await getSiteConfig(); // establish lastKey before hand-writing garbage under it
-    kvStore.set(lastKey!, JSON.stringify({ nav: { items: [{ bogus: true }, { href: "/not-a-real-route" }] } }));
+    kvStore.set(lastKey!, JSON.stringify({ nav: { items: [{ bogus: true }, { href: "javascript:alert(1)" }, { href: "http://plain.example" }] } }));
     const c = await getSiteConfig();
     expect(c.nav).toBeUndefined();
     expect(buildMenu(c).length).toBeGreaterThan(0);
+  });
+
+  it("T-620: a menu row may be an https link or a coming-later path, and a heading-only tab survives", async () => {
+    await getSiteConfig();
+    kvStore.set(lastKey!, JSON.stringify({ nav: { items: [
+      { id: "a", label: "Travels", href: "https://lovestravels.example" },
+      { id: "b", label: "Soon", href: "/travels" },
+      { id: "c", label: "Gifts", children: [] },
+      { id: "d", label: "Bad", href: "javascript:alert(1)" },
+    ] } }));
+    const c = await getSiteConfig();
+    expect(c.nav?.items.map((i) => i.label)).toEqual(["Travels", "Soon", "Gifts"]);
+    expect(buildMenu(c).map((m) => m.label)).toEqual(["Travels", "Soon"]); // a heading hides until it holds a page
   });
 
   it("PAGE_CATALOG's every href is a real route the store can actually filter", () => {
