@@ -26,11 +26,11 @@ describe("the site rail — the rooms, in Love's working order", () => {
     for (const r of rail) expect(r.houseOnly).toBeFalsy();
   });
 
-  it("SITE_NAV_ORDER keeps its ten-key sort contract untouched (TASK-330 decision 1a: the smaller diff)", async () => {
+  it("SITE_NAV_ORDER keeps its nine-key sort contract (T-623: Live is house-only, no key) untouched (TASK-330 decision 1a: the smaller diff)", async () => {
     const { SITE_NAV_ORDER, siteRoomOrder } = await import("@/components/console/SiteConsoleShell");
     const rail = siteRoomOrder([CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly));
     expect(rail.map((r) => r.key)).toEqual(SITE_NAV_ORDER);
-    expect(SITE_NAV_ORDER).toEqual(["overview", "booking", "live", "studio", "letters", "people", "money", "store", "site", "brand"]);
+    expect(SITE_NAV_ORDER).toEqual(["overview", "booking", "studio", "letters", "people", "money", "store", "site", "brand"]);
   });
 
   /* TASK-330 (0018.06.27 a₿): Live and Brand drop off the top-level rail —
@@ -41,9 +41,9 @@ describe("the site rail — the rooms, in Love's working order", () => {
   it("carries the eight-row rendered set (Live+Brand folded off the top rail), sorted the same real way", async () => {
     const { SITE_LABELS, SITE_NAV_ORDER, siteRoomOrder } = await import("@/components/console/SiteConsoleShell");
     const rail = siteRoomOrder([CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly)).filter(
-      (r) => r.key !== "live" && r.key !== "brand",
+      (r) => r.key !== "brand",
     );
-    const expectedOrder = SITE_NAV_ORDER.filter((k) => k !== "live" && k !== "brand");
+    const expectedOrder = SITE_NAV_ORDER.filter((k) => k !== "brand");
     expect(rail.map((r) => r.key)).toEqual(expectedOrder);
     expect(expectedOrder).toEqual(["overview", "booking", "studio", "letters", "people", "money", "store", "site"]);
     const labels = rail.map((r) => SITE_LABELS[r.key] ?? r.label);

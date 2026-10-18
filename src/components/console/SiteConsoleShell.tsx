@@ -40,7 +40,6 @@ export const SITE_LABELS: Record<string, string> = {
   people: "People",
   money: "Money",
   brand: "Brand",
-  live: "Live",
   studio: "Studio",
   site: "Site",
 };
@@ -58,7 +57,6 @@ const SITE_BLURBS: Record<string, string> = {
 export const SITE_NAV_ORDER = [
   "overview",
   "booking",
-  "live",
   "studio",
   "letters",
   "people",
@@ -424,7 +422,7 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
   }, [open, close]);
 
   const rooms = siteRoomOrder([CONSOLE_OVERVIEW, ...CONSOLE_ROOMS].filter((r) => !r.houseOnly)).filter(
-    (r) => r.key !== "live" && r.key !== "brand",
+    (r) => r.key !== "brand",
   );
 
   return (
