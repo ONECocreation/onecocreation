@@ -23,6 +23,7 @@
     { "route": "/a/letters", "siteChrome": "render", "signedOut": "gate", "gateDoor": "api-401" },
     { "route": "/a/letters/[key]", "siteChrome": "render", "signedOut": "gate", "gateDoor": "api-401" },
     { "route": "/a/letters/[key]/edit", "siteChrome": "render", "signedOut": "gate", "gateDoor": "api-401" },
+    { "route": "/a/letters/questions", "siteChrome": "render", "signedOut": "gate", "gateDoor": "api-401" },
     { "route": "/a/live", "siteChrome": "redirect", "alwaysRedirectTo": "/a/studio", "source": "src/app/a/live/page.tsx:71" },
     { "route": "/a/mempool", "siteChrome": "redirect", "alwaysRedirectTo": "/a/connections", "source": "src/app/a/mempool/page.tsx:8" },
     { "route": "/a/money", "siteChrome": "render", "signedOut": "gate", "gateDoor": "api-401" },

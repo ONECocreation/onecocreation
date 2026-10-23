@@ -87,7 +87,9 @@ export default function QuestionsPanel({ respondZ = "sheet" }: { respondZ?: "she
   }, []);
 
   useEffect(() => {
-    load();
+    /* the load rides a microtask: a synchronous setState in the effect body
+       would cascade a second render (the set-state-in-effect law) */
+    void Promise.resolve().then(load);
   }, [load]);
 
   const openRows = (rows ?? []).filter((r) => r.answeredAtMs === null);
@@ -126,7 +128,7 @@ export default function QuestionsPanel({ respondZ = "sheet" }: { respondZ?: "she
     );
   }
   if (rows === null) {
-    return <p className="kit-note">reading this month's questions…</p>;
+    return <p className="kit-note">reading this month&apos;s questions…</p>;
   }
 
   return (

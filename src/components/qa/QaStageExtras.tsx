@@ -30,7 +30,7 @@ export function QaStageSlot() {
   return (
     <div className="kit-stage-media kit-call-tall kitx-qa-stage">
       <p className="kit-text-quiet kitx-qa-stage-words">
-        The live call fills this area. It is the same in-page picture the members' screens carry, joined here as
+        The live call fills this area. It is the same in-page picture the members&apos; screens carry, joined here as
         the host.
       </p>
     </div>
