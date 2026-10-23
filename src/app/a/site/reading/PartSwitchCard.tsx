@@ -24,7 +24,7 @@ import type { SiteConfig } from "@/lib/site-config";
  * can hide or show the matching row of The rooms card. Nothing about
  * the card's own look or flow changes.
  */
-export type PartSwitchKey = "housewarming" | "bookTalk" | "qa";
+export type PartSwitchKey = "housewarming" | "bookTalk" | "qa" | "replaysAutoSend";
 
 export default function PartSwitchCard({
   switchKey,

@@ -179,6 +179,13 @@ export interface SiteConfig {
   bookTalk?: boolean;
   /** TASK-614: the Q&A with Love (Part 4) switch, same rule as bookTalk. */
   qa?: boolean;
+  /** T-638 (block 972,735): the replays catch-up letter's kill switch, set
+      from /a/site/reading. ABSENT MEANS ON: the letter goes to the whole
+      list on its own the day a replay is added (his A, block 972,725).
+      Only an explicit saved `false` turns the automatic send off, and the
+      tick then falls back to making a draft for Love. A malformed stored
+      value drops to absent (sanitizeSwitch) and reads ON. */
+  replaysAutoSend?: boolean;
   /** TASK-387 (block 968,088+): the per-room chat switch, set from
       /a/site/chat — Love's own studio ask, "hide the chat fully for some
       of the rooms. even during some sessions turn it on and off." Keyed
@@ -226,6 +233,8 @@ export type SiteConfigPatch = {
   /** TASK-614: bare booleans like housewarming; omitted leaves the saved flip alone */
   bookTalk?: boolean;
   qa?: boolean;
+  /** T-638: bare boolean like qa; omitted leaves the saved flip alone */
+  replaysAutoSend?: boolean;
   /** TASK-387: PARTIAL keyed map, unlike reading/about/nav's whole-object
       rule above — a save carries only the changed slug(s)
       (`{ rooms: { "<slug>": { chat } } }`), and saveSiteConfig merges
@@ -353,6 +362,7 @@ function sanitize(raw: unknown): SiteConfig {
     housewarming: sanitizeHousewarming(o.housewarming),
     bookTalk: sanitizeHousewarming(o.bookTalk),
     qa: sanitizeHousewarming(o.qa),
+    replaysAutoSend: sanitizeHousewarming(o.replaysAutoSend),
     rooms: sanitizeRooms(o.rooms),
   };
 }
@@ -750,6 +760,7 @@ export async function saveSiteConfig(patch: SiteConfigPatch): Promise<SiteConfig
     // TASK-614: same rule for the Book Talk and Q&A switches
     bookTalk: patch.bookTalk !== undefined ? patch.bookTalk : current.bookTalk,
     qa: patch.qa !== undefined ? patch.qa : current.qa,
+    replaysAutoSend: patch.replaysAutoSend !== undefined ? patch.replaysAutoSend : current.replaysAutoSend,
     // TASK-387: PER-SLUG merge, unlike every field above -- a rooms patch
     // never replaces the whole map. Every slug named in the patch
     // replaces that slug's own entry; every other stored slug rides

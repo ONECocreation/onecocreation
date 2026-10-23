@@ -10,8 +10,8 @@ import {
 } from "@/lib/letters";
 import { hourlyCap, onceWithin } from "@/lib/mail";
 import { listSubscribers, subscribersConfigured, unsubscribeUrl } from "@/lib/subscribers";
-import { enqueue, getSendRecord, initSendRecord, recentSendsForLetter, recordSendForLetter } from "@/lib/mail-queue";
-import { recordDelivery } from "@/lib/mailbox";
+import { enqueue, getSendRecord, recentSendsForLetter } from "@/lib/mail-queue";
+import { sendLetterToList } from "@/lib/list-send";
 
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 
@@ -92,28 +92,10 @@ export async function POST(request: Request) {
       { status: 409 },
     );
   }
-  // T-484 (walk item S7): one sendId per list-send click — every queued
-  // copy carries it, `tick()` bumps its sent/dropped tally against it, and
-  // the panel polls that tally instead of trusting silence.
-  const sendId = crypto.randomUUID();
-  const scheduledFor = notBefore ? new Date(notBefore).toISOString() : "next tick";
-  await enqueue(
-    list.map((to) => ({
-      to,
-      subject: tpl.subject,
-      html: htmlFor(to),
-      notBefore,
-      guard: { kind: "subscribed" as const },
-      sendId,
-    })),
-  );
-  await initSendRecord(sendId, { key: body.key, queued: list.length, segment: source ?? "all", scheduledFor });
-  await recordSendForLetter(body.key, sendId);
-  // the mailbox remembers — each member's /letters shows what THEY received
-  const atMs = notBefore ?? Date.now();
-  for (const to of list) {
-    await recordDelivery(to, { key: body.key, subject: tpl.subject, atMs }).catch(() => {});
-  }
+  // T-638: the queueing + bookkeeping lives in lib/list-send.ts so the
+  // replays catch-up letter takes the very same path.
+  const sent = await sendLetterToList({ key: body.key, subject: tpl.subject, body: tpl.body, source, notBefore, webUrl, list });
+  const { sendId, scheduledFor, atMs } = sent;
   const cap = hourlyCap();
   return NextResponse.json({
     ok: true,

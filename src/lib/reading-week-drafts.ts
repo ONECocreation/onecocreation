@@ -1,5 +1,5 @@
 import { capRemaining, onceWithin, sendMail } from "@/lib/mail";
-import { composedLetterKeys, createLetter, getLetterOverride, letterHtml, saveLetterOverride } from "@/lib/letters";
+import { composedLetterKeys, createLetter, getLetterOverride, letterHtml, saveLetterOverride, touchLetterMeta } from "@/lib/letters";
 import { offerNotifyTo } from "@/lib/pwyc-letters";
 import { siteBase } from "@/lib/subscribers";
 import { getSiteConfig } from "@/lib/site-config";
@@ -7,6 +7,7 @@ import { DEFAULT_READING_SCHEDULE, nextReading, type ReadingSchedule } from "@/l
 import { READING_COVER_SRC } from "@/lib/reading-cover";
 import { zonedDateParts } from "@/lib/booking-time";
 import { createHash } from "crypto";
+import { sendLetterToList } from "@/lib/list-send";
 import { loadReplays } from "@/lib/replays-source";
 import type { AboutVideo } from "@/lib/about-content";
 
@@ -15,11 +16,24 @@ import type { AboutVideo } from "@/lib/about-content";
  * written for her every Tuesday and mailed to her as a DRAFT. Love reviews
  * every letter before it goes out (the Admiral, block 969,308).
  *
- * THE ONE LAW: nothing here ever reaches the list. This module imports no
- * queue and no list-send: its only mail is the review copy to the operator
- * recipient set (Love's notice address plus OPERATOR_EMAILS). The list send
- * stays the existing panel at /a/letters/<key> (typed headcount, optional
- * schedule, the drip queue), pressed by an operator.
+ * THE ONE LAW: nothing here reaches the list on its own EXCEPT the replays
+ * catch-up letter. The weekly next-reading letter is only ever a draft: its
+ * only mail is the review copy to the operator recipient set (Love's notice
+ * address plus OPERATOR_EMAILS), and the list send stays the existing panel
+ * at /a/letters/<key> (typed headcount, optional schedule, the drip queue),
+ * pressed by an operator.
+ *
+ * THE ONE EXCEPTION (T-638, the Admiral, block 972,725): "we should get in
+ * the habit of sending these replays out shortly after ... it would go out
+ * the day we get to add it", answered A on the Desk: SENDS ON ITS OWN. The
+ * replays catch-up letter, and ONLY that letter, goes to the whole list the
+ * tick that finds a new replay. It takes the existing list-send path
+ * (`sendLetterToList` in list-send.ts, the same queue, subscribed guard,
+ * hourly cap and send record as the /a/letters send route), once per replay
+ * id set (claimOnce), never on the first run (the baseline), and only while
+ * the operator kill switch `replaysAutoSend` is not saved `false` (absent
+ * means ON). With the switch off, or if the send fails, it falls back to the
+ * old behaviour: a draft in the room and a review copy to Love.
  *
  * DERIVE-OR-DASH: the date and the clock come ONLY from the reading schedule
  * (`getSiteConfig().reading ?? DEFAULT_READING_SCHEDULE`, the same source the
@@ -160,14 +174,18 @@ const escAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").re
  *  note above it that it was prepared automatically and nothing has gone to
  *  the list, and a plain link to open it. Literal hex and inline style are
  *  the mail shell's own idiom (inboxes do not resolve var()). */
-export function reviewCopyHtml(key: string, body: string): string {
+export function reviewCopyHtml(key: string, body: string, mode: "draft" | "sent" = "draft"): string {
   const openUrl = `${siteBase()}/a/letters/${escAttr(key)}`;
+  const noteWords =
+    mode === "sent"
+      ? "This letter went to the list on its own, the day the replay was added. This is your copy."
+      : "This letter was prepared automatically for Love&#39;s review. Nothing has gone to the list.";
   const note =
     `<div style="max-width:552px;margin:0 auto;padding:14px 24px;background:#2b2733;color:#E9E2F2;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;border-bottom:1px solid rgba(139,118,196,.34);">` +
-    `<b>This letter was prepared automatically for Love&#39;s review. Nothing has gone to the list.</b></div>`;
+    `<b>${noteWords}</b></div>`;
   const link =
     `<div style="max-width:552px;margin:0 auto;padding:18px 24px;background:#2b2733;color:#E9E2F2;font-family:Arial,Helvetica,sans-serif;font-size:14px;text-align:center;">` +
-    `<a href="${openUrl}" style="color:#E7B2C3;">Open it to edit and send</a></div>`;
+    `<a href="${openUrl}" style="color:#E7B2C3;">${mode === "sent" ? "Open it to see the send" : "Open it to edit and send"}</a></div>`;
   const html = letterHtml(body, { webUrl: openUrl });
   const withNote = /<body[^>]*>/.test(html) ? html.replace(/<body[^>]*>/, (m) => `${m}\n${note}`) : note + html;
   return withNote.includes("</body>") ? withNote.replace("</body>", `${link}</body>`) : withNote + link;
@@ -223,19 +241,20 @@ async function releaseOnce(kind: string, id: string): Promise<void> {
  *  would wait for the next tick), capacity checked before EACH send, one
  *  claim per recipient per letter. Returns how many went out. A failed send
  *  is logged and skipped; the draft stays in the room either way. */
-export async function sendReviewCopy(key: string, subject: string, body: string): Promise<number> {
+export async function sendReviewCopy(key: string, subject: string, body: string, mode: "draft" | "sent" = "draft"): Promise<number> {
   const to = reviewRecipients();
   if (to.length === 0) {
     console.error("reading-week-drafts: no valid review recipients; the draft is in the room");
     return 0;
   }
-  const html = reviewCopyHtml(key, body);
+  const html = reviewCopyHtml(key, body, mode);
+  const subjectLine = mode === "sent" ? `Sent to the list: ${subject}` : `Draft for your review: ${subject}`;
   let sent = 0;
   for (const email of to) {
     try {
       if ((await capRemaining()) <= 0) break;
       if (!(await onceWithin(`review:${key}:${email}`, REVIEW_ONCE_MS))) continue;
-      await sendMail("news", { to: email, subject: `Draft for your review: ${subject}`, html });
+      await sendMail("news", { to: email, subject: subjectLine, html });
       sent++;
     } catch (err) {
       console.error("reading-week-drafts: review copy failed:", err);
@@ -248,13 +267,15 @@ export async function sendReviewCopy(key: string, subject: string, body: string)
 
 export type NextReadingDraftOutcome = "drafted" | "already" | "skipped" | "error";
 /** the recap half (T-538): "baselined" = first run, ids recorded, no draft */
-export type ReplayDraftOutcome = NextReadingDraftOutcome | "baselined";
+export type ReplayDraftOutcome = NextReadingDraftOutcome | "baselined" | "sent";
 
 export interface DraftStats {
   nextReading: NextReadingDraftOutcome;
   replay: ReplayDraftOutcome;
   reviewSent: number;
   key?: string;
+  /** T-638: copies queued for the list by the automatic replays letter */
+  replayQueued?: number;
 }
 
 export async function draftNextReadingLetter(
@@ -338,11 +359,59 @@ export function afterReadingLetter(rawTitles: unknown[]): { subject: string; bod
   };
 }
 
-export type ReplayDraftResult = { outcome: ReplayDraftOutcome; key?: string; subject?: string; body?: string };
+/** T-638: the title as the catch-up list shows it: the part before " | " when
+ *  present, run through replayTitle (untrusted text), and any stray bar
+ *  dropped so a title can never split the `!item:` directive. */
+export function catchUpTitle(raw: unknown): string {
+  const head = String(raw ?? "").split(" | ")[0];
+  return replayTitle(head).replace(/\|/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/* His sign-off for this letter carries the no-break space before Love
+   (the approved forge render), then her five lines exactly. */
+const CATCH_UP_SIGN_OFF = LOVE_SIGN_OFF.replace("Smiles\nLove", "Smiles\n\u00a0Love");
+
+/** T-638 (block 972,725): THE REPLAYS CATCH-UP LETTER. `all` is the FULL
+ *  replay list in site order (numbered 1..n), `freshIds` the ids new this
+ *  tick (each marked NEW). One new: the subject names it; several: "New
+ *  replays are here". One button to /replays. No em dash, no arrow. */
+export function replaysCatchUpLetter(
+  all: { id: string; title: unknown }[],
+  freshIds: string[],
+): { subject: string; body: string } {
+  const fresh = new Set(freshIds);
+  const rows = all
+    .map((v) => ({ id: v.id, title: catchUpTitle(v.title), isNew: fresh.has(v.id) }))
+    .filter((r) => r.title);
+  const newRows = rows.filter((r) => r.isNew);
+  const many = freshIds.length > 1;
+  const top = newRows[0]?.title ?? "";
+  const subject = many ? "New replays are here" : top ? `Catch up on the replays: ${top}` : "Catch up on the replays";
+  const opener = many
+    ? "New readings are in the Replays today."
+    : top
+      ? `A new reading is in the Replays today: **${top}**.`
+      : "A new reading is in the Replays today.";
+  return {
+    subject,
+    body: [
+      `!hero: ${siteBase()}${READING_COVER_SRC}`,
+      "Hello, beautiful soul!",
+      opener,
+      "Missed one? Get caught up. Every reading is kept for you, to play again whenever you like.",
+      rows.map((r) => `!item: ${r.title}${r.isNew ? " | NEW" : ""}`).join("\n"),
+      "!pill: Watch the replays | /replays",
+      "All it takes to watch is your email and a six-digit code.",
+      CATCH_UP_SIGN_OFF,
+    ].join("\n\n"),
+  };
+}
+
+export type ReplayDraftResult = { outcome: ReplayDraftOutcome; key?: string; subject?: string; body?: string; queued?: number };
 
 export async function draftReplayLetter(
   nowMs: number,
-  config: { replays?: AboutVideo[]; reading?: ReadingSchedule },
+  config: { replays?: AboutVideo[]; reading?: ReadingSchedule; replaysAutoSend?: boolean },
 ): Promise<ReplayDraftResult> {
   let videos: unknown;
   try {
@@ -404,7 +473,12 @@ export async function draftReplayLetter(
     return { outcome: "already" };
   }
 
-  const words = afterReadingLetter(fresh.map((v) => v.title));
+  /* T-638: the kill switch. Absent means ON (his A, block 972,725); only an
+     explicit saved `false` falls back to the draft for Love. */
+  const auto = config.replaysAutoSend !== false;
+  const words = auto
+    ? replaysCatchUpLetter(list, fresh.map((v) => v.id))
+    : afterReadingLetter(fresh.map((v) => v.title));
   let key = "";
   try {
     const prefix = `after-reading-${date}-`;
@@ -422,14 +496,30 @@ export async function draftReplayLetter(
     console.error("reading-week-drafts: could not make the recap draft:", err);
     return { outcome: "error", key };
   }
+  if (auto) {
+    /* the letter is saved in the room; now the existing list send. A send
+       that throws leaves the saved letter as a draft for Love (the old
+       behaviour), never a retry that could mail the list twice. */
+    try {
+      const saved = await getLetterOverride(key);
+      const sentBody = saved?.body ?? words.body;
+      const sentSubject = saved?.subject ?? words.subject;
+      const r = await sendLetterToList({ key, subject: sentSubject, body: sentBody });
+      await touchLetterMeta(key, { publish: true }).catch(() => {});
+      await writeSeen(union);
+      return { outcome: "sent", key, subject: sentSubject, body: sentBody, queued: r.queued };
+    } catch (err) {
+      console.error("reading-week-drafts: the automatic list send failed; the letter stays a draft:", err);
+    }
+  }
   /* the seen-set moves only now that the draft exists; if this write fails
      the once-key above stops a duplicate and the next tick catches up */
   await writeSeen(union);
   return { outcome: "drafted", key, ...words };
 }
 
-/** The tick's one call. Never throws; makes drafts and mails review copies,
- *  and nothing else. */
+/** The tick's one call. Never throws; makes drafts, mails review copies,
+ *  and (T-638) sends the replays catch-up letter to the list on its own. */
 export async function draftReadingLetters(nowMs: number, opts: { force?: boolean } = {}): Promise<DraftStats> {
   const stats: DraftStats = { nextReading: "skipped", replay: "skipped", reviewSent: 0 };
   try {
@@ -449,7 +539,11 @@ export async function draftReadingLetters(nowMs: number, opts: { force?: boolean
   try {
     const rr = await draftReplayLetter(nowMs, await getSiteConfig());
     stats.replay = rr.outcome;
-    if ((rr.outcome === "drafted") && rr.key && rr.body) stats.reviewSent += await sendReviewCopy(rr.key, rr.subject ?? "", rr.body);
+    if (rr.outcome === "drafted" && rr.key && rr.body) stats.reviewSent += await sendReviewCopy(rr.key, rr.subject ?? "", rr.body);
+    if (rr.outcome === "sent" && rr.key && rr.body) {
+      stats.replayQueued = rr.queued ?? 0;
+      stats.reviewSent += await sendReviewCopy(rr.key, rr.subject ?? "", rr.body, "sent");
+    }
   } catch (err) {
     stats.replay = "error";
     console.error("reading-week-drafts: recap draft failed:", err);

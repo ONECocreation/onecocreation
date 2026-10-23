@@ -579,6 +579,28 @@ const escHtml = (s: string) =>
  *  through to the plain body as literal text — never an attribute. */
 const admitsDirectiveUrl = (u: string) => u.startsWith("https://") || (u.startsWith("/") && !u.startsWith("//"));
 
+/** T-638: the numbered replay list. Three cells per row (number, title, and
+ *  a NEW cell that never wraps), so the NEW mark stays on the title's first
+ *  line at 390 instead of dropping to a line of its own. Literal hex and
+ *  inline style are the mail shell's idiom. Titles arrive already escaped. */
+function itemsPanel(run: { title: string; isNew: boolean }[]): string {
+  const cell = "padding:12px 0;color:#E9E2F2;font-size:15px;line-height:1.5;vertical-align:top;";
+  const rows = run
+    .map((r, i) => {
+      const edge = i < run.length - 1 ? "border-bottom:1px solid #3d3747;" : "";
+      const mark = r.isNew
+        ? `<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:#C56E8B;color:#2E0E1D;font-size:11px;font-weight:bold;letter-spacing:1px;white-space:nowrap;">NEW</span>`
+        : "";
+      return (
+        `<tr><td style="padding:12px 10px 12px 14px;${edge}color:#E7B2C3;font-size:13px;font-weight:bold;width:24px;vertical-align:top;">${i + 1}</td>` +
+        `<td style="${cell}${edge}">${r.title}</td>` +
+        `<td style="${cell}${edge}padding-left:10px;padding-right:14px;width:1%;white-space:nowrap;text-align:right;">${mark}</td></tr>`
+      );
+    })
+    .join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 1.6em;background:#221e2b;border-radius:10px;">${rows}</table>`;
+}
+
 /** The rich assembly: directives lift the letter into the news shell;
  *  a directive-free letter keeps riding the plain brand shell. */
 export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUrl?: string }): string {
@@ -592,6 +614,11 @@ export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUr
      The line becomes a placeholder paragraph, swapped for the pill after
      bodyToHtml; the same T-494 escaping and directive-URL policy as !cta. */
   const pills: { label: string; href: string }[] = [];
+  /* T-638: `!item: Title` / `!item: Title | NEW` lines. A run of consecutive
+     item lines becomes ONE numbered list panel (the replays catch-up letter),
+     placed where the first line of the run sits. */
+  const itemRuns: { title: string; isNew: boolean }[][] = [];
+  let inItemRun = false;
   const plain: string[] = [];
 
   for (const line of body.split("\n")) {
@@ -600,10 +627,22 @@ export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUr
     const sec = /^!section:\s*([^|]+)\|([^|]*)\|([^|]+)\|(.+)$/.exec(t);
     const c = /^!cta:\s*([^|]+)\|(.+)$/.exec(t);
     const p = /^!pill:\s*([^|]+)\|(.+)$/.exec(t);
+    const it = /^!item:\s*(.+?)(?:\s*\|\s*NEW)?$/.exec(t);
     /* TASK-494: every directive value is escaped BEFORE it reaches
      * richShell (directives bypass bodyToHtml entirely), and every URL
      * field passes the policy first — a failed line ships as literal
      * text, the T-227 fallback shape. */
+    if (it) {
+      const entry = { title: escHtml(it[1].replace(/\|/g, " ").replace(/\s+/g, " ").trim()), isNew: /\|\s*NEW$/.test(t) };
+      if (!inItemRun) {
+        plain.push(`@@ITEMS${itemRuns.length}@@`);
+        itemRuns.push([]);
+        inItemRun = true;
+      }
+      itemRuns[itemRuns.length - 1].push(entry);
+      continue;
+    }
+    inItemRun = false;
     if (hero && admitsDirectiveUrl(hero[1])) heroUrl = escHtml(hero[1]);
     else if (sec && admitsDirectiveUrl(sec[3].trim()) && (!sec[2].trim() || admitsDirectiveUrl(sec[2].trim())))
       sections.push({
@@ -640,6 +679,11 @@ export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUr
     bodyHtml = bodyHtml.includes(wrapped)
       ? bodyHtml.replace(wrapped, block)
       : bodyHtml.replace(`@@PILL${i}@@`, `</p>${block}<p style="margin:0 0 1.15em;line-height:1.75;">`);
+  });
+  itemRuns.forEach((run, i) => {
+    const wrapped = `<p style="margin:0 0 1.15em;line-height:1.75;">@@ITEMS${i}@@</p>`;
+    const panel = itemsPanel(run);
+    bodyHtml = bodyHtml.includes(wrapped) ? bodyHtml.replace(wrapped, panel) : bodyHtml.replace(`@@ITEMS${i}@@`, panel);
   });
   if (!heroUrl && sections.length === 0 && !cta) {
     return brandShell(bodyHtml, opts);

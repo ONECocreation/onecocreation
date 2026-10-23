@@ -147,6 +147,16 @@ export default function ReadingScheduleCard({ onSwitchValue }: { onSwitchValue?:
         onNote="saved - the Q&A is back on the reading page's next render"
         offNote="saved - no Q&A this week; the reading page hides it on its next render"
       />
+      {/* T-638: the replays catch-up letter's kill switch */}
+      <PartSwitchCard
+        switchKey="replaysAutoSend"
+        onValue={onSwitchValue}
+        label="Send the replays letter on its own"
+        onWords="a new replay goes to the whole list the day it is added"
+        offWords="off; a new replay only makes a draft for you to review"
+        onNote="saved - the replays letter goes out on its own again"
+        offNote="saved - a new replay now makes a draft for you to review"
+      />
 
       <div style={row}>
         <div style={{ flex: 1, minWidth: 220 }}>

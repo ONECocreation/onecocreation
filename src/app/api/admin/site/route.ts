@@ -71,6 +71,11 @@ export function qaPatchError(raw: unknown): string | null {
   return typeof raw === "boolean" ? null : "the Q&A switch must be true or false";
 }
 
+/** T-638: the replays catch-up letter's kill switch, same rule: only a real boolean. */
+export function replaysAutoSendPatchError(raw: unknown): string | null {
+  return typeof raw === "boolean" ? null : "the automatic replays letter switch must be true or false";
+}
+
 export async function GET(request: Request) {
   const operator = operatorFromCookieHeader(request.headers.get("cookie"));
   /* Dual-mode read (TASK-129): the SWITCHES THEMSELVES are public — they only
@@ -142,6 +147,10 @@ export async function PUT(request: Request) {
   }
   if ("qa" in patch) {
     const reason = qaPatchError((patch as Record<string, unknown>).qa);
+    if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
+  }
+  if ("replaysAutoSend" in patch) {
+    const reason = replaysAutoSendPatchError((patch as Record<string, unknown>).replaysAutoSend);
     if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
   }
   const config = await saveSiteConfig(patch);
