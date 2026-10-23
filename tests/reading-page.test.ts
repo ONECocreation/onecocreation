@@ -30,7 +30,7 @@ const PAGE_PATH = "src/app/reading/page.tsx";
 const ISLAND_PATH = "src/components/ReadingHeroCountdown.tsx";
 
 const BASE: ReadingSchedule = { on: true, weekday: 3, time: "13:11", tz: "America/Denver", durationMin: 60 };
-const STARTS = Date.parse("2026-09-23T19:11:00.000Z"); // Wednesday 1:11 PM MDT — tests/reading-schedule.test.ts
+const STARTS = Date.parse("2026-09-23T19:11:00.000Z"); // Wednesday 1:11 PM Mountain Time — tests/reading-schedule.test.ts
 const ENDS = Date.parse("2026-09-23T20:11:00.000Z");
 const ONE_DAY_MS = 24 * 3600_000;
 
@@ -64,7 +64,7 @@ describe("ReadingHeroCountdown — hero variant, one fixture per honest state", 
     const html = render(props({ asOfMs: STARTS - 3 * ONE_DAY_MS, variant: "hero" }));
     expect(html).toContain("Wednesday");
     expect(html).toContain("1:11");
-    expect(html).toContain("MDT"); // computed, not the mock's illustrative generic "MT"
+    expect(html).toContain("Mountain Time"); // computed, not the mock's illustrative generic "MT"
     expect(html).toContain("live online");
     expect(html).not.toContain("Starting soon.");
   });
@@ -72,7 +72,7 @@ describe("ReadingHeroCountdown — hero variant, one fixture per honest state", 
   it("soon: the SAME date line as upcoming — decision B ties 'Starting soon' to window alone, never soon", () => {
     const html = render(props({ asOfMs: STARTS - 3600_000, variant: "hero" }));
     expect(html).toContain("Wednesday");
-    expect(html).toContain("MDT");
+    expect(html).toContain("Mountain Time");
     expect(html).toContain("live online");
     expect(html).not.toContain("Starting soon.");
   });
@@ -105,7 +105,7 @@ describe("ReadingHeroCountdown — card variant, the 'Next reading.' body", () =
     expect(html).toContain("Next reading.");
     expect(html).toContain("Wednesday, September 23");
     expect(html).toContain("Love: 1:11");
-    expect(html).toContain("MDT");
+    expect(html).toContain("Mountain Time");
     expect(html).not.toContain("Your time");
     expect(html).not.toContain("Starts in");
   });
@@ -150,22 +150,20 @@ describe("ReadingHeroCountdown — the exact state boundaries (mirrors reading-n
 });
 
 describe("ReadingHeroCountdown — DST, the zone abbreviation is computed, never a fixed offset", () => {
-  it("the spring gap (2026-03-08, Denver springs forward at 2am): the resolved instant reads MST, still pre-transition (measured in tests/reading-schedule.test.ts)", () => {
+  it("the spring gap (2026-03-08, Denver springs forward at 2am): the resolved instant reads Mountain Time, still pre-transition (measured in tests/reading-schedule.test.ts)", () => {
     const schedule: ReadingSchedule = { on: true, weekday: 0, time: "02:30", tz: "America/Denver", durationMin: 60 };
     const starts = Date.parse("2026-03-08T08:30:00.000Z");
     const html = render({ schedule, next: { startsAtMs: starts, endsAtMs: starts + 3600_000 }, asOfMs: starts - 3 * ONE_DAY_MS, variant: "hero" });
     expect(html).toContain("Sunday");
-    expect(html).toContain("MST");
-    expect(html).not.toContain("MDT");
+    expect(html).toContain("Mountain Time");
   });
 
-  it("the autumn fold (2026-11-01, Denver falls back at 2am): the resolved (first) occurrence reads MDT, the still-daylight instant (measured in tests/reading-schedule.test.ts)", () => {
+  it("the autumn fold (2026-11-01, Denver falls back at 2am): the resolved (first) occurrence reads Mountain Time, the still-daylight instant (measured in tests/reading-schedule.test.ts)", () => {
     const schedule: ReadingSchedule = { on: true, weekday: 0, time: "01:30", tz: "America/Denver", durationMin: 60 };
     const starts = Date.parse("2026-11-01T07:30:00.000Z");
     const html = render({ schedule, next: { startsAtMs: starts, endsAtMs: starts + 3600_000 }, asOfMs: starts - 3 * ONE_DAY_MS, variant: "hero" });
     expect(html).toContain("Sunday");
-    expect(html).toContain("MDT");
-    expect(html).not.toContain("MST");
+    expect(html).toContain("Mountain Time");
   });
 });
 

@@ -81,7 +81,7 @@ const FRIENDLY_ZONE: Record<string, string> = { "America/Denver": "Mountain" };
 
 function zoneLabel(atMs: number, tz: string): string {
   if (FRIENDLY_ZONE[tz]) return FRIENDLY_ZONE[tz];
-  const part = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" })
+  const part = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "longGeneric" })
     .formatToParts(new Date(atMs))
     .find((p) => p.type === "timeZoneName");
   return part?.value ?? tz;

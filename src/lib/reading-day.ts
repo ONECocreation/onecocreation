@@ -83,7 +83,7 @@ const CLOCK_LABEL: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-di
  */
 export function clockWords(ms: number, tz: string): string {
   const clock = new Intl.DateTimeFormat("en-US", { timeZone: tz, ...CLOCK_LABEL }).format(new Date(ms));
-  const zoneParts = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(
+  const zoneParts = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "longGeneric" }).formatToParts(
     new Date(ms),
   );
   const zone = zoneParts.find((p) => p.type === "timeZoneName")?.value ?? tz;

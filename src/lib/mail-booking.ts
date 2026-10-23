@@ -45,7 +45,7 @@ function fmtWhen(iso: string, tz: string): string {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    timeZoneName: "short",
+    timeZoneName: "longGeneric",
   });
 }
 

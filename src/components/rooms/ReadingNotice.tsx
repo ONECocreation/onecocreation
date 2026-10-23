@@ -109,7 +109,7 @@ function clockAt(instantMs: number, tz: string): string {
  *  "today," since the schedule's own DST rule can differ between now and
  *  the occurrence (Ground, DETERMINISTIC HYDRATION). */
 function zoneLabel(instantMs: number, tz: string): string {
-  const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "longGeneric" }).formatToParts(
     new Date(instantMs),
   );
   return parts.find((p) => p.type === "timeZoneName")?.value ?? tz;

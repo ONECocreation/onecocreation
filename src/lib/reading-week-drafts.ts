@@ -53,7 +53,7 @@ const TUESDAY = 2;
    short-cut is gone from this module; the home page hero keeps "Mountain"
    (its own zoneLabel in ReadingHeroCountdown / sections.tsx, not this lane). */
 function zoneLabel(atMs: number, tz: string): string {
-  const part = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" })
+  const part = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "longGeneric" })
     .formatToParts(new Date(atMs))
     .find((p) => p.type === "timeZoneName");
   return part?.value ?? tz;

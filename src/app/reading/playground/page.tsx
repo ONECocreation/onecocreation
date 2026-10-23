@@ -62,7 +62,7 @@ function clockAt(ms: number, tz: string): string {
   return new Intl.DateTimeFormat("en-US", { timeZone: tz, ...CLOCK_LABEL }).format(new Date(ms));
 }
 function zoneLabel(ms: number, tz: string): string {
-  const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(new Date(ms));
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "longGeneric" }).formatToParts(new Date(ms));
   return parts.find((p) => p.type === "timeZoneName")?.value ?? tz;
 }
 
