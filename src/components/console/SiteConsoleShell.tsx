@@ -119,19 +119,26 @@ export const STUDIO_SUBS = [
      the studio menu on the left." Menu placement ONLY, same as T-545: the
      page stays at /a/site/replays (TASK-496's list of links /replays plays). */
   { key: "replays", href: "/a/site/replays", label: "Replays" },
+  /* TASK-603 phase 2 (K182, his Desk answer on card 971566: "Build it
+     (Studio menu)"): Q&A questions lists as its own sub-item under Studio,
+     beside Weekly reading. Menu placement ONLY, the T-545 precedent: the
+     route stays /a/letters/questions (round 2 moved the room there). */
+  { key: "questions", href: "/a/letters/questions", label: "Q&A questions" },
 ] as const;
 
 export type StudioSubKey = (typeof STUDIO_SUBS)[number]["key"];
 
 /** Which Studio sub-row a path marks current - /a/site/reading and anything
     under it (the go/<door> links) mark The weekly reading, /a/site/replays
-    marks Replays (T-619); all else nothing. */
+    marks Replays (T-619), /a/letters/questions marks Q&A questions (T-603);
+    all else nothing. */
 /** T-622: a Studio sub-room says its OWN name once in the page header (title
     and short subtitle), with no Studio block above it. The rail still groups
     these rows under Studio; only the heading changes. */
 export const STUDIO_SUB_HEADS: Record<StudioSubKey, { title: string; blurb: string }> = {
   reading: { title: "Weekly reading", blurb: "Set the schedule, then open each room when you're ready." },
   replays: { title: "Replays", blurb: "The list the Replays page plays." },
+  questions: { title: "Q&A questions", blurb: "The month's questions, read and answered." },
 };
 
 export function studioSubForPath(pathname: string): StudioSubKey | null {
@@ -468,13 +475,15 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
             // when the current room IS Brand, so it highlights.
             // TASK-545: the reading's pages belong to Studio's group, so the
             // Site row does not light for them (the sub-row is the mark).
-            const onReading = studioSubForPath(pathname) !== null;
+            // TASK-603: /a/letters/questions joins Studio's group, so the
+            // Letters row does not light for it either.
+            const onStudioSub = studioSubForPath(pathname) !== null;
             const active =
               r.key === "studio"
-                ? r.key === current.key || onReading
+                ? r.key === current.key || onStudioSub
                 : r.key === "site"
-                  ? (r.key === current.key || current.key === "brand") && !onReading
-                  : r.key === current.key;
+                  ? (r.key === current.key || current.key === "brand") && !onStudioSub
+                  : r.key === current.key && !onStudioSub;
             /* TASK-188: the Site row is the accordion — every other console
                item is the same flat link it always was. */
             if (r.key === "studio") {

@@ -106,4 +106,8 @@ next-env.d.ts
 
 # room pins — dual-driver doc, dev file half (prod uses KV/Blob)
 /data/room-pins.json
+
+# Q&A questions (TASK-603) — private driver (asker emails are PII): dev
+# month-keyed files, prod KV; never a public blob
+/data/qa-questions/
 .claude/worktrees/
