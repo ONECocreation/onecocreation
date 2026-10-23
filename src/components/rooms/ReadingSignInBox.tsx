@@ -96,6 +96,8 @@ export const HEART_FIELD_HREF = "/rooms/heart-field";
 export const NOSTR_KEY_POINTER = "Have a Nostr key? ";
 export const NOSTR_KEY_LINK_LABEL = "Sign in with your Nostr key";
 export const NOSTR_KEY_HREF = "/login?next=%2Freading";
+export const SIGN_IN_HEADING = "Sign in";
+export const SIGN_IN_QUIET_LINE = "We will email you a six-digit code. No password.";
 export const BOX_HEADING = "Sign me up. Keep me posted.";
 /* the code step says where the code went and how long it works (the
    /login sheet's own note, door-machine.ts, without its dash) */
@@ -194,6 +196,7 @@ export async function startEmailCode(email: string): Promise<{ ok: true } | { ok
 export async function verifyAndSubscribe(
   email: string,
   code: string,
+  subscribe = true,
 ): Promise<{ ok: true; handle: string; space: string; outcome: SignInOutcome } | { ok: false; message: string }> {
   let verifyData: { ok?: boolean; handle?: string; space?: string } | null;
   try {
@@ -210,6 +213,10 @@ export async function verifyAndSubscribe(
     return { ok: false, message: GENERIC_ERROR };
   }
   // verified — safe to subscribe now, never a moment before this line
+  // T-630: the sheet's sign-in view passes subscribe=false (no list sign-up)
+  if (!subscribe) {
+    return { ok: true, handle: verifyData.handle!, space: verifyData.space!, outcome: "already" };
+  }
   const sub = await postReadingSignUp(email);
   return {
     ok: true,
@@ -235,10 +242,18 @@ export interface ReadingSignInCardProps {
    *  step's own render is pinned by seeding the initial step rather than
    *  simulating a click. */
   initialStep?: "email" | "code";
+  /** T-630: the pop-up sheet's mode. "sign-up" is today's box (email, code,
+   *  keep me posted); "sign-in" is the same two steps with no list sign-up. */
+  mode?: "sign-up" | "sign-in";
+  /** T-630: inside the sheet the card drops its page id (the bottom box
+   *  keeps #sign-up) and its own heading card chrome stays the same. */
+  embedded?: boolean;
   onVerified?: (result: { handle: string; space: string; outcome: SignInOutcome }) => void;
 }
 
-export function ReadingSignInCard({ member, justJoined, initialStep = "email", onVerified }: ReadingSignInCardProps) {
+export function ReadingSignInCard({ member, justJoined, initialStep = "email", mode = "sign-up", embedded = false, onVerified }: ReadingSignInCardProps) {
+  const signInMode = mode === "sign-in";
+  const cardId = embedded ? undefined : "sign-up";
   const [step, setStep] = useState<"email" | "code">(initialStep);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -261,7 +276,7 @@ export function ReadingSignInCard({ member, justJoined, initialStep = "email", o
     if (busy) return;
     setBusy(true);
     setNote(null);
-    const result = await verifyAndSubscribe(email, code);
+    const result = await verifyAndSubscribe(email, code, !signInMode);
     if (result.ok) onVerified?.(result);
     else setNote(result.message);
     setBusy(false);
@@ -271,7 +286,7 @@ export function ReadingSignInCard({ member, justJoined, initialStep = "email", o
   // the honest outcome is already known, so ONE button, nothing else.
   if (justJoined) {
     return (
-      <Card id="sign-up" className="kit-signup">
+      <Card id={cardId} className="kit-signup">
         <div className="kit-stack">
           <h2 className="kit-h2">You&apos;re in.</h2>
           <p>{BOX_OUTCOME_COPY[justJoined]}</p>
@@ -310,17 +325,17 @@ export function ReadingSignInCard({ member, justJoined, initialStep = "email", o
 
   // Case 1 — signed out: email, then (same box) the code.
   return (
-    <Card id="sign-up" className="kit-signup">
+    <Card id={cardId} className="kit-signup">
       <div className="kit-stack">
-        <h2 className="kit-h2">{BOX_HEADING}</h2>
-        <p className="kit-text-quiet">{BOX_QUIET_LINE}</p>
+        <h2 className="kit-h2">{signInMode ? SIGN_IN_HEADING : BOX_HEADING}</h2>
+        <p className="kit-text-quiet">{signInMode ? SIGN_IN_QUIET_LINE : BOX_QUIET_LINE}</p>
       </div>
 
       {step === "email" && (
         <>
           <form className="kit-inline-form" onSubmit={submitEmail}>
             <Field
-              id="reading-signin-email"
+              id={embedded ? "reading-sheet-email" : "reading-signin-email"}
               label="Email"
               type="email"
               required
@@ -335,10 +350,12 @@ export function ReadingSignInCard({ member, justJoined, initialStep = "email", o
           </form>
           {/* the ONLY key word Love allows (the walk: plain "your key"
               confused her) — a quiet pointer, never a second loud door */}
+          {(!embedded || signInMode) && (
           <p className="kit-text-quiet">
             {NOSTR_KEY_POINTER}
             <Link href={NOSTR_KEY_HREF}>{NOSTR_KEY_LINK_LABEL}</Link>
           </p>
+          )}
         </>
       )}
 
@@ -349,7 +366,7 @@ export function ReadingSignInCard({ member, justJoined, initialStep = "email", o
           </p>
           <form className="kit-inline-form" onSubmit={submitCode}>
             <Field
-              id="reading-signin-code"
+              id={embedded ? "reading-sheet-code" : "reading-signin-code"}
               label="Sign-in code"
               inputMode="numeric"
               pattern="\d{6}"

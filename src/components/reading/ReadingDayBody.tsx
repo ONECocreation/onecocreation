@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SignUpSheetTrigger } from "@/components/reading/SignMeUpSheet";
 import { clockWords, dayWords } from "@/lib/reading-day";
 import type { EncoreFloorDoor, QaDoor } from "@/lib/reading-day-doors";
 import ReadingDayUnlockButton from "./ReadingDayUnlockButton";
@@ -132,9 +133,7 @@ export default function ReadingDayBody({
               {signedIn ? (
                 <ReadingPartSelectLink part={1}>Join the Housewarming</ReadingPartSelectLink>
               ) : (
-                <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">
-                  Sign me up
-                </Link>
+                <SignUpSheetTrigger />
               )}
             </span>
           </li>
@@ -151,9 +150,7 @@ export default function ReadingDayBody({
             {signedIn ? (
               <ReadingPartSelectLink part={2}>Watch the Reading</ReadingPartSelectLink>
             ) : (
-              <Link className="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">
-                Sign me up
-              </Link>
+              <SignUpSheetTrigger />
             )}
           </span>
         </li>

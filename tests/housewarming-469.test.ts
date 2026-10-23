@@ -112,10 +112,10 @@ describe("ReadingDayBody — the Housewarming row's buttons: TASK-471 (block 968
     expect(row).not.toContain("Sign me up");
   });
 
-  it("signed out: 'Sign me up', linked to #sign-up", () => {
+  it("signed out: 'Sign me up, opens the sheet (T-630)", () => {
     const html = render(bodyProps({ signedIn: false }));
     const row = firstRow(html);
-    expect(row).toContain('href="#sign-up"');
+    expect(row).toContain('aria-haspopup="dialog"');
     expect(row).toContain("Sign me up");
     expect(row).not.toContain("Back to the reading");
   });

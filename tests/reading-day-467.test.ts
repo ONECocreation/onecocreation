@@ -281,7 +281,7 @@ describe("ReadingDayBody — signed out / free member / tier A / B / C each get 
         expect(html).not.toContain("Sign me up");
       } else {
         expect(html).toContain("Sign me up");
-        expect(html).toContain('href="#sign-up"');
+        expect(html).toContain('aria-haspopup="dialog"');
       }
 
       if (encoreEntitled) {

@@ -139,7 +139,7 @@ describe("published, signed OUT — the page's own sign-in path, never a link el
 
   it("the one control is Sign me up, to #sign-up — never /rooms/heart-field, never a raw login link", () => {
     expect(count(html, "kit-btn-main")).toBe(1);
-    expect(html).toMatch(/<a class="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">\s*Sign me up\s*<\/a>/);
+    expect(html).toMatch(/<button type="button" class="kit-btn kit-btn-main kit-btn-sm" aria-haspopup="dialog">Sign me up<\/button>/);
     expect(html).not.toContain("/rooms/heart-field");
     expect(html).not.toContain("/login");
   });

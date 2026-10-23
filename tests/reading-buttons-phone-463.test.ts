@@ -51,7 +51,7 @@ describe("TASK-463/471 — the stage's buttons are the small kit button, never f
 
   it("published, signed out: the one button (Sign me up) is kit-btn-sm", () => {
     const html = render({ phase: "published", signedIn: false, room: "shot-room" });
-    expect(html).toMatch(/<a class="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">\s*Sign me up\s*<\/a>/);
+    expect(html).toMatch(/<button type="button" class="kit-btn kit-btn-main kit-btn-sm" aria-haspopup="dialog">Sign me up<\/button>/);
   });
 
   it("left-while-published: the one button (Back to the reading) is kit-btn-sm", () => {

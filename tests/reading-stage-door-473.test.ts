@@ -72,7 +72,7 @@ describe("ReadingStageDoorBody — signed out (door open, no session)", () => {
     const wire: Wire = { decision: "signin", reachable: null, room: null };
     const html = render(bodyProps({ wire }));
     expect(html).toContain("The Book Talk is live now. Sign in with your email and come straight back here to join it.");
-    expect(html).toMatch(/<a class="kit-btn kit-btn-main kit-btn-sm" href="#sign-up">\s*Sign me up\s*<\/a>/);
+    expect(html).toMatch(/<button type="button" class="kit-btn kit-btn-main kit-btn-sm" aria-haspopup="dialog">Sign me up<\/button>/);
     expect(html).not.toContain("kit-stage-viewer");
   });
 });

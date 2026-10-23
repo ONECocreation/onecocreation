@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element -- the book art is a static house asset; reading/page.tsx carries the same header */
 "use client";
 
+import { SignUpSheetTrigger } from "@/components/reading/SignMeUpSheet";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import JitsiRoom from "@/components/booking/JitsiRoom";
 import ReadingPartSelectLink from "./ReadingPartSelectLink";
 import { useReadingPart } from "./ReadingPartContext";
@@ -338,9 +338,7 @@ export function ReadingStageBody({
               Love is live now, free to watch. Sign in with your email and come straight back here to join her.
             </p>
             <div className="kit-btn-row">
-              <Link href="#sign-up" className="kit-btn kit-btn-main kit-btn-sm">
-                Sign me up
-              </Link>
+              <SignUpSheetTrigger />
             </div>
           </div>
         ) : phase === "published" ? (

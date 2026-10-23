@@ -10,6 +10,7 @@ import CosmicSky from "@/components/CosmicSky";
 import ReadingHeroCountdown from "@/components/ReadingHeroCountdown";
 import ReadingStageDeck from "@/components/reading/ReadingStageDeck";
 import { ReadingPartProvider } from "@/components/reading/ReadingPartContext";
+import SignMeUpSheet from "@/components/reading/SignMeUpSheet";
 import ReadingSignInBox from "@/components/rooms/ReadingSignInBox";
 import ReadingDay from "@/components/reading/ReadingDay";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
@@ -562,6 +563,8 @@ export default async function ReadingPage({
               TASK-532 (block
               969,334): the id="keep-posted" anchor is /replays' "Want a
               reminder email?" button's target (the round-2 NOD, pick 3). */}
+          {/* T-630: every signed-out Sign me up opens this sheet over the page */}
+          <SignMeUpSheet />
           <section className="kitx-section" id="keep-posted">
             <div className="wrap">
               <ReadingSignInBox />
