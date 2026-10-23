@@ -22,6 +22,7 @@ PHASE 2: THE BUILD. Phase 1 (mockup, rounds 1-3) was claimed and drawn on `feat/
 - `tests/reading-page.test.ts` (the kitx- stem pin gains kitx-form and kitx-qa - a pin fix by name, same law)
 - `tests/qa-questions.test.ts` (NEW)
 - `.gitignore` (the dev-driver data/qa-questions/ files)
+- `scripts/console-matrix.routes.json` (the policy row for the new /a/letters/questions room; Number One at the gate, 972,826)
 - `~/dev/kimi/outbox/task-603/`
 - `work-claims/task-603.md`
 
