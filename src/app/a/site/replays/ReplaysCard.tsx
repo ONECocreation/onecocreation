@@ -30,22 +30,91 @@ import { parseYoutubeInput } from "@/lib/youtube-id";
  * controls never fit beside the words.
  */
 
+/* T-624: ONE smart add. The site works out what a pasted link is (from the URL
+   pattern, no network call), shows a preview card, and Save lives there. Saved videos are cards you drag or
+   nudge with small icon buttons (the T-620 menu board's grip and moves). EVERY change saves itself, like the menu
+   editor, so there is no bottom Save. A saved playlist is one card in the list with a quiet Remove. */
+
+type Kind = "video" | "short" | "playlist";
+type Found = { kind: Kind; id: string; ratio: AboutVideo["ratio"]; title: string };
+
+const KIND_WORDS: Record<Kind, string> = { video: "A normal video", short: "A Short", playlist: "A playlist" };
+
+function classify(raw: string): Found | null {
+  const s = raw.trim();
+  if (!s) return null;
+  // a playlist page link, or a bare PL id (the real route probes the feed on save)
+  try {
+    const u = new URL(s);
+    const host = u.hostname.toLowerCase().replace(/^(www\.|m\.)/, "");
+    const list = u.searchParams.get("list");
+    if (host === "youtube.com" && u.pathname.startsWith("/playlist") && list) {
+      return { kind: "playlist", id: list, ratio: "16/9", title: "" };
+    }
+  } catch { /* not a URL: fall through */ }
+  if (/^PL[A-Za-z0-9_-]{10,}$/.test(s)) return { kind: "playlist", id: s, ratio: "16/9", title: "" };
+  const p = parseYoutubeInput(s);
+  if (!p) return null;
+  return p.likelyShort
+    ? { kind: "short", id: p.id, ratio: "9/16", title: "" }
+    : { kind: "video", id: p.id, ratio: "16/9", title: "" };
+}
+
+/** the frame silhouette: a wide rectangle for landscape, a tall one for portrait */
+function Frame({ ratio }: { ratio: AboutVideo["ratio"] }) {
+  return (
+    <svg className="kit-frame-ico" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" focusable="false">
+      {ratio === "9/16" ? (
+        <rect x="6.5" y="2.5" width="9" height="17" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      ) : (
+        <rect x="2.5" y="6.5" width="17" height="9" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      )}
+    </svg>
+  );
+}
+
+function Chev({ up }: { up: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d={up ? "M3.5 10.5 8 6l4.5 4.5" : "M3.5 5.5 8 10l4.5-4.5"} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function Cross() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function Thumb({ id, ratio }: { id: string | null; ratio: AboutVideo["ratio"] }) {
+  const [bad, setBad] = useState(false);
+  return (
+    <span className={`kit-rthumb${ratio === "9/16" ? " is-tall" : ""}`} aria-hidden="true">
+      {id && !bad ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="" loading="lazy" onError={() => setBad(true)} />
+      ) : (
+        <Frame ratio={ratio} />
+      )}
+    </span>
+  );
+}
+
 export default function ReplaysCard() {
   const [rows, setRows] = useState<AboutVideo[] | null>(null);
-  const [savedYet, setSavedYet] = useState(false);
   const [link, setLink] = useState("");
-  const [title, setTitle] = useState("");
-  const [ratio, setRatio] = useState<AboutVideo["ratio"]>("16/9");
-  const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
+  const [found, setFound] = useState<Found | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  /* TASK-532 (blocks 969,313 + 969,334) - the YouTube PLAYLIST field: its
-     own KV doc behind /api/admin/replays-playlist (ruling 3 - the
-     site-config doc and its route stay T-499's, untouched). */
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+  const [reason, setReason] = useState<string | null>(null);
   const [playlistId, setPlaylistId] = useState<string | null>(null);
-  const [playlistInput, setPlaylistInput] = useState("");
-  const [playlistBusy, setPlaylistBusy] = useState(false);
   const [playlistNote, setPlaylistNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [drag, setDrag] = useState<number | null>(null);
+  const [over, setOver] = useState<{ i: number; mode: "before" | "after" } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -53,9 +122,7 @@ export default function ReplaysCard() {
       if (!res.ok) return;
       const data = await res.json();
       if (!data.ok) return;
-      const replays = (data.config as SiteConfig).replays;
-      setSavedYet(replays !== undefined);
-      setRows(replays ?? []); // absent = empty: no seed stands behind this list
+      setRows(((data.config as SiteConfig).replays ?? []) as AboutVideo[]);
     })();
     (async () => {
       const res = await fetch("/api/admin/replays-playlist", { cache: "no-store" });
@@ -65,270 +132,226 @@ export default function ReplaysCard() {
     })();
   }, []);
 
-  const parsed = parseYoutubeInput(link);
-
-  function onLinkChange(v: string) {
-    setLink(v);
-    setErr(null);
-    // a Shorts link stands portrait until Love says otherwise
-    const p = parseYoutubeInput(v);
-    if (p?.likelyShort) setRatio("9/16");
-  }
-
-  function move<T>(list: T[], i: number, dir: -1 | 1): T[] {
-    const j = i + dir;
-    if (j < 0 || j >= list.length) return list;
-    const next = list.slice();
-    [next[i], next[j]] = [next[j], next[i]];
-    return next;
-  }
-
-  function add() {
-    if (!rows) return;
-    setErr(null);
-    if (!parsed) {
-      setErr("That doesn't look like a YouTube video link. Paste the watch link, the youtu.be share link, a Shorts link, or the 11-character video id.");
-      return;
-    }
-    if (!title.trim()) {
-      setErr("The replay needs a title, the words visitors see on its folded row.");
-      return;
-    }
-    if (rows.some((r) => r.id === parsed.id)) {
-      setErr("That video is already on the list.");
-      return;
-    }
-    setRows([...rows, { id: parsed.id, title: title.trim(), ratio }]);
-    setLink("");
-    setTitle("");
-    setRatio("16/9");
-  }
-
-  async function saveList() {
-    if (!rows) return;
-    setBusy(true);
-    setNote(null);
+  async function persist(next: AboutVideo[]) {
+    setRows(next);
+    setStatus("saving");
     try {
-      // `replays` is a whole-list replace (site-config.ts) - the card always
-      // saves its full set, an empty list included.
       const res = await fetch("/api/admin/site", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ replays: rows }),
+        body: JSON.stringify({ replays: next }),
       });
       const data = await res.json();
-      if (data.ok) {
-        setRows(data.config.replays ?? []);
-        setSavedYet(true);
-        setNote("saved ✓ the Replays page reads this list on its next render");
-      } else setNote(data.reason ?? "save failed");
+      if (data.ok) { setStatus("saved"); setReason(null); }
+      else { setStatus("failed"); setReason(data.reason ?? "the site would not take it"); }
     } catch {
-      setNote("save failed");
-    } finally {
-      setBusy(false);
+      setStatus("failed");
+      setReason("the site did not answer");
     }
   }
 
-  /* TASK-532 - the playlist field's own save/clear, against its own
-     route. The route probes the feed once on save and answers `found`,
-     so the note says exactly what YouTube answered. */
-  async function savePlaylistField(clear: boolean) {
-    setPlaylistBusy(true);
+  function move(i: number, j: number) {
+    if (!rows || j < 0 || j >= rows.length || i === j) return;
+    const next = rows.slice();
+    const [it] = next.splice(i, 1);
+    next.splice(j, 0, it);
+    void persist(next);
+  }
+
+  function smartAdd() {
+    setErr(null);
+    const f = classify(link);
+    if (!f) {
+      setFound(null);
+      setErr("That does not look like a YouTube link. Paste a watch link, a youtu.be link, a Shorts link, or a playlist link.");
+      return;
+    }
+    if (f.kind !== "playlist" && rows?.some((r) => r.id === f.id)) {
+      setFound(null);
+      setErr("That video is already on the list.");
+      return;
+    }
+    setFound(f);
+  }
+
+  async function savePlaylist(clear: boolean, value: string) {
+    setBusy(true);
     setPlaylistNote(null);
     try {
       const res = await fetch("/api/admin/replays-playlist", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playlist: clear ? null : playlistInput }),
+        body: JSON.stringify({ playlist: clear ? null : value }),
       });
       const data = await res.json();
       if (data.ok) {
         setPlaylistId(data.playlist?.id ?? null);
-        if (clear) {
-          setPlaylistInput("");
-          setPlaylistNote("cleared ✓ the Replays page shows your hand-added rows only");
-        } else if (data.found > 0) {
-          setPlaylistInput("");
-          setPlaylistNote(`saved ✓ found ${data.found} videos in the playlist, newest first behind your rows above`);
-        } else {
-          setPlaylistId(data.playlist?.id ?? null);
-          setPlaylistNote(data.note ?? "saved, but YouTube did not answer just now");
-        }
-      } else setPlaylistNote(data.reason ?? "save failed");
+        setPlaylistNote(clear ? "Playlist removed." : data.found > 0 ? `Playlist saved. ${data.found} videos found, newest first.` : (data.note ?? "Playlist saved, but YouTube did not answer just now."));
+      } else setPlaylistNote(data.reason ?? "The playlist did not save.");
     } catch {
-      setPlaylistNote("save failed");
+      setPlaylistNote("The playlist did not save.");
     } finally {
-      setPlaylistBusy(false);
+      setBusy(false);
     }
+  }
+
+  async function saveFound() {
+    if (!found) return;
+    if (found.kind === "playlist") {
+      await savePlaylist(false, found.id);
+    } else {
+      if (!found.title.trim()) {
+        setErr("Give the replay a title, the words visitors see on its folded row.");
+        return;
+      }
+      await persist([...(rows ?? []), { id: found.id, title: found.title.trim(), ratio: found.ratio }]);
+    }
+    setFound(null);
+    setLink("");
+    setErr(null);
   }
 
   if (!rows) return <p className="kit-note">Reading the list…</p>;
 
+  const statusWords =
+    status === "saving" ? "Saving…"
+    : status === "saved" ? "Saved. The Replays page shows this list."
+    : status === "failed" ? `Not saved: ${reason}. Change anything to try again.`
+    : "Every change saves itself. The top card plays first on the page.";
+
   return (
-    <Card className="kit-rooms-card kit-replays-card">
-      <p className="kit-text-quiet">
-        Paste a YouTube link: the watch link, the youtu.be share link, or a Shorts link all work, and the house
-        keeps only the video&apos;s id. The top row plays first on the page.{" "}
-        {savedYet
-          ? "This is your saved list: the Replays page shows exactly these."
-          : "Nothing saved yet. The Replays page shows its quiet note until you save the first one."}
-      </p>
-
-      {/* TASK-532 - the YouTube PLAYLIST field (its own doc and route).
-          The honest words are the Admiral's own ruling: the feed shares
-          only the latest 15, so older videos stay a hand-added row. */}
-      <div className="kit-stack kit-replays-part" data-part="playlist">
-        <p className="kit-text-quiet">
-          Paste a public YouTube playlist link. The Replays page then shows what is in it, newest first, and picks
-          up new videos on its own. YouTube shares only the latest 15 videos this way, so older ones need to be
-          added by hand below.
-        </p>
-        {playlistId && (
-          <p className="kit-note kit-note-ok">saved playlist: {playlistId}</p>
-        )}
-        <div className="kit-field">
-          <label className="kit-field-label" htmlFor="replays-playlist">
-            YouTube playlist
-          </label>
-          <input
-            id="replays-playlist"
-            className="kit-field-input"
-            value={playlistInput}
-            onChange={(e) => {
-              setPlaylistInput(e.target.value);
-              setPlaylistNote(null);
-            }}
-            placeholder="paste the playlist link or the playlist id…"
-            aria-label="YouTube playlist link or id"
-          />
-        </div>
-        <div className="kit-btn-row kit-replays-actions">
-          <button
-            type="button"
-            className="kit-btn kit-pill"
-            disabled={playlistBusy || !playlistInput.trim()}
-            onClick={() => savePlaylistField(false)}
-          >
-            {playlistBusy ? "Saving…" : "Save the playlist"}
-          </button>
-          {playlistId && (
-            <button
-              type="button"
-              className="kit-btn kit-pill"
-              disabled={playlistBusy}
-              onClick={() => savePlaylistField(true)}
-            >
-              Clear the playlist
-            </button>
-          )}
-        </div>
-        {playlistNote && (
-          <p className={`kit-note${playlistNote.includes("✓") ? " kit-note-ok" : " kit-note-err"}`}>{playlistNote}</p>
-        )}
-      </div>
-
+    <Card className="kit-rooms-card kit-replays-card kit-bset">
       <div className="kit-stack kit-replays-part" data-part="add">
         <div className="kit-field">
-          <label className="kit-field-label" htmlFor="replays-link">
-            YouTube link
-          </label>
-          <input
-            id="replays-link"
-            className="kit-field-input"
-            value={link}
-            onChange={(e) => onLinkChange(e.target.value)}
-            placeholder="paste the YouTube link or the video id…"
-            aria-label="YouTube link or video id"
-          />
-        </div>
-        <div className="kit-field">
-          <label className="kit-field-label" htmlFor="replays-title">
-            Title
-          </label>
-          <input
-            id="replays-title"
-            className="kit-field-input"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="the title visitors see…"
-            aria-label="replay title"
-          />
-        </div>
-        <p className={`kit-note${link.trim() ? (parsed ? " kit-note-ok" : " kit-note-err") : ""}`}>
-          {link.trim()
-            ? parsed
-              ? `id: ${parsed.id} ✓`
-              : "not a YouTube video link the house knows"
-            : "watch, youtu.be, Shorts, embed, or the bare 11-character id"}
-        </p>
-        <div className="kit-field kit-replays-shape">
-          <span className="kit-field-label" id="replays-shape-label">
-            Shape
-          </span>
-          <div className="kit-btn-row kit-replays-actions" role="group" aria-labelledby="replays-shape-label" aria-label="replay shape">
-            {(["16/9", "9/16"] as const).map((r) => (
-              <button
-                key={r}
-                type="button"
-                aria-pressed={ratio === r}
-                onClick={() => setRatio(r)}
-                className={`kit-btn kit-pill kit-replays-choice${ratio === r ? " is-on" : ""}`}
-              >
-                {r === "9/16" ? "portrait" : "landscape"}
-              </button>
-            ))}
+          <label className="kit-field-label" htmlFor="replays-link">Paste a YouTube link</label>
+          <div className="kit-smartadd">
+            <input
+              id="replays-link"
+              className="kit-field-input"
+              value={link}
+              onChange={(e) => { setLink(e.target.value); setErr(null); setFound(null); }}
+              onKeyDown={(e) => { if (e.key === "Enter") smartAdd(); }}
+              placeholder="a video, a Short or a playlist link"
+              aria-label="YouTube link"
+            />
+            <button type="button" className="kit-btn kit-pill kit-pill-primary" onClick={smartAdd} disabled={!link.trim()}>Add</button>
           </div>
-          <p className="kit-note">chosen shape: {ratio === "9/16" ? "portrait" : "landscape"}</p>
-        </div>
-        <div className="kit-btn-row kit-replays-actions">
-          <button type="button" className="kit-btn kit-pill" onClick={add}>
-            Add to the list
-          </button>
         </div>
         {err && <p className="kit-field-error">{err}</p>}
+
+        {found && (
+          <div className="kit-preview" data-part="preview">
+            <Thumb id={found.kind === "playlist" ? null : found.id} ratio={found.ratio} />
+            <div className="kit-preview-body">
+              <b>{KIND_WORDS[found.kind]}</b>
+              <span className="kit-text-quiet">
+                {found.kind === "playlist"
+                  ? "The page shows what is in it, newest first. YouTube shares only the latest 15."
+                  : `Found ${found.id}. ${found.kind === "short" ? "A Short plays tall, so portrait is picked." : "Landscape is picked."} You can change it.`}
+              </span>
+              {found.kind !== "playlist" && (
+                <>
+                  <div className="kit-field">
+                    <label className="kit-field-label" htmlFor="replays-title">Title</label>
+                    <input id="replays-title" className="kit-field-input" value={found.title} placeholder="the title visitors see"
+                      onChange={(e) => setFound({ ...found, title: e.target.value })} />
+                  </div>
+                  <div className="kit-field">
+                    <span className="kit-field-label" id="replays-shape-label">Shape</span>
+                    <div className="kit-shape" role="group" aria-labelledby="replays-shape-label">
+                      {(["16/9", "9/16"] as const).map((r) => (
+                        <button key={r} type="button" aria-pressed={found.ratio === r} onClick={() => setFound({ ...found, ratio: r })}
+                          className={`kit-btn kit-pill${found.ratio === r ? " is-on" : ""}`}>
+                          <Frame ratio={r} />
+                          {r === "9/16" ? "Portrait" : "Landscape"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+              <div className="kit-btn-row kit-preview-actions">
+                <button type="button" className="kit-btn kit-pill kit-pill-primary" disabled={busy} onClick={saveFound}>Save</button>
+                <button type="button" className="kit-btn kit-pill" onClick={() => { setFound(null); setErr(null); }}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
+        {playlistNote && <p className="kit-note kit-note-ok" role="status">{playlistNote}</p>}
       </div>
 
       <div className="kit-stack kit-replays-part" data-part="list">
-      {rows.length > 0 && (
-        <ul className="kit-rows" aria-label="The replays list">
-          {rows.map((v, i) => (
-            <li key={v.id} data-row={v.id}>
-              <span>
-                <b>{v.title}</b>
-                <em>
-                  {v.id} · {v.ratio === "9/16" ? "portrait" : "landscape"}
-                </em>
+        <ul className="kit-rcards" aria-label="The replays list">
+          {playlistId && (
+            <li className="kit-rcard is-playlist" data-row="playlist">
+              <Thumb id={null} ratio="16/9" />
+              <span className="kit-rcard-text">
+                <b>Playlist</b>
+                <em>{playlistId} · newest 15 show behind your videos</em>
               </span>
-              <span className="kit-rows-end">
-                <button type="button" className="kit-btn kit-pill" disabled={i === 0} aria-label={`move ${v.title} up`} onClick={() => setRows(move(rows, i, -1))}>
-                  Up
-                </button>
-                <button type="button" className="kit-btn kit-pill" disabled={i === rows.length - 1} aria-label={`move ${v.title} down`} onClick={() => setRows(move(rows, i, 1))}>
-                  Down
-                </button>
-                <button
-                  type="button"
-                  className="kit-btn kit-pill"
-                  aria-label={`${v.title}, currently ${v.ratio === "9/16" ? "portrait" : "landscape"}, flip the shape`}
-                  onClick={() => setRows(rows.map((r, idx) => (idx === i ? { ...r, ratio: r.ratio === "9/16" ? "16/9" : "9/16" } : r)))}
-                >
-                  {v.ratio === "9/16" ? "portrait" : "landscape"}
-                </button>
-                <button type="button" className="kit-btn kit-pill" onClick={() => setRows(rows.filter((_, idx) => idx !== i))}>
-                  Remove
-                </button>
+              <span className="kit-rcard-ctl">
+                <button type="button" className="kit-ibtn is-quiet" disabled={busy} aria-label="Remove the playlist" title="Remove" onClick={() => savePlaylist(true, "")}><Cross /></button>
               </span>
             </li>
-          ))}
+          )}
+          {rows.map((v, i) => {
+            const mark = over && over.i === i && drag !== null && drag !== i ? over.mode : undefined;
+            return (
+              <li key={v.id} className={`kit-rcard${drag === i ? " is-dragging" : ""}`} data-row={v.id} data-drop={mark}
+                onDragOver={(e) => {
+                  if (drag === null) return;
+                  e.preventDefault();
+                  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  setOver({ i, mode: e.clientY < r.top + r.height / 2 ? "before" : "after" });
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (drag !== null && over) {
+                    let to = over.i + (over.mode === "after" ? 1 : 0);
+                    if (drag < to) to -= 1;
+                    move(drag, to);
+                  }
+                  setDrag(null); setOver(null);
+                }}>
+                <span
+                  className="kit-rgrip"
+                  draggable
+                  aria-hidden="true"
+                  title={`Drag ${v.title} to move it`}
+                  onDragStart={(e) => {
+                    setDrag(i);
+                    e.dataTransfer.effectAllowed = "move";
+                    try {
+                      e.dataTransfer.setData("text/plain", "replay");
+                      const box = (e.currentTarget as HTMLElement).closest("li");
+                      if (box) e.dataTransfer.setDragImage(box, 24, 20);
+                    } catch { /* some drivers deny it */ }
+                  }}
+                  onDragEnd={() => { setDrag(null); setOver(null); }}
+                >
+                  ⠿
+                </span>
+                <Thumb id={v.id} ratio={v.ratio} />
+                <span className="kit-rcard-text">
+                  <b>{v.title}</b>
+                  <em><Frame ratio={v.ratio} />{v.ratio === "9/16" ? "Portrait frame" : "Landscape frame"}</em>
+                </span>
+                <span className="kit-rcard-ctl">
+                  <button type="button" className="kit-ibtn" disabled={i === 0} aria-label={`Move ${v.title} up`} title="Move up" onClick={() => move(i, i - 1)}><Chev up /></button>
+                  <button type="button" className="kit-ibtn" disabled={i === rows.length - 1} aria-label={`Move ${v.title} down`} title="Move down" onClick={() => move(i, i + 1)}><Chev up={false} /></button>
+                  <button type="button" className="kit-ibtn" aria-label={`${v.title} is ${v.ratio === "9/16" ? "portrait" : "landscape"}, press to flip the shape`}
+                    title={v.ratio === "9/16" ? "Portrait, press for landscape" : "Landscape, press for portrait"}
+                    onClick={() => persist(rows.map((r, idx) => (idx === i ? { ...r, ratio: r.ratio === "9/16" ? "16/9" : "9/16" } : r)))}>
+                    <Frame ratio={v.ratio} />
+                  </button>
+                  <button type="button" className="kit-ibtn is-quiet" aria-label={`Remove ${v.title}`} title="Remove" onClick={() => persist(rows.filter((_, idx) => idx !== i))}><Cross /></button>
+                </span>
+              </li>
+            );
+          })}
         </ul>
-      )}
-
-      <div className="kit-btn-row kit-replays-actions">
-        <button type="button" className="kit-btn kit-pill" disabled={busy} onClick={saveList}>
-          {busy ? "Saving…" : "Save the replays"}
-        </button>
-      </div>
-      {note && <p className={`kit-note${note.startsWith("saved") ? " kit-note-ok" : " kit-note-err"}`}>{note}</p>}
+        {rows.length === 0 && !playlistId && <p className="kit-note">Nothing here yet. Paste a link above and the Replays page fills in.</p>}
+        <p className="kit-note" data-state={status} role="status" aria-live="polite">{statusWords}</p>
       </div>
     </Card>
   );

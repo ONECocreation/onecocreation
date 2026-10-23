@@ -168,7 +168,7 @@ export default function LetterEditPage({ params }: { params: Promise<{ key: stri
   return (
     <div className="p-6 text-sm">
       <div className="kitx-pane">
-        <div>
+        <div className="kit-bset">
           <Link className="kit-btn kit-btn-quiet kit-btn-sm" href="/a/letters">Back to the letters</Link>
         </div>
         {CONSOLE_CHROME !== "site" && <h2 className="kit-h2">{title}</h2>}
@@ -187,7 +187,7 @@ export default function LetterEditPage({ params }: { params: Promise<{ key: stri
                 This letter has no picture, cards or button, so the mail uses the plain shell. Open the inbox check below to see it exactly.
               </p>
             )}
-            <div className="kit-btn-row">
+            <div className="kit-btn-row kit-bset">
               <Button sm onClick={() => put(true)} disabled={noWords}>Publish</Button>
               {isDrafted(key, letter) && (
                 <Button sm variant="second" onClick={() => put(false)} disabled={noWords}>Save draft</Button>
@@ -204,7 +204,7 @@ export default function LetterEditPage({ params }: { params: Promise<{ key: stri
                     ? `A test copy goes to ${copy.to} only, with what is on the screen.`
                     : "A test copy goes to your own address only, with what is on the screen.")}
             </p>
-            <div className="kit-btn-row">
+            <div className="kit-btn-row kit-bset">
               <Button sm variant="second" aria-expanded={previewOpen} onClick={() => setPreviewOpen((o) => !o)}>
                 See it as the inbox gets it
               </Button>

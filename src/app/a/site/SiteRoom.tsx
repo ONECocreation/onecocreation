@@ -114,26 +114,20 @@ export default function SiteRoom() {
     );
   if (!config || !rails) return <p className="p-6 text-sm" style={{ color: "var(--muted)" }}>reading the switches…</p>;
 
-  const toggle = (on: boolean, disabled: boolean, label: string, onFlip: () => void) => (
-    <button
-      type="button"
-      aria-pressed={on}
-      aria-label={label}
-      disabled={disabled}
-      onClick={onFlip}
-      className={`btn btn-sm ${on ? "btn-on" : "btn-ghost"}`}
-      style={disabled ? { opacity: 0.45, cursor: "not-allowed" } : undefined}
-    >
-      {on ? "ON" : "OFF"}
+  /* T-624 r2: ONE slider for every on/off row, the state said once inside it */
+  const slider = (on: boolean, disabled: boolean, label: string, onFlip: () => void) => (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} disabled={disabled} className="kit-tgl" onClick={onFlip}>
+      <span className="kit-tgl-word">{on ? "On" : "Off"}</span>
+      <span className="kit-tgl-knob" aria-hidden="true" />
     </button>
   );
 
   return (
-    <div className="p-6" style={{ maxWidth: 860 }}>
+    <div className="p-6 kit-bset" style={{ maxWidth: 860 }}>
       <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>The Switches</h1>
       <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
         Hide what isn&apos;t finished, turn the payment types on and off. A rail is live only when its
-        switch is ON <em>and</em> its keys are configured. The words under each toggle say which.
+        slider is On <em>and</em> its keys are configured. The note under each rail says which.
       </p>
 
       {/* ── the features ── */}
@@ -141,14 +135,12 @@ export default function SiteRoom() {
       {FEATURE_ROWS.map((r) => {
         const on = config.features[r.key];
         return (
-          <div key={r.key} style={row}>
-            {toggle(on, false, `${r.label} · currently ${on ? "on" : "off"}`, () =>
-              setConfig({ ...config, features: { ...config.features, [r.key]: !on } }))}
-            <div style={{ flex: 1, minWidth: 220 }}>
-              <b style={{ fontSize: ".9rem" }}>{r.label}</b>
-              <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: {on ? "showing" : "hidden"}, {r.about}</span>
+          <div key={r.key} className="kit-srow">
+            <div className="kit-srow-text">
+              <b>{r.label}</b>
+              <span>{r.about}</span>
             </div>
-            <Chip tone={on ? "green" : "grey"}>{on ? "ON · showing" : "OFF · hidden"}</Chip>
+            {slider(on, false, r.label, () => setConfig({ ...config, features: { ...config.features, [r.key]: !on } }))}
           </div>
         );
       })}
@@ -160,40 +152,34 @@ export default function SiteRoom() {
         const status = rails[r.key];
         const disabled = !status.configured;
         return (
-          <div key={r.key} style={{ ...row, opacity: disabled ? 0.72 : 1 }}>
-            {toggle(on && status.configured, disabled, `${r.label} · currently ${on ? "on" : "off"}`, () =>
-              setConfig({ ...config, payments: { ...config.payments, [r.key]: !on } }))}
-            <div style={{ flex: 1, minWidth: 220 }}>
-              <b style={{ fontSize: ".9rem" }}>{r.label}</b>
-              <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: {r.about}</span>
-              <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 3 }}>
+          <div key={r.key} className={`kit-srow${disabled ? " is-dim" : ""}`}>
+            <div className="kit-srow-text">
+              <b>{r.label}</b>
+              <span>{r.about}</span>
+              <span className="kit-srow-env">
                 {status.env.length > 0 ? (
                   <>
                     env: {status.env.map((n) => <code key={n} style={{ marginRight: 8 }}>{n}</code>)}
-                    {" "}{status.configured ? "configured ✓" : "not configured: the toggle stays dark until these are set"}
+                    {status.configured ? "configured" : "not configured, the slider stays dark until these are set"}
                   </>
                 ) : (
                   "no env: keys are pasted in the Money room's Stripe drawer; the rail itself ships separately"
                 )}
-              </div>
+              </span>
             </div>
-            <Chip tone={!status.configured ? "grey" : on ? "green" : "gold"}>
-              {!status.configured ? "not configured" : on ? "ON · live" : "OFF · hidden"}
-            </Chip>
+            {slider(on && status.configured, disabled, r.label, () => setConfig({ ...config, payments: { ...config.payments, [r.key]: !on } }))}
           </div>
         );
       })}
 
       {/* ── how sessions meet ── */}
       <SectionHead label="Meetings: how sessions open" />
-      <div style={row}>
-        <div style={{ flex: 1, minWidth: 220 }}>
-          <b style={{ fontSize: ".9rem" }}>The meeting rail</b>
-          <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>
-            {" "}Default for new services: {MEETING_RAILS.find((m) => m.key === config.meeting.rail)?.about}
-          </span>
+      <div className="kit-srow kit-srow-pills">
+        <div className="kit-srow-text">
+          <b>The meeting rail</b>
+          <span>new services default to this: {MEETING_RAILS.find((m) => m.key === config.meeting.rail)?.about}</span>
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="kit-rail" role="group" aria-label="The meeting rail">
           {MEETING_RAILS.map((m) => (
             <button
               key={m.key}
@@ -206,7 +192,6 @@ export default function SiteRoom() {
             </button>
           ))}
         </div>
-        <Chip tone="lavender">rail: {config.meeting.rail}</Chip>
       </div>
       {/* TASK-137 (0018.06.17 a₿) — the fields below CHANGE WITH THE RAIL:
           "the /a/site meeting fields don't change per rail" was the
@@ -256,7 +241,7 @@ export default function SiteRoom() {
             <b style={{ fontSize: ".9rem" }}>Studio host</b>
             <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: where the VDO rooms open; prefilled with this site&apos;s own studio</span>
             <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
-              a bare host only. No <code>https://</code>, no path: every guest/push/director link on this rail opens at{" "}
+              a bare host only, no <code>https://</code>, no path, every guest/push/director link on this rail opens at{" "}
               <code>{config.meeting.vdoHost || "host"}</code>
             </div>
           </div>
@@ -289,8 +274,8 @@ export default function SiteRoom() {
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 18 }}>
-        <button type="button" className="btn btn-gold btn-sm" disabled={busy} onClick={save}
+      <div className="kit-srow-save">
+        <button type="button" className="btn btn-sm" disabled={busy} onClick={save}
           style={busy ? { opacity: 0.5 } : undefined}>
           {busy ? "Saving…" : "Save the switches"}
         </button>
