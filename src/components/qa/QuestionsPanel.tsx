@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Sheet from "@/components/Sheet";
 
 /**
@@ -192,6 +193,9 @@ export default function QuestionsPanel({ respondZ = "sheet" }: { respondZ?: "she
         </>
       )}
 
+      {/* the window goes to the page body: inside the room's glass card a
+          fixed overlay is trapped by the card's backdrop filter and clips */}
+      {respondTo !== null && createPortal(
       <Sheet open={respondTo !== null} onClose={() => !busy && setRespondTo(null)} z={respondZ}>
         {respondTo && (
           <form
@@ -237,7 +241,9 @@ export default function QuestionsPanel({ respondZ = "sheet" }: { respondZ?: "she
             </div>
           </form>
         )}
-      </Sheet>
+      </Sheet>,
+      document.body,
+      )}
     </>
   );
 }
