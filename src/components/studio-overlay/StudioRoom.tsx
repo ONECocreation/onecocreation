@@ -3,16 +3,16 @@
 /**
  * THE DIRECTOR'S DESK (TASK-191, 0018.06.18 a₿ · block 966119; the
  * "Starts at"/"After-hours line" fields and the full scenes' "show in the
- * studio" doors added TASK-244) — the client half of /a/studio. Everything
+ * studio" doors added TASK-244), the client half of /a/studio. Everything
  * here is typed or copied by the operator: the scene chips (grouped "On
  * camera" / "Full screen"), the host's own lower third, the guest roster
- * (name + specialty — the overlay's duo/phone thirds read the FIRST
+ * (name + specialty, the overlay's duo/phone thirds read the FIRST
  * guest), the show title, the countdown target and the after-hours line,
  * the per-scene overlay URLs to paste into OBS, the full scenes' extra
  * VDO.Ninja "&website" source URL, and the VDO push/guest links the page
  * derived from the meeting config. One save button writes the whole stage
  * doc through the room's server action. The cameras' live state is Phase 2
- * — it comes with the studio kit, and the page says so up front.
+ *, it comes with the studio kit, and the page says so up front.
  *
  * The Admiral's law holds on every card: the buttons hug the bottom,
  * stacked and uniform.
@@ -26,7 +26,7 @@ import { saveStudio, mintJitsiDoor } from "@/app/a/studio/actions";
 import SendToUserChooser from "./SendToUserChooser";
 import JitsiDoorCard from "./JitsiDoorCard";
 
-/* datetime-local speaks LOCAL wall-clock words with no timezone — the
+/* datetime-local speaks LOCAL wall-clock words with no timezone, the
    doc stores an instant (ISO), so the field's value is a round-trip
    translation, never the stored string itself. */
 function isoToLocalInput(iso: string): string {
@@ -50,11 +50,11 @@ const fieldLabel: React.CSSProperties = {
 /* every action card: the buttons hug the bottom, stacked, uniform.
    TASK-337: exported so JitsiDoorCard.tsx (its own pure file, no site
    imports beyond this one) reuses the same visual language instead of a
-   second copy — named decision: export-in-place rather than lifting these
+   second copy, named decision: export-in-place rather than lifting these
    two consts up to @/components/console/glass, since that file sits
    outside this lane's OWNS/READ-ONLY list. */
 export const card: React.CSSProperties = { ...glassCard, display: "flex", flexDirection: "column", gap: 10 };
-export const doorStack: React.CSSProperties = { marginTop: "auto", display: "flex", flexDirection: "column", gap: 8 };
+export const doorStack: React.CSSProperties = { marginTop: "auto" };
 
 function CopyDoor({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false);
@@ -70,7 +70,7 @@ function CopyDoor({ value, label }: { value: string; label: string }) {
             setCopied(true);
             setTimeout(() => setCopied(false), 1600);
           } catch {
-            /* the field above is selectable — the manual way always works */
+            /* the field above is selectable, the manual way always works */
           }
         }}
       >
@@ -80,7 +80,7 @@ function CopyDoor({ value, label }: { value: string; label: string }) {
   );
 }
 
-/** TASK-300: an OPEN anchor's own copy-to-clipboard sibling — the ghost
+/** TASK-300: an OPEN anchor's own copy-to-clipboard sibling, the ghost
  *  secondary beside the primary OPEN button. Same clipboard logic as
  *  CopyDoor above, without the visible read-only input field (OPEN
  *  replaces the need to read the raw URL by eye). */
@@ -106,7 +106,7 @@ function CopyGhost({ value, label }: { value: string; label: string }) {
 }
 
 /* TASK-300 (Love call #4 item 1): "For the director's desk" open/closed,
-   remembered in localStorage — the Site-room accordion idiom PagesPanel's
+   remembered in localStorage, the Site-room accordion idiom PagesPanel's
    Archive group uses (T-230): closed is the honest default (this IS the
    clutter Love asked to have out from under her links), useSyncExternalStore
    keeps the server paint and the remembered state from forking hydration,
@@ -118,7 +118,7 @@ function readDeskOpen(): boolean {
   try {
     return window.localStorage.getItem(DESK_LS_KEY) === "1";
   } catch {
-    return false; /* storage can be denied — closed is the honest default */
+    return false; /* storage can be denied, closed is the honest default */
   }
 }
 
@@ -139,7 +139,7 @@ function useDeskOpen(): [boolean, () => void] {
     try {
       window.localStorage.setItem(DESK_LS_KEY, readDeskOpen() ? "0" : "1");
     } catch {
-      /* storage denied — nothing to remember; the section stays closed */
+      /* storage denied, nothing to remember; the section stays closed */
     }
     window.dispatchEvent(new Event(DESK_LS_EVENT));
   }, []);
@@ -164,43 +164,43 @@ export default function StudioRoom({
   overlayUrls: Record<StudioSceneId, string | null>;
   overlayReady: boolean;
   vdo: { room: string; push: string; guest: string };
-  /** TASK-261: the director seat's own door — TASK-306: the SITE route
+  /** TASK-261: the director seat's own door, TASK-306: the SITE route
    *  (`/a/studio/room/<room>` on the request's own origin, page.tsx's
    *  derivation via live-links.ts's directorDeskUrl), never the keyed
    *  studio URL bare in an href again: the desk route's own server mints
    *  the key into its iframe src. The CopyGhost beside it now copies an
-   *  UNKEYED in-site URL — harmless to paste, kept on purpose (T-306
+   *  UNKEYED in-site URL, harmless to paste, kept on purpose (T-306
    *  SUMMARY's documented call). */
   director: string;
   /** TASK-244: null for the on-camera scenes and for a full scene with no minted overlay URL yet */
   showInStudioUrls: Record<StudioSceneId, string | null>;
   showTitleFallback: string;
   /** TASK-300: the room's plain human name (brand/rooms.json on the
-   *  fork, TASK-262) — page.tsx carries it, this component only titles
+   *  fork, TASK-262), page.tsx carries it, this component only titles
    *  the links card with it. Optional (falls back to the generic "the
    *  studio") so an older render call with no opinion on the name still
-   *  type-checks — derive-or-dash, never invent a specific name here. */
+   *  type-checks, derive-or-dash, never invent a specific name here. */
   roomTitle?: string;
-  /** TASK-305: whether the links above carry `&password=<key>` — words
+  /** TASK-305: whether the links above carry `&password=<key>`, words
    *  only, NEVER the key itself (the door links already carry it; this
    *  line just says the room is locked). `undefined`/`false` reads as the
    *  honest unkeyed state (no SEAT_SECRET configured), never a guess. */
   roomKeyed?: boolean;
-  /** TASK-297: the guest door Love hands out — the SITE url
+  /** TASK-297: the guest door Love hands out, the SITE url
    *  (`/meet/studio/<room>` on the request's own origin, page.tsx's
    *  derivation via live-links.ts's meetStudioUrl), never the studio
    *  host's address (T-292 DESIGN.md §2 Page B). Keyless by posture: the
    *  key rides only inside the iframe src that page's own frame route
-   *  mints. Required — the one true door, never re-derived here. */
+   *  mints. Required, the one true door, never re-derived here. */
   guestDoor: string;
   /** TASK-337: config.meeting.jitsiDomain, page.tsx's own `meeting` prop
-   *  value reused — the fourth door's domain, e.g. "meet.onecocreation.com".
+   *  value reused, the fourth door's domain, e.g. "meet.onecocreation.com".
    *  Optional (falls back to "") so an older render call with no opinion
-   *  on Jitsi still type-checks — same derive-or-dash posture as
+   *  on Jitsi still type-checks, same derive-or-dash posture as
    *  `roomTitle`/`roomKeyed` above. */
   jitsiDomain?: string;
   /** TASK-337: the one-time Jitsi room's current slug, from KV
-   *  (`getJitsiDoor()`) — null/undefined when nothing's minted yet, the
+   *  (`getJitsiDoor()`), null/undefined when nothing's minted yet, the
    *  vault isn't configured, or an older render call passes nothing
    *  (derive-or-dash, never fabricated). */
   initialJitsiRoom?: string | null;
@@ -212,7 +212,7 @@ export default function StudioRoom({
   const [jitsiRoom, setJitsiRoom] = useState<string | null>(initialJitsiRoom ?? null);
   const [jitsiMinting, setJitsiMinting] = useState(false);
   /* TASK-337 named decision: its own error state, not the shared `error`
-     above — that one only renders inside the "For the director's desk"
+     above, that one only renders inside the "For the director's desk"
      accordion (closed by default), which would hide a top-card mint
      failure from view entirely. Same honest setError-on-failure pattern
      as save(), surfaced where the card actually is. */
@@ -257,7 +257,7 @@ export default function StudioRoom({
   return (
     <div className="p-2 text-sm" style={{ color: "var(--ink)" }}>
       {/* ── TASK-300 (Love call #4 items 1-2): the links card, FIRST on
-          the page — was "VDO links" at the bottom (T-261); moved up,
+          the page, was "VDO links" at the bottom (T-261); moved up,
           nothing removed. Each row keeps its heading, blurb, and Copy
           button; OPEN (new tab) is the new primary door. ─────────────── */}
       <SectionHead label={roomTitle ?? "the studio"} />
@@ -267,7 +267,7 @@ export default function StudioRoom({
           <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
             scene switching, mute-all, the room&apos;s own controls. Room: {vdo.room}.
           </p>
-          <div style={doorStack}>
+          <div className="kit-doors" style={doorStack}>
             <a href={director} target="_blank" rel="noopener" className="btn btn-sm">
               Open your director&apos;s desk
             </a>
@@ -279,7 +279,7 @@ export default function StudioRoom({
           <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
             step onto camera yourself.
           </p>
-          <div style={doorStack}>
+          <div className="kit-doors" style={doorStack}>
             <a href={vdo.push} target="_blank" rel="noopener" className="btn btn-sm">
               Step on camera
             </a>
@@ -291,14 +291,14 @@ export default function StudioRoom({
           <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
             camera and mic off until they choose. You can unmute from the desk. Opens on the site.
           </p>
-          <div style={doorStack}>
+          <div className="kit-doors" style={doorStack}>
             <a href={guestDoor} target="_blank" rel="noopener" className="btn btn-sm">
               Guest door
             </a>
             <CopyGhost value={guestDoor} label="Copy the guest link" />
           </div>
         </div>
-        {/* TASK-337: a fourth card — Love's ask for a one-time Jitsi room
+        {/* TASK-337: a fourth card, Love's ask for a one-time Jitsi room
             beside the three VDO copy doors above. Placed last in the
             stack (builder's placement call): it reads as "one more door"
             rather than displacing any of the three existing ones, and
@@ -312,21 +312,21 @@ export default function StudioRoom({
           ◌ {jitsiError}
         </p>
       )}
-      {/* TASK-305: words only, never the key itself — the doors above
+      {/* TASK-305: words only, never the key itself, the doors above
           already carry it. Honest either way: derive-or-dash. */}
       <p style={{ margin: "8px 0 0", fontSize: ".76rem", color: "var(--muted)" }}>
         {roomKeyed ? "Room key: on · rotates with the seat secret" : "room unkeyed: SEAT_SECRET unset"}
       </p>
-      {/* TASK-304: the stub grew teeth — pick one member, confirm, and the
+      {/* TASK-304: the stub grew teeth, pick one member, confirm, and the
           site mails them the guest door (never the keyed director link). */}
       <SendToUserChooser roomTitle={roomTitle} />
 
-      {/* ── TASK-300: everything else — guest-panel setup, timers, the
-          scene/overlay URL list — collapses under one section until
+      {/* ── TASK-300: everything else, guest-panel setup, timers, the
+          scene/overlay URL list, collapses under one section until
           T-292 moves it to the director view (Love call #4 item 1).
           Same accordion idiom as PagesPanel's Archive group (T-230):
           closed by default, remembered per-browser in localStorage.
-          Nothing below was deleted or renamed — only regrouped. ─────── */}
+          Nothing below was deleted or renamed, only regrouped. ─────── */}
       <div style={{ marginTop: 16, borderTop: "2px solid rgba(139,118,196,.35)", paddingTop: 10 }}>
         <button
           type="button"
@@ -359,7 +359,7 @@ export default function StudioRoom({
               <p style={{ margin: "10px 0 0", fontSize: ".82rem", color: "var(--ok)" }}>{note}</p>
             )}
 
-            {/* ── the scene picker — six chips, grouped ──────────────── */}
+            {/* ── the scene picker, six chips, grouped ──────────────── */}
             <SectionHead label="Scene" />
             {(
         [
@@ -420,7 +420,7 @@ export default function StudioRoom({
             />
           </label>
         </div>
-        <div style={doorStack}>
+        <div className="kit-doors" style={doorStack}>
           <button type="button" disabled={busy} onClick={() => save(doc)} className="btn btn-sm">
             {busy ? "Saving…" : "Save the stage"}
           </button>
@@ -453,7 +453,7 @@ export default function StudioRoom({
         <p style={{ margin: 0, fontSize: ".76rem", color: "var(--muted)" }}>
           left blank, &ldquo;starting soon&rdquo; shows the words alone. No clock, ever.
         </p>
-        <div style={doorStack}>
+        <div className="kit-doors" style={doorStack}>
           <button
             type="button"
             onClick={() => setDoc({ ...doc, startsAt: new Date(Date.now() + 20 * 60_000).toISOString() })}
@@ -495,7 +495,7 @@ export default function StudioRoom({
                 />
               </label>
             </div>
-            <div style={doorStack}>
+            <div className="kit-doors" style={doorStack}>
               <button
                 type="button"
                 onClick={() => setDoc({ ...doc, guests: doc.guests.filter((_, j) => j !== i) })}
@@ -508,7 +508,7 @@ export default function StudioRoom({
         ))}
         {doc.guests.length < GUEST_LIMIT && (
           <div style={card}>
-            <div style={doorStack}>
+            <div className="kit-doors" style={doorStack}>
               <button
                 type="button"
                 onClick={() => setDoc({ ...doc, guests: [...doc.guests, { name: "", specialty: "" }] })}
@@ -540,7 +540,7 @@ export default function StudioRoom({
               {doc.activeScene === s.id ? <Chip tone="green">picked</Chip> : <Chip tone="grey">{s.id}</Chip>}
             </div>
             {overlayUrls[s.id] && (
-              <div style={doorStack}>
+              <div className="kit-doors" style={doorStack}>
                 <CopyDoor value={overlayUrls[s.id]!} label={`Copy the ${s.id} overlay URL`} />
                 {s.kind === "full" && showInStudioUrls[s.id] && (
                   <CopyDoor value={showInStudioUrls[s.id]!} label={`Show ${s.id} in the studio`} />

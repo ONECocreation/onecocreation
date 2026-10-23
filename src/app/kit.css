@@ -690,16 +690,9 @@
 .kit-replays-card .kit-card-body>p,.kit-replays-card .kit-replays-part>p{margin:0}
 .kit-replays-card .kit-rows{margin:0}
 .kit-replays-card .kit-replays-actions{gap:12px;align-items:center}
-.kit-replays-card .kit-btn.kit-pill{width:168px;padding:0 12px}
-.kit-replays-card .kit-rows-end>button.kit-btn.kit-pill{min-width:0;width:112px}
 .kit-replays-card .kit-btn.kit-pill.is-on{
   background:color-mix(in srgb,var(--lavender) 30%,transparent);border-color:var(--lavender);
   box-shadow:0 0 0 2px var(--lavender)
-}
-@media(max-width:640px){
-  .kit-replays-card .kit-replays-actions>.kit-btn.kit-pill{flex:1 1 0;width:auto;min-width:0}
-  .kit-replays-card .kit-rows-end{width:100%}
-  .kit-replays-card .kit-rows-end>button.kit-btn.kit-pill{flex:1 1 calc(50% - 4px);width:auto}
 }
 
 /* ── T-620: the menu board. One column per tab; cards are its pages. Columns
@@ -744,3 +737,132 @@
 .menub-cards .menued-name{font-size:.85rem;line-height:1.3}
 @media(max-width:640px){.menub-col .kit-btn.kit-pill{height:38px;padding:0 12px;font-size:.68rem}.menub-head .menued-name{font-size:1.02rem}.menub-cards .menued-name{font-size:.92rem}.menub-head{gap:10px;padding:14px}.menub-cards>li.menub-card{gap:10px;padding:10px 12px}}
 @media(max-width:640px){.menub-head{grid-template-columns:1fr auto}.menub-cards>li.menub-card{grid-template-columns:1fr auto}}
+
+/* ── T-624: ONE button set for the /a console. Three kinds only.
+   PRIMARY = the kit's pink pill (one per group, every Save), SECONDARY = ghost pill, QUIET = text button.
+   One height (42px) per group, no square corners, nothing that reads disabled unless it is.
+   Scoped by .kit-bset, which the site console's main column (.mgmt-body) wears, so every /a page gets the set.
+   Sized to the label: height 38 (sm 34), padding only, no fixed widths. A group is one width, the widest label. ── */
+.kit-bset .btn,.kit-bset .kit-btn:not(.kit-btn-quiet){
+  display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;
+  height:38px;min-height:38px;padding:0 18px;border-radius:999px;border:0;box-shadow:none;
+  font-size:.74rem;font-weight:700;letter-spacing:.08em;line-height:1;text-transform:uppercase;white-space:nowrap;
+}
+.kit-bset .btn:is(.btn-sm,.kit-btn-sm),.kit-bset .kit-btn:is(.kit-btn-sm){height:34px;min-height:34px;padding:0 14px;font-size:.7rem}
+@media(max-width:640px){.kit-bset .btn,.kit-bset .kit-btn:not(.kit-btn-quiet){height:40px;min-height:40px}.kit-bset .btn:is(.btn-sm,.kit-btn-sm),.kit-bset .kit-btn:is(.kit-btn-sm){height:38px;min-height:38px}}
+.kit-bset .btn::after{content:none}
+.kit-bset .btn:hover,.kit-bset .kit-btn:hover{transform:none}
+/* primary: the pink pill */
+.kit-bset .btn:not(.btn-ghost):not(.btn-on):not(.btn-quiet),.kit-bset .kit-btn-main,.kit-bset .kit-btn.kit-pill.kit-pill-primary{
+  background:linear-gradient(135deg,color-mix(in srgb,var(--rose) 62%,white),var(--rose));color:var(--rose-btn-ink);
+}
+.kit-bset .btn:not(.btn-ghost):not(.btn-on):not(.btn-quiet):hover,.kit-bset .kit-btn-main:hover,.kit-bset .kit-btn.kit-pill.kit-pill-primary:hover:not(:disabled){
+  background:linear-gradient(135deg,color-mix(in srgb,var(--rose) 48%,white),color-mix(in srgb,var(--rose) 92%,white));
+}
+/* secondary: the ghost pill */
+.kit-bset .btn-ghost,.kit-bset .kit-btn-second,.kit-bset .kit-btn.kit-pill:not(.kit-pill-primary){
+  background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--lavender) 60%,transparent);
+}
+.kit-bset .kit-btn.kit-pill:not(.kit-pill-primary){border:0}
+.kit-bset .kit-btn.kit-pill.is-on{background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:white}
+.kit-bset .btn-on{background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:white}
+/* quiet: a text button, same height as its group */
+.kit-bset .btn-quiet,.kit-bset .kit-btn-quiet{
+  display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;height:38px;padding:0 10px;
+  background:none;box-shadow:none;border:0;border-radius:999px;color:var(--ghost-ink);
+  font-size:.76rem;font-weight:700;letter-spacing:.08em;line-height:1;text-transform:uppercase;
+}
+.kit-bset .btn-quiet:hover,.kit-bset .kit-btn-quiet:hover{color:var(--info);text-decoration:underline;transform:none}
+.kit-bset .btn:disabled,.kit-bset .kit-btn:disabled{opacity:.5;cursor:default}
+
+/* ── T-624: one switch row, label left, one round pill toggle right, state said once ── */
+.kit-srow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;background:var(--glass);border:1px solid color-mix(in srgb,var(--lavender) 30%,transparent);border-radius:12px;padding:10px 14px;margin-bottom:8px}
+.kit-srow-text{min-width:0}
+.kit-srow-text b{display:block;font-size:.9rem}
+.kit-srow-text span{display:block;font-size:.78rem;line-height:1.4;color:var(--muted)}
+.kit-tgl{position:relative;display:inline-flex;align-items:center;box-sizing:border-box;width:84px;height:38px;padding:0 12px;border:0;border-radius:999px;cursor:pointer;background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px var(--edge);font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;justify-content:flex-end}
+.kit-tgl[aria-checked="true"]{background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:white;box-shadow:none;justify-content:flex-start}
+.kit-tgl-knob{position:absolute;top:5px;left:5px;width:28px;height:28px;border-radius:50%;background:var(--ink-strong);transition:transform .15s}
+.kit-tgl[aria-checked="true"] .kit-tgl-knob{transform:translateX(46px);background:white}
+.kit-tgl:focus-visible{outline:2px solid var(--info);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.kit-tgl-knob{transition:none}}
+.kit-bset p{text-wrap:pretty}
+.kit-bset .kit-note{text-wrap:balance}
+
+/* ── T-624 round 2: Studio doors. No stretched buttons: one fixed width per group, left-aligned side by side
+   (primary then secondary), stacked and centred at phone width when they do not fit. ── */
+/* ── T-624 round 2: Site switches, every on/off row is the one slider; the meeting rail is a choice of three, one pill size ── */
+.kit-srow-text .kit-srow-env{font-size:.72rem;margin-top:3px}
+.kit-srow.is-dim{opacity:.72}
+.kit-tgl:disabled{opacity:.5;cursor:not-allowed}
+.kit-srow-wide{grid-template-columns:minmax(0,1fr);}
+@media(max-width:640px){.kit-srow-pills{grid-template-columns:minmax(0,1fr)}}
+.kit-srow-pills{grid-template-columns:minmax(0,1fr);gap:10px}
+.kit-srow-save{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}
+@media(max-width:640px){.kit-srow-save{justify-content:center}}
+
+/* ── T-624 round 2: Replays. One smart add, a preview card, cards you drag or nudge (the T-620 board's grip and moves) ── */
+.kit-smartadd{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.kit-smartadd .kit-field-input{height:38px;box-sizing:border-box;min-width:0;width:100%}.kit-smartadd{min-width:0}
+.kit-smartadd .kit-field-input{height:38px}
+@media(max-width:640px){.kit-smartadd{grid-template-columns:minmax(0,1fr)}.kit-smartadd .kit-btn{justify-self:center}}
+.kit-preview{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:start;padding:14px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-edge,color-mix(in srgb,var(--lavender) 40%,transparent))}
+.kit-preview-body{display:flex;flex-direction:column;gap:10px;min-width:0}
+.kit-preview-body b{color:var(--ink-strong)}
+.kit-preview-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.kit-shape .kit-btn.kit-pill{gap:8px}
+@media(max-width:640px){
+  .kit-preview{grid-template-columns:minmax(0,1fr);justify-items:center}
+  .kit-preview-body{width:100%}
+}
+.kit-frame-ico{flex:none;display:block}
+.kit-rthumb{flex:none;display:flex;align-items:center;justify-content:center;width:112px;height:63px;border-radius:10px;overflow:hidden;background:color-mix(in srgb,var(--lavender) 18%,transparent);color:var(--muted);box-shadow:inset 0 0 0 1px var(--glass-edge,color-mix(in srgb,var(--lavender) 40%,transparent))}
+.kit-rthumb.is-tall{width:63px;height:112px;margin-inline:24.5px}
+.kit-rcard.is-playlist::before{content:"";width:10px}
+.kit-rthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.kit-rcards{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.kit-rcard{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--glass);border:1px solid color-mix(in srgb,var(--lavender) 30%,transparent);position:relative}
+.kit-rcard.is-playlist{grid-template-columns:auto auto minmax(0,1fr) auto}
+.kit-rcard.is-dragging{opacity:.4}
+.kit-rcard[data-drop="before"]{box-shadow:inset 0 3px 0 var(--lavender)}
+.kit-rcard[data-drop="after"]{box-shadow:inset 0 -3px 0 var(--lavender)}
+.kit-rgrip{cursor:grab;color:var(--muted);font-size:1rem;line-height:1;user-select:none;touch-action:none;padding:6px 2px}
+.kit-rcard-text{min-width:0;display:flex;flex-direction:column;gap:4px}
+.kit-rcard-text b{color:var(--ink-strong);overflow-wrap:anywhere}
+.kit-rcard-text em{display:inline-flex;align-items:center;gap:6px;font-style:normal;font-size:.8rem;color:var(--muted);overflow-wrap:anywhere}
+.kit-rcard-ctl{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.kit-bset .kit-ibtn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:36px;height:36px;padding:0;border:0;border-radius:50%;cursor:pointer;background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--lavender) 60%,transparent)}
+.kit-bset .kit-ibtn:hover:not(:disabled){background:color-mix(in srgb,var(--lavender) 22%,transparent)}
+.kit-bset .kit-ibtn:disabled{opacity:.4;cursor:default}
+.kit-bset .kit-ibtn:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.kit-bset .kit-ibtn.is-quiet{background:none;box-shadow:none}
+.kit-bset .kit-ibtn.is-quiet:hover:not(:disabled){color:var(--info);background:color-mix(in srgb,var(--lavender) 14%,transparent)}
+@media(max-width:640px){
+  .kit-rgrip{display:none}
+  .kit-rcard{grid-template-columns:auto minmax(0,1fr);align-items:start}
+  .kit-rcard.is-playlist{grid-template-columns:auto minmax(0,1fr)}
+  .kit-rcard.is-playlist::before{display:none}
+  .kit-rcard-ctl{grid-column:1 / -1;justify-content:center;flex-wrap:wrap}
+}
+.kit-replays-card .kit-field:has(.kit-smartadd){max-width:640px}
+
+/* ── T-624: a button group is centred and every button in it is one width (the widest label), one column on a phone ── */
+.kit-bset .kit-btn-row,.kit-bset.kit-btn-row,.kit-bset .kit-doors,.kit-bset .kit-rail,.kit-bset .kit-shape,.kit-bset .kit-preview-actions{
+  display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;justify-content:center;align-items:center;width:fit-content;max-width:100%;margin-inline:auto;
+}
+.kit-bset .kit-doors{margin-top:4px}
+.kit-bset .kit-btn-row:has(>:nth-child(4)),.kit-bset.kit-btn-row:has(>:nth-child(4)){display:flex;flex-wrap:wrap;width:auto}
+@media(max-width:640px){
+  .kit-bset .kit-btn-row,.kit-bset.kit-btn-row,.kit-bset .kit-doors,.kit-bset .kit-rail,.kit-bset .kit-shape,.kit-bset .kit-preview-actions{grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:auto}
+}
+/* the letter canvas mimics the mail: its fixed Open and CTA buttons sit centred */
+@media(max-width:640px){.kitx-letter-card .kit-btn{display:flex;width:fit-content;margin:10px auto 0}}
+/* the menu preview's tabs mimic the site's own nav, so they keep the site's tab look, not the set */
+.kit-bset .kit-btn.menued-preview-tab{height:auto;min-height:0;padding:6px 2px;border-radius:0;font-size:.74rem;box-shadow:none;background:none;color:var(--nav-gold);border-bottom:2px solid transparent}
+.kit-bset .kit-btn.menued-preview-tab[aria-pressed="true"]{border-bottom-color:currentColor}
+@media(max-width:640px){.kit-bset .kit-btn.menued-preview-tab{height:auto;min-height:0;font-size:.64rem}.kit-bset .menued-preview-bar{gap:10px 12px}}
+/* a room row's Open and Join pair is one group: one width */
+.kit-bset .kit-rooms-card .kit-rows-end:has(>.kit-btn+.kit-btn){display:grid;grid-auto-flow:column;grid-auto-columns:1fr;justify-content:end}
+@media(max-width:640px){.kit-bset .kit-rooms-card .kit-rows-end:has(>.kit-btn+.kit-btn){grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:auto;justify-content:center}}
+.kit-doors{display:flex;flex-direction:column;gap:8px}
+.kit-bset .kit-doors{margin:auto auto 0}

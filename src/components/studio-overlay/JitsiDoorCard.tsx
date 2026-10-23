@@ -61,7 +61,7 @@ export default function JitsiDoorCard({ domain, room, minting, onMint }: JitsiDo
         SAME link to your guest. They join straight in, no account. Who&apos;s actually in the room is Jitsi&apos;s
         own participant list inside the call.
       </p>
-      <div style={doorStack}>
+      <div className="kit-doors" style={doorStack}>
         {url && (
           <button
             type="button"

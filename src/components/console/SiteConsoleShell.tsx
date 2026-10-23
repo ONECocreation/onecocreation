@@ -531,7 +531,7 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
               </>
             )}
           </header>
-          <main className="mgmt-body">{children}</main>
+          <main className="mgmt-body kit-bset">{children}</main>
         </div>
       </div>
 

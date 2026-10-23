@@ -335,13 +335,14 @@ describe("T-621 - the /a/site/replays card wears ONE pill button, three clear pa
   it("every action and row button is the house kit-pill; the shape is a two-way pressed choice; no old button looks", async () => {
     const card = await readSrc("src/app/a/site/replays/ReplaysCard.tsx");
     expect(card).not.toMatch(/kit-btn-(main|second|quiet|sm)/);
-    expect((card.match(/kit-btn kit-pill/g) ?? []).length).toBeGreaterThanOrEqual(7);
+    /* T-624: the row moves are small round icon buttons (kit-ibtn), so fewer pills than T-621's seven */
+    expect((card.match(/kit-btn kit-pill/g) ?? []).length).toBeGreaterThanOrEqual(4);
+    expect(card).toContain("kit-ibtn");
     expect(card).toContain("kit-replays-card");
-    for (const part of ["playlist", "add", "list"]) expect(card).toContain(`data-part="${part}"`);
-    expect(card).toContain("aria-pressed={ratio === r}");
-    expect(card).toContain("Add to the list");
-    expect(card).not.toContain("+ add to the list");
+    /* T-624: one smart add (the playlist rides in it), a preview card, the list */
+    for (const part of ["add", "preview", "list"]) expect(card).toContain(`data-part="${part}"`);
+    expect(card).toContain("aria-pressed={found.ratio === r}");
     const css = await readSrc("src/app/kit.css");
-    expect(css).toContain(".kit-replays-card .kit-btn.kit-pill{width:168px");
+    expect(css).not.toContain(".kit-replays-card .kit-btn.kit-pill{width:168px");
   });
 });

@@ -140,7 +140,7 @@ export interface GoLiveMeeting {
 
 /* every card: the buttons hug the bottom, stacked, uniform */
 const card: React.CSSProperties = { ...glassCard, display: "flex", flexDirection: "column", gap: 10 };
-const doorStack: React.CSSProperties = { marginTop: "auto", display: "flex", flexDirection: "column", gap: 8 };
+const doorStack: React.CSSProperties = { marginTop: "auto" };
 const fieldLabel: React.CSSProperties = {
   display: "block", fontSize: ".62rem", letterSpacing: ".1em", textTransform: "uppercase",
   color: "var(--muted)", marginBottom: 3,
@@ -628,7 +628,7 @@ export default function GoLiveRoom({
             )}
 
             {/* the doors hug the bottom — stacked, uniform */}
-            <div style={doorStack}>
+            <div className="kit-doors" style={doorStack}>
               {d.id === "read" && open === "read" && (
                 feed?.state.live ? (
                   <button type="button" className="btn btn-sm" onClick={() => act("close")} disabled={busy}>
