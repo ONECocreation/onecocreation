@@ -223,7 +223,7 @@ export default function QuestionsPanel({ respondZ = "sheet" }: { respondZ?: "she
             <div className="kitx-qa-actions">
               <button
                 type="button"
-                className="kit-btn kit-btn-ghost kit-btn-sm"
+                className="kit-btn kit-btn-second kit-btn-sm"
                 disabled={busy}
                 onClick={() => setRespondTo(null)}
               >

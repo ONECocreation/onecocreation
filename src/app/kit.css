@@ -395,8 +395,16 @@
    underlined, no button chrome (all:unset, never a new font declaration -
    the font census ratchet; the kitx-thumb idiom). */
 .kitx-qa-toggle{all:unset;color:var(--muted);text-decoration:underline;cursor:pointer}
-/* kitx-qa-actions — the respond window's button row: the right edge. */
+/* kitx-qa-actions — the respond window's button row: the right edge, one
+   width per the one-size-per-group law (the page-slop button-size-mix
+   check measures the row). At phone width the pair stacks full-width so
+   the uppercase labels never outgrow an even split. */
 .kitx-qa-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+.kitx-qa-actions>.kit-btn{flex:1 1 0;text-align:center;min-width:0}
+@media (max-width:640px){
+  .kitx-qa-actions{flex-direction:column}
+  .kitx-qa-actions>.kit-btn{width:100%}
+}
 /* kitx-qa-stage — the call placeholder box on the Q&A go door (K182 item 4:
    the call area stays a placeholder until the in-page Jitsi room is built;
    the fleet's convention for a third-party embed is a quiet glass box). */
