@@ -285,7 +285,7 @@ describe("the kit.css additions — the Amendment-1 laws", () => {
 /* ═══════════════ the blocks variant (L3 + M1) ═══════════════ */
 
 const BASE: ReadingSchedule = { on: true, weekday: 3, time: "13:11", tz: "America/Denver", durationMin: 60 };
-const STARTS = Date.parse("2026-09-23T19:11:00.000Z"); // Wednesday 1:11 PM MDT — tests/reading-schedule.test.ts
+const STARTS = Date.parse("2026-09-23T19:11:00.000Z"); // Wednesday 1:11 PM Mountain Time — tests/reading-schedule.test.ts
 const ENDS = Date.parse("2026-09-23T20:11:00.000Z");
 const ONE_DAY_MS = 24 * 3600_000;
 
@@ -309,7 +309,7 @@ describe("blocks — the when group (M1): the day on one line, the time on the n
     expect(html).toContain('<p class="kit-when-day">Wednesday, September 23</p>');
     const time = timeLineText(html);
     expect(time).toContain("1:11");
-    expect(time).toContain("MDT"); // 2026-09-26 is daylight time — computed, never hard-coded
+    expect(time).toContain("Mountain\u00A0Time"); // 2026-09-26 is daylight time — computed, never hard-coded
     expect(html).not.toContain("Your time");
   });
 
@@ -327,7 +327,7 @@ describe("blocks — the when group (M1): the day on one line, the time on the n
         return "1:11 PM"; // the ICU-78.3 shape checker C11 measured — a plain U+0020
       }
       formatToParts() {
-        return [{ type: "timeZoneName", value: "MDT" }];
+        return [{ type: "timeZoneName", value: "Mountain Time" }];
       }
       resolvedOptions() {
         return { timeZone: "America/Denver" };
@@ -337,7 +337,7 @@ describe("blocks — the when group (M1): the day on one line, the time on the n
     const html = renderIsland(props({ asOfMs: STARTS - 3 * ONE_DAY_MS }));
     const time = timeLineText(html);
     expect(time).not.toMatch(/ /);
-    expect(time).toContain("1:11\u00A0PM\u00A0MDT");
+    expect(time).toContain("1:11\u00A0PM\u00A0Mountain\u00A0Time");
   });
 
   it("…and under a stubbed Intl that emits U+202F (the other ICU shape), it still lands on U+00A0", () => {
@@ -347,7 +347,7 @@ describe("blocks — the when group (M1): the day on one line, the time on the n
         return "1:11 PM";
       }
       formatToParts() {
-        return [{ type: "timeZoneName", value: "MDT" }];
+        return [{ type: "timeZoneName", value: "Mountain Time" }];
       }
       resolvedOptions() {
         return { timeZone: "America/Denver" };
@@ -357,7 +357,7 @@ describe("blocks — the when group (M1): the day on one line, the time on the n
     const html = renderIsland(props({ asOfMs: STARTS - 3 * ONE_DAY_MS }));
     const time = timeLineText(html);
     expect(time).not.toMatch(/ /);
-    expect(time).toContain("1:11\u00A0PM\u00A0MDT");
+    expect(time).toContain("1:11\u00A0PM\u00A0Mountain\u00A0Time");
   });
 
   afterEach(() => {
@@ -405,19 +405,19 @@ describe("the hero and card variants are byte-identical to the pre-lane build", 
     [
       "hero upcoming",
       props({ asOfMs: STARTS - 3 * ONE_DAY_MS, variant: "hero" }),
-      '<p class="kit-body">Wednesday · 1:11 PM MDT · live online</p>',
+      '<p class="kit-body">Wednesday · 1:11 PM Mountain Time · live online</p>',
     ],
     [
       "hero soon",
       props({ asOfMs: STARTS - 3600_000, variant: "hero" }),
-      '<p class="kit-body">Wednesday · 1:11 PM MDT · live online</p>',
+      '<p class="kit-body">Wednesday · 1:11 PM Mountain Time · live online</p>',
     ],
     ["card off", props({ schedule: { ...BASE, on: false }, next: null, variant: "card" }), '<div class="kit-stack"><div>Stay tuned, with love.</div></div>'],
     ["card window", props({ asOfMs: STARTS + 30 * 60_000, variant: "card" }), '<div class="kit-stack"><div>Starting soon.</div></div>'],
     [
       "card upcoming",
       props({ asOfMs: STARTS - 3 * ONE_DAY_MS, variant: "card" }),
-      '<div class="kit-stack"><div>Next reading.</div><div>Wednesday, September 23</div><div class="kit-text-quiet">Love: 1:11 PM MDT.</div></div>',
+      '<div class="kit-stack"><div>Next reading.</div><div>Wednesday, September 23</div><div class="kit-text-quiet">Love: 1:11 PM Mountain Time.</div></div>',
     ],
   ];
 
@@ -430,7 +430,7 @@ describe("the hero and card variants are byte-identical to the pre-lane build", 
   it("card soon — the countdown's own value is clock-dependent, so the SHAPE around it is pinned byte-exactly", () => {
     const html = renderIsland(props({ asOfMs: STARTS - 3600_000, variant: "card" }));
     expect(html).toMatch(
-      /^<div class="kit-stack"><div>Next reading\.<\/div><div>Wednesday, September 23<\/div><div class="kit-text-quiet">Love: 1:11 PM MDT\.<\/div><div>Starts in <span>\d{1,4}:\d{2}(:\d{2})?<\/span>\.<\/div><\/div>$/,
+      /^<div class="kit-stack"><div>Next reading\.<\/div><div>Wednesday, September 23<\/div><div class="kit-text-quiet">Love: 1:11 PM Mountain Time\.<\/div><div>Starts in <span>\d{1,4}:\d{2}(:\d{2})?<\/span>\.<\/div><\/div>$/,
     );
   });
 });

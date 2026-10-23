@@ -25,11 +25,11 @@ import type { Tier } from "@/lib/entitlement";
  */
 
 const TZ = "America/Denver";
-// Wednesday 1:11 PM MDT — the same measured instant reading-day-467.test.ts uses.
+// Wednesday 1:11 PM Mountain Time — the same measured instant reading-day-467.test.ts uses.
 const READING_MS = Date.parse("2026-09-23T19:11:00.000Z");
-const ENCORE_MS = Date.parse("2026-09-23T20:22:00.000Z"); // 2:22 PM MDT, same day
-const QA_MS = Date.parse("2026-09-23T21:33:00.000Z"); // 3:33 PM MDT, same day
-const HOUSEWARMING_MS = Date.parse("2026-09-23T18:12:00.000Z"); // 12:12 PM MDT, same day, before the reading
+const ENCORE_MS = Date.parse("2026-09-23T20:22:00.000Z"); // 2:22 PM Mountain Time, same day
+const QA_MS = Date.parse("2026-09-23T21:33:00.000Z"); // 3:33 PM Mountain Time, same day
+const HOUSEWARMING_MS = Date.parse("2026-09-23T18:12:00.000Z"); // 12:12 PM Mountain Time, same day, before the reading
 
 const ENCORE_FLOOR = { tier: "A" as Tier, name: "Weekly Intuitive", itemId: "weekly-intuitive", href: "/packages/weekly-intuitive", price: "$33", passLive: false };
 const QA_OFFER_LIVE = {
@@ -67,9 +67,9 @@ function firstRow(html: string): string {
 }
 
 describe("reading-day.ts — HOUSEWARMING_TIME, the one place 12:12 is written", () => {
-  it("is the wall-clock string '12:12', and clockWords reads it as '12:12 PM MDT'", () => {
+  it("is the wall-clock string '12:12', and clockWords reads it as '12:12 PM Mountain Time'", () => {
     expect(HOUSEWARMING_TIME).toBe("12:12");
-    expect(clockWords(HOUSEWARMING_MS, TZ)).toBe("12:12 PM MDT");
+    expect(clockWords(HOUSEWARMING_MS, TZ)).toBe("12:12 PM Mountain Time");
   });
 });
 
@@ -94,7 +94,7 @@ describe("ReadingDayBody — the Housewarming is the FIRST row, before The Readi
     const html = render(bodyProps({}));
     const row = firstRow(html);
     expect(row).toContain(clockWords(HOUSEWARMING_MS, TZ));
-    expect(row).toContain("12:12 PM MDT");
+    expect(row).toContain("12:12 PM Mountain Time");
     // Lumen's word check (block 968,571): "Free." like the Reading row; a description, not a command
     expect(row).toContain("Free. Introductions and movement with Love. Everyone&#x27;s on camera.");
     expect(row).not.toContain("Cameras on.");

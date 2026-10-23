@@ -280,7 +280,7 @@ export async function POST(request: Request) {
       const whenLocal = new Intl.DateTimeFormat("en-US", {
         timeZone: service.artistTz,
         weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit",
-        timeZoneName: "short",
+        timeZoneName: "longGeneric",
       }).format(new Date(slot.startUtc));
       try {
         await enqueue(holdReminderLetters({

@@ -85,7 +85,7 @@ function installKv() {
 }
 
 const SUNDAY: ReadingSchedule = { on: true, weekday: 0, time: "13:11", tz: "America/Denver", durationMin: 120 };
-/* Tuesday Oct 6 2026 09:00 MDT, five days before Sunday Oct 11 1:11 PM MDT. */
+/* Tuesday Oct 6 2026 09:00 Mountain Time, five days before Sunday Oct 11 1:11 PM Mountain Time. */
 const TUE_0900_MDT = Date.UTC(2026, 9, 6, 15, 0);
 const SUN_READING = Date.UTC(2026, 9, 11, 19, 11);
 
@@ -128,16 +128,16 @@ describe("the Tuesday rule (draftableReading)", () => {
   it("does not draft on any other weekday", async () => {
     const { draftableReading } = await mod();
     for (const d of [5, 7, 8, 9, 10, 11]) {
-      // Oct 5 = Monday ... Oct 11 = Sunday, all at 09:00 MDT
+      // Oct 5 = Monday ... Oct 11 = Sunday, all at 09:00 Mountain Time
       expect(draftableReading(SUNDAY, Date.UTC(2026, 9, d, 15, 0))).toBeNull();
     }
   });
 
   it("uses the schedule's own zone for 'Tuesday' (Tuesday evening Denver is already Wednesday UTC)", async () => {
     const { draftableReading } = await mod();
-    // Wed 05:30 UTC = Tue 23:30 MDT
+    // Wed 05:30 UTC = Tue 23:30 Mountain Time
     expect(draftableReading(SUNDAY, Date.UTC(2026, 9, 7, 5, 30))).not.toBeNull();
-    // Tue 05:30 UTC = Mon 23:30 MDT
+    // Tue 05:30 UTC = Mon 23:30 Mountain Time
     expect(draftableReading(SUNDAY, Date.UTC(2026, 9, 6, 5, 30))).toBeNull();
   });
 
@@ -149,9 +149,9 @@ describe("the Tuesday rule (draftableReading)", () => {
   it("skips when the reading is less than 24 hours away, and the poke does not lift that", async () => {
     const { draftableReading } = await mod();
     const wed: ReadingSchedule = { ...SUNDAY, weekday: 3 };
-    // Wednesday Oct 7 1:11 PM MDT is 28h after Tuesday 09:00 MDT: drafts.
+    // Wednesday Oct 7 1:11 PM Mountain Time is 28h after Tuesday 09:00 Mountain Time: drafts.
     expect(draftableReading(wed, TUE_0900_MDT)).not.toBeNull();
-    // Tuesday reading, Tuesday 02:05 MDT: 11h away, skipped even when forced.
+    // Tuesday reading, Tuesday 02:05 Mountain Time: 11h away, skipped even when forced.
     const tue: ReadingSchedule = { ...SUNDAY, weekday: 2 };
     const t0205 = Date.UTC(2026, 9, 6, 8, 5);
     expect(draftableReading(tue, t0205)).toBeNull();
@@ -171,9 +171,9 @@ describe("the Tuesday rule (draftableReading)", () => {
     expect(draftableReading(SUNDAY, thu, true)).toEqual({ startsAtMs: SUN_READING, tz: "America/Denver" });
   });
 
-  it("holds across the November clock change (Sunday Nov 8, MST) and for a non-Denver zone", async () => {
+  it("holds across the November clock change (Sunday Nov 8, Mountain Time) and for a non-Denver zone", async () => {
     const { draftableReading } = await mod();
-    // Tuesday Nov 3 09:00 MST = 16:00 UTC; Sunday Nov 8 13:11 MST = 20:11 UTC
+    // Tuesday Nov 3 09:00 Mountain Time = 16:00 UTC; Sunday Nov 8 13:11 Mountain Time = 20:11 UTC
     expect(draftableReading(SUNDAY, Date.UTC(2026, 10, 3, 16, 0))).toEqual({ startsAtMs: Date.UTC(2026, 10, 8, 20, 11), tz: "America/Denver" });
     // Auckland: Tuesday Oct 6 09:00 NZDT is Monday Oct 5 20:00 UTC
     const nz: ReadingSchedule = { ...SUNDAY, tz: "Pacific/Auckland", time: "10:00" };
@@ -187,8 +187,8 @@ describe("the words (derived, Love's voice)", () => {
   it("derives the date words from the instant and the schedule's zone", async () => {
     const { whenWords, nextReadingKey } = await mod();
     /* T-601: the letter reads the Intl short abbreviation, never "Mountain" */
-    expect(whenWords(SUN_READING, "America/Denver")).toBe("Sunday, October 11 at 1:11 PM MDT");
-    expect(whenWords(Date.UTC(2026, 9, 11, 17, 30), "America/New_York")).toBe("Sunday, October 11 at 1:30 PM EDT");
+    expect(whenWords(SUN_READING, "America/Denver")).toBe("Sunday, October 11 at 1:11 PM Mountain Time");
+    expect(whenWords(Date.UTC(2026, 9, 11, 17, 30), "America/New_York")).toBe("Sunday, October 11 at 1:30 PM Eastern Time");
     expect(nextReadingKey(SUN_READING, "America/Denver")).toBe("next-reading-2026-10-11");
     // 20:00 UTC on Oct 11 is already Oct 12 in Auckland: the key follows the zone
     expect(nextReadingKey(Date.UTC(2026, 9, 11, 20, 0), "Pacific/Auckland")).toBe("next-reading-2026-10-12");
@@ -197,12 +197,12 @@ describe("the words (derived, Love's voice)", () => {
   it("writes the ruled subject and body with Love's standing adjustments, her sign-off, no em dash or arrow, and no emoji but her own", async () => {
     const { nextReadingLetter } = await mod();
     const l = nextReadingLetter(SUN_READING, "America/Denver");
-    expect(l.subject).toBe("The next reading: Sunday, October 11 at 1:11 PM MDT");
+    expect(l.subject).toBe("The next reading: Sunday, October 11 at 1:11 PM Mountain Time");
     /* T-601 adjustment 1: the stage's cover rides first, absolute */
     expect(l.body.startsWith("!hero: https://site.test/images/reading-love-cover.jpg")).toBe(true);
     expect(l.body).toContain("Hello, beautiful soul!");
     /* round 2 (the Admiral's pins): the date-time words are bold, derived */
-    expect(l.body).toContain("The next reading is **Sunday, October 11 at 1:11 PM MDT**. Come and read with me, free.");
+    expect(l.body).toContain("The next reading is **Sunday, October 11 at 1:11 PM Mountain Time**. Come and read with me, free.");
     /* round 2: the one button rides INLINE under the first paragraph through
        the positional !pill: directive; the end-of-letter cta stays empty */
     expect(l.body).toContain("!pill: 1:11 PM | /reading");
@@ -218,7 +218,7 @@ describe("the words (derived, Love's voice)", () => {
       "Love's weekly YouTube Lives, Monday, Wednesday and Friday, Live with Love or A Moment with Love, will continue as long as signal allows, at 11:11 MST. Keep those notifications on, as she may show up at other Angel number times to adjust for the signal needed. We appreciate your ability to Flow with the Go.",
     );
     /* adjustment 8: her five-line sign-off, her emoji */
-    expect(l.body.endsWith("Smiles\nLove\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation")).toBe(true);
+    expect(l.body.endsWith("Smiles\n\u00a0Love\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation")).toBe(true);
     for (const s of [l.subject, l.body]) {
       expect(s).not.toMatch(/[—–]/);
       expect(s.replace("🌈💫", "")).not.toMatch(/[←-⇿➡➔\u{1F300}-\u{1FAFF}☀-➿]/u);
@@ -238,7 +238,7 @@ describe("the Housewarming-off week (T-499 switch)", () => {
       const stats = await draftReadingLetters(TUE_0900_MDT);
       expect(stats.nextReading).toBe("drafted");
       const o = await getLetterOverride("next-reading-2026-10-11");
-      expect(o?.subject).toContain("1:11 PM MDT");
+      expect(o?.subject).toContain("1:11 PM Mountain Time");
       expect(o?.body).not.toMatch(/housewarming|12:12/i);
     }
   });
@@ -263,13 +263,13 @@ describe("derive-or-dash", () => {
     expect(sent).toHaveLength(0);
   });
 
-  it("reads DEFAULT_READING_SCHEDULE (Wednesday 1:11 PM MDT) when the site has none saved", async () => {
+  it("reads DEFAULT_READING_SCHEDULE (Wednesday 1:11 PM Mountain Time) when the site has none saved", async () => {
     const { draftReadingLetters } = await mod();
     const { getLetterOverride } = await lettersMod();
     cfg.reading = undefined;
     const stats = await draftReadingLetters(TUE_0900_MDT);
     expect(stats.key).toBe("next-reading-2026-10-07");
-    expect((await getLetterOverride("next-reading-2026-10-07"))?.subject).toBe("The next reading: Wednesday, October 7 at 1:11 PM MDT");
+    expect((await getLetterOverride("next-reading-2026-10-07"))?.subject).toBe("The next reading: Wednesday, October 7 at 1:11 PM Mountain Time");
   });
 });
 
@@ -333,7 +333,7 @@ describe("the review copy", () => {
     expect(sentPersonas).toEqual(["news", "news"]);
     expect(sent.map((m) => m.to).sort()).toEqual(["admiral@example.org", "love@onecocreation.com"]);
     for (const m of sent) {
-      expect(m.subject).toBe("Draft for your review: The next reading: Sunday, October 11 at 1:11 PM MDT");
+      expect(m.subject).toBe("Draft for your review: The next reading: Sunday, October 11 at 1:11 PM Mountain Time");
       expect(m.html).toContain("This letter was prepared automatically for Love&#39;s review. Nothing has gone to the list.");
       expect(m.html).toContain('href="https://site.test/a/letters/next-reading-2026-10-11"');
       expect(m.html).toContain("Open it to edit and send");
@@ -344,7 +344,7 @@ describe("the review copy", () => {
          date-time words in that paragraph are bold. */
       expect(m.html).toContain("background:linear-gradient(135deg,#E7B2C3,#C56E8B)");
       expect(m.html).toContain('<span style="color:#2E0E1D !important;">1:11 PM</span>');
-      expect(m.html).toContain("<b>Sunday, October 11 at 1:11 PM MDT</b>");
+      expect(m.html).toContain("<b>Sunday, October 11 at 1:11 PM Mountain Time</b>");
       const btnAt = m.html.indexOf("1:11 PM</span>");
       expect(btnAt).toBeGreaterThan(m.html.indexOf("Come and read with me, free."));
       expect(btnAt).toBeLessThan(m.html.indexOf("Missed one?"));

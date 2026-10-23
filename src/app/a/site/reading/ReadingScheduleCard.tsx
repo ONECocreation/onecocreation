@@ -181,7 +181,7 @@ export default function ReadingScheduleCard({ onSwitchValue }: { onSwitchValue?:
         <div style={{ flex: 1, minWidth: 220 }}>
           <b style={{ fontSize: ".9rem" }}>Which time zone</b>
           <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
-            Mountain time prints as MDT in summer and MST in winter; the site handles the change.
+            The site prints the zone as Mountain Time and handles the clock change.
           </div>
         </div>
         <select

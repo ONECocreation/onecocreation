@@ -42,7 +42,7 @@ export function studioInviteHtml(inv: StudioInvite): string {
   const when = inv.startsAt
     ? `<p><b>When:</b> ${new Date(inv.startsAt).toLocaleString("en-US", {
         weekday: "long", month: "long", day: "numeric",
-        hour: "numeric", minute: "2-digit", timeZoneName: "short",
+        hour: "numeric", minute: "2-digit", timeZoneName: "longGeneric",
       })}</p>`
     : "";
   const after = inv.afterHoursLine?.trim() ? `<p>${inv.afterHoursLine}</p>` : "";

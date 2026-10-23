@@ -53,7 +53,7 @@ const TUESDAY = 2;
    short-cut is gone from this module; the home page hero keeps "Mountain"
    (its own zoneLabel in ReadingHeroCountdown / sections.tsx, not this lane). */
 function zoneLabel(atMs: number, tz: string): string {
-  const part = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" })
+  const part = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "longGeneric" })
     .formatToParts(new Date(atMs))
     .find((p) => p.type === "timeZoneName");
   return part?.value ?? tz;
@@ -89,8 +89,10 @@ export function nextReadingKey(startsAtMs: number, tz: string): string {
 
 /* Love's own sign-off (her mail of 2026-10-06, adjustment 8), her words and
    her emoji exactly as she wrote them; the house no-emoji law is for OUR
-   words, never hers. */
-const LOVE_SIGN_OFF = "Smiles\nLove\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation";
+   words, never hers. The no-break space before Love is the Admiral's pin
+   (block 971,510): it sits Love over the rainbow and star, and a plain
+   space would collapse in the mail HTML. */
+const LOVE_SIGN_OFF = "Smiles\n\u00a0Love\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation";
 
 /* Adjustment 7, her words verbatim (she wrote MST here and it stays hers). */
 const LIVES_PARAGRAPH =

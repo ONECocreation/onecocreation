@@ -66,7 +66,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     if (email) {
       const when = new Intl.DateTimeFormat("en-US", {
         timeZone: booking.artistTz, weekday: "long", month: "long", day: "numeric",
-        hour: "numeric", minute: "2-digit", timeZoneName: "short",
+        hour: "numeric", minute: "2-digit", timeZoneName: "longGeneric",
       }).format(new Date(slot.startUtc));
       try {
         await enqueue([{

@@ -168,7 +168,7 @@ function MonthCalendar({
 
 /** "PDT", "GMT+1" — the short label a human recognizes. */
 function zoneLabel(tz: string): string {
-  const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(new Date());
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "longGeneric" }).formatToParts(new Date());
   return parts.find((p) => p.type === "timeZoneName")?.value ?? tz;
 }
 

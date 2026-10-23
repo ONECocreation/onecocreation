@@ -24,7 +24,7 @@ const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8")
 
 // The SAME BASE schedule and measured Wednesday-2026-09-23 instant
 // tests/reading-schedule.test.ts cross-checked against the system tz
-// database (America/Denver, 13:11 MDT = 19:11Z) — reused, not re-derived.
+// database (America/Denver, 13:11 Mountain Time = 19:11Z) — reused, not re-derived.
 const BASE: ReadingSchedule = { on: true, weekday: 3, time: "13:11", tz: "America/Denver", durationMin: 60 };
 const STARTS = Date.parse("2026-09-23T19:11:00.000Z");
 const ENDS = Date.parse("2026-09-23T20:11:00.000Z");
@@ -162,7 +162,7 @@ describe("ReadingNotice — deterministic initial markup, one fixture per state 
     expect(html).toContain("Next reading.");
     expect(html).toContain("Wednesday, September 23");
     expect(html).toContain("Love: 1:11");
-    expect(html).toContain("MDT");
+    expect(html).toContain("Mountain Time");
     expect(html).not.toContain("Your time");
     expect(html).not.toContain("Starts in");
     expect(html).not.toContain("<a ");

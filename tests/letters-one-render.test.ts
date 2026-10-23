@@ -371,6 +371,28 @@ describe("the positional !pill: directive (T-601 round 2)", () => {
   });
 });
 
+describe("T-633: pills are centred, never inside a <p>, and share one width", () => {
+  const body = "Hi.\n\n!pill: Yes | /a\n\nMid.\n\n!pill: Keep my place in the circle | /b\n\nEnd.";
+  it("no pill table sits inside a <p>", async () => {
+    const { letterHtml } = await import("@/lib/letters");
+    const html = letterHtml(body);
+    expect(html).not.toMatch(/<p[^>]*>(?:(?!<\/p>)[\s\S])*<table/);
+  });
+  it("every pill carries the same width and a centring cell", async () => {
+    const { letterHtml } = await import("@/lib/letters");
+    const html = letterHtml(body);
+    const widths = [...html.matchAll(/<table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-table;width:100%;max-width:(\d+)px/g)].map((m) => m[1]);
+    expect(widths.length).toBe(2);
+    expect(new Set(widths).size).toBe(1);
+    expect(html.match(/<td align="center" style="text-align:center;"><table/g)?.length).toBe(2);
+  });
+  it("a pill written beside text still ends up outside any <p>", async () => {
+    const { letterHtml } = await import("@/lib/letters");
+    const html = letterHtml("Words !pill: Go | /go");
+    expect(html).not.toMatch(/<p[^>]*>(?:(?!<\/p>)[\s\S])*<table/);
+  });
+});
+
 describe("preview equals sent: eleven EDITABLE_LETTERS keys with sample slots", () => {
   it("lead-magnet: sendLeadMagnetLetter string-equals letterHtml of the same resolved body", async () => {
     const { sendLeadMagnetLetter } = await leadMagnet();

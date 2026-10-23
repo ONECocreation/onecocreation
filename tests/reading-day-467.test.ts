@@ -37,12 +37,12 @@ const mockGetItem = vi.mocked(getItem);
 const read = (rel: string) => fs.readFile(path.join(process.cwd(), rel), "utf8");
 
 const TZ = "America/Denver";
-// Wednesday 1:11 PM MDT — the same measured instant reading-schedule.test.ts
+// Wednesday 1:11 PM Mountain Time — the same measured instant reading-schedule.test.ts
 // and reading-page.test.ts already use.
 const READING_MS = Date.parse("2026-09-23T19:11:00.000Z");
-const ENCORE_MS = Date.parse("2026-09-23T20:22:00.000Z"); // 2:22 PM MDT, same day
-const QA_MS = Date.parse("2026-09-23T21:33:00.000Z"); // 3:33 PM MDT, same day
-// TASK-469 (block 968,567): 12:12 PM MDT, same day, before the reading —
+const ENCORE_MS = Date.parse("2026-09-23T20:22:00.000Z"); // 2:22 PM Mountain Time, same day
+const QA_MS = Date.parse("2026-09-23T21:33:00.000Z"); // 3:33 PM Mountain Time, same day
+// TASK-469 (block 968,567): 12:12 PM Mountain Time, same day, before the reading —
 // this fixture's own bodyProps() now carries the Housewarming row too.
 const HOUSEWARMING_MS = Date.parse("2026-09-23T18:12:00.000Z");
 
@@ -67,15 +67,15 @@ beforeEach(() => {
 });
 
 describe("reading-day.ts — the ONE place the two clock times and the item id live", () => {
-  it("clockWords: '1:11 PM MDT', computed, not a literal", () => {
-    expect(clockWords(READING_MS, TZ)).toBe("1:11 PM MDT");
+  it("clockWords: '1:11 PM Mountain Time', computed, not a literal", () => {
+    expect(clockWords(READING_MS, TZ)).toBe("1:11 PM Mountain Time");
   });
 
   it("sameDayAt: the Encore (2:22 PM) and the Q&A (3:33 PM) land on the reading's OWN civil day", () => {
     expect(sameDayAt(READING_MS, TZ, ENCORE_TIME)).toBe(ENCORE_MS);
     expect(sameDayAt(READING_MS, TZ, QA_TIME)).toBe(QA_MS);
-    expect(clockWords(ENCORE_MS, TZ)).toBe("2:22 PM MDT");
-    expect(clockWords(QA_MS, TZ)).toBe("3:33 PM MDT");
+    expect(clockWords(ENCORE_MS, TZ)).toBe("2:22 PM Mountain Time");
+    expect(clockWords(QA_MS, TZ)).toBe("3:33 PM Mountain Time");
   });
 
   it("the exported constants are the two HH:MM strings and the pass's item id", () => {
