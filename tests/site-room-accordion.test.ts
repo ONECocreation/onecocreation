@@ -65,12 +65,17 @@ describe("the accordion's rows + the current mark", () => {
     expect(STUDIO_SUBS.map((s) => [s.key, s.href, s.label])).toEqual([
       ["reading", "/a/site/reading", "Weekly reading"],
       ["replays", "/a/site/replays", "Replays"], // T-619
+      // T-603 (K182, his Desk answer A): Q&A questions beside Weekly reading;
+      // menu placement ONLY - the route stays /a/letters/questions (T-545 precedent)
+      ["questions", "/a/letters/questions", "Q&A questions"],
     ]);
     expect(studioSubForPath("/a/site/reading")).toBe("reading");
     expect(studioSubForPath("/a/site/replays")).toBe("replays"); // T-619
+    expect(studioSubForPath("/a/letters/questions")).toBe("questions"); // T-603
     expect(studioSubForPath("/a/site/reading/go/free")).toBe("reading");
     expect(studioSubForPath("/a/studio")).toBeNull();
     expect(studioSubForPath("/a/site/readings")).toBeNull();
+    expect(studioSubForPath("/a/letters")).toBeNull(); // T-603: the Letters room itself stays Letters
     const shell = await read("src/components/console/SiteConsoleShell.tsx");
     expect(shell).toContain("window.sessionStorage.getItem(STUDIO_CLOSED_KEY)");
     expect(shell).toContain("oc-console-studio-closed");

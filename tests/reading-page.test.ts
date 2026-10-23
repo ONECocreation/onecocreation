@@ -359,7 +359,11 @@ describe("the design-drift theme contract — kit.css carries exactly the RULED 
        1600px wrap breakout) - kit.css, tokens only.
        T-604 (letters 553a) adds six more stems for the letter page: kitx-block,
        kitx-chip, kitx-frame, kitx-ground, kitx-letter (with its -head/-foot/
-       -text/-cards variants) and kitx-pane - kit.css, tokens only. */
+       -text/-cards variants) and kitx-pane - kit.css, tokens only.
+       T-603 (K182, the Desk's A on card 971566) adds two more stems for the
+       Q&A questions: kitx-form (the -col form column) and kitx-qa (the
+       -rows/-answered/-panel/-quote/-count/-show/-toggle/-actions/-stage
+       rules) - kit.css, tokens only. */
     expect(unique).toEqual(
       [
         ".kitx-actions",
@@ -368,6 +372,7 @@ describe("the design-drift theme contract — kit.css carries exactly the RULED 
         ".kitx-chip",
         ".kitx-even",
         ".kitx-flow",
+        ".kitx-form",
         ".kitx-frame",
         ".kitx-ground",
         ".kitx-group",
@@ -377,6 +382,7 @@ describe("the design-drift theme contract — kit.css carries exactly the RULED 
         ".kitx-pane",
         ".kitx-photo",
         ".kitx-player",
+        ".kitx-qa",
         ".kitx-row",
         ".kitx-theater",
         ".kitx-section",

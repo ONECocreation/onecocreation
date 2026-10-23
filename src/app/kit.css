@@ -222,6 +222,16 @@
 .kitx-flow{display:flex;flex-direction:column;gap:24px}
 .kitx-actions{justify-content:center;padding-top:16px}
 .kitx-actions>.kit-btn{flex:1 1 240px;max-width:320px}
+/* kitx-form-col — TASK-603 (the Admiral's mark on 02-qa-questions-dawn-1440:
+   "make the boxes bigger and or center the text in the card"): a centered,
+   wider form column inside a card body. Layout only (width/gap/align), zero
+   new colour/border/font values. The field width override is scoped to this
+   column so the kit-field 360px cap still stands everywhere else; typed text
+   stays left-aligned for readability while labels and notes follow the
+   card's centered voice. */
+.kitx-form-col{display:flex;flex-direction:column;gap:24px;width:min(560px,100%);margin-inline:auto}
+.kitx-form-col .kit-field{width:100%;max-width:none}
+.kitx-form-col .kit-field-input{text-align:left}
 .kitx-mark{width:88px;height:88px;margin-inline:auto}
 .kitx-photo{width:min(280px,100%);aspect-ratio:3/4;margin-inline:auto}
 
@@ -356,6 +366,43 @@
   .kit-rows>li:has(>.kit-rows-end>select){grid-template-columns:1fr;gap:8px}
   .kit-rows-end>select{width:100%;max-width:100%}
 }
+/* kitx-qa-rows — TASK-603: the questions room's rows carry a wide "Read and
+   respond" button; two-column at phone width left the question one word per
+   line. Same stack idiom as the select rows above and the stage1 card below,
+   scoped to this list's own class.
+   kitx-qa-answered — his round-3 mark on 08-qa-answered-r2-night-390 ("i
+   feel like these should be centered when in the mobile view"): the answered
+   rows' contents centre at phone width; desktop stays as drawn. */
+@media (max-width:640px){
+  .kitx-qa-rows>li{grid-template-columns:1fr;gap:8px}
+  .kitx-qa-rows .kit-rows-end{justify-self:end}
+  .kitx-qa-answered>li{grid-template-columns:1fr;gap:4px;text-align:center}
+}
+/* kitx-qa-panel — TASK-603 round 3: the same questions rows inside the
+   host's 420px side sheet on the go door. The sheet is narrow at every
+   viewport width, so the two-column grid orphaned single words there even
+   on desktop — the rows stack inside the panel always. */
+.kitx-qa-panel .kit-rows>li{grid-template-columns:1fr;gap:8px}
+.kitx-qa-panel .kit-rows-end{justify-self:end}
+/* kitx-qa-quote — the respond window's quoted question: the lavender rail,
+   muted ink, italic. Tokens only. */
+.kitx-qa-quote{margin:14px 0;padding:10px 14px;border-left:3px solid var(--glass-edge);color:var(--muted);font-style:italic}
+/* kitx-qa-count — the totals line under the list; kitx-qa-send-err — the
+   respond window's honest failure line; kitx-qa-show — the show/hide note. */
+.kitx-qa-count,.kitx-qa-send-err{margin-top:10px}
+.kitx-qa-show{margin-top:14px}
+/* kitx-qa-toggle — the show/hide-answered control wears the note's own ink,
+   underlined, no button chrome (all:unset, never a new font declaration -
+   the font census ratchet; the kitx-thumb idiom). */
+.kitx-qa-toggle{all:unset;color:var(--muted);text-decoration:underline;cursor:pointer}
+/* kitx-qa-actions — the respond window's button row: the right edge. */
+.kitx-qa-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+/* kitx-qa-stage — the call placeholder box on the Q&A go door (K182 item 4:
+   the call area stays a placeholder until the in-page Jitsi room is built;
+   the fleet's convention for a third-party embed is a quiet glass box). */
+.kitx-qa-stage{background:var(--glass);border:1px solid var(--glass-edge);border-radius:12px;display:flex;align-items:center;justify-content:center}
+.kitx-qa-stage-words{padding:0 24px;text-align:center;margin:0}
+.kitx-qa-answered{margin-top:8px}
 /* the operator Stage 1 card at narrow widths (K122 item 1): each row
    stacks — words, then the state line, then the control on the row's
    right edge, identical for every row in every state. SCOPED to the

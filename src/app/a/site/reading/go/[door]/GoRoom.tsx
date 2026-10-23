@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Card from "@/components/kit/Card";
+import { QaQuestionsButton, QaQuestionsSheet, QaStageSlot } from "@/components/qa/QaStageExtras";
 import { jitsiRoomUrl, doorStateWords, type DoorBusy, type DoorConfig, type DoorRowState } from "../../rooms-config";
 import { useDoorRoom } from "../useDoorRoom";
 
@@ -51,6 +53,12 @@ export interface GoRoomBodyProps {
   onClose: () => void;
   onShowCamera: () => void;
   onHideCamera: () => void;
+  /* TASK-603 phase 2 (K182): optional slots, absent in every pinned test
+     render — GoRoomBody's existing output is byte-identical without them.
+     stageSlot rides at the top of the open-state actions stack;
+     extraActions appends to it after Close this room. */
+  stageSlot?: React.ReactNode;
+  extraActions?: React.ReactNode;
 }
 
 const BUSY_WORDS: Record<Exclude<DoorBusy, null>, string> = {
@@ -60,7 +68,7 @@ const BUSY_WORDS: Record<Exclude<DoorBusy, null>, string> = {
   "hide-camera": "Pausing your camera…",
 };
 
-export function GoRoomBody({ door, state, busy, error, onOpenAndJoin, onClose, onShowCamera, onHideCamera }: GoRoomBodyProps) {
+export function GoRoomBody({ door, state, busy, error, onOpenAndJoin, onClose, onShowCamera, onHideCamera, stageSlot, extraActions }: GoRoomBodyProps) {
   const phase = state?.phase ?? "closed";
   const isOpen = !!state && phase !== "closed";
   const cameraOn = state?.camera === "shown";
@@ -78,6 +86,7 @@ export function GoRoomBody({ door, state, busy, error, onOpenAndJoin, onClose, o
         </p>
         {isOpen ? (
           <div className="kit-go-room-actions">
+            {stageSlot}
             {state?.room ? (
               <a className="kit-btn kit-btn-second" href={jitsiRoomUrl({ jitsiDomain: state.jitsiDomain, room: state.room })}>
                 Join as host
@@ -99,6 +108,7 @@ export function GoRoomBody({ door, state, busy, error, onOpenAndJoin, onClose, o
             <button type="button" className="kit-btn kit-btn-second" disabled={busy !== null} onClick={onClose}>
               Close this room
             </button>
+            {extraActions}
           </div>
         ) : (
           <div className="kit-go-room-actions">
@@ -114,6 +124,15 @@ export function GoRoomBody({ door, state, busy, error, onOpenAndJoin, onClose, o
 
 export default function GoRoom({ door }: { door: DoorConfig }) {
   const { state, busy, error, open, close, showCamera, hideCamera } = useDoorRoom(door);
+  /* TASK-603 phase 2 (K182, his words: love wants to read these live during
+     the sessions, accessible in the stage area): on the Q&A door alone, the
+     open page carries the call placeholder and a Questions button on her
+     host controls that opens the SAME questions list in a right-side sheet.
+     The pieces live in components/qa/QaStageExtras.tsx because this file is
+     source-pinned by tests/reading-go-door.test.ts (kit classes only, no
+     inline styles); every other door keeps the page byte-for-byte. */
+  const [qaPanelOpen, setQaPanelOpen] = useState(false);
+  const isQa = door.id === "qa";
 
   /* the ONE click: open, then send THIS TAB to whatever room the PUT
      answered with — assign, never open (the iOS-Safari-after-await
@@ -126,15 +145,20 @@ export default function GoRoom({ door }: { door: DoorConfig }) {
   }
 
   return (
-    <GoRoomBody
-      door={door}
-      state={state}
-      busy={busy}
-      error={error}
-      onOpenAndJoin={openAndJoin}
-      onClose={close}
-      onShowCamera={showCamera}
-      onHideCamera={hideCamera}
-    />
+    <>
+      <GoRoomBody
+        door={door}
+        state={state}
+        busy={busy}
+        error={error}
+        onOpenAndJoin={openAndJoin}
+        onClose={close}
+        onShowCamera={showCamera}
+        onHideCamera={hideCamera}
+        stageSlot={isQa ? <QaStageSlot /> : undefined}
+        extraActions={isQa ? <QaQuestionsButton onOpen={() => setQaPanelOpen(true)} /> : undefined}
+      />
+      {isQa && <QaQuestionsSheet open={qaPanelOpen} onClose={() => setQaPanelOpen(false)} />}
+    </>
   );
 }

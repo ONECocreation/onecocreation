@@ -19,6 +19,7 @@ PHASE 2: THE BUILD. Phase 1 (mockup, rounds 1-3) was claimed and drawn on `feat/
 - `src/components/console/SiteConsoleShell.tsx` (the Studio sub item + its own head words beside T-622's STUDIO_SUB_HEADS)
 - `src/app/kit.css` (the kitx-form-col + kitx-qa-* rules, layout only)
 - `tests/site-room-accordion.test.ts` (T-545's STUDIO_SUBS pin gains the questions row - a pin fix by name, inside OWNS per LESSONS 971,280)
+- `tests/reading-page.test.ts` (the kitx- stem pin gains kitx-form and kitx-qa - a pin fix by name, same law)
 - `tests/qa-questions.test.ts` (NEW)
 - `.gitignore` (the dev-driver data/qa-questions/ files)
 - `~/dev/kimi/outbox/task-603/`
