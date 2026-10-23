@@ -17,6 +17,8 @@ const sent = vi.hoisted(() => [] as OutgoingMail[]);
 const mailControl = vi.hoisted(() => ({ cap: 100 }));
 const onceClaims = vi.hoisted(() => new Set<string>());
 const replays = vi.hoisted(() => ({ result: [] as unknown, throws: false }));
+/* T-638: this file pins the DRAFT behaviour, so the automatic send is switched
+   off for it (replaysAutoSend false); the automatic send has its own file. */
 const cfg = vi.hoisted(() => ({ reading: undefined as ReadingSchedule | undefined }));
 
 vi.mock("@/lib/mail", async (importActual) => {
@@ -37,7 +39,7 @@ vi.mock("@/lib/mail", async (importActual) => {
 });
 vi.mock("@/lib/site-config", async (importActual) => {
   const actual = await importActual<typeof import("@/lib/site-config")>();
-  return { ...actual, getSiteConfig: async () => ({ ...actual.defaultSiteConfig(), reading: cfg.reading }) };
+  return { ...actual, getSiteConfig: async () => ({ ...actual.defaultSiteConfig(), reading: cfg.reading, replaysAutoSend: false }) };
 });
 vi.mock("@/lib/replays-source", () => ({
   loadReplays: async () => {
@@ -347,10 +349,11 @@ describe("failure isolation", () => {
 
 describe("THE LAW and the words", () => {
   const src = fs.readFileSync(path.join(__dirname, "..", "src/lib/reading-week-drafts.ts"), "utf8");
-  it("still no queue, no list send, no subscriber reads; loadReplays is called, replays-source never edited", () => {
+  it("the module has no queue of its own and no route call: the one list send is lib/list-send (T-638); loadReplays is called, replays-source never edited", () => {
     expect(src).not.toMatch(/mail-queue/);
     expect(src).not.toMatch(/\benqueue\b/);
     expect(src).not.toMatch(/admin\/letters/);
+    expect(src).toMatch(/import \{ sendLetterToList \} from "@\/lib\/list-send"/);
     expect(src).not.toMatch(/listSubscribers|isSubscribed|subscriberSegments/);
     expect(src).toMatch(/import \{ loadReplays \} from "@\/lib\/replays-source"/);
   });
