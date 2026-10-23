@@ -218,7 +218,7 @@ describe("the words (derived, Love's voice)", () => {
       "Love's weekly YouTube Lives, Monday, Wednesday and Friday, Live with Love or A Moment with Love, will continue as long as signal allows, at 11:11 MST. Keep those notifications on, as she may show up at other Angel number times to adjust for the signal needed. We appreciate your ability to Flow with the Go.",
     );
     /* adjustment 8: her five-line sign-off, her emoji */
-    expect(l.body.endsWith("Smiles\n Love\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation")).toBe(true);
+    expect(l.body.endsWith("Smiles\n\u00a0Love\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation")).toBe(true);
     for (const s of [l.subject, l.body]) {
       expect(s).not.toMatch(/[—–]/);
       expect(s.replace("🌈💫", "")).not.toMatch(/[←-⇿➡➔\u{1F300}-\u{1FAFF}☀-➿]/u);

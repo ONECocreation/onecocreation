@@ -149,7 +149,7 @@ describe("the trigger: a replay id the site has not seen", () => {
     expect(o?.body).toContain("All it takes to watch is your email and a six-digit code.");
     expect(o?.body).not.toMatch(/member/i);
     /* adjustment 8: her five-line sign-off, her emoji */
-    expect(o?.body?.endsWith("Smiles\n Love\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation")).toBe(true);
+    expect(o?.body?.endsWith("Smiles\n\u00a0Love\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation")).toBe(true);
     expect(seen().sort()).toEqual([A.id, B.id, C.id]);
   });
 
