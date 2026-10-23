@@ -230,7 +230,7 @@ export interface RichLetter {
   heroUrl?: string;
   bodyHtml: string;
   sections?: LetterSection[];
-  cta?: { label: string; href: string };
+  cta?: { label: string; href: string; width?: number };
   unsubscribeUrl?: string;
   /** the letter's own page on the site — "view in browser" */
   webUrl?: string;
@@ -290,7 +290,7 @@ const abs = (u: string) => (u.startsWith("http") ? u : `${site()}${u}`);
  *  white ink, 5.65:1) is unchanged — it was never broken; white was always
  *  the ink a "make it dark-mode safe" pass leaves alone, which is the whole
  *  lesson this pill's ink now follows too. */
-export function pill(href: string, label: string, size: "sm" | "lg" = "sm", variant: "primary" | "muted" | "cta" = "primary"): string {
+export function pill(href: string, label: string, size: "sm" | "lg" = "sm", variant: "primary" | "muted" | "cta" = "primary", width?: number): string {
   const pad = size === "lg" ? "13px 30px" : "10px 24px";
   const fs = size === "lg" ? "15px" : "13px";
   if (variant === "muted") {
@@ -315,9 +315,16 @@ export function pill(href: string, label: string, size: "sm" | "lg" = "sm", vari
        4.99:1 across the two stops. */
     const fallback = "#C56E8B"; // the gradient's dark stop
     const ink = "#2E0E1D"; // --rose-btn-ink
-    return `<table role="presentation" cellpadding="0" cellspacing="0" style="display:inline-table;"><tr>
-    <td bgcolor="${fallback}" style="border-radius:6px;background:linear-gradient(135deg,#E7B2C3,#C56E8B);background-color:${fallback};color:${ink};">
-      <a href="${abs(href)}" style="display:inline-block;padding:${pad};font-family:Arial,sans-serif;font-size:${fs};font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:${ink} !important;text-decoration:none;border-radius:6px;"><font color="${ink}"><span style="color:${ink} !important;">${label}</span></font></a>
+    /* T-633: an optional fixed width (px) so every button in one letter
+       shares one size; the label centres inside it. The width is a
+       max-width with width:100% (never a hard width attribute: a fixed table
+       width stops the shell shrinking on a phone). */
+    const w = "";
+    const ws = width ? `width:100%;max-width:${width}px;` : "";
+    const disp = width ? "display:block;text-align:center;" : "display:inline-block;";
+    return `<table role="presentation" cellpadding="0" cellspacing="0"${w} style="display:inline-table;${ws}"><tr>
+    <td bgcolor="${fallback}"${width ? ' align="center"' : ""} style="border-radius:6px;background:linear-gradient(135deg,#E7B2C3,#C56E8B);background-color:${fallback};color:${ink};">
+      <a href="${abs(href)}" style="${disp}padding:${pad};font-family:Arial,sans-serif;font-size:${fs};font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:${ink} !important;text-decoration:none;border-radius:6px;"><font color="${ink}"><span style="color:${ink} !important;">${label}</span></font></a>
     </td></tr></table>`;
   }
   // primary — deep rose fill, WHITE ink (TASK-308, 0018.06.25 a₿): a dark
@@ -373,7 +380,7 @@ export function richShell(letter: RichLetter): string {
   ${letter.heroUrl ? `<tr><td style="background:#0e0c18;"><a href="${site()}"><img src="${abs(letter.heroUrl)}" width="600" alt="" style="display:block;width:100%;"/></a></td></tr>` : ""}
   <tr><td style="padding:30px 34px 8px;font-size:15px;line-height:1.75;color:#E9E2F2;">${letter.bodyHtml}</td></tr>
   ${cards ? `<tr><td style="padding:6px 34px 8px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cards}</table></td></tr>` : ""}
-  ${letter.cta ? `<tr><td align="center" style="padding:26px 34px 34px;">${pill(letter.cta.href, letter.cta.label, "lg", "cta")}</td></tr>` : ""}
+  ${letter.cta ? `<tr><td align="center" style="padding:26px 34px 34px;">${pill(letter.cta.href, letter.cta.label, "lg", "cta", letter.cta.width)}</td></tr>` : ""}
   <tr><td bgcolor="#efe9df" style="background:#efe9df;padding:22px 34px;">
     <img src="${site()}/brand/onecocreation-mark-email.png" width="40" height="40" alt="✦" style="display:block;margin-bottom:8px;border:0;"/>
     <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#4a4458;">

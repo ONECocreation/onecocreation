@@ -584,7 +584,7 @@ const admitsDirectiveUrl = (u: string) => u.startsWith("https://") || (u.startsW
 export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUrl?: string }): string {
   let heroUrl: string | undefined;
   const sections: LetterSection[] = [];
-  let cta: { label: string; href: string } | undefined;
+  let cta: { label: string; href: string; width?: number } | undefined;
   /* TASK-601 round 2 (the Admiral's B on the forge render): the POSITIONAL
      button. richShell carries ONE end-of-letter cta; a `!pill: Label | /link`
      line renders the same cta-variant pill inline, centered, exactly where
@@ -620,12 +620,26 @@ export function letterHtml(body: string, opts?: { unsubscribeUrl?: string; webUr
   }
 
   let bodyHtml = bodyToHtml(plain.join("\n").trim());
+  /* T-633 (his pin on the trial letter: "buttons should be same sizes and
+     centered"). A <table> cannot sit inside a <p> (the parser closes the <p>
+     and the pill falls LEFT), so each pill rides its own centred table row.
+     ONE width for all: the widest label sets it, estimated at 12.5px per
+     character (15px bold Arial caps + 2px letter-spacing) plus the 60px side
+     padding, floored at 220px and capped at 520px; max-width:100% lets a
+     phone shrink it. A fixed px width is the mail-client-safe way (tables and
+     inline styles only, no flex). */
+  const plainLen = (l: string) => l.replace(/&[#\w]+;/g, "x").length;
+  const pillWidth = Math.min(520, Math.max(220, Math.ceil(Math.max(0, ...pills.map((x) => plainLen(x.label))) * 12.5) + 60));
+  if (cta && pills.length) cta = { ...cta, width: Math.min(520, Math.max(pillWidth, Math.ceil(plainLen(cta.label) * 12.5) + 60)) };
   pills.forEach((pl, i) => {
-    const inline = `<p style="margin:0 0 1.15em;line-height:1.75;text-align:center;">${pill(pl.href, pl.label, "lg", "cta")}</p>`;
+    const block = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" align="center" style="width:100%;margin:0 0 1.15em;"><tr><td align="center" style="text-align:center;">${pill(pl.href, pl.label, "lg", "cta", pillWidth)}</td></tr></table>`;
     const wrapped = `<p style="margin:0 0 1.15em;line-height:1.75;">@@PILL${i}@@</p>`;
     /* the placeholder normally stands alone in its own paragraph; if a hand
-       wrote it beside other text the bare token still swaps, never leaks */
-    bodyHtml = bodyHtml.includes(wrapped) ? bodyHtml.replace(wrapped, inline) : bodyHtml.replace(`@@PILL${i}@@`, inline);
+       wrote it beside other text, close the paragraph around the block so a
+       table is never inside a <p> */
+    bodyHtml = bodyHtml.includes(wrapped)
+      ? bodyHtml.replace(wrapped, block)
+      : bodyHtml.replace(`@@PILL${i}@@`, `</p>${block}<p style="margin:0 0 1.15em;line-height:1.75;">`);
   });
   if (!heroUrl && sections.length === 0 && !cta) {
     return brandShell(bodyHtml, opts);

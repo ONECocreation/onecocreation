@@ -90,7 +90,7 @@ export function nextReadingKey(startsAtMs: number, tz: string): string {
 /* Love's own sign-off (her mail of 2026-10-06, adjustment 8), her words and
    her emoji exactly as she wrote them; the house no-emoji law is for OUR
    words, never hers. */
-const LOVE_SIGN_OFF = "Smiles\nLove\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation";
+const LOVE_SIGN_OFF = "Smiles\n Love\n🌈💫\n\nAs Always. IAM, WE ARE One.\nOneCocreation";
 
 /* Adjustment 7, her words verbatim (she wrote MST here and it stays hers). */
 const LIVES_PARAGRAPH =
