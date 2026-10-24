@@ -40,6 +40,11 @@ meet.jit.si test room for the iPhone check.
   block cannot ship: a new .tsx gets a ZERO hand-typed-colour allowance from
   the design-drift ratchet, so the rules move into the kit's own stylesheet,
   appended as one banner-marked section; no existing rule touched)
+- `src/app/cartridge.css` (THREE new tokens beside the always-night
+  `--pop-bg`/`--pop-edge`/`--pop-shadow` recipe — `--pop-ink`/`--pop-pink`/
+  `--pop-rose`, the dock card's inks; the card never theme-flips
+  (TASK-398's law), so its inks must be pinned night values, and literals
+  are banned from kit.css's additions region by the reading-look law)
 - `src/components/reading/ReadingStage.tsx` (the bridge replaces the direct
   `JitsiRoom` mount; the cover/chip/`kit-stage-viewer` wrapper stay; the
   island dismisses the dock session on a server-side end)
