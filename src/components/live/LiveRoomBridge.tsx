@@ -24,6 +24,14 @@ import { useLiveRooms, type LiveRoomFields, type LiveRoomHandlers, type LiveRoom
  * provider (the repo's renderToStaticMarkup test idiom) the bridge is just
  * the placeholder — every existing owner-side pin keeps working.
  *
+ * The store is read through a REF, never as an effect dependency (the
+ * found-the-hard-way T-639 loop: the context value's identity changes on
+ * every state patch, so `[live, kind, domain, room]` re-ran the rect effect
+ * on every change — its own cleanup detached (a state change), its own
+ * report re-seated (another), and the page sat in a silent render loop
+ * that starved the router's transitions: no link on the page could commit
+ * a navigation while a room was live).
+ *
  * The placeholder itself is invisible (aria-hidden): the dock's stage-mode
  * window sits exactly over it. Its quiet "Opening the room…" line is the
  * pre-hydration first paint the embed's own SSR holder used to give.
@@ -43,23 +51,26 @@ export default function LiveRoomBridge({
   onRejoin,
 }: LiveRoomIdentity & LiveRoomFields & LiveRoomHandlers) {
   const live = useLiveRooms();
+  const liveRef = useRef(live);
+  useEffect(() => {
+    liveRef.current = live;
+  });
   const ref = useRef<HTMLDivElement>(null);
 
   /* no deps array on purpose: join() is the idempotent update path — the
      chip text and the camera cover flip WITHOUT a remount (the camera
      site-switch is the live case), and the handlers stay fresh. */
   useEffect(() => {
-    live?.join({ kind, domain, room }, { title, homePath, homeLabel, chip, coverUp }, { onEnded, onFailed, onJoined, onRejoin });
+    liveRef.current?.join({ kind, domain, room }, { title, homePath, homeLabel, chip, coverUp }, { onEnded, onFailed, onJoined, onRejoin });
   });
 
   useEffect(() => {
-    if (!live) return;
     const el = ref.current;
-    if (!el) return;
+    if (!el || !liveRef.current) return;
     const identity: LiveRoomIdentity = { kind, domain, room };
     const report = () => {
       const r = el.getBoundingClientRect();
-      live.reportRect(identity, { top: r.top, left: r.left, width: r.width, height: r.height });
+      liveRef.current?.reportRect(identity, { top: r.top, left: r.left, width: r.width, height: r.height });
     };
     report();
     window.addEventListener("scroll", report, { passive: true, capture: true });
@@ -67,9 +78,9 @@ export default function LiveRoomBridge({
     return () => {
       window.removeEventListener("scroll", report, { capture: true });
       window.removeEventListener("resize", report);
-      live.detach(identity);
+      liveRef.current?.detach(identity);
     };
-  }, [live, kind, domain, room]);
+  }, [kind, domain, room]);
 
   return (
     <div ref={ref} className="lrd-bridge" aria-hidden="true">

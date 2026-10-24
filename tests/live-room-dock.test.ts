@@ -199,13 +199,21 @@ describe("the dock's rulings — source pins (no jsdom in this repo)", () => {
 
   it("the bridge's cleanup DETACHES ONLY — never a leave, never a dismiss (navigation survival)", async () => {
     const src = await read(BRIDGE);
-    expect(src).toContain("live.detach(identity)");
+    expect(src).toContain("detach(identity)");
     expect(src).not.toContain(".endSession(");
     expect(src).not.toContain(".dismiss(");
     /* and it renders no controls — the owners' render pins (cover-479's
        no-buttons law) hold in the room's old seat */
     expect(src).not.toContain("<button");
     expect(src).not.toContain("<Link");
+  });
+
+  it("the bridge reads the store through a REF, never as an effect dep — the context value's identity changes on every patch, and a [live, ...] dep loops detach/report forever (the stuck-navigation bug, T-639 build)", async () => {
+    const src = await read(BRIDGE);
+    expect(src).toContain("liveRef");
+    /* the rect effect's deps are the identity parts ONLY */
+    expect(src).toContain("}, [kind, domain, room]);");
+    expect(src).not.toContain("}, [live,");
   });
 
   it("the context exposes the pure transitions + the idle state (this suite's own import surface)", async () => {
