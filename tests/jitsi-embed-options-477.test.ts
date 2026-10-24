@@ -112,22 +112,30 @@ describe("jitsiEmbedOptions — every other caller (guestView unset) is byte-ide
   });
 });
 
-describe("TASK-477 — the /reading guest mounts actually pass guestView", () => {
+describe("TASK-477 — the /reading guest mounts actually pass guestView (T-639: the embed moved to the dock)", () => {
   const STAGE = "src/components/reading/ReadingStage.tsx";
   const DOOR = "src/components/reading/ReadingStageDoor.tsx";
+  const DOCK = "src/components/live/LiveRoomDock.tsx";
 
-  it("ReadingStage.tsx's JitsiRoom mount carries guestView", async () => {
-    const src = await read(STAGE);
+  /* T-639 (K184, block 972,965): ReadingStage/ReadingStageDoor no longer
+     mount JitsiRoom themselves — they render `LiveRoomBridge` in the old
+     seat, and the layout-owned dock carries the ONE real embed. The
+     guestView ruling therefore pins on the DOCK's mount now, and the two
+     owners are pinned to the bridge. */
+  it("LiveRoomDock.tsx's JitsiRoom mount carries guestView", async () => {
+    const src = await read(DOCK);
     const line = src.split("\n").find((l) => l.includes("<JitsiRoom"));
     expect(line).toBeDefined();
     expect(line).toMatch(/guestView/);
   });
 
-  it("ReadingStageDoor.tsx's JitsiRoom mount carries guestView", async () => {
-    const src = await read(DOOR);
-    const line = src.split("\n").find((l) => l.includes("<JitsiRoom"));
-    expect(line).toBeDefined();
-    expect(line).toMatch(/guestView/);
+  it("ReadingStage.tsx and ReadingStageDoor.tsx mount the bridge, never the embed", async () => {
+    const stage = await read(STAGE);
+    const door = await read(DOOR);
+    expect(stage).toContain("<LiveRoomBridge");
+    expect(door).toContain("<LiveRoomBridge");
+    expect(stage).not.toContain("<JitsiRoom");
+    expect(door).not.toContain("<JitsiRoom");
   });
 
   it("both components still exist and export their default (import doesn't throw)", () => {

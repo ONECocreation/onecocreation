@@ -10,7 +10,8 @@ import Stage2Door from "./Stage2Door";
 import StoryTimePill from "./StoryTimePill";
 import PlaygroundDoor from "./PlaygroundDoor";
 import JitsiRoom from "../booking/JitsiRoom";
-import JitsiViewer from "../reading/JitsiViewer";
+import LiveRoomBridge from "../live/LiveRoomBridge";
+import { useLiveRooms, type LiveRoomIdentity } from "../live/LiveRoomContext";
 import { stage1WatchTarget } from "../reading/ReadingStage";
 import { READING_ROOM_SLUG, PLAYGROUND_ROOM_SLUG } from "@/lib/reading-room";
 import type { MaterialItem } from "@/lib/class-materials";
@@ -143,9 +144,11 @@ export default function StageView({
    *  968,357 — "the story time pill button added to the heartfield … the
    *  stage in the heartfield … leave the chat off for now in that stage
    *  area"): while Stage 1 is published, the free reading room offers the
-   *  reading on its OWN stage — the same one-way JitsiViewer /reading
-   *  uses (Guest by design: the one-way embed has no roster to be named
-   *  on, so no name prop is ever handed over). `storyOpen` is DISPLAY-ONLY
+   *  reading on its OWN stage — the same one-way watch /reading uses
+   *  (T-639, K184: joined through `LiveRoomBridge`; the JitsiViewer
+   *  itself lives in the layout-owned dock — Guest by design: the one-way
+   *  embed has no roster to be named on, so no name prop is ever handed
+   *  over). `storyOpen` is DISPLAY-ONLY
    *  (the poll below, fail-closed from its closed initial state);
    *  `storyRoom` + `storyDomain` mount ONLY from the click's own fresh
    *  re-check — the wire's jitsiDomain rides WITH the room name, the pair
@@ -157,6 +160,22 @@ export default function StageView({
   const [storyNote, setStoryNote] = useState<string | null>(null);
   /* the joined Stage 2 room as the click handler sees it (pickup fix) */
   const stage2RoomRef = useRef<string | null>(null);
+  /* T-639 (K184, block 972,965): the story's one-way watch mounts in the
+     layout-owned DOCK now (LiveRoomDock.tsx) — the live-room store is
+     ref-read so the pinned callback shapes below stay exact, and
+     storyIdentityRef carries the story's identity for the two dismissal
+     paths that never get a Jitsi farewell (the stage closing under a
+     playing story, and a Stage 2 join taking the stage). Named liveStore:
+     `live` is already this component's own live-show prop. */
+  const liveStore = useLiveRooms();
+  const liveRef = useRef(liveStore);
+  useEffect(() => {
+    liveRef.current = liveStore;
+  });
+  const storyIdentityRef = useRef<LiveRoomIdentity | null>(null);
+  useEffect(() => {
+    storyIdentityRef.current = storyRoom ? { kind: "watch", domain: storyDomain ?? "", room: storyRoom } : null;
+  }, [storyRoom, storyDomain]);
 
   useEffect(() => {
     if (gated) return; // the gate closed — no fetch, same law as the Lesson Path
@@ -189,6 +208,10 @@ export default function StageView({
              viewers' own next poll is what removes them"; ReadingStage's
              own published→closed branch), and the note retires with it */
           if (!open) {
+            /* T-639: the dock forgets the session outright — a stage
+               closed server-side is not a leave, so there is no rejoin
+               offer (the embed never fired its own farewell here). */
+            liveRef.current?.dismissIf(storyIdentityRef.current);
             setStoryRoom(null);
             setStoryDomain(null);
             setStoryNote(null);
@@ -256,6 +279,9 @@ export default function StageView({
      setWatching(false)). The ref lets an in-flight storyTime() see it. */
   const joinStage2 = useCallback((room: string) => {
     stage2RoomRef.current = room;
+    /* T-639: the story hands the stage over — the dock forgets its
+       session outright (no rejoin offer; the guest chose another room). */
+    liveRef.current?.dismissIf(storyIdentityRef.current);
     setStoryRoom(null);
     setStoryDomain(null);
     setStoryNote(null); // T-454: nothing to "try again" during Stage 2
@@ -299,13 +325,28 @@ export default function StageView({
             </>
           ) : storyRoom ? (
             /* TASK-450: the reading on the room's OWN stage — the same
-               one-way JitsiViewer as /reading (Guest, the T-448 keys,
+               one-way watch as /reading (Guest, the T-448 keys,
                untouched), framed by the reading's own .kit-stage-media
-               (an EXISTING class: the viewer is position:absolute and
+               (an EXISTING class: the seat is position:relative and
                needs a positioned 16:9 parent; no new CSS, no inline
-               style — the drift ceiling holds). */
+               style — the drift ceiling holds).
+               T-639 (K184, block 972,965): the embed itself lives in the
+               layout-owned DOCK now — this bridge joins the live-room
+               store, reports this seat's rect for the dock's stage mode,
+               and keeps the watch playing across client navigation.
+               LiveRoomDock.tsx carries the real JitsiViewer (pinned in
+               tests/jitsi-embed-options-477.test.ts). */
             <div className="kit-stage-media kit-call-tall">
-              <JitsiViewer domain={storyDomain ?? ""} room={storyRoom} onEnded={storyEnded} onFailed={storyFailed} />
+              <LiveRoomBridge
+                kind="watch"
+                domain={storyDomain ?? ""}
+                room={storyRoom}
+                title="the reading"
+                homePath={`/rooms/${slug}`}
+                homeLabel={`Back to ${title}`}
+                onEnded={storyEnded}
+                onFailed={storyFailed}
+              />
             </div>
           ) : (
             <RoomVideoSlot live={live} roomTitle={title} jitsiDomain={jitsiDomain} liveRoom={liveRoom} door={door} doorPackage={doorPackage} rail={rail} vdoHost={vdoHost} studioRoom={studioRoom} roomKey={roomKey} roster={roster} onCameraMxids={onCameraMxids} stageMxids={stageMxids} cameraDoor={cameraDoor} fullScene={fullScene} fullSceneShowTitle={fullSceneShowTitle} fullSceneStartsAt={fullSceneStartsAt} fullSceneAfterHoursLine={fullSceneAfterHoursLine} />

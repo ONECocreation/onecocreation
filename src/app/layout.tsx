@@ -5,6 +5,8 @@ import { EASY_MODE_BOOT_SCRIPT } from "@frens-earth/arcade-ui";
 import { renderCartridgeId, cartridge } from "@/brand/cartridge";
 import ScrollFix from "@/components/ScrollFix";
 import AliveEffects from "@/components/AliveEffects";
+import { LiveRoomsProvider } from "@/components/live/LiveRoomContext";
+import LiveRoomDock from "@/components/live/LiveRoomDock";
 import CartridgeVars from "@/components/CartridgeVars";
 import CartridgePreview from "@/components/CartridgePreview";
 import "./globals.css";
@@ -166,7 +168,18 @@ export default function RootLayout({
             header LiveStrip (SiteHeader) now carries the one "Love is live"
             line from the same /api/live flag; two strips would double-speak.
             LiveBanner.tsx itself stays, unmounted, for the orchestrator. */}
-        {children}
+        <LiveRoomsProvider>
+          {children}
+          {/* T-639 (K184, block 972,965 — the Admiral's ruling A): the
+              live-room mini player, REAL. The provider is the layout-owned
+              store the room pages join through their bridges (ReadingStage,
+              ReadingStageDoor, StageView's story time); the dock is the ONE
+              host that holds the actual embed, so the room keeps playing
+              across client navigation and rides as bar/strip/float when its
+              owner scrolls or navigates away. Never rendered under /a
+              (ruling C — the dock hides itself). */}
+          <LiveRoomDock />
+        </LiveRoomsProvider>
       </body>
     </html>
   );

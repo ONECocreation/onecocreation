@@ -105,6 +105,13 @@
      theme-flip — the bar itself follows the theme through --header-bg
      (TASK-398). */
   --pop-bg:rgba(20,16,32,.97); --pop-edge:rgba(217,178,78,.4); --pop-shadow:0 10px 30px rgba(0,0,0,.4);
+  /* the popup recipe's INKS, pinned night for the same reason (TASK-398's
+     law): T-639's live-room dock is an always-night card in both themes,
+     so its words and accents read these, never the theme-flipping rungs.
+     --pop-ink = the night --ink-strong, --pop-pink = the night --rose /
+     --gold-deep (the keep-dark pin's own value), --pop-rose = the deep
+     rose rung (the live dot). */
+  --pop-ink:#F4ECFF; --pop-pink:#E7B2C3; --pop-rose:#C56E8B;
   /* the dawn — where-you-are in the nav (VERSION B ~0018.05.24 a₿: Love's
      ORIGINAL gold nav — #FAC51C links, live-extracted from the production
      render — kept as an earned brand accent; the gold→purple dawn rides

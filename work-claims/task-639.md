@@ -64,6 +64,12 @@ meet.jit.si test room for the iPhone check.
 - `tests/heart-field-story-time.test.ts` (re-trued pin, by name: the story
   branch mounts `<LiveRoomBridge kind="watch" ...>` — the domain/room/
   onEnded/onFailed props keep their exact pinned spellings)
+- `tests/operator-census.baseline.json` (HAND-EDITED, one record only:
+  `src/app/kit.css` fontDecls 10 → 16, names rewritten to the measured
+  list. CENSUS_WRITE=1 ratchets DOWN only (min(old, measured)), so an
+  honest increase is the lane's own visible edit under review — the six
+  new declarations are the lrd- section's five `var(--font-h1/body)` faces
+  plus one `font:` shorthand, every one a token, every one drawn)
 
 READ-ONLY: everything else. `src/components/booking/JitsiRoom.tsx` and
 `src/components/reading/JitsiViewer.tsx` are mounted by the dock but never

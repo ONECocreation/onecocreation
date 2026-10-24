@@ -8,8 +8,9 @@ import { renderToStaticMarkup } from "react-dom/server";
  * TASK-450 (block 968,370; K124 §T-450 + the Admiral's ruling 2,
  * block 968,357) — the Heart Field room's "● Story time": while Stage 1
  * is published the free reading room (READING_ROOM_SLUG) offers the
- * reading on its OWN stage — the same one-way JitsiViewer /reading uses
- * (Guest, the T-448 keys, untouched) — with the room's chat stepped
+ * reading on its OWN stage — the same one-way watch /reading uses
+ * (Guest, the T-448 keys, untouched; since T-639 the JitsiViewer itself
+ * lives in the layout-owned dock and this page renders the bridge) — with the room's chat stepped
  * aside in THAT stage state only, and the Stage 2 door never moving.
  *
  * The repo runs no jsdom and effects never run under renderToStaticMarkup
@@ -259,9 +260,12 @@ describe("chat off in the story-time stage state ONLY (ruling 2's 'for now')", (
 });
 
 describe("the swap and the way back — the reading on the room's own stage", () => {
-  it("the storyRoom branch mounts the one-way JitsiViewer with the wire's domain + room", async () => {
+  it("the storyRoom branch joins the one-way watch through the dock's bridge (T-639), with the wire's domain + room", async () => {
     const branch = storyBranch(await read(STAGE_VIEW));
-    expect(branch).toContain("<JitsiViewer");
+    /* T-639 (K184, block 972,965): the JitsiViewer itself moved to the
+       layout-owned dock (LiveRoomDock.tsx — pinned in
+       tests/live-room-dock.test.ts); this branch renders the bridge. */
+    expect(branch).toContain("<LiveRoomBridge");
     expect(branch).toContain("domain={storyDomain ??");
     expect(branch).toContain("room={storyRoom}");
     expect(branch).toContain("onEnded={storyEnded}");
