@@ -959,8 +959,8 @@
 .lrd-stage{border-radius:24px}
 .lrd-stage .lrd-ctl-modes,.lrd-stage .lrd-back{display:none}
 /* shade — the Winamp title bar alone, the sound still on */
-.lrd-shade{right:12px;bottom:12px;width:min(360px,calc(100vw - 24px));flex-direction:row;align-items:center}
-.lrd-shade .lrd-bar{border-bottom:0;flex:1}
+.lrd-shade{right:12px;bottom:12px;width:min(440px,calc(100vw - 24px));flex-direction:row;align-items:center}
+.lrd-shade .lrd-bar{border-bottom:0;flex:1;min-width:0}
 .lrd-shade .lrd-body,.lrd-shade .lrd-back{display:none}
 .lrd-shade .lrd-shade-note{display:block}
 .lrd-shade .lrd-bar{cursor:grab}
@@ -998,8 +998,16 @@
   .lrd-dock.lrd-grown .lrd-body{display:block}
   .lrd-dock.lrd-grown .lrd-back{display:block}
   .lrd-shade{left:8px;right:8px;width:auto}
+  /* a phone's shade bar carries the title + the three word controls; the
+     "sound on" note steps aside at this width rather than clip (the
+     buttons' one size is the law) */
+  .lrd-shade .lrd-shade-note{display:none}
   .lrd-float{left:8px;right:8px;width:auto}
   .lrd-rejoin{left:8px;right:8px;max-width:none}
+  /* the ask pair cannot share a row at 390 without clipping "Leave the
+     reading" — the pair stacks, each button full-width, text still one
+     line (item 3's one-size law kept) */
+  .lrd-ask-buttons{flex-direction:column}
   /* ruling B / item 6 — while the strip shows, the page grows bottom
      padding of 56px strip + 8px gap + the safe-area inset, so the strip
      never covers a page control */
