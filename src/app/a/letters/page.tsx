@@ -275,6 +275,10 @@ export default function LettersRoom() {
   const [copyFor, setCopyFor] = useState<string | null>(null);
   const [copyTo, setCopyTo] = useState("");
   const [copyNote, setCopyNote] = useState("");
+  /* Delete draft: which draft's confirm strip is open, the typed words, its answer */
+  const [deleteFor, setDeleteFor] = useState<string | null>(null);
+  const [deleteWords, setDeleteWords] = useState("");
+  const [deleteNote, setDeleteNote] = useState("");
 
   // TASK-131: the "New letter" composer
   const [composing, setComposing] = useState(false);
@@ -317,7 +321,7 @@ export default function LettersRoom() {
    * existing "as the email renders" preview, Send is a link to the existing
    * send panel (the typed headcount lives there). Letters that send
    * themselves have no Send. */
-  function rowEnd(key: string, fallbackSubject: string, o: { send: boolean; label?: string; main?: boolean }) {
+  function rowEnd(key: string, fallbackSubject: string, o: { send: boolean; label?: string; main?: boolean; remove?: boolean }) {
     return (
       <span className="kit-rows-end kit-rows-pair kitx-even">
         {o.send && (
@@ -350,7 +354,56 @@ export default function LettersRoom() {
             <path d="m22 7-10 6L2 7" />
           </RowIcon>
         </Button>
+        {o.remove && (
+          <Button sm variant="second" onClick={() => openDelete(key)} aria-expanded={deleteFor === key}
+            aria-label="Delete this draft" title="Delete this draft">
+            <RowIcon>
+              <path d="M3 6h18" />
+              <path d="M8 6V4h8v2" />
+              <path d="M19 6l-1 14H6L5 6" />
+            </RowIcon>
+          </Button>
+        )}
       </span>
+    );
+  }
+
+  /* Delete draft (the destructive-action law): a second step that says there
+   * is no going back, the words "yes delete" typed, and the buttons on the
+   * other sides (Delete on the left, Keep it on the right). */
+  function openDelete(key: string) {
+    setDeleteFor(deleteFor === key ? null : key);
+    setDeleteWords("");
+    setDeleteNote("");
+  }
+
+  async function deleteDraft(key: string) {
+    setDeleteNote("Deleting...");
+    const d = await fetch("/api/admin/letters", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key }),
+    }).then((r) => r.json()).catch(() => null);
+    if (d?.ok) {
+      setDeleteFor(null);
+      if (open === key) setOpen(null);
+      setNote("Draft deleted.");
+      refresh();
+    } else setDeleteNote(`Not deleted. ${d?.reason ?? "Try again in a moment."}`);
+  }
+
+  function deleteStrip(key: string, title: string) {
+    return (
+      <div className="kitx-row">
+        <p className="kit-note">Delete the draft &ldquo;{title}&rdquo;? It leaves this room and there is no going back. Type yes delete to go on.</p>
+        <form className="kit-inline-form" onSubmit={(e) => { e.preventDefault(); if (deleteWords.trim().toLowerCase() === "yes delete") deleteDraft(key); }}>
+          <Field id={`delete-${key}`} label="Type yes delete" value={deleteWords}
+            onChange={(e) => setDeleteWords(e.target.value)} placeholder="yes delete" autoComplete="off" />
+          <Button type="submit" sm disabled={deleteWords.trim().toLowerCase() !== "yes delete"}>Delete draft</Button>
+          <Button type="button" sm variant="second" onClick={() => setDeleteFor(null)}>Keep it</Button>
+        </form>
+        {deleteNote && <p className="kit-note">{deleteNote}</p>}
+      </div>
     );
   }
 
@@ -439,8 +492,9 @@ export default function LettersRoom() {
           {subjectLine(c.override?.subject ?? c.title)}
           <em>{draftWhoWords(c.key, c.createdAtMs, weekdayOf, words)}</em>
         </div>
-        {rowEnd(c.key, c.title ?? c.key, { send: false, label: words ? "Review" : "Keep writing", main: words })}
+        {rowEnd(c.key, c.title ?? c.key, { send: false, label: words ? "Review" : "Keep writing", main: words, remove: true })}
         {copyFor === c.key && copyStrip(c.key)}
+        {deleteFor === c.key && deleteStrip(c.key, c.title ?? c.key)}
         {open === c.key && openedRow(c.key, { flip: true, pointer: "Nothing is sent until you press Publish and then send it from its send panel." })}
       </li>
     );
