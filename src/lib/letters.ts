@@ -1,5 +1,6 @@
 import { brandShell, pill, richShell, type LetterSection } from "./mail";
 import { siteBase } from "./subscribers";
+import { isDrafted } from "./letters-drafts";
 /**
  * LETTER TEMPLATES (Letters room, wireframe v2): editable copies of the
  * news-side letters live in the vault; the senders read the override first
@@ -494,6 +495,42 @@ export async function touchLetterMeta(k: string, opts: { publish?: boolean } = {
     next.reviewedAtMs = now;
   }
   await kv(["SET", metaKey(k), JSON.stringify(next)]);
+}
+
+/* Love's "Delete draft" press: a DRAFT leaves the room and its key is
+ * free again. Its words and meta are never erased: they move to one kept
+ * record at letters:removed:<key> (a key used twice keeps a list), so a
+ * press by mistake can be put back by hand. Published letters and seeded
+ * ones are refused; the route also refuses a letter riding an automatic
+ * send slot. */
+const removedKey = (k: string) => `letters:removed:${k}`;
+
+export interface RemovedLetter {
+  key: string;
+  removedAtMs: number;
+  meta: ComposedLetterMeta | null;
+  override: LetterOverride | null;
+}
+
+export async function removeDraftLetter(k: string): Promise<RemovedLetter> {
+  const keys = await composedLetterKeys();
+  if (!keys.includes(k)) throw new Error("only a letter you composed can be deleted");
+  const meta = await getLetterMeta(k);
+  if (!isDrafted(k, meta)) throw new Error("only a draft can be deleted; this letter is published");
+  const entry: RemovedLetter = { key: k, removedAtMs: Date.now(), meta, override: await getLetterOverride(k) };
+  let kept: RemovedLetter[] = [];
+  try {
+    const raw = (await kv(["GET", removedKey(k)])) as string | null;
+    kept = raw ? (JSON.parse(raw) as RemovedLetter[]) : [];
+  } catch {
+    kept = [];
+  }
+  /* the kept copy is written FIRST: if a later write fails, the words are safe */
+  await kv(["SET", removedKey(k), JSON.stringify([...kept, entry])]);
+  await kv(["SET", COMPOSED, JSON.stringify(keys.filter((x) => x !== k))]);
+  await kv(["DEL", metaKey(k)]);
+  await saveLetterOverride(k, null);
+  return entry;
 }
 
 /** Every letter key: the seeded nine first, then Love's own in creation order. */
