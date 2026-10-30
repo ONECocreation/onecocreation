@@ -8,9 +8,11 @@ const nextConfig: NextConfig = {
      NextConfig.outputFileTracingIncludes, Next 16.3.5). */
   outputFileTracingIncludes: {
     "/meditation/download": ["./public/audio/unzip-into-the-new-you.mp3"],
+    /* /style/reference/[slug] reads the capture's page markdown at runtime;
+       the key is a glob, so "[slug]" would be read as a character class. */
+    "/style/reference/*": ["./docs/shinepages-recon/**/*.md"],
     /* /api/recon-img reads the ShinePages capture shots/assets at runtime
        (path is dynamic, so scope the trace to just those two folders). */
-    "/style/reference/*": ["./docs/shinepages-recon/**/*.md"],
     "/api/recon-img": [
       "./docs/shinepages-recon/shots/**/*",
       "./docs/shinepages-recon/assets/**/*",
