@@ -532,7 +532,10 @@ describe("the page source gains only the mount (one import, one bare <ReadingDay
     expect(src).toContain('import ReadingDay from "@/components/reading/ReadingDay"');
     const mounts = [...src.matchAll(/<ReadingDay(\s*\/>|\s[^>]*\/>)/g)];
     expect(mounts.length).toBe(2);
-    expect(mounts[0][0]).toBe("<ReadingDay />"); // no props threaded from the page
+    /* TASK-616: the one prop the page threads - showAgenda=false on a
+       hidden-agenda day, so the dated-events "Coming up" card can stand
+       alone (the section then rides `agendaOn || comingUpOn`). */
+    expect(mounts[0][0]).toBe("<ReadingDay showAgenda={agendaOn} />");
     expect(mounts[1][0]).toBe("<ReadingDay ahead />"); // T-559: the one flag, nothing else
   });
 

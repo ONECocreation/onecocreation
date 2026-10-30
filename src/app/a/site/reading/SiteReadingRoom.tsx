@@ -3,6 +3,7 @@
 import { SectionHead } from "@/components/console/glass";
 import { useCallback, useState } from "react";
 import ReadingScheduleCard from "./ReadingScheduleCard";
+import DatedEventsCard from "./DatedEventsCard";
 import RoomsCard from "./RoomsCard";
 import { DOORS } from "./rooms-config";
 import type { PartSwitchKey } from "./PartSwitchCard";
@@ -51,6 +52,10 @@ export default function SiteReadingRoom() {
     <div className="p-6" style={{ maxWidth: 860 }}>
       <SectionHead label="Day, time, zone" />
       <ReadingScheduleCard onSwitchValue={onSwitchValue} />
+      {/* TASK-616 (K176): the one-off dated events ("Coming up"), rows in
+          the same style right under the T-614 switch rows */}
+      <SectionHead label="Coming up: one-off dates" />
+      <DatedEventsCard />
       <SectionHead label="The rooms" />
       <RoomsCard doors={DOORS} switches={switches} />
     </div>

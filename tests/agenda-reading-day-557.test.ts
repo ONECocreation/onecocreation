@@ -128,8 +128,12 @@ describe("TASK-557 /reading's own source", () => {
 
   it("the agenda's SECTION rides the decision, so the other days leave no empty band", async () => {
     const src = await read("src/app/reading/page.tsx");
-    expect(src).toMatch(/\{agendaOn && \(\s*<section className="kitx-section">\s*<div className="wrap">\s*<ReadingDay \/>\s*<\/div>\s*<\/section>\s*\)\}/);
-    expect(src.match(/<ReadingDay \/>/g)?.length).toBe(1);
+    /* TASK-616: the section also stands for the dated-events "Coming up"
+       card on a hidden-agenda day (agendaOn || comingUpOn), and the mount
+       carries the one showAgenda prop - the empty-band law is unchanged:
+       no agenda and no events still renders no section at all. */
+    expect(src).toMatch(/\{\(agendaOn \|\| comingUpOn\) && \(\s*<section className="kitx-section">\s*<div className="wrap">\s*\{\/\*[\s\S]*?\*\/\}\s*<ReadingDay showAgenda=\{agendaOn\} \/>\s*<\/div>\s*<\/section>\s*\)\}/);
+    expect(src.match(/<ReadingDay showAgenda=\{agendaOn\} \/>/g)?.length).toBe(1);
   });
 
   it("the sign-up box (now at the foot of the page, T-618) is not touched by the decision (it works without a date, K122 item 13)", async () => {

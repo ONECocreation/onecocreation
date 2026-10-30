@@ -244,6 +244,138 @@ export function buyAheadShows(agendaOn: boolean, signedIn: boolean, hasNext: boo
 }
 
 /**
+ * TASK-616 (K176, Love's mail #86): "Add more dates to the 'coming up' and
+ * add these events to the Calendar on the site." The weekly rule above
+ * cannot say "a reading on a SUNDAY this once," "only one event this week,
+ * due to travel," or "a full day of four parts on November 8" - its own
+ * CONTRACT defers exactly that ("skipping one week, or a single one-off
+ * date, cannot be expressed by this shape"). This is that shape: a short
+ * list of ONE-OFF DATED events, stored on the site-config doc as
+ * `readingEvents`, edited by Love from /a/site/reading, and read by
+ * /reading's "Coming up" card and by the calendar marks.
+ *
+ * An event is a CIVIL DATE plus an OPTIONAL wall clock, both in the
+ * schedule's own zone - never a UTC instant: "January 5" (the Weekly
+ * Intuitive membership opens, no clock) is a whole-day note, and a
+ * 12:12/1:11/2:22/3:33 reads exactly as she wrote it, MDT/MST handled by
+ * the zone like every other reading time on the site.
+ */
+export interface ReadingDatedEvent {
+  /** "YYYY-MM-DD" - the civil date in the schedule's zone. */
+  date: string;
+  /** "HH:MM", 24-hour wall clock in the same zone; ABSENT = a whole-day
+   *  note with no clock (the "January 5" membership opening). */
+  time?: string;
+  /** the event's own words - "Read with Love", "The Housewarming". */
+  title: string;
+  /** a quiet line under the title - "Only one event this week, due to
+   *  travel." */
+  note?: string;
+  /** one optional button - { "Submit your questions here", "/contact" }.
+   *  Internal hrefs only (a leading "/"), the KNOWN_NAV_HREFS law's own
+   *  rule: a hand-edited doc can never grow an external door. */
+  action?: { label: string; href: string };
+}
+
+const DATE_ISO = /^\d{4}-\d{2}-\d{2}$/;
+
+/** a real calendar date, not just a shaped one (2026-02-31 fails) */
+function isRealDate(date: string): boolean {
+  if (!DATE_ISO.test(date)) return false;
+  const [y, m, d] = date.split("-").map(Number);
+  const probe = new Date(Date.UTC(y, m - 1, d));
+  return probe.getUTCFullYear() === y && probe.getUTCMonth() === m - 1 && probe.getUTCDate() === d;
+}
+
+/**
+ * Runtime check of a `readingEvents` list - the validateReadingSchedule
+ * sibling, same contract: `reason` is one plain sentence Love can read
+ * (the route refusal returns it untouched). An empty list is valid (the
+ * saved "no one-off dates" state).
+ */
+export function validateReadingDatedEvents(
+  raw: unknown,
+): { ok: true; value: ReadingDatedEvent[] } | { ok: false; reason: string } {
+  if (!Array.isArray(raw)) return { ok: false, reason: "the dated events must be a list" };
+  const out: ReadingDatedEvent[] = [];
+  for (const [i, v] of raw.entries()) {
+    if (!v || typeof v !== "object") return { ok: false, reason: `event ${i + 1} isn't an object` };
+    const o = v as Record<string, unknown>;
+    if (typeof o.date !== "string" || !isRealDate(o.date)) {
+      return { ok: false, reason: `event ${i + 1}: the date must be a real date, YYYY-MM-DD` };
+    }
+    if (o.time !== undefined && (typeof o.time !== "string" || !HHMM_24H.test(o.time))) {
+      return { ok: false, reason: `event ${i + 1}: the time must be HH:MM in 24-hour time, or left empty for a whole-day note` };
+    }
+    if (typeof o.title !== "string" || !o.title.trim()) {
+      return { ok: false, reason: `event ${i + 1}: a title is required` };
+    }
+    if (o.note !== undefined && typeof o.note !== "string") {
+      return { ok: false, reason: `event ${i + 1}: the note must be words` };
+    }
+    let action: ReadingDatedEvent["action"];
+    if (o.action !== undefined) {
+      const a = o.action as Record<string, unknown> | null;
+      if (!a || typeof a !== "object") return { ok: false, reason: `event ${i + 1}: the button isn't an object` };
+      if (typeof a.label !== "string" || !a.label.trim()) {
+        return { ok: false, reason: `event ${i + 1}: the button needs its words` };
+      }
+      if (typeof a.href !== "string" || !a.href.startsWith("/") || a.href.startsWith("//")) {
+        return { ok: false, reason: `event ${i + 1}: the button's link must be a page on this site (start with /)` };
+      }
+      action = { label: a.label.trim().slice(0, 60), href: a.href.slice(0, 120) };
+    }
+    out.push({
+      date: o.date,
+      ...(o.time !== undefined ? { time: o.time as string } : {}),
+      title: (o.title as string).trim().slice(0, 80),
+      ...(typeof o.note === "string" && o.note.trim() ? { note: o.note.trim().slice(0, 160) } : {}),
+      ...(action ? { action } : {}),
+    });
+  }
+  return { ok: true, value: out.slice(0, 24) };
+}
+
+/** One dated event with its start instant derived - `startsAtMs` is null
+ *  for a whole-day note (no clock to derive). */
+export interface UpcomingDatedEvent extends ReadingDatedEvent {
+  startsAtMs: number | null;
+}
+
+/**
+ * The dated events still to come, as of `nowMs`, in the schedule's own
+ * zone. An event shows through its WHOLE civil day - the same "the whole
+ * day counts" law isReadingDay keeps (a 3:33 Q&A must not vanish from
+ * "Coming up" at 3:34 while the day is still going). Sorted by date,
+ * then by clock, a whole-day note after that day's timed events.
+ * Assumes validated input (validateReadingDatedEvents at every
+ * boundary); a malformed entry is skipped, never invented.
+ */
+export function upcomingDatedEvents(
+  events: ReadingDatedEvent[],
+  nowMs: number,
+  tz: string,
+): UpcomingDatedEvent[] {
+  if (!Number.isFinite(nowMs) || !isValidTz(tz)) return [];
+  const { date: today } = zonedDateParts(new Date(nowMs), tz);
+  const out: UpcomingDatedEvent[] = [];
+  for (const e of events) {
+    if (!isRealDate(e.date) || e.date < today) continue;
+    let startsAtMs: number | null = null;
+    if (e.time && HHMM_24H.test(e.time)) {
+      const [y, m, d] = e.date.split("-").map(Number);
+      const [hh, mm] = e.time.split(":").map(Number);
+      const ms = wallClockToUtc(y, m, d, hh, mm, tz).getTime();
+      if (Number.isNaN(ms)) continue;
+      startsAtMs = ms;
+    }
+    out.push({ ...e, startsAtMs });
+  }
+  out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : (a.time ?? "99") < (b.time ?? "99") ? -1 : 1));
+  return out;
+}
+
+/**
  * Every occurrence whose START instant lies in `[fromMs, toMs)` (TASK-385,
  * the calendar mark) — a calendar pill belongs to the day a reading
  * STARTS, never to a second day it runs into (a reading that starts

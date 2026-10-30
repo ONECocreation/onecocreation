@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
-import { getSiteConfig, saveSiteConfig, aboutPatchError, replaysPatchError, roomsPatchError, type SiteConfigPatch } from "@/lib/site-config";
+import { getSiteConfig, saveSiteConfig, aboutPatchError, replaysPatchError, roomsPatchError, readingEventsPatchError, type SiteConfigPatch } from "@/lib/site-config";
 import { validateReadingSchedule } from "@/lib/reading-schedule";
 import { btcpayAdapter, squareAdapter } from "@/lib/payments";
 
@@ -147,6 +147,11 @@ export async function PUT(request: Request) {
   }
   if ("qa" in patch) {
     const reason = qaPatchError((patch as Record<string, unknown>).qa);
+    if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
+  }
+  /* TASK-616: the dated-events list, refused IN WORDS the same way */
+  if ("readingEvents" in patch) {
+    const reason = readingEventsPatchError((patch as Record<string, unknown>).readingEvents);
     if (reason) return NextResponse.json({ ok: false, reason }, { status: 400 });
   }
   if ("replaysAutoSend" in patch) {

@@ -17,8 +17,8 @@ import { ROOMS } from "@/lib/matrix-rooms";
 import WeekAltitude from "./desk/WeekAltitude";
 import DayAltitude from "./desk/DayAltitude";
 import { buildDeskMarks, civilKeyOf } from "./desk/marks";
-import { mergeDayMarks, readingDeskMarksLookup } from "@/components/calendar/reading-marks";
-import { useReadingSchedule } from "@/components/calendar/useReadingSchedule";
+import { mergeDayMarks, readingDeskMarksLookup, datedEventsMarksLookup } from "@/components/calendar/reading-marks";
+import { useReadingDatedEvents, useReadingSchedule } from "@/components/calendar/useReadingSchedule";
 import type { DeskFeed, DeskRoom } from "./desk/types";
 import "./desk/loves-desk.css";
 
@@ -193,9 +193,18 @@ function DeskInner() {
      Built ONCE here and handed to Week too, so Month and Week never
      disagree. Reading first so it survives DayCell's two-pill cap. */
   const readingSchedule = useReadingSchedule();
+  /* TASK-616 (K176): the one-off dated events ride between the weekly
+     reading pill and the bookings - a full day like Nov 8 (four events)
+     outgrows DayCell's two-pill default, so the month grid below asks for
+     the same room the member calendar already does. */
+  const datedEvents = useReadingDatedEvents();
   const monthMarks = useMemo(
-    () => mergeDayMarks(readingDeskMarksLookup(readingSchedule), buildDeskMarks(feed, { todayCivilKey, liveNowRoomSlug })),
-    [readingSchedule, feed, todayCivilKey, liveNowRoomSlug],
+    () => mergeDayMarks(
+      readingDeskMarksLookup(readingSchedule),
+      datedEventsMarksLookup(datedEvents, readingSchedule?.tz ?? "America/Denver"),
+      buildDeskMarks(feed, { todayCivilKey, liveNowRoomSlug }),
+    ),
+    [readingSchedule, datedEvents, feed, todayCivilKey, liveNowRoomSlug],
   );
 
   function stepMonth(dir: -1 | 1) {
@@ -277,6 +286,7 @@ function DeskInner() {
             bftYear={bftYear}
             bftMonth={bftMonth}
             marks={monthMarks}
+            maxPills={6}
             onSelectDay={(cell) => jumpToDay(cell.bftDay)}
             onSelectPill={handleSelectPill}
           />

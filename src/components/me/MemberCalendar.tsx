@@ -12,8 +12,8 @@ import {
   type CalendarDayMarks,
   type CalendarDayMarksLookup,
 } from "@/components/calendar";
-import { useBookTalkQaOn, useHousewarmingOn, useReadingSchedule } from "@/components/calendar/useReadingSchedule";
-import { readingDayPartsMarksLookup, mergeDayMarks } from "@/components/calendar/reading-marks";
+import { useBookTalkQaOn, useHousewarmingOn, useReadingDatedEvents, useReadingSchedule } from "@/components/calendar/useReadingSchedule";
+import { datedEventsMarksLookup, readingDayPartsMarksLookup, mergeDayMarks } from "@/components/calendar/reading-marks";
 
 /** TASK-480 — the calendar shows all FOUR reading-day parts (see
  *  readingDayPartsMarksLookup) plus this member's own bookings; that can
@@ -84,6 +84,8 @@ export default function MemberCalendar() {
   const housewarmingOn = useHousewarmingOn();
   /* TASK-614 - the Book Talk and Q&A switches, same public GET */
   const { bookTalkOn, qaOn } = useBookTalkQaOn();
+  /* TASK-616 - the one-off dated events ("Coming up"), same public GET */
+  const datedEvents = useReadingDatedEvents();
 
   const today = useMemo(() => bftToday(nowMs), [nowMs]);
   const [bftYear, setBftYear] = useState(today.year);
@@ -115,8 +117,16 @@ export default function MemberCalendar() {
      fetch says otherwise) drops the part-1 pill in a no-Housewarming
      week. */
   const marks = useMemo(
-    () => mergeDayMarks(readingDayPartsMarksLookup(readingSchedule, housewarmingOn, bookTalkOn, qaOn), buildBookingMarks(bookings)),
-    [bookings, readingSchedule, housewarmingOn, bookTalkOn, qaOn],
+    () => mergeDayMarks(
+      readingDayPartsMarksLookup(readingSchedule, housewarmingOn, bookTalkOn, qaOn),
+      /* TASK-616 - the dated events ride right after the weekly parts
+         (reading family first, bookings last), the schedule's own zone
+         (falling back to Denver while the schedule fetch is unresolved -
+         the events' own dates are the match, only the pill clock waits). */
+      datedEventsMarksLookup(datedEvents, readingSchedule?.tz ?? "America/Denver"),
+      buildBookingMarks(bookings),
+    ),
+    [bookings, readingSchedule, housewarmingOn, bookTalkOn, qaOn, datedEvents],
   );
 
   function stepMonth(dir: -1 | 1) {

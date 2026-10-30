@@ -16,7 +16,7 @@ import ReadingDay from "@/components/reading/ReadingDay";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { getSiteConfig } from "@/lib/site-config";
 import { nextReading, dayAgendaShows, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
-import { buyAheadShows } from "@/lib/reading-schedule";
+import { buyAheadShows, upcomingDatedEvents } from "@/lib/reading-schedule";
 import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt, clockWords } from "@/lib/reading-day";
 /* TASK-557: its own line, so the line above stays the one tests/reading-page.test.ts pins (S8) */
 import { opensWords } from "@/lib/reading-day";
@@ -320,6 +320,12 @@ export default async function ReadingPage({
      reading-schedule.ts (`dayAgendaShows`), read against the SAME clock
      read (`asOfMs`) everything else on this page uses. */
   const agendaOn = dayAgendaShows(schedule, asOfMs, anyDoorOpen);
+  /* TASK-616 (K176, Love's mail #86): the one-off dated events show even
+     on a day the agenda is hidden - the travel week's "Coming up" card is
+     the whole point. ReadingDay re-derives the same list server-side;
+     this read only decides whether the SECTION stands (T-557's empty-
+     section law carries over). */
+  const comingUpOn = upcomingDatedEvents(config.readingEvents ?? [], asOfMs, schedule.tz).length > 0;
   /* TASK-559 (block 970,084): a signed-in visitor on a day the agenda is
      hidden still gets the two paid rows, ahead of time ("Coming up"). */
   /* TASK-614: the buy-ahead card holds only the two paid rows - with both
@@ -481,10 +487,12 @@ export default async function ReadingPage({
               only the card - an empty kitx-section would still draw its
               padding and its dashed line, a blank band between the
               sign-up box and the replays. */}
-          {agendaOn && (
+          {(agendaOn || comingUpOn) && (
             <section className="kitx-section">
               <div className="wrap">
-                <ReadingDay />
+                {/* TASK-616: showAgenda=false on a hidden-agenda day - the
+                    "Coming up" dated-events card stands alone then. */}
+                <ReadingDay showAgenda={agendaOn} />
               </div>
             </section>
           )}
