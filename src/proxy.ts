@@ -20,7 +20,7 @@ import { hasValidSessionEdge } from "@/lib/member-auth-edge";
  * a₿): migrated off the fren-auth-edge.ts compat shim — this is the only
  * caller, no reason to leave it on the compat path.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const hasSession = await hasValidSessionEdge(request.headers.get("cookie"));
   const to = roomsDoorRedirect(request.nextUrl.pathname, hasSession);
   if (!to) return NextResponse.next();

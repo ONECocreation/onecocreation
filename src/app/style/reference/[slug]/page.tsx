@@ -100,7 +100,7 @@ export default async function ReferencePage({
   const entry = reconPage(slug);
   if (!entry) notFound();
 
-  const md = await readFile(join(process.cwd(), RECON_ROOT, entry.md), "utf8").catch(() => null);
+  const md = await readFile(join(/*turbopackIgnore: true*/ process.cwd(), RECON_ROOT, entry.md), "utf8").catch(() => null);
   const t = await ourTokens();
 
   const typeRows: PairRow[] = [

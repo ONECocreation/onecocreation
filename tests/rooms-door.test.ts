@@ -15,8 +15,8 @@ describe("the rooms are for signed-in souls (middleware door)", () => {
     expect(roomsDoorRedirect("/", false)).toBeNull();
     expect(roomsDoorRedirect("/store/meditations", false)).toBeNull();
   });
-  it("the middleware matches exactly the rooms and /live, and reads the house cookie", () => {
-    const src = readFileSync("src/middleware.ts", "utf8");
+  it("the proxy matches exactly the rooms and /live, and reads the house cookie", () => {
+    const src = readFileSync("src/proxy.ts", "utf8");
     expect(src).toContain('"/rooms/:path*"');
     expect(src).toContain('"/live"');
     expect(src).toContain('"pa-fren"');
