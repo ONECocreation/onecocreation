@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
     "/meditation/download": ["./public/audio/unzip-into-the-new-you.mp3"],
     /* /api/recon-img reads the ShinePages capture shots/assets at runtime
        (path is dynamic, so scope the trace to just those two folders). */
-    "/style/reference/[slug]": ["./docs/shinepages-recon/**/*.md"],
+    "/style/reference/*": ["./docs/shinepages-recon/**/*.md"],
     "/api/recon-img": [
       "./docs/shinepages-recon/shots/**/*",
       "./docs/shinepages-recon/assets/**/*",
