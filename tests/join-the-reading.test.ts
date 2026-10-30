@@ -35,12 +35,10 @@ describe("the join-the-reading door, re-pointed to /reading (TASK-178 → TASK-4
     expect(door!.href).not.toContain("/rooms/");
   });
 
-  it("the words follow the SCHEDULE — weekday, clock and free — never a tier's name", async () => {
+  it("the words follow the SCHEDULE — clock and zone — never a tier's name", async () => {
     const { weeklyReadingDoor } = await import("@/components/sections");
     const door = weeklyReadingDoor(TUESDAY)!;
-    expect(door.words).toContain("Every Tuesday");
-    expect(door.words).toContain("9:45 AM");
-    expect(door.words).toContain("free");
+    expect(door.words).toBe("Read every weekend at 9:45 AM Mountain. The Heart Field holds the schedule.");
     expect(door.words).not.toContain("Observer");
     expect(door.words).not.toContain("membership");
   });
@@ -57,7 +55,7 @@ describe("the hero render (TASK-178, re-trued TASK-437)", () => {
     const { Hero } = await import("@/components/sections");
     const html = renderToStaticMarkup(createElement(Hero, { reading: TUESDAY }));
     const meditation = html.indexOf("Receive the Free Meditation");
-    const words = html.indexOf("Every Tuesday");
+    const words = html.indexOf("Read every weekend");
     const reading = html.indexOf("Join the Weekly Reading");
     expect(meditation).toBeGreaterThan(-1);
     expect(words).toBeGreaterThan(-1);

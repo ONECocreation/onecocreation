@@ -82,16 +82,6 @@ export interface VisitorSession {
   tier?: Tier | null;
 }
 
-/** The weekday's own name, derived the way /reading prints it (Intl's long
- *  weekday, reading/page.tsx:42-44) but from the schedule's INDEX alone —
- *  pure, no clock read: the epoch fell on a Thursday, so `(weekday - 4)`
- *  days from it lands on a civil day carrying the schedule's weekday, and
- *  UTC formatting reads its name back. */
-function weekdayName(weekday: number): string {
-  return new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: "UTC" })
-    .format(new Date((weekday - 4) * 86_400_000));
-}
-
 /** "1:11 PM" — schedule.time IS the wall clock in schedule.tz, so the words
  *  are string-derived straight from it, never an Intl round-trip through an
  *  instant (and never a DST question). */
@@ -122,7 +112,7 @@ export function weeklyReadingDoor(
   const s = checked.value;
   return {
     href: "/reading",
-    words: `Every ${weekdayName(s.weekday)} at ${clockWords(s.time)} ${FRIENDLY_ZONE[s.tz] ?? s.tz}. Live with Love, free.`,
+    words: `Read every weekend at ${clockWords(s.time)} ${FRIENDLY_ZONE[s.tz] ?? s.tz}. The Heart Field holds the schedule.`,
   };
 }
 
