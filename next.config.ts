@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
      NextConfig.outputFileTracingIncludes, Next 16.3.5). */
   outputFileTracingIncludes: {
     "/meditation/download": ["./public/audio/unzip-into-the-new-you.mp3"],
+    /* /api/recon-img reads the ShinePages capture shots/assets at runtime
+       (path is dynamic, so scope the trace to just those two folders). */
+    "/api/recon-img": [
+      "./docs/shinepages-recon/shots/**/*",
+      "./docs/shinepages-recon/assets/**/*",
+    ],
   },
   /* API routes require a server runtime; the old `output: 'export'` static
      export is retired along with the Plesk deploy. */
