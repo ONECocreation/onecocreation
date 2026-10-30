@@ -39,7 +39,7 @@ function dayLabel(date: string, tz: string): string {
   }).format(new Date(ms));
 }
 
-/** "1:11 PM MDT" - the schedule's own zone names itself (MDT/MST), the
+/** "1:11 PM Mountain Time" - the schedule's own zone names itself (Mountain Time), the
     exact wallClockToUtc derivation the public "Coming up" card makes, so
     her desk row and the site never word a clock differently. */
 function clockLabel(date: string, time: string, tz: string): string {
@@ -47,7 +47,7 @@ function clockLabel(date: string, time: string, tz: string): string {
   const [hh, mm] = time.split(":").map(Number);
   const ms = wallClockToUtc(y, m, d, hh, mm, tz).getTime();
   return new Intl.DateTimeFormat("en-US", {
-    timeZone: tz, hour: "numeric", minute: "2-digit", hour12: true, timeZoneName: "short",
+    timeZone: tz, hour: "numeric", minute: "2-digit", hour12: true, timeZoneName: "longGeneric",
   }).format(new Date(ms));
 }
 
@@ -217,7 +217,7 @@ export default function DatedEventsCard() {
       <div className="kit-switch-row">
         <div className="kit-switch-row-text">
           <b>What time</b>
-          <span> - the schedule&apos;s own zone (Mountain prints as MDT in summer, MST in winter). Empty = a whole-day note.</span>
+          <span> - the schedule&apos;s own zone (Mountain prints as Mountain Time all year). Empty = a whole-day note.</span>
         </div>
         <input
           type="time"
