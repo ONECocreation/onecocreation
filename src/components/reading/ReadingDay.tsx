@@ -3,12 +3,13 @@ import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { tierForSubject } from "@/lib/member-tier";
 import { tierSatisfies, type Tier } from "@/lib/entitlement";
 import { getSiteConfig } from "@/lib/site-config";
-import { nextReading, DEFAULT_READING_SCHEDULE, type ReadingSchedule } from "@/lib/reading-schedule";
+import { nextReading, DEFAULT_READING_SCHEDULE, upcomingDatedEvents, type ReadingDatedEvent, type ReadingSchedule } from "@/lib/reading-schedule";
 import { STAGE2_MIN_TIER } from "@/lib/stage2-access";
 import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt } from "@/lib/reading-day";
 import { encoreFloorDoor, qaDoor } from "@/lib/reading-day-doors";
 import { qaEntitled } from "@/lib/qa-entitlement";
 import ReadingDayBody from "./ReadingDayBody";
+import type { EncoreFloorDoor, QaDoor } from "@/lib/reading-day-doors";
 
 /**
  * THE READING DAY BRICK'S SERVER WRAPPER (TASK-467, block 968,561) — the
@@ -39,7 +40,11 @@ function deriveNext(schedule: ReadingSchedule) {
   return schedule.on ? nextReading(schedule, Date.now()) : null;
 }
 
-export default async function ReadingDay({ ahead = false }: { ahead?: boolean } = {}) {
+function deriveComingUp(events: ReadingDatedEvent[], tz: string) {
+  return upcomingDatedEvents(events, Date.now(), tz);
+}
+
+export default async function ReadingDay({ ahead = false, showAgenda = true }: { ahead?: boolean; showAgenda?: boolean } = {}) {
   const session = sessionsFromCookieHeader((await headers()).get("cookie"))[0] ?? null;
 
   const config = await getSiteConfig();
@@ -55,7 +60,34 @@ export default async function ReadingDay({ ahead = false }: { ahead?: boolean } 
   const bookTalkOn = config.bookTalk !== false;
   const qaOn = config.qa !== false;
   const next = deriveNext(schedule);
-  if (!next) return null;
+  /* TASK-616 (K176): the one-off dated events ride even when there is no
+     next weekly reading at all - the travel week's "Coming up" card is
+     the whole point, so this read happens BEFORE the !next early return.
+     The buy-ahead card keeps its own shape (no events list inside it). */
+  const comingUp = ahead ? undefined : deriveComingUp(config.readingEvents ?? [], schedule.tz);
+  if (!next) {
+    if (!comingUp || comingUp.length === 0) return null;
+    /* the agenda card is skipped (showAgenda false), so the door props are
+       never read - typed placeholders, named honestly, never rendered. */
+    const emptyFloor: EncoreFloorDoor = { tier: STAGE2_MIN_TIER, name: "", itemId: "", href: "/memberships", price: null, passLive: false };
+    const emptyQa: QaDoor = { itemId: "", passLive: false, price: null, eveningStar: { name: "", price: null, href: "/memberships" } };
+    return (
+      <ReadingDayBody
+        tz={schedule.tz}
+        housewarmingStartsAtMs={null}
+        readingStartsAtMs={0}
+        encoreStartsAtMs={null}
+        qaStartsAtMs={null}
+        signedIn={!!session}
+        encoreEntitled={false}
+        encoreFloor={emptyFloor}
+        qaEntitled={false}
+        qaOffer={emptyQa}
+        comingUp={comingUp}
+        showAgenda={false}
+      />
+    );
+  }
   /* TASK-614: the buy-ahead card holds only the two paid rows; with both
      switched off it has nothing to show. */
   if (ahead && !bookTalkOn && !qaOn) return null;
@@ -92,6 +124,8 @@ export default async function ReadingDay({ ahead = false }: { ahead?: boolean } 
       qaEntitled={hasQaAccess}
       qaOffer={qaOffer}
       ahead={ahead}
+      comingUp={comingUp}
+      showAgenda={showAgenda}
     />
   );
 }

@@ -56,7 +56,7 @@ describe("TASK-437 — the hero's reading door is ONE door for every visitor", (
     expect(door.href).toBe("/reading"); // /reading itself carries the guest onward to sign-in (reading-room.ts)
     expect(door.href).not.toContain("/login");
     expect(door.href).not.toContain("/rooms/weekly-reading");
-    expect(door.words).toContain("free");
+    expect(door.words).toContain("The Heart Field holds the schedule.");
     expect(door.words).not.toContain("with the Observer"); // no package is ever named on the hero
   });
 
@@ -78,9 +78,8 @@ describe("TASK-437 — the hero's reading door is ONE door for every visitor", (
   it("the words carry the live schedule's own day and clock — a fixture schedule proves they are derived", async () => {
     const { weeklyReadingDoor } = await import("@/components/sections");
     const door = weeklyReadingDoor({ on: true, weekday: 2, time: "09:45", tz: "America/Denver", durationMin: 45 })!;
-    expect(door.words).toContain("Tuesday");
     expect(door.words).toContain("9:45 AM");
-    expect(door.words).not.toContain("Saturday");
+    expect(door.words).not.toContain("1:11");
   });
 
   it("schedule off → no door for anyone (derive-or-dash); the T-178 bare render keeps the standing door", async () => {

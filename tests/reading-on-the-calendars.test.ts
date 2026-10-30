@@ -205,7 +205,10 @@ describe("TASK-551 Love's Desk shows the weekly reading", () => {
   it("the desk wiring merges reading marks (reading first) and hands the SAME marks to Week", async () => {
     const desk = await read("src/components/console/LovesDesk.tsx");
     expect(desk).toContain("useReadingSchedule()");
-    expect(desk).toMatch(/mergeDayMarks\(readingDeskMarksLookup\(readingSchedule\), buildDeskMarks\(/);
+    /* TASK-616: the dated-events lookup rides between the weekly reading
+       pill and the bookings - reading family first, the order is the same
+       load-bearing law mergeDayMarks's own docblock names. */
+    expect(desk).toMatch(/mergeDayMarks\(\s*readingDeskMarksLookup\(readingSchedule\),\s*datedEventsMarksLookup\(datedEvents, readingSchedule\?\.tz \?\? "America\/Denver"\),\s*buildDeskMarks\(/);
     expect(desk).toContain("marks={monthMarks}");
     const week = await read("src/components/console/desk/WeekAltitude.tsx");
     expect(week).toContain("marks: marksIn");

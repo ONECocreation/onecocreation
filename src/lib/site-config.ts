@@ -8,6 +8,7 @@ import { SPACE_NAME, domainForSpace } from "./identity-config.ts";
 import { YOUTUBE_ID_RE } from "./youtube-id.ts";
 import type { AboutVideo } from "./about-content.ts";
 import { validateReadingSchedule, type ReadingSchedule } from "./reading-schedule.ts";
+import { validateReadingDatedEvents, type ReadingDatedEvent } from "./reading-schedule.ts";
 import { isOpenNavHref } from "./nav-edit.ts";
 
 /**
@@ -179,6 +180,12 @@ export interface SiteConfig {
   bookTalk?: boolean;
   /** TASK-614: the Q&A with Love (Part 4) switch, same rule as bookTalk. */
   qa?: boolean;
+  /** TASK-616 (K176, Love's mail #86): the one-off dated events of the
+      "Coming up" card on /reading, edited from /a/site/reading. Absent =
+      none published; a saved EMPTY list is a real saved state
+      (sanitizeReadingEvents keeps it); a malformed doc drops to absent.
+      The weekly `reading` rule is untouched - this list rides beside it. */
+  readingEvents?: ReadingDatedEvent[];
   /** T-638 (block 972,735): the replays catch-up letter's kill switch, set
       from /a/site/reading. ABSENT MEANS ON: the letter goes to the whole
       list on its own the day a replay is added (his A, block 972,725).
@@ -235,6 +242,9 @@ export type SiteConfigPatch = {
   qa?: boolean;
   /** T-638: bare boolean like qa; omitted leaves the saved flip alone */
   replaysAutoSend?: boolean;
+  /** TASK-616: whole-list replace, same rule as replays - the desk card
+      always saves its full set; omitted leaves her saved list untouched */
+  readingEvents?: ReadingDatedEvent[];
   /** TASK-387: PARTIAL keyed map, unlike reading/about/nav's whole-object
       rule above — a save carries only the changed slug(s)
       (`{ rooms: { "<slug>": { chat } } }`), and saveSiteConfig merges
@@ -362,6 +372,7 @@ function sanitize(raw: unknown): SiteConfig {
     housewarming: sanitizeHousewarming(o.housewarming),
     bookTalk: sanitizeHousewarming(o.bookTalk),
     qa: sanitizeHousewarming(o.qa),
+    readingEvents: sanitizeReadingEvents(o.readingEvents),
     replaysAutoSend: sanitizeHousewarming(o.replaysAutoSend),
     rooms: sanitizeRooms(o.rooms),
   };
@@ -387,6 +398,28 @@ function sanitizeReading(raw: unknown): ReadingSchedule | undefined {
     (api/admin/site/route.ts). */
 function sanitizeHousewarming(raw: unknown): boolean | undefined {
   return typeof raw === "boolean" ? raw : undefined;
+}
+
+/** TASK-616: the stored dated-events list → known-good rows, or
+    `undefined` when `readingEvents` was never saved or is malformed - the
+    sanitizeReplays rule exactly: a saved EMPTY list survives (the desk's
+    "no one-off dates" is a real saved state), only a missing/malformed
+    doc falls back to absent. The read-side backstop; the route's
+    write-side refusal lives in readingEventsPatchError below. */
+function sanitizeReadingEvents(raw: unknown): ReadingDatedEvent[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const checked = validateReadingDatedEvents(raw);
+  return checked.ok ? checked.value : undefined;
+}
+
+/** TASK-616 - route-side patch validation for the dated-events list, the
+    exact replaysPatchError shape: the /api/admin/site PUT refuses a
+    malformed `readingEvents` patch IN WORDS instead of silently dropping
+    rows on the sanitize round-trip. Returns the refusal reason, or null
+    when the patch is clean. */
+export function readingEventsPatchError(raw: unknown): string | null {
+  const checked = validateReadingDatedEvents(raw);
+  return checked.ok ? null : checked.reason;
 }
 
 /** One playlist entry → known-good, or dropped: the id must be the 11-char
@@ -760,6 +793,9 @@ export async function saveSiteConfig(patch: SiteConfigPatch): Promise<SiteConfig
     // TASK-614: same rule for the Book Talk and Q&A switches
     bookTalk: patch.bookTalk !== undefined ? patch.bookTalk : current.bookTalk,
     qa: patch.qa !== undefined ? patch.qa : current.qa,
+    // TASK-616: same whole-list rule - omitted leaves her saved list untouched;
+    // a saved empty list is a real saved state.
+    readingEvents: patch.readingEvents !== undefined ? patch.readingEvents : current.readingEvents,
     replaysAutoSend: patch.replaysAutoSend !== undefined ? patch.replaysAutoSend : current.replaysAutoSend,
     // TASK-387: PER-SLUG merge, unlike every field above -- a rooms patch
     // never replaces the whole map. Every slug named in the patch

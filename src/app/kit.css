@@ -481,6 +481,19 @@
 /* one button width across the agenda card, whatever the label (Lumen
    L-004, the T-471 brand pass, block 968,624): the widest label fits */
 .kit-day .kit-rows-end>.kit-btn{width:256px;max-width:100%;box-sizing:border-box;text-align:center;padding-left:12px;padding-right:12px}
+/* TASK-616 (K176): the Coming up card's action labels are Love's own words
+   ("Submit your questions here" measures ~277px and clipped in the first
+   shots) and each date group's button stands alone - no stacked siblings to
+   hold one width with - so the 256px above becomes a FLOOR here and a long
+   label grows its own button. SCOPED to .kit-coming-up: the agenda card's
+   buttons keep the one-width look (Lumen L-004). */
+.kit-coming-up .kit-rows-end>.kit-btn{width:auto;min-width:256px}
+/* the dated events card's Edit/Remove pair (the same card's desk side):
+   one shared floor both labels fit inside, the rooms-card Open/Close
+   idiom (above) - buttons in one row keep one width. SCOPED to
+   .kit-dated-events so every other kit-switch-row keeps its natural
+   sizing. */
+.kit-dated-events .kit-switch-row>.kit-btn{min-width:120px;box-sizing:border-box;text-align:center}
 @media (max-width:640px){
   .room-card .kit-rows>li{grid-template-columns:1fr;gap:8px;text-align:center}
   .room-card .kit-rows-end{justify-self:center}

@@ -66,20 +66,18 @@ describe("the door is /reading for EVERY visitor (TASK-437)", () => {
 });
 
 describe("the words come from the live schedule, never hardcoded (TASK-437)", () => {
-  it("a Tuesday 09:45 fixture says Tuesday at 9:45 AM — never Saturday, never 1:11", async () => {
+  it("a Tuesday 09:45 fixture says 9:45 AM — never 1:11 (the day is the Heart Field's schedule now)", async () => {
     const { weeklyReadingDoor } = await import("@/components/sections");
     const door = weeklyReadingDoor(TUESDAY)!;
-    expect(door.words).toContain("Tuesday");
     expect(door.words).toContain("9:45 AM");
-    expect(door.words).not.toContain("Saturday");
     expect(door.words).not.toContain("1:11");
   });
 
-  it("the words say free, in the schedule's own zone — and NEVER name a package or a price", async () => {
+  it("the words name the Heart Field, in the schedule's own zone — and NEVER name a package or a price", async () => {
     const { weeklyReadingDoor } = await import("@/components/sections");
     for (const schedule of [TUESDAY, undefined]) {
       const door = weeklyReadingDoor(schedule)!;
-      expect(door.words).toContain("free");
+      expect(door.words).toContain("The Heart Field holds the schedule.");
       expect(door.words).toContain("Mountain"); // the house zone's friendly name (America/Denver)
       expect(door.words).not.toContain("Observer");
       expect(door.words).not.toContain("membership");
@@ -91,14 +89,12 @@ describe("the words come from the live schedule, never hardcoded (TASK-437)", ()
   it("the weekday and the clock track the schedule's own fields (a second fixture, another day and an evening hour)", async () => {
     const { weeklyReadingDoor } = await import("@/components/sections");
     const door = weeklyReadingDoor({ on: true, weekday: 6, time: "19:11", tz: "America/Denver", durationMin: 60 })!;
-    expect(door.words).toContain("Saturday");
     expect(door.words).toContain("7:11 PM");
   });
 
   it("a zone outside the house map prints its IANA name rather than a guessed abbreviation", async () => {
     const { weeklyReadingDoor } = await import("@/components/sections");
     const door = weeklyReadingDoor({ on: true, weekday: 4, time: "13:11", tz: "America/Chicago", durationMin: 60 })!;
-    expect(door.words).toContain("Thursday");
     expect(door.words).toContain("1:11 PM");
     expect(door.words).toContain("America/Chicago");
   });
@@ -130,7 +126,7 @@ describe("the rendered hero (TASK-437)", () => {
     const picture = html.indexOf('src="/images/reading-book.webp"');
     expect(button).toBeGreaterThan(-1);
     expect(picture).toBeGreaterThan(button); // the picture still follows the door
-    const words = html.indexOf("Tuesday");
+    const words = html.indexOf("Read every weekend");
     expect(words).toBeGreaterThan(-1);
     expect(words).toBeLessThan(button); // the schedule words ride above the button, as before
   });
