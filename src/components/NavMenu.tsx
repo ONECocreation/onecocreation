@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { SiteConfig } from "@/lib/site-config";
 import { READING_PAGE_PATH, READING_ROOM_PATH } from "@/lib/reading-room";
-import { COLLABORATIONS_HREF, COLLABORATIONS_SUBS, DOTERRA_TAB_LABEL, DOTERRA_URL } from "@/lib/collab-tabs";
+import { COLLABORATIONS_HREF, COLLABORATIONS_SUBS, DOTERRA_TAB_LABEL, DOTERRA_URL, PLACEHOLDER_NAV_HREFS } from "@/lib/collab-tabs";
 
 /**
  * The consolidated nav (Admiral, 0018.05.13): main doors with sub-menus, so
@@ -287,6 +287,7 @@ export default function NavMenu() {
               </button>
             ) : (
             <Link className={`nav-link${tabHere(m) ? " is-here" : ""}`} href={m.href}
+              prefetch={PLACEHOLDER_NAV_HREFS.has(m.href) ? false : undefined}
               aria-current={tabHere(m) ? "page" : undefined} onClick={() => setOpen(false)}>
               {m.label}
             </Link>
@@ -295,6 +296,7 @@ export default function NavMenu() {
               <div className="nav-sub">
                 {m.subs.map((s) => (
                   <Link key={s.href} href={s.href} className={here(s.href) ? "is-here" : undefined}
+                    prefetch={PLACEHOLDER_NAV_HREFS.has(s.href) ? false : undefined}
                     aria-current={here(s.href) ? "page" : undefined} onClick={() => setOpen(false)}>
                     {s.label}
                   </Link>

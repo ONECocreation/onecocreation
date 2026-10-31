@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import type { ReactElement } from "react";
-import { COLLABORATIONS_HREF, COLLABORATIONS_SUBS, DOTERRA_TAB_LABEL, DOTERRA_URL } from "@/lib/collab-tabs";
+import { COLLABORATIONS_HREF, COLLABORATIONS_SUBS, DOTERRA_TAB_LABEL, DOTERRA_URL, PLACEHOLDER_NAV_HREFS } from "@/lib/collab-tabs";
 
 /**
  * TASK-137 (0018.06.17 a₿) — the menu Love can shape. Pins:
@@ -499,6 +499,15 @@ describe("TASK-637 — the Collaborations + doTERRA tabs in the default menu", (
     expect(dot).toBeTruthy();
     expect(dot?.subs).toBeUndefined();
     expect(dot?.href).toBe(DOTERRA_URL);
+  });
+
+  it("the placeholder hrefs ride PLACEHOLDER_NAV_HREFS — the nav never prefetches a page that doesn't exist yet", () => {
+    expect(PLACEHOLDER_NAV_HREFS.has(COLLABORATIONS_HREF)).toBe(true);
+    for (const sub of COLLABORATIONS_SUBS.filter((s) => s.href.startsWith("/"))) {
+      expect(PLACEHOLDER_NAV_HREFS.has(sub.href)).toBe(true);
+    }
+    // the external rows (the map link) are never prefetched by Next anyway
+    expect(PLACEHOLDER_NAV_HREFS.has("https://maps.example.com/universally-local")).toBe(false);
   });
 
   it("both tabs render pre-fetch (s === null): no switch gates either of them", () => {

@@ -51,3 +51,14 @@ export const COLLABORATIONS_SUBS: CollabSub[] = [
 
 /** PLACEHOLDER — the Collaborations tab's own landing page. */
 export const COLLABORATIONS_HREF = "/collaborations";
+
+/** The placeholder hrefs (pages not yet built). The nav never prefetches
+    them: a prefetch of a route that doesn't exist yet is wasted traffic,
+    and in headless capture the pending prefetch never settles (measured:
+    the server 404s in 6ms, yet the browser-side prefetch promise hangs,
+    so networkidle waits forever). Drop a row from this set when its page
+    lands. */
+export const PLACEHOLDER_NAV_HREFS: ReadonlySet<string> = new Set([
+  COLLABORATIONS_HREF,
+  ...COLLABORATIONS_SUBS.map((s) => s.href).filter((h) => h.startsWith("/")),
+]);
