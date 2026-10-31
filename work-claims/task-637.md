@@ -17,6 +17,8 @@ WORKTREE: `~/dev/worktrees/task-637-collab-tabs`
 - `src/lib/collab-tabs.ts` (NEW — Love's seam: the two placeholders she replaces)
 - `src/components/NavMenu.tsx` (the two tabs in buildDefaultMenu + the doTERRA click pop-up)
 - `tests/nav-config.test.ts` (the T-637 pins; the T-615 pinned menu order gains two tabs)
+- `tests/site-config.test.ts` (PIN FIX BY NAME, LESSONS 971,280: its default-menu order
+  pin gains the same two tabs — the menu this lane changes is the menu it pins)
 
 READ-ONLY: site-config.ts (KNOWN_NAV_HREFS needs no new entries — isOpenNavHref already
 admits the /collaborations/* paths and https rows, T-620's ruling), nav-edit.ts (the
