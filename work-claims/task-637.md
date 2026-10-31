@@ -24,5 +24,8 @@ READ-ONLY: site-config.ts (KNOWN_NAV_HREFS needs no new entries — isOpenNavHre
 admits the /collaborations/* paths and https rows, T-620's ruling), nav-edit.ts (the
 one-level nesting law stands; "Universally Local" rides as the drop's first row),
 NavEditor.tsx (the board shows the menu as saved; the new tabs reach it through the
-default menu or Love's own rows), house.css (no new rules — the pop-up and the phone
-sheet's scroll cap are scoped inline in NavMenu.tsx, same as the approved mockup).
+default menu or Love's own rows).
+`src/app/house.css` (WIDENED at the design-drift gate: the build lane owns the pop-up's
+real classes — `.doterra-*`, prefixed, no collisions — and the phone sheet's scroll cap;
+the mockup's inline-style carry-over was mockup-only, the drift law is "use a class from
+kit.css or house.css and a token from cartridge.css; never raise the ceiling").
