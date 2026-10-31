@@ -3,7 +3,8 @@
 
 import { SignUpSheetTrigger } from "@/components/reading/SignMeUpSheet";
 import { useCallback, useEffect, useRef, useState } from "react";
-import JitsiRoom from "@/components/booking/JitsiRoom";
+import LiveRoomBridge from "@/components/live/LiveRoomBridge";
+import { useLiveRooms } from "@/components/live/LiveRoomContext";
 import ReadingPartSelectLink from "./ReadingPartSelectLink";
 import { useReadingPart } from "./ReadingPartContext";
 import { READING_COVER_SRC } from "@/lib/reading-cover";
@@ -65,6 +66,16 @@ import { READING_COVER_SRC } from "@/lib/reading-cover";
  *
  * `ReadingStageBody` is the pure presentation (renderToStaticMarkup
  * tests); the default export owns the fetching.
+ *
+ * T-639 (K184, block 972,965 — the Admiral's ruling A): the room no longer
+ * mounts IN this page's tree. The Body renders `LiveRoomBridge` in the
+ * room's old seat; the bridge joins the layout-owned live-room store
+ * (`src/components/live/LiveRoomContext.tsx`) and the DOCK
+ * (`src/components/live/LiveRoomDock.tsx`) holds the real JitsiRoom — so
+ * the room keeps playing, docked, while the guest browses (R-093). The
+ * cover, the chip and the `kit-stage-viewer` seat stay exactly where they
+ * were; `markEnded` (a server-side end) now also dismisses the dock
+ * session — a closed stage is not a leave, so there is no rejoin offer.
  */
 
 export interface ReadingStageProps {
@@ -156,6 +167,10 @@ export interface ReadingStageBodyProps {
   onJoined?: (joined: boolean) => void;
   /** TASK-614: false = no Book Talk this week (default true) */
   bookTalkOn?: boolean;
+  /** T-639 (K184): the dock window's own short title for this part ("the
+   *  reading" / "the housewarming") — the island resolves it off the
+   *  shared selection. Display only, in the dock's bar and strip. */
+  dockTitle?: string;
 }
 
 /** The wire body `/api/stage1` answers with (its exact four keys). */
@@ -230,6 +245,7 @@ export function ReadingStageBody({
   joined = true,
   onJoined,
   bookTalkOn = true,
+  dockTitle = "the reading",
 }: ReadingStageBodyProps) {
   /* the ONE gate for mounting the real two-way room: published, signed
      in, not left, not ended, and a room the poll actually gave us. */
@@ -265,7 +281,26 @@ export function ReadingStageBody({
                   onHostVideo/hostVideoReducer signal. That reducer's CODE
                   stays in JitsiRoom.tsx untouched (other callers may still
                   wire it); this mount just stops using it. */}
-              <JitsiRoom domain={jitsiDomain} room={room as string} onEnded={onRoomEnded} onJoined={onJoined} height="100%" guestView />
+              {/* T-639 (K184, block 972,965): the room itself mounts in the
+                  layout-owned DOCK now — this bridge joins the live-room
+                  store, reports this seat's rect for the dock's stage mode,
+                  and keeps the embed playing across client navigation.
+                  LiveRoomDock.tsx carries the real JitsiRoom (guestView,
+                  the TASK-477 keys — pinned in
+                  tests/jitsi-embed-options-477.test.ts). */}
+              <LiveRoomBridge
+                kind="twoway"
+                domain={jitsiDomain}
+                room={room as string}
+                title={dockTitle}
+                homePath="/reading"
+                homeLabel={`Back to ${dockTitle}`}
+                chip={chipText}
+                coverUp={coverUp}
+                onEnded={onRoomEnded}
+                onJoined={onJoined}
+                onRejoin={onRejoin}
+              />
             </div>
             {coverUp && (
               <div className="kit-stage-cover">
@@ -411,11 +446,30 @@ export default function ReadingStage({
   const [cameraShown, setCameraShown] = useState(false);
   /* TASK-488: JitsiRoom reports false on every boot, true once joined */
   const [joined, setJoined] = useState(false);
+  /* T-639 (K184): the live-room store, ref-read so the pinned callback
+     shapes below stay exact; roomRef carries the room's identity for the
+     server-side-end dismissal (markEnded). */
+  const live = useLiveRooms();
+  const liveRef = useRef(live);
+  useEffect(() => {
+    liveRef.current = live;
+  });
+  const roomRef = useRef<string | null>(null);
+  useEffect(() => {
+    roomRef.current = room;
+  }, [room]);
+  /* T-639: the dock window's short title, off the SAME shared selection
+     the chip already reads (parts 1/2 share this one door) */
+  const dockTitle = selected === 1 ? "the housewarming" : "the reading";
 
   /* K122 item 7 + the purity law — the ended words name the NEXT reading
      (the FOLLOWING occurrence once the clock is at or past next's start),
      computed here in handler-land, never in render. */
   const markEnded = useCallback(() => {
+    /* T-639: a server-side end is not a leave — the dock forgets the
+       session outright (no rejoin card; there is nothing to rejoin).
+       Identity-scoped, so another room's session is never killed here. */
+    liveRef.current?.dismissIf(roomRef.current ? { kind: "twoway", domain: jitsiDomain, room: roomRef.current } : null);
     setLeft(false);
     setRoom(null);
     setCameraShown(false);
@@ -432,7 +486,7 @@ export default function ReadingStage({
         : null,
     );
     setEnded(true);
-  }, [next, following, scheduleTz]);
+  }, [next, following, scheduleTz, jitsiDomain]);
 
   /* TASK-471 (block 968,624): the room mounts IN PLACE now — the poll
      itself is the fresh authorization (no separate click-time fetch, no
@@ -518,11 +572,12 @@ export default function ReadingStage({
 
   /* the "left" card's Back button — no navigation, no re-fetch: the room
      string from the hangup's own fresh re-check is still good, so this
-     simply remounts JitsiRoom against it. TASK-487: no cameraShown reset
-     needed any more — that value now comes from the door's own polled
-     truth (set on the hangup's own re-check above and every poll since),
-     never from JitsiRoom's per-mount reducer state, so there is nothing
-     stale to clear on a rejoin. */
+     simply clears the left flag — the bridge remounts and the dock boots
+     the room fresh (T-639). TASK-487: no cameraShown reset needed any
+     more — that value now comes from the door's own polled truth (set on
+     the hangup's own re-check above and every poll since), never from
+     JitsiRoom's per-mount reducer state, so there is nothing stale to
+     clear on a rejoin. */
   const rejoin = useCallback(() => {
     setLeft(false);
   }, []);
@@ -546,6 +601,7 @@ export default function ReadingStage({
       joined={joined}
       onJoined={setJoined}
       bookTalkOn={bookTalkOn}
+      dockTitle={dockTitle}
     />
   );
 }

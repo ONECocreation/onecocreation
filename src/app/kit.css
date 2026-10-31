@@ -936,3 +936,95 @@
 @media(max-width:640px){.kit-bset .kit-rooms-card .kit-rows-end:has(>.kit-btn+.kit-btn){grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:auto;justify-content:center}}
 .kit-doors{display:flex;flex-direction:column;gap:8px}
 .kit-bset .kit-doors{margin:auto auto 0}
+
+/* ═══════════════ T-639 — THE LIVE-ROOM DOCK (K184, block 972,965, ruling A) ═══════════════
+   One layout-owned window for the guest's live Jitsi room: stage (fixed over
+   the owning bridge's rect), dock (bottom-right; a strip above the bottom
+   edge on the phone, tap to grow), shade (the bar alone, sound on), float
+   (undocked, dragged by the bar). The modes restyle the ONE window — the
+   embed inside never moves in the DOM, so it never reloads on client
+   navigation. The card is ALWAYS NIGHT (the --pop-* recipe, TASK-398's law);
+   its inks read the pinned --pop-ink/--pop-pink/--pop-rose, never the
+   theme-flipping rungs. The reading-look law holds here: tokens and
+   color-mix() only, no literals. */
+.lrd-bridge{position:absolute;inset:0;display:grid;place-items:center}
+.lrd-bridge-note{margin:0;color:var(--muted);font-size:.9rem}
+.lrd-window{position:fixed;z-index:50;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--pop-bg);border:1.5px solid var(--pop-edge);border-radius:16px;box-shadow:var(--pop-shadow)}
+.lrd-hidden{display:none}
+.lrd-strip{display:none}
+.lrd-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--pop-edge);
+  touch-action:none;user-select:none}
+.lrd-title{font-family:var(--font-h1);font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold-2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrd-controls{display:flex;gap:8px}
+.lrd-ctl{min-width:64px;height:26px;padding:0 8px;border-radius:8px;border:1px solid var(--pop-edge);
+  background:color-mix(in srgb, var(--pop-ink) 8%, transparent);color:var(--pop-ink);
+  font-family:var(--font-body);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;line-height:1;
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.lrd-body{position:relative;flex:1;min-height:0}
+.lrd-live-dot{width:9px;height:9px;border-radius:50%;background:var(--pop-rose);box-shadow:0 0 10px var(--pop-rose);flex:none}
+.lrd-back{display:block;text-align:center;padding:7px 10px;font-size:.78rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--gold-2);border-top:1px solid var(--pop-edge)}
+.lrd-shade-note{display:none;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--pop-pink);padding:0 12px;white-space:nowrap}
+/* stage — the window sits exactly on the owning bridge's rect (inline
+   top/left/width/height from the measured box); the mode controls hide
+   (the stage IS the size), Close stays */
+.lrd-stage{border-radius:24px}
+.lrd-stage .lrd-ctl-modes,.lrd-stage .lrd-back{display:none}
+/* shade — the Winamp title bar alone, the sound still on */
+.lrd-shade{right:12px;bottom:12px;width:min(440px,calc(100vw - 24px));flex-direction:row;align-items:center}
+.lrd-shade .lrd-bar{border-bottom:0;flex:1;min-width:0}
+.lrd-shade .lrd-body,.lrd-shade .lrd-back{display:none}
+.lrd-shade .lrd-shade-note{display:block}
+.lrd-shade .lrd-bar{cursor:grab}
+/* dock + float — bottom-right cards; the float drags by its bar */
+.lrd-dock{right:12px;bottom:12px;width:min(520px,calc(100vw - 24px));height:300px}
+.lrd-float{right:12px;bottom:12px;width:min(520px,calc(100vw - 24px));height:300px}
+.lrd-float .lrd-bar{cursor:grab}
+.lrd-float .lrd-back{display:none}
+/* the phone strip (item 2): the full title, "Tap to grow" on one line,
+   Close — the Back link rides the grown card only */
+.lrd-strip-grow{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:none;border:0;padding:0;
+  font:inherit;color:inherit;cursor:pointer;text-align:left}
+.lrd-strip-word{font-family:var(--font-h1);font-size:.9rem;color:var(--gold-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrd-strip-hint{margin-left:auto;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--pop-pink);white-space:nowrap;flex:none}
+/* the rejoin card (rulings A + E — all guests, 11 s, keeps its close) */
+.lrd-rejoin{position:fixed;right:12px;bottom:12px;z-index:55;max-width:min(360px,calc(100vw - 24px));
+  background:var(--pop-bg);border:1.5px solid var(--pop-edge);border-radius:16px;box-shadow:var(--pop-shadow);
+  padding:18px 20px;text-align:center}
+.lrd-rejoin-close{position:absolute;top:8px;right:8px}
+.lrd-rejoin-line{font-family:var(--font-h1);font-size:1.05rem;color:var(--gold-2);margin:6px 0 14px}
+.lrd-rejoin-door{display:inline-block}
+/* the leave ask (item 3): the pair is one size, one line, 1440 AND 390 */
+.lrd-ask-line{font-family:var(--font-h1);font-size:1.15rem;color:var(--gold-deep);margin:0 0 18px;text-align:center}
+.lrd-ask-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:nowrap}
+.lrd-ask-buttons .btn{flex:1;white-space:nowrap;text-align:center}
+@media (max-width:640px){
+  .lrd-dock{left:8px;right:8px;bottom:8px;width:auto;height:56px}
+  .lrd-dock .lrd-strip{display:flex;align-items:center;gap:8px;height:100%;padding:0 6px 0 12px}
+  .lrd-dock .lrd-bar,.lrd-dock .lrd-body,.lrd-dock .lrd-back{display:none}
+  .lrd-dock.lrd-grown{height:280px}
+  .lrd-dock.lrd-grown .lrd-strip{display:none}
+  .lrd-dock.lrd-grown .lrd-bar{display:flex}
+  .lrd-dock.lrd-grown .lrd-body{display:block}
+  .lrd-dock.lrd-grown .lrd-back{display:block}
+  .lrd-shade{left:8px;right:8px;width:auto}
+  /* a phone's shade bar carries the title + the three word controls; the
+     "sound on" note steps aside at this width rather than clip (the
+     buttons' one size is the law) */
+  .lrd-shade .lrd-shade-note{display:none}
+  .lrd-float{left:8px;right:8px;width:auto}
+  .lrd-rejoin{left:8px;right:8px;max-width:none}
+  /* the ask pair cannot share a row at 390 without clipping "Leave the
+     reading" — the pair stacks, each button full-width, text still one
+     line (item 3's one-size law kept) */
+  .lrd-ask-buttons{flex-direction:column}
+  /* ruling B / item 6 — while the strip shows, the page grows bottom
+     padding of 56px strip + 8px gap + the safe-area inset, so the strip
+     never covers a page control */
+  html.lrd-strip-on body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+}

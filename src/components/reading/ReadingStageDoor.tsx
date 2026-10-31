@@ -2,9 +2,10 @@
 "use client";
 
 import { SignUpSheetTrigger } from "@/components/reading/SignMeUpSheet";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import JitsiRoom from "@/components/booking/JitsiRoom";
+import LiveRoomBridge from "@/components/live/LiveRoomBridge";
+import { useLiveRooms } from "@/components/live/LiveRoomContext";
 
 /**
  * THE GENERIC PAID-DOOR TOP SCREEN (TASK-473, block 968,624; course
@@ -18,8 +19,10 @@ import JitsiRoom from "@/components/booking/JitsiRoom";
  * picture + the part's time), signed out (the page's own sign-in), not
  * owned (the caller's own `notOwned` node — price + `ReadingDayUnlockButton`,
  * composed by the caller so this file never imports `EncoreFloorDoor`/
- * `QaDoor` directly), and live (JitsiRoom mounted in place, exactly one
- * conference, disposed on hangup/switch).
+ * `QaDoor` directly), and live (the room joined through `LiveRoomBridge`
+ * in place, exactly one conference — T-639 (K184, block 972,965): the
+ * embed itself lives in the layout-owned DOCK now, so the room keeps
+ * playing, docked, while the guest browses; disposed on hangup/switch).
  *
  * `/api/qa-door` doesn't exist yet (T-475, a separate lane) — a 404 or a
  * failed fetch never updates `wire` off its CLOSED default, so Part 4
@@ -135,7 +138,25 @@ export function ReadingStageDoorBody({
                 site-switch poll), never JitsiRoom's own onHostVideo/
                 hostVideoReducer signal. That reducer's CODE stays in
                 JitsiRoom.tsx untouched; this mount just stops using it. */}
-            <JitsiRoom domain={jitsiDomain} room={wire.room as string} onEnded={onEnded} onJoined={onJoined} height="100%" guestView />
+            {/* T-639 (K184, block 972,965): the room itself mounts in the
+                layout-owned DOCK now — this bridge joins the live-room
+                store, reports this seat's rect for the dock's stage mode,
+                and keeps the embed playing across client navigation.
+                LiveRoomDock.tsx carries the real JitsiRoom (guestView —
+                pinned in tests/jitsi-embed-options-477.test.ts). */}
+            <LiveRoomBridge
+              kind="twoway"
+              domain={jitsiDomain}
+              room={wire.room as string}
+              title={label}
+              homePath="/reading"
+              homeLabel={`Back to ${label}`}
+              chip={chipText}
+              coverUp={coverUp}
+              onEnded={onEnded}
+              onJoined={onJoined}
+              onRejoin={onRejoin}
+            />
           </div>
           {coverUp && (
             <div className="kit-stage-cover">
@@ -233,6 +254,18 @@ export default function ReadingStageDoor({
   const [left, setLeft] = useState(false);
   /* TASK-488: JitsiRoom reports false on every boot, true once joined */
   const [joined, setJoined] = useState(false);
+  /* T-639 (K184): the live-room store, ref-read so the pinned callback
+     shapes stay exact; roomRef carries the room's identity for the
+     door-closed dismissal in the poll below. */
+  const live = useLiveRooms();
+  const liveRef = useRef(live);
+  useEffect(() => {
+    liveRef.current = live;
+  });
+  const roomRef = useRef<string | null>(null);
+  useEffect(() => {
+    roomRef.current = wire.room;
+  }, [wire.room]);
 
   /* TASK-471 (block 968,624): a recursive setTimeout (never setInterval)
      so the delay before the NEXT fetch can depend on what THIS fetch just
@@ -255,6 +288,12 @@ export default function ReadingStageDoor({
           /* TASK-488 review: a door that closed server-side unmounts the
              room without a Jitsi farewell event, so clear the join too */
           if (decision !== "open") setJoined(false);
+          /* T-639: and dismiss the dock session outright — a door closed
+             server-side is not a leave, so there is no rejoin offer.
+             Identity-scoped, so another room's session is never killed
+             here (roomRef still holds the closing room's name). */
+          if (decision !== "open")
+            liveRef.current?.dismissIf(roomRef.current ? { kind: "twoway", domain: jitsiDomain, room: roomRef.current } : null);
           setWire({
             decision,
             reachable: d.reachable ?? null,
@@ -274,7 +313,7 @@ export default function ReadingStageDoor({
       alive = false;
       if (timer) clearTimeout(timer);
     };
-  }, [path]);
+  }, [path, jitsiDomain]);
 
   /* the hangup unmounts the embed in THIS commit (the TASK-471 review
      law) — no farewell-card flash while the fresh state comes back */

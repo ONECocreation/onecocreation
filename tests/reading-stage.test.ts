@@ -77,7 +77,7 @@ describe("closed — the book waits, no room, no control at all", () => {
   });
 });
 
-describe("published, signed in, room arrived, camera SHOWN (TASK-487's site switch pressed) — JitsiRoom mounts IN PLACE, never JitsiViewer", () => {
+describe("published, signed in, room arrived, camera SHOWN (TASK-487's site switch pressed) — the room joins IN PLACE through the dock's bridge (T-639), never JitsiViewer", () => {
   const html = render(bodyProps({ phase: "published", signedIn: true, room: ROOM, cameraShown: true }));
 
   it("the 'Love is live now' line, the LIVE chip, the two-way viewer wrapper — no book art, no button", () => {
@@ -95,17 +95,14 @@ describe("published, signed in, room arrived, camera SHOWN (TASK-487's site swit
     expect(html).not.toContain("Go to the Heart Field");
   });
 
-  it("no banner while the Playground is closed, and the ONLY camera/microphone words are TASK-519's deliberate prejoin hint", () => {
+  it("no banner while the Playground is closed, and NOTHING on the page speaks of a camera or a microphone", () => {
     expect(html).not.toContain("Want an encore?");
-    /* TASK-519 (K131, decision 7): the hint line "Allow camera and
-       microphone" now rides OUR JitsiRoom wrapper on purpose — the whole
-       point of the join-letter lane (Shawnah lost her camera to a
-       browser permission). The T-471-era intent of this pin is kept by
-       stripping that one deliberate line and asserting NOTHING ELSE on
-       the page speaks of a camera or a microphone. */
-    expect(html).toContain("Allow camera and microphone");
-    const withoutHint = html.split("Allow camera and microphone").join("");
-    expect(withoutHint).not.toMatch(/camera|microphone/i);
+    /* T-639 (K184, block 972,965): TASK-519's "Allow camera and
+       microphone" hint rode the in-page JitsiRoom wrapper; the room now
+       mounts in the layout-owned DOCK (LiveRoomDock.tsx carries the real
+       JitsiRoom — the hint is pinned in tests/live-room-dock.test.ts),
+       so this page's own markup is silent on both words. */
+    expect(html).not.toMatch(/camera|microphone/i);
   });
 });
 
@@ -296,12 +293,15 @@ describe("the island's own wiring — source pins (the repo runs no jsdom)", () 
     expect(fetches.length).toBeGreaterThanOrEqual(2); // the poll AND the hangup re-check
   });
 
-  it("never mounts JitsiViewer — JitsiRoom is the one embed on this page (the docblock's own history mentions the retired component by name; the CODE never imports or renders it)", async () => {
+  it("never mounts JitsiViewer — and since T-639 (K184) the room itself rides the layout-owned dock, so this page mounts the BRIDGE, never an embed", async () => {
     const src = await read(STAGE);
     expect(src).not.toContain('from "@/components/reading/JitsiViewer"');
     expect(src).not.toContain("<JitsiViewer");
-    expect(src).toContain('from "@/components/booking/JitsiRoom"');
-    expect(src).toContain("<JitsiRoom");
+    /* T-639: the two-way JitsiRoom moved to LiveRoomDock.tsx (pinned in
+       tests/jitsi-embed-options-477.test.ts); this page renders only the
+       bridge that joins the live-room store. */
+    expect(src).toContain('from "@/components/live/LiveRoomBridge"');
+    expect(src).toContain("<LiveRoomBridge");
   });
 
   it("no live /rooms/heart-field href anywhere in the source (the docblock's own history names the retired door in prose; no JSX carries it)", async () => {
