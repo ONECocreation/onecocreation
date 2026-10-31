@@ -1,5 +1,5 @@
 import { capRemaining, onceWithin, sendMail } from "@/lib/mail";
-import { composedLetterKeys, createLetter, getLetterOverride, letterHtml, saveLetterOverride, touchLetterMeta } from "@/lib/letters";
+import { composedLetterKeys, createLetter, getLetterOverride, isLetterKey, letterHtml, saveLetterOverride, touchLetterMeta } from "@/lib/letters";
 import { offerNotifyTo } from "@/lib/pwyc-letters";
 import { siteBase } from "@/lib/subscribers";
 import { getSiteConfig } from "@/lib/site-config";
@@ -483,7 +483,10 @@ export async function draftReplayLetter(
   try {
     const prefix = `after-reading-${date}-`;
     const taken = (await composedLetterKeys()).filter((k) => k.startsWith(prefix)).length;
-    key = `${prefix}${taken + 1}`;
+    /* a deleted draft leaves a gap in the count: step past any key still in use */
+    let n = taken + 1;
+    while (await isLetterKey(`${prefix}${n}`)) n++;
+    key = `${prefix}${n}`;
     try {
       await createLetter({ key, title: words.subject, audience: "list" });
     } catch (err) {

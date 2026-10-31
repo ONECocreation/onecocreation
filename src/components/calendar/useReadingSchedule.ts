@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { ReadingSchedule } from "@/lib/reading-schedule";
-import { normalizeHousewarmingResponse, normalizeReadingResponse, normalizeSwitchResponse } from "./reading-marks";
+import type { ReadingDatedEvent, ReadingSchedule } from "@/lib/reading-schedule";
+import { normalizeHousewarmingResponse, normalizeReadingEventsResponse, normalizeReadingResponse, normalizeSwitchResponse } from "./reading-marks";
 
 /**
  * TASK-385, Named decision B — the ONE shared fetch for the weekly reading
@@ -68,6 +68,33 @@ export function useHousewarmingOn(): boolean {
   }, []);
 
   return on;
+}
+
+/**
+ * TASK-616 (K176) - the one-off dated events, the same public GET
+ * /api/admin/site. Every unresolved or failed state reads as NO events
+ * (normalizeReadingEventsResponse's own law) - the calendar never
+ * invents a date.
+ */
+export function useReadingDatedEvents(): ReadingDatedEvent[] {
+  const [events, setEvents] = useState<ReadingDatedEvent[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/admin/site", { cache: "no-store" })
+      .then(async (r) => {
+        const body = await r.json().catch(() => null);
+        if (alive) setEvents(normalizeReadingEventsResponse(r.status, body));
+      })
+      .catch(() => {
+        if (alive) setEvents([]);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return events;
 }
 
 /**

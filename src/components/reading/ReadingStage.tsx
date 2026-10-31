@@ -272,6 +272,7 @@ export function ReadingStageBody({
       {phase === "published" && !ended && <p className="kit-body kit-stage-live-line">Love is live now</p>}
       <div className="kit-stage">
         {showRoom ? (
+          <>
           <div className={coverUp ? "kit-stage-media kit-stage-waiting kit-stage-waiting--cover" : "kit-stage-media kit-call-tall"}>
             <div className="kit-stage-viewer">
               {/* TASK-487: onHostVideo is deliberately NOT passed here any
@@ -306,8 +307,12 @@ export function ReadingStageBody({
                 <img src={COVER_SRC} alt={COVER_ALT} width="600" height="358" />
               </div>
             )}
-            {chipText && <span className="kit-stage-chip">{chipText}</span>}
           </div>
+          {/* T-518/T-519 mark (the Admiral, Oct 5): the chip sits BELOW the
+              call frame, never over it, so it can't cover the buttons
+              Jitsi draws along the top on a phone */}
+          {chipText && <span className="kit-stage-chip kit-stage-chip--below">{chipText}</span>}
+          </>
         ) : (
           <div className="kit-stage-media kit-stage-waiting kit-stage-waiting--cover">
             <img src={COVER_SRC} alt={COVER_ALT} width="600" height="358" />

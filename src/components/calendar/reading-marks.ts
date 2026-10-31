@@ -1,11 +1,13 @@
 import {
   DEFAULT_READING_SCHEDULE,
   readingOccurrencesBetween,
+  validateReadingDatedEvents,
   validateReadingSchedule,
+  type ReadingDatedEvent,
   type ReadingSchedule,
 } from "@/lib/reading-schedule";
 import { HOUSEWARMING_TIME, ENCORE_TIME, QA_TIME, sameDayAt } from "@/lib/reading-day";
-import { zonedDateParts } from "@/lib/booking-time";
+import { wallClockToUtc, zonedDateParts } from "@/lib/booking-time";
 import { AGENDA_ROW_TITLES, readingPartHref, type ReadingPart } from "@/lib/reading-parts";
 import type { CalendarDayMarks, CalendarDayMarksLookup, CalendarEventPill } from "./DayCell";
 
@@ -293,6 +295,68 @@ export function normalizeReadingResponse(status: number, body: unknown): Reading
   return checked.ok ? checked.value : null;
 }
 
+
+/**
+ * TASK-616 (K176, Love's mail #86) - the one-off dated events, painted
+ * onto the same calendar cells as the weekly parts. The stored `date` IS
+ * the event's civil day (written in the schedule's own zone), so the cell
+ * match is a plain civilKey compare - the same honesty stance
+ * `buildBookingMarks` keeps with its `startUtc.slice(0,10)`: every event
+ * the site publishes today sits in the afternoon, where a Denver civil
+ * day and a UTC-anchored cell agree; a near-midnight event would be the
+ * edge to revisit, not a case to invent now.
+ *
+ * EVERY PILL IS A REAL LINK, the readingDayPartsMarksLookup law: the
+ * event's own button href when it carries one (/contact for the Q&A
+ * questions, /packages/weekly-intuitive for the membership opening),
+ * else /reading - the page whose "Coming up" card tells the same dates.
+ * The clock reads in the VIEWER's own zone (readingClockWords), the same
+ * law as every other pill on these surfaces; a whole-day note carries no
+ * clock at all.
+ */
+export function datedEventsMarksLookup(
+  events: ReadingDatedEvent[] | null,
+  tz: string,
+): CalendarDayMarksLookup {
+  return (cell): CalendarDayMarks | undefined => {
+    if (!events || events.length === 0) return undefined;
+    const pills: CalendarEventPill[] = [];
+    events.forEach((e, i) => {
+      if (e.date !== cell.civilKey) return;
+      let clock: string | null = null;
+      if (e.time) {
+        const [y, m, d] = e.date.split("-").map(Number);
+        const [hh, mm] = e.time.split(":").map(Number);
+        const ms = wallClockToUtc(y, m, d, hh, mm, tz).getTime();
+        if (!Number.isNaN(ms)) clock = readingClockWords(ms);
+      }
+      pills.push({
+        id: `reading-event-${e.date}-${e.time ?? "day"}-${i}`,
+        label: clock ? `${clock} · ${e.title}` : e.title,
+        variant: "gold",
+        href: e.action?.href ?? "/reading",
+      });
+    });
+    return pills.length > 0 ? { pills } : undefined;
+  };
+}
+
+/**
+ * TASK-616 - the dated events list from the same public GET, the
+ * normalizeReadingResponse sibling. EVERY failure mode (non-2xx, non-ok
+ * body, absent key, malformed list) reads as NO events - never an
+ * invented date; the calendar is not the place to report a hiccup.
+ */
+export function normalizeReadingEventsResponse(status: number, body: unknown): ReadingDatedEvent[] {
+  if (status < 200 || status >= 300) return [];
+  if (!body || typeof body !== "object") return [];
+  const o = body as Record<string, unknown>;
+  if (o.ok !== true) return [];
+  const config = o.config;
+  if (!config || typeof config !== "object") return [];
+  const checked = validateReadingDatedEvents((config as Record<string, unknown>).readingEvents ?? []);
+  return checked.ok ? checked.value : [];
+}
 
 /**
  * TASK-499 (block 969,306+) — the Housewarming switch's half of the same

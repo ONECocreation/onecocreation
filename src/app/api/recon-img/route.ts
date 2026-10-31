@@ -24,7 +24,11 @@ export const dynamic = "force-dynamic";
  * Nothing in this route writes — the reference group is read-only law.
  */
 
-const ROOT = join(process.cwd(), RECON_ROOT);
+/* The recon root is a fixed subfolder; the turbopackIgnore marks the cwd join
+   as intentional so Turbopack does not trace the whole project (public/ and
+   all) into this function. The capture files are added to the trace for this
+   route only, via outputFileTracingIncludes in next.config.ts. */
+const ROOT = join(/*turbopackIgnore: true*/ process.cwd(), RECON_ROOT);
 const PREFIXES = ["shots/", "assets/"];
 const MIME: Record<string, string> = {
   jpg: "image/jpeg",
@@ -78,7 +82,7 @@ export async function GET(request: Request) {
   const mime = MIME[norm.split(".").pop()?.toLowerCase() ?? ""];
   if (!mime) return refuse(403);
 
-  const abs = join(ROOT, norm);
+  const abs = join(/*turbopackIgnore: true*/ ROOT, norm);
   if (!abs.startsWith(ROOT + sep)) return refuse(403);
 
   let data: Buffer;

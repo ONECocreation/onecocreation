@@ -5,6 +5,7 @@ import { TIERS, TIER_TERM_DAYS, isTier, packageDays, type Tier } from "./entitle
 import { buyerEmailOf } from "./order-receipt";
 import { offerNotifyTo, letterFor } from "./pwyc-letters";
 import { sendMail } from "./mail";
+import { dollars } from "./money-words";
 
 /**
  * TASK-518 (block 969,339 · ruling of record K131) — LOVE KNOWS WHO BOUGHT.
@@ -58,7 +59,7 @@ const P = 'style="margin:0 0 1.15em;line-height:1.75;"';
 
 /** The charged snapshot, verbatim — "2,100 sats" / "33.33 USD" (decision 4). */
 function amountWords(amount: number, currency: string): string {
-  return currency === "SATS" ? `${amount.toLocaleString("en-US")} sats` : `${amount} ${currency}`;
+  return currency === "SATS" ? `${amount.toLocaleString("en-US")} sats` : dollars(amount, currency);
 }
 
 /** The @tag behind a handle subject ("fren@onecocreation" → "@fren");
@@ -91,7 +92,7 @@ async function whoSlot(order: OrderRecord): Promise<string> {
   const email = buyerEmailOf(order);
   const name = await buyerNameOf(order);
   const whom = name && email ? `${name} (${email})` : name ?? email ?? tagOf(order) ?? "an anonymous soul";
-  return `<p ${P}>From <b>${esc(whom)}</b> · order ${order.id.slice(0, 8)}</p>`;
+  return `<p ${P}><b>${esc(whom)}</b> placed order ${order.id.slice(0, 8)}.</p>`;
 }
 
 function linesSlot(order: OrderRecord): string {
@@ -124,8 +125,8 @@ async function tierSlot(order: OrderRecord): Promise<string> {
   if (!best) return `<p ${P}>No membership or pass rides this order.</p>`;
   const name = esc(TIERS[best.tier].name);
   return best.days === TIER_TERM_DAYS
-    ? `<p ${P}>The membership: <b>${name}</b> · for ${best.days} days.</p>`
-    : `<p ${P}>The pass: <b>${name}</b> · for ${best.days} days.</p>`;
+    ? `<p ${P}>They are now in the <b>${name}</b> membership, for ${best.days} days.</p>`
+    : `<p ${P}>They have the <b>${name}</b> pass, for ${best.days} days.</p>`;
 }
 
 function amountSlot(order: OrderRecord): string {
@@ -136,9 +137,9 @@ function amountSlot(order: OrderRecord): string {
   if (!snap || typeof snap.amount !== "number") {
     return `<p ${P}>No amount recorded.</p>`;
   }
-  let w = `Charged: <b>${esc(amountWords(snap.amount, snap.currency))}</b>`;
+  let w = `They paid <b>${esc(amountWords(snap.amount, snap.currency))}</b>.`;
   if (order.discount) {
-    w += `<br>Code <b>${esc(order.discount.code)}</b> brought it to ${esc(amountWords(snap.amount, snap.currency))}; the full price was ${esc(amountWords(order.discount.originalAmount, snap.currency))}.`;
+    w += ` The code <b>${esc(order.discount.code)}</b> brought it down from ${esc(amountWords(order.discount.originalAmount, snap.currency))}.`;
   }
   return `<p ${P}>${w}</p>`;
 }

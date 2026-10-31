@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { SignUpSheetTrigger } from "@/components/reading/SignMeUpSheet";
+import { Fragment } from "react";
 import { clockWords, dayWords } from "@/lib/reading-day";
+import { wallClockToUtc } from "@/lib/booking-time";
+import type { UpcomingDatedEvent } from "@/lib/reading-schedule";
 import type { EncoreFloorDoor, QaDoor } from "@/lib/reading-day-doors";
 import ReadingDayUnlockButton from "./ReadingDayUnlockButton";
 import ReadingPartSelectLink from "./ReadingPartSelectLink";
@@ -85,6 +88,22 @@ export interface ReadingDayBodyProps {
    *  agenda is hidden): only the two paid rows, under a "Coming up" heading.
    *  Absent or false renders the agenda exactly as it always was. */
   ahead?: boolean;
+  /** TASK-616 (K176, Love's mail #86): the one-off dated events, already
+   *  filtered to upcoming by the caller. Absent/empty = no "Coming up"
+   *  card, exactly today's render. */
+  comingUp?: UpcomingDatedEvent[];
+  /** TASK-616: false on a day the agenda is hidden but dated events exist
+   *  (the travel week is the whole point - the "Coming up" card must show
+   *  when there is no agenda to ride under). Default true: every existing
+   *  caller renders exactly as before. */
+  showAgenda?: boolean;
+}
+
+/** TASK-616: a whole-day note's day label anchor - noon in the schedule's
+ *  own zone, so midnight edges never read the wrong day. */
+function noonAnchorMs(date: string, tz: string): number {
+  const [y, m, d] = date.split("-").map(Number);
+  return wallClockToUtc(y, m, d, 12, 0, tz).getTime();
 }
 
 export default function ReadingDayBody({
@@ -99,22 +118,80 @@ export default function ReadingDayBody({
   qaEntitled,
   qaOffer,
   ahead = false,
+  comingUp,
+  showAgenda = true,
 }: ReadingDayBodyProps) {
-  return (
+  /* TASK-616 - group the dated events by their civil date (one bold day
+     line per date, the letter's own grammar: "Sunday, November 8" then one
+     quiet line per event), the first action in the group riding the row's
+     right edge. Pure: same words for the same props, every render. */
+  const comingUpGroups: {
+    date: string;
+    dayLabel: string;
+    events: { key: string; clock: string | null; title: string; note?: string }[];
+    action?: { label: string; href: string };
+  }[] = [];
+  for (const e of comingUp ?? []) {
+    let g = comingUpGroups.find((x) => x.date === e.date);
+    if (!g) {
+      g = {
+        date: e.date,
+        dayLabel: dayWords(e.startsAtMs ?? noonAnchorMs(e.date, tz), tz),
+        events: [],
+      };
+      comingUpGroups.push(g);
+    }
+    g.events.push({
+      key: `${e.date}-${e.time ?? "day"}-${e.title}`,
+      clock: e.startsAtMs !== null ? clockWords(e.startsAtMs, tz) : null,
+      title: e.title,
+      ...(e.note ? { note: e.note } : {}),
+    });
+    if (!g.action && e.action) g.action = e.action;
+  }
+
+  const comingUpCard = comingUpGroups.length > 0 && (
+    <div className="card room-card kit-day kit-coming-up">
+      <h2 className="kit-h2">Coming up</h2>
+      <ul className="kit-rows" aria-label="Coming up">
+        {comingUpGroups.map((g) => (
+          <li key={g.date}>
+            <span>
+              <b>{g.dayLabel}</b>
+              {g.events.map((e) => (
+                <Fragment key={e.key}>
+                  <em>{e.clock ? `${e.clock} · ${e.title}` : e.title}</em>
+                  {e.note && <em>{e.note}</em>}
+                </Fragment>
+              ))}
+            </span>
+            {g.action && (
+              <span className="kit-rows-end">
+                <Link className="kit-btn kit-btn-main kit-btn-sm" href={g.action.href}>
+                  {g.action.label}
+                </Link>
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+  /* TASK-616: on a non-reading day with dated events the agenda card is
+     absent and the "Coming up" card stands alone (below). */
+  const agendaCard = (
     <div className="card room-card kit-day">
-      <h2 className="kit-h2">{ahead ? `Coming up ${dayWords(readingStartsAtMs, tz)}` : "The day's agenda"}</h2>
-      {ahead && <p className="kit-text-quiet">These follow the reading. You can unlock them ahead of time.</p>}
-      {/* TASK-499: the notice's part-1 flag is forced closed when Row 1
-          is hidden, so a hand-opened housewarming door never surfaces a
-          pick into a part that does not exist this week. */}
-      {!ahead && (
-        <ReadingDayOpenNotice
-          part1On={housewarmingStartsAtMs !== null}
-          part3On={encoreStartsAtMs !== null}
-          part4On={qaStartsAtMs !== null}
-        />
-      )}
-      <ul className="kit-rows" aria-label={ahead ? "Coming up" : "The day's agenda"}>
+        <h2 className="kit-h2">{ahead ? `Coming up ${dayWords(readingStartsAtMs, tz)}` : "The day's agenda"}</h2>
+        {ahead && <p className="kit-text-quiet">These follow the reading. You can unlock them ahead of time.</p>}
+        {!ahead && (
+          <ReadingDayOpenNotice
+            part1On={housewarmingStartsAtMs !== null}
+            part3On={encoreStartsAtMs !== null}
+            part4On={qaStartsAtMs !== null}
+          />
+        )}
+        <ul className="kit-rows" aria-label={ahead ? "Coming up" : "The day's agenda"}>
         {/* ROW 1 — the Housewarming (TASK-469, block 968,567): free, no
             lock, before the reading, the same door as Row 2 (the two-way
             call itself is Love's own /a/studio action, no code here).
@@ -237,6 +314,17 @@ export default function ReadingDayBody({
         </li>
         )}
       </ul>
+    </div>
+  );
+
+  if (!showAgenda) return comingUpCard || null;
+  if (!comingUpCard) return agendaCard;
+  /* TASK-616: both cards - the agenda above, "Coming up" below, the ruled
+     kitx-flow gap between them. */
+  return (
+    <div className="kitx-flow">
+      {agendaCard}
+      {comingUpCard}
     </div>
   );
 }

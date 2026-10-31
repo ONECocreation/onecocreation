@@ -8,6 +8,8 @@ import {
   getLetterOverride,
   isLetterKey,
   listLetterKeys,
+  removeDraftLetter,
+  AUTO_SLOTS,
   saveLetterOverride,
   touchLetterMeta,
   type LetterAudience,
@@ -16,6 +18,7 @@ import {
 import { hourlyCap } from "@/lib/mail";
 import { subscriberSegments, subscribersConfigured, listSubscribers } from "@/lib/subscribers";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
+import { effectiveAutoSlot } from "@/lib/reading-letters";
 
 export const dynamic = "force-dynamic";
 
@@ -119,4 +122,28 @@ export async function PUT(request: Request) {
   });
   await touchLetterMeta(k, { publish: body.publish === true });
   return NextResponse.json({ ok: true });
+}
+
+/** Love's "Delete draft" press: a draft leaves the room (its words are kept
+ *  aside, see removeDraftLetter). Body is the key only. A letter riding an
+ *  automatic send (the sign-up confirmation, the reading-day letter) is
+ *  refused: it must be moved off that slot first. */
+export async function DELETE(request: Request) {
+  const denied = gate(request);
+  if (denied) return denied;
+  const body = (await request.json().catch(() => null)) as { key?: string } | null;
+  if (!body?.key || !(await isLetterKey(body.key))) {
+    return NextResponse.json({ ok: false, reason: "unknown letter" }, { status: 400 });
+  }
+  for (const slot of AUTO_SLOTS) {
+    if ((await effectiveAutoSlot(slot)) === body.key) {
+      return NextResponse.json({ ok: false, reason: "this letter sends itself; pick another letter for that automatic send first" }, { status: 409 });
+    }
+  }
+  try {
+    await removeDraftLetter(body.key);
+    return NextResponse.json({ ok: true, deleted: body.key });
+  } catch (err) {
+    return NextResponse.json({ ok: false, reason: err instanceof Error ? err.message : "delete failed" }, { status: 400 });
+  }
 }
