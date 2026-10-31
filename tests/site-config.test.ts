@@ -144,7 +144,9 @@ describe("the switches — the nav MENU is built from them", () => {
     expect(labels(menu)).not.toContain("Memberships");
     // the store switch is OFF: the Store header keeps only Three packages (memberships ON)
     expect(menu.find((m) => m.label === "Store")?.subs?.map((s) => s.label)).toEqual(["Three packages"]);
-    expect(labels(menu)).toEqual(["About", "Store", "Community", "Support"]);
+    // T-637: Collaborations + doTERRA joined the default menu between
+    // Community and Support (block 973,977) — the pinned order gains both.
+    expect(labels(menu)).toEqual(["About", "Store", "Community", "Collaborations", "doTERRA", "Support"]);
     // meditation and 11:11 always ride Community now, switch or no switch
     const community = menu.find((m) => m.label === "Community");
     expect(community?.subs?.map((s) => s.label)).toContain("Free meditation");
