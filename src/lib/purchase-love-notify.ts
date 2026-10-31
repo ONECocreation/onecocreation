@@ -5,6 +5,7 @@ import { TIERS, TIER_TERM_DAYS, isTier, packageDays, type Tier } from "./entitle
 import { buyerEmailOf } from "./order-receipt";
 import { offerNotifyTo, letterFor } from "./pwyc-letters";
 import { sendMail } from "./mail";
+import { dollars } from "./money-words";
 
 /**
  * TASK-518 (block 969,339 · ruling of record K131) — LOVE KNOWS WHO BOUGHT.
@@ -58,7 +59,7 @@ const P = 'style="margin:0 0 1.15em;line-height:1.75;"';
 
 /** The charged snapshot, verbatim — "2,100 sats" / "33.33 USD" (decision 4). */
 function amountWords(amount: number, currency: string): string {
-  return currency === "SATS" ? `${amount.toLocaleString("en-US")} sats` : `${amount} ${currency}`;
+  return currency === "SATS" ? `${amount.toLocaleString("en-US")} sats` : dollars(amount, currency);
 }
 
 /** The @tag behind a handle subject ("fren@onecocreation" → "@fren");

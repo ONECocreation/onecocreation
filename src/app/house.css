@@ -462,8 +462,10 @@ section{padding:76px 0;position:relative}
 /* the sun with shades — theme toggle in the header, by the login name
    (Admiral, 0018.05.17: "easy on the eyes?") */
 .theme-sun{width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(235,203,119,.45);
-  background:none;color:#EBCB77;cursor:pointer;display:grid;place-items:center;padding:0;
-  transition:transform .18s ease,border-color .18s ease}
+  background:none;color:#EBCB77;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;
+  -webkit-appearance:none;appearance:none;transition:transform .18s ease,border-color .18s ease}
+/* Safari will not centre grid content inside a <button> (the sun sat left of its ring): flex, and the icon never shrinks */
+.theme-sun svg{display:block;flex:none}
 .theme-sun:hover{transform:rotate(20deg);border-color:rgba(235,203,119,.8)}
 html[data-oc-theme="light"] .theme-sun{color:#B4862B;border-color:rgba(180,134,43,.5)}
 
