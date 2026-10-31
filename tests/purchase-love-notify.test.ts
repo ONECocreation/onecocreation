@@ -344,7 +344,8 @@ describe("the letter's content — derive-or-dash, never an invented word", () =
     await sendPurchaseLoveNotify(
       orderFixture({ priceSnapshot: { amount: 3300, currency: "USD", at: "2026-09-30T00:00:00.000Z" } }) as never,
     );
-    expect(sentMail[0].html).toContain("3300 USD");
+    expect(sentMail[0].html).toContain("$33");
+    expect(sentMail[0].html).not.toContain("3300");
   });
 
   it("a 100%-code order says the code brought it to 0 and names the full price", async () => {
@@ -355,7 +356,7 @@ describe("the letter's content — derive-or-dash, never an invented word", () =
     });
     await sendPurchaseLoveNotify(order as never);
     expect(sentMail[0].html).toContain("FREEWEEK");
-    expect(sentMail[0].html).toContain("1100 USD");
+    expect(sentMail[0].html).toContain("$11");
   });
 
   it("a gift line names its recipient", async () => {
@@ -454,8 +455,8 @@ describe("the override — Love's words win, the facts can never be edited away"
     const { sendPurchaseLoveNotify } = await sender();
     await sendPurchaseLoveNotify(orderFixture() as never);
     const html = sentMail[0].html;
-    expect(html).toContain("1100 USD");
-    expect(html.indexOf("1100 USD")).toBeGreaterThan(html.indexOf("Someone bought something."));
+    expect(html).toContain("$11");
+    expect(html.indexOf("$11")).toBeGreaterThan(html.indexOf("Someone bought something."));
   });
 
   it("no literal {{slot}} text ever reaches the sent html", async () => {
