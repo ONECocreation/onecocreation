@@ -707,6 +707,31 @@ button.mgmt-rooms-btn{display:none}
 .nav-sub::before{content:"";position:absolute;top:-10px;left:0;right:0;height:10px}
 @media(prefers-reduced-motion:reduce){.nav-item.has-sub .nav-sub{transition:none;transform:none}}
 
+/* ── TASK-637 — the doTERRA tab's click pop-up (Love's text 972653) ─────
+   Portals to document.body: the header's own backdrop-filter (house.css:322)
+   would trap position:fixed inside the bar and let the bright hero shine
+   through a glass card, so the card wears the sheet's solid
+   --pop-bg/--pop-edge recipe. The overlay's grid CENTRES the card on both
+   axes at every width (the Admiral's pins on the mockup set), and the scan
+   code is display:block with auto margins — the Tailwind preflight makes
+   every svg a block, which silently ignored the card's text-align:center
+   in the mockup and sat the code left-of-centre. The ask pair is ONE SIZE
+   at every width (the T-633 law): a column of full-width buttons. */
+.doterra-overlay{position:fixed;inset:0;z-index:90;background:rgba(10,8,24,.55);
+  display:grid;place-items:center;padding:20px}
+.doterra-card{background:var(--pop-bg);border:1.5px solid var(--pop-edge);border-radius:24px;
+  padding:28px 30px;width:100%;max-width:340px;box-sizing:border-box;box-shadow:var(--soft);
+  text-align:center;color:var(--ink)}
+.doterra-intro{font-size:.95rem;color:var(--muted);margin:0 0 16px;text-wrap:balance}
+.doterra-kicker{margin-bottom:8px}
+.doterra-qr{display:block;margin:0 auto;background:#fff;border-radius:12px;
+  border:1px dashed rgba(120,100,160,.5)}
+.doterra-qr .qr-ink{fill:#241f3a}
+.doterra-qr .qr-paper{fill:#fff}
+.doterra-note{font-size:.72rem;color:var(--muted);margin:10px 0 0;text-wrap:balance}
+.doterra-asks{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.doterra-asks .btn{width:100%}
+
 /* TASK-386 — DoorButton's own popup (the header sheet + the signed-in
    member menu) pours the SAME recipe .nav-sub does (--pop-bg/--pop-edge/
    --pop-shadow, cartridge.css:95-98's own "once" comment), right-anchored
@@ -764,7 +789,10 @@ button.mgmt-rooms-btn{display:none}
      can push role="menu" wider than the phone. Menu-only, phone-only —
      the sign-in sheet never mounts this second class. */
   .door-pop--menu{max-width:calc(100% - 20px);white-space:normal;overflow-wrap:anywhere}
-  .nav-items.is-open{display:flex}
+  .nav-items.is-open{display:flex;max-height:calc(100vh - 84px);overflow-y:auto}
+  /* T-637's scroll cap rides the rule above: with six tabs the open sheet
+     outgrows an 844px viewport and its last rows can't be reached — the
+     sheet carries no scroll of its own without it. */
   .nav-item .nav-link{display:block;width:100%;text-align:left;padding:10px 18px}
   .nav-sub{position:static;border:none;box-shadow:none;background:transparent;padding:0 0 4px 14px;min-width:0}
   /* no hover on phones — subs sit open under their parent in the sheet */

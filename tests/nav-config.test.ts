@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import type { ReactElement } from "react";
+import { COLLABORATIONS_HREF, COLLABORATIONS_SUBS, DOTERRA_TAB_LABEL, DOTERRA_URL, PLACEHOLDER_NAV_HREFS } from "@/lib/collab-tabs";
 
 /**
  * TASK-137 (0018.06.17 a₿) — the menu Love can shape. Pins:
@@ -125,7 +126,10 @@ describe("buildMenu's default — Community is a header, not a switch", () => {
     c.features.sessions = true;
     c.features.memberships = true;
     const menu = buildMenu(c);
-    expect(menu.map((m) => m.label)).toEqual(["About", "Store", "Community", "Support"]);
+    // T-637: the Collaborations + doTERRA tabs joined the default menu
+    // between Community and Support (block 973,977, the Admiral's "ok to
+    // build") — the pinned order gains both.
+    expect(menu.map((m) => m.label)).toEqual(["About", "Store", "Community", "Collaborations", "doTERRA", "Support"]);
     const store = menu.find((m) => m.label === "Store");
     expect(store?.href).toBe("/store");
     expect(store?.subs?.map((s) => s.label)).toEqual(["Sessions", "Meditations", "Memberships", "Three packages"]);
@@ -467,5 +471,68 @@ describe("Packages() — the home hero's package doors follow the memberships sw
     await saveSiteConfig({ features: { memberships: false } });
     const result = await Packages();
     expect(result).toBeNull();
+  });
+});
+
+/* TASK-637 (block 973,977 — K185 item 1, the Admiral's "ok to build" on the
+   approved mockup): the Collaborations + doTERRA tabs ride the default menu
+   for real; the placeholders live in src/lib/collab-tabs.ts (Love's seam). */
+
+describe("TASK-637 — the Collaborations + doTERRA tabs in the default menu", () => {
+  it("Collaborations sits between Community and Support, with Love's five rows in her order, one level deep", () => {
+    const menu = buildDefaultMenu(defaultSiteConfig());
+    // memberships ON by default keeps a one-row Store header (Three packages)
+    expect(menu.map((m) => m.label)).toEqual(["About", "Store", "Community", "Collaborations", "doTERRA", "Support"]);
+    const collab = menu.find((m) => m.label === "Collaborations");
+    expect(collab?.href).toBe(COLLABORATIONS_HREF);
+    expect(collab?.subs).toEqual(COLLABORATIONS_SUBS);
+    expect(collab?.subs?.map((s) => s.label)).toEqual([
+      "Universally Local", "Local artist", "Local practitioners", "Stay Locally", "Find them on the map",
+    ]);
+    // the one-level law: "Universally Local" is the drop's first row, never a nested fly-out
+    expect(collab?.subs?.every((s) => !("subs" in s))).toBe(true);
+  });
+
+  it("the doTERRA tab is a leaf riding the placeholder link, label case exactly as Love wrote it", () => {
+    const dot = buildDefaultMenu(defaultSiteConfig()).find((m) => m.label === DOTERRA_TAB_LABEL);
+    expect(DOTERRA_TAB_LABEL).toBe("doTERRA");
+    expect(dot).toBeTruthy();
+    expect(dot?.subs).toBeUndefined();
+    expect(dot?.href).toBe(DOTERRA_URL);
+  });
+
+  it("the placeholder hrefs ride PLACEHOLDER_NAV_HREFS — the nav never prefetches a page that doesn't exist yet", () => {
+    expect(PLACEHOLDER_NAV_HREFS.has(COLLABORATIONS_HREF)).toBe(true);
+    for (const sub of COLLABORATIONS_SUBS.filter((s) => s.href.startsWith("/"))) {
+      expect(PLACEHOLDER_NAV_HREFS.has(sub.href)).toBe(true);
+    }
+    // the external rows (the map link) are never prefetched by Next anyway
+    expect(PLACEHOLDER_NAV_HREFS.has("https://maps.example.com/universally-local")).toBe(false);
+  });
+
+  it("both tabs render pre-fetch (s === null): no switch gates either of them", () => {
+    const labels = buildMenu(null).map((m) => m.label);
+    expect(labels).toContain("Collaborations");
+    expect(labels).toContain("doTERRA");
+  });
+
+  it("a saved nav carrying the new rows survives sanitize — isOpenNavHref admits them, KNOWN_NAV_HREFS unchanged", async () => {
+    await saveSiteConfig({
+      nav: {
+        items: [
+          {
+            id: COLLABORATIONS_HREF, label: "Collaborations", href: COLLABORATIONS_HREF,
+            children: COLLABORATIONS_SUBS.map((s) => ({ id: s.href, label: s.label, href: s.href })),
+          },
+          { id: DOTERRA_URL, label: "doTERRA", href: DOTERRA_URL },
+        ],
+      },
+    });
+    const c = await getSiteConfig();
+    expect(c.nav?.items.map((i) => i.label)).toEqual(["Collaborations", "doTERRA"]);
+    expect(c.nav?.items[0].children).toHaveLength(5);
+    const menu = buildMenu(c);
+    expect(menu.map((m) => m.label)).toEqual(["Collaborations", "doTERRA"]);
+    expect(menu[0].subs?.map((s) => s.label)).toEqual(COLLABORATIONS_SUBS.map((s) => s.label));
   });
 });

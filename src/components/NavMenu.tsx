@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { SiteConfig } from "@/lib/site-config";
 import { READING_PAGE_PATH, READING_ROOM_PATH } from "@/lib/reading-room";
+import { COLLABORATIONS_HREF, COLLABORATIONS_SUBS, DOTERRA_TAB_LABEL, DOTERRA_URL, PLACEHOLDER_NAV_HREFS } from "@/lib/collab-tabs";
 
 /**
  * The consolidated nav (Admiral, 0018.05.13): main doors with sub-menus, so
@@ -119,7 +121,8 @@ function pageOn(s: SiteConfig | null, href: string): boolean {
     default" without re-deriving this logic. */
 export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
   /* T-615 (the Admiral: "ok to move to this layout"): the built-in menu is
-     About | Store | Community | Support. Store carries Sessions (Book a time
+     About | Store | Community | Collaborations | doTERRA | Support (the two
+     tabs before Support are TASK-637's). Store carries Sessions (Book a time
      folds into it, same /book page), Meditations, Memberships and Three
      packages; Community carries Read with Love, Replays, Heart Field, 11:11
      Live with Love, Free meditation, then Classes and News & letters (each
@@ -152,6 +155,15 @@ export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
       ...(s?.features.news ? [{ label: "News & letters", href: "/news" }] : []),
     ],
   });
+  /* TASK-637 (block 973,977, Love's text 972653): the Collaborations tab
+     between Community and Support, and the doTERRA tab beside it. Both
+     ride the placeholders in src/lib/collab-tabs.ts (Love's seam — she
+     swaps the hrefs there, no code dive). No switch gates either tab. The
+     one-level law stands: "Universally Local" is the drop's FIRST ROW, its
+     own future page, never a nested fly-out. The doTERRA row is a leaf;
+     the component below opens its pop-up instead of sailing out. */
+  menu.push({ label: "Collaborations", href: COLLABORATIONS_HREF, subs: [...COLLABORATIONS_SUBS] });
+  menu.push({ label: DOTERRA_TAB_LABEL, href: DOTERRA_URL });
   menu.push({ label: "Support", href: "/support" });
   return menu;
 }
@@ -202,6 +214,7 @@ export function navChildHere(pathname: string, href: string): boolean {
 export default function NavMenu() {
   const [open, setOpen] = useState(false); // hamburger
   const [switches, setSwitches] = useState<SiteConfig | null>(null);
+  const [doterra, setDoterra] = useState(false); // T-637: the doTERRA pop-up
   const ref = useRef<HTMLElement>(null);
   const pathname = usePathname() ?? "";
 
@@ -231,6 +244,25 @@ export default function NavMenu() {
      straight to its home — Memberships→Heart Field, Community→Classes &
      rooms — while HOVER breathes the submenu open (pure CSS,
      .has-sub). In the phone sheet the subs simply sit under their parent. */
+
+  /* TASK-637: the doTERRA tab. Love's text (972653): "a link to her
+     personal doTERRA set up - maybe a pop-up with a scan code when they
+     click the link". The link AND the scan code stay placeholders
+     (src/lib/collab-tabs.ts is her seam) until she gives them; the tab
+     opens the pop-up below instead of sailing out. Keyed on the tab's own
+     label so no other row changes — a tab Love renames on the board to
+     something else becomes a plain link again. */
+  const doterraItem = menu.find((m) => !m.subs && m.label.toLowerCase() === DOTERRA_TAB_LABEL.toLowerCase());
+
+  useEffect(() => {
+    if (!doterra) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDoterra(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [doterra]);
+
   return (
     <nav ref={ref} className="site-nav nav-menu">
       <button
@@ -244,14 +276,27 @@ export default function NavMenu() {
       <div className={`nav-items${open ? " is-open" : ""}`}>
         {menu.map((m) => (
           <div key={m.label} className={`nav-item${m.subs ? " has-sub" : ""}`}>
+            {m === doterraItem ? (
+              /* the bare .nav-link class carries every look (size, case,
+                 spacing — house.css:679 already resets a button's chrome);
+                 NO inline typography, so the tab matches its siblings
+                 exactly (Number One's note on the mockup) */
+              <button type="button" className="nav-link"
+                onClick={() => { setOpen(false); setDoterra(true); }}>
+                {m.label}
+              </button>
+            ) : (
             <Link className={`nav-link${tabHere(m) ? " is-here" : ""}`} href={m.href}
+              prefetch={PLACEHOLDER_NAV_HREFS.has(m.href) ? false : undefined}
               aria-current={tabHere(m) ? "page" : undefined} onClick={() => setOpen(false)}>
               {m.label}
             </Link>
+            )}
             {m.subs && (
               <div className="nav-sub">
                 {m.subs.map((s) => (
                   <Link key={s.href} href={s.href} className={here(s.href) ? "is-here" : undefined}
+                    prefetch={PLACEHOLDER_NAV_HREFS.has(s.href) ? false : undefined}
                     aria-current={here(s.href) ? "page" : undefined} onClick={() => setOpen(false)}>
                     {s.label}
                   </Link>
@@ -261,6 +306,53 @@ export default function NavMenu() {
           </div>
         ))}
       </div>
+      {/* T-637: the pop-up portals to body (house.css's .doterra-* block
+          says why) and centres on both axes at every width — the Admiral's
+          pins on the mockup set. */}
+      {doterra && doterraItem && createPortal(
+        <div role="dialog" aria-modal="true" aria-label="doTERRA" className="doterra-overlay"
+          onClick={() => setDoterra(false)}>
+          <div className="doterra-card" onClick={(e) => e.stopPropagation()}>
+            <p className="kicker doterra-kicker">doTERRA</p>
+            <p className="doterra-intro">
+              Love&apos;s own doTERRA page opens from here. Scan the code with your phone, or open the link below.
+            </p>
+            {/* placeholder scan code: Love's real doTERRA scan code replaces this square */}
+            <svg width="132" height="132" viewBox="0 0 132 132" role="img" className="doterra-qr"
+              aria-label="Placeholder scan code - Love's real doTERRA scan code goes here">
+              {[0, 96, 0].map((x, i) => (
+                <g key={i} className="qr-ink">
+                  <rect x={[4, 92, 4][i]} y={[4, 4, 92][i]} width="36" height="36" rx="4" />
+                  <rect x={[10, 98, 10][i]} y={[10, 10, 98][i]} width="24" height="24" rx="2" className="qr-paper" />
+                  <rect x={[16, 104, 16][i]} y={[16, 16, 104][i]} width="12" height="12" rx="2" className="qr-ink" />
+                </g>
+              ))}
+              {[52, 66, 80, 96, 110].map((x, i) =>
+                [52, 74, 96, 110].map((y, j) =>
+                  (i * 7 + j * 13) % 3 === 0 ? <rect key={`${x}-${y}`} x={x} y={y} width="10" height="10" className="qr-ink" /> : null
+                )
+              )}
+              {[52, 66, 80].map((y, i) =>
+                [8, 22, 36].map((x, j) =>
+                  (i + j) % 2 === 0 ? <rect key={`m${x}-${y}`} x={x} y={y} width="10" height="10" className="qr-ink" /> : null
+                )
+              )}
+            </svg>
+            <p className="doterra-note">
+              placeholder: the scan code and the link are Love&apos;s to give
+            </p>
+            <div className="doterra-asks">
+              <a className="btn btn-sm" href={doterraItem.href} target="_blank" rel="noopener noreferrer">
+                Open the doTERRA site
+              </a>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDoterra(false)}>
+                Not now
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </nav>
   );
 }
