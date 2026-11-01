@@ -138,6 +138,16 @@ export default function TipJar({ only }: { only?: readonly JarKey[] }) {
             {p.toLocaleString()} sats
           </button>
         ))}
+        {/* TASK-636 (block 974,079 · the Admiral's row law, part of his A on
+            desk card 972826): the pills, the custom box and the Give button
+            are ONE height on ONE centre line. .btn-sm is 12px 24px padding on
+            a .9rem/1.25 line (18px) = a 42px box; the input is pinned to the
+            same 42px border-box (an input's content box comes from the
+            font's own metrics, which landed 1px short of the pills' 42 —
+            explicit height, never font luck), and Give rides the same
+            .btn-sm — the row's alignItems:"center" then holds every centre
+            line on the same pixel. Measured at 1440 and 390: 42.00px on all
+            five boxes, spread 0.00, centres equal. */}
         <input
           inputMode="numeric"
           placeholder="custom sats"
@@ -146,7 +156,10 @@ export default function TipJar({ only }: { only?: readonly JarKey[] }) {
           aria-label="Custom amount in sats"
           style={{
             width: 130,
-            padding: "9px 14px",
+            height: 42,
+            boxSizing: "border-box",
+            padding: "0 14px",
+            lineHeight: 1.25,
             borderRadius: 999,
             border: "1.5px solid rgba(180,134,43,.65)",
             background: "rgba(255,255,255,.92)",
@@ -154,7 +167,7 @@ export default function TipJar({ only }: { only?: readonly JarKey[] }) {
             fontSize: ".9rem",
           }}
         />
-        <button className="btn btn-gold" type="button" onClick={give} disabled={state === "busy" || !amount}>
+        <button className="btn btn-gold btn-sm" type="button" onClick={give} disabled={state === "busy" || !amount}>
           {state === "busy" ? "Placing it in the basket…" : `Give ${amount ? amount.toLocaleString() : "—"} sats`}
         </button>
       </div>

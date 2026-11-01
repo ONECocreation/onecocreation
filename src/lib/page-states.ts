@@ -75,6 +75,7 @@ export const PAGE_STATES: PageStateEntry[] = [
   { path: "/memberships", slug: "memberships", state: "designer", note: DESIGNER_NOTE },
   { path: "/news", slug: "news", state: "designer", note: DESIGNER_NOTE },
   { path: "/packages", slug: "packages", state: "designer", note: DESIGNER_NOTE },
+  { path: "/pay-it-forward", state: "words", note: "words — the pay-it-forward page (TASK-636); copy lives in code" },
   { path: "/privacy", slug: "privacy", state: "designer", note: DESIGNER_NOTE },
   { path: "/reading", state: "words", note: "words — the reading page; copy lives in code" },
   { path: "/replays", state: "words", note: "words - the replays page (TASK-496); copy lives in code" },
