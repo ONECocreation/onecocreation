@@ -29,6 +29,17 @@ BASE: origin/main `7bc9487e` (merge #184)
   page's double gate, the two reworded dash-free lines, the row-law classes
   and input metrics, the presets/blurb truths)
 
+WIDENED (same claim, first gate round): the two manifest/ratchet laws the
+page must answer —
+- `src/lib/page-states.ts` (ONE new PAGE_STATES row for /pay-it-forward,
+  state "words" — the route-walk manifest test demands every public route
+  listed or dashed)
+- `src/app/house.css` (ONE banner-marked `pif-` section appended, the page's
+  layout rules as classes — the design-drift ratchet gives a new .tsx a
+  styleBlocks allowance of 3 and the drawn page carries 18, so the styles
+  move to the stylesheet T-639's way; no existing rule touched, no
+  !important, no serif, no font-family)
+
 READ-ONLY: everything else. `src/components/store/GiftDrawer.tsx` keeps
 Love's approved words verbatim (its own dash lines are hers, unchanged);
 `src/lib/jars.ts`, `src/lib/payments.ts`, `src/components/sections.tsx`
