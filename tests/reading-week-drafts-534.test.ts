@@ -203,11 +203,17 @@ describe("the words (derived, Love's voice)", () => {
     expect(l.body).toContain("Hello, beautiful soul!");
     /* round 2 (the Admiral's pins): the date-time words are bold, derived */
     expect(l.body).toContain("The next reading is **Sunday, October 11 at 1:11 PM Mountain Time**. Come and read with me, free.");
-    /* round 2: the one button rides INLINE under the first paragraph through
-       the positional !pill: directive; the end-of-letter cta stays empty */
+    /* T-643 (his pin on oc-t601-letter: "move the item 1 to item 2
+       position"): the replay block opens the letter, the reading paragraph
+       follows as item 2, and the one button still rides INLINE right under
+       it through the positional !pill: directive; the end-of-letter cta
+       stays empty */
+    expect(l.body.indexOf("Missed one?")).toBeGreaterThan(l.body.indexOf("Hello, beautiful soul!"));
+    expect(l.body.indexOf("[Watch the replays](/replays)")).toBeGreaterThan(l.body.indexOf("Missed one?"));
+    expect(l.body.indexOf("The next reading is")).toBeGreaterThan(l.body.indexOf("[Watch the replays](/replays)"));
     expect(l.body).toContain("!pill: 1:11 PM | /reading");
     expect(l.body.indexOf("!pill: 1:11 PM | /reading")).toBeGreaterThan(l.body.indexOf("Come and read with me, free."));
-    expect(l.body.indexOf("!pill: 1:11 PM | /reading")).toBeLessThan(l.body.indexOf("Missed one?"));
+    expect(l.body.indexOf("!pill: 1:11 PM | /reading")).toBeLessThan(l.body.indexOf("Love's weekly YouTube Lives"));
     expect(l.body).not.toContain("!cta:");
     /* adjustment 4: no "members"; the replays live in the Heart Field */
     expect(l.body).toContain("Missed one? Every replay is kept for you in the Heart Field.");
@@ -340,14 +346,16 @@ describe("the review copy", () => {
       expect(m.html).toContain("Hello, beautiful soul!");
       /* T-601 adjustment 6: the cta pill wears the site's .btn paint — the
          gradient is the shine, email cannot run the shimmer. Round 2: the
-         one button renders INLINE, right after the first paragraph, and the
-         date-time words in that paragraph are bold. */
+         one button renders INLINE, right after the reading paragraph, and the
+         date-time words in that paragraph are bold. T-643: the replay block
+         opens the letter, the reading paragraph and its button follow. */
       expect(m.html).toContain("background:linear-gradient(135deg,#E7B2C3,#C56E8B)");
       expect(m.html).toContain('<span style="color:#2E0E1D !important;">1:11 PM</span>');
       expect(m.html).toContain("<b>Sunday, October 11 at 1:11 PM Mountain Time</b>");
+      expect(m.html.indexOf("Missed one?")).toBeLessThan(m.html.indexOf("The next reading is"));
       const btnAt = m.html.indexOf("1:11 PM</span>");
       expect(btnAt).toBeGreaterThan(m.html.indexOf("Come and read with me, free."));
-      expect(btnAt).toBeLessThan(m.html.indexOf("Missed one?"));
+      expect(btnAt).toBeLessThan(m.html.indexOf("Love's weekly YouTube Lives"));
       /* adjustment 1: the cover hero renders, absolute */
       expect(m.html).toContain('src="https://site.test/images/reading-love-cover.jpg"');
       expect(m.html).not.toMatch(/[—]/);
