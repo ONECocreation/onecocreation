@@ -464,7 +464,8 @@ section{padding:76px 0;position:relative}
 .theme-sun{width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(235,203,119,.45);
   background:none;color:#EBCB77;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;
   -webkit-appearance:none;appearance:none;transition:transform .18s ease,border-color .18s ease}
-/* Safari will not centre grid content inside a <button> (the sun sat left of its ring): flex, and the icon never shrinks */
+/* Safari will not centre grid content inside a <button> (the sun sat left of its ring): flex, and the icon never shrinks.
+   On desktop the .nav-tail leaf rule (TASK-257, below) must not undo the flex — see its .theme-sun carve-out. */
 .theme-sun svg{display:block;flex:none}
 .theme-sun:hover{transform:rotate(20deg);border-color:rgba(235,203,119,.8)}
 html[data-oc-theme="light"] .theme-sun{color:#B4862B;border-color:rgba(180,134,43,.5)}
@@ -622,6 +623,10 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
      outside the basket icon's own box — the ellipsis clip above sliced it
      off (the Admiral's "block"). ONE carve-out, the basket link alone. */
   .nav-tail a.basket-chip{overflow:visible;max-width:none}
+  /* the sun is a leaf too, but it centres its icon with flex — the
+     inline-block above beat .theme-sun's inline-flex on every desktop, so
+     the block svg sat flush left of its ring. Second carve-out. */
+  .nav-tail>button.theme-sun{display:inline-flex;overflow:visible;max-width:none}
 }
 
 /* ── the console's left rail (wireframe v2) ── */
