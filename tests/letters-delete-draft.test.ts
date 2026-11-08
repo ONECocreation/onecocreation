@@ -100,4 +100,38 @@ describe("the room's delete step", () => {
     expect(room).toContain('=== "yes delete"');
     expect(room.indexOf(">Delete draft</Button>")).toBeLessThan(room.indexOf(">Keep it</Button>"));
   });
+  /* the Admiral, Nov 2026: "the button on the yes delete area has 2 different colored texts".
+   * Both buttons sat straight in the form, so the shared rule put them in the ONE cell beside the
+   * field and Keep it was drawn over Delete draft. */
+  it("the pair rides its own button row under the field, never the field's one button cell", () => {
+    expect(room).toMatch(/<div className="kit-btn-row">\s*<Button type="submit" sm disabled=\{!saidYesDelete\(deleteWords\)\}>Delete draft<\/Button>\s*<Button type="button" sm variant="second" onClick=\{\(\) => setDeleteFor\(null\)\}>Keep it<\/Button>\s*<\/div>/);
+    const css = readFileSync(resolve(__dirname, "../src/app/kit.css"), "utf8");
+    expect(css).toContain(".kit-inline-form:has(>.kit-field)>.kit-btn~.kit-btn{grid-column:1/-1;grid-row:auto;justify-self:start}");
+    expect(css).toContain(".kit-inline-form:has(>.kit-field):has(>.kit-btn-row){grid-template-columns:minmax(0,1fr)}");
+    expect(css).toContain(".kit-inline-form:has(>.kit-field)>.kit-btn-row{grid-column:1/-1;margin-top:4px}");
+  });
+  it("the words to type are shown in quotes, and typing the quotes too still counts", () => {
+    expect(room).toContain("Type &ldquo;yes delete&rdquo; to go on.");
+    expect(room).toContain('label={"Type “yes delete”"}');
+    const line = room.split("\n").find((l) => l.includes("const saidYesDelete"))!;
+    // the page's own line, its one type annotation dropped so plain JS can run it
+    const saidYesDelete = new Function(`${line.trim().replace("(s: string)", "(s)")} return saidYesDelete;`)() as (s: string) => boolean;
+    for (const ok of ["yes delete", " Yes Delete ", "\"yes delete\"", "“yes delete”", "'yes delete'"]) expect(saidYesDelete(ok), ok).toBe(true);
+    for (const no of ["yes", "delete", "yes  delete", "no delete", ""]) expect(saidYesDelete(no), no).toBe(false);
+  });
+});
+
+/* any other field form with two buttons straight in it would stack the same way */
+describe("no field form puts two buttons in the one cell", () => {
+  it("each kit-inline-form with a Field has at most one Button straight in it (TextBlock keeps its own kitx-block row rule)", () => {
+    const files = ["src/app/a/letters/page.tsx", "src/components/rooms/ReadingSignInBox.tsx", "src/components/rooms/ReadingSignUp.tsx", "src/components/replays/ReplaysReminder.tsx"];
+    for (const f of files) {
+      const src = readFileSync(resolve(__dirname, "..", f), "utf8");
+      for (const form of src.split('className="kit-inline-form"').slice(1).map((s) => s.slice(0, s.indexOf("</form>")))) {
+        if (!form.includes("<Field")) continue;
+        const straight = form.replace(/<div className="kit-btn-row">[\s\S]*?<\/div>/g, "").match(/<Button\b/g) ?? [];
+        expect(straight.length, f).toBeLessThanOrEqual(1);
+      }
+    }
+  });
 });
