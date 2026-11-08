@@ -28,6 +28,10 @@ interface ApiLetter {
 
 const NOTE_PUBLISHED = "Published. This is the version that sends.";
 const NOTE_DRAFT = "Draft saved. It stays in Drafted, and nothing sends until you press Publish.";
+const NOTE_SIGNED_OUT = "Not saved. Your sign-in ran out. Sign in again in another tab, then press it again here. Your words are still here.";
+/* Publish keeps the words; it never mails anyone. Love read it as "send to
+ * the community", so the page says so and points at the send panel. */
+const NOTE_PUBLISH_IS_NOT_SEND = "Publishing makes this the version that sends. It does not send it. Your list gets it only when you send it from the Send page.";
 
 export default function LetterEditPage({ params }: { params: Promise<{ key: string }> }) {
   const { key } = use(params);
@@ -128,42 +132,83 @@ export default function LetterEditPage({ params }: { params: Promise<{ key: stri
 
   const blocked = Object.keys(problems).length > 0;
 
+  /* one press in flight at a time (the send panel's TASK-214 guard): a ref
+   * stops a second tap in the same tick, `busy` greys the buttons. A double
+   * tap on the test copy used to answer "Not sent" over the copy that went. */
+  const busyRef = useRef(false);
+  const [busy, setBusy] = useState(false);
+  function claim(): boolean {
+    if (busyRef.current) return false;
+    busyRef.current = true;
+    setBusy(true);
+    return true;
+  }
+  function release() {
+    busyRef.current = false;
+    setBusy(false);
+  }
+
   async function put(publish: boolean) {
     if (blocked) {
       setNote({ kind: "err", text: "Not saved. Fix the words marked above first." });
       return;
     }
-    const res = await fetch("/api/admin/letters", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(publish ? { key, subject, body, publish: true } : { key, subject, body }),
-    }).catch(() => null);
-    const d = await res?.json().catch(() => ({ ok: false }));
-    if (d?.ok) {
-      setDirty(false);
-      load();
-      setNote({ kind: "ok", text: publish ? NOTE_PUBLISHED : NOTE_DRAFT });
-    } else {
-      setNote({ kind: "err", text: publish ? "Not published. Subject and body are both required." : "Not saved. A draft needs a subject and some words." });
+    if (!claim()) return;
+    try {
+      const res = await fetch("/api/admin/letters", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(publish ? { key, subject, body, publish: true } : { key, subject, body }),
+      }).catch(() => null);
+      const d = await res?.json().catch(() => ({ ok: false }));
+      if (d?.ok) {
+        setDirty(false);
+        load();
+        setNote({ kind: "ok", text: publish ? NOTE_PUBLISHED : NOTE_DRAFT });
+      } else if (res?.status === 401) {
+        setNote({ kind: "err", text: NOTE_SIGNED_OUT });
+      } else if (d?.reason === "subject and body required") {
+        setNote({ kind: "err", text: publish ? "Not published. Subject and body are both required." : "Not saved. A draft needs a subject and some words." });
+      } else {
+        setNote({ kind: "err", text: `Not saved. ${d?.reason ? `The site said: ${d.reason}.` : "The site did not answer."} Your words are still here, press it again.` });
+      }
+    } finally {
+      release();
     }
   }
 
   async function sendCopy() {
+    if (blocked) {
+      setCopyNote({ kind: "err", text: "Not sent. Fix the words marked above first." });
+      return;
+    }
+    if (!claim()) return;
     setCopyNote({ kind: "info", text: "Sending..." });
-    const d = await fetch("/api/admin/letters/copy", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fromEditor: true, key, subject, body }),
-    }).then((r) => r.json()).catch(() => null);
-    setCopyNote(
-      d?.ok
-        ? { kind: "ok", text: `Sent to ${d.to ?? copy?.to}. It goes out on the next mail run, with [test] on the subject.` }
-        : { kind: "err", text: `Not sent. ${d?.reason ?? "Try again in a moment."}` },
-    );
+    try {
+      const res = await fetch("/api/admin/letters/copy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromEditor: true, key, subject, body }),
+      }).catch(() => null);
+      const d = await res?.json().catch(() => null);
+      setCopyNote(
+        d?.ok
+          ? { kind: "ok", text: `Sent to ${d.to ?? copy?.to}. It goes out on the next mail run, with [test] on the subject.` }
+          : res?.status === 429
+            ? { kind: "info", text: "A copy is already on its way. Look in your inbox in a few minutes." }
+            : res?.status === 401
+              ? { kind: "err", text: NOTE_SIGNED_OUT }
+              : { kind: "err", text: `Not sent. ${d?.reason ?? "Try again in a moment."}` },
+      );
+    } finally {
+      release();
+    }
   }
 
   const title = letter ? (letter.title ?? key.replace(/-/g, " ")) : key.replace(/-/g, " ");
   const noWords = !subject.trim() || !body.trim();
+  /* the room's own rule (rowEnd): one of Love's letters, out of Drafted, has a send panel */
+  const canSend = letter?.kind === "composed" && !isDrafted(key, letter);
 
   return (
     <div className="p-6 text-sm">
@@ -188,14 +233,19 @@ export default function LetterEditPage({ params }: { params: Promise<{ key: stri
               </p>
             )}
             <div className="kit-btn-row kit-bset">
-              <Button sm onClick={() => put(true)} disabled={noWords}>Publish</Button>
+              <Button sm onClick={() => put(true)} disabled={noWords || busy}>Publish</Button>
               {isDrafted(key, letter) && (
-                <Button sm variant="second" onClick={() => put(false)} disabled={noWords}>Save draft</Button>
+                <Button sm variant="second" onClick={() => put(false)} disabled={noWords || busy}>Save draft</Button>
               )}
-              <Button sm variant="second" onClick={sendCopy} disabled={noWords || copy?.canCopy === false}>Send me a test copy</Button>
+              <Button sm variant="second" onClick={sendCopy} disabled={noWords || busy || copy?.canCopy === false}>Send me a test copy</Button>
             </div>
-            <p className="kit-note">Publishing makes this the version that sends.</p>
+            <p className="kit-note">{NOTE_PUBLISH_IS_NOT_SEND}</p>
             {note && <p className={note.kind === "err" ? "kit-note kit-note-err" : note.kind === "ok" ? "kit-note kit-note-ok" : "kit-note"} aria-live="polite">{note.text}</p>}
+            {canSend && !dirty && (
+              <div className="kit-btn-row kit-bset">
+                <Link className="kit-btn kit-btn-main kit-btn-sm" href={`/a/letters/${key}`}>Send it to your list</Link>
+              </div>
+            )}
             <p className={copyNote?.kind === "err" || copy?.canCopy === false ? "kit-note kit-note-err" : copyNote?.kind === "ok" ? "kit-note kit-note-ok" : "kit-note"} aria-live="polite">
               {copyNote?.text ??
                 (copy?.canCopy === false

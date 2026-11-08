@@ -125,7 +125,7 @@ export interface LetterDoc {
   content: DocParagraph[];
 }
 
-export const REFUSE_STAR_OR_BRACKET = "A star or a bracket pair next to a bracket cannot be kept in a letter yet.";
+export const REFUSE_STAR_OR_BRACKET = "These words have stars (*) or brackets typed in them, and a letter cannot keep those yet. Take them out, and use the Bold, Italic and link buttons instead.";
 export const REFUSE_BOLD_ITALIC = "Bold and italic on the same words cannot be kept in a letter yet. Use one or the other.";
 
 const IMG = /!\[[^\]]*\]\(https?:[^)\s]+\)/g;
@@ -240,6 +240,35 @@ function merge(nodes: DocNode[]): DocNode[] {
 
 const rank = (m: DocMark) => (m.type === "link" ? 0 : m.type === "bold" ? 1 : 2);
 
+/** one line without the spaces at one edge; a text run that was only spaces goes, a blank (slot) stops it */
+function trimLine(line: DocNode[], side: "start" | "end"): DocNode[] {
+  const nodes = line.slice();
+  while (nodes.length) {
+    const at = side === "start" ? 0 : nodes.length - 1;
+    const n = nodes[at];
+    if (n.type !== "text") break;
+    const text = side === "start" ? n.text.replace(/^\s+/, "") : n.text.replace(/\s+$/, "");
+    if (text) {
+      nodes[at] = { ...n, text };
+      break;
+    }
+    nodes.splice(at, 1);
+  }
+  return nodes;
+}
+
+/**
+ * A space at a paragraph's edge (typed before Enter, or pasted in) never shows
+ * in the mail, and reading the words back drops it (textToDoc trims each
+ * paragraph). The check drops it too, so it is never mistaken for a star.
+ */
+function trimEdges(para: DocNode[][]): DocNode[][] {
+  const out = para.slice();
+  out[0] = trimLine(out[0], "start");
+  out[out.length - 1] = trimLine(out[out.length - 1], "end");
+  return out;
+}
+
 /** the canonical shape: marks ordered, runs merged, doubled breaks become paragraph breaks, empty paragraphs dropped */
 function canonical(doc: LetterDoc): DocNode[][][] {
   const paras: DocNode[][][] = [];
@@ -261,11 +290,11 @@ function canonical(doc: LetterDoc): DocNode[][][] {
     let cur: DocNode[][] = [];
     for (const l of lines) {
       if (empty(l)) {
-        if (cur.length) paras.push(cur);
+        if (cur.length) paras.push(trimEdges(cur));
         cur = [];
       } else cur.push(l);
     }
-    if (cur.length) paras.push(cur);
+    if (cur.length) paras.push(trimEdges(cur));
   }
   return paras;
 }
