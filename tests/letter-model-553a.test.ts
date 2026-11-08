@@ -7,9 +7,8 @@ import { describe, it, expect } from "vitest";
  */
 process.env.NEXT_PUBLIC_SITE_URL = "https://golden.example";
 
-import { EDITABLE_LETTERS, LETTER_DEFAULTS, letterHtml } from "@/lib/letters";
+import { EDITABLE_LETTERS, LETTER_DEFAULTS, bodyToHtml, letterHtml } from "@/lib/letters";
 import {
-  REFUSE_BOLD_ITALIC,
   REFUSE_STAR_OR_BRACKET,
   admitsLinkAddress,
   applyTextEdit,
@@ -20,6 +19,7 @@ import {
   serializeLetter,
   textToDoc,
   withTextSegment,
+  type DocMark,
   type DocNode,
   type DocParagraph,
 } from "@/lib/letter-model";
@@ -169,9 +169,12 @@ describe("text blocks and the editor document", () => {
     const doc = JSON.parse('{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","marks":[{"type":"bold"}],"text":"Welcome"},{"type":"text","text":" home."}]}]}');
     expect(docToText(doc)).toEqual({ ok: true, lines: ["**Welcome** home."] });
   });
-  it("refuses bold and italic on the same words", () => {
-    const doc = { type: "doc" as const, content: [{ type: "paragraph" as const, content: [{ type: "text" as const, text: "both", marks: [{ type: "bold" as const }, { type: "italic" as const }] }] }] };
-    expect(docToText(doc)).toEqual({ ok: false, reason: REFUSE_BOLD_ITALIC });
+  it("keeps bold and italic on the same words, as three stars (the Admiral and Love, Nov 2026)", () => {
+    const both = [{ type: "bold" as const }, { type: "italic" as const }];
+    const doc = { type: "doc" as const, content: [{ type: "paragraph" as const, content: [{ type: "text" as const, text: "Hello, Beautiful Soul!", marks: both }] }] };
+    expect(docToText(doc)).toEqual({ ok: true, lines: ["***Hello, Beautiful Soul!***"] });
+    // and a letter that already has ***words*** opens with them bold and italic, no stars showing
+    expect(textToDoc(["***Hello, Beautiful Soul!***"]).content[0].content).toEqual([{ type: "text", text: "Hello, Beautiful Soul!", marks: both }]);
   });
   it("a refused edit leaves the model untouched", () => {
     const m = parseLetter("Hi");
@@ -190,6 +193,69 @@ describe("text blocks and the editor document", () => {
       ],
     };
     expect(docToText(doc)).toEqual({ ok: true, lines: ["a", "", "b"] });
+  });
+});
+
+/* the mail is the truth: what the editor shows is what the mail draws, for
+ * every mix of plain, bold, italic, both and a link on Love's own words */
+describe("bold, italic and both, the editor and the mail agree", () => {
+  type K = "plain" | "bold" | "italic" | "both";
+  const KINDS: K[] = ["plain", "bold", "italic", "both"];
+  const WORDS = ["IAM", "OneCocreation", "One Cocreation"];
+  const node = (k: K, text: string, href?: string): DocNode => {
+    const marks: DocMark[] = [];
+    if (href) marks.push({ type: "link", attrs: { href } });
+    if (k === "bold" || k === "both") marks.push({ type: "bold" });
+    if (k === "italic" || k === "both") marks.push({ type: "italic" });
+    return marks.length ? { type: "text", text, marks } : { type: "text", text };
+  };
+  /* each character with how it looks: B bold, I italic, L in a link */
+  const look = (ch: string, b: boolean, i: boolean, l: boolean) => `${ch}${b ? "B" : ""}${i ? "I" : ""}${l ? "L" : ""}|`;
+  const mailLook = (html: string) => {
+    let b = 0, i = 0, l = 0, out = "";
+    for (const t of html.match(/<[^>]+>|[^<]/g) ?? []) {
+      if (t === "<b>") b++;
+      else if (t === "</b>") b--;
+      else if (t === "<i>") i++;
+      else if (t === "</i>") i--;
+      else if (t.startsWith("<a ")) l++;
+      else if (t === "</a>") l--;
+      else if (!t.startsWith("<")) out += look(t, b > 0, i > 0, l > 0);
+    }
+    return out;
+  };
+  const docLook = (nodes: DocNode[]) =>
+    nodes.map((n) => (n.type !== "text" ? "" : [...n.text].map((ch) => look(ch, !!n.marks?.some((m) => m.type === "bold"), !!n.marks?.some((m) => m.type === "italic"), !!n.marks?.some((m) => m.type === "link"))).join(""))).join("");
+  it("every mix of three runs, with and without spaces and links, saves and draws as edited", () => {
+    let tried = 0;
+    for (const a of KINDS) for (const b of KINDS) for (const c of KINDS) for (const sep of ["", " "]) for (const linkAt of [-1, 0, 1, 2]) {
+      const nodes = [a, b, c].map((k, i) => node(k, (i ? sep : "") + WORDS[i], i === linkAt ? "/replays" : undefined));
+      const tag = `${a}+${b}+${c} sep=${JSON.stringify(sep)} link=${linkAt}`;
+      const r = docToText({ type: "doc", content: [{ type: "paragraph", content: nodes }] });
+      expect(r.ok, tag).toBe(true);
+      if (!r.ok) continue;
+      expect(mailLook(bodyToHtml(r.lines.join("\n"))), `${tag}: ${r.lines[0]}`).toBe(docLook(nodes));
+      expect(docLook(textToDoc(r.lines).content[0].content ?? []), tag).toBe(docLook(nodes));
+      tried++;
+    }
+    expect(tried).toBe(4 * 4 * 4 * 2 * 4);
+  });
+  it("Love's sign-off keeps IAM and OneCocreation spelled as written, in any style, through save and the mail", () => {
+    const m = parseLetter("Smiles\nLove\n\nAs Always. IAM, WE ARE One.\nOneCocreation");
+    const both = [{ type: "bold" as const }, { type: "italic" as const }];
+    const doc = { type: "doc" as const, content: [
+      { type: "paragraph" as const, content: [{ type: "text" as const, text: "Smiles" }, { type: "hardBreak" as const }, { type: "text" as const, text: "Love", marks: [{ type: "italic" as const }] }] },
+      { type: "paragraph" as const, content: [{ type: "text" as const, text: "As Always. " }, { type: "text" as const, text: "IAM", marks: both }, { type: "text" as const, text: ", WE ARE One." }, { type: "hardBreak" as const }, { type: "text" as const, text: "OneCocreation", marks: [{ type: "bold" as const }] }] },
+    ] };
+    const r = applyTextEdit(m, 0, doc);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const body = serializeLetter(r.model);
+    expect(body).toBe("Smiles\n*Love*\n\nAs Always. ***IAM***, WE ARE One.\n**OneCocreation**");
+    const html = letterHtml(body, {});
+    expect(html).toContain("<i><b>IAM</b></i>, WE ARE One.");
+    expect(html).toContain("<b>OneCocreation</b>");
+    expect(html).toContain("<i>Love</i>");
   });
 });
 

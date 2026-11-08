@@ -126,7 +126,6 @@ export interface LetterDoc {
 }
 
 export const REFUSE_STAR_OR_BRACKET = "These words have stars (*) or brackets typed in them, and a letter cannot keep those yet. Take them out, and use the Bold, Italic and link buttons instead.";
-export const REFUSE_BOLD_ITALIC = "Bold and italic on the same words cannot be kept in a letter yet. Use one or the other.";
 
 const IMG = /!\[[^\]]*\]\(https?:[^)\s]+\)/g;
 const SLOT = /\{\{\s*([a-z]+)\s*\}\}/gi;
@@ -134,7 +133,6 @@ const LINK = /\[([^\]]+)\]\((https?:[^)\s]+|\/(?!\/)[^)\s]*)\)/g;
 const BOLD = /\*\*([^*]+)\*\*/g;
 const ITAL = /\*([^*\n]+)\*/g;
 
-type Mk = "bold" | "italic";
 interface Ctx {
   bold: boolean;
   italic: boolean;
@@ -149,19 +147,13 @@ function mk(text: string, c: Ctx): DocNode {
   return marks.length ? { type: "text", text, marks } : { type: "text", text };
 }
 
-/** matches of `re` in `s` that do not cut a link: whole links inside the match are fine, a match inside a link label waits for the label's own pass */
-function spans(s: string, re: RegExp): RegExpExecArray[] {
-  const links = [...s.matchAll(LINK)].map((m) => [m.index!, m.index! + m[0].length] as const);
-  const out: RegExpExecArray[] = [];
-  for (const m of s.matchAll(re)) {
-    const a = m.index!, b = a + m[0].length;
-    const ok = links.every(([ls, le]) => b <= ls || a >= le || (a <= ls && b >= le));
-    if (ok) out.push(m as RegExpExecArray);
-  }
-  return out;
-}
-
-function inline(s: string, c: Ctx): DocNode[] {
+/**
+ * One line, read the way the mail reads it (bodyToHtml in letters.ts): the
+ * links first, then every **bold** from the left, then every *italic* from the
+ * left over what is left. So ***x*** is bold and italic, an italic can hold a
+ * bold, and the editor shows exactly what the mail will draw.
+ */
+function inline(s: string): DocNode[] {
   if (!s) return [];
   // pictures and blanks: atoms, kept as the exact source text
   const atoms = [...s.matchAll(new RegExp(`${IMG.source}|${SLOT.source}`, "gi"))];
@@ -169,43 +161,44 @@ function inline(s: string, c: Ctx): DocNode[] {
     const out: DocNode[] = [];
     let at = 0;
     for (const m of atoms) {
-      out.push(...inline(s.slice(at, m.index), c));
+      out.push(...inline(s.slice(at, m.index)));
       const raw = m[0];
       const label = raw.startsWith("!") ? "picture" : (/\{\{\s*([a-z]+)\s*\}\}/i.exec(raw)?.[1] ?? raw);
       out.push({ type: "slot", attrs: { raw, label } });
       at = m.index! + raw.length;
     }
-    out.push(...inline(s.slice(at), c));
+    out.push(...inline(s.slice(at)));
     return out;
   }
-  for (const [re, key] of [[BOLD, "bold"], [ITAL, "italic"]] as [RegExp, Mk][]) {
-    const ms = spans(s, new RegExp(re.source, "g"));
-    if (ms.length === 0 || c[key]) continue;
-    const out: DocNode[] = [];
-    let at = 0;
-    for (const m of ms) {
-      out.push(...inline(s.slice(at, m.index), c));
-      out.push(...inline(m[1], { ...c, [key]: true }));
-      at = m.index! + m[0].length;
-    }
-    out.push(...inline(s.slice(at), c));
-    return out;
+  /* each character once; a link's two ends stand in for the <a ...> and </a>
+   * the mail writes there, which are not stars, so the patterns pass over them */
+  const units: { ch: string; href?: string; end?: true }[] = [];
+  let at = 0;
+  for (const m of s.matchAll(new RegExp(LINK.source, "g"))) {
+    for (const ch of s.slice(at, m.index).split("")) units.push({ ch });
+    units.push({ ch: " ", end: true });
+    for (const ch of m[1].split("")) units.push({ ch, href: m[2] });
+    units.push({ ch: " ", end: true });
+    at = m.index! + m[0].length;
   }
-  if (!c.href) {
-    const ms = [...s.matchAll(new RegExp(LINK.source, "g"))];
-    if (ms.length) {
-      const out: DocNode[] = [];
-      let at = 0;
-      for (const m of ms) {
-        out.push(...inline(s.slice(at, m.index), c));
-        out.push(...inline(m[1], { ...c, href: m[2] }));
-        at = m.index! + m[0].length;
-      }
-      out.push(...inline(s.slice(at), c));
-      return out;
+  for (const ch of s.slice(at).split("")) units.push({ ch });
+  const bold = units.map(() => false);
+  const italic = units.map(() => false);
+  const star = units.map(() => false);
+  const mark = (line: string, re: RegExp, side: number, on: boolean[]) => {
+    for (const m of line.matchAll(new RegExp(re.source, "g"))) {
+      const a = m.index!, b = a + m[0].length;
+      for (let i = a; i < b; i++) (i < a + side || i >= b - side ? star : on)[i] = true;
     }
-  }
-  return [mk(s, c)];
+  };
+  mark(units.map((u) => u.ch).join(""), BOLD, 2, bold);
+  // the bold stars are gone (the mail has written <b> there) before italic is read
+  mark(units.map((u, i) => (star[i] ? " " : u.ch)).join(""), ITAL, 1, italic);
+  const out: DocNode[] = [];
+  units.forEach((u, i) => {
+    if (!u.end && !star[i]) out.push(mk(u.ch, { bold: bold[i], italic: italic[i], href: u.href }));
+  });
+  return merge(out);
 }
 
 /** the text lines of one block to the editor document: blank line = paragraph, newline = hard break */
@@ -218,7 +211,7 @@ export function textToDoc(lines: string[]): LetterDoc {
       const content: DocNode[] = [];
       p.trim().split("\n").forEach((line, i) => {
         if (i > 0) content.push({ type: "hardBreak" });
-        content.push(...inline(line, { bold: false, italic: false }));
+        content.push(...inline(line));
       });
       return { type: "paragraph" as const, content: merge(content) };
     }),
@@ -299,45 +292,53 @@ function canonical(doc: LetterDoc): DocNode[][][] {
   return paras;
 }
 
+type TextNode = Extract<DocNode, { type: "text" }>;
+const hrefOf = (n: DocNode) => (n.type === "text" ? n.marks?.find((m): m is Extract<DocMark, { type: "link" }> => m.type === "link")?.attrs.href : undefined);
+const has = (n: TextNode, type: "bold" | "italic") => !!n.marks?.some((m) => m.type === type);
+
 function lineToText(nodes: DocNode[]): string {
   let out = "";
   for (let i = 0; i < nodes.length; ) {
     const n = nodes[i];
-    const href = n.type === "text" ? n.marks?.find((m) => m.type === "link") : undefined;
-    if (href && href.type === "link") {
-      let j = i;
-      let label = "";
-      while (j < nodes.length) {
-        const m = nodes[j];
-        const h = m.type === "text" ? m.marks?.find((x) => x.type === "link") : undefined;
-        if (!h || h.type !== "link" || h.attrs.href !== href.attrs.href) break;
-        label += wrapMarks(m as Extract<DocNode, { type: "text" }>);
-        j++;
-      }
-      out += `[${label}](${href.attrs.href})`;
-      i = j;
-    } else {
-      out += n.type === "text" ? wrapMarks(n) : n.type === "slot" ? n.attrs.raw : "";
+    if (n.type !== "text") {
+      out += n.type === "slot" ? n.attrs.raw : "";
       i++;
+      continue;
     }
+    // the words that share one link (or no link) are written together
+    const href = hrefOf(n);
+    const run: TextNode[] = [];
+    while (i < nodes.length && nodes[i].type === "text" && hrefOf(nodes[i]) === href) run.push(nodes[i++] as TextNode);
+    out += href ? `[${wrapMarks(run)}](${href})` : wrapMarks(run);
   }
   return out;
 }
 
-function wrapMarks(n: Extract<DocNode, { type: "text" }>): string {
-  const bold = n.marks?.some((m) => m.type === "bold");
-  const ital = n.marks?.some((m) => m.type === "italic");
-  return bold ? `**${n.text}**` : ital ? `*${n.text}*` : n.text;
+/**
+ * Bold and italic for a run of words. Italic words that sit together get ONE
+ * pair of stars round them all, with their bold words inside: an italic that
+ * holds a bold is the one mix the mail can draw (it reads every **bold** before
+ * any *italic*), so bold and italic on the same words is ***words***.
+ */
+function wrapMarks(run: TextNode[]): string {
+  let out = "";
+  for (let i = 0; i < run.length; ) {
+    if (!has(run[i], "italic")) {
+      out += has(run[i], "bold") ? `**${run[i].text}**` : run[i].text;
+      i++;
+      continue;
+    }
+    let inner = "";
+    for (; i < run.length && has(run[i], "italic"); i++) inner += has(run[i], "bold") ? `**${run[i].text}**` : run[i].text;
+    out += `*${inner}*`;
+  }
+  return out;
 }
 
 export type DocText = { ok: true; lines: string[] } | { ok: false; reason: string };
 
 /** the editor document back to legacy lines, or a plain reason it cannot be stored faithfully */
 export function docToText(doc: LetterDoc): DocText {
-  for (const p of doc.content ?? [])
-    for (const n of p.content ?? [])
-      if (n.type === "text" && n.marks?.some((m) => m.type === "bold") && n.marks?.some((m) => m.type === "italic"))
-        return { ok: false, reason: REFUSE_BOLD_ITALIC };
   const paras = canonical(doc);
   const text = paras.map((p) => p.map(lineToText).join("\n")).join("\n\n");
   // the faithful check: reading the words back must give the same document
