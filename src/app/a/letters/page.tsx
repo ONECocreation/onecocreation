@@ -392,15 +392,23 @@ export default function LettersRoom() {
     } else setDeleteNote(`Not deleted. ${d?.reason ?? "Try again in a moment."}`);
   }
 
+  /* the words are shown in quotes, so typing the quotes too still counts */
+  const saidYesDelete = (s: string) => s.trim().replace(/^["'“”]+|["'“”]+$/g, "").trim().toLowerCase() === "yes delete";
+
   function deleteStrip(key: string, title: string) {
+    /* the pair sits on its own row under the field, Delete left and Keep it
+       right; two buttons straight in the form shared the field's one button
+       cell and Keep it was drawn over Delete draft (two inks in one label) */
     return (
       <div className="kitx-row">
-        <p className="kit-note">Delete the draft &ldquo;{title}&rdquo;? It leaves this room and there is no going back. Type yes delete to go on.</p>
-        <form className="kit-inline-form" onSubmit={(e) => { e.preventDefault(); if (deleteWords.trim().toLowerCase() === "yes delete") deleteDraft(key); }}>
-          <Field id={`delete-${key}`} label="Type yes delete" value={deleteWords}
+        <p className="kit-note">Delete the draft &ldquo;{title}&rdquo;? It leaves this room and there is no going back. Type &ldquo;yes delete&rdquo; to go on.</p>
+        <form className="kit-inline-form" onSubmit={(e) => { e.preventDefault(); if (saidYesDelete(deleteWords)) deleteDraft(key); }}>
+          <Field id={`delete-${key}`} label={"Type “yes delete”"} value={deleteWords}
             onChange={(e) => setDeleteWords(e.target.value)} placeholder="yes delete" autoComplete="off" />
-          <Button type="submit" sm disabled={deleteWords.trim().toLowerCase() !== "yes delete"}>Delete draft</Button>
-          <Button type="button" sm variant="second" onClick={() => setDeleteFor(null)}>Keep it</Button>
+          <div className="kit-btn-row">
+            <Button type="submit" sm disabled={!saidYesDelete(deleteWords)}>Delete draft</Button>
+            <Button type="button" sm variant="second" onClick={() => setDeleteFor(null)}>Keep it</Button>
+          </div>
         </form>
         {deleteNote && <p className="kit-note">{deleteNote}</p>}
       </div>

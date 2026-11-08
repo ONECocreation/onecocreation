@@ -565,6 +565,15 @@
 .kit-inline-form:has(>.kit-field)>.kit-btn{grid-column:2;grid-row:2;align-self:stretch;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
 @media (max-width:640px){.kit-inline-form:has(>.kit-field){grid-template-columns:minmax(0,1fr)}
   .kit-inline-form:has(>.kit-field)>.kit-btn{grid-column:1;grid-row:auto;justify-self:center;margin-top:4px}}
+/* The cell beside the field holds ONE button. A second button straight in the form used to land in
+   that same cell, drawn over the first (Keep it over Delete draft: two inks in one label), so it now
+   takes its own row. A pair that belongs side by side rides a .kit-btn-row, which takes the whole
+   row under the field; in /a the T-624 group law (.kit-bset .kit-btn-row) then gives it one width
+   per button, centred, and stacks it at phone width. */
+.kit-inline-form:has(>.kit-field)>.kit-btn~.kit-btn{grid-column:1/-1;grid-row:auto;justify-self:start}
+.kit-inline-form:has(>.kit-field):has(>.kit-btn-row){grid-template-columns:minmax(0,1fr)}
+.kit-inline-form:has(>.kit-field)>.kit-btn-row{grid-column:1/-1;margin-top:4px}
+@media (max-width:640px){.kit-inline-form:has(>.kit-field)>.kit-btn~.kit-btn{justify-self:center}}
 
 /* ── replays: the top player and the mini thumbnails (TASK-532, block
       969,334, the round-2 NOD frames R2/R3 — tokens only) ── */
