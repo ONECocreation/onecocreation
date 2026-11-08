@@ -20,6 +20,8 @@ import {
   serializeLetter,
   textToDoc,
   withTextSegment,
+  type DocNode,
+  type DocParagraph,
 } from "@/lib/letter-model";
 
 const EDGE: Record<string, string> = {
@@ -128,6 +130,30 @@ describe("text blocks and the editor document", () => {
       const doc = { type: "doc" as const, content: [{ type: "paragraph" as const, content: [{ type: "text" as const, text: t }] }] };
       expect(docToText(doc), t).toEqual({ ok: false, reason: REFUSE_STAR_OR_BRACKET });
     }
+  });
+  it("a space at a paragraph's edge is dropped, never refused as a star (Love's 'Not saved', Nov 2026)", () => {
+    const para = (...content: DocNode[]) => ({ type: "paragraph" as const, content });
+    const t = (text: string, mark?: "bold") => (mark ? { type: "text" as const, text, marks: [{ type: mark }] } : { type: "text" as const, text });
+    const cases: [DocParagraph[], string[]][] = [
+      [[para(t("As Always. IAM, WE ARE One. ")), para(t("One Cocreation"))], ["As Always. IAM, WE ARE One.", "", "One Cocreation"]],
+      [[para(t(" One Cocreation"))], ["One Cocreation"]],
+      [[para(t("One Cocreation "))], ["One Cocreation"]],
+      [[para(t("One Cocreation "), { type: "hardBreak" })], ["One Cocreation"]],
+      [[para(t("One", "bold"), t(" "))], ["**One**"]],
+      [[para(t("Love ", "bold"))], ["**Love**"]],
+      [[para(t("a "), { type: "hardBreak" }, t("  "), { type: "hardBreak" }, t("b"))], ["a", "", "b"]],
+    ];
+    for (const [content, lines] of cases) expect(docToText({ type: "doc", content }), JSON.stringify(content)).toEqual({ ok: true, lines });
+  });
+  it("a space inside a paragraph, before a line break, is kept as typed", () => {
+    const doc = { type: "doc" as const, content: [{ type: "paragraph" as const, content: [{ type: "text" as const, text: "As Always. " }, { type: "hardBreak" as const }, { type: "text" as const, text: "Love" }] }] };
+    expect(docToText(doc)).toEqual({ ok: true, lines: ["As Always. ", "Love"] });
+  });
+  it("an edge space typed into a letter saves the letter", () => {
+    const m = parseLetter("Hi there");
+    const doc = { type: "doc" as const, content: [{ type: "paragraph" as const, content: [{ type: "text" as const, text: "Hi there, love " }] }] };
+    const r = applyTextEdit(m, 0, doc);
+    expect(r.ok && serializeLetter(r.model)).toBe("Hi there, love");
   });
   it("a link mark the editor decorates (target, rel, class) still writes back", () => {
     const doc = {

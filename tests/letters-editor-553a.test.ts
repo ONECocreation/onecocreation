@@ -87,6 +87,32 @@ describe("Publish and Save draft", () => {
   });
 });
 
+/* Love, Nov 2026: she pressed Publish thinking it mailed the community, then
+ * Send me a test copy twice, and read "Not saved" and "Not sent". */
+describe("Publish is not Send, and one press is one press", () => {
+  const src = read(PAGE);
+  it("the page says Publish does not send, and points at the send panel for her own published letters", () => {
+    expect(src).toContain("It does not send it. Your list gets it only when you send it from the Send page.");
+    expect(src).toContain('const canSend = letter?.kind === "composed" && !isDrafted(key, letter);');
+    expect(src).toMatch(/canSend && !dirty && \(\s*<div className="kit-btn-row kit-bset">\s*<Link className="kit-btn kit-btn-main kit-btn-sm" href=\{`\/a\/letters\/\$\{key\}`\}>Send it to your list<\/Link>/);
+  });
+  it("a ref guards Publish, Save draft and the test copy, and the buttons grey while one is in flight", () => {
+    expect(src).toContain("if (busyRef.current) return false;");
+    expect(src.match(/if \(!claim\(\)\) return;/g)?.length).toBe(2);
+    expect(src.match(/release\(\);/g)?.length).toBe(2);
+    for (const b of ["put(true)} disabled={noWords || busy}", "put(false)} disabled={noWords || busy}", "sendCopy} disabled={noWords || busy ||"]) expect(src).toContain(b);
+  });
+  it("a copy already on its way is not called a failure", () => {
+    expect(src).toContain("res?.status === 429");
+    expect(src).toContain("A copy is already on its way.");
+  });
+  it("a refused block stops the test copy too, and a failed save says why", () => {
+    expect(src).toContain('setCopyNote({ kind: "err", text: "Not sent. Fix the words marked above first." });');
+    expect(src).toContain("res?.status === 401");
+    expect(src).toContain('d?.reason === "subject and body required"');
+  });
+});
+
 describe("the room points at the page", () => {
   const room = read("src/app/a/letters/page.tsx");
   it("Edit is a link to /a/letters/<key>/edit in the Send link's kit classes", () => {
