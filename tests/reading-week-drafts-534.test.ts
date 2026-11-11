@@ -499,6 +499,7 @@ describe("the Reading group of /a/letters", () => {
   });
   it("the send panel and the send route are untouched by this lane", () => {
     const panel = fs.readFileSync(path.join(__dirname, "..", "src/app/a/letters/[key]/page.tsx"), "utf8");
-    expect(panel).toMatch(/type \{?.*\}? to send|to send to/i);
+    // the headcount confirm moved from a typed number to a checkbox (the Admiral's pin, block 975,433)
+    expect(panel).toMatch(/I checked the list\. This goes to/);
   });
 });

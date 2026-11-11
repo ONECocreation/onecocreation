@@ -10,7 +10,8 @@ import {
 } from "@/lib/letters";
 import { hourlyCap, onceWithin } from "@/lib/mail";
 import { listSubscribers, subscribersConfigured, unsubscribeUrl } from "@/lib/subscribers";
-import { enqueue, getSendRecord, recentSendsForLetter } from "@/lib/mail-queue";
+import { cancelSend, enqueue, getSendRecord, queuedRecipients, recentSendsForLetter, rescheduleSend } from "@/lib/mail-queue";
+import { moveDelivery } from "@/lib/mailbox";
 import { sendLetterToList } from "@/lib/list-send";
 
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
@@ -22,7 +23,8 @@ export const dynamic = "force-dynamic";
  * door's segment (TASK-131) — now, or scheduled. Every copy rides the drip
  * queue so the hourly cap and the meter stay honest. `at` (ISO) sets
  * notBefore; omitted = next tick. A list send must carry `confirm` = the
- * exact headcount it was shown — the typed-back number, not a button tap.
+ * exact headcount it was shown — the panel sends it only once Love ticks
+ * the box that names the count (it used to be a typed-back number).
  */
 export async function POST(request: Request) {
   if (!operatorFromCookieHeader(request.headers.get("cookie"))) {
@@ -142,4 +144,39 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, sends });
   }
   return NextResponse.json({ ok: false, reason: "sendId or key required" }, { status: 400 });
+}
+
+/**
+ * Cancel or Change time on a send that has not gone out yet (the Admiral's
+ * ask: "give the ability to modify an existing item that's going to send").
+ * Body: { sendId, action: "cancel" } or { sendId, action: "reschedule", at }.
+ * Operator only. The queue's own copies are untouched; the send's record
+ * carries the change and the sender tick obeys it (lib/mail-queue.ts).
+ */
+export async function PATCH(request: Request) {
+  if (!operatorFromCookieHeader(request.headers.get("cookie"))) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  const body = (await request.json().catch(() => null)) as { sendId?: string; action?: string; at?: string } | null;
+  if (!body?.sendId || (body.action !== "cancel" && body.action !== "reschedule")) {
+    return NextResponse.json({ ok: false, reason: "sendId and action required" }, { status: 400 });
+  }
+  const before = await getSendRecord(body.sendId);
+  let atMs: number | null = null;
+  if (body.action === "reschedule") {
+    atMs = body.at ? Date.parse(body.at) : NaN;
+    if (!Number.isFinite(atMs)) return NextResponse.json({ ok: false, reason: "bad schedule time" }, { status: 400 });
+    if (atMs <= Date.now()) return NextResponse.json({ ok: false, reason: "Pick a time that has not passed yet." }, { status: 400 });
+  }
+  const result = body.action === "cancel" ? await cancelSend(body.sendId) : await rescheduleSend(body.sendId, atMs as number);
+  if (!result.ok) return NextResponse.json(result, { status: 409 });
+
+  // each member's own /letters mailbox follows the change (best-effort)
+  if (before) {
+    const fromAtMs = before.scheduledFor === "next tick" ? before.createdAtMs : Date.parse(before.scheduledFor);
+    for (const to of await queuedRecipients(body.sendId)) {
+      await moveDelivery(to, before.key, fromAtMs, atMs).catch(() => {});
+    }
+  }
+  return NextResponse.json({ ok: true, ...result.record, sendId: body.sendId });
 }

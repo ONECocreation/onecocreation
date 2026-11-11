@@ -52,3 +52,27 @@ export async function listMailbox(email: string): Promise<MailboxEntry[]> {
   }
   return out;
 }
+
+/**
+ * Cancel and Change time on a send that has not gone out: the member's
+ * mailbox entry for it (same letter, written at `fromAtMs`, or within two
+ * minutes of it for a "next tick" send) is removed, and written again at
+ * `toAtMs` when the send was moved rather than cancelled. Best-effort.
+ */
+export async function moveDelivery(email: string, key: string, fromAtMs: number, toAtMs: number | null): Promise<void> {
+  if (!restEnv() || !email.includes("@")) return;
+  const raw = (await kv(["LRANGE", KEY(email), 0, 199])) as string[] | null;
+  if (!Array.isArray(raw)) return;
+  for (const r of raw) {
+    let e: MailboxEntry;
+    try {
+      e = JSON.parse(r) as MailboxEntry;
+    } catch {
+      continue;
+    }
+    if (e?.key !== key || Math.abs(e.atMs - fromAtMs) > 120_000) continue;
+    await kv(["LREM", KEY(email), 1, r]);
+    if (toAtMs !== null) await kv(["LPUSH", KEY(email), JSON.stringify({ ...e, atMs: toAtMs })]);
+    return;
+  }
+}

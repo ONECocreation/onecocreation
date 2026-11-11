@@ -829,6 +829,9 @@
 }
 .kit-bset .btn:is(.btn-sm,.kit-btn-sm),.kit-bset .kit-btn:is(.kit-btn-sm){height:34px;min-height:34px;padding:0 14px;font-size:.7rem}
 @media(max-width:640px){.kit-bset .btn,.kit-bset .kit-btn:not(.kit-btn-quiet){height:40px;min-height:40px}.kit-bset .btn:is(.btn-sm,.kit-btn-sm),.kit-bset .kit-btn:is(.kit-btn-sm){height:38px;min-height:38px}}
+/* the row-alignment law: a console field beside a small button is the button's own height (letters send panel) */
+.kit-bset .kit-field-sm{height:34px;box-sizing:border-box;line-height:normal}
+@media(max-width:640px){.kit-bset .kit-field-sm{height:38px}}
 .kit-bset .btn::after{content:none}
 .kit-bset .btn:hover,.kit-bset .kit-btn:hover{transform:none}
 /* primary: the pink pill */

@@ -43,13 +43,12 @@ describe("listSendOutcomeLine — the list-send control's ONE line", () => {
     expect(listSendOutcomeLine(o)).toBe("Queued for 1 person. Goes out within 10 minutes.");
   });
 
-  it("a real schedule reads in Mountain AND the viewer's own clock, both computed from the same instant", () => {
-    const iso = "2026-10-03T11:55:00.000Z"; // 5:55 AM MDT
+  it("a real schedule reads in Mountain Time (day and clock) AND the viewer's own clock, both from the same instant", () => {
+    const iso = "2026-10-03T11:55:00.000Z"; // 5:55 AM Mountain Time
     const o: ListSendOutcome = { kind: "queued", queued: 6, scheduledFor: iso };
     const line = listSendOutcomeLine(o);
-    const mountain = new Intl.DateTimeFormat("en-US", { timeZone: "America/Denver", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
     const viewer = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(iso));
-    expect(line).toBe(`Scheduled for ${mountain} Mountain (${viewer} your time).`);
+    expect(line).toBe(`Scheduled for Saturday, October 3 at 5:55 AM Mountain Time (${viewer} your time).`);
   });
 
   it("mid-progress: 'Sent to 3 of 6.' — the queued count never disappears", () => {
@@ -162,9 +161,9 @@ describe("the /a uniformity law, at the source (one state line, aria-live, error
   });
 
   it("each button's status line sits immediately after that SAME button's own markup — never the other control's", () => {
-    const testBtnAt = SRC.indexOf("SEND TEST COPY");
+    const testBtnAt = SRC.indexOf("Send me a test copy");
     const testLineAt = SRC.indexOf("testSendOutcomeLine(testOutcome)");
-    const listBtnAt = SRC.indexOf("SCHEDULE TO");
+    const listBtnAt = SRC.indexOf('"Send now"');
     const listLineAt = SRC.indexOf("listSendOutcomeLine(listOutcome)");
     expect(testBtnAt).toBeGreaterThan(-1);
     expect(testLineAt).toBeGreaterThan(testBtnAt);
@@ -174,7 +173,8 @@ describe("the /a uniformity law, at the source (one state line, aria-live, error
 
   it("the ONE-send-per-click guard (TASK-214) still wraps both send paths", () => {
     expect(SRC).toContain("if (sendingRef.current) return; // one click in flight at a time");
-    expect(SRC.match(/if \(sendingRef\.current\) return;/g)).toHaveLength(2);
+    // three since Cancel and Change time joined: one press in flight across all of them
+    expect(SRC.match(/if \(sendingRef\.current\) return;/g)).toHaveLength(3);
   });
 
   it("no em dash, arrow, or emoji rides any button label or the status-line copy this lane wrote", () => {
@@ -192,7 +192,7 @@ describe("the /a uniformity law, at the source (one state line, aria-live, error
     expect(the409Match, "the 409 wording was not found at its expected shape").toBeTruthy();
 
     const newLabelsAndCopy = [
-      "SEND TEST COPY",
+      "Send me a test copy",
       "Sending…",
       "Queued for",
       "Goes out within 10 minutes.",
