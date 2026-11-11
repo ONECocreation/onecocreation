@@ -1,14 +1,18 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { glassCard, field, SectionHead } from "@/components/console/glass";
+import { DEFAULT_TZ, wallClockToUtc } from "@/lib/booking-time";
+import { Button } from "@/components/kit";
 
 /**
  * THE SEND PANEL (TASK-131, 0018.06.16 a₿): one letter, one page — pick the
  * segment (All, or one door's people — every source seen in the records,
  * with LIVE counts), send yourself a test copy, schedule if the moment is
- * later, and type the exact headcount back before a list send fires. After
+ * later (in Mountain Time), and tick the box that names the headcount
+ * before Send now or Schedule fires; a send still waiting can be cancelled
+ * or moved (the Admiral's pins, block 975,433). After
  * the send, one delivery line per member. When N outruns the hourly cap the
  * panel says when the drip will finish — the queue's pace, told honestly.
  *
@@ -77,6 +81,56 @@ export interface SendRecord {
   segment: string;
   scheduledFor: string;
   createdAtMs: number;
+  /** Love pressed Cancel on it (absent on records written before Cancel existed). */
+  cancelled?: boolean;
+}
+
+/* ═══════════════ the schedule reads in Mountain Time (the Admiral's pin) ═══════
+ * The time field used to be read in the BROWSER's own zone: the Admiral,
+ * an hour west, typed 11:11 and the letter was queued for 12:11 Mountain.
+ * Whatever is typed is now Mountain Time, the site's own clock (DEFAULT_TZ),
+ * and the field says so. Pure helpers, pinned in tests. */
+
+/** "2026-11-11T11:11" from the time field = that wall clock in Mountain Time. */
+export function mountainInputToIso(value: string): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(value);
+  if (!m) return null;
+  return wallClockToUtc(+m[1], +m[2], +m[3], +m[4], +m[5], DEFAULT_TZ).toISOString();
+}
+
+/** The reverse: an instant as the time field's own "YYYY-MM-DDTHH:MM" in Mountain Time. */
+export function isoToMountainInput(iso: string): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: DEFAULT_TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date(iso));
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+}
+
+/** "Wednesday, November 11 at 11:11 AM Mountain Time" */
+export function mountainWords(iso: string): string {
+  const d = new Date(iso);
+  const day = new Intl.DateTimeFormat("en-US", { timeZone: DEFAULT_TZ, weekday: "long", month: "long", day: "numeric" }).format(d);
+  const time = new Intl.DateTimeFormat("en-US", { timeZone: DEFAULT_TZ, hour: "numeric", minute: "2-digit", timeZoneName: "longGeneric" }).format(d);
+  return `${day} at ${time}`;
+}
+
+/** Cancel and Change time are offered only while nothing has gone out (mail-queue.ts's own rule). */
+export function sendIsChangeable(s: Pick<SendRecord, "sent" | "dropped" | "cancelled">): boolean {
+  return !s.cancelled && s.sent + s.dropped === 0;
+}
+
+/** One row of the recent sends list, in words. */
+export function sendRowWords(s: SendRecord): string {
+  const who = `${s.queued} ${s.queued === 1 ? "person" : "people"}`;
+  const door = s.segment === "all" ? "everyone" : s.segment;
+  if (s.cancelled) return `Cancelled · ${door} · ${who}${s.sent > 0 ? ` · ${s.sent} sent before it stopped` : ""}`;
+  if (s.sent + s.dropped === 0) {
+    return s.scheduledFor === "next tick"
+      ? `Going out within 10 minutes · ${door} · ${who}`
+      : `Waiting for ${mountainWords(s.scheduledFor)} · ${door} · ${who}`;
+  }
+  return `Sent to ${s.sent}${s.dropped > 0 ? ` (${s.dropped} dropped)` : ""} of ${s.queued} · ${door}`;
 }
 
 /** "5:55 AM" — `iso`'s own clock in `timeZone` (undefined = the viewer's
@@ -109,7 +163,7 @@ export function listSendOutcomeLine(o: ListSendOutcome): string {
     case "queued": {
       const who = o.queued === 1 ? "person" : "people";
       if (o.scheduledFor === "next tick") return `Queued for ${o.queued} ${who}. Goes out within 10 minutes.`;
-      return `Scheduled for ${clockWords(o.scheduledFor, "America/Denver")} Mountain (${clockWords(o.scheduledFor)} your time).`;
+      return `Scheduled for ${mountainWords(o.scheduledFor)} (${clockWords(o.scheduledFor)} your time).`;
     }
     case "progress": {
       const who = o.queued === 1 ? "person" : "people";
@@ -161,6 +215,9 @@ export function testSendOutcomeLine(o: TestSendOutcome): string {
 
 const POLL_EVERY_MS = 15_000;
 
+/** a field that sits beside a small button: no vertical padding, kit-field-sm sets the shared height */
+const fieldSm: CSSProperties = { ...field, padding: "0 12px" };
+
 export default function LetterSendPanel({ params }: { params: Promise<{ key: string }> }) {
   const { key } = use(params);
   const [letter, setLetter] = useState<ApiLetter | null | undefined>(undefined);
@@ -169,7 +226,11 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   const [segment, setSegment] = useState("all");
   const [testTo, setTestTo] = useState("");
   const [sendAt, setSendAt] = useState("");
-  const [typed, setTyped] = useState("");
+  const [sendAtPast, setSendAtPast] = useState(false);
+  const [checked, setChecked] = useState(false);
+  // Change time / Cancel on a send still waiting: which row is open, and its own line
+  const [rowEdit, setRowEdit] = useState<{ sendId: string; mode: "time" | "cancel"; value: string } | null>(null);
+  const [rowNote, setRowNote] = useState<{ sendId: string; text: string; err: boolean } | null>(null);
   const [testOutcome, setTestOutcome] = useState<TestSendOutcome>({ kind: "idle" });
   const [listOutcome, setListOutcome] = useState<ListSendOutcome>({ kind: "idle" });
   const [recentSends, setRecentSends] = useState<SendRecord[]>([]);
@@ -203,7 +264,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   }
   function pickSegment(source: string, segs: Segment[] = segments, capVal: number = cap) {
     setSegment(source);
-    setTyped("");
+    setChecked(false);
     updateEstimate(segs.find((s) => s.source === source)?.count ?? 0, capVal);
   }
 
@@ -255,7 +316,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
       .then((r) => r.json())
       .catch(() => null);
     if (!d?.ok) return; // a transient fetch hiccup — try again next tick, never clear the line
-    const rec: SendRecord = { sendId, queued: d.queued, sent: d.sent, dropped: d.dropped, segment: d.segment, scheduledFor: d.scheduledFor, createdAtMs: d.createdAtMs };
+    const rec: SendRecord = { sendId, queued: d.queued, sent: d.sent, dropped: d.dropped, segment: d.segment, scheduledFor: d.scheduledFor, createdAtMs: d.createdAtMs, cancelled: !!d.cancelled };
     setListOutcome({ kind: "progress", queued: rec.queued, sent: rec.sent, dropped: rec.dropped });
     setRecentSends((prev) => [rec, ...prev.filter((s) => s.sendId !== sendId)].slice(0, 5));
     if (pollShouldStop(pollStartRef.current, Date.now(), rec)) setActiveSendId(null);
@@ -299,7 +360,14 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   const subject = letter?.override?.subject ?? letter?.default?.subject ?? letter?.title ?? "";
   const hasBody = !!(letter?.override?.body ?? letter?.default?.body)?.trim();
   const count = segments.find((s) => s.source === segment)?.count ?? 0;
-  const confirmed = typed.trim() !== "" && Number(typed) === count;
+  const confirmed = checked && count > 0;
+  const sendAtIso = sendAt ? mountainInputToIso(sendAt) : null;
+
+  function pickTime(value: string) {
+    setSendAt(value);
+    const iso = value ? mountainInputToIso(value) : null;
+    setSendAtPast(!!iso && Date.parse(iso) <= Date.now());
+  }
 
   async function sendTest() {
     if (sendingRef.current) return; // one click in flight at a time
@@ -319,7 +387,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
     }
   }
 
-  async function sendList() {
+  async function sendList(mode: "now" | "schedule") {
     if (sendingRef.current) return; // one click in flight at a time
     sendingRef.current = true;
     setSending(true);
@@ -331,13 +399,13 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         body: JSON.stringify({
           key,
           source: segment,
-          confirm: Number(typed),
-          at: sendAt ? new Date(sendAt).toISOString() : undefined,
+          confirm: confirmed ? count : undefined,
+          at: mode === "schedule" && sendAtIso ? sendAtIso : undefined,
         }),
       }).then((r) => r.json()).catch(() => null);
       if (d?.ok) {
         setListOutcome({ kind: "queued", queued: d.queued, scheduledFor: d.scheduledFor });
-        setTyped("");
+        setChecked(false);
         if (d.sendId) {
           const createdAtMs = Date.now();
           setRecentSends((prev) => [
@@ -348,9 +416,48 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
           setActiveSendId(d.sendId); // starts the poll effect above
         }
       } else if (d?.expected !== undefined) {
-        setListOutcome({ kind: "err", reason: `The list changed. It has ${d.expected} people now. Type ${d.expected} to send.` });
+        setListOutcome({ kind: "err", reason: `The list changed. It has ${d.expected} people now. Check the box again to send.` });
+        setChecked(false);
       } else {
         setListOutcome({ kind: "err", reason: d?.reason ?? "send failed" });
+      }
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
+    }
+  }
+
+  /** Cancel or Change time on a send still waiting to go out. */
+  async function changeSend(sendId: string, action: "cancel" | "reschedule", value?: string) {
+    const at = action === "reschedule" && value ? mountainInputToIso(value) : null;
+    if (action === "reschedule" && !at) {
+      setRowNote({ sendId, text: "Pick a day and a time.", err: true });
+      return;
+    }
+    if (sendingRef.current) return;
+    sendingRef.current = true;
+    setSending(true);
+    try {
+      const d = await fetch("/api/admin/letters/send", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sendId, action, at: at ?? undefined }),
+      }).then((r) => r.json()).catch(() => null);
+      if (!d?.ok) {
+        setRowNote({ sendId, text: d?.reason ?? "That did not save. Try again.", err: true });
+        return;
+      }
+      const rec: SendRecord = { sendId, queued: d.queued, sent: d.sent, dropped: d.dropped, segment: d.segment, scheduledFor: d.scheduledFor, createdAtMs: d.createdAtMs, cancelled: !!d.cancelled };
+      setRecentSends((prev) => prev.map((s) => (s.sendId === sendId ? rec : s)));
+      setRowEdit(null);
+      setRowNote({ sendId, text: action === "cancel" ? "Cancelled. Nobody on the list gets it." : `Moved to ${mountainWords(rec.scheduledFor)}.`, err: false });
+      if (activeSendId === sendId) {
+        if (action === "cancel") {
+          setActiveSendId(null);
+          setListOutcome({ kind: "idle" });
+        } else {
+          setListOutcome({ kind: "queued", queued: rec.queued, scheduledFor: rec.scheduledFor });
+        }
       }
     } finally {
       sendingRef.current = false;
@@ -384,7 +491,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
             /letters seam is flagged, outside this lane) — no preview door,
             and its emails carry no "view on the site" link */}
         {letter.kind === "seeded" ? (
-          <a href={`/letters/${letter.key}`} target="_blank" rel="noreferrer" className="mt-1 inline-block btn btn-ghost btn-sm">
+          <a href={`/letters/${letter.key}`} target="_blank" rel="noreferrer" className="mt-1 inline-block kit-btn kit-btn-second kit-btn-sm">
             preview on the site
           </a>
         ) : (
@@ -423,17 +530,17 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
       <SectionHead label="Send me a test" />
       <div style={glassCard}>
         <div className="flex flex-wrap items-center gap-2">
-          <input value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="you@example.com" type="email" className="console-field" style={field} />
-          <button onClick={sendTest} disabled={sending || !testTo.includes("@") || !hasBody} className="btn btn-sm">
-            {testOutcome.kind === "sending" ? "SENDING…" : "SEND TEST COPY"}
-          </button>
+          <input value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="you@example.com" type="email" className="console-field kit-field-sm" style={fieldSm} />
+          <Button sm variant="second" onClick={sendTest} disabled={sending || !testTo.includes("@") || !hasBody}>
+            {testOutcome.kind === "sending" ? "Sending…" : "Send me a test copy"}
+          </Button>
         </div>
         {testOutcome.kind !== "idle" && (
           <p aria-live="polite" className={testOutcome.kind === "err" ? "kit-note kit-note-err" : testOutcome.kind === "ok" ? "kit-note kit-note-ok" : "kit-note"}>{testSendOutcomeLine(testOutcome)}</p>
         )}
       </div>
 
-      <SectionHead label="Send to the list. Pick the door" />
+      <SectionHead label="Send to the list" />
       <div style={glassCard}>
         <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
           {segments.map((s) => (
@@ -451,23 +558,33 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         </ul>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <input type="datetime-local" value={sendAt} onChange={(e) => setSendAt(e.target.value)} className="console-field" style={field} />
-          <span style={{ fontSize: ".62rem", textTransform: "uppercase", color: "var(--muted)" }}>{sendAt ? "scheduled" : "next tick"}</span>
+          <input type="datetime-local" value={sendAt} onChange={(e) => pickTime(e.target.value)} aria-label="Send time, Mountain Time" className="console-field kit-field-sm" style={fieldSm} />
+          <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>Mountain Time</span>
         </div>
+        {sendAtIso && (
+          <p className={sendAtPast ? "kit-note kit-note-err" : "kit-note"}>
+            {sendAtPast ? "That time has passed. Pick a later one, or send it now." : `Schedule sends it ${mountainWords(sendAtIso)}.`}
+          </p>
+        )}
 
         {count > 0 && (
           <div className="mt-3 space-y-2">
-            <label className="block" style={{ fontSize: ".75rem", color: "var(--muted)" }}>
-              Type <b style={{ color: "var(--gold-deep)" }}>{count}</b> to send to {count} {count === 1 ? "person" : "people"}:
-              <input value={typed} onChange={(e) => setTyped(e.target.value)} inputMode="numeric" placeholder={String(count)}
-                className="ml-2 console-field" style={{ ...field, width: 96 }} />
+            <label className="flex items-center gap-2" style={{ ...field, cursor: "pointer" }}>
+              <input type="checkbox" checked={checked} onChange={(e) => setChecked(e.target.checked)} />
+              <span>I checked the list. This goes to <b>{count} {count === 1 ? "person" : "people"}</b>.</span>
             </label>
-            <button onClick={sendList} disabled={sending || !confirmed || !hasBody} className="btn btn-sm">
-              {listOutcome.kind === "sending" ? "SENDING…" : sendAt ? `SCHEDULE TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}` : `SEND TO ${count} ${count === 1 ? "PERSON" : "PEOPLE"}`}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button sm onClick={() => sendList("now")} disabled={sending || !confirmed || !hasBody}>
+                {listOutcome.kind === "sending" ? "Sending…" : "Send now"}
+              </Button>
+              <Button sm onClick={() => sendList("schedule")} disabled={sending || !confirmed || !hasBody || !sendAtIso || sendAtPast}>
+                Schedule
+              </Button>
+            </div>
+            <p className="kit-note">Send now goes out within 10 minutes. Schedule waits for the time above.</p>
             {finish && (
               <p style={{ fontSize: ".75rem", color: "var(--muted)" }}>
-                ⏳ the hourly cap ({cap}/hour) drips this: done by ≈ {finish.toLocaleString()}
+                The hourly cap ({cap} an hour) spreads this out: done by about {finish.toLocaleString()}
                 {sendAt ? " after the scheduled start" : ""}
               </p>
             )}
@@ -483,8 +600,31 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
           <ul className="kit-sends-list">
             {recentSends.map((s) => (
               <li key={s.sendId} className="kit-note">
-                {new Date(s.createdAtMs).toLocaleString()} · {s.segment === "all" ? "all" : s.segment} · Sent to {s.sent}
-                {s.dropped > 0 ? ` (${s.dropped} dropped)` : ""} of {s.queued}
+                <span>{sendRowWords(s)}</span>
+                {sendIsChangeable(s) && rowEdit?.sendId !== s.sendId && (
+                  <span className="ml-2 inline-flex flex-wrap gap-2">
+                    <Button sm variant="second" onClick={() => { setRowNote(null); setRowEdit({ sendId: s.sendId, mode: "time", value: s.scheduledFor === "next tick" ? "" : isoToMountainInput(s.scheduledFor) }); }} disabled={sending}>Change time</Button>
+                    <Button sm variant="second" onClick={() => { setRowNote(null); setRowEdit({ sendId: s.sendId, mode: "cancel", value: "" }); }} disabled={sending}>Cancel send</Button>
+                  </span>
+                )}
+                {rowEdit?.sendId === s.sendId && rowEdit.mode === "time" && (
+                  <span className="mt-2 flex flex-wrap items-center gap-2">
+                    <input type="datetime-local" value={rowEdit.value} onChange={(e) => setRowEdit({ ...rowEdit, value: e.target.value })} aria-label="New send time, Mountain Time" className="console-field kit-field-sm" style={fieldSm} />
+                    <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>Mountain Time</span>
+                    <Button sm onClick={() => changeSend(s.sendId, "reschedule", rowEdit.value)} disabled={sending || !rowEdit.value}>Save time</Button>
+                    <Button sm variant="second" onClick={() => setRowEdit(null)} disabled={sending}>Keep it</Button>
+                  </span>
+                )}
+                {rowEdit?.sendId === s.sendId && rowEdit.mode === "cancel" && (
+                  <span className="mt-2 flex flex-wrap items-center gap-2">
+                    <span>Cancel this send? Nobody on the list gets it. There is no going back.</span>
+                    <Button sm onClick={() => changeSend(s.sendId, "cancel")} disabled={sending}>Yes, cancel it</Button>
+                    <Button sm variant="second" onClick={() => setRowEdit(null)} disabled={sending}>Keep it</Button>
+                  </span>
+                )}
+                {rowNote?.sendId === s.sendId && (
+                  <span aria-live="polite" className={rowNote.err ? "kit-note kit-note-err" : "kit-note kit-note-ok"} style={{ display: "block" }}>{rowNote.text}</span>
+                )}
               </li>
             ))}
           </ul>
