@@ -761,10 +761,10 @@ export default function LettersRoom() {
           {CONSOLE_CHROME !== "site" && (
             <>
               <h2 className="kit-h2">Letters</h2>
-              <MailTickStatus />
               <p className="kit-text-quiet">Every email the house sends. Pick one to write it and see it as the reader will.</p>
             </>
           )}
+          <MailTickStatus />
           <div>
             <Button sm variant="second" onClick={() => { setComposing(!composing); setNote(""); }} aria-expanded={composing}>
               New letter
