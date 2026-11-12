@@ -220,15 +220,15 @@ describe("POST /api/admin/letters/send — a real list send carries a sendId", (
     expect(hashes.size).toBe(0);
   });
 
-  it("EXPIREs the send record for the full 14-day TTL", async () => {
+  it("keeps aggregate send history durable so Sent cannot silently become Draft", async () => {
     await seedList();
     const key = await composeAndWrite();
     await (await sendPOST())(
       req("/api/admin/letters/send", { method: "POST", body: JSON.stringify({ key, source: "meditation", confirm: 2 }) }),
     ).then((r) => r.json());
-    const expires = commandLog.filter((c) => c[0] === "EXPIRE" && String(c[1]).startsWith("letters:send:"));
+    const expires = commandLog.filter((c) => c[0] === "PERSIST" && String(c[1]).startsWith("letters:send:"));
     expect(expires.length).toBeGreaterThan(0);
-    for (const c of expires) expect(c[2]).toBe(String(14 * 24 * 3600));
+    expect(commandLog.some((c) => c[0] === "EXPIRE" && String(c[1]).startsWith("letters:send:"))).toBe(false);
   });
 });
 

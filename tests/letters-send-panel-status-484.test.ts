@@ -33,14 +33,14 @@ describe("listSendOutcomeLine — the list-send control's ONE line", () => {
     expect(listSendOutcomeLine({ kind: "err", reason: "type the exact count to send" })).toBe("type the exact count to send");
   });
 
-  it("success, next tick, plural: 'Queued for 6 people. Goes out within 10 minutes.'", () => {
+  it("success, next tick, plural: 'Queued for 6 people. Goes out on the next mail run.'", () => {
     const o: ListSendOutcome = { kind: "queued", queued: 6, scheduledFor: "next tick" };
-    expect(listSendOutcomeLine(o)).toBe("Queued for 6 people. Goes out within 10 minutes.");
+    expect(listSendOutcomeLine(o)).toBe("Queued for 6 people. Goes out on the next mail run.");
   });
 
   it("success, next tick, singular: 'person', not 'people'", () => {
     const o: ListSendOutcome = { kind: "queued", queued: 1, scheduledFor: "next tick" };
-    expect(listSendOutcomeLine(o)).toBe("Queued for 1 person. Goes out within 10 minutes.");
+    expect(listSendOutcomeLine(o)).toBe("Queued for 1 person. Goes out on the next mail run.");
   });
 
   it("a real schedule reads in Mountain Time (day and clock) AND the viewer's own clock, both from the same instant", () => {
@@ -195,7 +195,7 @@ describe("the /a uniformity law, at the source (one state line, aria-live, error
       "Send me a test copy",
       "Sending…",
       "Queued for",
-      "Goes out within 10 minutes.",
+      "Goes out on the next mail run.",
       "Scheduled for",
       "Mountain",
       "your time",

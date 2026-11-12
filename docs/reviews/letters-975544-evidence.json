@@ -1,0 +1,73 @@
+{
+  "scope": "Read-only Vercel logs; no tick invoked by this investigation",
+  "tickRequests": [
+    {
+      "atUtc": "2026-11-12T11:50:01.980000+00:00",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "atUtc": "2026-11-12T11:40:01.510000+00:00",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "atUtc": "2026-11-12T11:30:02.076000+00:00",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "atUtc": "2026-11-12T11:20:01.788000+00:00",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "atUtc": "2026-11-12T11:10:01.444000+00:00",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "atUtc": "2026-11-12T11:00:02.093000+00:00",
+      "status": 200,
+      "method": "GET"
+    }
+  ],
+  "sendEndpointRequests": [
+    {
+      "atUtc": "2026-11-12T11:47:55.549000+00:00",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "atUtc": "2026-11-12T11:47:43.703000+00:00",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "atUtc": "2026-11-12T11:47:40.543000+00:00",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "atUtc": "2026-11-12T11:47:25.150000+00:00",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "atUtc": "2026-11-12T11:47:09.098000+00:00",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "atUtc": "2026-11-12T11:43:02.234000+00:00",
+      "status": 200,
+      "method": "GET"
+    }
+  ],
+  "historicalQuery": {
+    "since": "2026-11-10T07:00:00Z",
+    "until": "2026-11-12T07:00:00Z",
+    "result": "Vercel API 400; no usable incident-window logs"
+  },
+  "redHawkSsh": "Configured Number One seat responds: This service allows sftp connections only."
+}

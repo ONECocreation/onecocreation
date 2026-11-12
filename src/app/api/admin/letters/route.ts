@@ -15,6 +15,7 @@ import {
   type LetterAudience,
   type LetterKey,
 } from "@/lib/letters";
+import { letterDeliverySummary } from "@/lib/letter-delivery";
 import { hourlyCap } from "@/lib/mail";
 import { subscriberSegments, subscribersConfigured, listSubscribers } from "@/lib/subscribers";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
@@ -41,6 +42,7 @@ export async function GET(request: Request) {
     const meta = seeded ? null : await getLetterMeta(k);
     letters.push({
       key: k,
+      delivery: await letterDeliverySummary(k),
       kind: seeded ? "seeded" : "composed",
       override: o,
       default: seeded ? (LETTER_DEFAULTS[k as LetterKey] ?? null) : null,
