@@ -105,3 +105,8 @@ product evidence. The second build/run uses the artist's `site` chrome above.
 [Desktop panel](letters-975544/panel-desktop.png) ·
 [Mobile panel](letters-975544/panel-mobile.png) ·
 [Browser assertions](letters-975544/interaction-checks.json)
+
+Final visual correction: moved the room heartbeat outside the template-only
+heading so Love's artist console shows it too. Rebuilt successfully, reran the
+32 affected room/delivery tests, and recaptured both widths. [Corrected mobile
+room (top crop)](letters-975544/room-mobile.png).
