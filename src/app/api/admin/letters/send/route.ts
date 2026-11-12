@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { watchDelivery, saveScheduleIntent } from "@/lib/letter-delivery";
 import { NextResponse } from "next/server";
 import {
   EDITABLE_LETTERS,
@@ -98,10 +99,23 @@ export async function POST(request: Request) {
   // replays catch-up letter takes the very same path.
   const sent = await sendLetterToList({ key: body.key, subject: tpl.subject, body: tpl.body, source, notBefore, webUrl, list });
   const { sendId, scheduledFor, atMs } = sent;
+  let recordConfirmed = false;
+  let noticePending = false;
+  try {
+    const history = await recentSendsForLetter(body.key, 8, true);
+    recordConfirmed = history.some((s) => s.sendId === sendId);
+    if (recordConfirmed) {
+      await watchDelivery(sendId, tpl.subject);
+      noticePending = true;
+      await saveScheduleIntent(body.key, null);
+    }
+  } catch { console.error("letter send accepted; tracking or notice could not be confirmed"); }
   const cap = hourlyCap();
   return NextResponse.json({
     ok: true,
     queued: list.length,
+    recordConfirmed,
+    noticePending,
     segment: source ?? "all",
     recipients: list,
     sendId,
@@ -134,16 +148,21 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const sendId = url.searchParams.get("sendId");
   const key = url.searchParams.get("key");
-  if (sendId) {
-    const rec = await getSendRecord(sendId);
-    if (!rec) return NextResponse.json({ ok: false, reason: "unknown send" }, { status: 404 });
-    return NextResponse.json({ ok: true, ...rec, sendId });
+  try {
+    if (sendId) {
+      const rec = await getSendRecord(sendId, true);
+      if (!rec) return NextResponse.json({ ok: false, reason: "unknown send" }, { status: 404 });
+      return NextResponse.json({ ok: true, ...rec, sendId });
+    }
+    if (key) {
+      if (!(await isLetterKey(key))) return NextResponse.json({ ok: false, reason: "unknown letter" }, { status: 404 });
+      const sends = await recentSendsForLetter(key, 5, true);
+      return NextResponse.json({ ok: true, sends });
+    }
+    return NextResponse.json({ ok: false, reason: "sendId or key required" }, { status: 400 });
+  } catch {
+    return NextResponse.json({ ok: false, reason: "send status unavailable" }, { status: 503 });
   }
-  if (key) {
-    const sends = await recentSendsForLetter(key, 5);
-    return NextResponse.json({ ok: true, sends });
-  }
-  return NextResponse.json({ ok: false, reason: "sendId or key required" }, { status: 400 });
 }
 
 /**
@@ -177,6 +196,10 @@ export async function PATCH(request: Request) {
     for (const to of await queuedRecipients(body.sendId)) {
       await moveDelivery(to, before.key, fromAtMs, atMs).catch(() => {});
     }
+  }
+  if (body.action === "reschedule" && before) {
+    const tpl = await getLetterOverride(before.key);
+    if (tpl) await watchDelivery(body.sendId, tpl.subject).catch(() => console.error("reschedule notice deferred"));
   }
   return NextResponse.json({ ok: true, ...result.record, sendId: body.sendId });
 }
