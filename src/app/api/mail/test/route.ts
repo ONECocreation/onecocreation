@@ -1,3 +1,4 @@
+import { lastMailTick } from "@/lib/letter-delivery";
 import { NextResponse } from "next/server";
 import { sendMail, mailConfigured, brandShell, capRemaining, hourlyCap } from "@/lib/mail";
 import { subscriberCount, subscribersConfigured, validEmail } from "@/lib/subscribers";
@@ -22,6 +23,7 @@ export async function GET(request: Request) {
   if (!authorized(request)) return NextResponse.json({ ok: false }, { status: 401 });
   return NextResponse.json({
     ok: true,
+    lastTickAtMs: await lastMailTick().catch(() => null),
     personas: { bookings: mailConfigured("bookings"), news: mailConfigured("news") },
     vault: subscribersConfigured(),
     subscribers: subscribersConfigured() ? await subscriberCount() : null,

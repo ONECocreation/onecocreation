@@ -1,0 +1,8 @@
+{
+  "notQueued": true,
+  "firstLeaveStayed": true,
+  "secondLeaveNoPrompt": true,
+  "acceptedUnverifiedWarning": true,
+  "oneInterceptedSendNoRealMail": true,
+  "noHorizontalOverflow": true
+}

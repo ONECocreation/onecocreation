@@ -1,5 +1,7 @@
 "use client";
 
+import MailTickStatus from "@/components/console/MailTickStatus";
+import { deliveryWords, type DeliverySummary } from "@/lib/letter-delivery-copy";
 import { useEffect, useRef, useState } from "react";
 import { insertAtCaret, insertHeroLine, insertLink, insertReadingRoomLink, toggleMark } from "@/lib/letter-marks";
 import { READING_PAGE_PATH } from "@/lib/reading-room";
@@ -253,6 +255,7 @@ const GROUPS: LetterGroup[] = ["Welcome sequence", "Reading", "Store", "Sessions
 
 interface ApiLetter {
   key: string;
+  delivery?: DeliverySummary;
   kind: "seeded" | "composed";
   override: { subject: string; body: string; audience?: string } | null;
   default: { subject: string; body: string } | null;
@@ -294,7 +297,7 @@ export default function LettersRoom() {
       })
       .catch(() => {});
   }
-  useEffect(refresh, []);
+  useEffect(() => { refresh(); const timer = setInterval(refresh, 15_000); return () => clearInterval(timer); }, []);
 
   /* TASK-493: the two Reading automatic-send rows name the composed letter
    * currently riding each slot — the GET's EFFECTIVE key per slot
@@ -498,6 +501,7 @@ export default function LettersRoom() {
         <div>
           <b>{c.title ?? c.key}</b>
           {subjectLine(c.override?.subject ?? c.title)}
+          <em>{deliveryWords(c.delivery ?? { state: "unknown" })}</em>
           <em>{draftWhoWords(c.key, c.createdAtMs, weekdayOf, words)}</em>
         </div>
         {rowEnd(c.key, c.title ?? c.key, { send: false, label: words ? "Review" : "Keep writing", main: words, remove: true })}
@@ -515,11 +519,12 @@ export default function LettersRoom() {
         <div>
           <b>{c.title ?? c.key}</b>
           {subjectLine(c.override?.subject ?? c.title)}
-          <em>Composed by you. {c.audience === "public" ? "Emailed and shown on /news." : "Emailed to the list."}</em>
+          <em>{deliveryWords(c.delivery ?? { state: "unknown" })}</em>
+          <em>Composed by you. {c.audience === "public" ? "Shown on /news." : "For the list."}</em>
         </div>
         {rowEnd(c.key, c.title ?? c.key, { send: true })}
         {copyFor === c.key && copyStrip(c.key)}
-        {open === c.key && openedRow(c.key, { flip: true, pointer: "Sending lives in the send panel: pick who, send yourself a test copy, type the count." })}
+        {open === c.key && openedRow(c.key, { flip: true, pointer: "Sending lives in the send panel: pick who, send yourself a test copy, check the list and confirm." })}
       </li>
     );
   }
@@ -759,6 +764,7 @@ export default function LettersRoom() {
               <p className="kit-text-quiet">Every email the house sends. Pick one to write it and see it as the reader will.</p>
             </>
           )}
+          <MailTickStatus />
           <div>
             <Button sm variant="second" onClick={() => { setComposing(!composing); setNote(""); }} aria-expanded={composing}>
               New letter
@@ -827,6 +833,7 @@ export default function LettersRoom() {
                       <div>
                         <b>{l.name}{api(rowKey)?.override ? " (edited)" : ""}</b>
                         {subjectLine(api(rowKey)?.override?.subject ?? l.subject)}
+                        {!l.noPublish && <em>{deliveryWords(api(rowKey)?.delivery ?? { state: "unknown" })}</em>}
                         {/* the when line, said once, under the row's words */}
                         <em>{l.when}</em>
                         {l.key || l.slot
@@ -841,7 +848,7 @@ export default function LettersRoom() {
                           ? "Automatic send. The letter above rides this slot; change the riding letter on its own page."
                           : l.noPublish
                             ? "One-soul letter. It sends itself when its moment comes, never a list blast."
-                            : "Sending lives in the send panel: pick who, send yourself a test copy, type the count.",
+                            : "Sending lives in the send panel: pick who, send yourself a test copy, check the list and confirm.",
                       })}
                     </li>
                   );
