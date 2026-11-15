@@ -488,19 +488,30 @@ html[data-oc-theme="light"] .theme-sun{color:#B4862B;border-color:rgba(180,134,4
    room, and share the row. Scoped to the phone fold (<=759 px, the same
    fold as .tier-cols and .lions-gate-whole): 768 and 1440 are unchanged.
    One row holds from 360 up (measured: the longest word sits 1 px inside
-   its border at 360, 7 px at 390). Below 360 it cannot: at 341-355 the
-   words run up to 3 px past the border, and at 320 they need ~262 px of
-   text at 12.5 px where the row leaves ~219 px (12 px with no tracking
-   still falls short). So under 360 the second row comes back, centred, in
-   the same face. No word is cut, nothing under 12 px, every pill at least
-   44 px tall. */
+   its border at 360, 7 px at 390). No word is cut, nothing under 12 px,
+   every pill at least 44 px tall. */
 @media(max-width:759px){
   .tier-pills{flex-wrap:nowrap;gap:6px}
   .tier-pill{flex:1 1 auto;min-width:0;min-height:44px;box-sizing:border-box;
     display:flex;align-items:center;justify-content:center;text-align:center;
     white-space:nowrap;padding:12px 8px;font-family:var(--font-h1);font-size:13.5px;letter-spacing:.03em}
 }
-@media(max-width:359px){.tier-pills{flex-wrap:wrap}.tier-pill{flex:0 1 auto}}
+/* T-645 (block 976,007, the Admiral on forge picture 16: "not of fan of
+   this 2 row buttons"): one row below 360 too. The room comes from the
+   row first: its side space drops from the wrap's 22 px to 10 px (300 px
+   of row at 320), then 12 px type, .01em tracking, 5 px side padding,
+   4 px gap. Measured 320-359: one row, 46 px tall, each label 2.2 px or
+   more clear of its padding. 360 and up are unchanged (picture 15). */
+@media(max-width:359px){
+  .tier-pills{gap:4px;margin-left:-12px;margin-right:-12px}
+  .tier-pill{padding:12px 5px;font-size:12px;letter-spacing:.01em}
+}
+/* T-645 1b (block 976,007): below 344 px the card grid's 300 px floor
+   (globals.css .grid-3, minmax(300px,1fr)) is wider than the wrap, so a
+   card ran past the screen's right edge (300 px in a 276 px row at 320).
+   On a phone the floor never exceeds the row; where 300 px fits, nothing
+   changes. 760 and up keep house's three columns. */
+@media(max-width:759px){.grid-3{grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))}}
 
 /* tier detail: two columns fold to one on phones */
 @media(max-width:760px){.tier-cols{grid-template-columns:1fr !important}}
