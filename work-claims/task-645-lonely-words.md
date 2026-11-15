@@ -1,0 +1,1 @@
+# T-645 lonely words: the orphan words page-slop finds on /packages and the home section at 390 (8 each, the card feature lists), fixed in their own small job per the Admiral's ruling (decision card 14, block 975,993), before and after in the forge before any merge; cut from lane/task-645 at 8c94564b, not built yet.
