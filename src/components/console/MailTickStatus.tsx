@@ -10,8 +10,8 @@ export default function MailTickStatus() {
         const res = await fetch("/api/mail/test");
         const d = await res.json();
         if (!res.ok || !d.ok) throw new Error();
-        if (alive) setLine(d.lastTickAtMs ? `Last completed mail run: ${deliveryTime(new Date(d.lastTickAtMs).toISOString())}.${Date.now() - d.lastTickAtMs > 20 * 60_000 ? " More than 20 minutes ago. Check the sender." : ""}` : deliveryCopy.tickMissing);
-      } catch { if (alive) setLine("Last mail run unavailable."); }
+        if (alive) setLine(d.lastTickAtMs ? `Last completed mail run: ${deliveryTime(new Date(d.lastTickAtMs).toISOString())}.${Date.now() - d.lastTickAtMs > 20 * 60_000 ? ` ${deliveryCopy.tickLate}` : ""}` : deliveryCopy.tickMissing);
+      } catch { if (alive) setLine(deliveryCopy.tickUnavailable); }
     }
     void refresh();
     const timer = setInterval(refresh, 60_000);

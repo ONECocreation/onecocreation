@@ -106,7 +106,7 @@ describe("operator-only notices", () => {
     await processDeliveryNotices(now); await processDeliveryNotices(now);
     expect(mail.send).toHaveBeenCalledTimes(2);
     expect(mail.send.mock.calls[1][1]).toMatchObject({ subject: "Sent to 2: a moment_1111" });
-    expect(mail.send.mock.calls[1][1].html).toContain("1 copies were not sent");
+    expect(mail.send.mock.calls[1][1].html).toContain("1 copy was not sent");
   });
   it("a moved schedule gets a new confirmation, cancellation never reports sent", async () => {
     const s = record(); await watchDelivery("send-1", "a moment_1111");
@@ -120,7 +120,7 @@ describe("operator-only notices", () => {
     await processDeliveryNotices(now); await processDeliveryNotices(now);
     expect(mail.send.mock.calls.map((c) => c[1].to).sort()).toEqual(["admiral@example.com", "love@example.com"]);
     expect(commands.some((c) => c.includes("mail:queue"))).toBe(false);
-    expect(mail.send.mock.calls[0][1].html).toContain("Nothing has been sent by this reminder");
+    expect(mail.send.mock.calls[0][1].html).toContain("This note sends nothing.");
   });
   it("future intent, any recorded send, and missing history never trigger a missed note", async () => {
     await saveScheduleIntent("moment", instant);
@@ -163,4 +163,33 @@ it("UI only confirms a record-backed send and registers leave guards", () => {
 it("notice slots include exact Mountain dates and honest partial delivery", () => {
   const words = deliveryNotice("scheduled", { subject: "moment", at: instant, queued: 3, sent: 0, dropped: 0, url: "https://site.example/a/letters/moment" });
   expect(words.body).toContain("11:11"); expect(words.body).toContain("Mountain");
+});
+
+describe("Lumen's copy (block 976,007)", () => {
+  const base = { subject: "moment", at: instant, url: "https://site.example/a/letters/moment" };
+  it("scheduled notice: 1 person / 2 people, subject in curly quotes", () => {
+    expect(deliveryNotice("scheduled", { ...base, queued: 1, sent: 0, dropped: 0 }).body).toContain("“moment” is scheduled for 1 person. It starts ");
+    expect(deliveryNotice("scheduled", { ...base, queued: 2, sent: 0, dropped: 0 }).body).toContain("is scheduled for 2 people.");
+    expect(deliveryNotice("scheduled", { ...base, queued: 1, sent: 0, dropped: 0 }).body).not.toContain("1 people");
+  });
+  it("sent notice: 1 person / 2 people and 1 copy / 2 copies; no dropped line when none dropped", () => {
+    const one = deliveryNotice("sent", { ...base, queued: 2, sent: 1, dropped: 1 }).body;
+    expect(one).toContain("“moment” has gone out. Sent to 1 person. 1 copy was not sent.");
+    const two = deliveryNotice("sent", { ...base, queued: 4, sent: 2, dropped: 2 }).body;
+    expect(two).toContain("Sent to 2 people. 2 copies were not sent.");
+    expect(deliveryNotice("sent", { ...base, queued: 2, sent: 2, dropped: 0 }).body).not.toContain("not sent");
+  });
+  it("still-waiting notice sends nothing and names both ways forward", () => {
+    const b = deliveryNotice("missed", { ...base, queued: 0, sent: 0, dropped: 0 }).body;
+    expect(b).toContain("for “moment”. That time has passed, and the house has no record of this letter going to the list. This note sends nothing.");
+    expect(b).toContain("Press Send now, or pick a new time and press Schedule: https://site.example/a/letters/moment");
+  });
+  it("draft word, and the leave prompt only promises a saved time once it is confirmed", () => {
+    expect(deliveryWords({ state: "draft" })).toBe("Draft · no send to the list on record");
+    const ui = readFileSync(new URL("../src/app/a/letters/[key]/page.tsx", import.meta.url), "utf8");
+    expect(ui).toContain("timeSaved.current ? deliveryCopy.leave : deliveryCopy.leaveUnsaved");
+    expect(ui).not.toContain("Remembering your chosen time");
+    const tick = readFileSync(new URL("../src/components/console/MailTickStatus.tsx", import.meta.url), "utf8");
+    expect(tick).not.toContain("Check the sender"); expect(tick).toContain("deliveryCopy.tickLate");
+  });
 });

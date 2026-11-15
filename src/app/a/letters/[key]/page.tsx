@@ -233,6 +233,8 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   const [unqueuedTime, setUnqueuedTime] = useState(false);
   const leavePrompted = useRef(false);
   const intentWrite = useRef<Promise<void>>(Promise.resolve());
+  const timeSaved = useRef(false); // true only once the house confirms her time is stored
+  const leaveWords = () => timeSaved.current ? deliveryCopy.leave : deliveryCopy.leaveUnsaved;
   const timeEdited = useRef(false);
   const [sendAtPast, setSendAtPast] = useState(false);
   const [checked, setChecked] = useState(false);
@@ -312,6 +314,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
           setSendAt(isoToMountainInput(intentRes.intent.at));
           setSendAtPast(Date.parse(intentRes.intent.at) <= Date.now());
           setUnqueuedTime(true);
+          timeSaved.current = true;
           setIntentNote(deliveryCopy.intentSaved);
         }
         const unfinished = sendToReArm(sends, Date.now());
@@ -388,12 +391,14 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
     const iso = value ? mountainInputToIso(value) : null;
     setSendAtPast(!!iso && Date.parse(iso) <= Date.now());
     // Serialize edits so a slow earlier request cannot overwrite a later time.
-    setIntentNote("Remembering your chosen time…");
+    timeSaved.current = false;
+    setIntentNote(deliveryCopy.intentSaving);
     intentWrite.current = intentWrite.current.then(async () => {
       const res = await fetch("/api/admin/letters/intent", { method: "PUT", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, at: iso }) });
       if (!res.ok) throw new Error();
+      timeSaved.current = !!iso;
       setIntentNote(iso ? deliveryCopy.intentSaved : "");
-    }).catch(() => setIntentNote(deliveryCopy.intentFailed));
+    }).catch(() => { timeSaved.current = false; setIntentNote(deliveryCopy.intentFailed); });
   }
 
   useEffect(() => {
@@ -407,12 +412,12 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
       const a = (event.target as Element)?.closest?.("a[href]");
       if (!a || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || a.getAttribute("target") === "_blank" || a.getAttribute("href")?.startsWith("#") || leavePrompted.current) return;
       leavePrompted.current = true;
-      if (window.confirm(deliveryCopy.leave)) { event.preventDefault(); event.stopPropagation(); }
+      if (window.confirm(leaveWords())) { event.preventDefault(); event.stopPropagation(); }
     }
     function backLeaving() {
       if (leavePrompted.current) return;
       leavePrompted.current = true;
-      if (window.confirm(deliveryCopy.leave)) window.history.forward();
+      if (window.confirm(leaveWords())) window.history.forward();
     }
     window.addEventListener("beforeunload", leaving);
     window.addEventListener("popstate", backLeaving);
@@ -626,14 +631,15 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
           <input type="datetime-local" value={sendAt} onChange={(e) => pickTime(e.target.value)} aria-label="Send time, Mountain Time" className="console-field kit-field-sm" style={fieldSm} />
           <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>Mountain Time</span>
         </div>
+        {/* Her letter first (saved time, then whether it is scheduled); the house's mail run last. */}
         {intentNote && <p className="kit-note" role="status">{intentNote}</p>}
-        {historyUnavailable && <p className="kit-note kit-note-err" role="alert">{deliveryCopy.unknown}</p>}
-        <MailTickStatus />
         {sendAtIso && (
           <p className={sendAtPast ? "kit-note kit-note-err" : "kit-note"}>
             {sendAtPast ? "That time has passed. Pick a later one, or send it now." : `${deliveryCopy.notQueued} Chosen time: ${mountainWords(sendAtIso)}.`}
           </p>
         )}
+        {historyUnavailable && <p className="kit-note kit-note-err" role="alert">{deliveryCopy.unknown}</p>}
+        <MailTickStatus />
 
         {count > 0 && (
           <div className="mt-3 space-y-2">
