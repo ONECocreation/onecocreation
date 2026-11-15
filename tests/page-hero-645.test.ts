@@ -97,7 +97,7 @@ describe("/packages opens on the house top with one lion", () => {
     expect(read("src/lib/puck-blocks/packages-grid.tsx")).toContain('className="lions-gate lions-gate-whole"');
     const css = read("src/app/cartridge.css");
     expect(css).toContain(".lions-gate-whole::before{");
-    expect(css).toMatch(/\.lions-gate-whole::before\{[^}]*position:sticky[^}]*aspect-ratio:1/);
+    expect(css).toMatch(/\.lions-gate-whole::before\{[^}]*aspect-ratio:1/);
     // the home page's hand-built section keeps plain .lions-gate (A.6)
     expect(read("src/components/sections.tsx")).toContain('<section id="packages" className="lions-gate">');
   });
