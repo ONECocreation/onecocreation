@@ -285,7 +285,9 @@ describe("TASK-187 — the memberships switch gates its two routes", () => {
     const src = await read("src/app/packages/page.tsx");
     expect(src).toContain("export default async function PackagesPage()");
     expect(src.indexOf("TASK-187 GATE")).toBeLessThan(src.indexOf('await getPuckPage("packages")'));
-    expect(src.indexOf('await getPuckPage("packages")')).toBeLessThan(src.indexOf("<Packages />"));
+    /* T-645 1c (block 976,007): the fallback drops the gate note on this page */
+    expect(src.indexOf('await getPuckPage("packages")')).toBeLessThan(src.indexOf("<Packages gateNote={false} />"));
+    expect(src.indexOf("<Packages gateNote={false} />")).toBeGreaterThan(-1);
     expect(src).toContain('from "@/components/NotOpenYet"');
   });
 });

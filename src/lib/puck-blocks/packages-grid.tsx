@@ -74,8 +74,10 @@ const CARDS = [
  * mutated.
  */
 export function applyPackagesToPuck<T extends { content?: unknown[] }>(data: T, shelf: PackagesShelf): T {
-  const current = Array.isArray(data.content) ? data.content : [];
-  let touched = false;
+  const original = Array.isArray(data.content) ? data.content : [];
+  const dropped = dropGateNote(original);
+  const current = dropped.list;
+  let touched = dropped.changed;
   const content = current.map((b) => {
     const blk = b as { type?: string; props?: Record<string, unknown> };
     if (blk.type !== "PackagesGrid" || !blk.props) return b;
@@ -83,6 +85,47 @@ export function applyPackagesToPuck<T extends { content?: unknown[] }>(data: T, 
     return { ...blk, props: { ...blk.props, shelf } };
   });
   return touched ? ({ ...data, content } as T) : data;
+}
+
+/**
+ * T-645 1c (block 976,007, the Admiral's answer D on desk card
+ * 976001-one-cocreation-packages-who-rewrites-the: "Take the note off the
+ * page"). The "How the gate works:" footnote leaves /packages at render
+ * time; the stored page is never written. Only a Note block whose words
+ * START with GATE_NOTE_START is dropped, so a note Love writes herself
+ * later stays. Walks slots (any prop array of blocks), and a container
+ * left empty by the drop (her saved page holds the note alone in a Band)
+ * goes with it, so no blank band is left behind. Pure; same reference
+ * when nothing matched. The home page's section is not touched.
+ */
+export const GATE_NOTE_START = "How the gate works";
+type BlockLike = { type?: string; props?: Record<string, unknown> };
+const isBlock = (v: unknown): v is BlockLike =>
+  !!v && typeof v === "object" && typeof (v as BlockLike).type === "string";
+const isGateNote = (b: BlockLike) =>
+  b.type === "Note" && typeof b.props?.text === "string" && b.props.text.trimStart().startsWith(GATE_NOTE_START);
+
+export function dropGateNote(list: unknown[]): { list: unknown[]; changed: boolean } {
+  let changed = false;
+  const out: unknown[] = [];
+  for (const item of list) {
+    if (!isBlock(item)) { out.push(item); continue; }
+    if (isGateNote(item)) { changed = true; continue; }
+    if (!item.props) { out.push(item); continue; }
+    let props = item.props;
+    let emptied = false;
+    for (const [k, v] of Object.entries(item.props)) {
+      if (!Array.isArray(v) || !v.some(isBlock)) continue;
+      const inner = dropGateNote(v);
+      if (!inner.changed) continue;
+      changed = true;
+      props = { ...props, [k]: inner.list };
+      if (inner.list.length === 0) emptied = true;
+    }
+    if (emptied && Object.values(props).every((v) => !Array.isArray(v) || v.length === 0)) continue;
+    out.push(props === item.props ? item : { ...item, props });
+  }
+  return { list: changed ? out : list, changed };
 }
 
 export function createPackagesGrid() {

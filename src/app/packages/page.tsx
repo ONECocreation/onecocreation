@@ -93,5 +93,7 @@ export default async function PackagesPage() {
     );
   }
 
-  return (<><SiteHeader /><main><Packages /></main><SiteFooter /></>);
+  /* T-645 1c (block 976,007): the hand-built fallback drops the "How the
+     gate works:" note on /packages; the home page's section keeps it */
+  return (<><SiteHeader /><main><Packages gateNote={false} /></main><SiteFooter /></>);
 }

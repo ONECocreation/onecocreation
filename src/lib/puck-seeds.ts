@@ -686,7 +686,7 @@ const packagesContent: Block[] = [
      page. The words are transcribed from Packages() (src/components/
      sections.tsx — the fallback, NOT edited; two pins source-grep it):
      the kicker, the "Memberships" heading, the lead closing on T-229's
-     PACKAGE_DOORS_WORDS verbatim, and the gate-explainer footnote.
+     PACKAGE_DOORS_WORDS verbatim (the gate-explainer footnote left in T-645 1c).
      Names and prices NEVER enter the seed — they live in TIERS and render
      through the PackagesGrid block below (rails-ON sale door / rails-OFF
      waitlist, switch-live at render time via applyPackagesToPuck).
@@ -705,9 +705,10 @@ const packagesContent: Block[] = [
   ]),
   /* a unique id (T-231's collision lesson): the kit consumed pk-0…pk-3 */
   { type: "PackagesGrid", props: { id: "pk-grid" } },
-  pk.band("plain", "theme", [
-    pk.note("How the gate works: once you pay, your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing."),
-  ]),
+  /* T-645 1c (block 976,007): the "How the gate works:" footnote band is
+     gone from this seed by the Admiral's ruling ("Take the note off the
+     page"); a page already published with it loses it at render time
+     (dropGateNote in applyPackagesToPuck). The home seed keeps its note. */
 ];
 
 /* ── support — the full room: hero, wild doors, more ways ─────────────────

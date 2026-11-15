@@ -88,7 +88,7 @@ afterAll(async () => {
 });
 
 describe("the seed — /style/packages opens pre-populated with her words", () => {
-  it("SEEDS.packages exists, carrying the kicker, the heading, the lead, the footnote, and exactly one PackagesGrid entry", async () => {
+  it("SEEDS.packages exists, carrying the kicker, the heading, the lead, and exactly one PackagesGrid entry (the gate footnote left in T-645 1c)", async () => {
     const { SEEDS } = await import("@/lib/puck-seeds");
     const seed = SEEDS.packages;
     expect(seed).toBeDefined();
@@ -102,7 +102,7 @@ describe("the seed — /style/packages opens pre-populated with her words", () =
     expect(flat).toContain("The Heart Field — Where Heaven and Earth Meet");
     expect(flat).toContain("Memberships");
     expect(flat).toContain("Three ways into the field — each includes everything before it.");
-    expect(flat).toContain("How the gate works:");
+    expect(flat).not.toContain("How the gate works");
   });
 
   it("the lead closes on PACKAGE_DOORS_WORDS verbatim (T-229's exported const — transcribed, pinned against the source)", async () => {
@@ -348,7 +348,7 @@ describe("PackagesPage — 1 gate → 2 Puck → 3 hand-built fallback", () => {
     const html = renderToStaticMarkup(renders[0]);
     expect(html).toContain("The Heart Field — Where Heaven and Earth Meet");
     expect(html).toContain("Three ways into the field");
-    expect(html).toContain("How the gate works:");
+    expect(html).not.toContain("How the gate works");
     expect(html).toContain("Weekly Intuitive");
     expect(html).toContain("55,555 sats / month");
     expect(html).toContain("I&#x27;m interested"); // rails OFF (default): the waitlist door
@@ -371,5 +371,63 @@ describe("PackagesPage — 1 gate → 2 Puck → 3 hand-built fallback", () => {
     const html = renderToStaticMarkup(renders[0]);
     expect((html.match(/See the package/g) ?? []).length).toBe(3);
     expect(html).not.toContain("I&#x27;m interested");
+  });
+});
+
+describe("T-645 1c: the gate note comes off /packages at render time (block 976,007)", () => {
+  const LOVE_NOTE = "How the gate works: pay → your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing.";
+  const lovesShape = () => ({
+    root: {},
+    content: [
+      { type: "Band", props: { id: "pk-3", background: "plain", hold: "theme", content: [{ type: "Heading", props: { id: "pk-1", text: "Memberships" } }] } },
+      { type: "PackagesGrid", props: { id: "pk-grid" } },
+      { type: "Band", props: { id: "pk-5", background: "plain", hold: "theme", content: [{ type: "Note", props: { id: "pk-4", text: LOVE_NOTE } }] } },
+    ],
+  });
+
+  it("her saved shape: the note and the band it sat alone in are dropped; the stored doc is untouched", async () => {
+    const { applyPackagesToPuck } = await import("@/lib/puck-blocks/packages-grid");
+    const doc = lovesShape();
+    const before = JSON.stringify(doc);
+    const out = applyPackagesToPuck(doc, await fixtureShelf(false));
+    const flat = JSON.stringify(out.content);
+    expect(flat).not.toContain("How the gate works");
+    expect((out.content as SeedBlock[]).map((b) => b.props.id)).toEqual(["pk-3", "pk-grid"]);
+    expect(JSON.stringify(doc)).toBe(before);
+  });
+
+  it("a note Love writes herself is left alone, and a band that holds more than the note keeps the rest", async () => {
+    const { dropGateNote } = await import("@/lib/puck-blocks/packages-grid");
+    const own = { type: "Note", props: { id: "n1", text: "A note of her own: the gate opens with love." } };
+    const mid = { type: "Note", props: { id: "n2", text: "Note: How the gate works is above." } };
+    const band = { type: "Band", props: { id: "b", content: [own, { type: "Note", props: { id: "g", text: "  How the gate works: x" } }] } };
+    const res = dropGateNote([band, mid]);
+    expect(res.changed).toBe(true);
+    expect(JSON.stringify(res.list)).toContain("A note of her own");
+    expect(JSON.stringify(res.list)).toContain("Note: How the gate works is above.");
+    expect(JSON.stringify(res.list)).not.toContain('"id":"g"');
+    const keep = [own, mid];
+    expect(dropGateNote(keep).list).toBe(keep);
+    expect(dropGateNote(keep).changed).toBe(false);
+  });
+
+  it("only a Note block is matched: a Text block that starts the same stays", async () => {
+    const { dropGateNote } = await import("@/lib/puck-blocks/packages-grid");
+    const list = [{ type: "Text", props: { id: "t", text: "How the gate works, in her words" } }];
+    expect(dropGateNote(list).list).toBe(list);
+  });
+
+  it("the hand-built fallback: /packages passes gateNote={false}; the home page calls Packages() bare and keeps the note", () => {
+    const page = readFileSync(path.join(REPO, "src/app/packages/page.tsx"), "utf8");
+    expect(page).toContain("<Packages gateNote={false} />");
+    const home = readFileSync(path.join(REPO, "src/app/page.tsx"), "utf8");
+    expect(home).toContain("<Packages />");
+    const sec = readFileSync(path.join(REPO, "src/components/sections.tsx"), "utf8");
+    expect(sec).toMatch(/\{gateNote && <p className="note"><b>How the gate works:<\/b>/);
+  });
+
+  it("the home seed keeps its gate note (he ruled /packages only)", async () => {
+    const { SEEDS } = await import("@/lib/puck-seeds");
+    expect(JSON.stringify(SEEDS.home.content)).toContain("How the gate works:");
   });
 });
