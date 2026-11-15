@@ -42,6 +42,10 @@ describe("button marks: one size on a phone, one height in a package card", () =
     expect(house).toMatch(/@media\(max-width:480px\)\{\.btn:not\(\.btn-sm\)\{padding:16px;font-size:\.95rem;letter-spacing:1px\}\}/);
   });
 
+  it("the pop-up card's button wears the phone size at every width (the card is 440 px wide)", () => {
+    expect(house).toMatch(/\.oc-popup-card \.btn:not\(\.btn-sm\)\{padding:16px;font-size:\.95rem;letter-spacing:1px\}/);
+  });
+
   it("the package card's doors share one row height while every child is a button", () => {
     expect(src("src/app/packages/[slug]/page.tsx")).toMatch(/<div className="tier-doors">/);
     expect(house).toMatch(/\.tier-doors:not\(:has\(>:not\(\.btn\)\)\)\{grid-auto-rows:1fr\}/);

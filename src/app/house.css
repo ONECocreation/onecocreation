@@ -169,6 +169,10 @@ section{padding:76px 0;position:relative}
    door, keeps 7 px inside its 256 px row. 51 px tall, over the 44 px
    thumb floor. .btn-sm keeps its own size; 481 px and up are unchanged. */
 @media(max-width:480px){.btn:not(.btn-sm){padding:16px;font-size:.95rem;letter-spacing:1px}}
+/* the pop-up card (PopupHost) is 440 px wide at every width, a phone's
+   room even at 1440, so its button wears the phone size everywhere:
+   'Receive the meditation' broke onto two lines at 1440 too */
+.oc-popup-card .btn:not(.btn-sm){padding:16px;font-size:.95rem;letter-spacing:1px}
 /* a package page's card (/packages/<tier>): its YES, its one-week door and
    its upgrade door are one size and one height (grid-auto-rows:1fr), the
    label centred in the box, at every width. The equal rows hold only while
