@@ -40,6 +40,7 @@ acceptance at block 975,999), with the reports export holding one row per gift.
 - `tests/design-drift.ceilings.json` (only lowered, or a new file's record)
 - `tests/jar-books-646.test.ts` (new)
 - `tests/pif-card-gifts-646.test.ts` (new)
+- `tests/basket-sats-off-646.test.ts` (new, fix round: the basket shows no sats while bitcoin is off, his Mark 2)
 - `tests/store-gift-drawer.test.ts` (pins follow the new gate)
 - `tests/support-jars-basket.test.ts` (pins follow the new gate)
 - `tests/item-page.test.ts` (pins follow the new gate)
