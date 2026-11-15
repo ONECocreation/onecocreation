@@ -14,8 +14,8 @@ import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
 import { listItems, stripPrivateMedia } from "@/lib/store";
 import { getSiteConfig } from "@/lib/site-config";
-import { liveAdapter, ensureSquareVault, jarsOpen } from "@/lib/payments";
-import { liveJarKeys } from "@/components/sections";
+import { liveAdapter, ensureSquareVault } from "@/lib/payments";
+import { giftPanel } from "@/lib/gift-panel";
 
 export const metadata: Metadata = {
   title: "Store — One Cocreation",
@@ -97,7 +97,10 @@ export default async function StorePage() {
      jar hidden: no drawer at all. No cat-pill for the drawer: the pills
      navigate the selling sections; the drawer is giving furniture, not a
      section. */
-  const jars = jarsOpen() ? await liveJarKeys() : [];
+  /* TASK-646 (block 976,007): the drawer's gate is rail by rail now —
+     giftPanel() opens it on the sats row (jars switch + bitcoin + a live jar
+     item) OR the dollar row (jars switch + card + a live gift item). */
+  const gifts = await giftPanel();
 
   return (
     <main>
@@ -133,7 +136,7 @@ export default async function StorePage() {
           withFreeCard={group.anchor === "meditations"}
         />
       ))}
-      {jars.length > 0 && <GiftDrawer liveJars={jars} />}
+      {gifts.open && <GiftDrawer liveJars={gifts.satsJars} dollarGifts={gifts.dollarGifts} />}
       <SiteFooter />
     </main>
   );

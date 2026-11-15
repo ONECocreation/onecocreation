@@ -5,8 +5,7 @@ import SiteFooter from "@/components/SiteFooter";
 import StackedHero from "@/components/StackedHero";
 import TipJar from "@/components/TipJar";
 import { getSiteConfig } from "@/lib/site-config";
-import { jarsOpen } from "@/lib/payments";
-import { liveJarKeys } from "@/components/sections";
+import { giftPanel, type GiftPanel } from "@/lib/gift-panel";
 
 /**
  * TASK-636 (block 974,079 · 0018.09.13 a₿) — THE PUBLIC PAY IT FORWARD PAGE,
@@ -38,6 +37,17 @@ import { liveJarKeys } from "@/components/sections";
  * The layout rules ride house.css's banner-marked `pif-` section — the
  * design-drift ratchet gives a new .tsx a styleBlocks allowance of 3, so
  * the mockup's inline styles became classes (T-639's pattern).
+ *
+ * TASK-646 (block 976,007 · Pay It Forward step 1, card 15) — THE GATE IS
+ * RAIL BY RAIL NOW: giftPanel() (@/lib/gift-panel). The panel opens when
+ * the jars switch is on and at least one rail is live with something to
+ * give: the sats row while bitcoin is live and the jar item is live, the
+ * dollar row while the card rail is live and a gift item is live. THE WORDS
+ * FOLLOW WHAT THE PAGE CAN DO (travelWords below): a dollar gift by card
+ * when only the card row shows, sats when only the sats row shows, both
+ * when both show, and no promise of a button when neither does. The card
+ * sentence and every changed line are PROPOSALS, listed for his and Love's
+ * word; nothing here is settled copy.
  */
 
 export const metadata: Metadata = {
@@ -48,19 +58,31 @@ export const metadata: Metadata = {
 /* the shelf judges the rails per request — never a cached build-time answer */
 export const dynamic = "force-dynamic";
 
-const TRAVEL_STEPS = [
-  { icon: "🎁", title: "You place a gift", words: "any amount from 111 sats, given on-chain through your basket" },
-  { icon: "🫙", title: "Love holds the jar", words: "the Gifts of Gratitude jar keeps its own line in the books" },
-  { icon: "🌱", title: "Someone claims it", words: "a session or a membership, for a person who needs the work and can't right now" },
-];
+/** The first card's words, from what the panel can really do (T-646). The
+ *  sats-only line is T-636's, verbatim; the other three are proposals. */
+export function travelWords(rows: { sats: boolean; dollars: boolean }): string {
+  if (rows.sats && rows.dollars) return "a dollar gift by card, or any amount from 111 sats on-chain, through your basket";
+  if (rows.sats) return "any amount from 111 sats, given on-chain through your basket";
+  if (rows.dollars) return "a dollar gift, paid by card through your basket";
+  return "giving opens again soon";
+}
+
+function travelSteps(rows: { sats: boolean; dollars: boolean }) {
+  return [
+    { icon: "🎁", title: "You place a gift", words: travelWords(rows) },
+    { icon: "🫙", title: "Love holds the jar", words: "the Gifts of Gratitude jar keeps its own line in the books" },
+    { icon: "🌱", title: "Someone claims it", words: "a session or a membership, for a person who needs the work and can't right now" },
+  ];
+}
 
 export default async function PayItForwardPage() {
-  /* WARM BEFORE YOU JUDGE (T-186's idiom, cart/page.tsx:25-35): jarsOpen()
-     reads siteSwitchesSync()'s warm cache; the await makes this request's
-     own switches the judged ones. */
+  /* WARM BEFORE YOU JUDGE (T-186's idiom, cart/page.tsx:25-35): giftPanel()
+     warms the switches and the square vault itself; the await here keeps
+     this request's own switches the judged ones for anything else read. */
   await getSiteConfig();
-  const jars = jarsOpen() ? await liveJarKeys() : [];
-  const payforwardOpen = jars.includes("payforward");
+  const panel: GiftPanel = await giftPanel();
+  const rows = { sats: panel.satsJars.includes("payforward"), dollars: panel.dollarGifts.length > 0 };
+  const payforwardOpen = rows.sats || rows.dollars;
 
   return (
     <>
@@ -84,7 +106,7 @@ export default async function PayItForwardPage() {
               <p className="kicker">How a Gift Travels</p>
             </div>
             <div className="reveal pif-travel-grid">
-              {TRAVEL_STEPS.map((s) => (
+              {travelSteps(rows).map((s) => (
                 <div key={s.title} className="card">
                   <div className="body pif-step-body">
                     <div className="pif-step-icon">{s.icon}</div>
@@ -109,12 +131,19 @@ export default async function PayItForwardPage() {
                 <p className="pif-jar-sub">
                   How gifts were received will show here.
                 </p>
-                <TipJar only={["payforward"]} />
-                <p className="pif-jar-bitcoin">
-                  Bitcoin gifts travel on-chain straight to Love&apos;s own wallet. Nothing
-                  held, nothing routed by anyone else. Dollars are always welcome too: bitcoin is an
-                  option here, never a demand.
-                </p>
+                <TipJar only={rows.sats ? ["payforward"] : []} dollarGifts={panel.dollarGifts} />
+                {rows.sats && (
+                  <p className="pif-jar-bitcoin">
+                    Bitcoin gifts travel on-chain straight to Love&apos;s own wallet. Nothing
+                    held, nothing routed by anyone else. Dollars are always welcome too: bitcoin is an
+                    option here, never a demand.
+                  </p>
+                )}
+                {rows.dollars && (
+                  <p className="pif-jar-bitcoin">
+                    Card gifts go through Square to Love&apos;s own Square account.
+                  </p>
+                )}
               </div>
             </div>
           </section>

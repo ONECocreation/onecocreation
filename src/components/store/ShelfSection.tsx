@@ -5,13 +5,14 @@ import StoreItemCard, { type PriceRails } from "@/components/store/StoreItemCard
 import FreeMeditationCard from "@/components/store/FreeMeditationCard";
 import type { StoreItem } from "@/lib/store";
 import { STORE_SECTIONS, doorForItem, groupItemsByBundle, type StoreSection } from "@/lib/store-sections";
-import { JAR_ITEMS } from "@/lib/jars";
+import { OFF_SHELF_IDS } from "@/lib/jars";
 import { cartridge } from "@/brand/cartridge";
 
 /* TASK-498 (R-072): the jars' shelf ids, one source (@/lib/jars, the same
    map T-411 pinned) — the grid exclusion keys on the ids, never on the
    category word "gifts". */
-const JAR_IDS = new Set<string>(Object.values(JAR_ITEMS));
+/* T-646: the jar items AND the three dollar gifts stay off (OFF_SHELF_IDS) */
+const JAR_IDS = OFF_SHELF_IDS;
 
 /**
  * THE SHELF SECTION (TASK-176, 0018.06.18 a₿ · block 966098) — one shelf

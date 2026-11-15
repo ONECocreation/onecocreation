@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import TipJar, { type JarKey } from "@/components/TipJar";
+import type { DollarGift } from "@/lib/gift-panel";
 
 /**
  * TASK-498 (block 969,095 · R-072, settled Monday — the Admiral
@@ -25,6 +26,11 @@ import TipJar, { type JarKey } from "@/components/TipJar";
  * empty box), so a closed rail or a hidden jar can never be woken by the
  * move. The crumb of each jar's item page points at #gifts
  * (sectionForItem, store-sections.ts) — this id is that anchor.
+ *
+ * TASK-646 (block 976,007): the drawer also carries the dollar row
+ * (`dollarGifts`, giftPanel()'s card half), so it opens on either rail. The
+ * bitcoin line shows with the sats row only; the card line (a proposal,
+ * his and Love's to rule) shows with the dollar row only.
  */
 
 /* the relocated /support block's own text styles, named once and shared
@@ -35,8 +41,8 @@ const dashLineStyle: CSSProperties = { color: "var(--muted)", margin: "2px 0 0",
 const bitcoinLineStyle: CSSProperties = { fontSize: ".82rem", color: "var(--muted)", marginTop: 18 };
 const subSectionStyle: CSSProperties = { marginTop: 38, paddingTop: 30, borderTop: "1px solid var(--warm-edge)" };
 
-export default function GiftDrawer({ liveJars }: { liveJars: JarKey[] }) {
-  if (liveJars.length === 0) return null;
+export default function GiftDrawer({ liveJars, dollarGifts = [] }: { liveJars: JarKey[]; dollarGifts?: DollarGift[] }) {
+  if (liveJars.length === 0 && dollarGifts.length === 0) return null;
   return (
     <section style={{ padding: "10px 0 46px" }}>
       <div className="wrap reveal">
@@ -60,12 +66,19 @@ export default function GiftDrawer({ liveJars }: { liveJars: JarKey[] }) {
             <p style={dashLineStyle}>
               — how gifts were received will show here.
             </p>
-            <TipJar only={liveJars} />
-            <p style={bitcoinLineStyle}>
-              Bitcoin gifts travel on-chain straight to Love&apos;s own wallet — nothing
-              held, nothing routed by anyone else. Dollars are always welcome too: bitcoin is an
-              option here, never a demand.
-            </p>
+            <TipJar only={liveJars} dollarGifts={dollarGifts} />
+            {liveJars.length > 0 && (
+              <p style={bitcoinLineStyle}>
+                Bitcoin gifts travel on-chain straight to Love&apos;s own wallet — nothing
+                held, nothing routed by anyone else. Dollars are always welcome too: bitcoin is an
+                option here, never a demand.
+              </p>
+            )}
+            {dollarGifts.length > 0 && (
+              <p style={bitcoinLineStyle}>
+                Card gifts go through Square to Love&apos;s own Square account.
+              </p>
+            )}
           </div>
         </details>
       </div>

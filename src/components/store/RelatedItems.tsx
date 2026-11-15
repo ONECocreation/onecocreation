@@ -1,13 +1,14 @@
 import Link from "next/link";
 import StoreItemCard, { type PriceRails } from "@/components/store/StoreItemCard";
 import { doorForItem } from "@/lib/store-sections";
-import { JAR_ITEMS } from "@/lib/jars";
+import { OFF_SHELF_IDS } from "@/lib/jars";
 import type { StoreItem } from "@/lib/store";
 
 /* TASK-498 (R-072): the jars' shelf ids, one source (@/lib/jars) — a jar
    is never related to anything and nothing is ever related to a jar;
    their one home is the GiftDrawer at the bottom of /store. */
-const JAR_IDS = new Set<string>(Object.values(JAR_ITEMS));
+/* T-646: the jar items AND the three dollar gifts stay off (OFF_SHELF_IDS) */
+const JAR_IDS = OFF_SHELF_IDS;
 
 /**
  * TASK-177 (0018.06.18 a₿) — the ShinePages product template's "Related

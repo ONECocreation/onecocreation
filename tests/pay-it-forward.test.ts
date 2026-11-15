@@ -107,14 +107,14 @@ afterAll(() => {
   cwd.cleanup();
 });
 
-describe("1. the page wires the production double gate (jarsOpen AND liveJarKeys)", () => {
-  it("source: warm-before-judge, both gates, the payforward-only mount, force-dynamic", () => {
+describe("1. the page wires the production gate (T-646: giftPanel(), rail by rail)", () => {
+  it("source: warm-before-judge, the rail-by-rail gate, the payforward-only mount, force-dynamic", () => {
     const src = readFileSync(PAGE, "utf8");
     expect(src).toContain("await getSiteConfig()");
-    expect(src).toContain("jarsOpen()");
-    expect(src).toContain("await liveJarKeys()");
-    expect(src).toContain('jars.includes("payforward")');
-    expect(src).toContain('only={["payforward"]}');
+    expect(src).toContain("await giftPanel()");
+    expect(src).toContain('panel.satsJars.includes("payforward")');
+    expect(src).toContain("panel.dollarGifts.length > 0");
+    expect(src).toContain('only={rows.sats ? ["payforward"] : []} dollarGifts={panel.dollarGifts}');
     expect(src).toContain('export const dynamic = "force-dynamic"');
   });
 });
@@ -135,7 +135,7 @@ describe("2. the two reused store lines carry no dash (his fix 2)", () => {
     expect(body).toContain("own wallet. Nothing");
     expect(body).not.toContain("own wallet — nothing");
     expect(body).toContain(
-      "Dollars are always welcome too: bitcoin is an\n                  option here, never a demand.",
+      "Dollars are always welcome too: bitcoin is an\n                    option here, never a demand.",
     );
   });
 
@@ -147,20 +147,29 @@ describe("2. the two reused store lines carry no dash (his fix 2)", () => {
   });
 });
 
-describe("3. the row law (his fix 1): Give, the pills and the custom box are one height", () => {
-  it("the Give button rides .btn-sm, the same size class as the sats pills", () => {
+describe("3. the row law (his fix 1, and T-646's row: one width, full-width Give, centred)", () => {
+  it("the Give buttons ride .btn-sm, the same size class as the amount buttons, full width of the row", () => {
     const src = readFileSync(TIPJAR, "utf8");
-    expect(src).toContain('className="btn btn-gold btn-sm" type="button" onClick={give}');
+    expect(src).toContain('className="btn btn-gold btn-sm give-row-give" type="button" onClick={giveSats}');
     expect(src).toContain('"btn btn-gold btn-sm" : "btn btn-ghost btn-sm"');
-    expect(src).toContain('alignItems: "center"');
+    expect(src).not.toContain("style={{");
+    const css = readFileSync(HOUSE, "utf8");
+    // three amount buttons, one width each (equal grid tracks), and every .btn
+    // in the row the full width of its track
+    expect(css).toContain(".give-row-amounts{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}");
+    expect(css).toMatch(/\.give-row \.btn\{display:block;width:100%;box-sizing:border-box;text-align:center/);
+    // the row centred in its panel
+    expect(css).toContain(".give-rows{display:grid;gap:22px;margin-top:20px;justify-items:center}");
   });
 
-  it("the custom amount box is pinned to the same 42px border-box (never font metrics)", () => {
-    const src = readFileSync(TIPJAR, "utf8");
-    expect(src).toContain("height: 42");
-    expect(src).toContain('boxSizing: "border-box"');
-    expect(src).toContain('fontSize: ".9rem"');
-    expect(src).toContain('border: "1.5px solid');
+  it("the custom amount box is pinned to the same 42px border-box (never font metrics), full width", () => {
+    const css = readFileSync(HOUSE, "utf8");
+    const rule = css.slice(css.indexOf(".give-row-own{"), css.indexOf("}", css.indexOf(".give-row-own{")));
+    expect(rule).toContain("width:100%");
+    expect(rule).toContain("height:42px");
+    expect(rule).toContain("box-sizing:border-box");
+    expect(rule).toContain("font-size:.9rem");
+    expect(rule).toContain("border:1.5px solid");
   });
 
   it("the arithmetic anchors hold: .btn-sm padding and the .btn line-height in house.css", () => {
