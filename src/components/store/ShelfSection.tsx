@@ -107,6 +107,7 @@ export default function ShelfSection({
   withFreeCard = false,
   wholeShelfLink = false,
   padTop = false,
+  heading = true,
 }: {
   group: ShelfGroupWithItems;
   /** the live rails (T-157): the shelf judges them server-side and passes them down */
@@ -117,6 +118,10 @@ export default function ShelfSection({
   wholeShelfLink?: boolean;
   /** the filtered routes render the section straight under the sticky header */
   padTop?: boolean;
+  /** false when the page's own top (kit PageHero) already says the shelf's
+   *  title and blurb (the filtered routes, block 976,027): the words are
+   *  said once, in the top; the whole-shelf link stays here */
+  heading?: boolean;
 }) {
   const band = SHELF_BANDS[group.anchor];
   const free = withFreeCard && hasFreeMeditation();
@@ -138,12 +143,16 @@ export default function ShelfSection({
       } as React.CSSProperties}>
       <div className="wrap">
         <div className="center reveal" style={{ marginBottom: 26 }}>
-          <h2 className="sec-h" style={{ fontSize: "1.7rem", color: band?.dark ? "var(--ink-strong)" : undefined }}>
-            {group.icon} {group.title}
-          </h2>
-          <p style={{ color: "var(--muted)", maxWidth: 560, margin: "6px auto 0", fontSize: ".95rem" }}>
-            {group.blurb}
-          </p>
+          {heading && (
+            <>
+              <h2 className="sec-h" style={{ fontSize: "1.7rem", color: band?.dark ? "var(--ink-strong)" : undefined }}>
+                {group.icon} {group.title}
+              </h2>
+              <p style={{ color: "var(--muted)", maxWidth: 560, margin: "6px auto 0", fontSize: ".95rem" }}>
+                {group.blurb}
+              </p>
+            </>
+          )}
           {wholeShelfLink && (
             <p style={{ margin: "14px 0 0" }}>
               <Link className="btn btn-ghost btn-sm" href="/store">see the whole shelf →</Link>

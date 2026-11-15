@@ -115,14 +115,19 @@ describe("the seed — /style/terms opens pre-populated, every word verbatim", (
 });
 
 describe("TermsPage — Puck first, the hand-built page as fallback", () => {
-  it("with nothing published: the hand-built page renders — no <Render> anywhere, its own h1 stands", async () => {
+  it("with nothing published: the hand-built page renders — no <Render> anywhere, its own title stands in the house top", async () => {
     const TermsPage = (await import("@/app/terms/page")).default;
     const el = await TermsPage();
 
     const { Render } = await import("@puckeditor/core");
     expect(findAll(el, (e) => e.type === Render)).toHaveLength(0);
-    const h1s = findAll(el, (e) => e.type === "h1");
-    expect(h1s).toHaveLength(1);
+    /* block 976,027: its own title rides the house top (kit PageHero), whose
+       StackedHero draws the one h1 — the element tree holds the PageHero */
+    const { default: PageHero } = await import("@/components/kit/PageHero");
+    const tops = findAll(el, (e) => e.type === PageHero);
+    expect(tops).toHaveLength(1);
+    expect((tops[0].props as { lines?: { t: string }[] }).lines?.map((l) => l.t)).toEqual(["TERMS", "& CONDITIONS"]);
+    expect(findAll(el, (e) => e.type === "h1")).toHaveLength(0);
   });
 
   it("draft-only (not yet published) still serves the hand-built page — drafts never leak to visitors", async () => {
@@ -134,7 +139,8 @@ describe("TermsPage — Puck first, the hand-built page as fallback", () => {
 
     const { Render } = await import("@puckeditor/core");
     expect(findAll(el, (e) => e.type === Render)).toHaveLength(0);
-    expect(findAll(el, (e) => e.type === "h1")).toHaveLength(1);
+    const { default: PageHero } = await import("@/components/kit/PageHero");
+    expect(findAll(el, (e) => e.type === PageHero)).toHaveLength(1);
   });
 
   it("after Publish to live: the SAME request renders the published Puck doc, the hand-built branch gone", async () => {

@@ -6,7 +6,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import ShelfSection, { shelfGroups, hasFreeMeditation } from "@/components/store/ShelfSection";
 import GiftDrawer from "@/components/store/GiftDrawer";
-import StackedHero from "@/components/StackedHero";
+import { PageHero } from "@/components/kit";
 import NotOpenYet from "@/components/NotOpenYet";
 import PaletteVars from "@/components/PaletteVars";
 import PopupHost from "@/components/PopupHost";
@@ -102,24 +102,22 @@ export default async function StorePage() {
   return (
     <main>
       <SiteHeader />
-      {/* breathing room around the header (Admiral, 0018.05.15) */}
-      <section style={{ padding: "96px 0 34px" }}>
-        <div className="wrap center reveal">
-          <StackedHero kicker="Where Heaven and Earth Meet" lines={[{ t: "THE" }, { t: "STORE", tone: "teal" }]} />
-          <p className="lead" style={{ marginBottom: 0 }}>
-            Everything Love makes — sessions, meditations, memberships, and wares.
-            Straight to the artist.
-          </p>
-          {groups.length > 1 && (
-            <nav className="cat-pills" aria-label="store categories">
-              {groups.map((g) => (
-                <a key={g.anchor} href={`#${g.anchor}`}>{g.icon} {g.pill}</a>
-              ))}
-            </nav>
-          )}
-
-        </div>
-      </section>
+      {/* the house top (galaxy, block 976,027): the page's own words; the
+          category pills ride under the lead, inside the night */}
+      <PageHero
+        kicker="Where Heaven and Earth Meet"
+        lines={[{ t: "THE" }, { t: "STORE", tone: "teal" }]}
+        constellation
+        lead={<>Everything Love makes — sessions, meditations, memberships, and wares. Straight to the artist.</>}
+      >
+        {groups.length > 1 && (
+          <nav className="cat-pills" aria-label="store categories">
+            {groups.map((g) => (
+              <a key={g.anchor} href={`#${g.anchor}`}>{g.icon} {g.pill}</a>
+            ))}
+          </nav>
+        )}
+      </PageHero>
 
       {groups.length === 0 && (
         <section><div className="wrap center"><p className="lead">Nothing in the store yet — come back soon ✨</p></div></section>

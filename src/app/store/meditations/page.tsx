@@ -3,6 +3,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import NotOpenYet from "@/components/NotOpenYet";
 import ShelfSection, { shelfGroups } from "@/components/store/ShelfSection";
+import { PageHero } from "@/components/kit";
 import { getSiteConfig } from "@/lib/site-config";
 import { listItems, stripPrivateMedia } from "@/lib/store";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
@@ -49,7 +50,16 @@ export default async function StoreMeditationsPage() {
   return (
     <main>
       <SiteHeader />
-      <ShelfSection group={group} rails={rails} withFreeCard wholeShelfLink padTop />
+      {/* the house top (galaxy, block 976,027): the shelf's own title and
+          blurb move up into it; the kicker is NEW, proposed for his and
+          Love's ruling (DONE-oc-galaxy-top-976027.md) */}
+      <PageHero
+        kicker="The Store"
+        lines={[{ t: "MEDITATIONS" }, { t: "& JOURNEYS", tone: "teal" }]}
+        constellation
+        lead={group.blurb}
+      />
+      <ShelfSection group={group} rails={rails} withFreeCard wholeShelfLink heading={false} />
       <SiteFooter />
     </main>
   );

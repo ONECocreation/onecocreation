@@ -9,6 +9,7 @@ import AddTierButton from "@/components/store/AddTierButton";
 import JoinWithCard from "@/components/store/JoinWithCard";
 import AddonActions from "@/components/store/AddonActions";
 import SubscribeForm from "@/components/SubscribeForm";
+import { PageHero } from "@/components/kit";
 import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES, TIER_ADDONS, tierPageBySlug, type TierPage } from "@/lib/tiers-content";
 import { getSiteConfig } from "@/lib/site-config";
@@ -73,6 +74,15 @@ export type TierPageMode = TierOfferMode | "soon";
 export function tierPageMode(offerMode: TierOfferMode, mainLive: boolean, comingSoon: boolean): TierPageMode {
   if (comingSoon) return "soon";
   return offerMode === "buy" && !mainLive ? "waitlist" : offerMode;
+}
+
+/** The tier's own name as the top's two-colour heading (block 976,027): the
+ *  last word in teal, any words before it in ink; a one-word name is one
+ *  teal line. No new words: "Weekly Intuitive", "Observer", "Evening Star". */
+export function tierHeroLines(name: string): { t: string; tone?: "teal" }[] {
+  const words = name.trim().split(/\s+/);
+  const last = words.pop() ?? name;
+  return [...(words.length ? [{ t: words.join(" ").toUpperCase() }] : []), { t: last.toUpperCase(), tone: "teal" as const }];
 }
 
 export function generateStaticParams() {
@@ -193,11 +203,14 @@ export default async function TierPage({
       <ScrollTop />
       <SiteHeader />
       <main>
+        {/* the house top (galaxy, block 976,027): the kicker stays the way
+            back to /memberships, the heading is the tier's own name */}
+        <PageHero
+          kicker={<Link href="/memberships" style={{ color: "inherit" }}>Memberships</Link>}
+          lines={tierHeroLines(t.name)}
+          constellation
+        />
         <div className="wrap" style={{ maxWidth: 1020, padding: "56px 22px 40px" }}>
-          <p className="kicker">
-            <Link href="/memberships" style={{ color: "inherit" }}>Memberships</Link>
-          </p>
-          <h1 className="sec-h">{t.name}</h1>
 
           <div
             style={{
@@ -205,7 +218,6 @@ export default async function TierPage({
               gap: 40,
               gridTemplateColumns: "minmax(0,1.1fr) minmax(0,.9fr)",
               alignItems: "start",
-              marginTop: 26,
             }}
             className="tier-cols"
           >
