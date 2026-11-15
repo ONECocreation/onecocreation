@@ -36,7 +36,7 @@ export default function SiteFooter() {
           <Link href="/about">About</Link>
           {switches?.features.memberships !== false && <Link href="/memberships">Memberships</Link>}{/* T-187: the footer follows the Memberships switch (absent = ON) */}
           {switches?.features.sessions && <Link href="/book">Sessions</Link>}
-          <Link href="/classes">Community</Link>{/* T-137 seam: the header always shows Community now; the footer follows */}
+          {switches?.features.classes && <Link href="/classes">Community</Link>}{/* block 976,007: /classes is closed while the Classes switch is OFF, so the footer row follows that switch (the Sessions row's idiom just above) */}
           <Link href="/support">⚡ Support</Link>
         </nav>
         <p className="legal">Copyright © 2026 One Cocreation · <Link href="/terms" style={{ color: "inherit" }}>Terms &amp; Conditions</Link> · <Link href="/privacy" style={{ color: "inherit" }}>Privacy Policy</Link></p>

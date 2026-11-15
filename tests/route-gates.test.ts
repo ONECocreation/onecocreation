@@ -8,7 +8,8 @@ import { isolateCwd } from "./helpers/isolate-cwd";
  * Cut from the T-137 review's seam 4: the nav hid switched-off routes but a
  * direct URL still rendered them. Pins:
  *
- *  · /classes gates on `community` AND `classes` both OFF → the shared
+ *  · /classes gates on `classes` OFF (block 976,007; was `community` AND
+ *    `classes` both OFF) → the shared
  *    NotOpenYet panel (T-137) INSIDE the site chrome (header + footer);
  *    the gate branch is the page's FIRST early return (the T-159 lane
  *    contract: 1 switch gate → 2 Puck-first read → 3 hand-built fallback);
@@ -57,10 +58,11 @@ function gateBlock(src: string, marker: string = "TASK-160 GATE"): string {
 }
 
 describe("TASK-160 — the route gates", () => {
-  it("/classes: community AND classes both OFF → NotOpenYet inside the site chrome", async () => {
+  it("/classes: the Classes switch OFF → NotOpenYet inside the site chrome (block 976,007: the Classes switch alone, community ON no longer holds it open)", async () => {
     const gate = gateBlock(await read("src/app/classes/page.tsx"));
     expect(gate).toContain("getSiteConfig");
-    expect(gate).toContain("!switches.features.community && !switches.features.classes");
+    expect(gate).toContain("if (!switches.features.classes) {");
+    expect(gate).not.toContain("switches.features.community");
     expect(gate).toContain("NotOpenYet");
     expect(gate).toContain("<SiteHeader />");
     expect(gate).toContain("<SiteFooter />");
@@ -140,8 +142,8 @@ describe("TASK-160 — the switches the gates read (behavioral, isolated cwd)", 
     await fs.writeFile(FILE, JSON.stringify({ ...s, features: { ...s.features, classes: true } }), "utf8");
     const next = await getSiteConfig();
     expect(next.features.classes).toBe(true);
-    // the /classes gate condition as the page computes it: both OFF → closed
-    expect(!next.features.community && !next.features.classes).toBe(false);
+    // the /classes gate condition as the page computes it (block 976,007): Classes OFF → closed
+    expect(!next.features.classes).toBe(false);
     await fs.rm(FILE, { force: true });
   });
 

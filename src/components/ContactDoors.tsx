@@ -6,6 +6,7 @@ import Link from "next/link";
  * /contact both. The pages drifted apart once; they don't get to again.
  */
 import { getSiteConfig } from "@/lib/site-config";
+import { LIVE_WITH_LOVE_URL } from "@/lib/live-with-love";
 
 export default async function ContactDoors() {
   const switches = await getSiteConfig();
@@ -23,7 +24,8 @@ export default async function ContactDoors() {
             letterSpacing: ".06em", color: "var(--gold-deep)" }}>book now ⚡</span>
         </div>
       </Link>
-      <a className="card reveal" href="https://www.youtube.com/@Onecocreation" target="_blank" rel="noreferrer"
+      {/* block 976,007: her YouTube lives, the one address (live-with-love.ts) */}
+      <a className="card reveal" href={LIVE_WITH_LOVE_URL} target="_blank" rel="noreferrer"
         style={{ textDecoration: "none", transitionDelay: ".1s" }}>
         <div className="body center">
           <div style={{ fontSize: "1.7rem" }}>📺</div>
