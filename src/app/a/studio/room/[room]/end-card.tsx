@@ -18,8 +18,8 @@ export default function DirectorDeskEndCard() {
         The desk is closed for now. Everything waits where you left it.
       </p>
       <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-        <Link className="btn" href="/a/studio">Back to the studio desk</Link>
-        <Link className="btn btn-ghost" href="/a/live">The go-live door</Link>
+        <Link className="kit-btn kit-btn-main" href="/a/studio">Back to the studio desk</Link>
+        <Link className="kit-btn kit-btn-second" href="/a/live">The go-live door</Link>
       </div>
     </div>
   );
