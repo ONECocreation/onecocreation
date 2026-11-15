@@ -172,6 +172,11 @@ describe("JewelryPage — Puck first, the hand-built section as fallback", () =>
   });
 
   it("a fresh publish of the real seed renders it whole — the doc passes through untouched", async () => {
+    /* lane/oc-sats-when-bitcoin-on (block 976,021): untouched while the
+       bitcoin rail is live (the btcpay switch defaults on; the env makes it
+       live). The dark state is pinned in tests/sats-when-bitcoin-on.test.ts. */
+    const BTC = { BTCPAY_URL: "https://btcpay.invalid", BTCPAY_STORE_ID: "store", BTCPAY_API_KEY: "key" };
+    Object.assign(process.env, BTC);
     const store = await import("@/lib/puck-store");
     const { SEEDS } = await import("@/lib/puck-seeds");
     await store.setPuckDraft("jewelry", SEEDS.jewelry);
@@ -184,5 +189,6 @@ describe("JewelryPage — Puck first, the hand-built section as fallback", () =>
     const renders = findAll(el, (e) => e.type === Render);
     expect(renders).toHaveLength(1);
     expect((renders[0].props as { data?: unknown }).data).toEqual(SEEDS.jewelry);
+    for (const k of Object.keys(BTC)) delete process.env[k];
   });
 });

@@ -17,6 +17,7 @@ import { listServices } from "@/lib/booking";
 import { listItems } from "@/lib/store";
 import { getSiteConfig } from "@/lib/site-config";
 import { cartridge } from "@/brand/cartridge";
+import { satsShown } from "@/lib/sats-shown";
 
 export const metadata: Metadata = {
   title: "Sessions — book a time",
@@ -95,6 +96,8 @@ export default async function BookIndexPage() {
 
   const services = await listServices();
   const shelfIds = new Set((await listItems()).map((i) => i.id));
+  /* lane/oc-sats-when-bitcoin-on (block 976,021): sats only while bitcoin is live */
+  const btc = await satsShown();
 
   return (
     <main>
@@ -134,7 +137,7 @@ export default async function BookIndexPage() {
                     blurb: s.blurb ?? "",
                     durationMin: s.durationMin,
                     usd: s.price.fiat ? Math.round(s.price.fiat.amount / 100) : undefined,
-                    sats: s.price.sats,
+                    sats: btc ? s.price.sats : undefined,
                     pwyc: s.pricingMode === "pwyc",
                     inStore: shelfIds.has(s.id),
                     img: imgFor(s.id),

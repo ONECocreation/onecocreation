@@ -40,6 +40,10 @@ export interface PackageTierProps {
 export interface PackagesShelf {
   /** tierRailsOn(switches) — rails ON sells, rails OFF keeps the waitlist */
   railsOn: boolean;
+  /** lane/oc-sats-when-bitcoin-on (block 976,021): the bitcoin rail is live
+   *  (satsShown, @/lib/sats-shown) — the sats line rides only while true;
+   *  absent reads as off (derive-or-dash: never a sats word on a guess) */
+  btc?: boolean;
   tiers: PackageTierProps[];
 }
 
@@ -178,7 +182,7 @@ export function createPackagesGrid() {
                     <div className="body">
                       <Link href={`/packages/${t.slug}`} className={`tier-name-pill tier-pill--${c.accent}`} style={{ textDecoration: "none" }}>{t.name}</Link>
                       <div className="price">${t.priceUsd}<small>/mo</small></div>
-                      <div className="sats">⚡ ≈ {t.priceSats.toLocaleString()} sats / month</div>
+                      {shelf.btc && <div className="sats">⚡ ≈ {t.priceSats.toLocaleString()} sats / month</div>}
                       <ul className="feat">{c.feats.map((f) => <li key={f}>{f}</li>)}</ul>
                       <div className="push" style={{ width: "100%" }}>
                         {shelf.railsOn ? (

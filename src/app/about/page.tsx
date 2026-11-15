@@ -24,6 +24,7 @@ import {
   ABOUT_VIDEOS_EMPTY,
 } from "@/lib/about-content";
 import { getSiteConfig } from "@/lib/site-config";
+import { satsShown } from "@/lib/sats-shown";
 import PaletteVars from "@/components/PaletteVars";
 import PopupHost from "@/components/PopupHost";
 
@@ -89,6 +90,8 @@ export default async function AboutPage() {
   }
 
   const t = TIERS.A;
+  /* lane/oc-sats-when-bitcoin-on (block 976,021): sats only while bitcoin is live */
+  const btc = await satsShown();
   /* TASK-161 (0018.06.17 a₿ · block 966,080) — the playlist is Love's now:
      her saved list (the /a/site "Videos on About" card) wins; absent = the
      seed in @/lib/about-content stands; a saved EMPTY list is honoured and
@@ -314,7 +317,7 @@ export default async function AboutPage() {
                 )}
                 <div className="center" style={{ marginTop: 18 }}>
                   <p style={{ fontSize: ".85rem", color: "var(--muted)", margin: "0 0 10px" }}>
-                    ${t.priceUsd}/mo · ⚡ ≈ {t.priceSats.toLocaleString()} sats — readings, breath,
+                    ${t.priceUsd}/mo{btc && <> · ⚡ ≈ {t.priceSats.toLocaleString()} sats</>} — readings, breath,
                     toning, light language, a held field
                   </p>
                   {/* item 4: the YES! door pours pink, not white */}
