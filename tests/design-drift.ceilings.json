@@ -1159,6 +1159,11 @@
       "colours": 0,
       "styledButtons": 0
     },
+    "src/components/kit/PageHero.tsx": {
+      "styleBlocks": 0,
+      "colours": 0,
+      "styledButtons": 0
+    },
     "src/components/kit/Tabs.tsx": {
       "styleBlocks": 0,
       "colours": 0,
@@ -1472,6 +1477,11 @@
     "src/lib/puck-blocks/packages-grid.tsx": {
       "styleBlocks": 2,
       "colours": 1,
+      "styledButtons": 0
+    },
+    "src/lib/puck-blocks/page-hero.tsx": {
+      "styleBlocks": 0,
+      "colours": 0,
       "styledButtons": 0
     },
     "src/lib/puck-blocks/parallax-band.tsx": {

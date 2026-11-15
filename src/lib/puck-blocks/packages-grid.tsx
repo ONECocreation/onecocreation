@@ -105,8 +105,12 @@ export function createPackagesGrid() {
       }
       /* the tier grid, markup-verbatim from Packages() — the fallback and
          the block stay identical cards by transcription (source-pinned) */
+      /* TASK-645 (block 975,980): the page's ONE lion is this section's own
+         .lions-gate ground; .lions-gate-whole (cartridge.css) keeps the lion
+         whole on a phone, sized to the screen instead of to this tall
+         section. The home page's Packages() section keeps plain .lions-gate. */
       return (
-        <section id="packages" className="lions-gate">
+        <section id="packages" className="lions-gate lions-gate-whole">
           {/* the scoped styles ride verbatim from Packages() (TASK-229's
               focus ring on the picture-door, TASK-254's .push>a.btn reach) —
               the same "own-CSS via a scoped <style>" idiom, never house.css */}

@@ -21,7 +21,7 @@ a touched file. The twelve hand-copied tops stay as they are.
 - `src/app/cartridge.css` (the grid lion whole on a phone, beside `.lions-gate`)
 - `src/lib/puck-blocks/page-hero.tsx` (Part C.2, the designer block)
 - `src/lib/puck-config.tsx` (registers the block)
-- `src/lib/copilot.ts` (COMPONENTS mirrors the registry)
+- `src/lib/puck-blocks/parallax-band.tsx` (its slot refuses PageHero, like Band; copilot.ts is not touched: its COMPONENTS carries no container blocks, Band included)
 - `src/lib/puck-seeds.ts` (the packages seed wears PageHero; the render-time top patch)
 - `src/lib/puck-blocks/packages-grid.tsx` (the grid's one lion, whole at 390)
 - `src/app/packages/page.tsx` (the top patch at render time; the page's own title)

@@ -129,12 +129,17 @@ export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
      behind its own switch). There is no separate Memberships tab or Sessions
      tab any more: their pages stay, reached through Store. Every row follows
      its own page's switch (pageOn), so a header with nothing left on drops
-     away, exactly like a saved menu does in buildMenu. */
+     away, exactly like a saved menu does in buildMenu.
+     TASK-645 (block 975,980, the Admiral: "we also seemed to have lost that
+     /memberships page in the navigation area"): the Memberships row walks
+     to the lion page /memberships, whose own button walks on to /packages.
+     The shelf /store/memberships keeps its door on /store, which carries
+     the same memberships section. */
   const store: MenuItem["subs"] = [
     { label: "Sessions", href: "/book" },
     ...(s?.features.cuts ? [{ label: "ConsciousCuts & Waxing", href: "/services" }] : []),
     { label: "Meditations", href: "/store/meditations" },
-    { label: "Memberships", href: "/store/memberships" },
+    { label: "Memberships", href: "/memberships" },
     { label: "Three packages", href: "/packages" },
   ].filter((c) => pageOn(s, c.href));
   const menu: MenuItem[] = [{ label: "About", href: "/about" }];

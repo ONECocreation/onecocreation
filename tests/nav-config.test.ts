@@ -133,7 +133,10 @@ describe("buildMenu's default — Community is a header, not a switch", () => {
     const store = menu.find((m) => m.label === "Store");
     expect(store?.href).toBe("/store");
     expect(store?.subs?.map((s) => s.label)).toEqual(["Sessions", "Meditations", "Memberships", "Three packages"]);
-    expect(store?.subs?.map((s) => s.href)).toEqual(["/book", "/store/meditations", "/store/memberships", "/packages"]);
+    // T-645 (block 975,980): the Memberships row walks to the lion page
+    // /memberships again (the Admiral: "we also seemed to have lost that
+    // /memberships page in the navigation area"); the shelf keeps /store.
+    expect(store?.subs?.map((s) => s.href)).toEqual(["/book", "/store/meditations", "/memberships", "/packages"]);
     const community = menu.find((m) => m.label === "Community");
     expect(community?.subs?.find((s) => s.label === "Free meditation")?.href).toBe("/meditation");
     expect(community?.subs?.map((s) => s.label).slice(0, 2)).toEqual(["Read with Love", "Replays"]);

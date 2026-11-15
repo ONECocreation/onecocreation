@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { Data } from "@puckeditor/core";
 import { Render } from "@puckeditor/core";
 import "@puckeditor/core/no-external.css";
@@ -14,11 +15,19 @@ import { tierRailsOn } from "@/lib/tier-offer";
 import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { applyPackagesToPuck, type PackagesShelf } from "@/lib/puck-blocks/packages-grid";
+import { applyHouseTopToPuck } from "@/lib/puck-seeds";
 
 /* T-229 follow-through (0018.06.23 a₿): this page reads the site switches from KV;
    without this Next bakes it at build time and a switch Love flips never lands
    until the next deploy (the same line / and /store already carry). */
 export const dynamic = "force-dynamic";
+
+/* TASK-645 (block 975,980): the page's own title. The tab read the site's
+   home title, the only public page of the three package doors without one. */
+export const metadata: Metadata = {
+  title: "Packages — One Cocreation",
+  description: "Three ways into the Heart Field. Each package includes everything before it.",
+};
 
 export default async function PackagesPage() {
   /* ── TASK-187 GATE, route-level (TASK-232, 0018.06.25 a₿ · block 967,125) —
@@ -72,7 +81,10 @@ export default async function PackagesPage() {
       <>
         <SiteHeader />
         <PaletteVars />
-        <main><Render config={config} data={applyPackagesToPuck(puck as Data, shelf)} /></main>
+        {/* TASK-645: a page published with the lion behind its first band
+            opens on the house top instead (applyHouseTopToPuck; the stored
+            page is never written) */}
+        <main><Render config={config} data={applyPackagesToPuck(applyHouseTopToPuck(puck as Data), shelf)} /></main>
         <SiteFooter />
         {/* STUDIO P2: the popup host rides the designer branch (the fallback
             never had one — byte-identical law — so it is not added there) */}
