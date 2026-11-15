@@ -255,7 +255,7 @@ export function DoorRow({ door, state, busy, error, onOpen, onClose, onShowCamer
          (kit.css's `.kit-rows>li` auto-places it under column 1,
          `.kit-rooms-card .kit-row-link` tightens the gap). */}
       <span className="kit-row-link">
-        <a href={`/a/site/reading/go/${door.id}`}>Room link</a>
+        <a href={`/a/site/reading/go/${door.id}`} className="kit-btn kit-btn-sm kit-btn-second">Room link</a>
       </span>
       {switchedOff && isOpen && (
         <span className="kit-row-link" data-switched-off="true">

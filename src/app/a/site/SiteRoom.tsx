@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Chip, SectionHead, field } from "@/components/console/glass";
 import type { SiteConfig } from "@/lib/site-config";
 
@@ -27,6 +27,13 @@ import type { SiteConfig } from "@/lib/site-config";
  */
 
 type RailStatus = Record<"btcpay" | "square" | "stripe", { configured: boolean; env: string[] }>;
+
+/* an env name breaks only after an underscore: BTCPAY_STORE_<wbr>ID, never BTCPAY_STORE_I / D */
+function envNameParts(name: string) {
+  return name.split("_").map((part, i, all) => (
+    <Fragment key={i}>{part}{i < all.length - 1 && <>_<wbr /></>}</Fragment>
+  ));
+}
 
 const FEATURE_ROWS: { key: keyof SiteConfig["features"]; label: string; about: string }[] = [
   { key: "community", label: "Community", about: "the Community door in the nav, the home community section, the 11:11 Live with Love door" },
@@ -159,7 +166,7 @@ export default function SiteRoom() {
               <span className="kit-srow-env">
                 {status.env.length > 0 ? (
                   <>
-                    env: {status.env.map((n) => <code key={n} style={{ marginRight: 8 }}>{n}</code>)}
+                    env: {status.env.map((n) => <code key={n}>{envNameParts(n)}</code>)}
                     {status.configured ? "configured" : "not configured, the slider stays dark until these are set"}
                   </>
                 ) : (

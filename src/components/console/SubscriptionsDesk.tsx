@@ -78,7 +78,7 @@ export default function SubscriptionsDesk() {
           {env ? ` Square is in ${env} mode.` : ""}
         </p>
         <p className="kit-note">
-          <Link href="/a/money/test-join" className="kit-btn kit-btn-quiet">Test a join before switching on</Link>
+          <Link href="/a/money/test-join" className="kit-btn kit-btn-sm kit-btn-second">Test a join before switching on</Link>
         </p>
         <h3 className="kit-h2">Members</h3>
         {rows.length === 0 ? (

@@ -359,11 +359,11 @@ export default function BookingRoom() {
                 {s.durationMin}min +{s.bufferMin} · {s.pricingMode === "pwyc" ? "give what you can" : "fixed"}
               </span>
               {s.status === "live" ? <Chip tone="green">live</Chip> : <Chip tone="grey">hidden</Chip>}
-              <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-                <button type="button" onClick={() => setDraft(s)} className="kit-btn kit-btn-quiet">
+              <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => setDraft(s)} className="kit-btn kit-btn-sm kit-btn-main">
                   edit
                 </button>
-                <button type="button" onClick={() => remove("service", s.id)} className="kit-btn kit-btn-quiet is-danger">
+                <button type="button" onClick={() => remove("service", s.id)} className="kit-btn kit-btn-sm kit-btn-second">
                   delete
                 </button>
               </span>
@@ -391,7 +391,7 @@ export default function BookingRoom() {
                 {r.serviceIds.length === 0 ? "all sessions" : r.serviceIds.join(", ")}
               </span>
             </span>
-            <button type="button" onClick={() => remove("rule", r.id)} className="kit-btn kit-btn-quiet is-danger">
+            <button type="button" onClick={() => remove("rule", r.id)} className="kit-btn kit-btn-sm kit-btn-second">
               remove
             </button>
           </li>
@@ -421,7 +421,7 @@ export default function BookingRoom() {
                 {o.note && <span style={{ marginLeft: 8, color: "var(--muted)", fontSize: ".78rem" }}>{o.note}</span>}
               </span>
               {!retreat && (
-                <button type="button" onClick={() => remove("override", o.id)} className="kit-btn kit-btn-quiet is-danger">
+                <button type="button" onClick={() => remove("override", o.id)} className="kit-btn kit-btn-sm kit-btn-second">
                   remove
                 </button>
               )}

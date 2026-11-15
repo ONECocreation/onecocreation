@@ -214,7 +214,7 @@ export default function LetterEditPage({ params }: { params: Promise<{ key: stri
     <div className="p-6 text-sm">
       <div className="kitx-pane">
         <div className="kit-bset">
-          <Link className="kit-btn kit-btn-quiet kit-btn-sm" href="/a/letters">Back to the letters</Link>
+          <Link className="kit-btn kit-btn-sm kit-btn-second" href="/a/letters">Back to the letters</Link>
         </div>
         {CONSOLE_CHROME !== "site" && <h2 className="kit-h2">{title}</h2>}
         {letter === undefined && !loadFailed && <p className="kit-note" aria-live="polite">Loading the letter...</p>}

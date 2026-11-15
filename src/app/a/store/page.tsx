@@ -534,13 +534,15 @@ export default function StoreRoom() {
                       <td style={td}><FulfilledBy item={item} /></td>
                       <td style={{ ...td, borderRadius: "0 14px 14px 0", borderRight: "1px solid rgba(139,118,196,.18)",
                         whiteSpace: "nowrap", textAlign: "right" }}>
-                        <button type="button" className="kit-btn kit-btn-quiet" onClick={() => openEditor(item)}>
-                          edit
-                        </button>
-                        <button type="button" className={`kit-btn kit-btn-quiet${item.status === "live" ? "" : " is-ok"}`}
-                          onClick={() => toggle(item, item.status === "live" ? "hidden" : "live")}>
-                          {item.status === "live" ? "hide" : "go live"}
-                        </button>
+                        <div className="kit-doors">
+                          <button type="button" className="kit-btn kit-btn-sm kit-btn-main" onClick={() => openEditor(item)}>
+                            edit
+                          </button>
+                          <button type="button" className={`kit-btn kit-btn-sm ${item.status === "live" ? "kit-btn-second" : "kit-btn-main"}`}
+                            onClick={() => toggle(item, item.status === "live" ? "hidden" : "live")}>
+                            {item.status === "live" ? "hide" : "go live"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -580,7 +582,7 @@ export default function StoreRoom() {
                     <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>
                       · {c.count} {c.count === 1 ? "item" : "items"}
                     </span>
-                    <button type="button" className="kit-btn kit-btn-quiet" onClick={() => { setRenaming(c.name); setRenameText(c.name); }}>
+                    <button type="button" className="kit-btn kit-btn-sm kit-btn-second" onClick={() => { setRenaming(c.name); setRenameText(c.name); }}>
                       rename
                     </button>
                   </>
@@ -722,7 +724,7 @@ export default function StoreRoom() {
                             <span style={{ display: "block", textAlign: "center", fontSize: ".75rem", fontWeight: 700,
                               color: "var(--gold-deep)", marginTop: 2 }}>★ default</span>
                           ) : (
-                            <button type="button" className="kit-btn kit-btn-quiet" onClick={() => makeDefault(url)}>
+                            <button type="button" className="kit-btn kit-btn-sm kit-btn-second" onClick={() => makeDefault(url)}>
                               ☆ make default
                             </button>
                           )}
@@ -1011,7 +1013,7 @@ export default function StoreRoom() {
 
                 {draft.id && (
                   <div style={{ textAlign: "right" }}>
-                    <button type="button" className="kit-btn kit-btn-quiet is-danger" onClick={() => removeItem(draft)}>
+                    <button type="button" className="kit-btn kit-btn-sm kit-btn-second" onClick={() => removeItem(draft)}>
                       Delete this item
                     </button>
                   </div>

@@ -197,7 +197,7 @@ export default function AboutVideosCard() {
         <div style={row}>
           <b style={{ fontSize: ".88rem", flex: 1, minWidth: 200 }}>{featured.title}</b>
           <Chip tone="grey">{featured.id}</Chip>
-          <button type="button" className="kit-btn kit-btn-quiet is-danger" disabled={featBusy} onClick={clearFeatured}>
+          <button type="button" className="kit-btn kit-btn-sm kit-btn-second" disabled={featBusy} onClick={clearFeatured}>
             {featBusy ? "…" : "Clear"}
           </button>
         </div>
@@ -270,7 +270,7 @@ export default function AboutVideosCard() {
           >
             {v.ratio === "9/16" ? "portrait 9/16" : "landscape 16/9"}
           </button>
-          <button type="button" className="kit-btn kit-btn-quiet is-danger" onClick={() => setRows(rows.filter((_, idx) => idx !== i))}>
+          <button type="button" className="kit-btn kit-btn-sm kit-btn-second" onClick={() => setRows(rows.filter((_, idx) => idx !== i))}>
             remove
           </button>
         </div>

@@ -158,6 +158,8 @@
      measures 7.52:1 at night / 5.10-5.30:1 at dawn against both the bare
      ground and a Card's --panel — comfortably clearing 4.5:1 in both. */
 .kit-field-input[aria-invalid="true"]{border-color:#a34e6c}
+/* on a phone a field in the row takes the card's whole width (the reading's Coming up form) */
+@media(max-width:640px){.kit-switch-row>.kit-field-input{flex:1 1 100%;width:100%;min-width:0;max-width:none;box-sizing:border-box}}
 .kit-field-error{margin:0;font-size:.82rem;font-weight:600;color:var(--err)}
 
 /* ── TABS ──────────────────────────────────────────────────────────
@@ -463,7 +465,7 @@
    rule only tightens the row gap the shared `gap:16px` would otherwise
    leave above it and sizes the link down to a quiet, secondary size. */
 .kit-rooms-card .kit-row-link{margin-top:-8px;font-size:.78rem}
-.kit-rooms-card .kit-row-link a{color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+.kit-rooms-card .kit-row-link a:not(.kit-btn){color:var(--muted);text-decoration:underline;text-underline-offset:2px}
 /* TASK-486 — the go/[door] page itself: one action column, every button
    full width (a thumb target at 390px, opened straight off an email link),
    no new per-page style object — the same kit.css cascade every other
@@ -878,6 +880,8 @@
    (primary then secondary), stacked and centred at phone width when they do not fit. ── */
 /* ── T-624 round 2: Site switches, every on/off row is the one slider; the meeting rail is a choice of three, one pill size ── */
 .kit-srow-text .kit-srow-env{font-size:.75rem;margin-top:3px}
+/* an env name is one word: each on its own line, and a too-long one breaks only after an underscore (its <wbr>) */
+.kit-srow-text .kit-srow-env code{display:block;overflow-wrap:normal;word-break:normal}
 .kit-srow.is-dim{opacity:.72}
 .kit-tgl:disabled{opacity:.5;cursor:not-allowed}
 .kit-srow-wide{grid-template-columns:minmax(0,1fr);}
@@ -936,6 +940,8 @@
   display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;justify-content:center;align-items:center;width:fit-content;max-width:100%;margin-inline:auto;
 }
 .kit-bset .kit-doors{margin-top:4px}
+/* a card's doors in a table cell (Items' EDIT and HIDE / GO LIVE): one width each, the cell may not squeeze them, at the cell's end */
+.kit-bset td>.kit-doors{min-width:max-content;margin:0 0 0 auto}
 .kit-bset .kit-btn-row:has(>:nth-child(4)),.kit-bset.kit-btn-row:has(>:nth-child(4)){display:flex;flex-wrap:wrap;width:auto}
 @media(max-width:640px){
   .kit-bset .kit-btn-row,.kit-bset.kit-btn-row,.kit-bset .kit-doors,.kit-bset .kit-rail,.kit-bset .kit-shape,.kit-bset .kit-preview-actions{grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:auto}
@@ -1103,5 +1109,3 @@
 /* A7: a fold-away row's toggle on the kit family (the studio's "For the director's desk") */
 .kit-bset .kit-btn-quiet.kit-disclosure{display:flex;width:100%;justify-content:flex-start;gap:6px;padding:0;text-transform:none;letter-spacing:.04em;color:var(--muted)}
 .kit-bset .kit-btn-quiet.kit-disclosure.is-open{margin-bottom:10px}
-/* A2: a lone door link in a row (the reading's "Room link") is a thumb-sized target on a phone */
-@media(max-width:640px){.mgmt-ground .kit-row-link>a{display:inline-flex;align-items:center;min-height:44px}}

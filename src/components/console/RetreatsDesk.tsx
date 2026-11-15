@@ -96,14 +96,14 @@ export default function RetreatsDesk() {
                 {r.depositSats != null && ` (deposit ${r.depositSats.toLocaleString()})`}
               </span>
               {r.status === "live" ? <Chip tone="teal">live</Chip> : <Chip tone="grey">hidden</Chip>}
-              <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-                <a href={`/retreats/${r.id}`} target="_blank" className="kit-btn kit-btn-quiet">
+              <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                <a href={`/retreats/${r.id}`} target="_blank" className="kit-btn kit-btn-sm kit-btn-second">
                   view
                 </a>
-                <button type="button" className="kit-btn kit-btn-quiet" onClick={() => { setDraft(r); setErr(""); }}>
+                <button type="button" className="kit-btn kit-btn-sm kit-btn-main" onClick={() => { setDraft(r); setErr(""); }}>
                   edit
                 </button>
-                <button type="button" className="kit-btn kit-btn-quiet is-danger" onClick={() => remove(r)} disabled={busy}>
+                <button type="button" className="kit-btn kit-btn-sm kit-btn-second" onClick={() => remove(r)} disabled={busy}>
                   remove
                 </button>
               </span>

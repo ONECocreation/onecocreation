@@ -65,10 +65,10 @@ export default function DiscountsDesk() {
             ) : (
               <Chip tone="grey">off</Chip>
             )}
-            <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+            <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
               <button
                 type="button"
-                className="kit-btn kit-btn-quiet"
+                className="kit-btn kit-btn-sm kit-btn-second"
                 disabled={busy}
                 onClick={() => save(codes.map((x) => (x.code === c.code ? { ...x, enabled: !x.enabled } : x)))}
               >
@@ -76,7 +76,7 @@ export default function DiscountsDesk() {
               </button>
               <button
                 type="button"
-                className="kit-btn kit-btn-quiet is-danger"
+                className="kit-btn kit-btn-sm kit-btn-second"
                 disabled={busy}
                 onClick={() => confirm(`Remove code ${c.code}?`) && save(codes.filter((x) => x.code !== c.code))}
               >
