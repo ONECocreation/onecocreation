@@ -27,6 +27,7 @@ a touched file. The twelve hand-copied tops stay as they are.
 - `src/app/packages/page.tsx` (the top patch at render time; the page's own title)
 - `src/components/NavMenu.tsx` (Part B.1, the Memberships row goes to /memberships)
 - `tests/nav-config.test.ts` (the T-615 pin follows the row, by name)
+- `tests/site-config.test.ts` (the default-switches menu pin follows the row, by name)
 - `tests/packages-puck.test.ts` (the seed pins follow the top)
 - `tests/page-hero-645.test.ts` (new)
 - `tests/menu-doors-645.test.ts` (new, Part B.3)
