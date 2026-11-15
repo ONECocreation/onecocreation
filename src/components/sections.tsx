@@ -252,6 +252,9 @@ export async function Packages({ gateNote = true }: { gateNote?: boolean } = {})
      its door both walk straight to that sale instead of collecting another
      waitlist signup. */
   const railsOn = tierRailsOn(switches);
+  /* lane/oc-sats-when-bitcoin-on (block 976,021): the sats line shows only
+     while the bitcoin rail is live — the same liveRails() truth below */
+  const { btc } = await liveRails();
   const cards = [
     { tier: "A" as const, accent: "a", img: cartridge.tierArt.A, feats: ["Live weekly meetup in Love's room — 4× a month", "Explore your Clair Senses through breath", "Meditations, toning, light language", "A held energetic field, in community"] },
     { tier: "B" as const, accent: "b", img: cartridge.tierArt.B, feats: ["Everything in Weekly Intuitive", "Weekly recorded reading + affirmations", "Weekly live meetup in Love's room", "Movement, meditation & navigation"] },
@@ -297,7 +300,7 @@ export async function Packages({ gateNote = true }: { gateNote?: boolean } = {})
                 <div className="body">
                   <Link href={`/packages/${slug}`} className={`tier-name-pill tier-pill--${c.accent}`} style={{ textDecoration: "none" }}>{t.name}</Link>
                   <div className="price">${t.priceUsd}<small>/mo</small></div>
-                  <div className="sats">⚡ ≈ {t.priceSats.toLocaleString()} sats / month</div>
+                  {btc && <div className="sats">⚡ ≈ {t.priceSats.toLocaleString()} sats / month</div>}
                   <ul className="feat">{c.feats.map((f) => <li key={f}>{f}</li>)}</ul>
                   {/* TASK-119 (0018.06.16 a₿): buy/pay buttons hidden while
                       payments are off — each tier offers the waitlist instead
@@ -385,7 +388,7 @@ export async function Jewelry() {
                 <h3 style={{ fontWeight: 400, fontSize: "1.1rem" }}>{it.name}</h3>
                 <p style={{ color: "var(--muted)", fontSize: ".85rem", minHeight: "2.4em" }}>{it.story}</p>
                 <div className="price" style={{ fontSize: "1.2rem" }}>${it.usd}</div>
-                <div className="sats">⚡ ≈ {it.sats} sats</div>
+                {rails.btc && <div className="sats">⚡ ≈ {it.sats} sats</div>}
                 <p style={{ fontSize: ".72rem", color: "var(--muted)", margin: "8px 0 12px" }}>Handmade · ships in 3–5 days</p>
               </div>
             </div>
@@ -405,6 +408,8 @@ export async function Services() {
   // The REAL shelf — same services the booking rail sells, in Love's order.
   const services = await listServices();
   const shelfIds = new Set((await listItems()).map((i) => i.id));
+  /* lane/oc-sats-when-bitcoin-on: no sats line on a card while bitcoin is off */
+  const { btc } = await liveRails();
   // real photography per session (Admiral, 0018.05.15 — no more emoji tiles)
   const IMG: [RegExp, string][] = [
     [/discovery/i, cartridge.hero.loveSidelook],
@@ -437,7 +442,7 @@ export async function Services() {
                 blurb: s.blurb ?? "",
                 durationMin: s.durationMin,
                 usd: s.price.fiat ? Math.round(s.price.fiat.amount / 100) : undefined,
-                sats: s.price.sats,
+                sats: btc ? s.price.sats : undefined,
                 pwyc: s.pricingMode === "pwyc",
                 inStore: shelfIds.has(s.id),
                 img: imgFor(s.id),
@@ -552,7 +557,7 @@ export async function Affirmations() {
               <div className="body">
                 <h3 style={{ fontWeight: 400 }}>{a.name}</h3>
                 <p style={{ color: "var(--muted)", margin: ".2em 0 .6em" }}>{a.sub}</p>
-                <div className="price">$11.11</div><div className="sats">⚡ ≈ 11,110 sats</div>
+                <div className="price">$11.11</div>{rails.btc && <div className="sats">⚡ ≈ 11,110 sats</div>}
                 <Link className="btn btn-ghost push" style={{ marginTop: 16 }} href="/store">Add ⚡</Link>
               </div>
             </div>

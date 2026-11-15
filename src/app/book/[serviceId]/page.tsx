@@ -6,6 +6,7 @@ import SiteFooter from "@/components/SiteFooter";
 import SlotPicker from "@/components/booking/SlotPicker";
 import { getService } from "@/lib/booking";
 import { dollars } from "@/lib/money-words";
+import { satsShown } from "@/lib/sats-shown";
 
 export const dynamic = "force-dynamic";
 
@@ -22,11 +23,13 @@ export async function generateMetadata({
   };
 }
 
-function priceLabel(service: NonNullable<Awaited<ReturnType<typeof getService>>>): string {
+/* lane/oc-sats-when-bitcoin-on (block 976,021): the sats word rides only
+   while the bitcoin rail is live (satsShown) */
+function priceLabel(service: Pick<NonNullable<Awaited<ReturnType<typeof getService>>>, "pricingMode" | "price">, btc: boolean): string {
   if (service.pricingMode === "pwyc") return "give what you can";
   const { sats, fiat } = service.price;
   const bits: string[] = [];
-  if (sats != null) bits.push(`${sats.toLocaleString("en-US")} sats`);
+  if (btc && sats != null) bits.push(`${sats.toLocaleString("en-US")} sats`);
   if (fiat) bits.push(dollars(fiat.amount, fiat.currency));
   return bits.join(" · ") || "price on request";
 }
@@ -35,6 +38,7 @@ export default async function BookPage({ params }: { params: Promise<{ serviceId
   const { serviceId } = await params;
   const service = await getService(serviceId);
   if (!service || service.status !== "live") notFound();
+  const btc = await satsShown();
 
   return (
     <main>
@@ -49,7 +53,7 @@ export default async function BookPage({ params }: { params: Promise<{ serviceId
             {service.blurb && (
               <p className="lead" style={{ marginBottom: 8 }}>{service.blurb}</p>
             )}
-            <p className="price" style={{ fontSize: "1.2rem", margin: "0 0 4px" }}>{priceLabel(service)}</p>
+            <p className="price" style={{ fontSize: "1.2rem", margin: "0 0 4px" }}>{priceLabel(service, btc)}</p>
             <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: 0 }}>{service.durationMin} minutes</p>
             {service.meetingRail.kind === "inPerson" && (
               <p style={{ marginTop: 12, fontSize: ".88rem", color: "var(--muted)", maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>

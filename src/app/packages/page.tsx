@@ -12,6 +12,7 @@ import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
 import { getSiteConfig } from "@/lib/site-config";
 import { tierRailsOn } from "@/lib/tier-offer";
+import { satsShown } from "@/lib/sats-shown";
 import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { applyPackagesToPuck, type PackagesShelf } from "@/lib/puck-blocks/packages-grid";
@@ -69,6 +70,7 @@ export default async function PackagesPage() {
        store, so a published snapshot can't fossilise a price) */
     const shelf: PackagesShelf = {
       railsOn: tierRailsOn(switches),
+      btc: await satsShown(),
       tiers: TIER_PAGES.map((p) => ({
         tier: p.tier,
         slug: p.slug,

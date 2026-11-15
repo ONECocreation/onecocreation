@@ -14,6 +14,8 @@ import { getSiteConfig } from "@/lib/site-config";
 import { DEFAULT_READING_SCHEDULE } from "@/lib/reading-schedule";
 import { applyHomeSwitchesToPuck } from "@/lib/puck-seeds";
 import { dropGateNote } from "@/lib/puck-blocks/packages-grid";
+import { applySatsRuleToPuck } from "@/lib/puck-sats";
+import { satsShown } from "@/lib/sats-shown";
 import {
   Hero, About, Packages, Services, Classes, Affirmations, Donations, FreeMeditation, Contact,
 } from "@/components/sections";
@@ -68,7 +70,10 @@ export default async function Home() {
        note loses it at render time, the same dropGateNote /packages uses.
        The stored page is never written. */
     const dropped = dropGateNote(Array.isArray(switched.content) ? switched.content : []);
-    const data = dropped.changed ? ({ ...switched, content: dropped.list } as Data) : switched;
+    const noted = dropped.changed ? ({ ...switched, content: dropped.list } as Data) : switched;
+    /* lane/oc-sats-when-bitcoin-on (block 976,021): the seed's sats words
+       leave the page while the bitcoin rail is dark (applySatsRuleToPuck) */
+    const data = applySatsRuleToPuck(noted, await satsShown());
     return (
       <>
         <SiteHeader />

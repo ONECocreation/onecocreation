@@ -8,6 +8,8 @@ import PopupHost from "@/components/PopupHost";
 import { Jewelry } from "@/components/sections";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
+import { applySatsRuleToPuck } from "@/lib/puck-sats";
+import { satsShown } from "@/lib/sats-shown";
 
 /* TASK-295 (0018.06.25 a₿): the page reads its Puck doc from KV now, so it
    carries the same force-dynamic line /about got under TASK-239 — without
@@ -27,7 +29,8 @@ export default async function JewelryPage() {
       <>
         <SiteHeader />
         <PaletteVars />
-        <main><Render config={config} data={puck as Data} /></main>
+        {/* lane/oc-sats-when-bitcoin-on: no sats line while bitcoin is dark */}
+        <main><Render config={config} data={applySatsRuleToPuck(puck as Data, await satsShown())} /></main>
         <SiteFooter />
         {/* STUDIO P2: popup host rides both branches of this page */}
         <PopupHost />

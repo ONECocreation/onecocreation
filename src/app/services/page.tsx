@@ -14,6 +14,7 @@ import { getPuckPage } from "@/lib/puck-store";
 import { TIERS } from "@/lib/entitlement";
 import { TIER_PAGES } from "@/lib/tiers-content";
 import { readConfig } from "@/lib/booking";
+import { satsShown } from "@/lib/sats-shown";
 import { renderCartridgeId, cartridge } from "@/brand/cartridge";
 
 /* eslint-disable @next/next/no-img-element */
@@ -81,6 +82,7 @@ export default async function ServicesPage() {
     );
   }
 
+  const btc = await satsShown();
   const anyRetreat = ((await readConfig()).retreats ?? []).some((r) => r.status === "live");
   return (
     <>
@@ -205,7 +207,7 @@ export default async function ServicesPage() {
                     <div className="body" style={{ alignItems: "center", textAlign: "center" }}>
                       <h3 style={{ fontWeight: 400, fontSize: "1.2rem", margin: 0 }}>{t.name}</h3>
                       <div className="price">${t.priceUsd}<small>/mo</small></div>
-                      <div className="sats">⚡ ≈ {t.priceSats.toLocaleString()} sats / month</div>
+                      {btc && <div className="sats">⚡ ≈ {t.priceSats.toLocaleString()} sats / month</div>}
                       <div className="push" style={{ display: "flex", justifyContent: "center", width: "100%", marginTop: 14 }}>
                         <Link className="btn" href={`/packages/${page?.slug}`}>YES!</Link>
                       </div>

@@ -59,6 +59,9 @@ async function fixtureShelf(railsOn: boolean) {
   const { TIER_PAGES } = await import("@/lib/tiers-content");
   return {
     railsOn,
+    /* lane/oc-sats-when-bitcoin-on: the fixture's bitcoin rail is live (as
+       today); tests/sats-when-bitcoin-on.test.ts pins the dark state */
+    btc: true,
     tiers: TIER_PAGES.map((p) => ({
       tier: p.tier,
       slug: p.slug,
@@ -350,7 +353,10 @@ describe("PackagesPage — 1 gate → 2 Puck → 3 hand-built fallback", () => {
     expect(html).toContain("Three ways into the field");
     expect(html).not.toContain("How the gate works");
     expect(html).toContain("Weekly Intuitive");
-    expect(html).toContain("55,555 sats / month");
+    /* lane/oc-sats-when-bitcoin-on (block 976,021): no btcpay env in this
+       fixture, so the bitcoin rail is dark and no sats line rides the cards */
+    expect(html).toContain("$33<small>/mo</small>");
+    expect(html).not.toContain("sats / month");
     expect(html).toContain("I&#x27;m interested"); // rails OFF (default): the waitlist door
   });
 
