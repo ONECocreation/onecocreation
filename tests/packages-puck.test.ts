@@ -417,17 +417,44 @@ describe("T-645 1c: the gate note comes off /packages at render time (block 976,
     expect(dropGateNote(list).list).toBe(list);
   });
 
-  it("the hand-built fallback: /packages passes gateNote={false}; the home page calls Packages() bare and keeps the note", () => {
+  it("the hand-built fallback: /packages and the home page both pass gateNote={false}", () => {
     const page = readFileSync(path.join(REPO, "src/app/packages/page.tsx"), "utf8");
     expect(page).toContain("<Packages gateNote={false} />");
     const home = readFileSync(path.join(REPO, "src/app/page.tsx"), "utf8");
-    expect(home).toContain("<Packages />");
+    expect(home).toContain("<Packages gateNote={false} />");
+    expect(home).not.toContain("<Packages />");
     const sec = readFileSync(path.join(REPO, "src/components/sections.tsx"), "utf8");
     expect(sec).toMatch(/\{gateNote && <p className="note"><b>How the gate works:<\/b>/);
   });
 
-  it("the home seed keeps its gate note (he ruled /packages only)", async () => {
+  it("the home seed has no gate note (desk card 976015, \"Take it off the home page too\")", async () => {
     const { SEEDS } = await import("@/lib/puck-seeds");
-    expect(JSON.stringify(SEEDS.home.content)).toContain("How the gate works:");
+    expect(JSON.stringify(SEEDS.home.content)).not.toContain("How the gate works");
+  });
+
+  it("the home page drops a saved gate note at render time, never writing the stored page", () => {
+    const home = readFileSync(path.join(REPO, "src/app/page.tsx"), "utf8");
+    expect(home).toContain('import { dropGateNote } from "@/lib/puck-blocks/packages-grid";');
+    expect(home.indexOf("applyHomeSwitchesToPuck(puck as Data")).toBeLessThan(home.indexOf("dropGateNote("));
+    expect(home.indexOf("dropGateNote(")).toBeLessThan(home.indexOf("<Render config={config} data={data} />"));
+    expect(home).not.toMatch(/setPuckPage|putPuckPage|savePuckPage/);
+  });
+
+  it("a saved home page built from the old seed loses only the note; its Memberships band stays", async () => {
+    const { dropGateNote } = await import("@/lib/puck-blocks/packages-grid");
+    const { SEEDS } = await import("@/lib/puck-seeds");
+    const note = { type: "Note", props: { id: "hm-old", text: "How the gate works: once you pay, your package opens automatically." } };
+    const saved = SEEDS.home.content.map((b) => {
+      const blk = b as { props?: Record<string, unknown> };
+      if (blk.props?.id !== "home-memberships") return b;
+      return { ...blk, props: { ...blk.props, content: [...(blk.props.content as unknown[]), note] } };
+    });
+    const before = JSON.stringify(saved);
+    const res = dropGateNote(saved);
+    expect(res.changed).toBe(true);
+    expect(JSON.stringify(res.list)).not.toContain("How the gate works");
+    expect(JSON.stringify(res.list)).toContain('"id":"home-memberships"');
+    expect(res.list.length).toBe(saved.length);
+    expect(JSON.stringify(saved)).toBe(before);
   });
 });

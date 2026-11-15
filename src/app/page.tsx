@@ -13,6 +13,7 @@ import { getPuckPage } from "@/lib/puck-store";
 import { getSiteConfig } from "@/lib/site-config";
 import { DEFAULT_READING_SCHEDULE } from "@/lib/reading-schedule";
 import { applyHomeSwitchesToPuck } from "@/lib/puck-seeds";
+import { dropGateNote } from "@/lib/puck-blocks/packages-grid";
 import {
   Hero, About, Packages, Services, Classes, Affirmations, Donations, FreeMeditation, Contact,
 } from "@/components/sections";
@@ -61,7 +62,13 @@ export default async function Home() {
   const puck = await getPuckPage("home");
   if (puck) {
     const switches = await getSiteConfig();
-    const data = applyHomeSwitchesToPuck(puck as Data, switches.features);
+    const switched = applyHomeSwitchesToPuck(puck as Data, switches.features);
+    /* The Admiral's ruling (desk card 976015, "Take it off the home page
+       too"): a saved home page that still holds the "How the gate works:"
+       note loses it at render time, the same dropGateNote /packages uses.
+       The stored page is never written. */
+    const dropped = dropGateNote(Array.isArray(switched.content) ? switched.content : []);
+    const data = dropped.changed ? ({ ...switched, content: dropped.list } as Data) : switched;
     return (
       <>
         <SiteHeader />
@@ -83,7 +90,7 @@ export default async function Home() {
       <main>
         <Hero session={session} reading={reading} />
         <About />
-        <Packages />
+        <Packages gateNote={false} />
         <Classes />
         <Affirmations />
         {/* ConsciousCuts goes LAST among the offering sections (Love's

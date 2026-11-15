@@ -461,7 +461,8 @@ const homeContent: Block[] = [
         hm.button("See the package", "/packages/evening-star", "gold", "center"),
       ])],
     ),
-    hm.note("How the gate works: once you pay, your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing."),
+    /* The "How the gate works:" note left this band by the Admiral's ruling
+       (desk card 976015, "Take it off the home page too"). */
   ]), "home-memberships"),
 
   // 3 - the Heart Field — rooms, tier-gated
@@ -708,7 +709,8 @@ const packagesContent: Block[] = [
   /* T-645 1c (block 976,007): the "How the gate works:" footnote band is
      gone from this seed by the Admiral's ruling ("Take the note off the
      page"); a page already published with it loses it at render time
-     (dropGateNote in applyPackagesToPuck). The home seed keeps its note. */
+     (dropGateNote in applyPackagesToPuck). The home seed lost its note too
+     (desk card 976015); the home page drops a saved one the same way. */
 ];
 
 /* ── support — the full room: hero, wild doors, more ways ─────────────────

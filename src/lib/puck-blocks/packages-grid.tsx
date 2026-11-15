@@ -96,7 +96,7 @@ export function applyPackagesToPuck<T extends { content?: unknown[] }>(data: T, 
  * later stays. Walks slots (any prop array of blocks), and a container
  * left empty by the drop (her saved page holds the note alone in a Band)
  * goes with it, so no blank band is left behind. Pure; same reference
- * when nothing matched. The home page's section is not touched.
+ * when nothing matched. The home page runs it too (desk card 976015).
  */
 export const GATE_NOTE_START = "How the gate works";
 type BlockLike = { type?: string; props?: Record<string, unknown> };
