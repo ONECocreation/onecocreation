@@ -12,6 +12,7 @@ import { getPuckPage } from "@/lib/puck-store";
 import { TIERS } from "@/lib/entitlement";
 import { getLiveState, roomForSlug, LIVE_SCHEDULE, LIVE_YOUTUBE, liveRoomName } from "@/lib/live";
 import { getSiteConfig } from "@/lib/site-config";
+import { classesDoor } from "@/lib/classes";
 import JitsiRoom from "@/components/booking/JitsiRoom";
 import { applyLiveToPuck, type LiveDoorLiveProps } from "@/lib/puck-blocks/live-door";
 
@@ -56,6 +57,9 @@ export default async function LivePage() {
      and NOWHERE else. The <main> wears mgmt-ground/mgmt-body (the bb-time
      lesson): the block embeds app chrome (.card/.btn/.note/mgmt-title)
      whose classes assume the mgmt remapping. */
+  /* block 976,021: the idle "Classes & Community" sentence follows the
+     Classes switch on both branches (classesDoor; null hides it). */
+  const classesHref = classesDoor(await getSiteConfig());
   const puck = await getPuckPage("live");
   if (puck) {
     const live: LiveDoorLiveProps | null = room
@@ -72,7 +76,7 @@ export default async function LivePage() {
         <SiteHeader />
         <PaletteVars />
         <main className="mgmt-ground mgmt-body">
-          <Render config={config} data={applyLiveToPuck(puck as Data, { live, embed })} />
+          <Render config={config} data={applyLiveToPuck(puck as Data, { live, embed, classesHref })} />
         </main>
         <SiteFooter />
         {/* STUDIO P2: the popup host rides the designer branch (the fallback
@@ -159,13 +163,15 @@ export default async function LivePage() {
               </a>
               . The replay stays on the channel when the moment passes.
             </p>
-            <p style={{ margin: 0, color: "var(--muted)", fontSize: ".88rem" }}>
-              Classes and community gather in the rooms —{" "}
-              <Link href="/classes" style={{ color: "var(--gold-deep)" }}>
-                Classes &amp; Community
-              </Link>{" "}
-              shows every door and what opens it. When a room opens live, this page carries it here.
-            </p>
+            {classesHref && (
+              <p style={{ margin: 0, color: "var(--muted)", fontSize: ".88rem" }}>
+                Classes and community gather in the rooms —{" "}
+                <Link href={classesHref} style={{ color: "var(--gold-deep)" }}>
+                  Classes &amp; Community
+                </Link>{" "}
+                shows every door and what opens it. When a room opens live, this page carries it here.
+              </p>
+            )}
           </div>
         )}
       </section>

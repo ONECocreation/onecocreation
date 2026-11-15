@@ -7,6 +7,7 @@ import {
 } from "@/lib/about-content";
 import { renderCartridgeId, cartridge } from "@/brand/cartridge";
 import { RETREATS_EMPTY_TEXT } from "@/lib/puck-blocks/retreats-list";
+import { CLASSES_URL, HEART_FIELD_URL, classesDoor } from "@/lib/classes";
 
 /**
  * Puck page seeds (PUCK P4, Admiral-approved 2026-08-11). A seed is the
@@ -622,6 +623,23 @@ export function applyHomeSwitchesToPuck<T extends { content?: unknown[] }>(
       return true;
     })
     .map((b) => {
+      /* block 976,021: the band's "Enter your rooms" button asks
+         classesDoor(). Classes OFF points it at the free Heart Field, fresh
+         each request; nothing is written back to the stored doc. */
+      if (b.props?.id === "home-classes-community") {
+        const door = classesDoor({ features: switches }) ?? HEART_FIELD_URL;
+        if (door === CLASSES_URL) return b;
+        const inner = Array.isArray(b.props.content) ? (b.props.content as Block[]) : [];
+        let doorTouched = false;
+        const nextInner = inner.map((c) => {
+          if (c.type !== "Button" || c.props.href !== CLASSES_URL) return c;
+          doorTouched = true;
+          return { ...c, props: { ...c.props, href: door } };
+        });
+        if (!doorTouched) return b;
+        touched = true;
+        return { ...b, props: { ...b.props, content: nextInner } };
+      }
       if (b.props?.id !== "home-services" || hideIds.has("home-services")) return b;
       const inner = Array.isArray(b.props.content) ? (b.props.content as Block[]) : [];
       const wantText = switches.cuts ? "ConsciousCuts & Waxing 🦋" : "Sessions with Love";

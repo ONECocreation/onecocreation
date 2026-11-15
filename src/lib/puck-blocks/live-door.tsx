@@ -1,5 +1,6 @@
 import Link from "next/link";
 import JitsiRoom from "@/components/booking/JitsiRoom";
+import { CLASSES_URL } from "@/lib/classes";
 
 /**
  * LiveDoor (TASK-296 wave B, pair live, 0018.06.25 a₿ · block 967,201) —
@@ -45,6 +46,10 @@ export interface LiveDoorEmbedProps {
 export interface LiveDoorInjected {
   live: LiveDoorLiveProps | null;
   embed: LiveDoorEmbedProps | null;
+  /** block 976,021: classesDoor() as the server read it. null (Classes
+      off) hides the idle "Classes & Community" sentence. Absent (the
+      designer canvas, no injection) keeps it as /classes. */
+  classesHref?: string | null;
 }
 
 interface LiveDoorProps {
@@ -53,6 +58,7 @@ interface LiveDoorProps {
   youtubeUrl: string;
   live?: LiveDoorLiveProps | null;
   embed?: LiveDoorEmbedProps | null;
+  classesHref?: string | null;
 }
 
 const LIVE_NOW_H1 = "Love is live now";
@@ -70,7 +76,7 @@ export function createLiveDoor() {
       schedule: "Mon · Wed · Fri ~11:11",
       youtubeUrl: "https://www.youtube.com/@Onecocreation",
     },
-    render: ({ idleH1, schedule, youtubeUrl, live, embed }: LiveDoorProps) => (
+    render: ({ idleH1, schedule, youtubeUrl, live, embed, classesHref }: LiveDoorProps) => (
       <>
         <h1 className="mgmt-title">{live ? LIVE_NOW_H1 : idleH1}</h1>
         {live ? (
@@ -141,13 +147,15 @@ export function createLiveDoor() {
               </a>
               . The replay stays on the channel when the moment passes.
             </p>
-            <p style={{ margin: 0, color: "var(--muted)", fontSize: ".88rem" }}>
-              Classes and community gather in the rooms —{" "}
-              <Link href="/classes" style={{ color: "var(--gold-deep)" }}>
-                Classes &amp; Community
-              </Link>{" "}
-              shows every door and what opens it. When a room opens live, this page carries it here.
-            </p>
+            {classesHref !== null && (
+              <p style={{ margin: 0, color: "var(--muted)", fontSize: ".88rem" }}>
+                Classes and community gather in the rooms —{" "}
+                <Link href={classesHref ?? CLASSES_URL} style={{ color: "var(--gold-deep)" }}>
+                  Classes &amp; Community
+                </Link>{" "}
+                shows every door and what opens it. When a room opens live, this page carries it here.
+              </p>
+            )}
           </div>
         )}
       </>
@@ -173,7 +181,8 @@ export function applyLiveToPuck<T>(data: T, injected: LiveDoorInjected): T {
       const o = v as Record<string, unknown>;
       if (o.type === "LiveDoor" && o.props && typeof o.props === "object") {
         touched = true;
-        return { ...o, props: { ...(o.props as Record<string, unknown>), live: injected.live, embed: injected.embed } };
+        const extra = injected.classesHref !== undefined ? { classesHref: injected.classesHref } : {};
+        return { ...o, props: { ...(o.props as Record<string, unknown>), live: injected.live, embed: injected.embed, ...extra } };
       }
       let changed = false;
       const next: Record<string, unknown> = {};

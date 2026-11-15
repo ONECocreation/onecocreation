@@ -94,3 +94,16 @@ export const ARTIST_GATE_CERT_COUNT = FOUNDATION_COURSES.length;
 
 /** Where the classes live on this site. */
 export const CLASSES_URL = "/classes";
+
+/** The Heart Field — the free room. It stays open while Classes is off. */
+export const HEART_FIELD_URL = "/rooms/heart-field";
+
+/** Block 976,021: the one door to /classes. Classes ON gives CLASSES_URL.
+    Classes OFF (or switches not read yet) gives null. Every link that leads
+    to /classes asks this, so a button never promises a shut room. Each link
+    then either hides on null or falls back to HEART_FIELD_URL. */
+export function classesDoor(
+  switches: { features?: { classes?: boolean } } | null | undefined,
+): string | null {
+  return switches?.features?.classes ? CLASSES_URL : null;
+}

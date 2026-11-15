@@ -9,6 +9,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import useMemberSession from "@/hooks/useMemberSession";
 import { cartridge } from "@/brand/cartridge";
+import { CLASSES_URL, HEART_FIELD_URL } from "@/lib/classes";
+import { useClassesDoor } from "@/lib/use-classes-door";
 import { continueLabel } from "@/components/door/door-machine";
 import Field from "@/components/kit/Field";
 import Button from "@/components/kit/Button";
@@ -69,11 +71,14 @@ const shell: React.CSSProperties = {
  *  them by position (item 2, "one after another"). */
 const DOORS = [
   { icon: "🕊️", t: "Book your discovery call", w: "credited toward your first session", href: "/book/discovery-call" },
-  { icon: "💗", t: "Step into The Heart Field", w: "the free circle, open to every member", href: "/classes" },
+  { icon: "💗", t: "Step into The Heart Field", w: "the free circle, open to every member", href: CLASSES_URL },
   { icon: "🌙", t: "Wander the store", w: "meditations, sessions, wares", href: "/store" },
 ] as const;
 
 export default function WelcomeFlow({ next = null }: { next?: string | null }) {
+  /* block 976,021: the Heart Field door asks classesDoor(); Classes OFF
+     sends it to the room its own words name. */
+  const classesHref = useClassesDoor();
   const { member: session, checked } = useMemberSession();
   /* the known-by name (the door's own rule): an email member is greeted by
      who they ARE once the name is claimed, never by the mailbox */
@@ -247,7 +252,7 @@ export default function WelcomeFlow({ next = null }: { next?: string | null }) {
           `}</style>
           <div style={{ display: "grid", gap: 10, margin: "18px 0 0", textAlign: "left" }}>
             {DOORS.map((d, i) => (
-              <Link key={d.t} href={d.href}
+              <Link key={d.t} href={d.href === CLASSES_URL ? (classesHref ?? HEART_FIELD_URL) : d.href}
                 className={`card shine-hover${reducedMotion || i === walkIdx ? " shine-walk" : ""}`}
                 /* overflow visible: .card clips at its padding box, and the
                    shine rim rides 1.5px OUTSIDE it — clipped, the light never

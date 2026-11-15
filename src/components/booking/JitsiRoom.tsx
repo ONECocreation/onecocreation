@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { cartridge } from "@/brand/cartridge";
+import { useClassesDoor } from "@/lib/use-classes-door";
 
 /**
  * The meeting, held ON the site (Admiral, 0018.05.17): the jitsi room rides
@@ -312,6 +313,8 @@ export default function JitsiRoom({
 }) {
   const holder = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"loading" | "live" | "ended" | "failed">("loading");
+  /* block 976,021: "The community" hides while Classes is off */
+  const classesHref = useClassesDoor();
 
   useEffect(() => {
     let api: { dispose: () => void } | null = null;
@@ -420,7 +423,7 @@ export default function JitsiRoom({
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
           <Link className="btn" href="/me">My calendar</Link>
-          <Link className="btn btn-ghost" href="/classes">The community</Link>
+          {classesHref && <Link className="btn btn-ghost" href={classesHref}>The community</Link>}
         </div>
       </div>
     );
