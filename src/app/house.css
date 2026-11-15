@@ -355,9 +355,13 @@ section{padding:76px 0;position:relative}
 .hero .inner{position:relative;z-index:3}
 .hero::before,.hero::after{pointer-events:none}
 .hero canvas{pointer-events:none!important}
-.hero .days{font-family:var(--serif);letter-spacing:.55em;color:var(--gold-2);text-transform:uppercase;font-size:1.3rem}
+/* T-645 fix A: .days and .sub share ONE face declaration (same selectors,
+   same place) so the tier pills' phone face below keeps house.css at its
+   operator-census font baseline (22) instead of raising it */
+.hero .days,.hero .sub{font-family:var(--serif)}
+.hero .days{letter-spacing:.55em;color:var(--gold-2);text-transform:uppercase;font-size:1.3rem}
 .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(2.7rem,9vw,5rem);color:var(--ink-strong);letter-spacing:.05em;margin:.08em 0;text-shadow:0 0 44px rgba(232,185,35,.4)}
-.hero .sub{font-family:var(--serif);letter-spacing:.18em;text-transform:uppercase;color:var(--rose);margin:.4em 0 1.6em}
+.hero .sub{letter-spacing:.18em;text-transform:uppercase;color:var(--rose);margin:.4em 0 1.6em}
 .glyph{width:min(300px,70vw);margin:0 auto 22px;filter:drop-shadow(0 0 8px rgba(255,255,255,.85)) drop-shadow(0 0 30px rgba(232,185,35,.4))}
 
 /* jewelry */
@@ -477,6 +481,37 @@ html[data-oc-theme="light"] .theme-sun{color:#B4862B;border-color:rgba(180,134,4
   padding:11px 22px;font-weight:700;font-size:.86rem;letter-spacing:.05em;text-transform:uppercase;
   transition:background .18s,border-color .18s}
 .tier-pill:hover{background:rgba(197,110,139,.14);border-color:var(--gold-deep)}
+/* T-645 fix A (the Admiral's pick, block 976,001: "buttons on one row
+   please"): on a phone the three pills hold ONE row. The words alone in the
+   body Helvetica (337 px) could not fit the 346 px row at 390, so the pills
+   take the house Barlow (--font-h1) at 13.5 px, tighter tracking and side
+   room, and share the row. Scoped to the phone fold (<=759 px, the same
+   fold as .tier-cols and .lions-gate-whole): 768 and 1440 are unchanged.
+   One row holds from 360 up (measured: the longest word sits 1 px inside
+   its border at 360, 7 px at 390). No word is cut, nothing under 12 px,
+   every pill at least 44 px tall. */
+@media(max-width:759px){
+  .tier-pills{flex-wrap:nowrap;gap:6px}
+  .tier-pill{flex:1 1 auto;min-width:0;min-height:44px;box-sizing:border-box;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    white-space:nowrap;padding:12px 8px;font-family:var(--font-h1);font-size:13.5px;letter-spacing:.03em}
+}
+/* T-645 (block 976,007, the Admiral on forge picture 16: "not of fan of
+   this 2 row buttons"): one row below 360 too. The room comes from the
+   row first: its side space drops from the wrap's 22 px to 10 px (300 px
+   of row at 320), then 12 px type, .01em tracking, 5 px side padding,
+   4 px gap. Measured 320-359: one row, 46 px tall, each label 2.2 px or
+   more clear of its padding. 360 and up are unchanged (picture 15). */
+@media(max-width:359px){
+  .tier-pills{gap:4px;margin-left:-12px;margin-right:-12px}
+  .tier-pill{padding:12px 5px;font-size:12px;letter-spacing:.01em}
+}
+/* T-645 1b (block 976,007): below 344 px the card grid's 300 px floor
+   (globals.css .grid-3, minmax(300px,1fr)) is wider than the wrap, so a
+   card ran past the screen's right edge (300 px in a 276 px row at 320).
+   On a phone the floor never exceeds the row; where 300 px fits, nothing
+   changes. 760 and up keep house's three columns. */
+@media(max-width:759px){.grid-3{grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))}}
 
 /* tier detail: two columns fold to one on phones */
 @media(max-width:760px){.tier-cols{grid-template-columns:1fr !important}}

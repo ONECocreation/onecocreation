@@ -142,8 +142,11 @@ describe("the switches — the nav MENU is built from them", () => {
     const menu = buildMenu(defaultSiteConfig());
     expect(labels(menu)).not.toContain("Sessions");
     expect(labels(menu)).not.toContain("Memberships");
-    // the store switch is OFF: the Store header keeps only Three packages (memberships ON)
-    expect(menu.find((m) => m.label === "Store")?.subs?.map((s) => s.label)).toEqual(["Three packages"]);
+    // the store switch is OFF: the Store header keeps the two pages the
+    // memberships switch opens (memberships ON). T-645 (block 975,980): the
+    // Memberships row walks to the lion page /memberships, which needs only
+    // that switch, so it stays beside Three packages.
+    expect(menu.find((m) => m.label === "Store")?.subs?.map((s) => s.label)).toEqual(["Memberships", "Three packages"]);
     // T-637: Collaborations + doTERRA joined the default menu between
     // Community and Support (block 973,977) — the pinned order gains both.
     expect(labels(menu)).toEqual(["About", "Store", "Community", "Collaborations", "doTERRA", "Support"]);

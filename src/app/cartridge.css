@@ -314,6 +314,32 @@ html[data-oc-theme="light"] .lions-gate{
     linear-gradient(rgba(251,246,239,.82), rgba(251,246,239,.9)),
     url("/images/lions-gate.webp") center top / cover no-repeat;
 }
+/* THE WHOLE LION ON A PHONE (TASK-645, block 975,980). On a phone the
+   three cards stack and the section grows to about 3,400 px, so `cover`
+   blew the lion up to a blur of fur. Here the lion is sized to the screen,
+   not to the section: a square as wide as the phone at the top of the
+   section, under the same veils, fading into the veil at its foot, where
+   the tier pills sit. The cards follow on the veil alone. Scoped to
+   .lions-gate-whole (the designer /packages grid); the home page's
+   .lions-gate section is not touched. */
+@media (max-width:759px) and (orientation:portrait){
+  .lions-gate.lions-gate-whole{padding-top:0;background:linear-gradient(rgba(18,13,30,.8), rgba(20,16,33,.9))}
+  html[data-oc-theme="light"] .lions-gate.lions-gate-whole{background:linear-gradient(rgba(251,246,239,.82), rgba(251,246,239,.9))}
+  .lions-gate-whole::before{
+    content:"";display:block;aspect-ratio:1;margin-bottom:-8%;pointer-events:none;
+    background:
+      linear-gradient(rgba(18,13,30,.8), rgba(20,16,33,.9)),
+      url("/images/lions-gate.webp") center / cover no-repeat;
+    -webkit-mask-image:linear-gradient(to bottom, black 84%, transparent);
+    mask-image:linear-gradient(to bottom, black 84%, transparent);
+  }
+  html[data-oc-theme="light"] .lions-gate-whole::before{
+    background:
+      linear-gradient(rgba(251,246,239,.82), rgba(251,246,239,.9)),
+      url("/images/lions-gate.webp") center / cover no-repeat;
+  }
+  .lions-gate-whole>.wrap{position:relative}
+}
 
 /* ROOM + SHELF PHOTO SCRIMS (TASK-396, block 968,132) — the lion's exact
    recipe (one photo, a night veil and a dawn veil) applied to the

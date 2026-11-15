@@ -87,7 +87,7 @@ export function createParallaxBand(opts: {
           { label: "Fast — a full sweep", value: "fast" },
         ],
       },
-      content: { type: "slot" as const, disallow: ["Band", "Hero", "ParallaxBand"] },
+      content: { type: "slot" as const, disallow: ["Band", "Hero", "ParallaxBand", "PageHero"] }, /* T-645: the house top is full-width too */
     },
     defaultProps: {
       /* opt-in law: parallax is OFF by default — the artist turns it on */

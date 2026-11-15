@@ -1040,3 +1040,15 @@
      never covers a page control */
   html.lrd-strip-on body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
 }
+
+/* ── PAGE HERO (TASK-645, block 975,980) ───────────────────────────
+   The house top as one part (src/components/kit/PageHero.tsx). The
+   ground is house.css/cartridge.css's own `keep-dark sky-veil` (it holds
+   the night at dawn); these rules carry what twelve hand copies wrote
+   inline: the section clips the star canvas, the words sit above it, and
+   the padding is /contact's. The words column is 680 px, the width the
+   designer Band gives its content. No token is added here. */
+.kit-page-hero{position:relative;overflow:hidden;padding:0}
+.kit-page-hero-inner{position:relative;z-index:2;padding:64px 22px 60px}
+.kit-page-hero-lead{max-width:460px;margin:18px auto 0;font-size:1.05rem}
+.kit-page-hero-words{max-width:680px;margin:0 auto}

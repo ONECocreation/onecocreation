@@ -228,6 +228,27 @@ export function applyLionToPuck<T extends { content?: unknown[] }>(data: T, lion
 }
 
 /**
+ * TASK-645 (block 975,980) — the house top on a page published with the
+ * lion behind its first band (/packages, TASK-232's seed). The Admiral: the
+ * top "should really be more the dark galaxy tops kinda like we have in the
+ * rest". At render time, the FIRST top-level block, when it is a Band whose
+ * ground is exactly the lion (LION_GROUND), is drawn as a PageHero holding
+ * that band's own blocks, untouched: her kicker, her heading, her lead, in
+ * her order. Any other first block, or a ground Love chose herself, comes
+ * back as the same reference. Pure; the stored page is never written.
+ */
+export function applyHouseTopToPuck<T extends { content?: unknown[] }>(data: T): T {
+  const current = Array.isArray(data.content) ? data.content : [];
+  const first = current[0] as { type?: string; props?: Record<string, unknown> } | undefined;
+  if (!first || first.type !== "Band" || !first.props) return data;
+  if (first.props.bgSrc !== LION_GROUND) return data;
+  const words = Array.isArray(first.props.content) ? first.props.content : [];
+  const id = typeof first.props.id === "string" ? first.props.id : "house-top";
+  const top = { type: "PageHero", props: { id, content: words } };
+  return { ...data, content: [top, ...current.slice(1)] } as T;
+}
+
+/**
  * TASK-611 (L18) - the three glyphs on a line of their own. The published
  * /memberships Text block ends "...heart connection with you <rainbow><hearts>
  * <lion>"; the T-560 fix lived only in the fallback JSX, which never runs while
@@ -349,6 +370,8 @@ const kit = (prefix: string) => {
       ground?: { bgSrc?: string; bgColor?: string },
     ) => mk("Band", { background, hold, content, ...(ground ?? {}) }),
     hero: (days: string, title: string, sub: string) => mk("Hero", { days, title, sub }),
+    /* TASK-645: the house top (night galaxy + stars) with the words in its slot */
+    pageHero: (content: Block[]) => mk("PageHero", { content }),
   };
 };
 
@@ -663,28 +686,29 @@ const packagesContent: Block[] = [
      page. The words are transcribed from Packages() (src/components/
      sections.tsx — the fallback, NOT edited; two pins source-grep it):
      the kicker, the "Memberships" heading, the lead closing on T-229's
-     PACKAGE_DOORS_WORDS verbatim, and the gate-explainer footnote.
+     PACKAGE_DOORS_WORDS verbatim (the gate-explainer footnote left in T-645 1c).
      Names and prices NEVER enter the seed — they live in TIERS and render
      through the PackagesGrid block below (rails-ON sale door / rails-OFF
-     waitlist, switch-live at render time via applyPackagesToPuck). The
-     lion: the words band carries it as its ground (bgSrc, the memberships
-     seed's idiom — the vendored Band's veil is dark, documented package
-     limitation) and the grid block's own section wears .lions-gate exactly
-     like today's; the plain-band footnote is the one stretch the
-     continuous lion ground can't carry across separate blocks. */
-  pk.band("sky-veil", skyHold, [
+     waitlist, switch-live at render time via applyPackagesToPuck).
+     TASK-645 (block 975,980): the words open on the house top (PageHero:
+     the night galaxy and its stars, as /book and /contact wear it), and the
+     page shows ONE lion, the grid's own .lions-gate ground. A page Love
+     published with the old lion top gets the same top at render time
+     (applyHouseTopToPuck, below the seeds). */
+  pk.pageHero([
     pk.eyebrow("The Heart Field — Where Heaven and Earth Meet", "center"),
     /* h1, not the hand-built page's h2: the publish rails require exactly
        one h1 (one-h1 is an ERROR — the seed must publish clean); the
        promotion is noted here, the house's archival-heading idiom */
     pk.heading("Memberships", "h1", "center"),
     pk.text("Three ways into the field — each includes everything before it. Your package opens its doors.", "center"),
-  ], { bgSrc: LION_GROUND }),
+  ]),
   /* a unique id (T-231's collision lesson): the kit consumed pk-0…pk-3 */
   { type: "PackagesGrid", props: { id: "pk-grid" } },
-  pk.band("plain", "theme", [
-    pk.note("How the gate works: once you pay, your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing."),
-  ]),
+  /* T-645 1c (block 976,007): the "How the gate works:" footnote band is
+     gone from this seed by the Admiral's ruling ("Take the note off the
+     page"); a page already published with it loses it at render time
+     (dropGateNote in applyPackagesToPuck). The home seed keeps its note. */
 ];
 
 /* ── support — the full room: hero, wild doors, more ways ─────────────────

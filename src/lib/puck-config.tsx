@@ -16,6 +16,7 @@ import { createBbConsole } from "@/lib/puck-blocks/bb-console";
 import { createBftClock } from "@/lib/puck-blocks/bft-clock";
 import { createLiveDoor } from "@/lib/puck-blocks/live-door";
 import { createEmojiLine } from "@/lib/puck-blocks/emoji-line";
+import { createPageHero } from "@/lib/puck-blocks/page-hero";
 import { NIP05_DOMAIN, SPACE_NAME } from "@/lib/identity-config";
 
 /**
@@ -76,7 +77,8 @@ const base = createConfig({
    stays vendored-untouched. To keep it root-only like the package's
    NO_FULL_WIDTH law, every package slot whose disallow list bans "Band"
    gets a NEW list that also bans "ParallaxBand" (fresh objects — the
-   package's own arrays are never mutated). */
+   package's own arrays are never mutated). TASK-645: "PageHero", the
+   house top, is full-width too and joins the same list. */
 const components = Object.fromEntries(
   Object.entries(base.components).map(([key, comp]) => [
     key,
@@ -86,7 +88,7 @@ const components = Object.fromEntries(
         Object.entries(comp.fields ?? {}).map(([fk, field]) => [
           fk,
           field.type === "slot" && Array.isArray(field.disallow) && field.disallow.includes("Band")
-            ? { ...field, disallow: [...field.disallow, "ParallaxBand"] }
+            ? { ...field, disallow: [...field.disallow, "ParallaxBand", "PageHero"] }
             : field,
         ]),
       ),
@@ -172,6 +174,11 @@ components.AccountDoor = createAccountDoor() as unknown as (typeof components)[s
    LOCAL; the vendored Text block is untouched. Appended, never reordered. */
 components.EmojiLine = createEmojiLine() as unknown as (typeof components)[string];
 
+/* TASK-645 (block 975,980): PageHero - the house top (night galaxy, stars,
+   Love's own words in its slot), the same kit part the route files wear
+   (src/components/kit/PageHero.tsx). LOCAL; appended, never reordered. */
+components.PageHero = createPageHero() as unknown as (typeof components)[string];
+
 /* the library rail: ParallaxBand (and the data-bound blocks, TASK-231's
    RetreatsList + TASK-232's PackagesGrid) join the Layout group, appended
    at the end (after Divider — the package's array order is never reordered) */
@@ -185,7 +192,7 @@ export const config = {
   components,
   categories: {
     ...categories,
-    layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid", "LettersRoom", "CartPanel", "LiveDoor"] },
+    layout: { ...layout, components: [...(layout.components ?? []), "ParallaxBand", "RetreatsList", "PackagesGrid", "LettersRoom", "CartPanel", "LiveDoor", "PageHero"] },
     actions: { ...actions, components: [...(actions.components ?? []), "JoinSurface", "FormDoors", "MeSwitch", "LoginDoor", "BbConsole", "BftClock", "AccountDoor", "EmojiLine"] },
   },
   /* STUDIO P1: page-level SEO lives on the Puck root — plain fields edited

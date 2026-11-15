@@ -233,7 +233,11 @@ export function packageWaitlistProps(tier: "A" | "B" | "C", slug: string | undef
  *  carries the right idea — "your package opens the doors." */
 export const PACKAGE_DOORS_WORDS = "Your package opens its doors.";
 
-export async function Packages() {
+/* T-645 1c (block 976,007): /packages renders this section with
+   gateNote={false} (the Admiral's ruling, "Take the note off the page").
+   The home page calls it bare and keeps its "How the gate works:" note
+   until he rules on the home page. */
+export async function Packages({ gateNote = true }: { gateNote?: boolean } = {}) {
   /* TASK-187 GATE (0018.06.18 a₿ · block 966,104) — the home hero's package
      doors follow the memberships switch, same visibility-only idiom as
      Services()/Classes()/Affirmations() above: default ON, so this section
@@ -320,7 +324,7 @@ export async function Packages() {
             );
           })}
         </div>
-        <p className="note"><b>How the gate works:</b> once you pay, your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing.</p>
+        {gateNote && <p className="note"><b>How the gate works:</b> once you pay, your package opens automatically. Your tier is checked before content, classes, and community render — the house level-locked door — live and enforcing.</p>}
       </div>
     </section>
   );
