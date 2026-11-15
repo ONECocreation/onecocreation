@@ -11,6 +11,9 @@ import { basketContact, basketGatedLine } from "@/lib/basket-contact";
  * rail follows the same derivation as the single-item door, never a second
  * reader invented here. railForPrefer is a pure export, reused read-only. */
 import { railForPrefer } from "./BuyPanel";
+/* TASK-646 (block 976,007): which live rail can carry THIS basket, and the
+   plain sentence when none can (a dollar gift beside a sats gift) */
+import { basketRails } from "@/lib/basket-rails";
 
 /* eslint-disable @next/next/no-img-element */
 import CartTimePicker from "./CartTimePicker";
@@ -36,6 +39,11 @@ interface Line {
   serviceGift?: boolean;
   artistTz?: string;
 }
+
+/* TASK-646: a line priced only in dollars (a dollar gift) offers no sats
+   door: there is no sats price for an offer to meet, and an offer would
+   turn a card gift into a basket no live rail can carry */
+const dollarOnlyLine = (l: Line) => l.sats == null && l.fiat != null;
 
 const lineKey = (l: Line) => l.slot?.holdId ?? `${l.itemId}-${l.size ?? ""}`;
 
@@ -101,7 +109,7 @@ export default function CartPanel({
      member's saved word wins over the cookie and is written back on flip. */
   const [prefer, setPrefer] = useMoneyPrefer(rails);
   /* the words follow the rail (the bolt on a card charge is a lie of omission — BuyPanel's law, T-198 follow-through) */
-  const cardRail = railForPrefer(prefer, { btcpay: rails.btc, square: rails.card }) === "square";
+  const cardRail = basketRail() === "square";
   const [memberPrefKnown, setMemberPrefKnown] = useState(false);
   /* TASK-210 — the basket knows who is signed in: the SAME session read the
      header and BuyPanel make (session-read.ts, T-177). What follows from it
@@ -195,6 +203,17 @@ export default function CartPanel({
     setGiftOpen(null);
   }
 
+  /* TASK-646: the rail the basket can actually ride. Both can → the
+     visitor's money word decides (T-198); one can → that one; the button
+     is not shown at all when neither can (fit.note says why instead). */
+  function basketRail(): "btcpay" | "square" | null {
+    const fit = basketRails(lines ?? [], rails);
+    if (fit.btc && fit.card) return railForPrefer(prefer, { btcpay: rails.btc, square: rails.card });
+    if (fit.card) return "square";
+    if (fit.btc) return "btcpay";
+    return railForPrefer(prefer, { btcpay: rails.btc, square: rails.card });
+  }
+
   async function checkout() {
     setBusy(true);
     setError(null);
@@ -202,7 +221,7 @@ export default function CartPanel({
       // TASK-198 — the money word picks the rail (T-186's own toggle, the
       // single-item door's own derivation): fiat asks for Square, sats
       // keeps the bitcoin default — same helper, one reading of the word.
-      const chosenRail = railForPrefer(prefer, { btcpay: rails.btc, square: rails.card });
+      const chosenRail = basketRail();
       const contactEmail = basketContact(memberSession, email).email ?? undefined;
       const res = await fetch("/api/cart/checkout", {
         method: "POST",
@@ -279,6 +298,7 @@ export default function CartPanel({
   /* time before money (Admiral, 0018.05.15): a session in the basket picks
      its slot BEFORE any invoice — gifts stay timeless (the voucher rail) */
   const needsTime = lines.some((l) => l.kind === "service" && !l.slot && !l.serviceGift && !l.giftTo);
+  const railFit = basketRails(lines, rails);
   const anyOffer = lines.some((l) => l.offerSats != null && l.listSats != null && l.offerSats < l.listSats);
 
   // inputs are always lit paper — their ink stays dark in both themes
@@ -421,7 +441,7 @@ export default function CartPanel({
                   remove offer — pay the listed price
                 </button>
               ) : rails.btc ? (
-                <button onClick={() => { setOfferOpen(lineKey(l)); setOfferInput(""); }} className="btn-quiet" style={softLink}>
+                dollarOnlyLine(l) ? null : <button onClick={() => { setOfferOpen(lineKey(l)); setOfferInput(""); }} className="btn-quiet" style={softLink}>
                   pay what you can — make an offer
                 </button>
               ) : null}
@@ -546,7 +566,12 @@ export default function CartPanel({
         )}
       </div>
 
-      {/* the door — bottom center (the Admiral's law) */}
+      {/* the door — bottom center (the Admiral's law). TASK-646: when no live
+          rail can carry this basket, a plain sentence stands in its place
+          (never a button that can only fail); when one rail carries it while
+          both are live, the sentence names it above the button. */}
+      {railFit.note && <p className="basket-rail-note">{railFit.note}</p>}
+      {(railFit.btc || railFit.card || (!rails.btc && !rails.card)) && (
       <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
         <button
           onClick={checkout}
@@ -557,6 +582,7 @@ export default function CartPanel({
           {busy ? (cardRail ? "Opening card checkout…" : "Opening invoice…") : needsTime ? "Choose your time first ⏰" : cardRail ? "Checkout 💳" : "Checkout ⚡"}
         </button>
       </div>
+      )}
       {error && <p style={{ margin: "10px 0 0", fontSize: ".8rem", color: "var(--err)", textAlign: "center" }}>{error}</p>}
     </div>
   );

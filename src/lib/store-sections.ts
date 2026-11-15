@@ -1,6 +1,6 @@
 import type { StoreItem } from "@/lib/store";
 import { TIER_PAGES } from "@/lib/tiers-content";
-import { JAR_ITEMS } from "@/lib/jars";
+import { OFF_SHELF_IDS } from "@/lib/jars";
 
 /**
  * TASK-189 (0018.06.18 a₿, cut from the T-177/T-184 reviews) — THE ONE
@@ -85,7 +85,8 @@ export function sectionForKind(kind: StoreItem["kind"]): StoreSection | undefine
  *  untouched — four entries, sessions last. Everything that is not a jar
  *  falls through to the one kind→section map. */
 export function sectionForItem(item: Pick<StoreItem, "id" | "kind">): Pick<StoreSection, "anchor" | "pill"> | undefined {
-  if ((Object.values(JAR_ITEMS) as string[]).includes(item.id)) {
+  // T-646: the three dollar gifts share the jars' drawer home (OFF_SHELF_IDS)
+  if (OFF_SHELF_IDS.has(item.id)) {
     return { anchor: "gifts", pill: "Gifts" };
   }
   return sectionForKind(item.kind);

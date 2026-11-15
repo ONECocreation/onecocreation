@@ -80,7 +80,7 @@ h1,h2,h3,h4{line-height:1.16;margin:0 0 .45em;color:var(--ink-strong);font-weigh
    H2 + body, Lucida Grande = H3 (h4 rides with h3 — no fourth voice) */
 h1{font-family:var(--font-h1)}
 h2{font-family:var(--font-h2)}
-h3,h4{font-family:var(--font-h3)}
+h3,h4,.give-jar-title{font-family:var(--font-h3)}
 .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
 section{padding:76px 0;position:relative}
 .kicker{font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:var(--rose);font-weight:700;margin:0 0 1rem}
@@ -968,3 +968,38 @@ main .about-story-sky{background:radial-gradient(760px 460px at 50% 14%, rgba(12
 .pif-back{padding:0 0 60px}
 .pif-back-line{color:var(--muted);font-size:.9rem;margin:0}
 .pif-back-link{color:var(--info)}
+/* the panel holds its row centred at phone width (T-646): less side room inside the
+   warm panel below 520px, so three amount buttons sit one width each in one row */
+@media(max-width:520px){.pif-jar-panel{padding:28px 18px}}
+
+/* ── TASK-646 (block 976,007) — THE GIVE ROW (Pay It Forward step 1, card 15) ──
+   His pin on pif-row-dawn-390: "these sizes look bad. i'm not a fan of the uneven
+   button sizes. and itmes are not centered." One rule set for TipJar's two rows,
+   on /pay-it-forward and in the store's gift drawer: three amount buttons in one
+   row, one width each; the own-amount box (sats only) and Give each the full width
+   of that row; the whole row centred. Every member of a row is the .btn-sm box
+   (12+12 + .9rem x 1.25 = 42px); the box is pinned to the same 42px border-box.
+   No !important, no serif, no new font declaration (the jar title joins the h3 rule): house.css's ceilings are untouched. */
+.give{margin-top:22px}
+.give-jars{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr))}
+.give-jar{display:block;text-align:left;padding:16px 18px;border-radius:18px;color:inherit;background:var(--ghost-bg);border:1.5px solid rgba(180,134,43,.3)}
+button.give-jar{cursor:pointer;width:100%}
+.give-jar.is-on{background:rgba(217,178,78,.18);border-color:var(--gold-deep)}
+.give-jar-title{display:block;font-size:1.06rem;color:var(--ink-strong)}
+.give-jar-blurb{display:block;font-size:.85rem;color:var(--muted);margin-top:4px}
+.give-rows{display:grid;gap:22px;margin-top:20px;justify-items:center}
+.give-row{display:grid;gap:10px;width:100%;max-width:440px}
+.give-row-unit{margin:0;text-align:center;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.give-row-amounts{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+.give-row .btn{display:block;width:100%;box-sizing:border-box;text-align:center;padding-left:4px;padding-right:4px;letter-spacing:.5px}
+.give-row-own{display:block;width:100%;height:42px;box-sizing:border-box;padding:0 14px;line-height:1.25;border-radius:999px;border:1.5px solid rgba(180,134,43,.65);background:var(--field-bg);color:var(--field-ink);font-size:.9rem;text-align:center}
+.give-note{color:var(--muted);font-size:.85rem;margin:10px 0 0;text-align:center}
+/* T-646 · the basket's plain sentence when one rail, or none, can carry it (CartPanel) */
+.basket-rail-note{margin:16px auto 0;max-width:480px;text-align:center;font-size:.85rem;color:var(--ink-body)}
+/* T-646 · the Money room's jar cards (/a/money). Night keeps the console glass it always wore.
+   Dawn wears the store's own card (.card above): --panel over the store's --ground, the
+   --glass-edge rim, 24px corners, the --soft shadow. The ground is painted under the panel so
+   the card reads the same over any console ground (the scar chrome keeps a dark ground at dawn,
+   and the console glass over it turned grey). No new colour: every value is a house token. */
+.money-jar{background:var(--glass);border:1px solid rgba(255,255,255,.9);border-radius:18px;padding:14px 16px;box-shadow:0 18px 44px -28px rgba(120,100,160,.45)}
+html[data-oc-theme="light"] .money-jar{background:linear-gradient(var(--panel),var(--panel)),var(--ground);border-color:var(--glass-edge);border-radius:24px;box-shadow:var(--soft)}

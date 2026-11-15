@@ -21,7 +21,8 @@ import { dollars } from "@/lib/money-words";
 interface TipRecord { id: string; jar: string; sats: number; status: string; createdMs: number }
 interface Ledger {
   tips?: TipRecord[];
-  totals: Record<string, { settledSats: number; count: number }>;
+  /** T-646: settledFiat is card gifts in minor units per currency, never added to sats */
+  totals: Record<string, { settledSats: number; settledFiat?: Record<string, number>; count: number }>;
 }
 
 const JARS: { key: string; label: string }[] = [
@@ -173,18 +174,19 @@ export default function MoneyRoom() {
   return (
     <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
       <SectionHead label="The Jars" />
-      <p style={{ margin: "-4px 0 8px", fontSize: ".72rem", color: "var(--muted)" }}>read live from BTCPay</p>
+      <p style={{ margin: "-4px 0 8px", fontSize: ".72rem", color: "var(--muted)" }}>read live from the basket orders and BTCPay</p>
       <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))" }}>
         {JARS.map(({ key, label }) => {
           const t = ledger?.totals?.[key];
           const pulse = jarPulse[key];
           const max = Math.max(1, ...(pulse?.spark ?? [1]));
           return (
-            <div key={key} style={{ background: "var(--glass)", border: "1px solid rgba(255,255,255,.9)",
-              borderRadius: 18, padding: "14px 16px", boxShadow: "0 18px 44px -28px rgba(120,100,160,.45)" }}>
+            <div key={key} className="money-jar">
               <b style={{ fontSize: ".85rem" }}>{label}</b>
               <div style={{ fontFamily: "var(--sans)", fontWeight: 700, fontSize: "1.65rem", color: "var(--gold-deep)", lineHeight: 1.15 }}>
                 {(t?.settledSats ?? 0).toLocaleString("en-US")} <span style={{ fontSize: ".9rem" }}>sats</span>
+                {/* T-646: card gifts beside the sats, in their own currency, never added */}
+                {Object.entries(t?.settledFiat ?? {}).map(([cur, amt]) => ` · ${dollars(amt, cur)}`)}
               </div>
               <div style={{ fontSize: ".72rem", color: "var(--muted)" }}>
                 {t?.count ?? 0} gifts{pulse?.thisMoon ? ` · ${pulse.thisMoon} this moon` : ""}

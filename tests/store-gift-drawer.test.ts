@@ -66,16 +66,15 @@ describe("1. /support page source — the jars left the room (R-072)", () => {
 });
 
 describe("2. /store page source — the drawer mounts below the shelf, double-gated", () => {
-  it("GiftDrawer mounts AFTER the sections map, gated on jarsOpen() and live jars", () => {
+  it("GiftDrawer mounts AFTER the sections map, gated by giftPanel() (T-646: rail by rail, live items)", () => {
     const src = readSrc("src/app/store/page.tsx");
     expect(src).toContain('import GiftDrawer from "@/components/store/GiftDrawer"');
-    expect(src).toContain("jarsOpen()");
-    expect(src).toContain("liveJarKeys()");
+    expect(src).toContain("await giftPanel()");
     const sectionsAt = src.indexOf("groups.map(");
     const drawerAt = src.indexOf("<GiftDrawer");
     expect(sectionsAt).toBeGreaterThan(-1);
     expect(drawerAt).toBeGreaterThan(sectionsAt);
-    expect(src).toMatch(/\{jars\.length > 0 && <GiftDrawer liveJars=\{jars\} \/>\}/);
+    expect(src).toContain("{gifts.open && <GiftDrawer liveJars={gifts.satsJars} dollarGifts={gifts.dollarGifts} />}");
   });
 });
 
