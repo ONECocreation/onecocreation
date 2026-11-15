@@ -181,8 +181,7 @@ export default function MoneyRoom() {
           const pulse = jarPulse[key];
           const max = Math.max(1, ...(pulse?.spark ?? [1]));
           return (
-            <div key={key} style={{ background: "var(--glass)", border: "1px solid rgba(255,255,255,.9)",
-              borderRadius: 18, padding: "14px 16px", boxShadow: "0 18px 44px -28px rgba(120,100,160,.45)" }}>
+            <div key={key} className="money-jar">
               <b style={{ fontSize: ".85rem" }}>{label}</b>
               <div style={{ fontFamily: "var(--sans)", fontWeight: 700, fontSize: "1.65rem", color: "var(--gold-deep)", lineHeight: 1.15 }}>
                 {(t?.settledSats ?? 0).toLocaleString("en-US")} <span style={{ fontSize: ".9rem" }}>sats</span>
