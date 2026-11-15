@@ -464,7 +464,7 @@
    shared 2-column grid auto-places a bare third child under column 1, this
    rule only tightens the row gap the shared `gap:16px` would otherwise
    leave above it and sizes the link down to a quiet, secondary size. */
-.kit-rooms-card .kit-row-link{margin-top:-8px;font-size:.78rem}
+.kit-rooms-card .kit-row-link{font-size:.78rem}
 .kit-rooms-card .kit-row-link a:not(.kit-btn){color:var(--muted);text-decoration:underline;text-underline-offset:2px}
 /* TASK-486 — the go/[door] page itself: one action column, every button
    full width (a thumb target at 390px, opened straight off an email link),
