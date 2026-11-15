@@ -1,5 +1,7 @@
 "use client";
 
+import { deliveryCopy } from "@/lib/letter-delivery-copy";
+import MailTickStatus from "@/components/console/MailTickStatus";
 import { use, useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { glassCard, field, SectionHead } from "@/components/console/glass";
@@ -127,7 +129,7 @@ export function sendRowWords(s: SendRecord): string {
   if (s.cancelled) return `Cancelled · ${door} · ${who}${s.sent > 0 ? ` · ${s.sent} sent before it stopped` : ""}`;
   if (s.sent + s.dropped === 0) {
     return s.scheduledFor === "next tick"
-      ? `Going out within 10 minutes · ${door} · ${who}`
+      ? `Waiting for the next mail run · ${door} · ${who}`
       : `Waiting for ${mountainWords(s.scheduledFor)} · ${door} · ${who}`;
   }
   return `Sent to ${s.sent}${s.dropped > 0 ? ` (${s.dropped} dropped)` : ""} of ${s.queued} · ${door}`;
@@ -162,7 +164,7 @@ export function listSendOutcomeLine(o: ListSendOutcome): string {
       return o.reason;
     case "queued": {
       const who = o.queued === 1 ? "person" : "people";
-      if (o.scheduledFor === "next tick") return `Queued for ${o.queued} ${who}. Goes out within 10 minutes.`;
+      if (o.scheduledFor === "next tick") return `Queued for ${o.queued} ${who}. Goes out on the next mail run.`;
       return `Scheduled for ${mountainWords(o.scheduledFor)} (${clockWords(o.scheduledFor)} your time).`;
     }
     case "progress": {
@@ -226,6 +228,14 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   const [segment, setSegment] = useState("all");
   const [testTo, setTestTo] = useState("");
   const [sendAt, setSendAt] = useState("");
+  const [intentNote, setIntentNote] = useState("");
+  const [historyUnavailable, setHistoryUnavailable] = useState(false);
+  const [unqueuedTime, setUnqueuedTime] = useState(false);
+  const leavePrompted = useRef(false);
+  const intentWrite = useRef<Promise<void>>(Promise.resolve());
+  const timeSaved = useRef(false); // true only once the house confirms her time is stored
+  const leaveWords = () => timeSaved.current ? deliveryCopy.leave : deliveryCopy.leaveUnsaved;
+  const timeEdited = useRef(false);
   const [sendAtPast, setSendAtPast] = useState(false);
   const [checked, setChecked] = useState(false);
   // Change time / Cancel on a send still waiting: which row is open, and its own line
@@ -273,8 +283,9 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
       fetch("/api/admin/letters").then((r) => (r.ok ? r.json() : null)),
       fetch("/api/admin/letters/slots").then((r) => (r.ok ? r.json() : null)),
       fetch(`/api/admin/letters/send?key=${encodeURIComponent(key)}`).then((r) => (r.ok ? r.json() : null)),
+      fetch(`/api/admin/letters/intent?key=${encodeURIComponent(key)}`).then((r) => r.ok ? r.json() : null),
     ])
-      .then(([d, s, sendsRes]) => {
+      .then(([d, s, sendsRes, intentRes]) => {
         if (!d?.ok) {
           setLetter(null);
           return;
@@ -298,6 +309,14 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         // reloads shows a frozen line that never updates again.
         const sends: SendRecord[] = sendsRes?.ok ? (sendsRes.sends ?? []) : [];
         setRecentSends(sends);
+        setHistoryUnavailable(!sendsRes?.ok);
+        if (!timeEdited.current && intentRes?.intent?.at) {
+          setSendAt(isoToMountainInput(intentRes.intent.at));
+          setSendAtPast(Date.parse(intentRes.intent.at) <= Date.now());
+          setUnqueuedTime(true);
+          timeSaved.current = true;
+          setIntentNote(deliveryCopy.intentSaved);
+        }
         const unfinished = sendToReArm(sends, Date.now());
         if (unfinished) {
           pollStartRef.current = unfinished.createdAtMs;
@@ -315,7 +334,8 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
     const d = await fetch(`/api/admin/letters/send?sendId=${encodeURIComponent(sendId)}`)
       .then((r) => r.json())
       .catch(() => null);
-    if (!d?.ok) return; // a transient fetch hiccup — try again next tick, never clear the line
+    if (!d?.ok) { setHistoryUnavailable(true); return; } // a transient fetch hiccup — try again next tick, never clear the line
+    setHistoryUnavailable(false);
     const rec: SendRecord = { sendId, queued: d.queued, sent: d.sent, dropped: d.dropped, segment: d.segment, scheduledFor: d.scheduledFor, createdAtMs: d.createdAtMs, cancelled: !!d.cancelled };
     setListOutcome({ kind: "progress", queued: rec.queued, sent: rec.sent, dropped: rec.dropped });
     setRecentSends((prev) => [rec, ...prev.filter((s) => s.sendId !== sendId)].slice(0, 5));
@@ -364,10 +384,46 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   const sendAtIso = sendAt ? mountainInputToIso(sendAt) : null;
 
   function pickTime(value: string) {
+    timeEdited.current = true;
+    leavePrompted.current = false;
+    setUnqueuedTime(!!value);
     setSendAt(value);
     const iso = value ? mountainInputToIso(value) : null;
     setSendAtPast(!!iso && Date.parse(iso) <= Date.now());
+    // Serialize edits so a slow earlier request cannot overwrite a later time.
+    timeSaved.current = false;
+    setIntentNote(deliveryCopy.intentSaving);
+    intentWrite.current = intentWrite.current.then(async () => {
+      const res = await fetch("/api/admin/letters/intent", { method: "PUT", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, at: iso }) });
+      if (!res.ok) throw new Error();
+      timeSaved.current = !!iso;
+      setIntentNote(iso ? deliveryCopy.intentSaved : "");
+    }).catch(() => { timeSaved.current = false; setIntentNote(deliveryCopy.intentFailed); });
   }
+
+  useEffect(() => {
+    if (!unqueuedTime) return;
+    function leaving(event: BeforeUnloadEvent) {
+      if (leavePrompted.current) return;
+      leavePrompted.current = true;
+      event.preventDefault(); event.returnValue = ""; // browsers supply their own words
+    }
+    function linkLeaving(event: MouseEvent) {
+      const a = (event.target as Element)?.closest?.("a[href]");
+      if (!a || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || a.getAttribute("target") === "_blank" || a.getAttribute("href")?.startsWith("#") || leavePrompted.current) return;
+      leavePrompted.current = true;
+      if (window.confirm(leaveWords())) { event.preventDefault(); event.stopPropagation(); }
+    }
+    function backLeaving() {
+      if (leavePrompted.current) return;
+      leavePrompted.current = true;
+      if (window.confirm(leaveWords())) window.history.forward();
+    }
+    window.addEventListener("beforeunload", leaving);
+    window.addEventListener("popstate", backLeaving);
+    document.addEventListener("click", linkLeaving, true);
+    return () => { window.removeEventListener("beforeunload", leaving); window.removeEventListener("popstate", backLeaving); document.removeEventListener("click", linkLeaving, true); };
+  }, [unqueuedTime]);
 
   async function sendTest() {
     if (sendingRef.current) return; // one click in flight at a time
@@ -388,11 +444,15 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   }
 
   async function sendList(mode: "now" | "schedule") {
+    if (mode === "schedule" && (!sendAtIso || sendAtPast)) {
+      setListOutcome({ kind: "err", reason: "Pick a time that has not passed yet." }); return;
+    }
     if (sendingRef.current) return; // one click in flight at a time
     sendingRef.current = true;
     setSending(true);
     setListOutcome({ kind: "sending" });
     try {
+      await intentWrite.current;
       const d = await fetch("/api/admin/letters/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -404,6 +464,15 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         }),
       }).then((r) => r.json()).catch(() => null);
       if (d?.ok) {
+        setUnqueuedTime(false);
+        setSendAt("");
+        setIntentNote("");
+        if (!d.recordConfirmed) {
+          setHistoryUnavailable(true);
+          setListOutcome({ kind: "err", reason: deliveryCopy.unverified });
+          return;
+        }
+        setHistoryUnavailable(false);
         setListOutcome({ kind: "queued", queued: d.queued, scheduledFor: d.scheduledFor });
         setChecked(false);
         if (d.sendId) {
@@ -418,6 +487,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
       } else if (d?.expected !== undefined) {
         setListOutcome({ kind: "err", reason: `The list changed. It has ${d.expected} people now. Check the box again to send.` });
         setChecked(false);
+        setSegments((prev) => prev.map((s) => s.source === segment ? { ...s, count: d.expected } : s));
       } else {
         setListOutcome({ kind: "err", reason: d?.reason ?? "send failed" });
       }
@@ -561,11 +631,15 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
           <input type="datetime-local" value={sendAt} onChange={(e) => pickTime(e.target.value)} aria-label="Send time, Mountain Time" className="console-field kit-field-sm" style={fieldSm} />
           <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>Mountain Time</span>
         </div>
+        {/* Her letter first (saved time, then whether it is scheduled); the house's mail run last. */}
+        {intentNote && <p className="kit-note" role="status">{intentNote}</p>}
         {sendAtIso && (
           <p className={sendAtPast ? "kit-note kit-note-err" : "kit-note"}>
-            {sendAtPast ? "That time has passed. Pick a later one, or send it now." : `Schedule sends it ${mountainWords(sendAtIso)}.`}
+            {sendAtPast ? "That time has passed. Pick a later one, or send it now." : `${deliveryCopy.notQueued} Chosen time: ${mountainWords(sendAtIso)}.`}
           </p>
         )}
+        {historyUnavailable && <p className="kit-note kit-note-err" role="alert">{deliveryCopy.unknown}</p>}
+        <MailTickStatus />
 
         {count > 0 && (
           <div className="mt-3 space-y-2">
@@ -574,14 +648,14 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
               <span>I checked the list. This goes to <b>{count} {count === 1 ? "person" : "people"}</b>.</span>
             </label>
             <div className="flex flex-wrap items-center gap-2">
-              <Button sm onClick={() => sendList("now")} disabled={sending || !confirmed || !hasBody}>
+              <Button sm onClick={() => sendList("now")} disabled={sending || historyUnavailable || !confirmed || !hasBody}>
                 {listOutcome.kind === "sending" ? "Sending…" : "Send now"}
               </Button>
-              <Button sm onClick={() => sendList("schedule")} disabled={sending || !confirmed || !hasBody || !sendAtIso || sendAtPast}>
+              <Button sm onClick={() => sendList("schedule")} disabled={sending || historyUnavailable || !confirmed || !hasBody || !sendAtIso || sendAtPast}>
                 Schedule
               </Button>
             </div>
-            <p className="kit-note">Send now goes out within 10 minutes. Schedule waits for the time above.</p>
+            <p className="kit-note">Send now goes out on the next mail run. Schedule waits for the time above.</p>
             {finish && (
               <p style={{ fontSize: ".75rem", color: "var(--muted)" }}>
                 The hourly cap ({cap} an hour) spreads this out: done by about {finish.toLocaleString()}

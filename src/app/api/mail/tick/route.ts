@@ -1,3 +1,4 @@
+import { processDeliveryNotices, recordMailTick } from "@/lib/letter-delivery";
 import { NextResponse } from "next/server";
 import { tick } from "@/lib/mail-queue";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
@@ -58,7 +59,13 @@ export async function GET(request: Request) {
     console.error("mail tick: reading drafts failed:", err);
     drafts = { nextReading: "error", replay: "held", reviewSent: 0 };
   }
-  return NextResponse.json({ ok: true, ...result, reading, join, drafts });
+  let deliveryNotices = "checked";
+  try { await processDeliveryNotices(); }
+  catch { deliveryNotices = "deferred"; console.error("letter delivery checks deferred"); }
+  let heartbeatRecorded = true;
+  try { await recordMailTick(Date.now()); }
+  catch { heartbeatRecorded = false; }
+  return NextResponse.json({ ok: true, ...result, reading, join, drafts, deliveryNotices, heartbeatRecorded });
 }
 
 export async function POST(request: Request) {

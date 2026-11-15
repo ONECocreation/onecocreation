@@ -52,7 +52,9 @@ async function kv(cmd: unknown[]): Promise<unknown> {
     cache: "no-store",
   });
   if (!res.ok) throw new Error(`mail queue: KV ${res.status}`);
-  return ((await res.json()) as { result: unknown }).result;
+  const data = (await res.json()) as { result: unknown; error?: string };
+  if (data.error) throw new Error("mail queue: KV command failed");
+  return data.result;
 }
 
 export async function enqueue(items: QueuedMail[]): Promise<number> {
@@ -69,15 +71,14 @@ export async function queueDepth(): Promise<number> {
  * One KV hash per list send, `letters:send:<sendId>` — queued (fixed at
  * publish time), sent/dropped (this tick, and every later one, bump them
  * live), the letter's key, its segment, when it goes out, and when it was
- * queued. 14-day TTL (SEND_TTL_SECONDS): a send's own history matters for
- * a couple of weeks, never forever. A second small key per LETTER,
+ * queued. Aggregate records are durable: expiring them would turn Sent back into Draft.
+ * No recipient addresses live in these records. A second small key per LETTER,
  * `letters:sends:<key>`, holds the last few sendIds (newest first) so the
  * panel can list "the last few sends for this letter" after a reload
  * without scanning the whole vault. Every helper here fails CLOSED — a
  * KV hiccup recording the tally must never take down the send itself
  * (`enqueue` above already ran) or the tick that is draining it. */
 
-const SEND_TTL_SECONDS = 14 * 24 * 3600;
 const RECENT_SENDS_KEPT = 8;
 
 const sendRecordKey = (sendId: string) => `letters:send:${sendId}`;
@@ -129,7 +130,7 @@ export async function initSendRecord(
       "dropped", "0",
       "createdAtMs", String(Date.now()),
     ]);
-    await kv(["EXPIRE", k, String(SEND_TTL_SECONDS)]);
+    await kv(["PERSIST", k]);
   } catch {
     /* the send itself already queued — a record failure is not a send failure */
   }
@@ -143,15 +144,15 @@ export async function recordSendForLetter(key: string, sendId: string): Promise<
     const k = sendsForLetterKey(key);
     await kv(["LPUSH", k, sendId]);
     await kv(["LTRIM", k, "0", String(RECENT_SENDS_KEPT - 1)]);
-    await kv(["EXPIRE", k, String(SEND_TTL_SECONDS)]);
+    await kv(["PERSIST", k]);
   } catch {
     /* the history list is a nicety — never the send itself */
   }
 }
 
 /** One send's current tally — `null` when the vault has no record (an
- *  unknown/expired sendId), never a thrown error into the route. */
-export async function getSendRecord(sendId: string): Promise<SendRecord | null> {
+ *  unknown sendId), never a thrown error into the route. */
+export async function getSendRecord(sendId: string, strict = false): Promise<SendRecord | null> {
   try {
     const h = parseHash(await kv(["HGETALL", sendRecordKey(sendId)]));
     if (!("queued" in h)) return null;
@@ -165,7 +166,8 @@ export async function getSendRecord(sendId: string): Promise<SendRecord | null> 
       dropped: Number(h.dropped ?? 0),
       cancelled: h.cancelled === "1",
     };
-  } catch {
+  } catch (err) {
+    if (strict) throw err;
     return null;
   }
 }
@@ -232,21 +234,24 @@ async function readSendControl(sendId: string): Promise<{ cancelled: boolean; at
 }
 
 /** The last few sends for one letter, newest first, each with its own
- *  tally — an id whose hash has already expired (past the 14-day TTL) is
- *  simply left out, never a gap the caller has to explain. */
+ *  tally — legacy missing records remain unknown in strict mode; compatibility callers
+ *  may still omit them. UI and reminder paths always use strict reads. */
 export async function recentSendsForLetter(
   key: string,
   limit = 5,
+  strict = false,
 ): Promise<Array<SendRecord & { sendId: string }>> {
   try {
     const ids = ((await kv(["LRANGE", sendsForLetterKey(key), "0", String(limit - 1)])) as string[] | null) ?? [];
     const out: Array<SendRecord & { sendId: string }> = [];
     for (const sendId of ids) {
-      const rec = await getSendRecord(sendId);
+      const rec = await getSendRecord(sendId, strict);
+      if (!rec && strict) throw new Error("send history incomplete");
       if (rec) out.push({ ...rec, sendId });
     }
     return out;
-  } catch {
+  } catch (err) {
+    if (strict) throw err;
     return [];
   }
 }
@@ -261,7 +266,7 @@ async function bumpSendOutcome(sendId: string | undefined, field: "sent" | "drop
   try {
     const k = sendRecordKey(sendId);
     await kv(["HINCRBY", k, field, "1"]);
-    await kv(["EXPIRE", k, String(SEND_TTL_SECONDS)]);
+    await kv(["PERSIST", k]);
   } catch {
     /* best-effort — the delivery itself already happened either way */
   }
