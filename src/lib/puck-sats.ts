@@ -8,7 +8,8 @@
  * from those seeds keeps them in her stored doc. While the bitcoin rail is
  * dark this render-time filter takes the sats part out — the line that is
  * ONLY sats goes, the line that leads with dollars keeps its dollars. No
- * new words: it only deletes. Never written back to the store (the
+ * new words: it only deletes. The seed's "Add ⚡" button reads "Add" (the
+ * bolt is a bitcoin mark, the Pay It Forward basket's own reading). Never written back to the store (the
  * applyHomeSwitchesToPuck precedent). Bitcoin live, or nothing matched ⇒
  * the same `data` reference comes back.
  */
@@ -19,6 +20,9 @@ type Node = { type?: unknown; props?: Record<string, unknown> };
 const SATS_ONLY = /^\s*⚡\s*≈\s*[\d,]+\s*sats(\s*\/\s*month)?\s*$/;
 /** a dollar line with a sats tail: "$33/mo — ⚡ ≈ 55,555 sats / month" */
 const SATS_TAIL = /\s*[—·-]\s*⚡\s*≈\s*[\d,]+\s*sats(\s*\/\s*month)?\s*$/;
+
+/** the seed's affirmation door; the bolt is a bitcoin mark */
+const BOLT_ADD = "Add ⚡";
 
 function isNode(v: unknown): v is Node {
   return typeof v === "object" && v !== null && "type" in v && "props" in v;
@@ -37,6 +41,11 @@ function walkList(list: unknown[]): { list: unknown[]; changed: boolean } {
         out.push({ ...item, props: { ...props, text: props.text.replace(SATS_TAIL, "") } });
         continue;
       }
+    }
+    if (item.type === "Button" && props.label === BOLT_ADD) {
+      changed = true;
+      out.push({ ...item, props: { ...props, label: "Add" } });
+      continue;
     }
     const next = walkProps(props);
     if (next.changed) { changed = true; out.push({ ...item, props: next.props }); }

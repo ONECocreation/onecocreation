@@ -556,7 +556,7 @@ export async function Affirmations() {
                 <h3 style={{ fontWeight: 400 }}>{a.name}</h3>
                 <p style={{ color: "var(--muted)", margin: ".2em 0 .6em" }}>{a.sub}</p>
                 <div className="price">$11.11</div>{rails.btc && <div className="sats">⚡ ≈ 11,110 sats</div>}
-                <Link className="btn btn-ghost push" style={{ marginTop: 16 }} href="/store">Add ⚡</Link>
+                <Link className="btn btn-ghost push" style={{ marginTop: 16 }} href="/store">{/* lane/oc-sats-when-bitcoin-on: the bolt is a bitcoin mark — "Add" while bitcoin is off */}{rails.btc ? "Add ⚡" : "Add"}</Link>
               </div>
             </div>
           ))}

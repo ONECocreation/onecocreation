@@ -129,6 +129,9 @@ describe("home shelves — Affirmations(), Services(); /jewelry — Jewelry()", 
     const aff = await html(Affirmations());
     expect(aff).toContain("$11.11");
     expect(aff).not.toContain("11,110 sats");
+    // the button label: the bolt is a bitcoin mark
+    expect(aff).not.toContain("⚡");
+    expect(aff).toContain('href="/store">Add</a>');
     const jw = await html(Jewelry());
     expect(jw).toContain("$88");
     expect(jw).not.toContain('class="sats"');
@@ -137,7 +140,9 @@ describe("home shelves — Affirmations(), Services(); /jewelry — Jewelry()", 
   it("bitcoin ON: both stand as today", async () => {
     await setRails(true);
     const { Affirmations, Jewelry } = await import("@/components/sections");
-    expect(await html(Affirmations())).toContain('<div class="sats">⚡ ≈ 11,110 sats</div>');
+    const aff = await html(Affirmations());
+    expect(aff).toContain('<div class="sats">⚡ ≈ 11,110 sats</div>');
+    expect(aff).toContain('href="/store">Add ⚡</a>');
     expect(await html(Jewelry())).toContain('<div class="sats">⚡ ≈ 88,000 sats</div>');
   });
 
@@ -189,6 +194,11 @@ describe("the designer branch — applySatsRuleToPuck over the house seeds", () 
     const home = texts(applySatsRuleToPuck(SEEDS.home as { content: unknown[] }, false));
     expect(home).toContain("$33/mo");
     expect(home).toContain("$11.11");
+    const labels = (d: unknown) => JSON.stringify(d).match(/"label":"Add[^"]*"/g) ?? [];
+    expect(labels(SEEDS.home)).toContain('"label":"Add ⚡"');
+    const offLabels = labels(applySatsRuleToPuck(SEEDS.home as { content: unknown[] }, false));
+    expect(offLabels.length).toBeGreaterThan(0);
+    expect(offLabels.every((l) => l === '"label":"Add"')).toBe(true);
     const jw = texts(applySatsRuleToPuck(SEEDS.jewelry as { content: unknown[] }, false));
     expect(jw).toContain("$88");
   });
