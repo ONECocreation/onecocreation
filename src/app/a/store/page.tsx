@@ -167,13 +167,13 @@ const cardHead: React.CSSProperties = {
 };
 
 const fieldLabel: React.CSSProperties = {
-  display: "block", fontSize: ".62rem", letterSpacing: ".1em", textTransform: "uppercase",
+  display: "block", fontSize: ".75rem", letterSpacing: ".1em", textTransform: "uppercase",
   color: "var(--muted)", margin: "10px 0 3px",
 };
 
 /* TASK-145 — Love's shop is the customer: every field carries its words
    next to it, and validation speaks in sentences, never color alone. */
-const fieldHint: React.CSSProperties = { margin: "3px 0 0", fontSize: ".7rem", color: "var(--muted)" };
+const fieldHint: React.CSSProperties = { margin: "3px 0 0", fontSize: ".75rem", color: "var(--muted)" };
 
 export default function StoreRoom() {
   const [items, setItems] = useState<StoreItem[] | null>(null);
@@ -437,17 +437,17 @@ export default function StoreRoom() {
               onChange={(e) => setSearch(e.target.value)}
               className="console-field" style={{ ...field, borderRadius: 999, padding: "9px 18px", flex: 1, minWidth: 170 }}
             />
-            <a className="btn btn-ghost btn-sm" href="/store" target="_blank" rel="noreferrer">
+            <a className="kit-btn kit-btn-second kit-btn-sm" href="/store" target="_blank" rel="noreferrer">
               Preview store
             </a>
-            <button className="btn btn-sm" onClick={() => openEditor(BLANK)}>
+            <button className="kit-btn kit-btn-main kit-btn-sm" onClick={() => openEditor(BLANK)}>
               + Add item
             </button>
           </div>
 
           {cats.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", margin: "0 0 12px" }}>
-              <span style={{ fontSize: ".68rem", color: "var(--muted)" }}>shelf by:</span>
+              <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>shelf by:</span>
               {cats.map((c) => (
                 <button key={c.name} type="button" className="chip-select" aria-pressed={catFilter === c.name}
                   onClick={() => setCatFilter(catFilter === c.name ? null : c.name)}>
@@ -471,7 +471,7 @@ export default function StoreRoom() {
               <thead>
                 <tr>
                   {["", "Item", "Price", "Inventory", "Status", "Fulfilled by", ""].map((h, i) => (
-                    <th key={i} style={{ fontSize: ".62rem", letterSpacing: ".1em", textTransform: "uppercase",
+                    <th key={i} style={{ fontSize: ".75rem", letterSpacing: ".1em", textTransform: "uppercase",
                       color: "var(--muted)", textAlign: "left", padding: "0 10px 2px", fontWeight: 600 }}>{h}</th>
                   ))}
                 </tr>
@@ -496,7 +496,7 @@ export default function StoreRoom() {
                       </td>
                       <td style={td}>
                         <b style={{ display: "block", fontSize: ".92rem", color: "var(--ink-strong)" }}>{item.title}</b>
-                        <span style={{ fontSize: ".72rem", color: "var(--muted)" }}>
+                        <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>
                           {KIND_WORD[item.kind]}
                           {item.category && item.category.trim().toLowerCase() !== KIND_WORD[item.kind] &&
                             ` · ${item.category}`}
@@ -510,7 +510,7 @@ export default function StoreRoom() {
                       <td style={{ ...td, whiteSpace: "nowrap" }}>
                         <span style={{ fontFamily: "var(--sans)", fontWeight: 700, color: "var(--gold-deep)" }}>{priceWords(item)}</span>
                         {item.sale && (
-                          <span style={{ display: "block", fontSize: ".68rem", color: "var(--err)" }}>
+                          <span style={{ display: "block", fontSize: ".75rem", color: "var(--err)" }}>
                             sale {saleWords(item.sale)}
                           </span>
                         )}
@@ -520,7 +520,7 @@ export default function StoreRoom() {
                           <span>
                             {item.inventory} left
                             {item.inventory === 0 && (
-                              <span style={{ display: "block", fontSize: ".68rem", color: "var(--err)" }}>sold out at 0</span>
+                              <span style={{ display: "block", fontSize: ".75rem", color: "var(--err)" }}>sold out at 0</span>
                             )}
                           </span>
                         ) : (
@@ -534,16 +534,11 @@ export default function StoreRoom() {
                       <td style={td}><FulfilledBy item={item} /></td>
                       <td style={{ ...td, borderRadius: "0 14px 14px 0", borderRight: "1px solid rgba(139,118,196,.18)",
                         whiteSpace: "nowrap", textAlign: "right" }}>
-                        <button onClick={() => openEditor(item)}
-                          style={{ background: "none", border: 0, cursor: "pointer", padding: "6px 4px", fontFamily: "inherit",
-                            fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em",
-                            color: "var(--info)" }}>
+                        <button type="button" className="kit-btn kit-btn-quiet" onClick={() => openEditor(item)}>
                           edit
                         </button>
-                        <button onClick={() => toggle(item, item.status === "live" ? "hidden" : "live")}
-                          style={{ background: "none", border: 0, cursor: "pointer", padding: "6px 4px", marginLeft: 6, fontFamily: "inherit",
-                            fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em",
-                            color: item.status === "live" ? "var(--muted)" : "var(--ok)" }}>
+                        <button type="button" className={`kit-btn kit-btn-quiet${item.status === "live" ? "" : " is-ok"}`}
+                          onClick={() => toggle(item, item.status === "live" ? "hidden" : "live")}>
                           {item.status === "live" ? "hide" : "go live"}
                         </button>
                       </td>
@@ -573,10 +568,10 @@ export default function StoreRoom() {
                       onKeyDown={(e) => { if (e.key === "Enter") void renameCategory(c.name, renameText); }}
                       className="console-field" style={{ ...field, width: "100%" }} />
                     <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                      <button className="btn btn-sm" onClick={() => void renameCategory(c.name, renameText)}>
+                      <button className="kit-btn kit-btn-main kit-btn-sm" onClick={() => void renameCategory(c.name, renameText)}>
                         Rename
                       </button>
-                      <button className="btn btn-ghost btn-sm" onClick={() => setRenaming(null)}>Cancel</button>
+                      <button className="kit-btn kit-btn-second kit-btn-sm" onClick={() => setRenaming(null)}>Cancel</button>
                     </div>
                   </>
                 ) : (
@@ -585,10 +580,7 @@ export default function StoreRoom() {
                     <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>
                       · {c.count} {c.count === 1 ? "item" : "items"}
                     </span>
-                    <button onClick={() => { setRenaming(c.name); setRenameText(c.name); }}
-                      style={{ background: "none", border: 0, cursor: "pointer", padding: "6px 4px", marginLeft: 8,
-                        fontFamily: "inherit", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase",
-                        letterSpacing: ".05em", color: "var(--info)" }}>
+                    <button type="button" className="kit-btn kit-btn-quiet" onClick={() => { setRenaming(c.name); setRenameText(c.name); }}>
                       rename
                     </button>
                   </>
@@ -642,10 +634,10 @@ export default function StoreRoom() {
               <h3 style={{ fontFamily: "var(--font-h3)", fontWeight: 400, fontSize: "1.3rem", margin: 0, flex: 1 }}>
                 {draft.id ? draft.title || "Edit item" : "A new item"}
               </h3>
-              <button className="btn btn-sm" onClick={saveDraft} disabled={uploading || dUploading}>
+              <button className="kit-btn kit-btn-main kit-btn-sm" onClick={saveDraft} disabled={uploading || dUploading}>
                 Save
               </button>
-              <button className="btn btn-ghost btn-sm" onClick={() => setDraft(null)}>Close</button>
+              <button className="kit-btn kit-btn-second kit-btn-sm" onClick={() => setDraft(null)}>Close</button>
             </div>
             {note && <p style={{ color: "var(--err)", fontSize: ".82rem", margin: "0 0 10px" }}>{note}</p>}
 
@@ -725,17 +717,12 @@ export default function StoreRoom() {
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={url} alt="" style={{ width: 76, height: 76, borderRadius: 10, objectFit: "cover",
                             border: idx === 0 ? "2px solid var(--gold-deep)" : "1px solid rgba(139,118,196,.35)" }} />
-                          <button onClick={() => removeImage(url)} aria-label="remove picture"
-                            style={{ position: "absolute", top: -7, right: -7, width: 20, height: 20, borderRadius: "50%",
-                              border: "1px solid rgba(139,118,196,.5)", background: "#fff", cursor: "pointer",
-                              fontSize: ".7rem", lineHeight: 1, color: "var(--field-ink)" }}>×</button>
+                          <button type="button" className="kit-ibtn kit-ibtn-corner" onClick={() => removeImage(url)} aria-label="remove picture">×</button>
                           {idx === 0 ? (
-                            <span style={{ display: "block", textAlign: "center", fontSize: ".6rem", fontWeight: 700,
+                            <span style={{ display: "block", textAlign: "center", fontSize: ".75rem", fontWeight: 700,
                               color: "var(--gold-deep)", marginTop: 2 }}>★ default</span>
                           ) : (
-                            <button onClick={() => makeDefault(url)}
-                              style={{ display: "block", width: "100%", background: "none", border: 0, cursor: "pointer",
-                                fontSize: ".6rem", color: "var(--muted)", marginTop: 2, fontFamily: "inherit" }}>
+                            <button type="button" className="kit-btn kit-btn-quiet" onClick={() => makeDefault(url)}>
                               ☆ make default
                             </button>
                           )}
@@ -743,7 +730,7 @@ export default function StoreRoom() {
                       ))}
                     </div>
                   )}
-                  <label className="btn btn-sm" style={{ cursor: uploading ? "wait" : "pointer" }}>
+                  <label className="kit-btn kit-btn-main kit-btn-sm" style={{ cursor: uploading ? "wait" : "pointer" }}>
                     {uploading ? "Uploading…" : "+ Add pictures"}
                     <input
                       type="file"
@@ -757,7 +744,7 @@ export default function StoreRoom() {
                       style={{ display: "none" }}
                     />
                   </label>
-                  <p style={{ margin: "8px 0 0", fontSize: ".72rem", color: "var(--muted)" }}>
+                  <p style={{ margin: "8px 0 0", fontSize: ".75rem", color: "var(--muted)" }}>
                     png/jpg/webp/gif/avif up to 4 MB each. The ★ default picture is the item&apos;s face on the shelf
                   </p>
                 </div>
@@ -878,7 +865,7 @@ export default function StoreRoom() {
                         {partners.printful && <option value="printful">Printful: printed &amp; shipped on demand</option>}
                         {partners.fourthwall && <option value="fourthwall">Fourthwall: their product, our checkout</option>}
                       </select>
-                      <p style={{ margin: "8px 0 0", fontSize: ".72rem", color: "var(--muted)" }}>
+                      <p style={{ margin: "8px 0 0", fontSize: ".75rem", color: "var(--muted)" }}>
                         paid in sats here, then the order flies to the partner, then tracking lands on the receipt
                       </p>
                     </>
@@ -908,7 +895,7 @@ export default function StoreRoom() {
                         setDraft({ ...draft, entitlementDays: e.target.value ? Number(e.target.value) : undefined })}
                       className="console-field" style={{ ...field, width: "100%" }}
                     />
-                    <p style={{ margin: "8px 0 0", fontSize: ".72rem", color: "var(--muted)" }}>
+                    <p style={{ margin: "8px 0 0", fontSize: ".75rem", color: "var(--muted)" }}>
                       set this for a one-week taster (weekly-one-week, observer-one-week, …). The grant
                       closes itself this many days after purchase instead of standing open
                     </p>
@@ -976,12 +963,12 @@ export default function StoreRoom() {
                         </p>
                       )}
                       {draft.media.deliverable.blobPath && !dReplace ? (
-                        <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }}
+                        <button className="kit-btn kit-btn-second kit-btn-sm" style={{ marginTop: 8 }}
                           onClick={() => setDReplace(true)} disabled={dUploading}>
                           Replace file
                         </button>
                       ) : (
-                        <label className="btn btn-ghost btn-sm" style={{ marginTop: 8, cursor: dUploading ? "wait" : "pointer" }}>
+                        <label className="kit-btn kit-btn-second kit-btn-sm" style={{ marginTop: 8, cursor: dUploading ? "wait" : "pointer" }}>
                           {dUploading ? "Uploading…" : "Choose the paid file"}
                           <input
                             type="file"
@@ -1001,7 +988,7 @@ export default function StoreRoom() {
                         </p>
                       )}
                       {dNote && <p style={{ margin: "6px 0 0", fontSize: ".75rem", color: "var(--ok)" }}>{dNote}</p>}
-                      <p style={{ margin: "8px 0 0", fontSize: ".72rem", color: "var(--muted)" }}>
+                      <p style={{ margin: "8px 0 0", fontSize: ".75rem", color: "var(--muted)" }}>
                         {directUp
                           ? "audio/video/zip/pdf up to 1 GB. Uploads go from your browser straight to the file vault; the buyer's receipt grows a download button once payment settles"
                           : "dev driver: the file lands in data/deliverables/ on this machine; the buyer's receipt grows a download button once payment settles"}
@@ -1024,10 +1011,7 @@ export default function StoreRoom() {
 
                 {draft.id && (
                   <div style={{ textAlign: "right" }}>
-                    <button onClick={() => removeItem(draft)}
-                      style={{ background: "none", border: 0, cursor: "pointer", fontFamily: "inherit",
-                        fontSize: ".72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em",
-                        color: "var(--err)", padding: 6 }}>
+                    <button type="button" className="kit-btn kit-btn-quiet is-danger" onClick={() => removeItem(draft)}>
                       Delete this item
                     </button>
                   </div>

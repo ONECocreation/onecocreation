@@ -43,7 +43,7 @@ function localInputToIso(v: string): string {
 }
 
 const fieldLabel: React.CSSProperties = {
-  display: "block", fontSize: ".62rem", letterSpacing: ".1em", textTransform: "uppercase",
+  display: "block", fontSize: ".75rem", letterSpacing: ".1em", textTransform: "uppercase",
   color: "var(--muted)", marginBottom: 3,
 };
 
@@ -63,7 +63,7 @@ function CopyDoor({ value, label }: { value: string; label: string }) {
       <input readOnly value={value} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".78rem" }} />
       <button
         type="button"
-        className="btn btn-sm"
+        className="kit-btn kit-btn-main kit-btn-sm"
         onClick={async () => {
           try {
             await navigator.clipboard.writeText(value);
@@ -89,7 +89,7 @@ function CopyGhost({ value, label }: { value: string; label: string }) {
   return (
     <button
       type="button"
-      className="btn btn-sm btn-ghost"
+      className="kit-btn kit-btn-sm kit-btn-second"
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(value);
@@ -268,7 +268,7 @@ export default function StudioRoom({
             scene switching, mute-all, the room&apos;s own controls. Room: {vdo.room}.
           </p>
           <div className="kit-doors" style={doorStack}>
-            <a href={director} target="_blank" rel="noopener" className="btn btn-sm">
+            <a href={director} target="_blank" rel="noopener" className="kit-btn kit-btn-main kit-btn-sm">
               Open your director&apos;s desk
             </a>
             <CopyGhost value={director} label="Copy the director link" />
@@ -280,7 +280,7 @@ export default function StudioRoom({
             step onto camera yourself.
           </p>
           <div className="kit-doors" style={doorStack}>
-            <a href={vdo.push} target="_blank" rel="noopener" className="btn btn-sm">
+            <a href={vdo.push} target="_blank" rel="noopener" className="kit-btn kit-btn-main kit-btn-sm">
               Step on camera
             </a>
             <CopyGhost value={vdo.push} label="Copy the push link" />
@@ -292,7 +292,7 @@ export default function StudioRoom({
             camera and mic off until they choose. You can unmute from the desk. Opens on the site.
           </p>
           <div className="kit-doors" style={doorStack}>
-            <a href={guestDoor} target="_blank" rel="noopener" className="btn btn-sm">
+            <a href={guestDoor} target="_blank" rel="noopener" className="kit-btn kit-btn-main kit-btn-sm">
               Guest door
             </a>
             <CopyGhost value={guestDoor} label="Copy the guest link" />
@@ -333,10 +333,7 @@ export default function StudioRoom({
           onClick={toggleDesk}
           aria-expanded={deskOpen}
           title={deskOpen ? "fold this away" : "guest-panel setup, timers, the scene/overlay URL list. Moving to the director view"}
-          style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", padding: "2px 0",
-            marginBottom: deskOpen ? 10 : 0, background: "none", border: "none", cursor: "pointer",
-            textAlign: "left", fontSize: ".78rem", fontWeight: 700, letterSpacing: ".04em",
-            color: "var(--muted)" }}
+          className={`kit-btn kit-btn-quiet kit-disclosure${deskOpen ? " is-open" : ""}`}
         >
           <span aria-hidden>{deskOpen ? "▾" : "▸"}</span>
           For the director&apos;s desk (moving to the director view)
@@ -368,7 +365,7 @@ export default function StudioRoom({
         ]
       ).map((group) => (
         <div key={group.kind} style={{ marginBottom: 10 }}>
-          <span style={{ display: "block", fontSize: ".64rem", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 6 }}>
+          <span style={{ display: "block", fontSize: ".75rem", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 6 }}>
             {group.heading}
           </span>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -377,7 +374,7 @@ export default function StudioRoom({
                 key={s.id}
                 type="button"
                 onClick={() => setDoc({ ...doc, activeScene: s.id })}
-                className={`btn btn-sm ${doc.activeScene === s.id ? "btn-on" : "btn-ghost"}`}
+                className={`kit-btn kit-btn-sm ${doc.activeScene === s.id ? "is-on" : "kit-btn-second"}`}
               >
                 {s.label}
               </button>
@@ -421,7 +418,7 @@ export default function StudioRoom({
           </label>
         </div>
         <div className="kit-doors" style={doorStack}>
-          <button type="button" disabled={busy} onClick={() => save(doc)} className="btn btn-sm">
+          <button type="button" disabled={busy} onClick={() => save(doc)} className="kit-btn kit-btn-main kit-btn-sm">
             {busy ? "Saving…" : "Save the stage"}
           </button>
         </div>
@@ -457,11 +454,11 @@ export default function StudioRoom({
           <button
             type="button"
             onClick={() => setDoc({ ...doc, startsAt: new Date(Date.now() + 20 * 60_000).toISOString() })}
-            className="btn btn-ghost btn-sm"
+            className="kit-btn kit-btn-second kit-btn-sm"
           >
             In 20 min
           </button>
-          <button type="button" disabled={busy} onClick={() => save(doc)} className="btn btn-sm">
+          <button type="button" disabled={busy} onClick={() => save(doc)} className="kit-btn kit-btn-main kit-btn-sm">
             {busy ? "Saving…" : "Save the full scenes"}
           </button>
         </div>
@@ -499,7 +496,7 @@ export default function StudioRoom({
               <button
                 type="button"
                 onClick={() => setDoc({ ...doc, guests: doc.guests.filter((_, j) => j !== i) })}
-                className="btn btn-ghost btn-sm"
+                className="kit-btn kit-btn-second kit-btn-sm"
               >
                 Remove this guest
               </button>
@@ -512,11 +509,11 @@ export default function StudioRoom({
               <button
                 type="button"
                 onClick={() => setDoc({ ...doc, guests: [...doc.guests, { name: "", specialty: "" }] })}
-                className="btn btn-sm"
+                className="kit-btn kit-btn-main kit-btn-sm"
               >
                 + Add a guest
               </button>
-              <button type="button" disabled={busy} onClick={() => save(doc)} className="btn btn-sm">
+              <button type="button" disabled={busy} onClick={() => save(doc)} className="kit-btn kit-btn-main kit-btn-sm">
                 {busy ? "Saving…" : "Save the roster"}
               </button>
             </div>

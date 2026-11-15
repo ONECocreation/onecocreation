@@ -173,7 +173,7 @@ export default function MoneyRoom() {
   return (
     <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
       <SectionHead label="The Jars" />
-      <p style={{ margin: "-4px 0 8px", fontSize: ".72rem", color: "var(--muted)" }}>read live from BTCPay</p>
+      <p style={{ margin: "-4px 0 8px", fontSize: ".75rem", color: "var(--muted)" }}>read live from BTCPay</p>
       <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))" }}>
         {JARS.map(({ key, label }) => {
           const t = ledger?.totals?.[key];
@@ -186,7 +186,7 @@ export default function MoneyRoom() {
               <div style={{ fontFamily: "var(--sans)", fontWeight: 700, fontSize: "1.65rem", color: "var(--gold-deep)", lineHeight: 1.15 }}>
                 {(t?.settledSats ?? 0).toLocaleString("en-US")} <span style={{ fontSize: ".9rem" }}>sats</span>
               </div>
-              <div style={{ fontSize: ".72rem", color: "var(--muted)" }}>
+              <div style={{ fontSize: ".75rem", color: "var(--muted)" }}>
                 {t?.count ?? 0} gifts{pulse?.thisMoon ? ` · ${pulse.thisMoon} this moon` : ""}
                 {key === "payforward" && (
                   <span title="Love passes this jar onward. The doors live on /store">
@@ -205,7 +205,7 @@ export default function MoneyRoom() {
           );
         })}
       </div>
-      <p style={{ margin: "8px 0 0", fontSize: ".72rem", color: "var(--muted)" }}>
+      <p style={{ margin: "8px 0 0", fontSize: ".75rem", color: "var(--muted)" }}>
         Tips break out per artist once trainers land. Every jar keeps its own line in the books.
       </p>
 
@@ -264,8 +264,8 @@ export default function MoneyRoom() {
           <option value="all">all time</option>
         </select>
         <span style={{ flex: 1 }} />
-        <a className="btn btn-sm" href={exportHref("csv")} download>Download CSV</a>
-        <a className="btn btn-ghost btn-sm" href={exportHref("quickbooks")} download>QuickBooks</a>
+        <a className="kit-btn kit-btn-main kit-btn-sm" href={exportHref("csv")} download>Download CSV</a>
+        <a className="kit-btn kit-btn-second kit-btn-sm" href={exportHref("quickbooks")} download>QuickBooks</a>
       </div>
       {kind === "tips" ? (
         <p style={{ color: "var(--muted)", fontSize: ".85rem" }}>
@@ -278,7 +278,7 @@ export default function MoneyRoom() {
           <thead>
             <tr>
               {["When (BFT)", "What", "Who", "Sats", "State"].map((h) => (
-                <th key={h} style={{ fontSize: ".6rem", letterSpacing: ".1em", textTransform: "uppercase",
+                <th key={h} style={{ fontSize: ".75rem", letterSpacing: ".1em", textTransform: "uppercase",
                   color: "var(--muted)", textAlign: "left", padding: "0 10px", fontWeight: 600 }}>{h}</th>
               ))}
             </tr>
@@ -368,14 +368,14 @@ export default function MoneyRoom() {
             )}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
               {detail.state === "settled" && (
-                <button className="btn btn-sm" onClick={() => fulfil(detail)} disabled={busy}>
+                <button className="kit-btn kit-btn-main kit-btn-sm" onClick={() => fulfil(detail)} disabled={busy}>
                   {busy ? "Marking…" : "Mark fulfilled ✓"}
                 </button>
               )}
-              <a className="btn btn-ghost btn-sm" href={`/store/order/${detail.id}`} target="_blank" rel="noreferrer">
+              <a className="kit-btn kit-btn-second kit-btn-sm" href={`/store/order/${detail.id}`} target="_blank" rel="noreferrer">
                 Open order page
               </a>
-              <button className="btn btn-ghost btn-sm" onClick={() => setDetail(null)}>Close</button>
+              <button className="kit-btn kit-btn-second kit-btn-sm" onClick={() => setDetail(null)}>Close</button>
             </div>
           </div>
         </div>

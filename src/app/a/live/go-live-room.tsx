@@ -142,7 +142,7 @@ export interface GoLiveMeeting {
 const card: React.CSSProperties = { ...glassCard, display: "flex", flexDirection: "column", gap: 10 };
 const doorStack: React.CSSProperties = { marginTop: "auto" };
 const fieldLabel: React.CSSProperties = {
-  display: "block", fontSize: ".62rem", letterSpacing: ".1em", textTransform: "uppercase",
+  display: "block", fontSize: ".75rem", letterSpacing: ".1em", textTransform: "uppercase",
   color: "var(--muted)", marginBottom: 3,
 };
 const muted: React.CSSProperties = { margin: 0, fontSize: ".78rem", color: "var(--muted)" };
@@ -152,7 +152,7 @@ function CopyDoor({ value, label }: { value: string; label: string }) {
   return (
     <button
       type="button"
-      className="btn btn-sm"
+      className="kit-btn kit-btn-main kit-btn-sm"
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(value);
@@ -385,7 +385,7 @@ export default function GoLiveRoom({
                 : "none yet"}
             </span>
             <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-              <button type="button" className="btn btn-sm btn-ghost" onClick={() => act("close")} disabled={busy}>
+              <button type="button" className="kit-btn kit-btn-sm kit-btn-second" onClick={() => act("close")} disabled={busy}>
                 {busy ? "Ending…" : "End the session"}
               </button>
             </span>
@@ -416,18 +416,18 @@ export default function GoLiveRoom({
                     {meeting.rail === "vdo" && (
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                         <span style={fieldLabel}>Next</span>
-                        <a href={studioDirector} target="_blank" rel="noopener noreferrer" className="btn btn-sm" style={{ alignSelf: "flex-start" }}>
+                        <a href={studioDirector} target="_blank" rel="noopener noreferrer" className="kit-btn kit-btn-main kit-btn-sm" style={{ alignSelf: "flex-start" }}>
                           Open your director&apos;s desk
                         </a>
                         <p style={muted}>scene switching, mute-all, the room&apos;s own controls. Opens in a new tab</p>
-                        <a href={studioVdo.push} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-ghost" style={{ alignSelf: "flex-start" }}>
+                        <a href={studioVdo.push} target="_blank" rel="noopener noreferrer" className="kit-btn kit-btn-sm kit-btn-second" style={{ alignSelf: "flex-start" }}>
                           Step on camera
                         </a>
                         <p style={muted}>opens your camera in a new tab; the stage watches this seat</p>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                           <button
                             type="button"
-                            className={`btn btn-sm ${feed.scene?.active === "starting" ? "btn-on" : "btn-ghost"}`}
+                            className={`kit-btn kit-btn-sm ${feed.scene?.active === "starting" ? "is-on" : "kit-btn-second"}`}
                             onClick={() => actScene("starting", 20)}
                             disabled={sceneBusy}
                           >
@@ -435,7 +435,7 @@ export default function GoLiveRoom({
                           </button>
                           <button
                             type="button"
-                            className={`btn btn-sm ${feed.scene?.active === "solo" ? "btn-on" : "btn-ghost"}`}
+                            className={`kit-btn kit-btn-sm ${feed.scene?.active === "solo" ? "is-on" : "kit-btn-second"}`}
                             onClick={() => actScene("solo")}
                             disabled={sceneBusy}
                           >
@@ -456,7 +456,7 @@ export default function GoLiveRoom({
                               <button
                                 key={r.slug}
                                 type="button"
-                                className={`btn btn-sm ${room === r.slug ? "btn-on" : "btn-ghost"}`}
+                                className={`kit-btn kit-btn-sm ${room === r.slug ? "is-on" : "kit-btn-second"}`}
                                 onClick={() => setRoom(r.slug)}
                               >
                                 {r.title}
@@ -480,7 +480,7 @@ export default function GoLiveRoom({
                       onChange={(e) => setMessage(e.target.value)}
                       maxLength={300}
                     />
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".74rem", color: "var(--muted)" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".75rem", color: "var(--muted)" }}>
                       <input type="checkbox" checked={letter} onChange={(e) => setLetter(e.target.checked)} />
                       also queue the class-starting letter (off by default, the mail rail is reputation armor)
                     </label>
@@ -519,7 +519,7 @@ export default function GoLiveRoom({
                     </select>
                     <button
                       type="button"
-                      className="btn btn-sm btn-ghost"
+                      className="kit-btn kit-btn-sm kit-btn-second"
                       onClick={() => actAfterHours("after-hours")}
                       disabled={afterHoursBusy || !!afterHours || !afterHoursRoomSlug || vaultDark}
                     >
@@ -527,7 +527,7 @@ export default function GoLiveRoom({
                     </button>
                     <button
                       type="button"
-                      className="btn btn-sm btn-ghost"
+                      className="kit-btn kit-btn-sm kit-btn-second"
                       onClick={() => actAfterHours("after-hours-clear")}
                       disabled={afterHoursBusy || !afterHours}
                     >
@@ -559,11 +559,11 @@ export default function GoLiveRoom({
                 </p>
                 <label style={{ display: "block" }}>
                   <span style={fieldLabel}>your camera (push)</span>
-                  <input readOnly value={studioVdo.push} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".74rem" }} />
+                  <input readOnly value={studioVdo.push} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".75rem" }} />
                 </label>
                 <label style={{ display: "block" }}>
                   <span style={fieldLabel}>a guest&apos;s door: opens on the site</span>
-                  <input readOnly value={studioGuestDoor} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".74rem" }} />
+                  <input readOnly value={studioGuestDoor} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".75rem" }} />
                 </label>
               </>
             )}
@@ -602,7 +602,7 @@ export default function GoLiveRoom({
                     <button
                       key={r}
                       type="button"
-                      className={`btn btn-sm ${guestRail === r ? "btn-on" : "btn-ghost"}`}
+                      className={`kit-btn kit-btn-sm ${guestRail === r ? "is-on" : "kit-btn-second"}`}
                       onClick={() => setGuestRail(r)}
                     >
                       {r === "jitsi" ? "Jitsi" : "VDO"}
@@ -619,7 +619,7 @@ export default function GoLiveRoom({
                 ) : guestLink ? (
                   <label style={{ display: "block" }}>
                     <span style={fieldLabel}>the guest link (derived, never stored)</span>
-                    <input readOnly value={guestLink} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".74rem" }} />
+                    <input readOnly value={guestLink} onFocus={(e) => e.target.select()} className="console-field" style={{ ...field, width: "100%", fontSize: ".75rem" }} />
                   </label>
                 ) : (
                   <p style={muted}>type a room name and the guest link derives here</p>
@@ -631,11 +631,11 @@ export default function GoLiveRoom({
             <div className="kit-doors" style={doorStack}>
               {d.id === "read" && open === "read" && (
                 feed?.state.live ? (
-                  <button type="button" className="btn btn-sm" onClick={() => act("close")} disabled={busy}>
+                  <button type="button" className="kit-btn kit-btn-main kit-btn-sm" onClick={() => act("close")} disabled={busy}>
                     {busy ? "Closing…" : "Close the room"}
                   </button>
                 ) : (
-                  <button type="button" className="btn btn-sm" onClick={() => act("open")} disabled={busy || !room || railsDark}>
+                  <button type="button" className="kit-btn kit-btn-main kit-btn-sm" onClick={() => act("open")} disabled={busy || !room || railsDark}>
                     {busy ? "Opening…" : "Open the room ●"}
                   </button>
                 )
@@ -654,14 +654,14 @@ export default function GoLiveRoom({
               )}
               {d.id === "call" && open === "call" &&
                 sessions.map((s) => (
-                  <Link key={s.bookingId} className="btn btn-sm" href={`/meet/${s.bookingId}`}>
+                  <Link key={s.bookingId} className="kit-btn kit-btn-main kit-btn-sm" href={`/meet/${s.bookingId}`}>
                     Open the room: {s.startUtc.slice(11, 16)} UTC · {s.customer}
                   </Link>
                 ))}
               {d.id === "cocreate" && open === "cocreate" && guestLink && (
                 <CopyDoor value={guestLink} label="Copy the guest link" />
               )}
-              <button type="button" className="btn btn-sm btn-ghost" onClick={() => setOpen((cur) => nextOpenDoor(cur, d.id))}>
+              <button type="button" className="kit-btn kit-btn-sm kit-btn-second" onClick={() => setOpen((cur) => nextOpenDoor(cur, d.id))}>
                 {open === d.id ? "Close this door" : "Open this door"}
               </button>
             </div>

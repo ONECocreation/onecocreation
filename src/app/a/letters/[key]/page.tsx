@@ -565,7 +565,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
             preview on the site
           </a>
         ) : (
-          <p className="mt-1" style={{ fontSize: ".62rem", textTransform: "uppercase", color: "var(--muted)" }}>
+          <p className="mt-1" style={{ fontSize: ".75rem", textTransform: "uppercase", color: "var(--muted)" }}>
             composed letter: its site page arrives with the /news seam (flagged)
           </p>
         )}

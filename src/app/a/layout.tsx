@@ -27,10 +27,10 @@ export default async function ConsoleLayout({
   const operator = operatorFromCookieHeader(cookie);
   if (!operator) return <DisplayFonts>{children}</DisplayFonts>;
   // Same gate, same rooms — only the chrome differs per clone (console.ts).
-  const Shell = CONSOLE_CHROME === "site" ? SiteConsoleShell : ConsoleShell;
+  /* block 975,990 (A6): the site chrome's header is told who holds the seat */
   return (
     <DisplayFonts>
-      <Shell>{children}</Shell>
+      {CONSOLE_CHROME === "site" ? <SiteConsoleShell operator={operator}>{children}</SiteConsoleShell> : <ConsoleShell>{children}</ConsoleShell>}
     </DisplayFonts>
   );
 }

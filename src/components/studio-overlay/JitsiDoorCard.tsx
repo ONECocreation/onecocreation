@@ -56,7 +56,7 @@ export default function JitsiDoorCard({ domain, room, minting, onMint }: JitsiDo
       ) : (
         <p style={{ margin: 0, fontSize: ".78rem", color: "var(--muted)" }}>no room minted yet.</p>
       )}
-      <p style={{ margin: 0, fontSize: ".72rem", color: "var(--muted)" }}>
+      <p style={{ margin: 0, fontSize: ".75rem", color: "var(--muted)" }}>
         Open it and sign in as yourself to host (the login prompt is {domain}&apos;s own moderator gate). Send this
         SAME link to your guest. They join straight in, no account. Who&apos;s actually in the room is Jitsi&apos;s
         own participant list inside the call.
@@ -72,12 +72,12 @@ export default function JitsiDoorCard({ domain, room, minting, onMint }: JitsiDo
                 /* the field above is selectable — the manual way always works */
               }
             }}
-            className="btn btn-sm btn-ghost"
+            className="kit-btn kit-btn-sm kit-btn-second"
           >
             Copy the room link
           </button>
         )}
-        <button type="button" disabled={minting} onClick={onMint} className="btn btn-sm">
+        <button type="button" disabled={minting} onClick={onMint} className="kit-btn kit-btn-main kit-btn-sm">
           {minting ? "Minting…" : room ? "New room" : "Mint a room"}
         </button>
       </div>

@@ -67,20 +67,18 @@ export default function DiscountsDesk() {
             )}
             <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
               <button
+                type="button"
+                className="kit-btn kit-btn-quiet"
                 disabled={busy}
                 onClick={() => save(codes.map((x) => (x.code === c.code ? { ...x, enabled: !x.enabled } : x)))}
-                style={{ background: "none", border: 0, cursor: "pointer", fontFamily: "inherit", padding: "6px 4px",
-                  fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em",
-                  color: "var(--info)" }}
               >
                 {c.enabled ? "turn off" : "turn on"}
               </button>
               <button
+                type="button"
+                className="kit-btn kit-btn-quiet is-danger"
                 disabled={busy}
                 onClick={() => confirm(`Remove code ${c.code}?`) && save(codes.filter((x) => x.code !== c.code))}
-                style={{ background: "none", border: 0, cursor: "pointer", fontFamily: "inherit", padding: "6px 4px",
-                  fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em",
-                  color: "var(--err)" }}
               >
                 remove
               </button>
@@ -117,7 +115,7 @@ export default function DiscountsDesk() {
           className="console-field" style={field}
         />
         <button
-          className="btn btn-sm"
+          className="kit-btn kit-btn-main kit-btn-sm"
           disabled={busy || !draft.code}
           onClick={() => {
             save([...codes.filter((x) => x.code !== draft.code), draft]);

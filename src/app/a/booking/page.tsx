@@ -21,7 +21,7 @@ import type { SiteConfig } from "@/lib/site-config";
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const fieldLabel: React.CSSProperties = {
-  display: "block", fontSize: ".62rem", letterSpacing: ".1em", textTransform: "uppercase",
+  display: "block", fontSize: ".75rem", letterSpacing: ".1em", textTransform: "uppercase",
   color: "var(--muted)", marginBottom: 3,
 };
 
@@ -29,11 +29,6 @@ const glassRow: React.CSSProperties = {
   background: "var(--glass)", border: "1px solid rgba(139,118,196,.22)",
   borderRadius: 12, padding: "10px 14px", marginBottom: 8,
 };
-
-const textBtn = (color: string): React.CSSProperties => ({
-  background: "none", border: 0, cursor: "pointer", fontFamily: "inherit", padding: "6px 4px",
-  fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color,
-});
 
 const blankService = (tz: string, meeting?: SiteConfig["meeting"]): Service => ({
   id: "",
@@ -244,7 +239,7 @@ export default function BookingRoom() {
                         geo: draft.meetingRail.kind === "inPerson" ? draft.meetingRail.geo : "" },
                 })
               }
-              className={`btn btn-sm ${draft.meetingRail.kind === kind ? "btn-on" : "btn-ghost"}`}
+              className={`kit-btn kit-btn-sm ${draft.meetingRail.kind === kind ? "is-on" : "kit-btn-second"}`}
             >
               {label}
             </button>
@@ -313,10 +308,10 @@ export default function BookingRoom() {
       </Field>
     </div>
     <div className="mt-3 flex gap-2">
-      <button type="button" disabled={busy} onClick={() => save("service", draft)} className="btn btn-sm">
+      <button type="button" disabled={busy} onClick={() => save("service", draft)} className="kit-btn kit-btn-main kit-btn-sm">
         {busy ? "Saving…" : "Save"}
       </button>
-      <button type="button" onClick={() => setDraft(null)} className="btn btn-ghost btn-sm">
+      <button type="button" onClick={() => setDraft(null)} className="kit-btn kit-btn-second kit-btn-sm">
         Cancel
       </button>
     </div>
@@ -342,7 +337,7 @@ export default function BookingRoom() {
       {/* ── services ─────────────────────────────────────────────────── */}
       <SectionHead label="Sessions" />
       <div style={{ margin: "0 0 10px" }}>
-        <button type="button" onClick={() => setDraft(blankService(defaultTz, siteMeeting))} className="btn btn-sm">
+        <button type="button" onClick={() => setDraft(blankService(defaultTz, siteMeeting))} className="kit-btn kit-btn-main kit-btn-sm">
           + New session
         </button>
       </div>
@@ -365,10 +360,10 @@ export default function BookingRoom() {
               </span>
               {s.status === "live" ? <Chip tone="green">live</Chip> : <Chip tone="grey">hidden</Chip>}
               <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-                <button type="button" onClick={() => setDraft(s)} style={textBtn("var(--info)")}>
+                <button type="button" onClick={() => setDraft(s)} className="kit-btn kit-btn-quiet">
                   edit
                 </button>
-                <button type="button" onClick={() => remove("service", s.id)} style={textBtn("var(--err)")}>
+                <button type="button" onClick={() => remove("service", s.id)} className="kit-btn kit-btn-quiet is-danger">
                   delete
                 </button>
               </span>
@@ -396,7 +391,7 @@ export default function BookingRoom() {
                 {r.serviceIds.length === 0 ? "all sessions" : r.serviceIds.join(", ")}
               </span>
             </span>
-            <button type="button" onClick={() => remove("rule", r.id)} style={textBtn("var(--err)")}>
+            <button type="button" onClick={() => remove("rule", r.id)} className="kit-btn kit-btn-quiet is-danger">
               remove
             </button>
           </li>
@@ -426,7 +421,7 @@ export default function BookingRoom() {
                 {o.note && <span style={{ marginLeft: 8, color: "var(--muted)", fontSize: ".78rem" }}>{o.note}</span>}
               </span>
               {!retreat && (
-                <button type="button" onClick={() => remove("override", o.id)} style={textBtn("var(--err)")}>
+                <button type="button" onClick={() => remove("override", o.id)} className="kit-btn kit-btn-quiet is-danger">
                   remove
                 </button>
               )}
@@ -492,7 +487,7 @@ function RuleAdder({
         onClick={() =>
           onAdd({ id: "", weekday: weekday as AvailabilityRule["weekday"], start, end, serviceIds: serviceId ? [serviceId] : [] })
         }
-        className="btn btn-sm"
+        className="kit-btn kit-btn-main kit-btn-sm"
       >
         + Add window
       </button>
@@ -523,7 +518,7 @@ function OverrideAdder({ onAdd, busy }: { onAdd: (o: DateOverride) => void; busy
         type="button"
         disabled={busy || !date}
         onClick={() => onAdd({ id: "", date, kind, start: start || undefined, end: end || undefined })}
-        className="btn btn-sm"
+        className="kit-btn kit-btn-main kit-btn-sm"
       >
         + Add exception
       </button>

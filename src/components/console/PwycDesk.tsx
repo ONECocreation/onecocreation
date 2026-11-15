@@ -64,7 +64,7 @@ export default function PwycDesk() {
   return (
     <div className="mt-8">
       <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "26px 0 10px" }}>
-        <span style={{ borderRadius: 999, padding: "4px 16px", fontSize: ".72rem", fontWeight: 700,
+        <span style={{ borderRadius: 999, padding: "4px 16px", fontSize: ".75rem", fontWeight: 700,
           letterSpacing: ".08em", textTransform: "uppercase", color: "var(--gold-wash-ink, #b4862b)",
           border: "1.5px solid rgba(180,134,43,.45)", background: "rgba(217,178,78,.10)", whiteSpace: "nowrap" }}>
           Give-What-You-Can Offers
@@ -83,7 +83,7 @@ export default function PwycDesk() {
             return (
               <li key={o.id} style={{ background: "var(--glass)", border: "1px solid rgba(139,118,196,.22)",
                 borderRadius: 12, padding: "10px 14px", marginBottom: 8 }}>
-                <p style={{ margin: 0, fontSize: ".72rem", color: "var(--muted)" }}>
+                <p style={{ margin: 0, fontSize: ".75rem", color: "var(--muted)" }}>
                   {new Date(o.createdAtMs).toLocaleString()} · {o.entitlementSubject ?? o.contact?.email ?? "anonymous"} · order {o.id.slice(0, 8)} · {o.state}
                 </p>
                 {offered.map((l) => (
@@ -93,14 +93,14 @@ export default function PwycDesk() {
                     <span style={{ color: "var(--muted)" }}> of {l.listSats!.toLocaleString()} listed</span>
                   </p>
                 ))}
-                <p style={{ margin: "4px 0 0", fontSize: ".74rem", color: "var(--muted)" }}>
+                <p style={{ margin: "4px 0 0", fontSize: ".75rem", color: "var(--muted)" }}>
                   the gap: {gap.toLocaleString()} sats: accepted, the Pay-It-Forward jar may carry it.
                 </p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-                  <button className="btn btn-gold btn-sm" onClick={() => decide(o.id, "pwyc-accept")} disabled={busy === o.id}>
+                  <button className="kit-btn kit-btn-main kit-btn-sm" onClick={() => decide(o.id, "pwyc-accept")} disabled={busy === o.id}>
                     Accept with love
                   </button>
-                  <button className="btn btn-ghost btn-sm" onClick={() => decide(o.id, "pwyc-decline")} disabled={busy === o.id}>
+                  <button className="kit-btn kit-btn-second kit-btn-sm" onClick={() => decide(o.id, "pwyc-decline")} disabled={busy === o.id}>
                     Decline: refund owed
                   </button>
                 </div>

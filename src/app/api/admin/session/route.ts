@@ -58,3 +58,14 @@ export async function POST(request: Request) {
     }
   );
 }
+
+/* A6 (Lumen's brief, block 975,990): the header's "Sign out" for the KEY seat.
+   Clears the operator cookie only - a member seat in the same browser stays
+   signed in (the member's own Sign out, DELETE /api/member/session, already
+   clears both). Needs no proof: clearing your own cookie harms nobody. */
+export async function DELETE() {
+  return Response.json(
+    { ok: true },
+    { headers: { "Set-Cookie": `${OPERATOR_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0` } }
+  );
+}

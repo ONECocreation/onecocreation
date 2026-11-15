@@ -48,7 +48,7 @@ export function SectionHead({ label }: { label: string }) {
      relaxed gold law: gold is curated to money + earned accents) */
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "26px 0 10px" }}>
-      <span style={{ borderRadius: 999, padding: "4px 16px", fontSize: ".72rem", fontWeight: 700,
+      <span style={{ borderRadius: 999, padding: "4px 16px", fontSize: ".75rem", fontWeight: 700,
         letterSpacing: ".08em", textTransform: "uppercase", color: "var(--info, #5f4b96)",
         border: "1.5px solid rgba(139,118,196,.45)", background: "rgba(139,118,196,.10)", whiteSpace: "nowrap" }}>
         {label}
@@ -72,7 +72,7 @@ const CHIP_TONES = {
 
 export function Chip({ tone, children }: { tone: keyof typeof CHIP_TONES; children: React.ReactNode }) {
   return (
-    <span style={{ display: "inline-block", borderRadius: 999, padding: "2px 10px", fontSize: ".64rem",
+    <span style={{ display: "inline-block", borderRadius: 999, padding: "2px 10px", fontSize: ".75rem",
       fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", whiteSpace: "nowrap",
       ...CHIP_TONES[tone] }}>
       {children}

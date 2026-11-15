@@ -212,7 +212,7 @@ export default function OverviewPanel() {
             <p className="mx-auto mt-1 max-w-xl font-body text-sm text-white/55">{s.detail}</p>
             <div className="mt-3 flex justify-center">
               {/* ONE uniform onboarding button size */}
-              <Link href={s.href} data-accent={s.accent} className="btn-pill min-w-[220px]">
+              <Link href={s.href} data-accent={s.accent} className="kit-btn kit-pill min-w-[220px]">
                 {s.cta}
               </Link>
             </div>

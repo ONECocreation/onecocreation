@@ -75,7 +75,7 @@ function PinEditor({ roomSlug, roomTitle }: { roomSlug: string | null; roomTitle
       <div className="desk-panel__head">
         <h3>Pinned welcome: {roomTitle}</h3>
         {!editing && (
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setDraft(pin?.text ?? ""); setEditing(true); }}>
+          <button type="button" className="kit-btn kit-btn-second kit-btn-sm" onClick={() => { setDraft(pin?.text ?? ""); setEditing(true); }}>
             edit
           </button>
         )}
@@ -93,10 +93,10 @@ function PinEditor({ roomSlug, roomTitle }: { roomSlug: string | null; roomTitle
             maxLength={600}
           />
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button type="button" className="btn btn-sm" onClick={save} disabled={busy}>
+            <button type="button" className="kit-btn kit-btn-main kit-btn-sm" onClick={save} disabled={busy}>
               {busy ? "Saving…" : "Save & pin"}
             </button>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing(false)} disabled={busy}>
+            <button type="button" className="kit-btn kit-btn-second kit-btn-sm" onClick={() => setEditing(false)} disabled={busy}>
               cancel
             </button>
           </div>

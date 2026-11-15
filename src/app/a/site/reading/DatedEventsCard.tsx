@@ -189,10 +189,10 @@ export default function DatedEventsCard() {
               {e.action && <span>{` · button: ${e.action.label} (${e.action.href})`}</span>}
             </div>
             <Chip tone={past ? "grey" : "green"}>{past ? "PAST" : "COMING UP"}</Chip>
-            <Button sm variant="main" className="btn-ghost" disabled={busy} onClick={() => startEdit(i)} aria-label={`Edit ${e.title} on ${e.date}`}>
+            <Button sm variant="second" disabled={busy} onClick={() => startEdit(i)} aria-label={`Edit ${e.title} on ${e.date}`}>
               Edit
             </Button>
-            <Button sm variant="main" className="btn-ghost" disabled={busy} onClick={() => removeAt(i)} aria-label={`Remove ${e.title} on ${e.date}`}>
+            <Button sm variant="second" disabled={busy} onClick={() => removeAt(i)} aria-label={`Remove ${e.title} on ${e.date}`}>
               Remove
             </Button>
           </div>
@@ -282,7 +282,7 @@ export default function DatedEventsCard() {
       <div className="kit-btn-row">
         <button
           type="button"
-          className="btn btn-gold btn-sm"
+          className="kit-btn kit-btn-main kit-btn-sm"
           disabled={!canSave}
           onClick={submit}
         >
@@ -291,7 +291,7 @@ export default function DatedEventsCard() {
         {editIndex !== null && (
           <button
             type="button"
-            className="btn btn-ghost btn-sm"
+            className="kit-btn kit-btn-second kit-btn-sm"
             disabled={busy}
             onClick={() => {
               setEditIndex(null);

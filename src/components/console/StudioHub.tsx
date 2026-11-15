@@ -145,7 +145,7 @@ export default function StudioHub({
         <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>
           {overlayReady ? "Relay ready" : "Relay not configured"}
         </span>
-        <a href="#studio-live" className="btn btn-sm btn-quiet" style={{ marginLeft: "auto" }}>
+        <a href="#studio-live" className="kit-btn kit-btn-sm kit-btn-quiet" style={{ marginLeft: "auto" }}>
           Go to live controls
         </a>
       </div>

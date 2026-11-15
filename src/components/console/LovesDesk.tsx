@@ -125,7 +125,7 @@ function LiveDoor({ roomSlug }: { roomSlug: string | null }) {
   if (feed.state.live) {
     const title = feed.rooms.find((r) => r.slug === feed.state.room)?.title ?? feed.state.room;
     return (
-      <button type="button" className="btn btn-sm desk-live-door desk-live-door--on" onClick={() => act("close")} disabled={busy}>
+      <button type="button" className="kit-btn kit-btn-main kit-btn-sm desk-live-door desk-live-door--on" onClick={() => act("close")} disabled={busy}>
         ● LIVE · {title} · close
       </button>
     );
@@ -133,7 +133,7 @@ function LiveDoor({ roomSlug }: { roomSlug: string | null }) {
   return (
     <button
       type="button"
-      className="btn btn-sm desk-live-door"
+      className="kit-btn kit-btn-main kit-btn-sm desk-live-door"
       onClick={() => act("open")}
       disabled={busy || !room || dark}
       title={dark ? "the matrix bot / live vault aren't configured here" : undefined}
@@ -264,9 +264,9 @@ function DeskInner() {
   return (
     <div className="desk">
       <div className="desk-bar">
-        <button type="button" className="btn btn-sm" aria-pressed={altitude === "month"} onClick={() => chooseAltitude("month")}>Month</button>
-        <button type="button" className="btn btn-sm" aria-pressed={altitude === "week"} onClick={() => chooseAltitude("week")}>Week</button>
-        <button type="button" className="btn btn-sm" aria-pressed={altitude === "day"} onClick={() => chooseAltitude("day")}>Day</button>
+        <button type="button" className="kit-btn kit-btn-main kit-btn-sm" aria-pressed={altitude === "month"} onClick={() => chooseAltitude("month")}>Month</button>
+        <button type="button" className="kit-btn kit-btn-main kit-btn-sm" aria-pressed={altitude === "week"} onClick={() => chooseAltitude("week")}>Week</button>
+        <button type="button" className="kit-btn kit-btn-main kit-btn-sm" aria-pressed={altitude === "day"} onClick={() => chooseAltitude("day")}>Day</button>
         <span className="desk-bar__spacer" />
         <LiveDoor roomSlug={selectedRoomSlug} />
         <CalendarOptions />
@@ -275,12 +275,12 @@ function DeskInner() {
       {altitude === "month" && (
         <div>
           <div className="desk-month-head">
-            <button type="button" className="btn-round" aria-label="previous month" onClick={() => stepMonth(-1)}>‹</button>
+            <button type="button" className="kit-ibtn" aria-label="previous month" onClick={() => stepMonth(-1)}>‹</button>
             <div className="desk-month-head__title">
               <p>{header}</p>
             </div>
-            <button type="button" className="btn-round" aria-label="next month" onClick={() => stepMonth(1)}>›</button>
-            <Link className="btn btn-sm desk-schedule-chip" href="/a/booking">+ schedule</Link>
+            <button type="button" className="kit-ibtn" aria-label="next month" onClick={() => stepMonth(1)}>›</button>
+            <Link className="kit-btn kit-btn-main kit-btn-sm desk-schedule-chip" href="/a/booking">+ schedule</Link>
           </div>
           <BftMonthGrid
             bftYear={bftYear}
@@ -315,11 +315,11 @@ function DeskInner() {
       {altitude === "day" && dayCell && (
         <div>
           <div className="desk-month-head">
-            <button type="button" className="btn-round" aria-label="previous day" onClick={() => stepDay(-1)}>‹</button>
+            <button type="button" className="kit-ibtn" aria-label="previous day" onClick={() => stepDay(-1)}>‹</button>
             <div className="desk-month-head__title">
               <p>D{pad2(dayCell.bftDay)} · {dayCell.civilMonthAbbr} {dayCell.civilDayNum}{counts ? ` · day ${dayCell.dayOfYear} · W${dayCell.weekOfYear}` : ""}</p>
             </div>
-            <button type="button" className="btn-round" aria-label="next day" onClick={() => stepDay(1)}>›</button>
+            <button type="button" className="kit-ibtn" aria-label="next day" onClick={() => stepDay(1)}>›</button>
           </div>
           <DayAltitude
             cell={dayCell}

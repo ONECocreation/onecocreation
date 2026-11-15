@@ -7,6 +7,7 @@ import ThemeLantern from "./ThemeLantern";
 import NavMenu from "./NavMenu";
 import BasketChip from "./BasketChip";
 import LiveStrip from "./LiveStrip";
+import OperatorDoor from "./console/OperatorDoor";
 import { cartridge } from "@/brand/cartridge";
 
 /** Dark celestial header, true to One Cocreation's brand mark.
@@ -17,7 +18,11 @@ import { cartridge } from "@/brand/cartridge";
  * chip is hidden under /a entirely rather than showing an empty/irrelevant
  * cart icon on the bridge. "use client" only to read the path; nothing
  * else here needed it. */
-export default function SiteHeader() {
+/* A6 (Lumen's brief, block 975,990): under /a the console layout hands down
+   who holds the operator seat, and the door chip says so ("Operator", with
+   Sign out) in place of a "Log in" that read as if nobody were signed in.
+   Every public page calls SiteHeader with no prop and is unchanged. */
+export default function SiteHeader({ operator = null }: { operator?: string | null } = {}) {
   const pathname = usePathname() ?? "";
   const underConsole = pathname === "/a" || pathname.startsWith("/a/");
   return (
@@ -38,7 +43,7 @@ export default function SiteHeader() {
                 under the button; signed in, the name opens the member menu.
                 FrenBadge is retired (the Admiral's ruling 2), its known-by
                 rule carried into DoorButton. */}
-            <DoorButton />
+            {underConsole && operator ? <OperatorDoor operator={operator} /> : <DoorButton />}
           </div>
         </div>
       </header>

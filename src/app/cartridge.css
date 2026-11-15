@@ -630,3 +630,15 @@ html[data-oc-theme="light"] main.lions-gate-dark .keep-dark{--ink-strong:inherit
   .kit-sheet-backdrop{align-items:flex-end;padding:0}
   .kit-sheet{width:100%;max-height:92vh;border-radius:24px 24px 0 0;padding-bottom:28px}
 }
+
+/* ── The operator rooms, night (Lumen's brief A1, block 975,990). No field in /a wears a light ground in the
+   night theme. Every console field paints var(--field-bg)/var(--field-ink) (glass.tsx's `field`,
+   .kit-field-input, and kit.css's console rule), so in the night theme the field itself re-points those two
+   tokens: --glass-strong over the night ground with --ink-strong words (14.9:1) and a --muted placeholder
+   (5.9:1). Dawn names nothing here, so its lit-paper field is byte-identical. The choice chips (Items'
+   tabs and filters) take the night ghost ground the same way; a pressed chip keeps its lavender. ── */
+html:not([data-oc-theme="light"]) .mgmt-ground :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),select,textarea){
+  --field-bg:var(--glass-strong);--field-ink:var(--ink-strong);color-scheme:dark;
+}
+html:not([data-oc-theme="light"]) .mgmt-ground :is(input,textarea)::placeholder{color:var(--muted);opacity:1}
+html:not([data-oc-theme="light"]) .mgmt-ground .chip-select:not([aria-pressed="true"]):not(.on){background:var(--ghost-bg);color:var(--ink-body)}

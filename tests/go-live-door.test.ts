@@ -198,7 +198,8 @@ describe("TASK-261 — the director's desk and the guest's one-click door", () =
     expect(src).toContain("Open your director&apos;s desk");
     expect(src).toContain("href={studioVdo.push}");
     expect(src).toContain("Step on camera");
-    expect(src).toContain("btn-sm btn-ghost");
+    // block 975,990 (A7): the secondary door is on the kit family now (was "btn-sm btn-ghost")
+    expect(src).toContain("kit-btn-sm kit-btn-second");
   });
 
 });

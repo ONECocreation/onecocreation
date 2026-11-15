@@ -22,11 +22,6 @@ const row: React.CSSProperties = {
   borderRadius: 12, padding: "10px 14px", marginBottom: 8,
 };
 
-const videoIconBtn: React.CSSProperties = {
-  background: "none", border: "1px solid rgba(139,118,196,.35)", borderRadius: 6,
-  width: 26, height: 26, cursor: "pointer", fontSize: ".8rem", lineHeight: 1, color: "var(--ink)",
-};
-
 export default function AboutVideosCard() {
   const [rows, setRows] = useState<AboutVideo[] | null>(null);
   const [savedYet, setSavedYet] = useState(false);
@@ -202,8 +197,7 @@ export default function AboutVideosCard() {
         <div style={row}>
           <b style={{ fontSize: ".88rem", flex: 1, minWidth: 200 }}>{featured.title}</b>
           <Chip tone="grey">{featured.id}</Chip>
-          <button type="button" disabled={featBusy} onClick={clearFeatured}
-            style={{ ...videoIconBtn, width: "auto", padding: "0 8px", color: "var(--err)" }}>
+          <button type="button" className="kit-btn kit-btn-quiet is-danger" disabled={featBusy} onClick={clearFeatured}>
             {featBusy ? "…" : "Clear"}
           </button>
         </div>
@@ -224,7 +218,7 @@ export default function AboutVideosCard() {
             className="console-field" style={{ ...field, width: "100%" }}
             aria-label="Top of About: video title"
           />
-          <span style={{ fontSize: ".74rem", color: featParsed ? "var(--ok)" : "var(--muted)" }}>
+          <span style={{ fontSize: ".75rem", color: featParsed ? "var(--ok)" : "var(--muted)" }}>
             {featLink.trim()
               ? featParsed
                 ? `id: ${featParsed.id} ✓`
@@ -232,7 +226,7 @@ export default function AboutVideosCard() {
               : "watch, youtu.be, Shorts, embed, or the bare 11-character id"}
           </span>
         </div>
-        <button type="button" className="btn btn-gold btn-sm" disabled={featBusy} onClick={saveFeatured}
+        <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled={featBusy} onClick={saveFeatured}
           style={featBusy ? { opacity: 0.5 } : undefined}>
           {featBusy ? "Saving…" : featured ? "Replace" : "Save"}
         </button>
@@ -262,22 +256,21 @@ export default function AboutVideosCard() {
       {rows.map((v, i) => (
         <div key={v.id} style={row}>
           <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <button type="button" style={videoIconBtn} disabled={i === 0} onClick={() => setRows(move(rows, i, -1))} aria-label={`move ${v.title} up`}><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 8l4-4 4 4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
-            <button type="button" style={videoIconBtn} disabled={i === rows.length - 1} onClick={() => setRows(move(rows, i, 1))} aria-label={`move ${v.title} down`}><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+            <button type="button" className="kit-ibtn" disabled={i === 0} onClick={() => setRows(move(rows, i, -1))} aria-label={`move ${v.title} up`}><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 8l4-4 4 4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+            <button type="button" className="kit-ibtn" disabled={i === rows.length - 1} onClick={() => setRows(move(rows, i, 1))} aria-label={`move ${v.title} down`}><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
           </span>
           <b style={{ fontSize: ".88rem", flex: 1, minWidth: 200 }}>{v.title}</b>
           <Chip tone="grey">{v.id}</Chip>
           <button
             type="button"
-            className="btn btn-ghost btn-sm"
+            className="kit-btn kit-btn-second kit-btn-sm"
             aria-label={`${v.title} · currently ${v.ratio === "9/16" ? "portrait" : "landscape"}, flip the shape`}
             onClick={() =>
               setRows(rows.map((r, idx) => (idx === i ? { ...r, ratio: r.ratio === "9/16" ? "16/9" : "9/16" } : r)))}
           >
             {v.ratio === "9/16" ? "portrait 9/16" : "landscape 16/9"}
           </button>
-          <button type="button" onClick={() => setRows(rows.filter((_, idx) => idx !== i))}
-            style={{ ...videoIconBtn, width: "auto", padding: "0 8px", color: "var(--err)" }}>
+          <button type="button" className="kit-btn kit-btn-quiet is-danger" onClick={() => setRows(rows.filter((_, idx) => idx !== i))}>
             remove
           </button>
         </div>
@@ -300,7 +293,7 @@ export default function AboutVideosCard() {
             className="console-field" style={{ ...field, width: "100%" }}
             aria-label="video title"
           />
-          <span style={{ fontSize: ".74rem", color: parsed ? "var(--ok)" : "var(--muted)" }}>
+          <span style={{ fontSize: ".75rem", color: parsed ? "var(--ok)" : "var(--muted)" }}>
             {link.trim()
               ? parsed
                 ? `id: ${parsed.id} ✓`
@@ -315,18 +308,18 @@ export default function AboutVideosCard() {
               type="button"
               aria-pressed={ratio === r}
               onClick={() => setRatio(r)}
-              className={`btn btn-sm ${ratio === r ? "btn-on" : "btn-ghost"}`}
+              className={`kit-btn kit-btn-sm ${ratio === r ? "is-on" : "kit-btn-second"}`}
             >
               {r === "9/16" ? "portrait" : "landscape"}
             </button>
           ))}
         </div>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={add}>+ add</button>
+        <button type="button" className="kit-btn kit-btn-second kit-btn-sm" onClick={add}>+ add</button>
       </div>
       {err && <p style={{ fontSize: ".8rem", color: "var(--err)", margin: "4px 0 0" }}>{err}</p>}
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10 }}>
-        <button type="button" className="btn btn-gold btn-sm" disabled={busy} onClick={saveList}
+        <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled={busy} onClick={saveList}
           style={busy ? { opacity: 0.5 } : undefined}>
           {busy ? "Saving…" : "Save the videos"}
         </button>

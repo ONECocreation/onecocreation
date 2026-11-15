@@ -144,7 +144,7 @@ export default function SiteChatCard() {
               aria-pressed={value === "on"}
               aria-label={`${r.title} · chat currently ${value === "on" ? "on" : "hidden"}`}
               onClick={() => toggle(slug)}
-              className={`btn btn-sm ${value === "on" ? "btn-on" : "btn-ghost"}`}
+              className={`kit-btn kit-btn-sm ${value === "on" ? "is-on" : "kit-btn-second"}`}
             >
               {value === "on" ? "ON" : "HIDDEN"}
             </button>
@@ -158,7 +158,7 @@ export default function SiteChatCard() {
       })}
 
       <div style={saveRow}>
-        <button type="button" className="btn btn-gold btn-sm" disabled={busy || !dirty} onClick={save}>
+        <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled={busy || !dirty} onClick={save}>
           {busy ? "Saving…" : "Save to apply"}
         </button>
         {note && <span style={note.startsWith("saved") ? noteOk : noteErr}>{note}</span>}

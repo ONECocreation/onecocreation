@@ -186,7 +186,7 @@ export default function SiteRoom() {
               type="button"
               aria-pressed={config.meeting.rail === m.key}
               onClick={() => setConfig({ ...config, meeting: { ...config.meeting, rail: m.key } })}
-              className={`btn btn-sm ${config.meeting.rail === m.key ? "btn-on" : "btn-ghost"}`}
+              className={`kit-btn kit-btn-sm ${config.meeting.rail === m.key ? "is-on" : "kit-btn-second"}`}
             >
               {m.label}
             </button>
@@ -205,7 +205,7 @@ export default function SiteRoom() {
           <div style={{ flex: 1, minWidth: 220 }}>
             <b style={{ fontSize: ".9rem" }}>Jitsi domain</b>
             <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: where the Jitsi rooms open; prefilled with this site&apos;s own</span>
-            <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
+            <div style={{ fontSize: ".75rem", color: "var(--muted)", marginTop: 4 }}>
               room name pattern (read-only): each session opens at <code>{config.meeting.jitsiDomain}/&lt;booking id&gt;</code>: 
               the booking&apos;s own id, never a name you have to invent
             </div>
@@ -223,7 +223,7 @@ export default function SiteRoom() {
           <div style={{ flex: 1, minWidth: 220 }}>
             <b style={{ fontSize: ".9rem" }}>Studio room prefix</b>
             <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: defaults to the site&apos;s own name</span>
-            <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
+            <div style={{ fontSize: ".75rem", color: "var(--muted)", marginTop: 4 }}>
               guests get <code>?room={config.meeting.vdoRoomPrefix || "prefix"}-&lt;booking&gt;</code>: a new session&apos;s room name starts with this prefix
             </div>
           </div>
@@ -240,7 +240,7 @@ export default function SiteRoom() {
           <div style={{ flex: 1, minWidth: 220 }}>
             <b style={{ fontSize: ".9rem" }}>Studio host</b>
             <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: where the VDO rooms open; prefilled with this site&apos;s own studio</span>
-            <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
+            <div style={{ fontSize: ".75rem", color: "var(--muted)", marginTop: 4 }}>
               a bare host only, no <code>https://</code>, no path, every guest/push/director link on this rail opens at{" "}
               <code>{config.meeting.vdoHost || "host"}</code>
             </div>
@@ -259,7 +259,7 @@ export default function SiteRoom() {
           <div style={{ flex: 1, minWidth: 220 }}>
             <b style={{ fontSize: ".9rem" }}>Standing meeting link</b>
             <span style={{ fontSize: ".78rem", color: "var(--muted)" }}>: Zoom, Webex, anything; a new session defaults to this link</span>
-            <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
+            <div style={{ fontSize: ".75rem", color: "var(--muted)", marginTop: 4 }}>
               choosing this rail already allows &quot;any link&quot; per session: there&apos;s no separate switch to flip
             </div>
           </div>
@@ -275,7 +275,7 @@ export default function SiteRoom() {
       )}
 
       <div className="kit-srow-save">
-        <button type="button" className="btn btn-sm" disabled={busy} onClick={save}
+        <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled={busy} onClick={save}
           style={busy ? { opacity: 0.5 } : undefined}>
           {busy ? "Saving…" : "Save the switches"}
         </button>

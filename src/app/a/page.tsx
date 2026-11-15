@@ -48,10 +48,10 @@ async function TipJarsCard({ banner = false }: { banner?: boolean }) {
         <span key={jar} style={{ fontSize: ".8rem", color: "var(--muted, #9a8fae)" }}>
           {JAR_LABELS[jar]}{" "}
           <b style={{ color: "var(--gold-deep, #d9b24e)" }}>{ledger.totals[jar].settledSats.toLocaleString()}</b>
-          <span style={{ fontSize: ".68rem" }}> sats</span>
+          <span style={{ fontSize: ".75rem" }}> sats</span>
         </span>
       ))}
-      <span style={{ marginLeft: "auto", fontSize: ".68rem", textTransform: "uppercase", letterSpacing: ".08em", color: "var(--gold-deep, #d9b24e)" }}>
+      <span style={{ marginLeft: "auto", fontSize: ".75rem", textTransform: "uppercase", letterSpacing: ".08em", color: "var(--gold-deep, #d9b24e)" }}>
         the books
       </span>
     </Link>

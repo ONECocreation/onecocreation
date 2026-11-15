@@ -54,7 +54,7 @@ export default function BrandDesk() {
         {/* p5 Deep: "ground shade -- band backgrounds"; p3 Soft: "warm
             secondary -- kickers, highlights" */}
         <div style={{ padding: "26px 22px", background: pal.p5 }}>
-          <p style={{ margin: 0, fontSize: ".7rem", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: pal.p3 }}>
+          <p style={{ margin: 0, fontSize: ".75rem", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: pal.p3 }}>
             {cartridge.copy.tagline}
           </p>
           <h2 style={{ margin: "6px 0 0", fontSize: "1.4rem", color: "#fff", fontFamily: cartridge.fonts.display }}>
@@ -68,17 +68,17 @@ export default function BrandDesk() {
         <div style={{ padding: 18, background: "var(--panel, #fff)" }}>
           <div style={{ border: `1.5px solid ${pal.p2}`, borderRadius: 12, padding: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <span style={{ flex: 1, minWidth: 160, fontSize: ".85rem" }}>A card, edged in the Mid slot.</span>
-            <span style={{ borderRadius: 999, padding: "3px 10px", fontSize: ".66rem", fontWeight: 700, background: pal.p4, color: "#141021" }}>
+            <span style={{ borderRadius: 999, padding: "3px 10px", fontSize: ".75rem", fontWeight: 700, background: pal.p4, color: "#141021" }}>
               Counter
             </span>
-            <button type="button" className="btn btn-sm" style={{ background: pal.p1, color: "#2E0E1D", border: "none", fontWeight: 700 }}>
+            <button type="button" className="kit-btn kit-btn-main kit-btn-sm" style={{ background: pal.p1, color: "#2E0E1D", border: "none", fontWeight: 700 }}>
               Book now
             </button>
           </div>
         </div>
       </div>
 
-      <p style={{ fontSize: ".72rem", color: "var(--muted)", margin: "8px 0 0", maxWidth: 640 }}>
+      <p style={{ fontSize: ".75rem", color: "var(--muted)", margin: "8px 0 0", maxWidth: 640 }}>
         The header above this desk and the sign-in below are the site&apos;s own. They wear the
         cartridge, not these five slots (one brand, one cartridge; only Style-built pages draw
         from p1 to p5).
@@ -90,7 +90,11 @@ export default function BrandDesk() {
 
       {/* ── the real front door ── */}
       <SectionHead label="The real front door" />
-      <div style={{ border: "1px solid var(--glass-edge)", borderRadius: 16, overflow: "hidden", maxWidth: 440 }}>
+      {/* data-public-sample (block 975,990): the public sign-in sheet, shown
+          exactly as /login shows it, so the /a phone walk
+          (scripts/admin-walk.cjs) leaves its field and type to the public page
+          standard rather than the operator rooms' rules */}
+      <div style={{ border: "1px solid var(--glass-edge)", borderRadius: 16, overflow: "hidden", maxWidth: 440 }} data-public-sample="">
         {/* TASK-185 Phase B: LoginPanel is retired — the one door is the
             sheet, mounted here exactly as /login mounts it */}
         <DoorSheet mount="page" />

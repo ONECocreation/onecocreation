@@ -219,7 +219,7 @@ function Mark({ mark }: { mark: RowMark }) {
   const base: React.CSSProperties = {
     display: "inline-flex", alignItems: "center", justifyContent: "center",
     width: 15, height: 15, borderRadius: 4, flex: "0 0 auto",
-    fontSize: ".7rem", fontWeight: 700, lineHeight: 1, transform: "translateY(2px)",
+    fontSize: ".75rem", fontWeight: 700, lineHeight: 1, transform: "translateY(2px)",
   };
   if (mark === "check")
     return <span aria-label="verified" style={{ ...base, color: "var(--ok)", border: "1.5px solid var(--ok)" }}>✓</span>;
@@ -277,8 +277,8 @@ function SquareVaultForm({
     <div style={{ marginTop: 6 }}>
       {name === "environment" ? (
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <button className="btn btn-sm" disabled={busy} onClick={() => save("sandbox")}>Sandbox</button>
-          <button className="btn btn-sm" disabled={busy} onClick={() => save("production")}>Production</button>
+          <button className="kit-btn kit-btn-main kit-btn-sm" disabled={busy} onClick={() => save("sandbox")}>Sandbox</button>
+          <button className="kit-btn kit-btn-main kit-btn-sm" disabled={busy} onClick={() => save("production")}>Production</button>
         </div>
       ) : (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -291,7 +291,7 @@ function SquareVaultForm({
             className="console-field" style={{ ...field, flex: "1 1 260px", fontFamily: "monospace" }}
           />
           <button
-            className="btn btn-sm"
+            className="kit-btn kit-btn-main kit-btn-sm"
             onClick={() => save(value.trim() || defaultValue || "")}
             disabled={busy || !(value.trim() || defaultValue)}
           >
@@ -316,7 +316,7 @@ function SquareRow({
     <div style={{ padding: "8px 0", borderBottom: "1px solid rgba(139,118,196,.14)" }}>
       <div style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
         <Mark mark={row.mark} />
-        <code style={{ fontSize: ".72rem", letterSpacing: ".06em" }}>{row.envName}</code>
+        <code style={{ fontSize: ".75rem", letterSpacing: ".06em" }}>{row.envName}</code>
         <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>
           {row.where}
           {row.where === "in the vault" && row.savedAt ? ` · saved ${day(row.savedAt)}` : ""}
@@ -327,7 +327,7 @@ function SquareRow({
       </div>
       {row.canPaste && (
         <div style={{ marginLeft: 23, marginTop: 4 }}>
-          <button className="btn btn-ghost btn-sm" onClick={() => setOpen((o) => !o)}>
+          <button className="kit-btn kit-btn-second kit-btn-sm" onClick={() => setOpen((o) => !o)}>
             {open ? "Keep it unset for now" : "Set it here instead"}
           </button>
           {open && (
@@ -405,7 +405,7 @@ function SquareSection() {
         {sourceLine && <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>{sourceLine}</span>}
         {data && !reason && (
           <>
-            <button className="btn btn-sm" disabled={testBusy || !data.configured} onClick={testConnection}>
+            <button className="kit-btn kit-btn-main kit-btn-sm" disabled={testBusy || !data.configured} onClick={testConnection}>
               {testBusy ? "Testing…" : "Test the connection"}
             </button>
             {!data.configured && (
@@ -531,7 +531,7 @@ function StripeRow({
         {saved ? "saved: never shown back, never in an email" : "not set: the rail will need it once built"}
       </div>
       <div style={{ marginLeft: 23, marginTop: 4 }}>
-        <button className="btn btn-ghost btn-sm" onClick={() => setOpen((o) => !o)}>
+        <button className="kit-btn kit-btn-second kit-btn-sm" onClick={() => setOpen((o) => !o)}>
           {open ? "Close" : saved ? "Replace it" : "Set it here instead"}
         </button>
         {open && (
@@ -544,7 +544,7 @@ function StripeRow({
               placeholder={placeholder}
               className="console-field" style={{ ...field, flex: "1 1 220px", fontFamily: "monospace" }}
             />
-            <button className="btn btn-sm" onClick={save} disabled={busy || !value.trim()}>
+            <button className="kit-btn kit-btn-main kit-btn-sm" onClick={save} disabled={busy || !value.trim()}>
               {busy ? "Saving…" : "Save to the vault"}
             </button>
           </div>
@@ -685,7 +685,7 @@ export function RailSwitchView({
         aria-label={`${RAIL_LABEL[railKey]} rail: currently ${on ? "on" : "off"} for visitors`}
         disabled={busy || dark}
         onClick={onFlip}
-        className={`btn btn-sm ${on ? "btn-on" : "btn-ghost"}`}
+        className={`kit-btn kit-btn-sm ${on ? "is-on" : "kit-btn-second"}`}
         style={dark ? { opacity: 0.45, cursor: "not-allowed" } : undefined}
       >
         {busy ? "…" : on ? "ON" : "OFF"}

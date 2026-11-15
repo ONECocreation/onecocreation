@@ -13,7 +13,6 @@ import CommunityDoorCard from "@/components/console/CommunityDoorCard";
 export default function SiteCommunityDoorRoom() {
   return (
     <div className="p-6" style={{ maxWidth: 860 }}>
-      <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>The Community door</h1>
       <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
         The switch is here too, for when the rows read ok.
       </p>

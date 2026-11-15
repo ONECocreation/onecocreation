@@ -50,7 +50,7 @@ export default function PeopleRoom() {
 
   return (
     <div className="p-6 text-sm" style={{ color: "var(--ink)" }}>
-      <label htmlFor="people-search" style={{ display: "block", margin: "0 0 4px 2px", fontSize: ".72rem", color: "var(--muted)" }}>
+      <label htmlFor="people-search" style={{ display: "block", margin: "0 0 4px 2px", fontSize: ".75rem", color: "var(--muted)" }}>
         Search members
       </label>
       <input id="people-search" aria-label="Search members" value={q} onChange={(e) => setQ(e.target.value)} placeholder="search members…"
@@ -63,7 +63,7 @@ export default function PeopleRoom() {
             <thead>
               <tr>
                 {["member", "door", "packages held", "sessions", "last purchase", "last sign-in", "class progress"].map((h) => (
-                  <th key={h} style={{ fontSize: ".6rem", letterSpacing: ".1em", textTransform: "uppercase",
+                  <th key={h} style={{ fontSize: ".75rem", letterSpacing: ".1em", textTransform: "uppercase",
                     color: "var(--muted)", textAlign: "left", padding: "0 10px", fontWeight: 600 }}>{h}</th>
                 ))}
               </tr>
@@ -114,7 +114,7 @@ export default function PeopleRoom() {
                       ? "linked ✓: both doors now see one member"
                       : "link failed");
                   }}
-                  className="btn btn-sm"
+                  className="kit-btn kit-btn-main kit-btn-sm"
                 >
                   LINK ACCOUNTS
                 </button>

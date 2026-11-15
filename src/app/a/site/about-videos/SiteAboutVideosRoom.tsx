@@ -12,7 +12,6 @@ import AboutVideosCard from "./AboutVideosCard";
 export default function SiteAboutVideosRoom() {
   return (
     <div className="p-6" style={{ maxWidth: 860 }}>
-      <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>Videos on About</h1>
       <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
         The playlist the About page shows. Paste a YouTube link, order the rows, save.
       </p>

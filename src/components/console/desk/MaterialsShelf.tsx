@@ -128,11 +128,11 @@ export default function MaterialsShelf({
         <a href={m.url} target="_blank" rel="noreferrer" className="desk-shelf__name">{m.name}</a>
         <Chip tone="lavender">{KIND_LABEL[m.kind]}</Chip>
         {sessionKey && (
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => toggleAttach(m)}>
+          <button type="button" className="kit-btn kit-btn-second kit-btn-sm" onClick={() => toggleAttach(m)}>
             {m.attachedTo.kind === "session" ? `For ${sessionLabel}` : "shelf: all sessions"}
           </button>
         )}
-        <button type="button" className="btn btn-ghost btn-sm" onClick={() => remove(m.id)} title="remove">✕</button>
+        <button type="button" className="kit-btn kit-btn-second kit-btn-sm" onClick={() => remove(m.id)} title="remove">✕</button>
       </li>
     );
   }
@@ -151,7 +151,7 @@ export default function MaterialsShelf({
     >
       <div className="desk-panel__head">
         <h3>Materials</h3>
-        <label className="btn btn-sm" style={{ cursor: busy || !roomSlug ? "wait" : "pointer" }}>
+        <label className="kit-btn kit-btn-main kit-btn-sm" style={{ cursor: busy || !roomSlug ? "wait" : "pointer" }}>
           {busy ? "Uploading…" : "+ upload"}
           <input
             ref={inputRef}

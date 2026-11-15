@@ -111,7 +111,7 @@ export default function CommunityDoorCard() {
           aria-label={`Community: currently ${communityOn ? "on" : "off"}`}
           disabled={busy}
           onClick={flip}
-          className={`btn btn-sm ${communityOn ? "btn-on" : "btn-ghost"}`}
+          className={`kit-btn kit-btn-sm ${communityOn ? "is-on" : "kit-btn-second"}`}
           style={busy ? { opacity: 0.5 } : undefined}
         >
           {communityOn ? "ON" : "OFF"}

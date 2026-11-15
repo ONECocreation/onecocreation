@@ -90,7 +90,7 @@ export default function TodaySummary({
           background: "rgba(231,178,195,.14)", border: "1.5px solid rgba(231,178,195,.5)", color: "var(--ink-body)",
           display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <span>⚑ couldn&apos;t load the schedule. Something may be on the books.</span>
-          <button type="button" className="btn btn-sm" style={{ minHeight: 44 }}
+          <button type="button" className="kit-btn kit-btn-main kit-btn-sm" style={{ minHeight: 44 }}
             onClick={() => router.refresh()}>
             Retry
           </button>
@@ -107,7 +107,7 @@ export default function TodaySummary({
           <span style={{ fontSize: ".85rem" }}>
             {formatSessionTime(next)} · <b>{next.serviceTitle}</b>
           </span>
-          <span style={{ marginLeft: "auto", fontSize: ".72rem", textTransform: "uppercase", letterSpacing: ".08em", color: "var(--muted)" }}>
+          <span style={{ marginLeft: "auto", fontSize: ".75rem", textTransform: "uppercase", letterSpacing: ".08em", color: "var(--muted)" }}>
             the calendar
           </span>
         </Link>

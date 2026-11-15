@@ -46,7 +46,7 @@ export default function RosterPanel({ roomSlug, roomTitle }: { roomSlug: string 
       <div className="desk-panel__head">
         <h3>Roster</h3>
         {roomSlug && (
-          <Link className="btn btn-ghost btn-sm" href={`/rooms/${roomSlug}`}>
+          <Link className="kit-btn kit-btn-second kit-btn-sm" href={`/rooms/${roomSlug}`}>
             open {roomTitle ?? "room"} live room
           </Link>
         )}

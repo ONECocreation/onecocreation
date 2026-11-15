@@ -31,8 +31,8 @@ export default function SwitchRow({
     <div className="kit-switch-row">
       <Button
         sm
-        variant="main"
-        className={on ? "btn-on" : "btn-ghost"}
+        variant="second"
+        className={on ? "is-on" : undefined}
         aria-pressed={on}
         aria-label={ariaLabel}
         disabled={disabled}

@@ -141,6 +141,24 @@ export const STUDIO_SUB_HEADS: Record<StudioSubKey, { title: string; blurb: stri
   questions: { title: "Q&A questions", blurb: "The month's questions, read and answered." },
 };
 
+/* Lumen's brief A5 (block 975,990): a Site sub-room says its OWN name in the
+   page header too (the T-622 shape), so Menu, Community door, Videos on About
+   and Room chat no longer all read "Site". Switches (/a/site itself) stays
+   "Site"; Brand already says its own name through its own room entry. The
+   titles are the side menu's own labels, so the heading and the marked row
+   read the same words. */
+export const SITE_SUB_HEADS: Partial<Record<SiteSubKey, { title: string; blurb: string }>> = {
+  menu: { title: "Menu", blurb: "The tabs across the top of the site, and the pages under each." },
+  "community-door": { title: "Community door", blurb: "What the community needs before it opens, and its switch." },
+  "about-videos": { title: "Videos on About", blurb: "The video at the top of About, and the playlist under it." },
+  chat: { title: "Room chat", blurb: "Hide the chat for a room, or turn it back on." },
+};
+
+/** A5: a back room deeper than its own room says its own name as well. */
+export const ROOM_PAGE_HEADS: Record<string, { title: string; blurb: string }> = {
+  "/a/money/test-join": { title: "Test join", blurb: "Join a monthly membership with a real card, the way a member does." },
+};
+
 export function studioSubForPath(pathname: string): StudioSubKey | null {
   const sub = STUDIO_SUBS.find((x) => pathname === x.href || pathname.startsWith(`${x.href}/`));
   return sub ? sub.key : null;
@@ -247,9 +265,11 @@ function useStudioOpen(): [boolean, () => void] {
    whole-row toggle, Studio's small toggle) render through it, so the
    operator census keeps a single button family for this file. */
 /* TASK-586: `menu` = the two side-menu buttons (Rooms, Close) - the house
-   ghost pill, one size, through this same single button. */
+   ghost pill, one size, through this same single button. Block 975,990 (A7):
+   on the kit family now (kit-btn-second, the set's ghost pill), not the old
+   btn family; the shell wears .kit-bset so the set's sizes reach them. */
 function RailToggle({ menu, ...props }: React.ComponentProps<"button"> & { menu?: boolean }) {
-  return <button type="button" {...props} className={menu ? `btn btn-ghost btn-sm ${props.className ?? ""}`.trim() : props.className} />;
+  return <button type="button" {...props} className={menu ? `kit-btn kit-btn-second kit-btn-sm ${props.className ?? ""}`.trim() : props.className} />;
 }
 
 /* TASK-586 (Admiral, forge set oc-t552-letters-room-r4, phone shot of
@@ -322,9 +342,12 @@ function StudioRoomAccordion({ active, title, href, pathname }: { active: boolea
 }
 
 function SiteRoomAccordion({ active, title, pathname }: { active: boolean; title: string; pathname: string }) {
-  const [open, toggle] = useSiteAccordionOpen();
+  const [openByHand, toggle] = useSiteAccordionOpen();
 
   const currentSub = siteSubForPath(pathname);
+  /* A5 (block 975,990): in one of Site's rooms the group is always open, so the
+     marked row shows - the way Studio's group already behaves. */
+  const open = openByHand || currentSub !== null;
   return (
     <div>
       <RailToggle
@@ -341,7 +364,7 @@ function SiteRoomAccordion({ active, title, pathname }: { active: boolean; title
         }}
       >
         {title}
-        <span aria-hidden="true" style={{ fontSize: ".68rem" }}>{open ? "▾" : "▸"}</span>
+        <span aria-hidden="true" style={{ fontSize: ".75rem" }}>{open ? "▾" : "▸"}</span>
       </RailToggle>
       {open && (
         <div id="mgmt-site-subs">
@@ -365,7 +388,7 @@ function SiteRoomAccordion({ active, title, pathname }: { active: boolean; title
   );
 }
 
-export default function SiteConsoleShell({ children }: { children: React.ReactNode }) {
+export default function SiteConsoleShell({ children, operator }: { children: React.ReactNode; operator?: string | null }) {
   const pathname = usePathname() ?? "/a";
   const current = roomForPath(pathname);
   // TASK-545: the weekly reading lists under Studio, so its page heading says
@@ -373,7 +396,12 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
   const headRoom =
     (studioSubForPath(pathname) !== null && CONSOLE_ROOMS.find((r) => r.key === "studio")) || current;
   const subKey = studioSubForPath(pathname);
-  const subHead = subKey ? STUDIO_SUB_HEADS[subKey] : null;
+  const siteSubKey = siteSubForPath(pathname);
+  const subHead =
+    (subKey ? STUDIO_SUB_HEADS[subKey] : null) ??
+    (siteSubKey ? SITE_SUB_HEADS[siteSubKey] ?? null : null) ??
+    ROOM_PAGE_HEADS[pathname] ??
+    null;
   // House furniture stays on the house's bridge. An artist running their own
   // shop has no use for a SIMULATOR or a FLEET MAP, and showing them would
   // make their admin feel like someone else's software.
@@ -434,9 +462,10 @@ export default function SiteConsoleShell({ children }: { children: React.ReactNo
 
   return (
     <div className="mgmt-ground">
-      <SiteChromeHeader />
+      {/* A6 (block 975,990): the header knows the operator is signed in */}
+      <SiteChromeHeader operator={operator ?? null} />
 
-      <div className="mgmt-wrap mgmt-shell">
+      <div className="mgmt-wrap mgmt-shell kit-bset">
         {/* the LEFT RAIL — wireframe v2: tabs down the side, stage beside */}
         {/* TASK-586: phone only (CSS hides it above 760px) - the one door to the side menu */}
         <RailToggle

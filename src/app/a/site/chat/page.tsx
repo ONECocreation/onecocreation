@@ -30,7 +30,6 @@ export default async function SiteChatPage() {
   }
   return (
     <div className="p-6" style={{ maxWidth: 860 }}>
-      <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px" }}>Room chat</h1>
       <p style={{ fontSize: ".82rem", color: "var(--muted)", margin: "0 0 6px", maxWidth: 640 }}>
         Hide the chat fully for a room, or turn it back on. The same switch works live,
         mid-session; open rooms follow within about one poll after you Save.

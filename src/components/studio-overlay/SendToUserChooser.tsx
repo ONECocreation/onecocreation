@@ -80,7 +80,7 @@ export default function SendToUserChooser({ roomTitle }: { roomTitle?: string })
         <p style={{ margin: "0 0 6px", fontSize: ".78rem", color: "var(--muted)" }}>
           Send this guest door to a member
         </p>
-        <button id="send-to-user-open" type="button" className="btn btn-sm btn-ghost" onClick={load}>
+        <button id="send-to-user-open" type="button" className="kit-btn kit-btn-sm kit-btn-second" onClick={load}>
           Send to user
         </button>
       </div>
@@ -103,10 +103,10 @@ export default function SendToUserChooser({ roomTitle }: { roomTitle?: string })
             the guest door ({roomTitle ?? "the studio"}) goes to <b>{picked}</b>, one letter, just them
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <button type="button" className="btn btn-sm" disabled={busy} onClick={send}>
+            <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled={busy} onClick={send}>
               {busy ? "sending…" : "Send the letter"}
             </button>
-            <button type="button" className="btn btn-sm btn-ghost" disabled={busy} onClick={() => setPicked(null)}>
+            <button type="button" className="kit-btn kit-btn-sm kit-btn-second" disabled={busy} onClick={() => setPicked(null)}>
               choose someone else
             </button>
           </div>
@@ -135,7 +135,7 @@ export default function SendToUserChooser({ roomTitle }: { roomTitle?: string })
               ))
             )}
           </div>
-          <button type="button" className="btn btn-sm btn-ghost" onClick={() => { setOpen(false); setQ(""); setNote(null); }}>
+          <button type="button" className="kit-btn kit-btn-sm kit-btn-second" onClick={() => { setOpen(false); setQ(""); setNote(null); }}>
             not now
           </button>
         </>

@@ -190,7 +190,7 @@ export default function ReadingScheduleCard({ onSwitchValue }: { onSwitchValue?:
       <div style={row}>
         <div style={{ flex: 1, minWidth: 220 }}>
           <b style={{ fontSize: ".9rem" }}>Which time zone</b>
-          <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 4 }}>
+          <div style={{ fontSize: ".75rem", color: "var(--muted)", marginTop: 4 }}>
             The site prints the zone as Mountain Time and handles the clock change.
           </div>
         </div>
@@ -226,7 +226,7 @@ export default function ReadingScheduleCard({ onSwitchValue }: { onSwitchValue?:
       {err && <p style={{ fontSize: ".8rem", color: "var(--err)", margin: "4px 0 0" }}>{err}</p>}
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 18 }}>
-        <button type="button" className="btn btn-gold btn-sm" disabled={busy} onClick={save}
+        <button type="button" className="kit-btn kit-btn-main kit-btn-sm" disabled={busy} onClick={save}
           style={busy ? { opacity: 0.5 } : undefined}>
           {busy ? "Saving…" : "Save the reading time"}
         </button>

@@ -1,0 +1,26 @@
+{
+  "_doc": [
+    "The /a rooms the phone walk visits (scripts/admin-walk.cjs). Hand-declared, like console-matrix.routes.json: a new operator room is a deliberate edit here.",
+    "The fifteen rooms in the operator's own menu, plus the two back rooms that render (Brand, Test join). /a/live lands on Studio and the eleven house rooms land on Home, so they are not walked twice.",
+    "name = the heading the room must say (A5). private: true = the room shows member data (People shows member email addresses). The walk measures it but never takes its picture."
+  ],
+  "rooms": [
+    { "route": "/a", "name": "Home" },
+    { "route": "/a/booking", "name": "Sessions & hours" },
+    { "route": "/a/studio", "name": "Studio" },
+    { "route": "/a/site/reading", "name": "Weekly reading" },
+    { "route": "/a/site/replays", "name": "Replays" },
+    { "route": "/a/letters/questions", "name": "Q&A questions" },
+    { "route": "/a/letters", "name": "Letters" },
+    { "route": "/a/people", "name": "People", "private": true },
+    { "route": "/a/money", "name": "Money" },
+    { "route": "/a/money/test-join", "name": "Test join" },
+    { "route": "/a/store", "name": "Items" },
+    { "route": "/a/site", "name": "Site" },
+    { "route": "/a/site/menu", "name": "Menu" },
+    { "route": "/a/site/about-videos", "name": "Videos on About" },
+    { "route": "/a/site/chat", "name": "Room chat" },
+    { "route": "/a/site/community-door", "name": "Community door" },
+    { "route": "/a/brand", "name": "Brand" }
+  ]
+}

@@ -99,13 +99,13 @@ function GradientLab({ hexes, shuffleN, onShuffle }: {
   const chip: React.CSSProperties = {
     position: "absolute", left: 10, bottom: 8,
     background: "rgba(12,10,22,.85)", color: "#F4ECFF", /* S2: pinned — needs a ruling (chip stays dark over both panes' gradients) */
-    fontFamily: MONO, fontSize: 11.5, fontWeight: 700,
+    fontFamily: MONO, fontSize: 12, fontWeight: 700,
     padding: "3px 9px", borderRadius: 7, letterSpacing: ".04em",
   };
   return (
     <div style={{ marginTop: 26 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-        <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+        <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: ".18em",
           textTransform: "uppercase", fontWeight: 700, color: "var(--ink-strong)" }}>
           Gradient lab
         </span>
@@ -157,7 +157,7 @@ function ThemePane({ variant, hexes, dawnOverrides, onSwatch, onClearDawn, shuff
         backgroundColor: isDawn ? "#fcf7f0" : "#141021" /* S2: pinned — needs a ruling */ }}
     >
       <div style={{ padding: "16px 18px 30px" }}>
-        <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".2em", fontWeight: 800,
+        <div style={{ fontFamily: MONO, fontSize: 12, letterSpacing: ".2em", fontWeight: 800,
           textTransform: "uppercase", color: "var(--ink-strong)", marginBottom: 12 }}>
           {isDawn ? "☀ Dawn — light theme" : "🌙 Night — dark theme"}
         </div>
@@ -192,7 +192,7 @@ function ThemePane({ variant, hexes, dawnOverrides, onSwatch, onClearDawn, shuff
                   color: "var(--ink-strong)", marginTop: 5 }}>
                   {SLOT_LABELS[k]}{overridden ? " •" : ""}
                 </div>
-                <div style={{ fontFamily: MONO, fontSize: 11, color: "var(--ink-body)" }}>
+                <div style={{ fontFamily: MONO, fontSize: 12, color: "var(--ink-body)" }}>
                   {hexes[k]}
                 </div>
               </div>
@@ -393,7 +393,7 @@ export function BrandPaletteDesk({ bp }: { bp: BrandPaletteApi }) {
               <div style={{ flex: 1, minWidth: 220 }}>
                 <b style={{ fontSize: ".9rem", textTransform: "capitalize" }}>{SLOT_LABELS[k]}</b>
                 <span style={{ fontSize: ".78rem", color: "var(--muted)" }}> ({k}) — {SLOT_HINTS[k]}</span>
-                <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 3 }}>
+                <div style={{ fontSize: ".75rem", color: "var(--muted)", marginTop: 3 }}>
                   {grades.map((g) => (
                     <span key={g.label} style={{ marginRight: 16, color: g.ok ? "var(--ok)" : "var(--err)" }}>
                       {g.label}: {g.ratio.toFixed(2)}:1{g.ok ? "" : " — too light"}
@@ -410,7 +410,7 @@ export function BrandPaletteDesk({ bp }: { bp: BrandPaletteApi }) {
 
       {/* ── the top faces ── */}
       <div style={{ marginTop: 18 }}>
-        <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+        <div style={{ fontFamily: MONO, fontSize: 12, letterSpacing: ".18em",
           textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
           color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */ }}>
           The top faces
@@ -470,7 +470,7 @@ export function BrandPaletteDesk({ bp }: { bp: BrandPaletteApi }) {
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
         <button
           type="button"
-          className="btn btn-gold btn-sm"
+          className="kit-btn kit-btn-main kit-btn-sm"
           disabled={anyBusy || !anyDirty}
           onClick={saveAll}
           title={anyDirty ? "save the colours and faces to the brand — the pages draw from them" : "no unsaved changes"}
@@ -478,7 +478,7 @@ export function BrandPaletteDesk({ bp }: { bp: BrandPaletteApi }) {
         >
           {anyBusy ? "Saving…" : "Save"}
         </button>
-        <button type="button" className="btn btn-ghost btn-sm" disabled={anyBusy} onClick={resetAll}
+        <button type="button" className="kit-btn kit-btn-second kit-btn-sm" disabled={anyBusy} onClick={resetAll}
           title="back to the cartridge default — colours AND faces">
           Reset to cartridge default
         </button>
@@ -1056,7 +1056,7 @@ function IdentityRoom() {
       textDecoration: "underline" };
     return (
       <div style={{ marginTop: 20 }}>
-        <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+        <div style={{ fontFamily: MONO, fontSize: 12, letterSpacing: ".18em",
           textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
           color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>
           Voices of the field
@@ -1131,7 +1131,7 @@ function IdentityRoom() {
         border: "1px solid var(--oc-structural-edge, rgba(139,118,196,.35))",
         background: "var(--puck-color-surface)" /* S2: pinned — the ruling landed (S22 A1): the literal WAS night --puck-color-surface — a solid ground under every word (doctrine) */ }}
     >
-      <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".2em", fontWeight: 800,
+      <div style={{ fontFamily: MONO, fontSize: 12, letterSpacing: ".2em", fontWeight: 800,
         textTransform: "uppercase", color: "var(--ink-strong)" /* S2: pinned — the ruling landed (S22): the literal WAS night --ink-strong */, marginBottom: 6 }}>
         ✦ The dressing room
       </div>
@@ -1158,7 +1158,7 @@ function IdentityRoom() {
         <div>
           {/* the cartridge/theme selection stays at the top of the room, one line */}
           <div style={{ marginBottom: 22 }}>
-            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+            <div style={{ fontFamily: MONO, fontSize: 12, letterSpacing: ".18em",
               textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
               color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>
               Cartridge
@@ -1171,7 +1171,7 @@ function IdentityRoom() {
           </div>
 
           {/* the art, page by page (TASK-182) */}
-          <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+          <div style={{ fontFamily: MONO, fontSize: 12, letterSpacing: ".18em",
             textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
             color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */ }}>
             The art, page by page
@@ -1187,7 +1187,7 @@ function IdentityRoom() {
                   border: "1px solid var(--oc-structural-edge, rgba(139,118,196,.35))",
                   borderRadius: 14, padding: "14px 16px 16px" }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 2 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+                  <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: ".18em",
                     textTransform: "uppercase", fontWeight: 700,
                     color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3) */ }}>
                     {card.page}
@@ -1219,7 +1219,7 @@ function IdentityRoom() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 40px", alignItems: "flex-start", marginTop: 22 }}>
             {WORD_GROUPS.map((g) => (
               <div key={g.title} style={{ flex: "1 1 420px", minWidth: 0 }}>
-                <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+                <div style={{ fontFamily: MONO, fontSize: 12, letterSpacing: ".18em",
                   textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
                   color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>
                   {g.title}
@@ -1232,7 +1232,7 @@ function IdentityRoom() {
               </div>
             ))}
             <div style={{ flex: "1 1 420px", minWidth: 0 }}>
-              <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em",
+              <div style={{ fontFamily: MONO, fontSize: 12, letterSpacing: ".18em",
                 textTransform: "uppercase", fontWeight: 700, marginBottom: 2,
                 color: "var(--oc-gold-text, #EBCB77)" /* S2: gold law — the ruling landed (S22 B3): night literal is the fallback, dawn drinks the cartridge's gold ink */ }}>
                 Nav accent

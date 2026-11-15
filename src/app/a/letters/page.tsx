@@ -741,7 +741,7 @@ export default function LettersRoom() {
         </div>
         {previewOpen === key && (
           <div className="w-full shrink-0 lg:w-[380px]" style={{ ...glassCard, padding: 0, overflow: "hidden" }}>
-            <div style={{ padding: "6px 10px", fontSize: ".62rem", textTransform: "uppercase", letterSpacing: ".06em",
+            <div style={{ padding: "6px 10px", fontSize: ".75rem", textTransform: "uppercase", letterSpacing: ".06em",
               color: "var(--info)", borderBottom: "1px solid var(--glass-edge)" }}>
               preview: as the email renders
             </div>

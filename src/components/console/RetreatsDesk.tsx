@@ -30,7 +30,7 @@ const BLANK: Retreat = {
 };
 
 const fieldLabel: React.CSSProperties = {
-  display: "block", fontSize: ".62rem", letterSpacing: ".1em", textTransform: "uppercase",
+  display: "block", fontSize: ".75rem", letterSpacing: ".1em", textTransform: "uppercase",
   color: "var(--muted)", margin: "10px 0 3px",
 };
 
@@ -97,19 +97,13 @@ export default function RetreatsDesk() {
               </span>
               {r.status === "live" ? <Chip tone="teal">live</Chip> : <Chip tone="grey">hidden</Chip>}
               <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-                <a href={`/retreats/${r.id}`} target="_blank"
-                  style={{ background: "none", border: 0, fontSize: ".68rem", fontWeight: 700,
-                    textTransform: "uppercase", letterSpacing: ".05em", color: "var(--muted)", padding: "6px 4px" }}>
+                <a href={`/retreats/${r.id}`} target="_blank" className="kit-btn kit-btn-quiet">
                   view
                 </a>
-                <button onClick={() => { setDraft(r); setErr(""); }}
-                  style={{ background: "none", border: 0, cursor: "pointer", fontFamily: "inherit", fontSize: ".68rem",
-                    fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color: "var(--info)", padding: "6px 4px" }}>
+                <button type="button" className="kit-btn kit-btn-quiet" onClick={() => { setDraft(r); setErr(""); }}>
                   edit
                 </button>
-                <button onClick={() => remove(r)} disabled={busy}
-                  style={{ background: "none", border: 0, cursor: "pointer", fontFamily: "inherit", fontSize: ".68rem",
-                    fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color: "var(--err)", padding: "6px 4px" }}>
+                <button type="button" className="kit-btn kit-btn-quiet is-danger" onClick={() => remove(r)} disabled={busy}>
                   remove
                 </button>
               </span>
@@ -122,7 +116,7 @@ export default function RetreatsDesk() {
       </ul>
 
       {!draft ? (
-        <button className="btn btn-sm" style={{ marginTop: 10 }} onClick={() => { setDraft(BLANK); setErr(""); }}>
+        <button className="kit-btn kit-btn-main kit-btn-sm" style={{ marginTop: 10 }} onClick={() => { setDraft(BLANK); setErr(""); }}>
           + New retreat
         </button>
       ) : (
@@ -182,12 +176,12 @@ export default function RetreatsDesk() {
             className="console-field" style={{ ...field, width: "100%", minHeight: 64, resize: "vertical" }} />
           {err && <p style={{ color: "var(--err)", fontSize: ".8rem", margin: "8px 0 0" }}>{err}</p>}
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <button className="btn btn-sm" onClick={save} disabled={busy}>
+            <button className="kit-btn kit-btn-main kit-btn-sm" onClick={save} disabled={busy}>
               {busy ? "Saving…" : draft.status === "live" ? "Save & open the doors" : "Save"}
             </button>
-            <button className="btn btn-ghost btn-sm" onClick={() => setDraft(null)}>Close</button>
+            <button className="kit-btn kit-btn-second kit-btn-sm" onClick={() => setDraft(null)}>Close</button>
           </div>
-          <p style={{ fontSize: ".72rem", color: "var(--muted)", margin: "10px 0 0" }}>
+          <p style={{ fontSize: ".75rem", color: "var(--muted)", margin: "10px 0 0" }}>
             a deposit seat counts as a held seat. The remainder settles by letter, your hand for now.
           </p>
         </div>

@@ -86,7 +86,7 @@ export default function DeliverablesPanel() {
         {checks.map((c) => (
           <div key={c.id} style={row}>
             <b style={{ fontSize: ".85rem", flex: 1 }}>{c.title}</b>
-            <span style={{ fontSize: ".72rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>
+            <span style={{ fontSize: ".75rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>
               {KIND_WORD[c.kind]}
             </span>
             <span style={{ fontSize: ".76rem", color: "var(--muted)" }}>{c.label ?? "no label"}</span>
@@ -94,7 +94,7 @@ export default function DeliverablesPanel() {
           </div>
         ))}
       </div>
-      <button type="button" className="btn btn-ghost btn-sm" onClick={recheck} disabled={checking} style={{ marginTop: 8 }}>
+      <button type="button" className="kit-btn kit-btn-second kit-btn-sm" onClick={recheck} disabled={checking} style={{ marginTop: 8 }}>
         {checking ? "checking…" : "Re-check"}
       </button>
     </>
