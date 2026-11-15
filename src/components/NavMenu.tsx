@@ -153,11 +153,15 @@ export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
   // opens /classes only while the Classes switch is ON; OFF, the tab opens
   // its first row instead, the same way Store already does when `store` is
   // OFF (just above).
+  // Block 976,027 (desk card 976022, the Admiral's answer A): Contact gets
+  // its own row right after 11:11, so /contact keeps a menu door now that
+  // the 11:11 row opens her YouTube lives.
   const community: NonNullable<MenuItem["subs"]> = [
     { label: "Read with Love", href: READING_PAGE_PATH },
     { label: "Replays", href: "/replays" },
     ...(READING_ROOM_PATH ? [{ label: "Heart Field", href: READING_ROOM_PATH }] : []),
     { label: "11:11 Live with Love", href: LIVE_WITH_LOVE_URL },
+    { label: "Contact", href: "/contact" },
     { label: "Free meditation", href: "/meditation" },
     ...(s?.features.classes ? [{ label: "Classes", href: "/classes" }] : []),
     ...(s?.features.news ? [{ label: "News & letters", href: "/news" }] : []),
