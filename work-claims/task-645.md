@@ -33,3 +33,4 @@ a touched file. The twelve hand-copied tops stay as they are.
 - `tests/menu-doors-645.test.ts` (new, Part B.3)
 - `tests/design-drift.ceilings.json` (only if a new file needs its record; never a raise)
 - `src/app/house.css` (fix A, block 976,001: the tier pills on one row on a phone, `nav.tier-pills` / `a.tier-pill`; the Admiral's pick from the forge card 11)
+- `src/components/sections.tsx` (T-645 1c, block 976,007: `Packages({ gateNote })`, so /packages' hand-built fallback drops the "How the gate works:" note and the home page keeps it)
