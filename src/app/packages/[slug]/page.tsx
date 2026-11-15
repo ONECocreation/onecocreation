@@ -227,7 +227,7 @@ export default async function TierPage({
               )}
               {page.oneTime && oneTimeLive && (
                 <div style={{ color: "var(--muted)", fontSize: ".92rem" }}>
-                  or ${page.oneTime.usd} — {page.oneTime.label}
+                  or ${page.oneTime.usd} — {page.oneTime.label}{page.oneTime.line2 && <> — {page.oneTime.line2}</>}
                 </div>
               )}
               <p style={{ fontWeight: 600, color: "var(--ink-strong)", marginTop: 14 }}>{page.cadence}</p>
@@ -307,10 +307,11 @@ export default async function TierPage({
                       ghost
                       itemId={page.oneTime.itemId}
                       label={`YES! $${page.oneTime.usd} — ${page.oneTime.label}`}
+                      line2={page.oneTime.line2}
                     />
                   ) : (
                     <Link className="btn btn-ghost" style={{ textAlign: "center" }} href="/support">
-                      YES! ${page.oneTime.usd} — {page.oneTime.label}
+                      <span>YES! ${page.oneTime.usd} — {page.oneTime.label}{page.oneTime.line2 && <><br />{page.oneTime.line2}</>}</span>
                     </Link>
                   ))}
                 {upgrade && upgradeLive && (

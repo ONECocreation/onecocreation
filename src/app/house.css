@@ -168,7 +168,9 @@ section{padding:76px 0;position:relative}
    full support room'). Measured at 390: the tightest, the support room
    door, keeps 7 px inside its 256 px row. 51 px tall, over the 44 px
    thumb floor. .btn-sm keeps its own size; 481 px and up are unchanged. */
-@media(max-width:480px){.btn:not(.btn-sm){padding:16px;font-size:.95rem;letter-spacing:1px}}
+/* a short word ("YES!", "SEND") keeps a thumb-wide door on a phone: the
+   phone size holds a floor near "Back home" (Lumen, block 976,024) */
+@media(max-width:480px){.btn:not(.btn-sm){padding:16px;font-size:.95rem;letter-spacing:1px;min-width:140px}}
 /* the pop-up card (PopupHost) is 440 px wide at every width, a phone's
    room even at 1440, so its button wears the phone size everywhere:
    'Receive the meditation' broke onto two lines at 1440 too */

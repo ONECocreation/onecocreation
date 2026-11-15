@@ -39,7 +39,7 @@ describe("button marks: one size on a phone, one height in a package card", () =
   const house = src("src/app/house.css");
 
   it("the big .btn takes one smaller phone size; .btn-sm keeps its own", () => {
-    expect(house).toMatch(/@media\(max-width:480px\)\{\.btn:not\(\.btn-sm\)\{padding:16px;font-size:\.95rem;letter-spacing:1px\}\}/);
+    expect(house).toMatch(/@media\(max-width:480px\)\{\.btn:not\(\.btn-sm\)\{padding:16px;font-size:\.95rem;letter-spacing:1px;min-width:140px\}\}/);
   });
 
   it("the pop-up card's button wears the phone size at every width (the card is 440 px wide)", () => {
@@ -49,5 +49,25 @@ describe("button marks: one size on a phone, one height in a package card", () =
   it("the package card's doors share one row height while every child is a button", () => {
     expect(src("src/app/packages/[slug]/page.tsx")).toMatch(/<div className="tier-doors">/);
     expect(house).toMatch(/\.tier-doors:not\(:has\(>:not\(\.btn\)\)\)\{grid-auto-rows:1fr\}/);
+  });
+});
+
+/* The fix round (block 976,024): the Admiral's marks on the set. */
+describe("button marks, fix round", () => {
+  it("the store card's title row centres a lone title; it spreads only beside a badge", () => {
+    expect(src("src/components/store/StoreItemCard.tsx")).toMatch(
+      /justifyContent: m\.soldOut \|\| m\.comingSoon \? "space-between" : "center"/,
+    );
+  });
+
+  it("the one-week door's words are two lines in tiers-content.ts, the second dash gone", () => {
+    const t = src("src/lib/tiers-content.ts");
+    expect(t).not.toMatch(/one week — one-time purchase/);
+    expect([...t.matchAll(/oneTime: \{ label: "one week", line2: "one-time purchase", usd: (\d+)/g)].map((m) => m[1])).toEqual(["11", "22"]);
+  });
+
+  it("the door breaks with a real <br>, in one span so a flex door keeps it", () => {
+    expect(src("src/components/store/AddTierButton.tsx")).toMatch(/line2 \? <span>\{label\}<br \/>\{line2\}<\/span> : label/);
+    expect(src("src/app/packages/[slug]/page.tsx")).toMatch(/line2=\{page\.oneTime\.line2\}/);
   });
 });

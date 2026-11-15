@@ -18,8 +18,10 @@ export interface TierPage {
   heading: string;
   tagline: string;
   /** e.g. the $11 single-week door on tier A — itemId is its store item,
-   *  so the pill drops it in the basket instead of dead-ending at /support */
-  oneTime?: { label: string; usd: number; itemId?: string };
+   *  so the pill drops it in the basket instead of dead-ending at /support.
+   *  The door reads on two lines (the Admiral's marks, block 976,024):
+   *  "YES! $11 — one week", then line2 "one-time purchase" underneath. */
+  oneTime?: { label: string; line2?: string; usd: number; itemId?: string };
   cadence: string;
   paragraphs: string[];
   /** what rides in from the lower packages — named, never lettered, with
@@ -38,7 +40,7 @@ export const TIER_PAGES: TierPage[] = [
     img: "/images/weekly-intuitive.webp",
     heading: "Weekly Live Meetups",
     tagline: "The weekly rhythm — live, held, together.",
-    oneTime: { label: "one week — one-time purchase", usd: 11, itemId: "weekly-one-week" },
+    oneTime: { label: "one week", line2: "one-time purchase", usd: 11, itemId: "weekly-one-week" },
     cadence: "Meets 4 times a month",
     paragraphs: [
       "Live in Love's room, once-a-week sessions. We will explore our Clair Senses through Breath — explore tools you already have, to dive deeper into WHO YOU ARE.",
@@ -61,7 +63,7 @@ export const TIER_PAGES: TierPage[] = [
     img: "/images/observer.webp",
     heading: "The Weekly Reading",
     tagline: "Everything weekly — plus the reading that finds you.",
-    oneTime: { label: "one week — one-time purchase", usd: 22, itemId: "observer-one-week" },
+    oneTime: { label: "one week", line2: "one-time purchase", usd: 22, itemId: "observer-one-week" },
     cadence: "Weekly recording + weekly live meetup",
     paragraphs: [
       "For the one who watches and wants more to work with: a recorded reading and affirmations arrive every week, and a second live meetup deepens the practice — movement, meditation, navigation.",
