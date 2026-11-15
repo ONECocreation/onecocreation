@@ -238,4 +238,21 @@ describe("5. the row", () => {
     expect(html).toContain("Card gifts go through Square");
     expect(html).not.toContain("Bitcoin gifts travel");
   });
+
+  it("fix round: with no tip jar to give, the drawer drops the Tip the Field head and its line; Gifts of Gratitude heads the summary", async () => {
+    const { default: GiftDrawer } = await import("@/components/store/GiftDrawer");
+    const cardOnly = renderToStaticMarkup(createElement(GiftDrawer, { liveJars: [], dollarGifts: gifts }));
+    expect(cardOnly).not.toContain("Tip the Field");
+    expect(cardOnly).not.toContain("pick a jar, pick an amount");
+    const summary = cardOnly.slice(cardOnly.indexOf("<summary"), cardOnly.indexOf("</summary>"));
+    expect(summary).toContain("Gifts of Gratitude");
+    expect(summary).toContain("A gift bought forward for someone who needs it");
+    expect((cardOnly.match(/Gifts of Gratitude<\/h2>/g) ?? []).length).toBe(1);
+    // a tip jar live: the head is back, Gifts of Gratitude under it
+    const withTips = renderToStaticMarkup(createElement(GiftDrawer, { liveJars: ["love", "onecocreation", "payforward"], dollarGifts: gifts }));
+    expect(withTips).toContain("Tip the Field");
+    expect(withTips).toContain("pick a jar, pick an amount");
+    const s2 = withTips.slice(withTips.indexOf("<summary"), withTips.indexOf("</summary>"));
+    expect(s2).not.toContain("Gifts of Gratitude");
+  });
 });
