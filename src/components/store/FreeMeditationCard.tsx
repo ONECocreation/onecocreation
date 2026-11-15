@@ -82,7 +82,7 @@ export default function FreeMeditationCard({ delay = 0 }: { delay?: number }) {
                 the one door is the gift's own page, never a checkout */}
             <div className="push" onClick={(e) => e.stopPropagation()}
               style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", width: "100%" }}>
-              <Link className="btn btn-sm" href={m.href}>Full view →</Link>
+              <Link className="btn btn-sm" href={m.href}>Full view</Link>
               <button className="btn btn-ghost btn-sm" onClick={flip} aria-expanded={flipped}>more info</button>
             </div>
           </div>
@@ -108,7 +108,7 @@ export default function FreeMeditationCard({ delay = 0 }: { delay?: number }) {
             </div>
             <div onClick={(e) => e.stopPropagation()}
               style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-              <Link className="btn btn-sm" href={m.href}>Full view →</Link>
+              <Link className="btn btn-sm" href={m.href}>Full view</Link>
               <button className="btn-quiet" onClick={flip}>flip back</button>
             </div>
           </div>

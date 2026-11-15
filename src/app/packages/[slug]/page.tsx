@@ -273,7 +273,8 @@ export default async function TierPage({
                   {page.caption}
                 </p>
               )}
-              <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
+              {/* the button marks (block 976,007): one size, one height (house.css .tier-doors) */}
+              <div className="tier-doors">
                 {mode === "buy" && switches.features.subscriptions ? (
                   /* T-541b: monthly memberships ON: join with a card (sign-in door first); OFF keeps the one-time buy below */
                   <JoinWithCard tier={page.tier} tierName={t.name} priceUsd={t.priceUsd} slug={page.slug} />

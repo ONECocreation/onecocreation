@@ -146,7 +146,7 @@ export default function ShelfSection({
           </p>
           {wholeShelfLink && (
             <p style={{ margin: "14px 0 0" }}>
-              <Link className="btn btn-ghost btn-sm" href="/store">see the whole shelf →</Link>
+              <Link className="btn btn-ghost btn-sm" href="/store">see the whole shelf</Link>
             </p>
           )}
         </div>
