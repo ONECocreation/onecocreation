@@ -94,6 +94,7 @@ export default async function PackagesPage() {
   }
 
   /* T-645 1c (block 976,007): the hand-built fallback drops the "How the
-     gate works:" note on /packages; the home page's section keeps it */
+     gate works:" note on /packages; the home page passes the same prop
+     (desk card 976015) */
   return (<><SiteHeader /><main><Packages gateNote={false} /></main><SiteFooter /></>);
 }
