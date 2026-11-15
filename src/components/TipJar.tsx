@@ -99,7 +99,11 @@ export default function TipJar({
   const jars = JARS.filter(
     (j) => satsKeys.includes(j.key) || (j.key === "payforward" && dollarGifts.length > 0),
   );
-  const [jar, setJar] = useState<JarKey>(jars[0]?.key ?? "payforward");
+  /* T-646: with dollar gifts to give, the panel opens on Gifts of Gratitude,
+     so both rows are in view at once; otherwise the first jar, as before */
+  const [jar, setJar] = useState<JarKey>(
+    dollarGifts.length > 0 ? "payforward" : (jars[0]?.key ?? "payforward"),
+  );
   const [sats, setSats] = useState<number>(11_111);
   const [custom, setCustom] = useState("");
   const [gift, setGift] = useState<string>(dollarGifts[Math.min(1, dollarGifts.length - 1)]?.id ?? "");

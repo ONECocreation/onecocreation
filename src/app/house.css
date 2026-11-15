@@ -80,7 +80,7 @@ h1,h2,h3,h4{line-height:1.16;margin:0 0 .45em;color:var(--ink-strong);font-weigh
    H2 + body, Lucida Grande = H3 (h4 rides with h3 — no fourth voice) */
 h1{font-family:var(--font-h1)}
 h2{font-family:var(--font-h2)}
-h3,h4{font-family:var(--font-h3)}
+h3,h4,.give-jar-title{font-family:var(--font-h3)}
 .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
 section{padding:76px 0;position:relative}
 .kicker{font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:var(--rose);font-weight:700;margin:0 0 1rem}
@@ -979,13 +979,13 @@ main .about-story-sky{background:radial-gradient(760px 460px at 50% 14%, rgba(12
    row, one width each; the own-amount box (sats only) and Give each the full width
    of that row; the whole row centred. Every member of a row is the .btn-sm box
    (12+12 + .9rem x 1.25 = 42px); the box is pinned to the same 42px border-box.
-   No !important, no serif, no font-family: house.css's ceilings are untouched. */
+   No !important, no serif, no new font declaration (the jar title joins the h3 rule): house.css's ceilings are untouched. */
 .give{margin-top:22px}
 .give-jars{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr))}
-.give-jar{display:block;text-align:left;padding:16px 18px;border-radius:18px;font:inherit;color:inherit;background:var(--ghost-bg);border:1.5px solid rgba(180,134,43,.3)}
+.give-jar{display:block;text-align:left;padding:16px 18px;border-radius:18px;color:inherit;background:var(--ghost-bg);border:1.5px solid rgba(180,134,43,.3)}
 button.give-jar{cursor:pointer;width:100%}
 .give-jar.is-on{background:rgba(217,178,78,.18);border-color:var(--gold-deep)}
-.give-jar-title{display:block;font-family:var(--font-h3);font-size:1.06rem;color:var(--ink-strong)}
+.give-jar-title{display:block;font-size:1.06rem;color:var(--ink-strong)}
 .give-jar-blurb{display:block;font-size:.85rem;color:var(--muted);margin-top:4px}
 .give-rows{display:grid;gap:22px;margin-top:20px;justify-items:center}
 .give-row{display:grid;gap:10px;width:100%;max-width:440px}
