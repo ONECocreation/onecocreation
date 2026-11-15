@@ -35,3 +35,4 @@ a touched file. The twelve hand-copied tops stay as they are.
 - `src/app/house.css` (fix A, block 976,001: the tier pills on one row on a phone, `nav.tier-pills` / `a.tier-pill`; the Admiral's pick from the forge card 11)
 - `src/components/sections.tsx` (T-645 1c, block 976,007: `Packages({ gateNote })`, so /packages' hand-built fallback drops the "How the gate works:" note and the home page keeps it)
 - `tests/route-gates.test.ts` (T-645 1c: its 1 gate → 2 Puck → 3 fallback order pin reads the fallback as `<Packages gateNote={false} />`)
+- `work-claims/task-645-lonely-words.md` (the lonely-words lane note, decision card 14, block 975,993; this branch only)
