@@ -1069,7 +1069,7 @@
   .mgmt-ground input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]){min-height:44px;box-sizing:border-box}
   .mgmt-ground textarea{min-height:88px}
   .mgmt-ground label:has(>input:is([type=checkbox],[type=radio])){min-height:44px;display:flex;align-items:center;gap:8px}
-  .mgmt-ground summary{display:flex;align-items:center;gap:6px}
+  .mgmt-ground summary{display:list-item;padding-block:12px}
   .mgmt-ground .kit-ibtn,.mgmt-ground .btn-round{min-width:44px;width:44px;height:44px}
   .mgmt-ground .kit-tgl{height:44px}
   .mgmt-ground .kit-tgl-knob{top:8px}
