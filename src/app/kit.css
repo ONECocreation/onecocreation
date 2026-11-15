@@ -848,9 +848,9 @@
 }
 .kit-bset .kit-btn.kit-pill:not(.kit-pill-primary){border:0}
 .kit-bset .kit-btn.kit-pill.is-on{background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:white}
-.kit-bset .btn-on{background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:white}
-/* block 975,990 (A7): the kit family's pressed/on state - the old btn-on's lavender, on a kit button */
-.kit-bset .kit-btn.is-on{background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:white;box-shadow:none}
+/* block 975,990 (A7): .is-on is the kit family's pressed/on state - the old btn-on's own lavender, one rule */
+.kit-bset .btn-on,.kit-bset .kit-btn.is-on{background:linear-gradient(135deg,var(--lavender-soft),var(--lavender));color:white}
+.kit-bset .kit-btn.is-on{box-shadow:none}
 /* quiet: a text button, same height as its group */
 .kit-bset .btn-quiet,.kit-bset .kit-btn-quiet{
   display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;height:38px;padding:0 10px;
