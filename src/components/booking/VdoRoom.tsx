@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useClassesDoor } from "@/lib/use-classes-door";
 
 /**
  * THE STUDIO ROOM, HELD ON THE SITE (TASK-297, 0018.06.25 a₿ · block
@@ -41,6 +42,8 @@ import { useEffect, useRef, useState } from "react";
 /** The farewell, Love's line verbatim (JitsiRoom.tsx's end card — reuse,
  *  never rewrite). Exported so the suite can pin the words directly. */
 export function VdoRoomEndCard() {
+  /* block 976,021: "The community" hides while Classes is off */
+  const classesHref = useClassesDoor();
   return (
     <div className="card" style={{ padding: 32, textAlign: "center" }}>
       <p style={{ fontFamily: "var(--sans)", fontWeight: 600, fontSize: "1.4rem", margin: "0 0 8px" }}>
@@ -51,7 +54,7 @@ export function VdoRoomEndCard() {
       </p>
       <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
         <Link className="btn" href="/me">My calendar</Link>
-        <Link className="btn btn-ghost" href="/classes">The community</Link>
+        {classesHref && <Link className="btn btn-ghost" href={classesHref}>The community</Link>}
       </div>
     </div>
   );

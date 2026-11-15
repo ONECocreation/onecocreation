@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { HEART_FIELD_URL } from "@/lib/classes";
+import { useClassesDoor } from "@/lib/use-classes-door";
 
 /**
  * The member-home cards every signed-in soul gets (the Admiral's ask):
@@ -64,6 +66,8 @@ function StateChip({ state }: { state: string }) {
 }
 
 export default function MemberQuickCards() {
+  /* block 976,021: Classes OFF sends this card to the free Heart Field */
+  const classesHref = useClassesDoor();
   const [orders, setOrders] = useState<MemberOrder[] | null>(null);
 
   useEffect(() => {
@@ -114,7 +118,7 @@ export default function MemberQuickCards() {
           <Link className="kit-btn kit-btn-second kit-btn-sm" href="/memberships">Memberships</Link>
           <Link className="kit-btn kit-btn-second kit-btn-sm" href="/book">Book a Session</Link>
           <Link className="kit-btn kit-btn-second kit-btn-sm" href="/store">The Store</Link>
-          <Link className="kit-btn kit-btn-second kit-btn-sm" href="/classes">Community & Classes</Link>
+          <Link className="kit-btn kit-btn-second kit-btn-sm" href={classesHref ?? HEART_FIELD_URL}>Community & Classes</Link>
         </div>
         <p style={{ color: "var(--muted)", fontSize: ".78rem", marginTop: 14 }}>
           Your calendar lives one tab over — the sessions you&apos;ve booked ride the grid there.

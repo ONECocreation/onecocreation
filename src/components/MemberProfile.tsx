@@ -5,7 +5,8 @@ import Link from "next/link";
 import { bftDate } from "@/lib/bb/bft";
 import type { HandleStatus } from "@/lib/registry";
 import { ANCHOR_BLOCKS_OUT, SPACE_ROLES } from "@/lib/identity-config";
-import { ARTIST_GATE_CERT_COUNT, CLASSES_URL } from "@/lib/classes";
+import { ARTIST_GATE_CERT_COUNT, HEART_FIELD_URL } from "@/lib/classes";
+import { useClassesDoor } from "@/lib/use-classes-door";
 import { PixelAvatar, useTipHeight } from "@frens-earth/arcade-ui";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
@@ -106,6 +107,10 @@ export default function MemberProfile({
   const spaceTag = `@${space}`;
   const nip05Id = `${handle}@${nip05Domain}`;
   const njumpUrl = `https://njump.me/${nip05Id}`;
+  /* block 976,021: the classes links ask classesDoor(); Classes OFF hides
+     SEE THE CLASSES, unlinks the CERTS step, and sends JOIN THE COMMUNITY
+     to the free Heart Field. */
+  const classesHref = useClassesDoor();
   const [copied, setCopied] = useState<"none" | "pub" | "nip05" | "page">("none");
   const { state: signal, profile, raw, applyLocal } = useNostrProfile(npub);
   const sinceBlock = usePlayerSinceBlock(blockHeight, requestedAt);
@@ -276,7 +281,7 @@ export default function MemberProfile({
                     done: matrixProvisioned,
                     href: matrixProvisioned ? null : "/login",
                   },
-                  { label: `CERTS 0/${ARTIST_GATE_CERT_COUNT}`, done: false, href: CLASSES_URL },
+                  { label: `CERTS 0/${ARTIST_GATE_CERT_COUNT}`, done: false, href: classesHref },
                   { label: "WALLET", done: false, href: null },
                 ].map((m, i, all) => (
                   <div key={m.label} className="flex flex-1 items-start">
@@ -417,8 +422,10 @@ export default function MemberProfile({
                   Zelda cartridge — and halvings mint the{" "}
                   <span className="text-pink">astronomical</span> tier.
                 </p>
-                <a href={CLASSES_URL} className="button mt-4 inline-block text-center">
-                  SEE THE CLASSES </a>
+                {classesHref && (
+                  <a href={classesHref} className="button mt-4 inline-block text-center">
+                    SEE THE CLASSES </a>
+                )}
               </div>
             </div>
           </div>
@@ -644,7 +651,7 @@ export default function MemberProfile({
                 Classes and gatherings — one tag across all of it.
               </p>
               <Link
-                href="/classes"
+                href={classesHref ?? HEART_FIELD_URL}
                 className="self-start font-pixel text-[10px] text-cyan underline hover:glow-cyan"
               >
                 JOIN THE COMMUNITY </Link>

@@ -371,6 +371,9 @@ describe("the pre-join card and the end card", () => {
     expect(html).toContain("The field holds what you brought 🕊️");
     expect(html).toContain("Thank you for meeting");
     expect(html).toContain('href="/me"');
-    expect(html).toContain('href="/classes"');
+    // block 976,021: "The community" asks classesDoor() (hidden while
+    // Classes is off, and until the switches are read) — see
+    // tests/classes-door-976021.test.ts for both states.
+    expect(html).not.toContain('href="/classes"');
   });
 });

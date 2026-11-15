@@ -7,6 +7,7 @@ import { listServices } from "@/lib/booking";
 import { listItems, getItem } from "@/lib/store";
 import { JAR_ITEMS } from "@/lib/jars";
 import { getSiteConfig } from "@/lib/site-config";
+import { classesDoor, HEART_FIELD_URL } from "@/lib/classes";
 import { tierRailsOn } from "@/lib/tier-offer";
 import { liveAdapter, ensureSquareVault } from "@/lib/payments";
 import { DEFAULT_READING_SCHEDULE, validateReadingSchedule, type ReadingSchedule } from "@/lib/reading-schedule";
@@ -501,7 +502,8 @@ export async function Classes() {
           )}
         </div>
         <div className="center reveal" style={{ marginTop: 24 }}>
-          <Link className="btn" href="/classes">Enter your rooms</Link>
+          {/* block 976,021: Classes OFF sends this to the free Heart Field (classesDoor) */}
+          <Link className="btn" href={classesDoor(switches) ?? HEART_FIELD_URL}>Enter your rooms</Link>
         </div>
         <p className="note reveal"><b>Matrix-powered</b> — paying for a package sends your invite automatically, One Cocreation-branded (replacing Patreon / Mighty Networks / Kajabi). Your rooms, your keys.</p>
       </div>

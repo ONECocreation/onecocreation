@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { signInDoorLine, signInDoorHref, packageDoorLine } from "@/lib/room-access";
+import { HEART_FIELD_URL } from "@/lib/classes";
+import { useClassesDoor } from "@/lib/use-classes-door";
 
 /**
  * THE ROOM, WORN IN HER BRAND (C4, mockups 2–3 blessed 0018.05.14): the
@@ -223,6 +225,10 @@ export function ReactionPicker({ onPick }: { onPick: (key: string) => void }) {
 }
 
 export default function RoomView({ slug, alias, title, kind }: Props) {
+  /* block 976,021: "Back to the rooms" asks classesDoor(). Classes OFF
+     sends it to the free Heart Field, and hides it inside Heart Field. */
+  const classesHref = useClassesDoor();
+  const backHref = classesHref ?? (`/rooms/${slug}` === HEART_FIELD_URL ? null : HEART_FIELD_URL);
   const [state, setState] = useState<"loading" | "signedout" | "locked" | "open" | "error">("loading");
   /* a guest never reads the reason (TASK-548); it rides on the error block as
      data-reason so whoever helps them can still see the cause */
@@ -435,7 +441,7 @@ export default function RoomView({ slug, alias, title, kind }: Props) {
     return (
       <div data-reason={reason || undefined}>
         <p style={{ color: "var(--muted)" }}>{CHAT_CLOSED_LINE}</p>
-        <p><Link href="/classes" style={{ color: "var(--gold-deep)" }}>Back to the rooms</Link></p>
+        {backHref && <p><Link href={backHref} style={{ color: "var(--gold-deep)" }}>Back to the rooms</Link></p>}
       </div>
     );
 

@@ -117,7 +117,8 @@ describe("Part 3 — /me Purchases Quick doors: even width, no tripled classroom
     expect(src).toContain('href="/memberships"');
     expect(src).toContain('href="/book"');
     expect(src).toContain('href="/store"');
-    expect((src.match(/href="\/classes"/g) ?? []).length).toBe(1);
+    // block 976,021: the classes door asks classesDoor() (Heart Field while Classes is off)
+    expect((src.match(/href=\{classesHref \?\? HEART_FIELD_URL\}/g) ?? []).length).toBe(1);
   });
 
   it("the doors wrapper uses a grid (equal width), not flexWrap", async () => {

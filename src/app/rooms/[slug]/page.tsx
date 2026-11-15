@@ -9,6 +9,7 @@ import { ROOMS } from "@/lib/matrix-rooms";
 import { rosterForRequest } from "@/lib/matrix";
 import { getPin } from "@/lib/room-pins";
 import { getSiteConfig } from "@/lib/site-config";
+import { classesDoor } from "@/lib/classes";
 import { liveRoomName, studioVdoLinks, studioGuestCameraLink } from "@/lib/live";
 import { getStudioDoc } from "@/lib/studio/roster";
 import { studioSceneKind, type StudioSceneId } from "@/lib/studio/scenes";
@@ -69,6 +70,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
    * handed down as plain props. Without this the toggle in RoomVideoSlot
    * would be cosmetic — there would be nothing to embed. */
   const switches = await getSiteConfig();
+  const classesHref = classesDoor(switches);
 
   /* TASK-387: this room's own chat switch, off the SAME `switches` read
    * above -- zero new server fetch. Absent slug or absent map reads as
@@ -214,9 +216,12 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
       <SiteHeader />
       <section className="mgmt-wrap mgmt-body" style={{ maxWidth: 1080 }}>
         <header className="mgmt-head">
-          <p className="mgmt-eyebrow">
-            <Link href="/classes" style={{ color: "inherit" }}>Classes &amp; Community</Link>
-          </p>
+          {/* block 976,021: the link back hides while Classes is off; the room title stays */}
+          {classesHref && (
+            <p className="mgmt-eyebrow">
+              <Link href={classesHref} style={{ color: "inherit" }}>Classes &amp; Community</Link>
+            </p>
+          )}
           <h1 className="mgmt-title">{room.title}</h1>
         </header>
         <ClassroomView

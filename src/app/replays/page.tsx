@@ -6,6 +6,7 @@ import PaletteVars from "@/components/PaletteVars";
 import ReplaysList from "@/components/replays/ReplaysList";
 import ReplaysReminder from "@/components/replays/ReplaysReminder";
 import { getSiteConfig } from "@/lib/site-config";
+import { classesDoor } from "@/lib/classes";
 import { sessionsFromCookieHeader } from "@/lib/member-auth";
 import { loadReplays } from "@/lib/replays-source";
 
@@ -67,6 +68,7 @@ export default async function ReplaysPage({
   }
 
   const config = await getSiteConfig();
+  const classesHref = classesDoor(config);
   /* Manual rows + the playlist auto-fill. The fetch is member-triggered
      only: a signed-out render never fetches (the crawler law). */
   const replays = await loadReplays(config, { allowFetch: signedIn });
@@ -97,9 +99,12 @@ export default async function ReplaysPage({
                         Read with Love
                       </a>
                     </div>
-                    <p className="kit-note">
-                      <a href="/classes">Visit the Community page</a>
-                    </p>
+                    {/* block 976,021: hidden while Classes is off (classesDoor) */}
+                    {classesHref && (
+                      <p className="kit-note">
+                        <a href={classesHref}>Visit the Community page</a>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
