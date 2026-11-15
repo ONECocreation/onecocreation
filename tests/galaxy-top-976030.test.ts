@@ -7,9 +7,9 @@ import path from "node:path";
  *  1. /terms: the top carries the kicker and the heading only. The draft
  *     note is the small first line of the body again (mgmt-blurb), the
  *     same words as on main.
- *  2. /replays: a shorter top (no glyph line) and the theater's viewport
- *     budget grown by the top's extra height, so "Sign in to watch" stays
- *     in the first screen at 1440 by 900.
+ *  2. /replays: no top in this PR (Lumen's ruling, block 976,030). The
+ *     page and the theater's viewport budget (100vh - 390px) stay main's;
+ *     the trade is held for the Admiral's ruling.
  *  3. /meditation: the same short top (no glyph line), so the email box
  *     stays in a phone's first screen.
  */
@@ -56,20 +56,19 @@ describe("galaxy top fix round (block 976,030)", () => {
     expect(notes[0].props?.children).toBe("Draft v1 — plain language; final wording with Love.");
   });
 
-  it("/replays and /meditation wear the short top: no glyph line", async () => {
-    for (const p of ["src/app/replays/page.tsx", "src/app/meditation/page.tsx"]) {
-      expect(heroProps(await read(p)), p).not.toMatch(/\bconstellation\b/);
-    }
-    // the replays words are unchanged
-    const replays = heroProps(await read("src/app/replays/page.tsx"));
-    expect(replays).toMatch(/kicker="Read with Love"/);
-    expect(replays).toMatch(/lead="Every recorded reading, kept here to play again."/);
+  it("/meditation wears the short top: no glyph line", async () => {
+    expect(heroProps(await read("src/app/meditation/page.tsx"))).not.toMatch(/\bconstellation\b/);
   });
 
-  it("the theater's viewport budget counts the house top (515 px), so the sign-in door stays in the first screen", async () => {
+  it("/replays is not touched: no house top, main's header words, the theater budget is 390 px as on main", async () => {
+    const src = await read("src/app/replays/page.tsx");
+    expect(src).not.toMatch(/PageHero/);
+    expect(src).toMatch(/<p className="kicker">Read with Love<\/p>/);
+    expect(src).toMatch(/<h1 className="kit-h1">Replays<\/h1>/);
+    expect(src).toMatch(/<p className="kit-body">Every recorded reading, kept here to play again.<\/p>/);
     const css = await read("src/app/kit.css");
-    expect(css).toMatch(/\.kitx-theater-card\{--kitx-player-w:min\(100%,max\(320px,calc\(\(100vh - 515px\)\*16\/9\)\)\)/);
-    expect(css).not.toMatch(/100vh - 390px/);
+    expect(css).toMatch(/\.kitx-theater-card\{--kitx-player-w:min\(100%,max\(320px,calc\(\(100vh - 390px\)\*16\/9\)\)\)/);
+    expect(css).not.toMatch(/100vh - 515px/);
   });
 
   it("the other galaxy tops keep their glyph line", async () => {

@@ -10,36 +10,36 @@ import path from "node:path";
  */
 const read = (p: string) => readFile(path.join(process.cwd(), p), "utf8");
 
-const ELEVEN = [
+const TEN = [
   "src/app/store/page.tsx",
   "src/app/support/page.tsx",
   "src/app/cart/page.tsx",
   "src/app/store/meditations/page.tsx",
   "src/app/store/memberships/page.tsx",
   "src/app/packages/[slug]/page.tsx", // Weekly Intuitive, Observer, Evening Star
-  "src/app/replays/page.tsx",
   "src/app/meditation/page.tsx",
   "src/app/terms/page.tsx",
 ];
 
-describe("the galaxy top (kit PageHero) on the eleven pages", () => {
+describe("the galaxy top (kit PageHero) on the ten pages (/replays held, block 976,030)", () => {
   it("each page file renders <PageHero> exactly once", async () => {
-    for (const p of ELEVEN) {
+    for (const p of TEN) {
       const src = await read(p);
       expect((src.match(/<PageHero\b/g) ?? []).length, p).toBe(1);
     }
   });
 
   it("no page among them keeps a second top: no hand-placed StackedHero, kit-h1 or mgmt-title beside it", async () => {
-    for (const p of ELEVEN) {
+    for (const p of TEN) {
       const src = await read(p);
       expect(src, p).not.toMatch(/<StackedHero\b/);
       expect(src, p).not.toMatch(/className="kit-h1"|className="mgmt-title"/);
     }
   });
 
-  it("the three left alone still carry no PageHero: home, /reading, /memberships", async () => {
-    for (const p of ["src/app/page.tsx", "src/app/reading/page.tsx", "src/app/memberships/page.tsx"]) {
+  it("the pages left alone still carry no PageHero: home, /reading, /memberships, /replays", async () => {
+    /* /replays: held for the Admiral's ruling (block 976,030); it keeps main's own header words */
+    for (const p of ["src/app/page.tsx", "src/app/reading/page.tsx", "src/app/memberships/page.tsx", "src/app/replays/page.tsx"]) {
       expect(await read(p), p).not.toMatch(/<PageHero\b/);
     }
   });

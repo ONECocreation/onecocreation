@@ -3,7 +3,6 @@ import { headers } from "next/headers";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PaletteVars from "@/components/PaletteVars";
-import { PageHero } from "@/components/kit";
 import ReplaysList from "@/components/replays/ReplaysList";
 import ReplaysReminder from "@/components/replays/ReplaysReminder";
 import { getSiteConfig } from "@/lib/site-config";
@@ -81,17 +80,11 @@ export default async function ReplaysPage({
       <SiteHeader />
       <PaletteVars />
       <main className="center kitx-balanced">
-        {/* the house top (galaxy, block 976,027): the page's own kicker,
-            title and line, moved up out of the theater. No glyph line here
-            (block 976,030): the short top keeps "Sign in to watch" in the
-            first screen at 1440 by 900, as on main. */}
-        <PageHero
-          kicker="Read with Love"
-          lines={[{ t: "REPLAYS", tone: "teal" }]}
-          lead="Every recorded reading, kept here to play again."
-        />
         <section className="kitx-section kitx-section-first kitx-theater">
           <div className="wrap kitx-flow kitx-wide">
+            <p className="kicker">Read with Love</p>
+            <h1 className="kit-h1">Replays</h1>
+            <p className="kit-body">Every recorded reading, kept here to play again.</p>
             {replays.length === 0 ? (
               <div className="card room-card kit-day">
                 <div className="kit-card-body">
