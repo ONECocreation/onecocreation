@@ -23,7 +23,7 @@ import { useMoneyPrefer } from "@/lib/money-preference";
  * the card; Enter/Space turns it too; front and back are the same box,
  * so the grid never reflows. The buy/basket doors (GET IT ⚡, ADD TO
  * BASKET) live on the FULL VIEW page only — the card's one door is
- * "Full view →", on both faces.
+ * "Full view", on both faces.
  *
  * TASK-253 (0018.06.24 a₿ — the Admiral: "the it cards are supposed to be
  * uniform sizes … prices and buttons should line up. the IAM worthy sleep
@@ -162,11 +162,16 @@ export default function StoreItemCard({
             {/* TASK-253: card-title reserves its row (house.css min-height:
                 2.5em) so a sold-out badge's extra width never shifts the
                 sub/meta/price rows below it on ITS card alone */}
-            <div className="card-title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+            {/* The Admiral's mark (block 976,024): the title sits on the card's
+                centre axis, over the picture, the line and the price. A lone
+                h3 in a space-between row sat at the row's start; it only
+                spreads when the badge rides beside it. */}
+            <div className="card-title" style={{ display: "flex", alignItems: "baseline",
+              justifyContent: m.soldOut || m.comingSoon ? "space-between" : "center", gap: 8 }}>
               <h3 style={{ fontWeight: 400, fontSize: "1.12rem", margin: 0 }}>{item.title}</h3>
               {/* TASK-472 (block 968,624): comingSoon shares the sold-out
                   badge's one style block (mutually exclusive states) —
-                  the card's own door is still "Full view →" either way;
+                  the card's own door is still "Full view" either way;
                   the full view's BuyPanel is what swaps to "Coming soon." */}
               {(m.soldOut || m.comingSoon) && (
                 <span style={{ fontSize: ".64rem", fontWeight: 700, textTransform: "uppercase",
@@ -202,7 +207,7 @@ export default function StoreItemCard({
             {/* doors: centered at the card's foot; the flip stops at them */}
             <div className="push" onClick={(e) => e.stopPropagation()}
               style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", width: "100%" }}>
-              <Link className="btn btn-sm" href={href}>Full view →</Link>
+              <Link className="btn btn-sm" href={href}>Full view</Link>
               <button className="btn btn-ghost btn-sm" onClick={flip} aria-expanded={flipped}>more info</button>
             </div>
           </div>
@@ -228,7 +233,7 @@ export default function StoreItemCard({
             </div>
             <div onClick={(e) => e.stopPropagation()}
               style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-              <Link className="btn btn-sm" href={href}>Full view →</Link>
+              <Link className="btn btn-sm" href={href}>Full view</Link>
               <button className="btn-quiet" onClick={flip}>flip back</button>
             </div>
           </div>

@@ -227,7 +227,7 @@ export default async function TierPage({
               )}
               {page.oneTime && oneTimeLive && (
                 <div style={{ color: "var(--muted)", fontSize: ".92rem" }}>
-                  or ${page.oneTime.usd} — {page.oneTime.label}
+                  or ${page.oneTime.usd} — {page.oneTime.label}{page.oneTime.line2 && <> — {page.oneTime.line2}</>}
                 </div>
               )}
               <p style={{ fontWeight: 600, color: "var(--ink-strong)", marginTop: 14 }}>{page.cadence}</p>
@@ -273,7 +273,8 @@ export default async function TierPage({
                   {page.caption}
                 </p>
               )}
-              <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
+              {/* the button marks (block 976,007): one size, one height (house.css .tier-doors) */}
+              <div className="tier-doors">
                 {mode === "buy" && switches.features.subscriptions ? (
                   /* T-541b: monthly memberships ON: join with a card (sign-in door first); OFF keeps the one-time buy below */
                   <JoinWithCard tier={page.tier} tierName={t.name} priceUsd={t.priceUsd} slug={page.slug} />
@@ -306,10 +307,11 @@ export default async function TierPage({
                       ghost
                       itemId={page.oneTime.itemId}
                       label={`YES! $${page.oneTime.usd} — ${page.oneTime.label}`}
+                      line2={page.oneTime.line2}
                     />
                   ) : (
                     <Link className="btn btn-ghost" style={{ textAlign: "center" }} href="/support">
-                      YES! ${page.oneTime.usd} — {page.oneTime.label}
+                      <span>YES! ${page.oneTime.usd} — {page.oneTime.label}{page.oneTime.line2 && <><br />{page.oneTime.line2}</>}</span>
                     </Link>
                   ))}
                 {upgrade && upgradeLive && (

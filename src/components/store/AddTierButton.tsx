@@ -6,7 +6,7 @@ import { useState } from "react";
  *  walks to checkout. The gate (sign-in for packages) meets them there.
  *  TASK-147 (0018.06.17 a₿): a failed add used to reset the button and say
  *  NOTHING — now the route's own sentence (or these words) shows beneath. */
-export default function AddTierButton({ itemId, label, ghost }: { itemId: string; label: string; ghost?: boolean }) {
+export default function AddTierButton({ itemId, label, line2, ghost }: { itemId: string; label: string; line2?: string; ghost?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +30,9 @@ export default function AddTierButton({ itemId, label, ghost }: { itemId: string
   return (
     <>
       <button className={`btn ${ghost ? "btn-ghost" : "btn-gold"}`} style={{ width: "100%", textAlign: "center" }} onClick={add} disabled={busy}>
-        {busy ? "Adding…" : label}
+        {/* line2 starts a real new line (the one-week door's "one-time
+            purchase"); one span, so a flex door keeps the <br> */}
+        {busy ? "Adding…" : line2 ? <span>{label}<br />{line2}</span> : label}
       </button>
       {error && (
         <p style={{ margin: "6px 0 0", fontSize: ".8rem", color: "var(--err)", textAlign: "center" }}>

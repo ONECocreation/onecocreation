@@ -162,6 +162,28 @@ section{padding:76px 0;position:relative}
 .btn-ghost{background:var(--ghost-bg);color:var(--ghost-ink);box-shadow:inset 0 0 0 1.5px var(--edge)}
 /* the small variant — same square law, compact for dense rooms */
 .btn-sm{padding:12px 24px;font-size:.9rem;letter-spacing:1.5px}
+/* the button marks (block 976,007, R-071: a label never wraps): on a phone
+   the big .btn is one smaller size, so the house's own labels sit on one
+   line at 390 ('Receive the free meditation', 'Get started today', 'The
+   full support room'). Measured at 390: the tightest, the support room
+   door, keeps 7 px inside its 256 px row. 51 px tall, over the 44 px
+   thumb floor. .btn-sm keeps its own size; 481 px and up are unchanged. */
+/* a short word ("YES!", "SEND") keeps a thumb-wide door on a phone: the
+   phone size holds a floor near "Back home" (Lumen, block 976,024) */
+@media(max-width:480px){.btn:not(.btn-sm){padding:16px;font-size:.95rem;letter-spacing:1px;min-width:140px}}
+/* the pop-up card (PopupHost) is 440 px wide at every width, a phone's
+   room even at 1440, so its button wears the phone size everywhere:
+   'Receive the meditation' broke onto two lines at 1440 too */
+.oc-popup-card .btn:not(.btn-sm){padding:16px;font-size:.95rem;letter-spacing:1px}
+/* a package page's card (/packages/<tier>): its YES, its one-week door and
+   its upgrade door are one size and one height (grid-auto-rows:1fr), the
+   label centred in the box, at every width. The equal rows hold only while
+   every child is a button: the monthly join form or a waitlist form keeps
+   its own height and never stretches the doors beside it. */
+.tier-doors{display:grid;gap:10px;margin-top:14px}
+.tier-doors:not(:has(>:not(.btn))){grid-auto-rows:1fr}
+.tier-doors>.btn{display:flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;
+  padding:14px 16px;font-size:.95rem;letter-spacing:1px}
 /* step 5 of the cartridge walk: the three shapes that end the one-offs */
 .btn-quiet{background:none;border:0;padding:8px 6px;cursor:pointer;font-family:inherit;
   font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;

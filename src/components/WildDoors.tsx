@@ -56,7 +56,7 @@ const DOORS: Door[] = [
     // Love's word, 0018.05.15: the Capstone Community door supports the
     // lions directly
     href: "https://whitelions.org/capstone-community-2026/",
-    cta: "Give to the lions ↗",
+    cta: "Give to the lions",
   },
   {
     key: "instagram",
@@ -69,7 +69,7 @@ const DOORS: Door[] = [
     title: "Love on Instagram",
     words: INSTAGRAM_DESCRIPTION ? `${INSTAGRAM_HANDLE} — ${INSTAGRAM_DESCRIPTION}` : INSTAGRAM_HANDLE,
     href: `https://instagram.com/${INSTAGRAM_HANDLE.slice(1)}`,
-    cta: "Follow along ↗",
+    cta: "Follow along",
   },
 ];
 
@@ -87,7 +87,9 @@ export default function WildDoors() {
           <div className="wild-body">
             <h3>{d.title}</h3>
             <p>{d.words}</p>
-            <span className="wild-cta">{d.cta}</span>
+            {/* both doors leave the site: the mark is the kit's outward icon
+                beside the words, never a glyph inside the label (R-071) */}
+            <span className="wild-cta">{d.cta}<span className="kit-out" aria-hidden="true" /></span>
           </div>
         </a>
       ))}
