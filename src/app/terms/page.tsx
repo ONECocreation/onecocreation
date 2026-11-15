@@ -45,15 +45,18 @@ export default async function TermsPage() {
   return (
     <main className="mgmt-ground">
       <SiteHeader />
-      {/* the house top (galaxy, block 976,027): the page's own eyebrow,
-          title and blurb, moved up out of the console header */}
+      {/* the house top (galaxy, block 976,027): the page's own eyebrow and
+          title, moved up out of the console header. No lead (block 976,030):
+          the draft note stays the small first line of the body, as on main. */}
       <PageHero
         kicker="The fine print, kindly"
         lines={[{ t: "TERMS" }, { t: "& CONDITIONS", tone: "teal" }]}
         constellation
-        lead="Draft v1 — plain language; final wording with Love."
       />
       <section className="mgmt-wrap mgmt-body" style={{ maxWidth: 720 }}>
+        <header className="mgmt-head">
+          <p className="mgmt-blurb">Draft v1 — plain language; final wording with Love.</p>
+        </header>
         <div className="space-y-4 text-sm text-neutral-300">
           <p><b>What you&apos;re buying.</b> Digital offerings (meditations, affirmations, courses) unlock for the signed-in account that bought them. Memberships open their tier&apos;s rooms and content for the paid period. In-person sessions are booked for a specific time and place.</p>
           <p><b>Payment.</b> Prices are shown in dollars and sats. Bitcoin payments (lightning or on-chain) settle to One Cocreation&apos;s own wallet — non-custodial, no third parties holding funds. A payment is complete when the invoice settles.</p>

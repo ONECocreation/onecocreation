@@ -82,11 +82,12 @@ export default async function ReplaysPage({
       <PaletteVars />
       <main className="center kitx-balanced">
         {/* the house top (galaxy, block 976,027): the page's own kicker,
-            title and line, moved up out of the theater */}
+            title and line, moved up out of the theater. No glyph line here
+            (block 976,030): the short top keeps "Sign in to watch" in the
+            first screen at 1440 by 900, as on main. */}
         <PageHero
           kicker="Read with Love"
           lines={[{ t: "REPLAYS", tone: "teal" }]}
-          constellation
           lead="Every recorded reading, kept here to play again."
         />
         <section className="kitx-section kitx-section-first kitx-theater">

@@ -45,7 +45,9 @@ export default async function MeditationPage() {
   }
 
   /* the house top (galaxy, block 976,027): the section's own kicker and
-     heading move up into it; the section below opens on her words */
+     heading move up into it; the section below opens on her words. No
+     glyph line here (block 976,030), as on /replays: the short top keeps
+     the email box in a phone's first screen, as on main. */
   return (
     <>
       <SiteHeader />
@@ -53,7 +55,6 @@ export default async function MeditationPage() {
         <PageHero
           kicker="Be in the Know"
           lines={[{ t: "A FREE MEDITATION" }, { t: "WITH LOVE", tone: "teal" }]}
-          constellation
         />
         <FreeMeditation heading={false} />
       </main>

@@ -597,11 +597,15 @@
    width: as wide as the row allows but never taller than the viewport lets
    the whole 16:9 frame (and its title) stay on screen. The header words
    stay calm; the sky-stage precedent above tightens the header gap so the
-   frame starts higher. Phones go nearer edge to edge. ── */
+   frame starts higher. Phones go nearer edge to edge. Block 976,030:
+   the page now opens on the house top (PageHero, no glyph line) above
+   the theater, 125 px more than the old header words, so the viewport
+   budget grows by the same 125 px (390 to 515) and "Sign in to watch"
+   stays in the first screen at 1440 by 900, as before. ── */
 .kitx-theater .kitx-flow{gap:12px}
 .kitx-theater .kitx-flow>.kicker,.kitx-theater .kitx-flow>.kit-h1{margin:0}
 .wrap.kitx-wide{max-width:1600px}
-.kitx-theater-card{--kitx-player-w:min(100%,max(320px,calc((100vh - 390px)*16/9)));max-width:none;width:100%}
+.kitx-theater-card{--kitx-player-w:min(100%,max(320px,calc((100vh - 515px)*16/9)));max-width:none;width:100%}
 .kitx-theater-card .kitx-player{width:var(--kitx-player-w);margin:0 auto 24px}
 .kitx-theater-card .kitx-thumbs{width:var(--kitx-player-w);margin:0 auto}
 .kitx-theater-card .kitx-thumbs-mini{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
