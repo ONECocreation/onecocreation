@@ -16,7 +16,7 @@ import { defaultSiteConfig, type SiteConfig } from "@/lib/site-config";
 const NO_ROW: Record<string, string> = {
   "/me": "the member's own page; reached from the signed-in name in the header (MEMBER_MENU, door-machine.ts)",
   "/store/memberships": "the shelf's memberships section also sits on /store, the Store tab's own door",
-  "/letters": "NO DOOR: no menu row and no public link reaches the members' mailbox page; named in the T-645 DONE note for a ruling",
+  "/letters": "ruled no door, decision card 13, block 975,993",
 };
 
 function allOn(): SiteConfig {
