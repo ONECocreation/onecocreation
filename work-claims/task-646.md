@@ -44,4 +44,3 @@ acceptance at block 975,999), with the reports export holding one row per gift.
 - `tests/support-jars-basket.test.ts` (pins follow the new gate)
 - `tests/item-page.test.ts` (pins follow the new gate)
 - `tests/pay-it-forward.test.ts` (pins follow the new words)
-- `scripts/pif-646-seed.mjs` (new: local test data for the pictures only)
