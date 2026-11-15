@@ -22,3 +22,12 @@ export const JAR_ITEMS: Record<"love" | "onecocreation" | "payforward", string> 
   onecocreation: "tip-one-cocreation",
   payforward: "gifts-of-gratitude",
 };
+
+/** TASK-646 (block 976,007): the jar a shelf item gives to, or null. The
+ *  books (src/lib/tips.ts) read a basket line through this one lookup. */
+export function jarForItem(itemId: string): keyof typeof JAR_ITEMS | null {
+  for (const [jar, id] of Object.entries(JAR_ITEMS) as [keyof typeof JAR_ITEMS, string][]) {
+    if (id === itemId) return jar;
+  }
+  return null;
+}

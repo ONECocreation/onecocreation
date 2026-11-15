@@ -210,6 +210,12 @@ export interface OrderRecord {
      *  for the ledger (offer < list ⇒ the order waits on Love's review) */
     offerSats?: number;
     listSats?: number;
+    /** TASK-646 (block 976,007): the line's list price in fiat minor units
+     *  (unit × qty), written on the card rail only — the books' record of
+     *  what one line was, as listSats is on the bitcoin rail. Never read by
+     *  the charge; the order's total stays priceSnapshot. Absent on older
+     *  orders. */
+    listFiat?: number;
     /** a gift line — who it's for (email or @tag); delivery is Love's
      *  loving hand for now, auto-delivery is a next-round rail */
     giftTo?: string;

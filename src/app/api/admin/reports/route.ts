@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listOrders, getItem, ordersConfigured } from "@/lib/store";
-import { listTips, tipsConfigured } from "@/lib/tips";
+import { listTips, tipsConfigured, tipsFromOrders } from "@/lib/tips";
+import { jarForItem } from "@/lib/jars";
 import { operatorFromCookieHeader } from "@/lib/operator-auth";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +13,14 @@ export const dynamic = "force-dynamic";
  * tips (the jars). Numbers are what was actually charged: sats when the
  * invoice was sats, fiat minor-units when fiat; both columns always
  * present so the bookkeeper never guesses.
+ *
+ * TASK-646 (block 976,007) — ONE ROW FOR ONE GIFT. Since T-411 a jar gift
+ * is a basket order. It is filed as a TIPS row (category "tips", the order
+ * id as its id, "tip — <jar>" as its description), read from the jar
+ * ledger, and the order row is NOT also written for it. An order holding
+ * only gift lines writes no order row; a mixed order writes its order row
+ * for the other lines, with the gift lines' amount taken out of it.
+ * Pinned in tests/jar-books-646.test.ts.
  */
 type Row = {
   date: string;
@@ -48,10 +57,15 @@ export async function GET(request: Request) {
     for (const o of await listOrders()) {
       if (o.createdAtMs < from || o.createdAtMs > to) continue;
       if (!["settled", "fulfilled", "refunded"].includes(o.state)) continue;
-      const hasSession = !!o.bookingId || o.lineItems.some((l) => l.bookingId);
+      // T-646: a gift line is a tips row, never also an order row
+      const goodsLines = o.lineItems.filter((l) => !jarForItem(l.itemId));
+      if (goodsLines.length === 0) continue;
+      const giftAmount = tipsFromOrders([o]).reduce((n, t) => n + (t.fiat ? t.fiat.amount : t.sats), 0);
+      const amount = Math.max(0, o.priceSnapshot.amount - giftAmount);
+      const hasSession = !!o.bookingId || goodsLines.some((l) => l.bookingId);
       const category: Row["category"] = hasSession ? "services" : "goods";
       if (type !== "all" && type !== category) continue;
-      const li = o.lineItems[0];
+      const li = goodsLines[0];
       const item = li && !o.bookingId ? await getItem(li.itemId) : null;
       const svcOrGoods = item?.kind === "service" ? "services" : category;
       rows.push({
@@ -59,10 +73,10 @@ export async function GET(request: Request) {
         id: o.id,
         category: svcOrGoods as Row["category"],
         description: li?.title ?? "order",
-        sats: o.priceSnapshot.currency === "SATS" ? o.priceSnapshot.amount : "",
+        sats: o.priceSnapshot.currency === "SATS" ? amount : "",
         fiatAmount:
           o.priceSnapshot.currency !== "SATS"
-            ? (o.priceSnapshot.amount / 100).toFixed(2)
+            ? (amount / 100).toFixed(2)
             : "",
         currency: o.priceSnapshot.currency,
         discount: o.discount ? `${o.discount.code}` : "",
@@ -74,17 +88,18 @@ export async function GET(request: Request) {
   if (tipsConfigured() && (type === "all" || type === "tips")) {
     const ledger = await listTips();
     for (const t of ledger.tips) {
-      if (t.createdMs < from || t.createdMs > to || t.status !== "settled") continue;
+      // a refunded basket gift keeps its row, with its state (as its order row did)
+      if (t.createdMs < from || t.createdMs > to || (t.status !== "settled" && t.status !== "refunded")) continue;
       rows.push({
         date: new Date(t.createdMs).toISOString().slice(0, 10),
         id: t.id,
         category: "tips",
         description: `tip — ${t.jar}`,
-        sats: t.sats,
-        fiatAmount: "",
-        currency: "SATS",
+        sats: t.fiat ? "" : t.sats,
+        fiatAmount: t.fiat ? (t.fiat.amount / 100).toFixed(2) : "",
+        currency: t.fiat ? t.fiat.currency : "SATS",
         discount: "",
-        state: "settled",
+        state: t.status,
       });
     }
   }

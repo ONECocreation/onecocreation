@@ -7,6 +7,7 @@ import { glassCard } from "@/components/console/glass";
 import { operatorFromCookieHeader, operatorsConfigured } from "@/lib/operator-auth";
 import { CONSOLE_SITE, CONSOLE_CHROME } from "@/lib/console";
 import { listTips, tipsConfigured, type TipLedger } from "@/lib/tips";
+import { dollars } from "@/lib/money-words";
 import LovesDesk from "@/components/console/LovesDesk";
 import TodaySummary, { type TodayNext } from "@/components/console/TodaySummary";
 import { getLiveState, roomForSlug, LIVE_SCHEDULE, LIVE_YOUTUBE } from "@/lib/live";
@@ -18,7 +19,7 @@ const JAR_LABELS: Record<string, string> = {
   payforward: "Pay It Forward",
 };
 
-/** The jars, read live from BTCPay. Pay-it-forward is a promise held for
+/** The jars, read live from the basket orders and BTCPay (T-646). Pay-it-forward is a promise held for
  *  someone who hasn't arrived yet — it gets shown even at zero. */
 /** THE SCOREBOARD (Admiral, 0018.05.18): the jars as one slim banner —
  *  glance, don't dwell; Money Jars holds the full books. */
@@ -49,6 +50,8 @@ async function TipJarsCard({ banner = false }: { banner?: boolean }) {
           {JAR_LABELS[jar]}{" "}
           <b style={{ color: "var(--gold-deep, #d9b24e)" }}>{ledger.totals[jar].settledSats.toLocaleString()}</b>
           <span style={{ fontSize: ".68rem" }}> sats</span>
+          {/* T-646: card gifts beside the sats, never added to them */}
+          {Object.entries(ledger.totals[jar].settledFiat).map(([cur, amt]) => ` · ${dollars(amt, cur)}`)}
         </span>
       ))}
       <span style={{ marginLeft: "auto", fontSize: ".68rem", textTransform: "uppercase", letterSpacing: ".08em", color: "var(--gold-deep, #d9b24e)" }}>

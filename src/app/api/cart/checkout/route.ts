@@ -277,7 +277,9 @@ export async function POST(request: Request) {
     // (their email becomes the account, same as digital/package)
     if (item.kind === "digital" || item.kind === "package" || item.kind === "retreat") hasGated = true;
     if (wantsCard) squareLines.push({ name: item.title, quantity: l.qty, unitAmount: priced.amount });
-    lineItems.push({ itemId: item.id, title: item.title, qty: l.qty, size: l.size, offerSats: l.offerSats, listSats: wantsCard ? undefined : listAmount, giftTo: l.giftTo });
+    // TASK-646: listFiat is the books' record of this line on the card rail
+    // (the jars read it); the charge above is unchanged
+    lineItems.push({ itemId: item.id, title: item.title, qty: l.qty, size: l.size, offerSats: l.offerSats, listSats: wantsCard ? undefined : listAmount, listFiat: wantsCard ? listAmount : undefined, giftTo: l.giftTo });
   }
 
   // a guest WITH an email checks out fine (Admiral, 0018.05.18): the email
