@@ -72,7 +72,10 @@ export function basketRails(lines: readonly BasketRailLine[], rails: { btc: bool
   } else if (dollarOnly.length > 0 && !rails.card) {
     note = `${dollarWord} pays by card, and card checkout is closed right now. Remove it to check out the rest.`;
   } else if (satsOnly.length > 0 && !rails.btc) {
-    note = `${satsWord.charAt(0).toUpperCase()}${satsWord.slice(1)} pays by bitcoin, and bitcoin checkout is closed right now. Remove it to check out the rest.`;
+    /* his Mark 2 (block 976,021): no sats word while bitcoin is off, so this
+       sentence names the rail, never the unit */
+    const btcWord = satsOnly.some((l) => l.offerSats != null) ? "A bitcoin gift or offer" : "An item that pays only by bitcoin";
+    note = `${btcWord} is in this basket, and bitcoin checkout is closed right now. Remove it to check out the rest.`;
   } else {
     note = "These items cannot share one checkout. Remove one, check out, then add it back.";
   }
