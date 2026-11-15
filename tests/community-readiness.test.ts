@@ -279,7 +279,8 @@ describe("TASK-162 — the door + the card's words", () => {
 
   it("the invariants stay: the T-160 /classes gate and the T-137 header Community link (source pin)", async () => {
     const classes = await read("src/app/classes/page.tsx");
-    expect(classes).toContain("!switches.features.community && !switches.features.classes");
+    // block 976,007 (desk answer A, "Close it while the switch is off"): the gate follows the Classes switch alone
+    expect(classes).toContain("if (!switches.features.classes) {");
     expect(classes).toContain("NotOpenYet");
     const nav = await read("src/components/NavMenu.tsx");
     // T-137: the Community header is always-on — no feature gate on it

@@ -29,14 +29,16 @@ export const dynamic = "force-dynamic";
  * this house is the Heartfield). */
 export default async function ClassesPage() {
   /* ── TASK-160 GATE (0018.06.17 a₿ · block 966,055) — the route itself
-     follows the switches now, not just the nav: with `community` AND
-     `classes` both OFF (Love's streamlined default), a direct /classes URL
-     renders the shared NotOpenYet quiet panel (T-137) inside the site
-     chrome, never the rooms. Either switch ON opens the page. This branch
+     follows the switches now, not just the nav: with the switch OFF, a
+     direct /classes URL renders the shared NotOpenYet quiet panel (T-137)
+     inside the site chrome, never the rooms. Block 976,007 (the Admiral's
+     desk answer A, "Close it while the switch is off"): the page follows
+     the Classes switch alone, like /book follows `sessions` and /store
+     follows `store`; `community` ON no longer holds it open. This branch
      stays FIRST — the T-159 lane's Puck-first read lands right after it
      (order: 1 gate → 2 Puck → 3 hand-built). ── */
   const switches = await getSiteConfig();
-  if (!switches.features.community && !switches.features.classes) {
+  if (!switches.features.classes) {
     return (
       <main>
         <SiteHeader />

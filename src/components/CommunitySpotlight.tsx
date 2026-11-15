@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cartridge } from "@/brand/cartridge";
+import { LIVE_WITH_LOVE_URL } from "@/lib/live-with-love";
 
 /**
  * THE COMMUNITY SPOTLIGHT (Admiral's word, 0018.05.15): before the rooms
@@ -13,7 +14,7 @@ import { cartridge } from "@/brand/cartridge";
 export default function CommunitySpotlight() {
   const doors = [
     { icon: "🏜️", title: "Retreats", sub: "Days together at a place — held, fed, and walked in the field.", href: "/retreats", cta: "see what's forming" },
-    { icon: "📺", title: "11:11 Live with Love", sub: "Mon · Wed · Fri @ ~11:11 (MST/PST) — or there abouts ;)", href: "https://www.youtube.com/@Onecocreation", cta: "@Onecocreation", external: true },
+    { icon: "📺", title: "11:11 Live with Love", sub: "Mon · Wed · Fri @ ~11:11 (MST/PST) — or there abouts ;)", href: LIVE_WITH_LOVE_URL, cta: "@Onecocreation", external: true },
   ];
   return (
     <div style={{ margin: "0 0 34px" }}>

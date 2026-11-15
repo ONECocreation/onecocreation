@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { SiteConfig } from "@/lib/site-config";
 import { READING_PAGE_PATH, READING_ROOM_PATH } from "@/lib/reading-room";
+import { LIVE_WITH_LOVE_URL } from "@/lib/live-with-love";
 import { COLLABORATIONS_HREF, COLLABORATIONS_SUBS, DOTERRA_TAB_LABEL, DOTERRA_URL, PLACEHOLDER_NAV_HREFS } from "@/lib/collab-tabs";
 
 /**
@@ -147,18 +148,24 @@ export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
   // Community is a HEADER (TASK-137): Free meditation and 11:11 Live with
   // Love always exist, so it always renders. Heart Field is the free room
   // (derive-or-dash: no free room in the registry, no row).
+  // Block 976,007 (two doors): 11:11 Live with Love opens her YouTube lives
+  // (LIVE_WITH_LOVE_URL, the one address, in a new tab), and the tab itself
+  // opens /classes only while the Classes switch is ON; OFF, the tab opens
+  // its first row instead, the same way Store already does when `store` is
+  // OFF (just above).
+  const community: NonNullable<MenuItem["subs"]> = [
+    { label: "Read with Love", href: READING_PAGE_PATH },
+    { label: "Replays", href: "/replays" },
+    ...(READING_ROOM_PATH ? [{ label: "Heart Field", href: READING_ROOM_PATH }] : []),
+    { label: "11:11 Live with Love", href: LIVE_WITH_LOVE_URL },
+    { label: "Free meditation", href: "/meditation" },
+    ...(s?.features.classes ? [{ label: "Classes", href: "/classes" }] : []),
+    ...(s?.features.news ? [{ label: "News & letters", href: "/news" }] : []),
+  ];
   menu.push({
     label: "Community",
-    href: "/classes",
-    subs: [
-      { label: "Read with Love", href: READING_PAGE_PATH },
-      { label: "Replays", href: "/replays" },
-      ...(READING_ROOM_PATH ? [{ label: "Heart Field", href: READING_ROOM_PATH }] : []),
-      { label: "11:11 Live with Love", href: "/contact" },
-      { label: "Free meditation", href: "/meditation" },
-      ...(s?.features.classes ? [{ label: "Classes", href: "/classes" }] : []),
-      ...(s?.features.news ? [{ label: "News & letters", href: "/news" }] : []),
-    ],
+    href: pageOn(s, "/classes") ? "/classes" : community[0].href,
+    subs: community,
   });
   /* TASK-637 (block 973,977, Love's text 972653): the Collaborations tab
      between Community and Support, and the doTERRA tab beside it. Both
@@ -176,12 +183,17 @@ export function buildDefaultMenu(s: SiteConfig | null): MenuItem[] {
 /** MENU from Love's saved nav, or the switches — pure, so tests pin it.
     `null` = the pre-fetch paint: only the doors every config carries.
     A LEAF item (no children) is gated by its own href's switch. A HEADER
-    (children present) is gated by its CHILDREN's switches only — never its
+    (children present) is SHOWN by its CHILDREN's switches only — never its
     own href — which is exactly why Community always survives: it always
     has at least one always-on child (Free meditation, 11:11), so it's
     never empty, so it's never dropped, no matter what its own href is. A
     header whose every child switches off has nothing left to show and
-    disappears with them. */
+    disappears with them.
+    Block 976,007 (two doors): a header's own click-through still follows
+    its page's switch. Love's saved Community tab opens /classes; while
+    the Classes switch is OFF it opens its first surviving row instead,
+    so no tab sails to a switched-off page (the default menu's Store tab
+    already worked this way). Switch ON: the saved href, unchanged. */
 export function buildMenu(s: SiteConfig | null): MenuItem[] {
   const nav = s?.nav;
   if (!nav || nav.items.length === 0) return buildDefaultMenu(s);
@@ -194,7 +206,7 @@ export function buildMenu(s: SiteConfig | null): MenuItem[] {
     }
     const subs = rawChildren.filter((c) => pageOn(s, c.href)).map((c) => ({ label: c.label, href: c.href }));
     if (subs.length === 0) continue;
-    menu.push({ label: item.label, href: item.href ?? subs[0].href, subs });
+    menu.push({ label: item.label, href: item.href && pageOn(s, item.href) ? item.href : subs[0].href, subs });
   }
   return menu;
 }
@@ -214,6 +226,15 @@ export function navTabHere(pathname: string, m: MenuItem): boolean {
     (/book/xyz still marks a Book child). */
 export function navChildHere(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** Block 976,007: a row that points at another site (an https address, a
+    built-in row like 11:11 Live with Love or a saved "Any link" row) opens
+    in a new tab, the way the site's other outside links do
+    (target="_blank" rel="noreferrer", CommunitySpotlight / ContactDoors /
+    the About page). Site paths stay client-side Links. */
+export function isOutsideHref(href: string): boolean {
+  return href.startsWith("https://");
 }
 
 export default function NavMenu() {
@@ -290,6 +311,10 @@ export default function NavMenu() {
                 onClick={() => { setOpen(false); setDoterra(true); }}>
                 {m.label}
               </button>
+            ) : isOutsideHref(m.href) ? (
+              <a className="nav-link" href={m.href} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
+                {m.label}
+              </a>
             ) : (
             <Link className={`nav-link${tabHere(m) ? " is-here" : ""}`} href={m.href}
               prefetch={PLACEHOLDER_NAV_HREFS.has(m.href) ? false : undefined}
@@ -299,7 +324,11 @@ export default function NavMenu() {
             )}
             {m.subs && (
               <div className="nav-sub">
-                {m.subs.map((s) => (
+                {m.subs.map((s) => isOutsideHref(s.href) ? (
+                  <a key={s.href} href={s.href} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
+                    {s.label}
+                  </a>
+                ) : (
                   <Link key={s.href} href={s.href} className={here(s.href) ? "is-here" : undefined}
                     prefetch={PLACEHOLDER_NAV_HREFS.has(s.href) ? false : undefined}
                     aria-current={here(s.href) ? "page" : undefined} onClick={() => setOpen(false)}>
