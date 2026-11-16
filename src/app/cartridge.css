@@ -27,6 +27,9 @@
   /* TASK-558: the one corner arc for every square-cornered button (the forge's own 6px) */
   --btn-radius:6px;
   --space:#0a0a14; --panel:rgba(24,19,44,.72); --edge:rgba(139,118,196,.34);
+  /* grey cards at night (block 976,142): the site-page panel fill
+     (house.css .mgmt-body [class*="bg-panel"]); night = the night panel */
+  --mgmt-panel:var(--panel);
   /* TASK-398 (B12): the header bar's own token — was a bare literal on
      .site-header (house.css:286), so the bar could never follow the theme.
      Night value byte-identical to the literal it replaces; the dawn twin
@@ -254,6 +257,7 @@
 .button,h5,h6{font-family:var(--font-pixel)}
 
 html[data-oc-theme="light"],.oc-pv-light{  --panel:rgba(255,255,255,.6); --edge:rgba(139,118,196,.28);
+  --mgmt-panel:rgba(255,255,255,.62); /* grey cards at night (976,142): the site-page panel's dawn fill, byte-identical to the literal it replaces */
   --header-bg:rgba(36,26,51,.86); /* TASK-398 (B12) "a little lighter" — RULED PLUM LIFT: the
      palette's own --band-2 family (#241a33) at the night bar's own .86 alpha; not the cream
      flip, so the gold nav/here-mark/DoorButton pin/burger/lockup all hold unchanged */
@@ -409,6 +413,19 @@ html[data-oc-theme="light"] .shelf-photo-scrim{
 .wild-body p{color:#4E4860;font-size:.85rem;margin:0 0 10px}
 .wild-cta{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#614411}
 .wild-cta--soon{color:#4E4860}
+/* Grey cards at night (block 976,142, the Admiral's A: "Both go dark at
+   night, like the cards around them"). The 72%-white card above was
+   the same in both themes, so over the night ground it read grey. At
+   night only, the card wears the night card the "More Ways" cards under it
+   on /support wear (house .card: --panel fill, --glass-edge rim), and its
+   words take the night inks. The picture band (.habitat) is untouched.
+   Dawn never matches this selector, so dawn stays exactly as above. All
+   values are existing house tokens; no new colour. */
+html:not([data-oc-theme="light"]) .wild-card{background:var(--panel);border-color:var(--glass-edge);color:var(--ink)}
+html:not([data-oc-theme="light"]) .wild-body h3{color:var(--ink-strong)}
+html:not([data-oc-theme="light"]) .wild-body p{color:var(--muted)}
+html:not([data-oc-theme="light"]) .wild-cta{color:var(--gold-deep)}
+html:not([data-oc-theme="light"]) .wild-cta--soon{color:var(--muted)}
 @media(prefers-reduced-motion:reduce){.wild-card,.beast,.sprout{transition:none}.wild-card:hover .beast{transform:none}}
 
 /* ── THE COSMIC WALK (0018.05.15) — the homepage keeps its dark hero

@@ -554,7 +554,13 @@ header.mgmt-head{background:none;position:static;border-bottom:none;padding:0;ba
 
 /* the sign-in card sheds its arcade skin (panel/glow/pixel/pink shadow)
    inside site pages — scoped like the rest of the cartridge repaint */
-.mgmt-body [class*="bg-panel"]{background:rgba(255,255,255,.62)!important;border-radius:20px}
+/* Grey cards at night (block 976,142, the Admiral's A): the fill was a
+   bare white literal with no theme scope, so at night it lay over the dark
+   ground and read grey (member profile, /artist, /media, /bb). It now reads
+   --mgmt-panel (cartridge.css): at night that is --panel, the night panel
+   the house .card wears; at dawn it is this same rgba(255,255,255,.62), so
+   dawn keeps the same selector, the same weight and the same fill. */
+.mgmt-body [class*="bg-panel"]{background:var(--mgmt-panel)!important;border-radius:20px}
 .mgmt-body [class*="shadow-["]{box-shadow:var(--soft)!important}
 .mgmt-body [class*="glow-"]{text-shadow:none!important}
 .mgmt-body [class*="font-pixel"]{font-family:var(--sans)!important;letter-spacing:.04em}
