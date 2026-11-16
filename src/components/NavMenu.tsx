@@ -19,8 +19,10 @@ import { COLLABORATIONS_HREF, COLLABORATIONS_SUBS, DOTERRA_TAB_LABEL, DOTERRA_UR
  * SiteHeader can't pass the doc down (it's client-reachable via
  * MemberProfile/OperatorGate, so no server import may enter its graph), so the
  * switches ride the public half of /api/admin/site — same fetch idiom as
- * FrenBadge. Until the answer lands only the doors every config carries
- * render, so a hidden feature never flashes on.
+ * FrenBadge. Until the answer lands the bar carries no tabs at all (block
+ * 976,140, the Admiral's answer B: see menuForLoad below); if it never
+ * lands, only the doors every config carries render, so a hidden feature
+ * never flashes on.
  *
  * TASK-137 (0018.06.17 a₿) — the menu Love can shape:
  *  · Community is now a HEADER, not a switch: it always renders because two
@@ -241,9 +243,27 @@ export function isOutsideHref(href: string): boolean {
   return href.startsWith("https://");
 }
 
+/** Block 976,140 (desk card 976039, the Admiral's answer B, "Empty until it
+    lands"): the bar shows NO tabs until Love's saved menu arrives, so the
+    built-in menu never flashes up first on a slow line. Three states:
+      · "waiting": the fetch has not answered yet. No tabs (the bar keeps
+        its height; the logo and the basket/name tail still draw).
+      · "landed": her saved menu (buildMenu(config)), as before.
+      · "failed": the fetch errored or answered without a config. The
+        built-in menu (buildMenu(null), the switch-free doors) so a visitor
+        is never left with an empty bar for good.
+    Pure and exported so tests pin the ruling without a DOM. */
+export type MenuLoad = { state: "waiting" } | { state: "landed"; config: SiteConfig } | { state: "failed" };
+
+export function menuForLoad(load: MenuLoad): MenuItem[] {
+  if (load.state === "waiting") return [];
+  if (load.state === "landed") return buildMenu(load.config);
+  return buildMenu(null);
+}
+
 export default function NavMenu() {
   const [open, setOpen] = useState(false); // hamburger
-  const [switches, setSwitches] = useState<SiteConfig | null>(null);
+  const [load, setLoad] = useState<MenuLoad>({ state: "waiting" });
   const [doterra, setDoterra] = useState(false); // T-637: the doTERRA pop-up
   const ref = useRef<HTMLElement>(null);
   const pathname = usePathname() ?? "";
@@ -251,11 +271,11 @@ export default function NavMenu() {
   useEffect(() => {
     fetch("/api/admin/site", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d?.ok && d.config && setSwitches(d.config))
-      .catch(() => {});
+      .then((d) => setLoad(d?.ok && d.config ? { state: "landed", config: d.config } : { state: "failed" }))
+      .catch(() => setLoad({ state: "failed" }));
   }, []);
 
-  const menu = buildMenu(switches);
+  const menu = menuForLoad(load);
 
   /* where-you-are wears the dawn — the TASK-176 ruling: the TAB lights only
      for its own page (never a child's); a CHILD keeps its own mark */
@@ -303,7 +323,7 @@ export default function NavMenu() {
       >
         ☰
       </button>
-      <div className={`nav-items${open ? " is-open" : ""}`}>
+      <div className={`nav-items${open && menu.length > 0 ? " is-open" : ""}`} aria-busy={load.state === "waiting" ? true : undefined}>
         {menu.map((m) => (
           <div key={m.label} className={`nav-item${m.subs ? " has-sub" : ""}`}>
             {m === doterraItem ? (
