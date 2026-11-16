@@ -88,7 +88,7 @@ export default function GiftDrawer({ liveJars, dollarGifts = [] }: { liveJars: J
             {tipJarOpen && giftsHead}
             {tipJarOpen && giftsLine}
             <p style={dashLineStyle}>
-              — how gifts were received will show here.
+              How gifts were received will show here.
             </p>
             <TipJar only={liveJars} dollarGifts={dollarGifts} />
             {liveJars.length > 0 && (
