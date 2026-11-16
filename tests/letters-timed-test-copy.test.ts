@@ -332,4 +332,26 @@ describe("the panel: a time for the test copy, its row and its Cancel, words fro
     expect(testCopyRowWords({ scheduledFor: at, sent: 0, dropped: 1 })).toBe("Test copy · not sent");
     for (const w of [...Object.values(testCopyWords), testCopyScheduledLine("a@b.c", at)]) expect(w).not.toMatch(/—/);
   });
+  it("block 976,143: the operator words stand exactly as Lumen read them", () => {
+    expect(testCopyWords).toEqual({
+      timeLabel: "Test copy time, Mountain Time",
+      timeVisibleLabel: "Time for the test copy (optional)",
+      timeHint: "Leave the time empty to send it on the next mail run.",
+      scheduleButton: "Schedule the test copy",
+      past: "That time has passed. Pick a later one, or leave it empty.",
+      cancelButton: "Cancel test copy",
+      cancelled: "The test copy will not go out.",
+    });
+  });
+  it("block 976,143: the card reads address, time label, time field, hint, then the button last", () => {
+    const card = SRC.slice(SRC.indexOf('<SectionHead label="Send me a test" />'), SRC.indexOf('<SectionHead label="Send to the list" />'));
+    const order = ["value={testTo}", "{testCopyWords.timeVisibleLabel}", "aria-label={testCopyWords.timeLabel}", "{testCopyWords.timeHint}", "onClick={sendTest}"].map((m) => card.indexOf(m));
+    expect(order.every((i) => i >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    expect(card).toContain('htmlFor="test-copy-at"');
+  });
+  it("block 976,143: on a phone the waiting row's words take their own line, Cancel under them", () => {
+    expect(SRC).toContain('<span className="block sm:inline">{testCopyRowWords(t)}</span>');
+    expect(SRC).toContain('className="mt-1 flex flex-wrap gap-2 sm:mt-0 sm:ml-2 sm:inline-flex"');
+  });
 });

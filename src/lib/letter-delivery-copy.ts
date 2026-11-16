@@ -37,11 +37,12 @@ export function deliveryNotice(kind: "scheduled" | "sent" | "missed", p: { subje
 /* Timed test copy (block 976,142): every word an operator reads about it. */
 export const testCopyWords = {
   timeLabel: "Test copy time, Mountain Time",
+  timeVisibleLabel: "Time for the test copy (optional)",
   timeHint: "Leave the time empty to send it on the next mail run.",
   scheduleButton: "Schedule the test copy",
   past: "That time has passed. Pick a later one, or leave it empty.",
   cancelButton: "Cancel test copy",
-  cancelled: "Cancelled. The test copy will not go out.",
+  cancelled: "The test copy will not go out.",
 };
 export function testCopyScheduledLine(to: string, iso: string): string {
   return `Test copy for ${to} scheduled for ${deliveryTime(iso)}. It goes out on the first mail run at or after that time. Only this address gets it.`;

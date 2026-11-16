@@ -618,17 +618,21 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
 
       <SectionHead label="Send me a test" />
       <div style={glassCard}>
+        {/* block 976,143: top to bottom: the address, the time with its label and hint, then the button last */}
         <div className="flex flex-wrap items-center gap-2">
           <input value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="you@example.com" type="email" className="console-field kit-field-sm" style={fieldSm} />
+        </div>
+        <label htmlFor="test-copy-at" className="kit-note mt-2" style={{ display: "block" }}>{testCopyWords.timeVisibleLabel}</label>
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <input id="test-copy-at" type="datetime-local" value={testAt} onChange={(e) => setTestAt(e.target.value)} aria-label={testCopyWords.timeLabel} className="console-field kit-field-sm" style={fieldSm} />
+          <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>Mountain Time</span>
+        </div>
+        <p className="kit-note">{testCopyWords.timeHint}</p>
+        <div className="mt-2">
           <Button sm variant="second" onClick={sendTest} disabled={sending || !testTo.includes("@") || !hasBody}>
             {testOutcome.kind === "sending" ? "Sending…" : testAt ? testCopyWords.scheduleButton : "Send me a test copy"}
           </Button>
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <input type="datetime-local" value={testAt} onChange={(e) => setTestAt(e.target.value)} aria-label={testCopyWords.timeLabel} className="console-field kit-field-sm" style={fieldSm} />
-          <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>Mountain Time</span>
-        </div>
-        <p className="kit-note">{testCopyWords.timeHint}</p>
         {testOutcome.kind !== "idle" && (
           <p aria-live="polite" className={testOutcome.kind === "err" ? "kit-note kit-note-err" : testOutcome.kind === "ok" ? "kit-note kit-note-ok" : "kit-note"}>{testSendOutcomeLine(testOutcome)}</p>
         )}
@@ -636,9 +640,10 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
           <ul className="kit-sends-list" data-list="test-sends">
             {testSends.map((t) => (
               <li key={t.sendId} className="kit-note">
-                <span>{testCopyRowWords(t)}</span>
+                {/* on a phone the words take their own line and Cancel sits under them */}
+                <span className="block sm:inline">{testCopyRowWords(t)}</span>
                 {sendIsChangeable(t) && (
-                  <span className="ml-2 inline-flex flex-wrap gap-2">
+                  <span className="mt-1 flex flex-wrap gap-2 sm:mt-0 sm:ml-2 sm:inline-flex">
                     <Button sm variant="second" onClick={() => { setRowNote(null); changeSend(t.sendId, "cancel"); }} disabled={sending}>{testCopyWords.cancelButton}</Button>
                   </span>
                 )}
