@@ -1,6 +1,6 @@
 "use client";
 
-import { deliveryCopy } from "@/lib/letter-delivery-copy";
+import { deliveryCopy, testCopyWords, testCopyScheduledLine, testCopyRowWords } from "@/lib/letter-delivery-copy";
 import MailTickStatus from "@/components/console/MailTickStatus";
 import { use, useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
@@ -85,6 +85,8 @@ export interface SendRecord {
   createdAtMs: number;
   /** Love pressed Cancel on it (absent on records written before Cancel existed). */
   cancelled?: boolean;
+  /** a timed test copy to one address (its own list, never the letter's list history) */
+  test?: boolean;
 }
 
 /* ═══════════════ the schedule reads in Mountain Time (the Admiral's pin) ═══════
@@ -196,7 +198,7 @@ export function sendToReArm(sends: SendRecord[], nowMs: number): SendRecord | nu
   return sends.find((s) => s.sent + s.dropped < s.queued && !pollShouldStop(s.createdAtMs, nowMs, s)) ?? null;
 }
 
-export type TestSendOutcome = { kind: "idle" } | { kind: "sending" } | { kind: "ok"; to: string } | { kind: "err"; reason: string };
+export type TestSendOutcome = { kind: "idle" } | { kind: "sending" } | { kind: "ok"; to: string; at?: string } | { kind: "err"; reason: string };
 
 /** The test button's own line, right beside it — never shared with the
  *  list send's line below (the original miss: one `note` variable served
@@ -209,7 +211,7 @@ export function testSendOutcomeLine(o: TestSendOutcome): string {
     case "sending":
       return "Sending…";
     case "ok":
-      return `Test copy queued for ${o.to}.`;
+      return o.at ? testCopyScheduledLine(o.to, o.at) : `Test copy queued for ${o.to}.`;
     case "err":
       return o.reason;
   }
@@ -227,6 +229,9 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   const [cap, setCap] = useState(100);
   const [segment, setSegment] = useState("all");
   const [testTo, setTestTo] = useState("");
+  // block 976,142: an optional time for the test copy, and the timed test copies on record
+  const [testAt, setTestAt] = useState("");
+  const [testSends, setTestSends] = useState<SendRecord[]>([]);
   const [sendAt, setSendAt] = useState("");
   const [intentNote, setIntentNote] = useState("");
   const [historyUnavailable, setHistoryUnavailable] = useState(false);
@@ -309,6 +314,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         // reloads shows a frozen line that never updates again.
         const sends: SendRecord[] = sendsRes?.ok ? (sendsRes.sends ?? []) : [];
         setRecentSends(sends);
+        setTestSends(sendsRes?.ok ? (sendsRes.testSends ?? []) : []);
         setHistoryUnavailable(!sendsRes?.ok);
         if (!timeEdited.current && intentRes?.intent?.at) {
           setSendAt(isoToMountainInput(intentRes.intent.at));
@@ -426,6 +432,10 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
   }, [unqueuedTime]);
 
   async function sendTest() {
+    const at = testAt ? mountainInputToIso(testAt) : null;
+    if (testAt && (!at || Date.parse(at) <= Date.now())) {
+      setTestOutcome({ kind: "err", reason: testCopyWords.past }); return;
+    }
     if (sendingRef.current) return; // one click in flight at a time
     sendingRef.current = true;
     setSending(true);
@@ -434,9 +444,17 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
       const d = await fetch("/api/admin/letters/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key, testTo }),
+        body: JSON.stringify({ key, testTo, at: at ?? undefined }),
       }).then((r) => r.json()).catch(() => null);
-      setTestOutcome(d?.ok ? { kind: "ok", to: testTo } : { kind: "err", reason: d?.reason ?? "test send failed" });
+      setTestOutcome(d?.ok ? { kind: "ok", to: testTo, at: d.scheduledFor } : { kind: "err", reason: d?.reason ?? "test send failed" });
+      if (d?.ok && d.sendId) {
+        // a timed test copy shows right away, with its own Cancel
+        setTestSends((prev) => [
+          { sendId: d.sendId, queued: 1, sent: 0, dropped: 0, segment: "test", scheduledFor: d.scheduledFor, createdAtMs: Date.now(), test: true },
+          ...prev.filter((s) => s.sendId !== d.sendId),
+        ].slice(0, 5));
+        setTestAt("");
+      }
     } finally {
       sendingRef.current = false;
       setSending(false);
@@ -517,10 +535,11 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         setRowNote({ sendId, text: d?.reason ?? "That did not save. Try again.", err: true });
         return;
       }
-      const rec: SendRecord = { sendId, queued: d.queued, sent: d.sent, dropped: d.dropped, segment: d.segment, scheduledFor: d.scheduledFor, createdAtMs: d.createdAtMs, cancelled: !!d.cancelled };
-      setRecentSends((prev) => prev.map((s) => (s.sendId === sendId ? rec : s)));
+      const rec: SendRecord = { sendId, queued: d.queued, sent: d.sent, dropped: d.dropped, segment: d.segment, scheduledFor: d.scheduledFor, createdAtMs: d.createdAtMs, cancelled: !!d.cancelled, test: !!d.test };
+      if (rec.test) setTestSends((prev) => prev.map((s) => (s.sendId === sendId ? rec : s)));
+      else setRecentSends((prev) => prev.map((s) => (s.sendId === sendId ? rec : s)));
       setRowEdit(null);
-      setRowNote({ sendId, text: action === "cancel" ? "Cancelled. Nobody on the list gets it." : `Moved to ${mountainWords(rec.scheduledFor)}.`, err: false });
+      setRowNote({ sendId, text: action === "cancel" ? (rec.test ? testCopyWords.cancelled : "Cancelled. Nobody on the list gets it.") : `Moved to ${mountainWords(rec.scheduledFor)}.`, err: false });
       if (activeSendId === sendId) {
         if (action === "cancel") {
           setActiveSendId(null);
@@ -599,14 +618,41 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
 
       <SectionHead label="Send me a test" />
       <div style={glassCard}>
+        {/* block 976,143: top to bottom: the address, the time with its label and hint, then the button last */}
         <div className="flex flex-wrap items-center gap-2">
           <input value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="you@example.com" type="email" className="console-field kit-field-sm" style={fieldSm} />
+        </div>
+        <label htmlFor="test-copy-at" className="kit-note" style={{ display: "block", marginTop: 10 }}>{testCopyWords.timeVisibleLabel}</label>
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <input id="test-copy-at" type="datetime-local" value={testAt} onChange={(e) => setTestAt(e.target.value)} aria-label={testCopyWords.timeLabel} className="console-field kit-field-sm" style={fieldSm} />
+          <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>Mountain Time</span>
+        </div>
+        <p className="kit-note">{testCopyWords.timeHint}</p>
+        <div className="mt-2">
           <Button sm variant="second" onClick={sendTest} disabled={sending || !testTo.includes("@") || !hasBody}>
-            {testOutcome.kind === "sending" ? "Sending…" : "Send me a test copy"}
+            {testOutcome.kind === "sending" ? "Sending…" : testAt ? testCopyWords.scheduleButton : "Send me a test copy"}
           </Button>
         </div>
         {testOutcome.kind !== "idle" && (
           <p aria-live="polite" className={testOutcome.kind === "err" ? "kit-note kit-note-err" : testOutcome.kind === "ok" ? "kit-note kit-note-ok" : "kit-note"}>{testSendOutcomeLine(testOutcome)}</p>
+        )}
+        {testSends.length > 0 && (
+          <ul className="kit-sends-list" data-list="test-sends">
+            {testSends.map((t) => (
+              <li key={t.sendId} className="kit-note">
+                {/* on a phone the words take their own line and Cancel sits under them */}
+                <span className="block sm:inline">{testCopyRowWords(t)}</span>
+                {sendIsChangeable(t) && (
+                  <span className="mt-1 flex flex-wrap gap-2 sm:mt-0 sm:ml-2 sm:inline-flex">
+                    <Button sm variant="second" onClick={() => { setRowNote(null); changeSend(t.sendId, "cancel"); }} disabled={sending}>{testCopyWords.cancelButton}</Button>
+                  </span>
+                )}
+                {rowNote?.sendId === t.sendId && (
+                  <span aria-live="polite" className={rowNote.err ? "kit-note kit-note-err" : "kit-note kit-note-ok"} style={{ display: "block" }}>{rowNote.text}</span>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 

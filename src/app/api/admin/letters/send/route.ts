@@ -11,7 +11,8 @@ import {
 } from "@/lib/letters";
 import { hourlyCap, onceWithin } from "@/lib/mail";
 import { listSubscribers, subscribersConfigured, unsubscribeUrl } from "@/lib/subscribers";
-import { cancelSend, enqueue, getSendRecord, queuedRecipients, recentSendsForLetter, rescheduleSend } from "@/lib/mail-queue";
+import { cancelSend, getSendRecord, queuedRecipients, recentSendsForLetter, recentTestSendsForLetter, rescheduleSend } from "@/lib/mail-queue";
+import { queueTestCopy } from "@/lib/test-send";
 import { moveDelivery } from "@/lib/mailbox";
 import { sendLetterToList } from "@/lib/list-send";
 
@@ -71,14 +72,19 @@ export async function POST(request: Request) {
   const webUrl = seeded ? `/letters/${body.key}` : undefined;
   const htmlFor = (to: string) => letterHtml(tpl.body, { webUrl, unsubscribeUrl: unsubscribeUrl(to) });
 
-  // a TEST copy to one address — the operator's own eyes before the list
+  // a TEST copy to one address — the operator's own eyes before the list.
+  // With `at` it waits in the same queue for the same tick a scheduled list
+  // send would (block 976,142); it never reads the list or writes a member's
+  // record (lib/test-send.ts).
   if (body.testTo) {
-    await enqueue([{
-      to: body.testTo,
-      subject: `[test] ${tpl.subject}`,
-      html: htmlFor(body.testTo),
-    }]);
-    return NextResponse.json({ ok: true, queued: 1, test: true });
+    let testAt: number | undefined;
+    if (body.at) {
+      testAt = Date.parse(body.at);
+      if (!Number.isFinite(testAt)) return NextResponse.json({ ok: false, reason: "bad schedule time" }, { status: 400 });
+      if (testAt <= Date.now()) return NextResponse.json({ ok: false, reason: "Pick a time that has not passed yet." }, { status: 400 });
+    }
+    const queued = await queueTestCopy({ key: body.key, subject: tpl.subject, to: body.testTo, html: htmlFor(body.testTo), notBefore: testAt });
+    return NextResponse.json(queued);
   }
   const notBefore = body.at ? Date.parse(body.at) : undefined;
   if (body.at && !Number.isFinite(notBefore)) {
@@ -157,7 +163,9 @@ export async function GET(request: Request) {
     if (key) {
       if (!(await isLetterKey(key))) return NextResponse.json({ ok: false, reason: "unknown letter" }, { status: 404 });
       const sends = await recentSendsForLetter(key, 5, true);
-      return NextResponse.json({ ok: true, sends });
+      // timed test copies ride their own list, never the letter's list history
+      const testSends = await recentTestSendsForLetter(key, 5);
+      return NextResponse.json({ ok: true, sends, testSends });
     }
     return NextResponse.json({ ok: false, reason: "sendId or key required" }, { status: 400 });
   } catch {
@@ -190,14 +198,15 @@ export async function PATCH(request: Request) {
   const result = body.action === "cancel" ? await cancelSend(body.sendId) : await rescheduleSend(body.sendId, atMs as number);
   if (!result.ok) return NextResponse.json(result, { status: 409 });
 
-  // each member's own /letters mailbox follows the change (best-effort)
-  if (before) {
+  // each member's own /letters mailbox follows the change (best-effort).
+  // A test copy never wrote a mailbox entry and never asked for a notice.
+  if (before && !before.test) {
     const fromAtMs = before.scheduledFor === "next tick" ? before.createdAtMs : Date.parse(before.scheduledFor);
     for (const to of await queuedRecipients(body.sendId)) {
       await moveDelivery(to, before.key, fromAtMs, atMs).catch(() => {});
     }
   }
-  if (body.action === "reschedule" && before) {
+  if (body.action === "reschedule" && before && !before.test) {
     const tpl = await getLetterOverride(before.key);
     if (tpl) await watchDelivery(body.sendId, tpl.subject).catch(() => console.error("reschedule notice deferred"));
   }

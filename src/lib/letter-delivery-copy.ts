@@ -33,3 +33,23 @@ export function deliveryNotice(kind: "scheduled" | "sent" | "missed", p: { subje
   if (kind === "sent") return { subject: `Sent to ${p.sent}: ${p.subject}`, body: `“${p.subject}” has gone out. Sent to ${people(p.sent)}.${p.dropped ? ` ${p.dropped} ${p.dropped === 1 ? "copy was" : "copies were"} not sent.` : ""}\n\nOpen the letter: ${p.url}` };
   return { subject: `Still waiting: ${p.subject}`, body: `You chose ${deliveryTime(p.at)} for “${p.subject}”. That time has passed, and the house has no record of this letter going to the list. This note sends nothing.\n\nWhen you are ready, open the letter. Press Send now, or pick a new time and press Schedule: ${p.url}` };
 }
+
+/* Timed test copy (block 976,142): every word an operator reads about it. */
+export const testCopyWords = {
+  timeLabel: "Test copy time, Mountain Time",
+  timeVisibleLabel: "Time for the test copy (optional)",
+  timeHint: "Leave the time empty to send it on the next mail run.",
+  scheduleButton: "Schedule the test copy",
+  past: "That time has passed. Pick a later one, or leave it empty.",
+  cancelButton: "Cancel test copy",
+  cancelled: "The test copy will not go out.",
+};
+export function testCopyScheduledLine(to: string, iso: string): string {
+  return `Test copy for ${to} scheduled for ${deliveryTime(iso)}. It goes out on the first mail run at or after that time. Only this address gets it.`;
+}
+export function testCopyRowWords(s: { scheduledFor: string; sent: number; dropped: number; cancelled?: boolean }): string {
+  if (s.cancelled) return "Test copy · cancelled";
+  if (s.sent > 0) return "Test copy · sent";
+  if (s.dropped > 0) return "Test copy · not sent";
+  return `Test copy · waiting for ${deliveryTime(s.scheduledFor)}`;
+}
