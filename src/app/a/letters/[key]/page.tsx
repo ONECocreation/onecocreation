@@ -622,7 +622,7 @@ export default function LetterSendPanel({ params }: { params: Promise<{ key: str
         <div className="flex flex-wrap items-center gap-2">
           <input value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="you@example.com" type="email" className="console-field kit-field-sm" style={fieldSm} />
         </div>
-        <label htmlFor="test-copy-at" className="kit-note mt-2" style={{ display: "block" }}>{testCopyWords.timeVisibleLabel}</label>
+        <label htmlFor="test-copy-at" className="kit-note" style={{ display: "block", marginTop: 10 }}>{testCopyWords.timeVisibleLabel}</label>
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <input id="test-copy-at" type="datetime-local" value={testAt} onChange={(e) => setTestAt(e.target.value)} aria-label={testCopyWords.timeLabel} className="console-field kit-field-sm" style={fieldSm} />
           <span style={{ fontSize: ".75rem", color: "var(--muted)" }}>Mountain Time</span>
