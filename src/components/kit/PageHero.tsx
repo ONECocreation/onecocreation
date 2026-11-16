@@ -19,7 +19,7 @@ import StackedHero from "@/components/StackedHero";
  *    blocks here, so a page she edits wears the same top.
  */
 export interface KitPageHeroProps {
-  kicker?: string;
+  kicker?: ReactNode;
   kickerTone?: "teal";
   lines?: { t: string; tone?: "ink" | "teal" | "amp" | "sub" | "rose" }[];
   constellation?: boolean;

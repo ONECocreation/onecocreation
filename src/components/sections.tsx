@@ -632,15 +632,18 @@ export async function Donations() {
   );
 }
 
-export function FreeMeditation() {
+/** `heading={false}` (the /meditation page, block 976,027): the page's top
+ *  (kit PageHero) already says the kicker and heading, so the section opens
+ *  on the words. The home page calls it bare and is unchanged. */
+export function FreeMeditation({ heading = true }: { heading?: boolean } = {}) {
   return (
     <section id="free">
       <div className="wrap">
         <div className="two-col" style={{ gap: 36 }}>
           <img src="/images/dusk-lake-storm-light.webp" alt="Love's own photograph: a still lake under mountains at dusk, orange light breaking through storm cloud" style={{ borderRadius: 24, boxShadow: "var(--soft)" }} />
           <div>
-            <p className="kicker">Be in the Know</p>
-            <h2 className="sec-h">A Free Meditation, With Love</h2>
+            {heading && <p className="kicker">Be in the Know</p>}
+            {heading && <h2 className="sec-h">A Free Meditation, With Love</h2>}
             <p style={{ color: "var(--ink-body)", fontSize: "1.02rem" }}>Join the newsletter and receive <strong style={{ color: "var(--rose)" }}>&ldquo;Unzip Into the New You&rdquo;</strong> — a free guided meditation, plus a weekly note of inspiration.</p>
             <p style={{ fontSize: ".85rem", color: "var(--muted)", margin: "0 0 26px" }}>Delivered straight to your inbox — on the house, from our 💞 to yours.</p>
             <SubscribeForm source="meditation" />

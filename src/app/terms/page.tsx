@@ -5,6 +5,7 @@ import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PaletteVars from "@/components/PaletteVars";
+import { PageHero } from "@/components/kit";
 import PopupHost from "@/components/PopupHost";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
@@ -44,10 +45,16 @@ export default async function TermsPage() {
   return (
     <main className="mgmt-ground">
       <SiteHeader />
+      {/* the house top (galaxy, block 976,027): the page's own eyebrow and
+          title, moved up out of the console header. No lead (block 976,030):
+          the draft note stays the small first line of the body, as on main. */}
+      <PageHero
+        kicker="The fine print, kindly"
+        lines={[{ t: "TERMS" }, { t: "& CONDITIONS", tone: "teal" }]}
+        constellation
+      />
       <section className="mgmt-wrap mgmt-body" style={{ maxWidth: 720 }}>
         <header className="mgmt-head">
-          <p className="mgmt-eyebrow">The fine print, kindly</p>
-          <h1 className="mgmt-title">Terms &amp; Conditions</h1>
           <p className="mgmt-blurb">Draft v1 — plain language; final wording with Love.</p>
         </header>
         <div className="space-y-4 text-sm text-neutral-300">

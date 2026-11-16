@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { cartridge } from "@/brand/cartridge";
 
 /**
@@ -22,7 +23,8 @@ export default function StackedHero({
   constellation,
   children,
 }: {
-  kicker?: string;
+  /** a string, or a small node (a package page's kicker is its link back to /memberships) */
+  kicker?: ReactNode;
   /** default (unset) is the CSS default — --rose — so most pages never pass this */
   kickerTone?: "teal";
   lines: { t: string; tone?: "ink" | "teal" | "amp" | "sub" | "rose" }[];

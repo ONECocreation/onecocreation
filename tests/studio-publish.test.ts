@@ -198,14 +198,14 @@ async function publish(slug: string, text: string) {
 }
 
 describe("SupportPage — publish to live actually takes", () => {
-  it("with nothing published: the hand-built room (its own StackedHero kicker), no Render", async () => {
+  it("with nothing published: the hand-built room (its own house-top kicker, kit PageHero since block 976,027), no Render", async () => {
     const SupportPage = (await import("@/app/support/page")).default;
-    const { default: StackedHero } = await import("@/components/StackedHero");
+    const { default: PageHero } = await import("@/components/kit/PageHero");
     const el = await SupportPage();
 
     const { Render } = await import("@puckeditor/core");
     expect(findAll(el, (e) => e.type === Render)).toHaveLength(0);
-    const heroes = findAll(el, (e) => e.type === StackedHero);
+    const heroes = findAll(el, (e) => e.type === PageHero);
     expect(heroes).toHaveLength(1);
     /* TASK-411 (block 968,170 a₿, decision C lean — ruled words pending):
        the ⚡ goes with the lightning words; if the Admiral rules the glyph
@@ -217,7 +217,7 @@ describe("SupportPage — publish to live actually takes", () => {
     const doc = await publish("support", "Fixture publish — support live");
 
     const SupportPage = (await import("@/app/support/page")).default;
-    const { default: StackedHero } = await import("@/components/StackedHero");
+    const { default: PageHero } = await import("@/components/kit/PageHero");
     const el = await SupportPage();
 
     const { Render } = await import("@puckeditor/core");
@@ -227,7 +227,7 @@ describe("SupportPage — publish to live actually takes", () => {
     // the real blocks render the fixture words — no mock in this suite
     expect(renderToStaticMarkup(renders[0])).toContain("Fixture publish — support live");
     // the hand-built branch is gone from this request's output
-    expect(findAll(el, (e) => e.type === StackedHero)).toHaveLength(0);
+    expect(findAll(el, (e) => e.type === PageHero)).toHaveLength(0);
   });
 });
 
@@ -318,17 +318,17 @@ describe("StorePage — publish to live actually takes", () => {
     expect(findAll(el, (e) => e.type === NotOpenYet)).toHaveLength(1);
   });
 
-  it("store ON, nothing published: the hand-built shelf (its StackedHero), no Render", async () => {
+  it("store ON, nothing published: the hand-built shelf (its house top, kit PageHero since block 976,027), no Render", async () => {
     const { saveSiteConfig } = await import("@/lib/site-config");
     await saveSiteConfig({ features: { store: true } }); // fixture file in the isolated cwd
 
     const StorePage = (await import("@/app/store/page")).default;
-    const { default: StackedHero } = await import("@/components/StackedHero");
+    const { default: PageHero } = await import("@/components/kit/PageHero");
     const el = await StorePage();
 
     const { Render } = await import("@puckeditor/core");
     expect(findAll(el, (e) => e.type === Render)).toHaveLength(0);
-    const heroes = findAll(el, (e) => e.type === StackedHero);
+    const heroes = findAll(el, (e) => e.type === PageHero);
     expect(heroes).toHaveLength(1);
     expect((heroes[0].props as { kicker?: string }).kicker).toBe("Where Heaven and Earth Meet");
   });
@@ -339,7 +339,7 @@ describe("StorePage — publish to live actually takes", () => {
     const doc = await publish("store", "Fixture publish — store live");
 
     const StorePage = (await import("@/app/store/page")).default;
-    const { default: StackedHero } = await import("@/components/StackedHero");
+    const { default: PageHero } = await import("@/components/kit/PageHero");
     const el = await StorePage();
 
     const { Render } = await import("@puckeditor/core");
@@ -347,6 +347,6 @@ describe("StorePage — publish to live actually takes", () => {
     expect(renders).toHaveLength(1);
     expect((renders[0].props as { data?: unknown }).data).toEqual(doc);
     expect(renderToStaticMarkup(renders[0])).toContain("Fixture publish — store live");
-    expect(findAll(el, (e) => e.type === StackedHero)).toHaveLength(0);
+    expect(findAll(el, (e) => e.type === PageHero)).toHaveLength(0);
   });
 });

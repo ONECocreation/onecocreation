@@ -7,6 +7,7 @@ import SiteFooter from "@/components/SiteFooter";
 import PaletteVars from "@/components/PaletteVars";
 import PopupHost from "@/components/PopupHost";
 import { FreeMeditation } from "@/components/sections";
+import { PageHero } from "@/components/kit";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
 
@@ -43,5 +44,21 @@ export default async function MeditationPage() {
     );
   }
 
-  return (<><SiteHeader /><main><FreeMeditation /></main><SiteFooter /></>);
+  /* the house top (galaxy, block 976,027): the section's own kicker and
+     heading move up into it; the section below opens on her words. No
+     glyph line here (block 976,030), as on /replays: the short top keeps
+     the email box in a phone's first screen, as on main. */
+  return (
+    <>
+      <SiteHeader />
+      <main>
+        <PageHero
+          kicker="Be in the Know"
+          lines={[{ t: "A FREE MEDITATION" }, { t: "WITH LOVE", tone: "teal" }]}
+        />
+        <FreeMeditation heading={false} />
+      </main>
+      <SiteFooter />
+    </>
+  );
 }

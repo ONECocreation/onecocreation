@@ -6,7 +6,7 @@ import "@puckeditor/core/no-external.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import WildDoors from "@/components/WildDoors";
-import StackedHero from "@/components/StackedHero";
+import { PageHero } from "@/components/kit";
 import PaletteVars from "@/components/PaletteVars";
 import PopupHost from "@/components/PopupHost";
 import { config } from "@/lib/puck-config";
@@ -69,16 +69,13 @@ export default async function SupportPage() {
     <>
       <SiteHeader />
       <main>
-        {/* ── the field hero ── */}
-        <section style={{ paddingBottom: 26 }}>
-          <div className="wrap center reveal">
-            <StackedHero kicker="Support This Work — Gently" lines={[{ t: "TEND" }, { t: "THE FIELD", tone: "teal" }]} constellation />
-            <p className="lead" style={{ marginBottom: 0 }}>
-              Everything here — the sessions, the rooms, the letters — is held by one pair of hands.
-              A gift lands with Love.
-            </p>
-          </div>
-        </section>
+        {/* ── the field hero: the house top (galaxy, block 976,027) ── */}
+        <PageHero
+          kicker="Support This Work — Gently"
+          lines={[{ t: "TEND" }, { t: "THE FIELD", tone: "teal" }]}
+          constellation
+          lead={<>Everything here — the sessions, the rooms, the letters — is held by one pair of hands. A gift lands with Love.</>}
+        />
 
         {/* ── the wild doors ── */}
         <section style={{ padding: "20px 0 34px" }}>

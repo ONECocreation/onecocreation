@@ -7,7 +7,7 @@ import SiteFooter from "@/components/SiteFooter";
 import PaletteVars from "@/components/PaletteVars";
 import PopupHost from "@/components/PopupHost";
 import CartPanel from "@/components/store/CartPanel";
-import StackedHero from "@/components/StackedHero";
+import { PageHero } from "@/components/kit";
 import { config } from "@/lib/puck-config";
 import { getPuckPage } from "@/lib/puck-store";
 import { applyCartRailsToPuck } from "@/lib/puck-blocks/cart-panel";
@@ -73,14 +73,15 @@ export default async function CartPage() {
   return (
     <main>
       <SiteHeader />
+      {/* the house top (galaxy, block 976,027); the checkout line is its lead */}
+      <PageHero
+        kicker="The Store"
+        lines={[{ t: "YOUR" }, { t: "BASKET 🧺", tone: "teal" }]}
+        constellation
+        lead={cartCheckoutLine(rails)}
+      />
       <section>
         <div className="wrap" style={{ maxWidth: 720 }}>
-          <div className="center reveal" style={{ marginBottom: 26 }}>
-            <StackedHero kicker="The Store" lines={[{ t: "YOUR" }, { t: "BASKET 🧺", tone: "teal" }]} />
-            <p style={{ color: "var(--muted)", fontSize: ".9rem", margin: "14px 0 0" }}>
-              {cartCheckoutLine(rails)}
-            </p>
-          </div>
           <CartPanel rails={rails} />
         </div>
       </section>
