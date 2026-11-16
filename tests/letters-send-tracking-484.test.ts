@@ -338,7 +338,7 @@ describe("GET /api/admin/letters/send — the real sent state, read back", () =>
     const { createLetter } = await import("@/lib/letters");
     const { key } = await createLetter({ title: "Never Sent", audience: "list" });
     const d = await (await sendGET())(req(`/api/admin/letters/send?key=${key}`)).then((r) => r.json());
-    expect(d).toEqual({ ok: true, sends: [] });
+    expect(d).toEqual({ ok: true, sends: [], testSends: [] }); // block 976,142: timed test copies ride their own list
   });
 });
 

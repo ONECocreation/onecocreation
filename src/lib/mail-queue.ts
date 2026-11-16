@@ -30,8 +30,9 @@ export interface QueuedMail {
   guard?: { kind: "cart-hold"; cartId: string; holdId: string } | { kind: "subscribed" };
   /** T-484 (walk item S7): every item from ONE list-send panel click
    *  carries the SAME sendId — this tick's own record of what actually
-   *  happened against it (see the send-record block below). Absent for a
-   *  test copy and for every other queue user (the cart/day-two drips) —
+   *  happened against it (see the send-record block below). A TIMED test
+   *  copy carries one too (its record is marked `test`). Absent for an
+   *  untimed test copy and for every other queue user (the cart/day-two drips) —
    *  those never touch `letters:send:*` at all. */
   sendId?: string;
 }
@@ -95,6 +96,10 @@ export interface SendRecord {
   dropped: number;
   /** Love pressed Cancel: every copy not yet mailed is dropped at the next tick. */
   cancelled: boolean;
+  /** A timed TEST copy to one address (block 976,142): its own record so the
+   *  panel can show it and Cancel it, but never on the letter's list history
+   *  (`letters:sends:<key>`), never a headcount, never a member's mailbox. */
+  test?: boolean;
 }
 
 /** REST KV hands a hash back as a flat `[field, value, field, value, …]`
@@ -111,12 +116,12 @@ function parseHash(raw: unknown): Record<string, string> {
 }
 
 /** Written ONCE, right after `enqueue()` succeeds for a real list send
- *  (never a test copy). A failure here must never undo the send that
+ *  (or a TIMED test copy, marked `test`). A failure here must never undo the send that
  *  already queued — the panel simply has no progress line to poll for
  *  this one send, same as any other best-effort read. */
 export async function initSendRecord(
   sendId: string,
-  info: { key: string; queued: number; segment: string; scheduledFor: string },
+  info: { key: string; queued: number; segment: string; scheduledFor: string; test?: boolean },
 ): Promise<void> {
   try {
     const k = sendRecordKey(sendId);
@@ -129,6 +134,7 @@ export async function initSendRecord(
       "sent", "0",
       "dropped", "0",
       "createdAtMs", String(Date.now()),
+      ...(info.test ? ["test", "1"] : []),
     ]);
     await kv(["PERSIST", k]);
   } catch {
@@ -165,10 +171,46 @@ export async function getSendRecord(sendId: string, strict = false): Promise<Sen
       sent: Number(h.sent ?? 0),
       dropped: Number(h.dropped ?? 0),
       cancelled: h.cancelled === "1",
+      ...(h.test === "1" ? { test: true } : {}),
     };
   } catch (err) {
     if (strict) throw err;
     return null;
+  }
+}
+
+/* ── timed test copies (block 976,142) ─────────────────────────────────────
+ * A test copy with a time gets a sendId and a send record (marked `test`) so
+ * it rides the same queue, the same `notBefore`, the same tick and the same
+ * Cancel as a list send. Its id goes on its OWN short list per letter,
+ * `letters:test-sends:<key>`, never on `letters:sends:<key>`: the letter's
+ * Draft/Scheduled/Sent line, the missed-moment note and the list's recent
+ * sends never see a test copy. */
+
+const testSendsForLetterKey = (key: string) => `letters:test-sends:${key}`;
+
+export async function recordTestSendForLetter(key: string, sendId: string): Promise<void> {
+  try {
+    const k = testSendsForLetterKey(key);
+    await kv(["LPUSH", k, sendId]);
+    await kv(["LTRIM", k, "0", String(RECENT_SENDS_KEPT - 1)]);
+  } catch {
+    /* the panel's list is a nicety; the copy already queued */
+  }
+}
+
+/** The last few timed test copies for one letter, newest first. */
+export async function recentTestSendsForLetter(key: string, limit = 5): Promise<Array<SendRecord & { sendId: string }>> {
+  try {
+    const ids = ((await kv(["LRANGE", testSendsForLetterKey(key), "0", String(limit - 1)])) as string[] | null) ?? [];
+    const out: Array<SendRecord & { sendId: string }> = [];
+    for (const sendId of ids) {
+      const rec = await getSendRecord(sendId);
+      if (rec?.test) out.push({ ...rec, sendId });
+    }
+    return out;
+  } catch {
+    return [];
   }
 }
 
@@ -258,7 +300,7 @@ export async function recentSendsForLetter(
 
 /** `tick()`'s own call, once per queued item that just resolved (sent OR
  *  dropped, never for a requeue — that copy hasn't resolved yet). A silent
- *  no-op when the item carries no sendId (a test copy, the cart/day-two
+ *  no-op when the item carries no sendId (an untimed test copy, the cart/day-two
  *  drips) or the bump itself fails — the tally is best-effort, the send
  *  it describes already happened either way. */
 async function bumpSendOutcome(sendId: string | undefined, field: "sent" | "dropped"): Promise<void> {
